@@ -39,7 +39,11 @@ export default function Events() {
             )}
 
             <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold">
-              {item.type}
+              {item.type === "open"
+                ? "Open Tournament"
+                : item.type === "team"
+                ? "Team Event"
+                : item.type}
             </span>
 
             <div className="flex items-center gap-2 text-sm text-gray-500">
