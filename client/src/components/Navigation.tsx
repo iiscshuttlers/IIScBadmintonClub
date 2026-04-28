@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 
 /**
  * Navigation Component
- * Design: Dynamic Sports Energy - Deep Navy primary with Emerald Green accents
- * Features: Responsive navigation with mobile menu toggle
+ * Fixed mobile + tablet responsive layout
+ * Desktop unchanged
  */
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
@@ -25,23 +25,26 @@ export default function Navigation() {
     <nav className="sticky top-0 z-50 bg-white shadow-md border-b-4 border-emerald-500">
       <div className="container mx-auto px-4 py-3">
         <div className="flex justify-between items-center">
-          {/* Logo */}
+
+          {/* Logo + Title */}
           <Link href="/">
-            <div className="flex items-center gap-4 cursor-pointer">
+            <div className="flex items-center gap-3 cursor-pointer min-w-0">
+
               <img
                 src={`${import.meta.env.BASE_URL}iisc-logo.png`}
                 alt="IISc Logo"
-                className="h-12 w-auto object-contain"
+                className="h-10 sm:h-12 w-auto object-contain flex-shrink-0"
               />
 
-              <span className="font-semibold text-2xl text-blue-900 hidden sm:inline">
+              <span className="font-semibold text-blue-900 leading-tight text-lg sm:text-2xl truncate">
                 IISc Badminton Club
               </span>
+
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex gap-1">
+          {/* Desktop Navigation ONLY large screens */}
+          <div className="hidden lg:flex gap-1">
             {navLinks.map((link) => (
               <Link key={link.href} href={link.href}>
                 <Button
@@ -54,9 +57,9 @@ export default function Navigation() {
             ))}
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile + Tablet Hamburger */}
           <button
-            className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
             onClick={() => setIsOpen(!isOpen)}
             aria-label="Toggle menu"
           >
@@ -68,9 +71,9 @@ export default function Navigation() {
           </button>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Dropdown */}
         {isOpen && (
-          <div className="md:hidden mt-4 pb-4 border-t border-gray-200 pt-4 animate-in fade-in slide-in-from-top-2">
+          <div className="lg:hidden mt-4 pb-4 border-t border-gray-200 pt-4 animate-in fade-in slide-in-from-top-2">
             <div className="flex flex-col gap-2">
               {navLinks.map((link) => (
                 <Link key={link.href} href={link.href}>
@@ -86,6 +89,7 @@ export default function Navigation() {
             </div>
           </div>
         )}
+
       </div>
     </nav>
   );
