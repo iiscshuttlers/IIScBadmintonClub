@@ -39,7 +39,7 @@ export default function Contact() {
 
               <CardContent>
                 <p className="font-semibold text-gray-800">
-                  badminton@iisc.ac.in
+                  office.gym@iisc.ac.in
                 </p>
                 <p className="text-sm text-gray-600 mt-2">
                   Best mode for membership and official queries.
@@ -57,7 +57,7 @@ export default function Contact() {
 
               <CardContent>
                 <p className="font-semibold text-gray-800">
-                  +91 (080) 2293 2000
+                  +91 (080) 2293 xxxx
                 </p>
                 <p className="text-sm text-gray-600 mt-2">
                   IISc Main Contact
@@ -75,7 +75,7 @@ export default function Contact() {
 
               <CardContent>
                 <p className="font-semibold text-gray-800">
-                  IISc Gymkhana Badminton Courts
+                  Gymkhana Office, 2nd Floor, Janta Bazar, IISc
                 </p>
                 <p className="text-sm text-gray-600 mt-2">
                   Bengaluru - 560012, India
@@ -116,8 +116,7 @@ export default function Contact() {
                 Do you offer coaching?
               </h3>
               <p className="text-gray-700">
-                Yes. Coaching sessions and practice opportunities are organized
-                periodically for different skill levels.
+                No. We do not provide coaching, but we have a vibrant community of players across all levels.
               </p>
             </div>
 
