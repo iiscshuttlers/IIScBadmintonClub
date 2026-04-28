@@ -16,6 +16,13 @@ export default function Announcements() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [loading, setLoading] = useState(true);
 
+  function sortByNewest(items: Announcement[]) {
+    return [...items].sort(
+      (a, b) =>
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+  }
+
   useEffect(() => {
     fetch('/data/announcements.json')
       .then((res) => res.json())
@@ -24,22 +31,18 @@ export default function Announcements() {
         setRecentAnnouncements(sortByNewest(data.recent || []));
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((err) => {
+        console.error('Announcements JSON load failed:', err);
+        setLoading(false);
+      });
   }, []);
-
-  const sortByNewest = (items: Announcement[]) => {
-    return [...items].sort(
-      (a, b) =>
-        new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-  };
 
   const categories = [
     { id: 'all', label: 'All', color: 'bg-gray-100 text-gray-700' },
     { id: 'tournament', label: 'Tournaments', color: 'bg-emerald-100 text-emerald-700' },
-    { id: 'training', label: 'Training', color: 'bg-orange-100 text-orange-700' },
     { id: 'facility', label: 'Facilities', color: 'bg-blue-100 text-blue-700' },
     { id: 'general', label: 'General', color: 'bg-purple-100 text-purple-700' },
+    { id: 'others', label: 'Others', color: 'bg-orange-100 text-orange-700' }
   ];
 
   const getCategoryColor = (category: string) => {
@@ -67,8 +70,7 @@ export default function Announcements() {
           </h1>
 
           <p className="text-lg text-gray-200 max-w-2xl mx-auto">
-            Stay updated with tournaments, events, facility notices and latest
-            IISc Badminton Club news.
+            Stay updated with tournaments, events, facility notices and latest IISc Badminton Club news.
           </p>
         </div>
       </section>
@@ -96,10 +98,7 @@ export default function Announcements() {
 
                 <div className="space-y-5">
                   {pinnedAnnouncements.map((item, index) => (
-                    <Card
-                      key={index}
-                      className="border-2 border-orange-300 hover:shadow-lg transition"
-                    >
+                    <Card key={index} className="border-2 border-orange-300 hover:shadow-lg transition">
                       <CardHeader>
                         <CardTitle className="text-blue-900 text-xl">
                           {item.title}
@@ -170,10 +169,7 @@ export default function Announcements() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {filteredRecent.map((item, index) => (
-                    <Card
-                      key={index}
-                      className="border border-gray-200 hover:shadow-lg transition"
-                    >
+                    <Card key={index} className="border border-gray-200 hover:shadow-lg transition">
                       <CardHeader>
                         <CardTitle className="text-blue-900 text-lg">
                           {item.title}
@@ -215,19 +211,17 @@ export default function Announcements() {
 
               <div className="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-md border-l-4 border-emerald-500">
                 <p className="text-gray-700 text-lg leading-relaxed mb-6">
-                  Don't miss important moments! Follow us on Instagram. 
+                  Don't miss important moments! Follow us on Instagram.
                 </p>
 
                 <div className="bg-emerald-50 p-6 rounded-xl border border-emerald-200 space-y-6">
-                  
+
                   <div>
                     <p className="font-semibold text-blue-900 text-xl mb-2">
                       📱 For important updates:
                     </p>
                     <p className="text-gray-700 text-lg">
-                      Join our official WhatsApp group. Check back
-                      regularly for the latest announcements about events, tournaments,
-                      facility updates, and more.
+                      Join our official WhatsApp group.
                     </p>
                   </div>
 
