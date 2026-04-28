@@ -2,30 +2,9 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Instagram } from 'lucide-react';
 
-/**
- * AUTO GALLERY SYSTEM
- *
- * PUT IMAGES HERE:
- *
- * client/src/assets/gallery/tournaments/
- * client/src/assets/gallery/team/
- * client/src/assets/gallery/facilities/
- * client/src/assets/gallery/practice/
- * client/src/assets/gallery/winners/
- *
- * Then images appear automatically.
- *
- * Example filename:
- * spectrum-2026-final.jpg
- *
- * Shows as:
- * Spectrum 2026 Final
- */
-
 export default function Gallery() {
   const [selectedCategory, setSelectedCategory] = useState('all');
 
-  /* AUTO LOAD ALL IMAGES */
   const imageModules = import.meta.glob(
     '/src/assets/gallery/**/*.{png,jpg,jpeg,webp}',
     {
@@ -34,14 +13,16 @@ export default function Gallery() {
     }
   );
 
-  /* Build gallery items automatically */
   const galleryItems = Object.entries(imageModules).map(
     ([path, image], index) => {
       const cleanPath = path.replace('/src/assets/gallery/', '');
       const parts = cleanPath.split('/');
 
-      const category = parts[0];
-      const filename = parts[1];
+      const category = parts[0]; // tournaments
+      const subfolder =
+        parts.length > 2 ? parts[1] : '';
+
+      const filename = parts[parts.length - 1];
 
       const title = filename
         .replace(/\.[^/.]+$/, '')
@@ -52,28 +33,33 @@ export default function Gallery() {
         id: index + 1,
         title,
         category,
+        subfolder,
         image: image as string,
-        description: title,
+        description:
+          subfolder !== ''
+            ? subfolder + ' • ' + title
+            : title,
       };
     }
   );
 
-  /* Auto categories */
   const categories = [
     { id: 'all', label: 'All' },
-    ...Array.from(new Set(galleryItems.map((item) => item.category))).map(
-      (cat) => ({
-        id: cat,
-        label: cat.charAt(0).toUpperCase() + cat.slice(1),
-      })
-    ),
+    ...Array.from(
+      new Set(galleryItems.map((item) => item.category))
+    ).map((cat) => ({
+      id: cat,
+      label:
+        cat.charAt(0).toUpperCase() + cat.slice(1),
+    })),
   ];
 
   const filteredItems =
     selectedCategory === 'all'
       ? galleryItems
       : galleryItems.filter(
-          (item) => item.category === selectedCategory
+          (item) =>
+            item.category === selectedCategory
         );
 
   return (
@@ -85,13 +71,17 @@ export default function Gallery() {
 
           <h1
             className="text-5xl font-bold mb-4"
-            style={{ fontFamily: 'Playfair Display, serif' }}
+            style={{
+              fontFamily:
+                'Playfair Display, serif',
+            }}
           >
             Gallery
           </h1>
 
           <p className="text-xl text-gray-200 max-w-2xl mx-auto">
-            Tournaments, practice sessions, victories and badminton life at IISc.
+            Tournaments, victories, practice
+            sessions and badminton life at IISc.
           </p>
 
         </div>
@@ -106,7 +96,9 @@ export default function Gallery() {
             {categories.map((cat) => (
               <button
                 key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
+                onClick={() =>
+                  setSelectedCategory(cat.id)
+                }
                 className={`px-6 py-2 rounded-full font-semibold transition ${
                   selectedCategory === cat.id
                     ? 'bg-emerald-500 text-white shadow-lg'
@@ -126,8 +118,6 @@ export default function Gallery() {
                 key={item.id}
                 className="group bg-white rounded-xl shadow-md hover:shadow-xl overflow-hidden transition"
               >
-
-                {/* Image */}
                 <div className="h-72 overflow-hidden bg-gray-200">
                   <img
                     src={item.image}
@@ -136,7 +126,6 @@ export default function Gallery() {
                   />
                 </div>
 
-                {/* Text */}
                 <div className="p-5">
 
                   <div className="flex justify-between items-start gap-3 mb-3">
@@ -156,7 +145,6 @@ export default function Gallery() {
                   </p>
 
                 </div>
-
               </div>
             ))}
 
@@ -181,13 +169,16 @@ export default function Gallery() {
 
             <h2
               className="text-3xl font-bold text-blue-900 mb-4"
-              style={{ fontFamily: 'Playfair Display, serif' }}
+              style={{
+                fontFamily:
+                  'Playfair Display, serif',
+              }}
             >
               Follow Us on Instagram
             </h2>
 
             <p className="text-gray-600 mb-6">
-              Photos, tournaments, updates and badminton moments.
+              Photos, reels, tournaments and updates.
             </p>
 
             <a
