@@ -71,7 +71,7 @@ export default function TournamentDetail() {
 
               <div className="space-y-3">
                 <div>Tanisha def. Shailli (21-18, 21-16)</div>
-                <div>Radhika/Raja def. Team B (21-17, 18-21, 21-14)</div>
+                <div>Radhika/Raja def. KD Shaili (22-20, 21-19)</div>
               </div>
             </div>
           </>
