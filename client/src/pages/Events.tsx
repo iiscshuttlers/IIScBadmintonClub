@@ -2,10 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 /**
  * Events Page
- * Clean Professional Version
- * - Removed Admin Mode
- * - Removed fake upcoming events
- * - Added real tournament highlights
+ * Updated with real Open Tournament 2025 winners
  */
 
 export default function Events() {
@@ -20,10 +17,15 @@ export default function Events() {
     {
       title: 'Open Tournament 2025',
       date: 'November 2025',
-      winner:
-        'MS, MD, XD, WS, WD Categories – Gold & Silver awarded in each division',
+      winner: `
+MS: Winner - Krishnendu | Runner Up - Piyush
+WS: Winner - Tanisha | Runner Up - Shailli
+MD: Winner - Abhisek & Krishnendu | Runner Up - Raja & Kaling
+WD: Winner - Renu & Shailli | Runner Up - Radhika & Madhuvanti
+XD: Winner - Radhika & Raja | Runner Up - Shailli & Krishnendu
+      `,
       description:
-        'Successful open badminton tournament conducted across multiple categories with strong participation.',
+        'Successful open badminton tournament featuring singles, doubles, and mixed doubles categories with strong participation across campus.',
     },
   ];
 
@@ -58,7 +60,7 @@ export default function Events() {
             Tournament Highlights
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
 
             {pastEvents.map((event, idx) => (
               <Card
@@ -76,13 +78,13 @@ export default function Events() {
                 <CardContent className="space-y-4">
 
                   <div>
-                    <p className="text-sm text-gray-500 mb-1">
+                    <p className="text-sm text-gray-500 mb-2">
                       Results / Winners
                     </p>
 
-                    <p className="font-semibold text-emerald-600 leading-relaxed">
+                    <div className="font-semibold text-emerald-600 whitespace-pre-line leading-relaxed text-sm">
                       {event.winner}
-                    </p>
+                    </div>
                   </div>
 
                   <p className="text-gray-700 leading-relaxed">
