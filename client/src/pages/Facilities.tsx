@@ -1,16 +1,27 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, Clock, MapPin } from 'lucide-react';
+import { CheckCircle, Clock, MapPin, Trophy, Users } from 'lucide-react';
 
 /**
  * Facilities Page
- * Design: Dynamic Sports Energy - Showcase of club facilities and amenities
+ * Improved version:
+ * - Removed excessive white space
+ * - Better section flow
+ * - Added map button
+ * - Better membership layout
+ * - More premium look
  */
 export default function Facilities() {
   const facilities = [
     {
       title: 'Indoor Courts',
-      description: 'Three professional-grade wooden courts with synthetic mat on wooden floors and modern lighting.',
-      details: ['Wooden flooring with synthetic mat', 'Professional markings', 'LED lighting']
+      description:
+        'Three professional-grade wooden courts with synthetic mat flooring and modern lighting designed for training and competitive play.',
+      details: [
+        'Wooden flooring with synthetic mat',
+        'Professional court markings',
+        'Bright LED lighting',
+        'Tournament-ready environment',
+      ],
     },
   ];
 
@@ -21,130 +32,182 @@ export default function Facilities() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-900 to-emerald-900 text-white py-16">
-        <div className="container mx-auto px-4">
-          <h1 className="text-5xl font-bold mb-4" style={{ fontFamily: 'Playfair Display, serif' }}>
+
+      {/* Hero */}
+      <section className="bg-gradient-to-r from-blue-900 to-emerald-900 text-white py-14">
+        <div className="container mx-auto px-4 text-center">
+          <h1
+            className="text-4xl md:text-5xl font-bold mb-4"
+            style={{ fontFamily: 'Playfair Display, serif' }}
+          >
             Our Facilities
           </h1>
-          <p className="text-xl text-gray-200 max-w-2xl">
-            World-class badminton facilities designed to support players at every level.
+
+          <p className="text-lg md:text-xl text-gray-200 max-w-3xl mx-auto">
+            Premium badminton facilities designed to support players at every level.
           </p>
         </div>
       </section>
 
-      {/* Main Facilities */}
-      <section className="py-16 bg-white">
+      {/* Courts + Hours Combined */}
+      <section className="py-14 bg-white">
         <div className="container mx-auto px-4">
-          <div className="max-w-2xl mx-auto mb-16">
-            {facilities.map((facility, idx) => (
-              <Card key={idx} className="border-2 border-emerald-200 hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <CardTitle className="text-blue-900 flex items-center gap-2">
-                    <CheckCircle className="w-6 h-6 text-emerald-500" />
-                    {facility.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-gray-700">{facility.description}</p>
-                  <ul className="space-y-2">
-                    {facility.details.map((detail, i) => (
-                      <li key={i} className="flex gap-2 text-gray-600">
-                        <span className="text-orange-500 font-bold">•</span>
-                        {detail}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* Operating Hours */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-blue-900 mb-12 text-center" style={{ fontFamily: 'Playfair Display, serif' }}>
-            Operating Hours
-          </h2>
-          <div className="max-w-2xl mx-auto">
-            <div className="space-y-4">
-              {schedule.map((slot, idx) => (
-                <div key={idx} className="bg-gradient-to-r from-blue-50 to-emerald-50 p-6 rounded-lg border-l-4 border-emerald-500">
-                  <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-                    <div className="font-bold text-blue-900 text-lg">{slot.day}</div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-5 h-5 text-emerald-500" />
-                      <p className="font-semibold text-gray-800">{slot.hours}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
 
-      {/* Location */}
-      <section className="py-16 bg-gradient-to-r from-emerald-50 to-orange-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-blue-900 mb-12 text-center" style={{ fontFamily: 'Playfair Display, serif' }}>
-            Location
-          </h2>
-          <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
-            <div className="flex items-start gap-4 mb-6">
-              <MapPin className="w-6 h-6 text-emerald-500 flex-shrink-0 mt-1" />
-              <div>
-                <h3 className="font-bold text-blue-900 text-lg mb-2">IISc Gymkhana Badminton Courts</h3>
-                <p className="text-gray-700">
-                  Indian Institute of Science<br />
-                  Bangalore - 560012<br />
-                  India
-                </p>
-              </div>
-            </div>
-            <p className="text-gray-600 text-sm">
-              Located within the IISc campus, our courts are easily accessible to all members and visitors. The facility is equipped with ample parking and is well-connected by public transportation.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Membership Info */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-blue-900 mb-12 text-center" style={{ fontFamily: 'Playfair Display, serif' }}>
-            Membership & Access
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-            <Card className="border-2 border-emerald-200">
+            {/* Courts */}
+            <Card className="border-2 border-emerald-100 shadow-md hover:shadow-lg transition-shadow">
               <CardHeader>
-                <CardTitle className="text-emerald-600">IISc Members</CardTitle>
+                <CardTitle className="text-blue-900 flex items-center gap-2 text-2xl">
+                  <Trophy className="w-6 h-6 text-emerald-500" />
+                  {facilities[0].title}
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-gray-700">
-                  Students, faculty, and staff of IISc have access to the facilities through the Gymkhana membership.
+
+              <CardContent className="space-y-5">
+                <p className="text-gray-700 leading-relaxed">
+                  {facilities[0].description}
                 </p>
-                <ul className="space-y-2">
-                  <li className="flex gap-2">
-                    <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-                    <span className="text-gray-600">Full facility access</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-                    <span className="text-gray-600">Coaching available</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-                    <span className="text-gray-600">Tournament participation</span>
-                  </li>
+
+                <ul className="space-y-3">
+                  {facilities[0].details.map((detail, i) => (
+                    <li key={i} className="flex gap-3">
+                      <CheckCircle className="w-5 h-5 text-emerald-500 mt-0.5" />
+                      <span className="text-gray-700">{detail}</span>
+                    </li>
+                  ))}
                 </ul>
               </CardContent>
             </Card>
+
+            {/* Hours */}
+            <Card className="border-2 border-blue-100 shadow-md hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="text-blue-900 flex items-center gap-2 text-2xl">
+                  <Clock className="w-6 h-6 text-emerald-500" />
+                  Operating Hours
+                </CardTitle>
+              </CardHeader>
+
+              <CardContent className="space-y-4">
+                {schedule.map((slot, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-gradient-to-r from-blue-50 to-emerald-50 p-5 rounded-xl"
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-blue-900">
+                        {slot.day}
+                      </span>
+
+                      <span className="text-gray-700 font-medium">
+                        {slot.hours}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
           </div>
         </div>
       </section>
+
+      {/* Location + Membership Combined */}
+      <section className="py-14 bg-gradient-to-r from-emerald-50 to-orange-50">
+        <div className="container mx-auto px-4">
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+
+            {/* Location */}
+            <Card className="shadow-md border-0">
+              <CardHeader>
+                <CardTitle className="text-blue-900 flex items-center gap-2 text-2xl">
+                  <MapPin className="w-6 h-6 text-emerald-500" />
+                  Location
+                </CardTitle>
+              </CardHeader>
+
+              <CardContent className="space-y-5">
+                <div>
+                  <h3 className="font-bold text-blue-900 text-lg mb-2">
+                    IISc Gymkhana Badminton Courts
+                  </h3>
+
+                  <p className="text-gray-700 leading-relaxed">
+                    Indian Institute of Science <br />
+                    Bangalore - 560012 <br />
+                    India
+                  </p>
+                </div>
+
+                <p className="text-gray-600">
+                  Located within the IISc campus with easy access, ample parking,
+                  and excellent connectivity.
+                </p>
+
+                <a
+                  href="https://maps.app.goo.gl/pBTtJGYEPwnu6qd78"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-3 rounded-lg font-semibold transition"
+                >
+                  Open in Google Maps
+                </a>
+              </CardContent>
+            </Card>
+
+            {/* Membership */}
+            <Card className="shadow-md border-0">
+              <CardHeader>
+                <CardTitle className="text-blue-900 flex items-center gap-2 text-2xl">
+                  <Users className="w-6 h-6 text-emerald-500" />
+                  Membership & Access
+                </CardTitle>
+              </CardHeader>
+
+              <CardContent className="space-y-5">
+
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5">
+                  <h3 className="font-bold text-emerald-700 text-lg mb-2">
+                    IISc Members
+                  </h3>
+
+                  <p className="text-gray-700 leading-relaxed">
+                    Students, faculty, staff, and eligible members can access
+                    the badminton facilities through Gymkhana membership.
+                  </p>
+                </div>
+
+                <ul className="space-y-3">
+                  <li className="flex gap-3">
+                    <CheckCircle className="w-5 h-5 text-emerald-500 mt-0.5" />
+                    <span className="text-gray-700">Full facility access</span>
+                  </li>
+
+                  <li className="flex gap-3">
+                    <CheckCircle className="w-5 h-5 text-emerald-500 mt-0.5" />
+                    <span className="text-gray-700">Coaching and training support</span>
+                  </li>
+
+                  <li className="flex gap-3">
+                    <CheckCircle className="w-5 h-5 text-emerald-500 mt-0.5" />
+                    <span className="text-gray-700">Tournament participation</span>
+                  </li>
+
+                  <li className="flex gap-3">
+                    <CheckCircle className="w-5 h-5 text-emerald-500 mt-0.5" />
+                    <span className="text-gray-700">Join IISc badminton community</span>
+                  </li>
+                </ul>
+
+              </CardContent>
+            </Card>
+
+          </div>
+        </div>
+      </section>
+
     </div>
   );
 }
