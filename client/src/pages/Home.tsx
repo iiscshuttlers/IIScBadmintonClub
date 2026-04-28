@@ -176,17 +176,17 @@ export default function Home() {
 // ==========================================
 function AnimatedLogo() {
   return (
-    <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
-      
+    <div className="relative w-full h-full flex items-center justify-center overflow-visible">
+
       {/* Scaling wrapper */}
       <div className="relative w-[420px] h-[420px] transform scale-[0.7] sm:scale-[0.8] md:scale-90 lg:scale-100 flex-shrink-0 transition-transform">
-        
-        {/* Outer Ring & Badge Background */}
+
+        {/* ONLY Circle Logo (black box removed) */}
         <div className="relative w-full h-full rounded-full bg-gradient-to-br from-blue-950 to-slate-900 shadow-2xl border-[8px] border-slate-950 flex flex-col items-center justify-center overflow-hidden ring-[6px] ring-amber-500 z-0">
-          
-          {/* Subtle Background Grid (Court Feel) */}
+
+          {/* Subtle Grid */}
           <div className="absolute inset-0 opacity-15 pointer-events-none">
-            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <svg width="100%" height="100%">
               <defs>
                 <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
                   <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#f59e0b" strokeWidth="1" />
@@ -196,85 +196,29 @@ function AnimatedLogo() {
             </svg>
           </div>
 
-          {/* IISc Main Building Silhouette */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[280px] opacity-20 text-amber-500 pointer-events-none mt-2 z-0">
-            <svg viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
-              <line x1="15" y1="180" x2="185" y2="180" strokeWidth="3"/>
-              <rect x="75" y="80" width="50" height="100" />
-              <circle cx="100" cy="105" r="9" />
-              <polyline points="100,100 100,105 104,105" />
-              <rect x="25" y="130" width="50" height="50" />
-              <path d="M 35 180 L 35 150 Q 40 142 45 150 L 45 180" />
-              <path d="M 55 180 L 55 150 Q 60 142 65 150 L 65 180" />
-              <rect x="125" y="130" width="50" height="50" />
-              <path d="M 135 180 L 135 150 Q 140 142 145 150 L 145 180" />
-              <path d="M 155 180 L 155 150 Q 160 142 165 150 L 165 180" />
-              <polygon points="70,80 130,80 125,70 75,70" fill="currentColor" fillOpacity="0.15" />
-              <rect x="82" y="45" width="36" height="25" />
-              <line x1="94" y1="45" x2="94" y2="70" />
-              <line x1="106" y1="45" x2="106" y2="70" />
-              <polygon points="78,45 122,45 118,38 82,38" fill="currentColor" fillOpacity="0.15" />
-              <path d="M 82 38 C 82 10, 118 10, 118 38 Z" fill="currentColor" fillOpacity="0.1" />
-              <line x1="100" y1="18" x2="100" y2="0" strokeWidth="2" />
-              <circle cx="100" cy="0" r="2" fill="currentColor" />
-            </svg>
-          </div>
-
-          {/* Top Text: IISc */}
-          <div className="absolute top-16 left-0 right-0 text-center z-10 flex flex-col items-center">
-            <h1 className="text-7xl font-black text-white tracking-wider drop-shadow-md flex items-baseline">
-              IIS<span className="text-6xl text-amber-400 ml-0.5">c</span>
+          {/* IISc text */}
+          <div className="absolute top-16 left-0 right-0 text-center z-10">
+            <h1 className="text-7xl font-black text-white tracking-wider">
+              IIS<span className="text-amber-400">c</span>
             </h1>
           </div>
 
-          {/* Central Animation Zone */}
-          <div className="absolute inset-0 z-20 pointer-events-none">
-            
-            {/* Racket Container */}
-            <div className="racket-anim absolute top-1/2 left-1/2 -ml-[50px] -mt-[50px] w-[100px] h-[180px]">
-              <svg width="100" height="180" viewBox="0 0 100 180">
-                <rect x="42" y="120" width="16" height="50" fill="#f59e0b" rx="2" />
-                <rect x="42" y="165" width="16" height="5" fill="#b45309" rx="1" />
-                <rect x="44" y="115" width="12" height="5" fill="#94a3b8" />
-                <line x1="50" y1="115" x2="50" y2="75" stroke="#cbd5e1" strokeWidth="6" />
-                <path d="M 50 75 L 40 60 L 60 60 Z" fill="#3b82f6" />
-                <defs>
-                  <pattern id="strings" width="8" height="8" patternUnits="userSpaceOnUse">
-                    <rect width="8" height="8" fill="none" stroke="#64748b" strokeWidth="0.75" />
-                  </pattern>
-                </defs>
-                <ellipse cx="50" cy="50" rx="28" ry="38" fill="url(#strings)" stroke="#3b82f6" strokeWidth="6" />
-              </svg>
-            </div>
-
-            {/* Shuttlecock Container */}
-            <div className="shuttle-anim absolute top-1/2 left-1/2 -ml-[30px] -mt-[30px] w-[60px] h-[60px]">
-              <svg width="60" height="60" viewBox="0 0 60 60">
-                <path d="M 22 45 A 8 8 0 0 0 38 45 Z" fill="#ef4444" />
-                <rect x="22" y="42" width="16" height="3" fill="#ffffff" />
-                <path d="M 22 42 L 10 10 L 50 10 L 38 42 Z" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.5" strokeLinejoin="round" />
-                <line x1="26" y1="42" x2="20" y2="10" stroke="#cbd5e1" strokeWidth="1.5" />
-                <line x1="30" y1="42" x2="30" y2="10" stroke="#cbd5e1" strokeWidth="1.5" />
-                <line x1="34" y1="42" x2="40" y2="10" stroke="#cbd5e1" strokeWidth="1.5" />
-                <path d="M 12 25 Q 30 32 48 25" fill="none" stroke="#cbd5e1" strokeWidth="1.5" />
-                <path d="M 17 35 Q 30 39 43 35" fill="none" stroke="#cbd5e1" strokeWidth="1.5" />
-              </svg>
-            </div>
-
-            {/* Impact Spark Effect */}
-            <div className="spark-anim absolute top-1/2 left-1/2 ml-[10px] mt-[10px] w-[60px] h-[60px] -translate-x-1/2 -translate-y-1/2">
-              <svg viewBox="0 0 100 100">
-                <path d="M50 10 L55 45 L90 50 L55 55 L50 90 L45 55 L10 50 L45 45 Z" fill="#fef08a" />
-              </svg>
-            </div>
+          {/* Center Logo Area */}
+          <div className="absolute inset-0 flex items-center justify-center z-20">
+            <img
+              src={`${import.meta.env.BASE_URL}iisc-logo.png`}
+              alt="IISc Club Logo"
+              className="w-[220px] h-[220px] object-contain"
+            />
           </div>
 
-          {/* Bottom Text: BADMINTON CLUB */}
-          <div className="absolute bottom-14 left-0 right-0 text-center z-10 flex flex-col items-center">
-            <h2 className="text-2xl font-bold text-amber-500 tracking-[0.25em] uppercase drop-shadow-sm">
+          {/* Bottom Text */}
+          <div className="absolute bottom-14 left-0 right-0 text-center z-10">
+            <h2 className="text-2xl font-bold text-amber-500 tracking-[0.25em] uppercase">
               Badminton
             </h2>
-            <div className="flex items-center gap-4 mt-2">
+
+            <div className="flex items-center justify-center gap-4 mt-2">
               <div className="w-8 h-[2px] bg-white/40"></div>
               <h3 className="text-lg font-semibold text-slate-100 tracking-[0.4em] uppercase">
                 Club
@@ -282,53 +226,9 @@ function AnimatedLogo() {
               <div className="w-8 h-[2px] bg-white/40"></div>
             </div>
           </div>
+
         </div>
       </div>
-
-      {/* Internal Stylesheet for Animations */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        .racket-anim {
-          transform-origin: 50px 170px;
-          animation: swing 1.5s infinite ease-in-out;
-        }
-
-        @keyframes swing {
-          0%, 100% { transform: rotate(-15deg); }
-          35% { transform: rotate(-50deg); }
-          47% { transform: rotate(-50deg); }
-          50% { transform: rotate(20deg); }
-          58% { transform: rotate(55deg); }
-          75% { transform: rotate(-15deg); }
-        }
-
-        .shuttle-anim {
-          transform-origin: 30px 30px;
-          animation: fly 1.5s infinite linear;
-        }
-
-        @keyframes fly {
-          0% { transform: translate(-180px, -120px) rotate(135deg); opacity: 0; }
-          10% { opacity: 1; }
-          47% { transform: translate(25px, -5px) rotate(135deg); } 
-          50% { transform: translate(40px, 10px) rotate(45deg) scale(0.6, 0.9); } 
-          52% { transform: translate(55px, -5px) rotate(45deg) scale(1, 1); } 
-          80% { transform: translate(200px, -150px) rotate(45deg); opacity: 1; }
-          90% { transform: translate(250px, -200px) rotate(45deg); opacity: 0; }
-          100% { transform: translate(250px, -200px) rotate(45deg); opacity: 0; }
-        }
-
-        .spark-anim {
-          transform-origin: center;
-          animation: spark 1.5s infinite;
-        }
-
-        @keyframes spark {
-          0%, 48% { opacity: 0; transform: scale(0) rotate(0deg); }
-          50% { opacity: 1; transform: scale(1.2) rotate(45deg); }
-          54% { opacity: 0; transform: scale(1.8) rotate(90deg); }
-          100% { opacity: 0; }
-        }
-      `}} />
     </div>
   );
 }
