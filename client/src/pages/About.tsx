@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 export default function About() {
   const teamMembers = [
     { role: 'Convener', name: 'Raja Janmejay', description: 'Leading the club with vision and passion' },
-    { role: 'Co-Convener', name: 'Aneesh Verla', description: 'Supporting operations and events' },
+    { role: 'Co-Convener', name: 'Aneesh Varla', description: 'Helping members connect, compete, and grow through the sport' },
 ];
 
   return (
