@@ -203,29 +203,49 @@ export default function Announcements() {
             </div>
           </section>
 
-          {/* Contact */}
+          {/* Stay Informed */}
           <section className="py-16 bg-gradient-to-r from-blue-50 to-emerald-50">
             <div className="container mx-auto px-4">
-              <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-md p-8">
-                <h2
-                  className="text-3xl font-bold text-blue-900 mb-6 text-center"
-                  style={{ fontFamily: 'Playfair Display, serif' }}
-                >
-                  Stay Connected
-                </h2>
+              <h2
+                className="text-3xl font-bold text-blue-900 mb-8 text-center"
+                style={{ fontFamily: 'Playfair Display, serif' }}
+              >
+                Stay Informed
+              </h2>
 
-                <p className="text-gray-700 mb-6 text-center">
-                  Follow us for tournament news, schedules, events and updates.
+              <div className="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-md border-l-4 border-emerald-500">
+                <p className="text-gray-700 text-lg leading-relaxed mb-6">
+                  Don't miss important moments! Follow us on Instagram. 
                 </p>
 
-                <div className="space-y-3 text-center">
-                  <p className="font-semibold text-blue-900">
-                    Instagram: @iisc_badminton_club
-                  </p>
+                <div className="bg-emerald-50 p-6 rounded-xl border border-emerald-200 space-y-6">
+                  
+                  <div>
+                    <p className="font-semibold text-blue-900 text-xl mb-2">
+                      📱 For important updates:
+                    </p>
+                    <p className="text-gray-700 text-lg">
+                      Join our official WhatsApp group. Check back
+                      regularly for the latest announcements about events, tournaments,
+                      facility updates, and more.
+                    </p>
+                  </div>
 
-                  <p className="text-gray-700">
-                    Check this page regularly for latest notices.
-                  </p>
+                  <div>
+                    <p className="font-semibold text-blue-900 text-xl mb-2">
+                      📸 Follow us on Instagram:
+                    </p>
+
+                    <a
+                      href="https://www.instagram.com/iisc.badminton/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-emerald-600 font-semibold hover:underline text-lg"
+                    >
+                      @iisc.badminton
+                    </a>
+                  </div>
+
                 </div>
               </div>
             </div>
