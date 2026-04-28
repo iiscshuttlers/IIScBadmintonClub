@@ -24,7 +24,7 @@ export default function Announcements() {
   }
 
   useEffect(() => {
-    fetch('/data/announcements.json')
+    fetch(`${import.meta.env.BASE_URL}data/announcements.json`)
       .then((res) => res.json())
       .then((data) => {
         setPinnedAnnouncements(data.pinned || []);
