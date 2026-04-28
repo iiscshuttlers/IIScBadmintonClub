@@ -1,7 +1,8 @@
-import { useParams } from 'react-router-dom';
+import { useRoute } from 'wouter';
 
 export default function TournamentDetail() {
-  const { slug } = useParams();
+  const [, params] = useRoute('/events/:slug');
+  const slug = params?.slug || '';
 
   return (
     <div className="min-h-screen bg-slate-50">
