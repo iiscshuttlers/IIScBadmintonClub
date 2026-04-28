@@ -1,5 +1,5 @@
+import { Link } from 'wouter';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Calendar, Trophy, Radio } from 'lucide-react';
 import { getTournaments } from '@/lib/tournaments';
@@ -28,7 +28,7 @@ export default function Events() {
   const completed = events.filter((e) => e.status === 'completed');
 
   const renderCard = (item: any, liveMode = false) => (
-    <Link to={`/events/${item.slug}`} key={item.id}>
+    <Link href={`/events/${item.slug}`} key={item.id}>
       <Card className="rounded-3xl border border-emerald-200 shadow-md bg-white hover:shadow-xl hover:-translate-y-1 transition duration-300 cursor-pointer">
         <CardContent className="p-8 space-y-5">
           <div className="flex flex-wrap items-center gap-3">

@@ -22,7 +22,7 @@ function AppRoutes() {
       <Route path="/about" component={About} />
       <Route path="/facilities" component={Facilities} />
       <Route path="/events" component={Events} />
-      <Route path="/events/:slug" element={<TournamentDetail />} />
+      <Route path="/events/:slug" component={TournamentDetail} />
       <Route path="/announcements" component={Announcements} />
       <Route path="/gallery" component={Gallery} />
       <Route path="/contact" component={Contact} />
