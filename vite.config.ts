@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import fs from "node:fs";
 import path from "node:path";
 import { defineConfig, type Plugin, type ViteDevServer } from "vite";
+import { VitePWA } from "vite-plugin-pwa";
 import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
 
 // =============================================================================
@@ -202,7 +203,40 @@ function vitePluginStorageProxy(): Plugin {
   };
 }
 
-const plugins = [react(), tailwindcss(), vitePluginManusRuntime(), vitePluginManusDebugCollector(), vitePluginStorageProxy()];
+const plugins = [
+  react(),
+  tailwindcss(),
+  vitePluginManusRuntime(),
+  vitePluginManusDebugCollector(),
+  vitePluginStorageProxy(),
+
+  VitePWA({
+    registerType: "autoUpdate",
+    manifest: {
+      name: "IISc Badminton Club",
+      short_name: "IISc Badminton",
+      description: "Official IISc Badminton Club App",
+      theme_color: "#0f172a",
+      background_color: "#ffffff",
+      display: "standalone",
+      start_url: "/iiscshuttlers/",
+      scope: "/iiscshuttlers/",
+
+      icons: [
+        {
+          src: "/iiscshuttlers/icon-192.png",
+          sizes: "192x192",
+          type: "image/png"
+        },
+        {
+          src: "/iiscshuttlers/icon-512.png",
+          sizes: "512x512",
+          type: "image/png"
+        }
+      ]
+    }
+  }),
+];
 
 export default defineConfig({
   plugins,
