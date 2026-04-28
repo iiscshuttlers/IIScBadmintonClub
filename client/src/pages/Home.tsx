@@ -49,18 +49,15 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Right Image / Animated Logo */}
-            <div className="relative animate-in fade-in slide-in-from-right-4 duration-700 delay-200">
-              <div className="relative overflow-visible transform hover:scale-105 transition-transform duration-300 flex items-center justify-center">
-                
-                {/* Inserted Animated Logo Component */}
-                <AnimatedLogo />
-
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none"></div>
-              </div>
-              {/* Accent element */}
-              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-orange-500 rounded-full opacity-20 blur-3xl z-[-1]"></div>
+          {/* Right Image / Animated Logo */}
+          <div className="relative animate-in fade-in slide-in-from-right-4 duration-700 delay-200">
+            
+            <div className="relative flex items-center justify-center">
+              <AnimatedLogo />
             </div>
+
+            <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-orange-500 rounded-full opacity-20 blur-3xl z-[-1]"></div>
+          </div>
           </div>
         </div>
       </section>
@@ -176,10 +173,10 @@ export default function Home() {
 // ==========================================
 function AnimatedLogo() {
   return (
-    <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+    <div className="relative flex items-center justify-center bg-transparent overflow-visible">
       
       {/* Scaling wrapper */}
-      <div className="relative w-[420px] h-[420px] transform scale-[0.7] sm:scale-[0.8] md:scale-90 lg:scale-100 flex-shrink-0 transition-transform">
+      <div className="relative w-[380px] h-[380px] flex-shrink-0">
         
         {/* Outer Ring & Badge Background */}
         <div className="relative w-full h-full rounded-full bg-gradient-to-br from-blue-950 to-slate-900 shadow-2xl border-[8px] border-slate-950 flex flex-col items-center justify-center overflow-hidden ring-[6px] ring-amber-500 z-0">
