@@ -208,8 +208,8 @@ const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(
 export default defineConfig({
   plugins,
   // Set base path for GitHub Pages deployment
-  // Use '/iisc-badminton-club/' for GitHub Pages or '/' for Netlify/Vercel
-  base: process.env.GITHUB_PAGES === 'true' ? '/iisc-badminton-club/' : '/',
+  // Use '/iiscshuttlers/' for GitHub Pages or '/' for Netlify/Vercel
+  base: process.env.GITHUB_PAGES === 'true' ? '/iiscshuttlers/' : '/',
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),
