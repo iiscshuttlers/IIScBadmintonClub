@@ -1,0 +1,8 @@
+node_modules
+dist
+.local
+.git_old
+.npm-global
+*.log
+.DS_Store
+Thumbs.db
