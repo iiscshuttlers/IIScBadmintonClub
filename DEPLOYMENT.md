@@ -23,7 +23,7 @@ To get a custom domain:
 
 2. **Create a new repository**:
    - Go to https://github.com/new
-   - Name: `iisc-badminton-club`
+   - Name: `iiscshuttlers`
    - Make it Public or Private
    - Click "Create repository"
 
@@ -37,7 +37,7 @@ To get a custom domain:
    - Go to https://app.netlify.com
    - Click "Add new site" → "Import an existing project"
    - Choose "GitHub"
-   - Select your `iisc-badminton-club` repository
+   - Select your `iiscshuttlers` repository
    - Build settings are already configured in `netlify.toml`
    - Click "Deploy site"
 

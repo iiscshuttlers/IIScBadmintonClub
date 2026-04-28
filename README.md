@@ -25,8 +25,8 @@ A modern, dynamic website for the Indian Institute of Science Badminton Club bui
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/iisc-badminton-club.git
-cd iisc-badminton-club
+git clone https://github.com/YOUR_USERNAME/iiscshuttlers.git
+cd iiscshuttlers
 
 # Install dependencies
 pnpm install
@@ -81,7 +81,7 @@ pnpm gh-pages -d dist/public
 ## 🏗️ Project Structure
 
 ```
-iisc-badminton-club/
+iiscshuttlers/
 ├── client/
 │   ├── src/
 │   │   ├── components/     # Reusable UI components

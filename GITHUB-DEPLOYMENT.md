@@ -17,7 +17,7 @@
 3. **Create New Repository**
    - Open GitHub Desktop
    - Click "File" → "New Repository"
-   - Name: `iisc-badminton-club`
+   - Name: `iiscshuttlers`
    - Description: "IISc Badminton Club Website"
    - Check "Initialize with README" (uncheck - we already have one)
    - Click "Create Repository"
@@ -39,7 +39,7 @@
 
 ```bash
 # Navigate to your project folder
-cd iisc-badminton-club
+cd iiscshuttlers
 
 # Initialize git (if not already done)
 git init
@@ -51,7 +51,7 @@ git add .
 git commit -m "Initial commit - IISc Badminton Club website"
 
 # Create repository on GitHub.com first, then:
-git remote add origin https://github.com/YOUR_USERNAME/iisc-badminton-club.git
+git remote add origin https://github.com/YOUR_USERNAME/iiscshuttlers.git
 git branch -M main
 git push -u origin main
 ```
@@ -71,7 +71,7 @@ git push -u origin main
    - Select "Import an existing project"
    - Click "GitHub"
    - Authorize Netlify to access your GitHub
-   - Select `iisc-badminton-club` repository
+   - Select `iiscshuttlers` repository
 
 3. **Configure Build Settings** (Auto-detected from netlify.toml)
    - Build command: `pnpm install && pnpm build`
@@ -93,8 +93,8 @@ git push -u origin main
 1. **In Netlify Dashboard**:
    - Click "Site settings"
    - Click "Change site name"
-   - Enter: `iisc-badminton-club`
-   - Your URL becomes: `https://iisc-badminton-club.netlify.app`
+   - Enter: `iiscshuttlers`
+   - Your URL becomes: `https://iiscshuttlers.netlify.app`
 
 2. **Add Custom Domain** (Optional):
    - Click "Domain management"
