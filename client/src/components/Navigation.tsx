@@ -22,17 +22,18 @@ export default function Navigation() {
 
   return (
     <nav className="sticky top-0 z-50 bg-white shadow-md border-b-4 border-emerald-500">
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto px-4 py-3">
         <div className="flex justify-between items-center">
           {/* Logo */}
           <Link href="/">
-            <div className="flex items-center gap-3 cursor-pointer">
+            <div className="flex items-center gap-4 cursor-pointer">
               <img
                 src={`${import.meta.env.BASE_URL}iisc-logo.png`}
                 alt="IISc Logo"
-                className="h-10 w-auto object-contain"
+                className="h-12 w-auto object-contain"
               />
-              <span className="font-bold text-xl text-blue-900 hidden sm:inline">
+
+              <span className="font-semibold text-2xl text-blue-900 hidden sm:inline">
                 IISc Badminton Club
               </span>
             </div>
