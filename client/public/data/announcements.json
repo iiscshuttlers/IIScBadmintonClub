@@ -1,0 +1,26 @@
+@'
+{
+  "pinned": [
+    {
+      "title": "Spectrum 2026 Tournament",
+      "date": "2026-04-12",
+      "category": "tournament",
+      "content": "Spectrum 2026 is over."
+    }
+  ],
+  "recent": [
+    {
+      "title": "Court Maintenance Notice",
+      "date": "2026-04-03",
+      "category": "facility",
+      "content": "All Courts will remain closed from 3rd April 2026 9 AM to 4th April 2026 12 PM for maintenance."
+    },
+    {
+      "title": "Join WhatsApp Group",
+      "date": "2026-04-06",
+      "category": "general",
+      "content": "Visit the badminton hall notice board to join the official updates group."
+    }
+  ]
+}
+'@ | Set-Content public\data\announcements.json
