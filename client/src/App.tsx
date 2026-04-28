@@ -13,6 +13,7 @@ import Gallery from "./pages/Gallery";
 import Contact from "./pages/Contact";
 import Navigation from "./components/Navigation";
 import Footer from "./components/Footer";
+import TournamentDetail from "./pages/TournamentDetail";
 
 function AppRoutes() {
   return (
@@ -21,6 +22,7 @@ function AppRoutes() {
       <Route path="/about" component={About} />
       <Route path="/facilities" component={Facilities} />
       <Route path="/events" component={Events} />
+      <Route path="/events/:slug" element={<TournamentDetail />} />
       <Route path="/announcements" component={Announcements} />
       <Route path="/gallery" component={Gallery} />
       <Route path="/contact" component={Contact} />
