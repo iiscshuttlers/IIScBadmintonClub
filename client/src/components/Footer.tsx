@@ -58,6 +58,14 @@ export default function Footer() {
               </li>
 
               <li>
+                <Link href="/announcements">
+                  <span className="text-gray-300 hover:text-emerald-400 transition-colors cursor-pointer">
+                    Announcements
+                  </span>
+                </Link>
+              </li>
+
+              <li>
                 <Link href="/gallery">
                   <span className="text-gray-300 hover:text-emerald-400 transition-colors cursor-pointer">
                     Gallery

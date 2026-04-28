@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import About from "./pages/About";
 import Facilities from "./pages/Facilities";
 import Events from "./pages/Events";
+import Announcements from './pages/Announcements';
 import Gallery from "./pages/Gallery";
 import Contact from "./pages/Contact";
 import Navigation from "./components/Navigation";
@@ -20,6 +21,7 @@ function AppRoutes() {
       <Route path="/about" component={About} />
       <Route path="/facilities" component={Facilities} />
       <Route path="/events" component={Events} />
+      <Route path="/announcements" component={Announcements} />
       <Route path="/gallery" component={Gallery} />
       <Route path="/contact" component={Contact} />
       <Route path="/404" component={NotFound} />
