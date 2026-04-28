@@ -27,12 +27,14 @@ export default function Navigation() {
           {/* Logo */}
           <Link href="/">
             <div className="flex items-center gap-3 cursor-pointer">
-              <img 
-                src="/iisc-logo.png" 
-                alt="IISc Logo" 
-                className="w-12 h-12 object-contain"
+              <img
+                src={`${import.meta.env.BASE_URL}iisc-logo.png`}
+                alt="IISc Logo"
+                className="h-10 w-auto object-contain"
               />
-              <span className="font-bold text-xl text-blue-900 hidden sm:inline">IISc Badminton Club</span>
+              <span className="font-bold text-xl text-blue-900 hidden sm:inline">
+                IISc Badminton Club
+              </span>
             </div>
           </Link>
 
