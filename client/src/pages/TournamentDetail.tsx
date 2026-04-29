@@ -25,25 +25,31 @@ export default function TournamentDetail() {
           <div className="grid md:grid-cols-2 gap-8">
 
             <Card className="rounded-3xl shadow-md h-full">
-              <CardContent className="p-10">
-                <h2 className="text-3xl font-bold text-blue-900 mb-8">
-                  Final Podium
-                </h2>
+          <CardContent className="p-10">
+            <h2 className="text-3xl font-bold text-blue-900 mb-8">
+              Final Podium
+            </h2>
 
-                <div className="space-y-5 text-xl">
-                  <div className="rounded-2xl bg-yellow-50 border border-yellow-200 px-5 py-4">
-                    🥇 UG Seniors
-                  </div>
+            <div className="space-y-5 text-xl">
 
-                  <div className="rounded-2xl bg-gray-50 border border-gray-200 px-5 py-4">
-                    🥈 CeNSE
-                  </div>
+              <div className="rounded-2xl bg-yellow-50 border border-yellow-200 px-5 py-4">
+                🥇 UG Seniors
+              </div>
 
-                  <div className="rounded-2xl bg-orange-50 border border-orange-200 px-5 py-4">
-                    🥉 ECE
-                  </div>
-                </div>
-              </CardContent>
+              <div className="rounded-2xl bg-gray-50 border border-gray-200 px-5 py-4">
+                🥈 CeNSE
+              </div>
+
+              <div className="rounded-2xl bg-orange-50 border border-orange-200 px-5 py-4">
+                🥉 ECE
+              </div>
+
+              <div className="rounded-2xl bg-blue-50 border border-blue-200 px-5 py-4">
+                4️⃣ AE
+              </div>
+
+            </div>
+          </CardContent>
             </Card>
 
             <Card className="rounded-3xl shadow-md h-full">
