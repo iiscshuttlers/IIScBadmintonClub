@@ -101,12 +101,15 @@ export default function TournamentDetail() {
               <div className="grid md:grid-cols-2 gap-8">
 
                 <div className="space-y-8">
+
                   <div>
                     <h3 className="text-2xl font-semibold text-blue-800 mb-2">
                       Men Singles
                     </h3>
                     <p>🥇 Krishnendu</p>
                     <p>🥈 Piyush</p>
+                    <p>🥉 Abhishek Sampath</p>
+                    <p>🥉 Manish</p>
                   </div>
 
                   <div>
@@ -115,6 +118,8 @@ export default function TournamentDetail() {
                     </h3>
                     <p>🥇 Tanisha</p>
                     <p>🥈 Shailli</p>
+                    <p>🥉 Radhika</p>
+                    <p>🥉 Sharanya Marathe</p>
                   </div>
 
                   <div>
@@ -123,16 +128,22 @@ export default function TournamentDetail() {
                     </h3>
                     <p>🥇 Abhisek & Krishnendu</p>
                     <p>🥈 Raja & Kaling</p>
+                    <p>🥉 Bhuppi & Piyush</p>
+                    <p>🥉 Shiv Pratap & Shubham</p>
                   </div>
+
                 </div>
 
                 <div className="space-y-8">
+
                   <div>
                     <h3 className="text-2xl font-semibold text-blue-800 mb-2">
                       Women Doubles
                     </h3>
                     <p>🥇 Renu & Shailli</p>
                     <p>🥈 Radhika & Madhuvanti</p>
+                    <p>🥉 Sonali & Somili</p>
+                    <p>🥉 Shruti & Jefrin</p>
                   </div>
 
                   <div>
@@ -141,7 +152,10 @@ export default function TournamentDetail() {
                     </h3>
                     <p>🥇 Radhika & Raja</p>
                     <p>🥈 Shailli & Krishnendu</p>
+                    <p>🥉 Tanisha & Abhisek</p>
+                    <p>🥉 Sayoni & Piyush</p>
                   </div>
+
                 </div>
 
               </div>
