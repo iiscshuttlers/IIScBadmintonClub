@@ -189,7 +189,7 @@ export default function Announcements() {
                   >
                     {cat.label}
                   </button>
-                })}
+                ))}
               </div>
             </div>
           </section>
