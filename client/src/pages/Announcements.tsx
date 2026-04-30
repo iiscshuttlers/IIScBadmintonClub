@@ -31,8 +31,16 @@ export default function Announcements() {
     })
       .then((res) => res.json())
       .then((data) => {
-        setPinnedAnnouncements(data.pinned || []);
-        setRecentAnnouncements(sortByNewest(data.recent || []));
+      const allAnnouncements = data.recent || [];
+
+      const pinned = allAnnouncements.filter((item: Announcement) => {
+        const status = getStatus(item);
+
+        return status === 'ongoing' || status === 'upcoming';
+      });
+
+      setPinnedAnnouncements(sortByNewest(pinned));
+      setRecentAnnouncements(sortByNewest(allAnnouncements));
         setLoading(false);
       })
       .catch((err) => {
