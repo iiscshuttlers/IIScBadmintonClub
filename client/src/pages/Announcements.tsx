@@ -5,7 +5,9 @@ import { Calendar, Bell, Pin } from 'lucide-react';
 
 type Announcement = {
   title: string;
-  date: string;
+  date?: string;
+  startDate?: string;
+  endDate?: string;
   category: string;
   content: string;
 };
@@ -24,7 +26,9 @@ export default function Announcements() {
   }
 
   useEffect(() => {
-    fetch(`${import.meta.env.BASE_URL}data/announcements.json`)
+    fetch(`${import.meta.env.BASE_URL}data/announcements.json?v=1`, {
+      cache: 'no-store'
+    })
       .then((res) => res.json())
       .then((data) => {
         setPinnedAnnouncements(data.pinned || []);
@@ -54,8 +58,43 @@ export default function Announcements() {
     selectedCategory === 'all'
       ? recentAnnouncements
       : recentAnnouncements.filter(
-          (item) => item.category === selectedCategory
-        );
+        (item) => item.category === selectedCategory
+      );
+
+  function getStatus(item: Announcement) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (item.startDate && item.endDate) {
+      const start = new Date(item.startDate);
+      const end = new Date(item.endDate);
+
+      start.setHours(0, 0, 0, 0);
+      end.setHours(0, 0, 0, 0);
+
+      if (today < start) return 'upcoming';
+      if (today >= start && today <= end) return 'ongoing';
+      return 'past';
+    }
+
+    if (item.date) {
+      const date = new Date(item.date);
+      date.setHours(0, 0, 0, 0);
+
+      if (today < date) return 'upcoming';
+      if (today.getTime() === date.getTime()) return 'ongoing';
+      return 'past';
+    }
+
+    return 'unknown';
+  }
+
+  function getStatusColor(status: string) {
+    if (status === 'upcoming') return 'bg-emerald-100 text-emerald-700';
+    if (status === 'ongoing') return 'bg-blue-100 text-blue-700';
+    if (status === 'past') return 'bg-gray-100 text-gray-600';
+    return 'bg-gray-100 text-gray-600';
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -97,32 +136,39 @@ export default function Announcements() {
                 </h2>
 
                 <div className="space-y-5">
-                  {pinnedAnnouncements.map((item, index) => (
-                    <Card key={index} className="border-2 border-orange-300 hover:shadow-lg transition">
-                      <CardHeader>
-                        <CardTitle className="text-blue-900 text-xl">
-                          {item.title}
-                        </CardTitle>
+                  {pinnedAnnouncements.map((item, index) => {
+                    const status = getStatus(item);
 
-                        <div className="flex flex-wrap gap-3 text-sm text-gray-600 mt-3">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-emerald-500" />
-                            {item.date}
+                    return (
+                      <Card key={index} className="border-2 border-orange-300 hover:shadow-lg transition">
+                        <CardHeader>
+                          <CardTitle className="text-blue-900 text-xl">
+                            {item.title}
+                          </CardTitle>
+
+                          <div className="flex flex-wrap gap-3 text-sm text-gray-600 mt-3">
+                            <div className="flex items-center gap-2">
+                              <Calendar className="w-4 h-4 text-emerald-500" />
+                              {item.date}
+                            </div>
+
+                            <Badge className={getCategoryColor(item.category)}>
+                              {item.category}
+                            </Badge>
+                            <Badge className={getStatusColor(status)}>
+                              {status}
+                            </Badge>
                           </div>
-
-                          <Badge className={getCategoryColor(item.category)}>
-                            {item.category}
-                          </Badge>
-                        </div>
-                      </CardHeader>
-
-                      <CardContent>
-                        <p className="text-gray-700 leading-relaxed">
-                          {item.content}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </CardHeader>
+                        <CardContent>
+                          <p
+                            className="text-gray-700 leading-relaxed"
+                            dangerouslySetInnerHTML={{ __html: item.content }}
+                          />
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               </div>
             </section>
@@ -136,15 +182,14 @@ export default function Announcements() {
                   <button
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
-                    className={`px-5 py-2 rounded-full font-semibold transition ${
-                      selectedCategory === cat.id
+                    className={`px-5 py-2 rounded-full font-semibold transition ${selectedCategory === cat.id
                         ? 'bg-emerald-500 text-white shadow-md'
                         : `${cat.color} hover:shadow`
-                    }`}
+                      }`}
                   >
                     {cat.label}
                   </button>
-                ))}
+                })}
               </div>
             </div>
           </section>
@@ -168,32 +213,40 @@ export default function Announcements() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {filteredRecent.map((item, index) => (
-                    <Card key={index} className="border border-gray-200 hover:shadow-lg transition">
-                      <CardHeader>
-                        <CardTitle className="text-blue-900 text-lg">
-                          {item.title}
-                        </CardTitle>
+                  {filteredRecent.map((item, index) => {
+                    const status = getStatus(item);
 
-                        <div className="flex flex-wrap gap-3 text-sm text-gray-600 mt-2">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-emerald-500" />
-                            {item.date}
+                    return (
+                      <Card key={index} className="border border-gray-200 hover:shadow-lg transition">
+                        <CardHeader>
+                          <CardTitle className="text-blue-900 text-lg">
+                            {item.title}
+                          </CardTitle>
+
+                          <div className="flex flex-wrap gap-3 text-sm text-gray-600 mt-2">
+                            <div className="flex items-center gap-2">
+                              <Calendar className="w-4 h-4 text-emerald-500" />
+                              {item.date}
+                            </div>
+
+                            <Badge className={getCategoryColor(item.category)}>
+                              {item.category}
+                            </Badge>
+                            <Badge className={getStatusColor(status)}>
+                              {status}
+                            </Badge>
                           </div>
+                        </CardHeader>
 
-                          <Badge className={getCategoryColor(item.category)}>
-                            {item.category}
-                          </Badge>
-                        </div>
-                      </CardHeader>
-
-                      <CardContent>
-                        <p className="text-gray-700 text-sm leading-relaxed">
-                          {item.content}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        <CardContent>
+                          <p
+                            className="text-gray-700 text-sm leading-relaxed"
+                            dangerouslySetInnerHTML={{ __html: item.content }}
+                          />
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               )}
             </div>
