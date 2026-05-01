@@ -82,6 +82,34 @@ export default function Events() {
       </section>
 
       <section className="py-16 container mx-auto px-4 space-y-16">
+      <div className="mb-12">
+        <Link href="/events/farewell-match">
+          <Card className="rounded-3xl border-2 border-blue-400 shadow-lg bg-gradient-to-r from-blue-100 to-emerald-100 hover:shadow-xl hover:-translate-y-1 transition duration-300 cursor-pointer">
+            <CardContent className="p-10 space-y-4 text-center">
+
+              <span className="px-4 py-1 rounded-full bg-blue-900 text-white text-sm font-bold">
+                🎉 Special Event
+              </span>
+
+              <h2 className="text-4xl font-bold text-blue-900">
+                Farewell Badminton Match 🏸
+              </h2>
+
+              <p className="text-lg text-gray-700 max-w-2xl mx-auto">
+                Join us for a fun mixed doubles farewell for the outgoing batch.
+                Quick matches, great vibes, and memorable rallies.
+              </p>
+
+              <div className="pt-4">
+                <span className="inline-block bg-blue-900 text-white px-6 py-3 rounded-xl font-semibold">
+                  Register Now →
+                </span>
+              </div>
+
+            </CardContent>
+          </Card>
+        </Link>
+      </div>      
 
         {loading && (
           <p className="text-center text-gray-500 text-lg">
