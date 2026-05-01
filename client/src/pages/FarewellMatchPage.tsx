@@ -12,7 +12,7 @@ export default function FarewellMatchPage() {
       {/* QR CODE */}
       <div className="flex flex-col items-center mb-10">
         <img
-          src="/farewell-qr.png"   // 👉 put your QR image in public folder
+          src="/iiscshuttlers/farewell-qr.png"   {/* ✅ FIXED path for GitHub Pages */}
           alt="Scan to Register"
           className="w-72 md:w-96 rounded-2xl shadow-lg bg-white p-4"
         />
@@ -29,7 +29,7 @@ export default function FarewellMatchPage() {
       {/* EMBED FORM */}
       <div className="max-w-4xl mx-auto bg-white rounded-2xl overflow-hidden shadow-xl">
         <iframe
-          src="https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=l80Vb6f240Gyxa1Bk5dkdjlbEJEXeeNOpPakbLe44QpUME1XNlgyTzYwQThTTEVIWEdKNU03MzlHRC4u&embed=true"
+          src="https://forms.office.com/Pages/ResponsePage.aspx?id=l80Vb6f240Gyxa1Bk5dkdjlbEJEXeeNOpPakbLe44QpUME1XNlgyTzYwQThTTEVIWEdKNU03MzlHRC4u&embed=true"
           className="w-full h-[80vh]"
           frameBorder="0"
           title="Farewell Match Registration"
@@ -39,8 +39,9 @@ export default function FarewellMatchPage() {
       {/* FALLBACK BUTTON */}
       <div className="text-center mt-6">
         <a
-          href="https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=l80Vb6f240Gyxa1Bk5dkdjlbEJEXeeNOpPakbLe44QpUME1XNlgyTzYwQThTTEVIWEdKNU03MzlHRC4u"
+          href="https://forms.office.com/Pages/ResponsePage.aspx?id=l80Vb6f240Gyxa1Bk5dkdjlbEJEXeeNOpPakbLe44QpUME1XNlgyTzYwQThTTEVIWEdKNU03MzlHRC4u"
           target="_blank"
+          rel="noopener noreferrer"
           className="inline-block bg-white text-blue-700 px-6 py-3 rounded-xl font-semibold hover:scale-105 transition"
         >
           Open Form in New Tab
