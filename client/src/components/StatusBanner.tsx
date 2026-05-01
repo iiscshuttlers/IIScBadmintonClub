@@ -1,32 +1,88 @@
-// client/src/components/StatusBanner.tsx
+import { useEffect, useState } from "react";
 
-import { useEffect, useState } from 'react';
+type Holiday = { date: string; name: string };
+type Event = {
+  date: string;
+  title: string;
+  link: string;
+  registrationDeadline?: string;
+};
 
 export default function StatusBanner() {
-  const [holiday, setHoliday] = useState<any>(null);
+  const [messages, setMessages] = useState<string[]>([]);
+  const [index, setIndex] = useState(0);
+  const [bg, setBg] = useState("bg-green-600");
+
+  const today = new Date().toLocaleDateString("en-CA", {
+    timeZone: "Asia/Kolkata",
+  });
+
+  const tomorrowDate = new Date();
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+
+  const tomorrow = tomorrowDate.toLocaleDateString("en-CA", {
+    timeZone: "Asia/Kolkata",
+  });
 
   useEffect(() => {
-    fetch(`${import.meta.env.BASE_URL}data/holidays.json`)
-      .then((res) => res.json())
-      .then((data) => {
-        const today = new Date().toLocaleDateString('en-CA', {
-          timeZone: 'Asia/Kolkata',
-        });
+    Promise.all([
+      fetch(`${import.meta.env.BASE_URL}data/holidays.json`).then(res => res.json()),
+      fetch(`${import.meta.env.BASE_URL}data/events.json`).then(res => res.json()),
+    ]).then(([holidays, events]) => {
+      let msgs: string[] = [];
 
-        const todayHoliday = data.find((h: any) => h.date === today);
+      const todayHoliday = holidays.find((h: Holiday) => h.date === today);
+      const tomorrowHoliday = holidays.find((h: Holiday) => h.date === tomorrow);
 
-        if (todayHoliday) {
-          setHoliday(todayHoliday);
+      // 🔴 Today closed
+      if (todayHoliday) {
+        msgs.push(`🏸 Courts closed today – ${todayHoliday.name}`);
+        setBg("bg-red-600");
+      } else {
+        msgs.push(`🏸 Courts open today`);
+      }
+
+      // 🟡 Tomorrow warning
+      if (tomorrowHoliday) {
+        msgs.push(`⚠️ Closed tomorrow – ${tomorrowHoliday.name}`);
+      }
+
+      // 🔵 Events
+      events.forEach((e: Event) => {
+        const diff =
+          (new Date(e.date).getTime() - new Date(today).getTime()) /
+          (1000 * 3600 * 24);
+
+        if (diff >= 0 && diff <= 7) {
+          msgs.push(`🎉 ${e.title} → Register`);
         }
-      })
-      .catch((err) => console.error(err));
+
+        // 🔔 Last day to register
+        if (e.registrationDeadline === today) {
+          msgs.push(`⚡ Last day to register – ${e.title}`);
+        }
+      });
+
+      setMessages(msgs);
+    });
   }, []);
 
-  if (!holiday) return null;
+  // 🔁 Rotation
+  useEffect(() => {
+    if (messages.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % messages.length);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [messages]);
+
+  if (!messages.length) return null;
 
   return (
-    <div className="bg-red-600 text-white text-center py-3 text-sm font-semibold animate-pulse">
-      🏸 Courts closed today – {holiday.name}
+    <div className={`${bg} text-white text-center py-2 text-sm font-semibold transition-all`}>
+      {messages[index]}
     </div>
   );
 }

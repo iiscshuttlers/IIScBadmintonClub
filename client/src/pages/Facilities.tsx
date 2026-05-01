@@ -5,11 +5,22 @@ import { CheckCircle, Clock, MapPin, Trophy, Users } from 'lucide-react';
 export default function Facilities() {
 
   const [holidays, setHolidays] = useState<any[]>([]);
+  const [nextHoliday, setNextHoliday] = useState<any>(null);
 
   useEffect(() => {
     fetch(`${import.meta.env.BASE_URL}data/holidays.json`)
       .then(res => res.json())
-      .then(data => setHolidays(data))
+      .then(data => {
+        setHolidays(data);
+
+        // 🔥 Find next upcoming holiday
+        const today = new Date().toLocaleDateString("en-CA", {
+          timeZone: "Asia/Kolkata",
+        });
+
+        const upcoming = data.find((h: any) => h.date >= today);
+        setNextHoliday(upcoming);
+      })
       .catch(err => console.error("Error loading holidays:", err));
   }, []);
 
@@ -127,6 +138,17 @@ export default function Facilities() {
             Court Closure Days – 2026
           </h2>
 
+          {/* 🔥 NEW: Next Holiday Highlight */}
+          {nextHoliday && (
+            <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl text-center mb-8 shadow-sm">
+              <span className="font-semibold text-blue-900">
+                Next Closure:
+              </span>{" "}
+              {nextHoliday.name} ({nextHoliday.date})
+            </div>
+          )}
+
+          {/* Existing Grid */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
 
             {holidays.map((h, i) => (
@@ -134,13 +156,11 @@ export default function Facilities() {
                 key={i}
                 className="bg-white rounded-2xl shadow-md hover:shadow-xl transition p-6 text-center"
               >
-                <div className="text-sm text-gray-500">{h.month}</div>
-
-                <div className="text-3xl font-bold text-red-500 my-2">
+                <div className="text-sm text-gray-500">
                   {h.date}
                 </div>
 
-                <div className="text-sm font-semibold text-blue-900">
+                <div className="text-sm font-semibold text-blue-900 mt-2">
                   {h.name}
                 </div>
               </div>
