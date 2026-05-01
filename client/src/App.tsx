@@ -2,6 +2,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/NotFound';
 import { Route, Switch, Router } from 'wouter';
+<Router base="/iiscshuttlers" hook={useHashLocation}>
 import ErrorBoundary from './components/ErrorBoundary';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Home from './pages/Home';
@@ -23,9 +24,9 @@ function AppRoutes() {
       <Route path="/about" component={About} />
       <Route path="/facilities" component={Facilities} />
       <Route path="/events" component={Events} />
+      <Route path="/events/farewell-match" element={<FarewellMatchPage />} />
       <Route path="/events/:slug" component={TournamentDetail} />
       <Route path="/announcements" component={Announcements} />
-      <Route path="/events/farewell-match" element={<FarewellMatchPage />} />
       <Route path="/gallery" component={Gallery} />
       <Route path="/contact" component={Contact} />
       <Route path="/404" component={NotFound} />
