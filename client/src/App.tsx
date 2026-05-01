@@ -2,7 +2,8 @@ import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/NotFound';
 import { Route, Switch, Router } from 'wouter';
-<Router base="/iiscshuttlers" hook={useHashLocation}>
+import { useHashLocation } from "wouter/use-hash-location"; // ✅ ADD THIS
+
 import ErrorBoundary from './components/ErrorBoundary';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Home from './pages/Home';
@@ -23,12 +24,18 @@ function AppRoutes() {
       <Route path="/" component={Home} />
       <Route path="/about" component={About} />
       <Route path="/facilities" component={Facilities} />
+
       <Route path="/events" component={Events} />
-      <Route path="/events/farewell-match" element={<FarewellMatchPage />} />
+
+      {/* ✅ IMPORTANT: specific route BEFORE slug */}
+      <Route path="/events/farewell-match" component={FarewellMatchPage} />
+
       <Route path="/events/:slug" component={TournamentDetail} />
+
       <Route path="/announcements" component={Announcements} />
       <Route path="/gallery" component={Gallery} />
       <Route path="/contact" component={Contact} />
+
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
@@ -41,7 +48,9 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
-          <Router base="/iiscshuttlers">
+
+          {/* ✅ FIXED ROUTER */}
+          <Router base="/iiscshuttlers" hook={useHashLocation}>
             <div className="flex flex-col min-h-screen">
               <Navigation />
               <main className="flex-1">
@@ -50,6 +59,7 @@ function App() {
               <Footer />
             </div>
           </Router>
+
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
