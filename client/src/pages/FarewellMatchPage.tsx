@@ -11,11 +11,14 @@ export default function FarewellMatchPage() {
 
       {/* QR CODE */}
       <div className="flex flex-col items-center mb-10">
+        
+        {/* ✅ FIXED path for GitHub Pages */}
         <img
-          src="/iiscshuttlers/farewell-qr.png"   {/* ✅ FIXED path for GitHub Pages */}
+          src="/iiscshuttlers/farewell-qr.png"
           alt="Scan to Register"
           className="w-72 md:w-96 rounded-2xl shadow-lg bg-white p-4"
         />
+
         <p className="mt-4 text-lg opacity-90">
           Scan to register instantly
         </p>
