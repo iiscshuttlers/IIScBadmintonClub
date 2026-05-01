@@ -25,13 +25,11 @@ function AppRoutes() {
       <Route path="/about" component={About} />
       <Route path="/facilities" component={Facilities} />
 
-      {/* 🔥 MOST SPECIFIC FIRST */}
       <Route path="/events/farewell-match" component={FarewellMatchPage} />
-
       <Route path="/events/:slug" component={TournamentDetail} />
-
-      {/* 🔥 GENERIC LAST */}
-      <Route path="/events" component={Events} />
+      <Route path="/events" nest>
+        <Events />
+      </Route>
 
       <Route path="/announcements" component={Announcements} />
       <Route path="/gallery" component={Gallery} />
