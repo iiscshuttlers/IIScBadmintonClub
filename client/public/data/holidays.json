@@ -1,12 +1,12 @@
 [
-  { "month": "Jan", "date": "26", "name": "Republic Day" },
-  { "month": "Mar", "date": "19", "name": "Ugadi" },
-  { "month": "May", "date": "27", "name": "Id-ul-Zuha (Bakrid)" },
-  { "month": "Aug", "date": "15", "name": "Independence Day" },
-  { "month": "Aug", "date": "28", "name": "Varamahalakshmi Festival" },
-  { "month": "Sep", "date": "14", "name": "Ganesha Chaturthi" },
-  { "month": "Oct", "date": "02", "name": "Mahatma Gandhi Jayanti" },
-  { "month": "Oct", "date": "20", "name": "Dussehra (Vijaya Dasami)" },
-  { "month": "Nov", "date": "09", "name": "Diwali (Deepavali)" },
-  { "month": "Dec", "date": "25", "name": "Christmas Day" }
+  { "date": "2026-01-26", "name": "Republic Day" },
+  { "date": "2026-03-19", "name": "Ugadi" },
+  { "date": "2026-05-27", "name": "Id-ul-Zuha" },
+  { "date": "2026-08-15", "name": "Independence Day" },
+  { "date": "2026-08-28", "name": "Varamahalakshmi Festival" },
+  { "date": "2026-09-14", "name": "Ganesha Chaturthi" },
+  { "date": "2026-10-02", "name": "Gandhi Jayanti" },
+  { "date": "2026-10-20", "name": "Dussehra" },
+  { "date": "2026-11-09", "name": "Diwali" },
+  { "date": "2026-12-25", "name": "Christmas" }
 ]

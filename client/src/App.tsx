@@ -3,6 +3,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/NotFound';
 import { Route, Switch, Router } from 'wouter';
 import { useHashLocation } from 'wouter/use-hash-location'; // ✅ ADD THIS
+import StatusBanner from "@/components/StatusBanner";
 
 import ErrorBoundary from './components/ErrorBoundary';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -54,6 +55,7 @@ function App() {
           <Router base="/iiscshuttlers" hook={useHashLocation}>
             <div className="flex flex-col min-h-screen">
               <Navigation />
+              <StatusBanner />   {/* 🔥 ADD HERE */}
               <main className="flex-1">
                 <AppRoutes />
               </main>
