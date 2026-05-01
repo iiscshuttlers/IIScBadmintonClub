@@ -1,16 +1,18 @@
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, Clock, MapPin, Trophy, Users } from 'lucide-react';
 
-/**
- * Facilities Page
- * Improved version:
- * - Removed excessive white space
- * - Better section flow
- * - Added map button
- * - Better membership layout
- * - More premium look
- */
 export default function Facilities() {
+
+  const [holidays, setHolidays] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch(`${import.meta.env.BASE_URL}data/holidays.json`)
+      .then(res => res.json())
+      .then(data => setHolidays(data))
+      .catch(err => console.error("Error loading holidays:", err));
+  }, []);
+
   const facilities = [
     {
       title: 'Indoor Courts',
@@ -106,10 +108,50 @@ export default function Facilities() {
                     </div>
                   </div>
                 ))}
+
+                <p className="text-sm text-red-500">
+                  Closed on Gymkhana holidays (see below)
+                </p>
               </CardContent>
             </Card>
 
           </div>
+        </div>
+      </section>
+
+      {/* 🔥 COURT CLOSURE DAYS */}
+      <section className="py-14 bg-gray-50">
+        <div className="container mx-auto px-4 max-w-6xl">
+
+          <h2 className="text-3xl font-bold text-center text-blue-900 mb-10">
+            Court Closure Days – 2026
+          </h2>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+
+            {holidays.map((h, i) => (
+              <div
+                key={i}
+                className="bg-white rounded-2xl shadow-md hover:shadow-xl transition p-6 text-center"
+              >
+                <div className="text-sm text-gray-500">{h.month}</div>
+
+                <div className="text-3xl font-bold text-red-500 my-2">
+                  {h.date}
+                </div>
+
+                <div className="text-sm font-semibold text-blue-900">
+                  {h.name}
+                </div>
+              </div>
+            ))}
+
+          </div>
+
+          <div className="mt-8 text-center text-sm text-gray-600">
+            * Dates may change as per Government announcements
+          </div>
+
         </div>
       </section>
 
