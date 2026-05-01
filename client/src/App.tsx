@@ -2,7 +2,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/NotFound';
 import { Route, Switch, Router } from 'wouter';
-import { useHashLocation } from "wouter/use-hash-location"; // ✅ ADD THIS
+import { useHashLocation } from 'wouter/use-hash-location'; // ✅ ADD THIS
 
 import ErrorBoundary from './components/ErrorBoundary';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -25,12 +25,13 @@ function AppRoutes() {
       <Route path="/about" component={About} />
       <Route path="/facilities" component={Facilities} />
 
-      <Route path="/events" component={Events} />
-
-      {/* ✅ IMPORTANT: specific route BEFORE slug */}
+      {/* 🔥 MOST SPECIFIC FIRST */}
       <Route path="/events/farewell-match" component={FarewellMatchPage} />
 
       <Route path="/events/:slug" component={TournamentDetail} />
+
+      {/* 🔥 GENERIC LAST */}
+      <Route path="/events" component={Events} />
 
       <Route path="/announcements" component={Announcements} />
       <Route path="/gallery" component={Gallery} />
@@ -59,7 +60,6 @@ function App() {
               <Footer />
             </div>
           </Router>
-
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
