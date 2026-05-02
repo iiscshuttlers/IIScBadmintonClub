@@ -33,11 +33,16 @@ export default function TournamentBrackets() {
   const [lastUpdate, setLastUpdate] = useState(new Date());
 
   // Load bracket structure (one-time)
-  useEffect(() => {
-    fetch('/bracket-structure.json')
-      .then(res => res.json())
-      .then(data => setBracketStructure(data));
-  }, []);
+  // Load bracket structure
+    useEffect(() => {
+      fetch('/bracket-structure.json')
+        .then(res => {
+          if (!res.ok) throw new Error("Could not load bracket JSON");
+          return res.json();
+        })
+        .then(data => setBracketStructure(data))
+        .catch(err => console.error("Bracket structure error:", err));
+    }, []);
 
   // Load match data from Google Sheets
   useEffect(() => {
