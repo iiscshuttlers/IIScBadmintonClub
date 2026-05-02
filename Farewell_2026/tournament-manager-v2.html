@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IISc Farewell Tournament Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        .tab-button { transition: all 0.3s; }
+        .tab-button.active { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-emerald-50 min-h-screen">
+    <div id="app" class="p-4 md:p-8">
+        <!-- Header -->
+        <div class="max-w-7xl mx-auto mb-6">
+            <div class="bg-white rounded-xl shadow-xl p-6 border-t-4 border-emerald-600">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <h1 class="text-3xl md:text-4xl font-bold text-gray-800 flex items-center gap-3">
+                            <span class="text-4xl">🏸</span>
+                            IISc Farewell Tournament Manager
+                        </h1>
+                        <p class="text-gray-600 mt-2">Upload Excel → Create Matches → Track Scores</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <label class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer flex items-center gap-2">
+                            <span>📤</span> Import Excel
+                            <input type="file" id="importExcel" accept=".xlsx,.xls" class="hidden" onchange="importExcel(event)">
+                        </label>
+                        <button onclick="exportToExcel()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-2">
+                            <span>📥</span> Export Excel
+                        </button>
+                        <button onclick="exportForWebsite()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2">
+                            <span>🌐</span> Export for Website
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Format Tabs -->
+        <div class="max-w-7xl mx-auto mb-6">
+            <div class="bg-white rounded-xl shadow-lg p-4">
+                <div class="flex flex-wrap gap-2" id="formatTabs">
+                    <button class="tab-button active px-6 py-3 rounded-lg font-semibold" onclick="switchFormat('MS')">
+                        MS - Men's Singles
+                    </button>
+                    <button class="tab-button px-6 py-3 rounded-lg font-semibold" onclick="switchFormat('WS')">
+                        WS - Women's Singles
+                    </button>
+                    <button class="tab-button px-6 py-3 rounded-lg font-semibold" onclick="switchFormat('XD')">
+                        XD - Mixed Doubles
+                    </button>
+                    <button class="tab-button px-6 py-3 rounded-lg font-semibold" onclick="switchFormat('MD')">
+                        MD - Men's Doubles
+                    </button>
+                    <button class="tab-button px-6 py-3 rounded-lg font-semibold" onclick="switchFormat('WD')">
+                        WD - Women's Doubles
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <!-- Left Panel: Players/Teams List -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-xl shadow-lg p-6 sticky top-4">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4" id="playersTitle">Players</h2>
+                        <div id="playersList" class="space-y-2 max-h-96 overflow-y-auto"></div>
+                        
+                        <div class="mt-6 p-4 bg-blue-50 rounded-lg text-sm">
+                            <h3 class="font-semibold text-blue-900 mb-2">Quick Stats</h3>
+                            <div id="statsContent"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Panel: Matches -->
+                <div class="lg:col-span-3">
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-2xl font-bold text-gray-800">Matches</h2>
+                            <button onclick="openAddMatchModal()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-2">
+                                <span>➕</span> Add Match
+                            </button>
+                        </div>
+                        <div id="matchesTable" class="overflow-x-auto"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Match Modal -->
+    <div id="addMatchModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Add New Match</h2>
+                <button onclick="closeAddMatchModal()" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+            </div>
+
+            <form id="addMatchForm" class="space-y-4">
+                <!-- Match ID (auto-generated) -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Match ID</label>
+                    <input type="text" id="newMatchId" readonly class="w-full px-3 py-2 border rounded-lg bg-gray-100" value="">
+                </div>
+
+                <!-- Round & Match Type -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Round</label>
+                        <select id="newRound" class="w-full px-3 py-2 border rounded-lg" onchange="updateMatchSettings()">
+                            <option value="League">League</option>
+                            <option value="Semi Finals">Semi Finals</option>
+                            <option value="Final">Final</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Match Type</label>
+                        <select id="newMatchType" class="w-full px-3 py-2 border rounded-lg" onchange="updatePointsAndSets()">
+                            <option value="League">League</option>
+                            <option value="KO1">Knockout 1 (Semi)</option>
+                            <option value="KO2">Knockout 2 (Final)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Points & Sets -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Points per Set</label>
+                        <input type="number" id="newPointsPerSet" class="w-full px-3 py-2 border rounded-lg" value="21">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Best of Sets</label>
+                        <select id="newBestOfSets" class="w-full px-3 py-2 border rounded-lg">
+                            <option value="1">Best of 1</option>
+                            <option value="3">Best of 3</option>
+                            <option value="5">Best of 5</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Player/Team Selection -->
+                <div id="playerSelection" class="grid grid-cols-2 gap-4">
+                    <!-- Will be populated based on format -->
+                </div>
+
+                <!-- Date, Day, Time -->
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Date</label>
+                        <input type="date" id="newDate" class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Day</label>
+                        <input type="text" id="newDay" readonly class="w-full px-3 py-2 border rounded-lg bg-gray-100">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Time</label>
+                        <input type="time" id="newTime" class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                </div>
+
+                <!-- Court -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Court</label>
+                    <select id="newCourt" class="w-full px-3 py-2 border rounded-lg">
+                        <option value="">Select Court</option>
+                        <option value="Court 1">Court 1</option>
+                        <option value="Court 2">Court 2</option>
+                        <option value="Court 3">Court 3</option>
+                        <option value="Court 4">Court 4</option>
+                    </select>
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex gap-3 pt-4">
+                    <button type="button" onclick="saveNewMatch()" class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
+                        Save Match
+                    </button>
+                    <button type="button" onclick="closeAddMatchModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let tournamentData = {
+            players: {},
+            config: {},
+            matches: {}
+        };
+        let currentFormat = 'MS';
+
+        // Match type configurations
+        const matchTypeConfig = {
+            'League': { points: 15, sets: 1 },
+            'KO1': { points: 21, sets: 1 },
+            'KO2': { points: 21, sets: 3 }
+        };
+
+        // Initialize
+        function initializeEmpty() {
+            const formats = ['MS', 'WS', 'XD', 'MD', 'WD'];
+            formats.forEach(fmt => {
+                tournamentData.players[fmt] = [];
+                tournamentData.matches[fmt] = [];
+                tournamentData.config[fmt] = {
+                    Format: fmt,
+                    Points_League: 21,
+                    Points_Knockout: 21,
+                    Sets_League: 1,
+                    Sets_Knockout: 1
+                };
+            });
+            renderCurrentFormat();
+        }
+
+        // Auto-update day when date changes
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateInput = document.getElementById('newDate');
+            if (dateInput) {
+                dateInput.addEventListener('change', function() {
+                    const date = new Date(this.value);
+                    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                    document.getElementById('newDay').value = days[date.getDay()];
+                });
+            }
+        });
+
+        // Import Excel
+        function importExcel(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+
+                // Read players
+                ['MS', 'WS', 'XD', 'MD', 'WD'].forEach(format => {
+                    const sheetName = `${format}_Players`;
+                    if (workbook.SheetNames.includes(sheetName)) {
+                        const sheet = workbook.Sheets[sheetName];
+                        const jsonData = XLSX.utils.sheet_to_json(sheet);
+                        tournamentData.players[format] = jsonData;
+                    }
+                });
+
+                // Read config
+                if (workbook.SheetNames.includes('Tournament_Config')) {
+                    const sheet = workbook.Sheets['Tournament_Config'];
+                    const jsonData = XLSX.utils.sheet_to_json(sheet);
+                    jsonData.forEach(row => {
+                        tournamentData.config[row.Format] = row;
+                    });
+                }
+
+                // Read matches
+                ['MS', 'WS', 'XD', 'MD', 'WD'].forEach(format => {
+                    const sheetName = `${format}_Matches`;
+                    if (workbook.SheetNames.includes(sheetName)) {
+                        const sheet = workbook.Sheets[sheetName];
+                        let jsonData = XLSX.utils.sheet_to_json(sheet);
+                        // Filter out example rows
+                        jsonData = jsonData.filter(row => 
+                            row.Match_ID && 
+                            !row.Match_ID.toString().toLowerCase().includes('example') &&
+                            !row.Player_1?.toString().toLowerCase().includes('dropdown') &&
+                            !row.Player_1?.toString().toLowerCase().includes('select')
+                        );
+                        tournamentData.matches[format] = jsonData;
+                    }
+                });
+
+                renderCurrentFormat();
+                alert('✅ Excel file imported successfully!');
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Export to Excel
+        function exportToExcel() {
+            const wb = XLSX.utils.book_new();
+
+            // Add players sheets
+            ['MS', 'WS', 'XD', 'MD', 'WD'].forEach(format => {
+                if (tournamentData.players[format] && tournamentData.players[format].length > 0) {
+                    const ws = XLSX.utils.json_to_sheet(tournamentData.players[format]);
+                    XLSX.utils.book_append_sheet(wb, ws, `${format}_Players`);
+                }
+            });
+
+            // Add config
+            if (Object.keys(tournamentData.config).length > 0) {
+                const configArray = Object.values(tournamentData.config);
+                const ws = XLSX.utils.json_to_sheet(configArray);
+                XLSX.utils.book_append_sheet(wb, ws, 'Tournament_Config');
+            }
+
+            // Add matches sheets
+            ['MS', 'WS', 'XD', 'MD', 'WD'].forEach(format => {
+                if (tournamentData.matches[format] && tournamentData.matches[format].length > 0) {
+                    const ws = XLSX.utils.json_to_sheet(tournamentData.matches[format]);
+                    XLSX.utils.book_append_sheet(wb, ws, `${format}_Matches`);
+                }
+            });
+
+            XLSX.writeFile(wb, `Farewell_Tournament_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+
+        // Export for Website (JSON format)
+        function exportForWebsite() {
+            const websiteData = {
+                formats: ['MS', 'WS', 'XD', 'MD', 'WD'],
+                players: tournamentData.players,
+                matches: tournamentData.matches,
+                config: tournamentData.config,
+                lastUpdated: new Date().toISOString()
+            };
+
+            const dataStr = JSON.stringify(websiteData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'tournament-data.json';
+            link.click();
+            URL.revokeObjectURL(url);
+            
+            alert('✅ JSON exported! Upload this to your website repository.');
+        }
+
+        // Switch format tab
+        function switchFormat(format) {
+            currentFormat = format;
+            
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            renderCurrentFormat();
+        }
+
+        // Render current format
+        function renderCurrentFormat() {
+            renderPlayersList();
+            renderMatchesTable();
+            renderStats();
+        }
+
+        // Render players list
+        function renderPlayersList() {
+            const players = tournamentData.players[currentFormat] || [];
+            const container = document.getElementById('playersList');
+            const title = document.getElementById('playersTitle');
+            
+            if (currentFormat === 'MS' || currentFormat === 'WS') {
+                title.textContent = 'Players';
+                container.innerHTML = players.map((p, idx) => `
+                    <div class="p-2 bg-gray-50 rounded border border-gray-200">
+                        <div class="font-semibold text-gray-800">${p.Player || 'Unknown'}</div>
+                        <div class="text-xs text-gray-600">${p.Department || 'No dept'}</div>
+                    </div>
+                `).join('');
+            } else {
+                title.textContent = 'Teams';
+                container.innerHTML = players.map((p, idx) => `
+                    <div class="p-2 bg-gray-50 rounded border border-gray-200">
+                        <div class="font-semibold text-gray-800">Team ${p.Team_No}</div>
+                        <div class="text-sm text-gray-700">${p.Player_1} / ${p.Player_2}</div>
+                        <div class="text-xs text-gray-600">${p.Department_1 || ''} / ${p.Department_2 || ''}</div>
+                    </div>
+                `).join('');
+            }
+
+            if (players.length === 0) {
+                container.innerHTML = '<div class="text-gray-500 text-sm text-center py-4">No players loaded. Import Excel file.</div>';
+            }
+        }
+
+        // Render matches table
+        function renderMatchesTable() {
+            const matches = tournamentData.matches[currentFormat] || [];
+            const container = document.getElementById('matchesTable');
+            const players = tournamentData.players[currentFormat] || [];
+            
+            if (matches.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-gray-500">
+                        <div class="text-4xl mb-4">🏸</div>
+                        <div class="text-lg">No matches yet</div>
+                        <div class="text-sm">Click "Add Match" to create your first match</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const isSingles = currentFormat === 'MS' || currentFormat === 'WS';
+            
+            let html = '<table class="w-full border-collapse text-sm">';
+            html += '<thead><tr class="bg-emerald-100">';
+            html += '<th class="border p-2">Match ID</th>';
+            html += '<th class="border p-2">Date & Time</th>';
+            html += '<th class="border p-2">Round</th>';
+            html += isSingles ? '<th class="border p-2">Player 1</th>' : '<th class="border p-2">Team 1</th>';
+            html += '<th class="border p-2">Score</th>';
+            html += isSingles ? '<th class="border p-2">Player 2</th>' : '<th class="border p-2">Team 2</th>';
+            html += '<th class="border p-2">Winner</th>';
+            html += '<th class="border p-2">Status</th>';
+            html += '<th class="border p-2">Actions</th>';
+            html += '</tr></thead><tbody>';
+
+            matches.forEach((match, idx) => {
+                const statusColor = match.Status === 'completed' ? 'bg-green-50' :
+                                  match.Status === 'in-progress' ? 'bg-yellow-50' : '';
+                
+                const dateTimeStr = `${match.Day || ''} ${match.Date || ''}<br>${match.Time || ''}`;
+                
+                html += `<tr class="${statusColor}">`;
+                html += `<td class="border p-2 font-mono text-xs">${match.Match_ID}</td>`;
+                html += `<td class="border p-2 text-xs">${dateTimeStr}</td>`;
+                html += `<td class="border p-2 text-xs">${match.Round || 'League'}<br><span class="text-xs text-gray-600">${match.Best_Of_Sets ? 'BO' + match.Best_Of_Sets : ''} ${match.Points_Per_Set ? match.Points_Per_Set + 'pts' : ''}</span></td>`;
+                
+                if (isSingles) {
+                    html += `<td class="border p-2 text-xs">${match.Player_1 || 'TBD'}<br><span class="text-xs text-gray-600">${match.Dept_1 || ''}</span></td>`;
+                    html += `<td class="border p-2"><input type="text" value="${match.Score_1 || ''}" placeholder="21-18" onchange="updateScore('${currentFormat}', ${idx}, 'Score_1', this.value)" class="w-20 p-1 border rounded text-xs"></td>`;
+                    html += `<td class="border p-2 text-xs">${match.Player_2 || 'TBD'}<br><span class="text-xs text-gray-600">${match.Dept_2 || ''}</span></td>`;
+                } else {
+                    const team1 = players.find(p => p.Team_No == match.Team_1);
+                    const team2 = players.find(p => p.Team_2 == match.Team_2);
+                    html += `<td class="border p-2 text-xs">Team ${match.Team_1 || 'TBD'}<br><span class="text-xs text-gray-600">${team1 ? team1.Player_1 + '/' + team1.Player_2 : ''}</span></td>`;
+                    html += `<td class="border p-2"><input type="text" value="${match.Score_1 || ''}" placeholder="21-18" onchange="updateScore('${currentFormat}', ${idx}, 'Score_1', this.value)" class="w-20 p-1 border rounded text-xs"></td>`;
+                    html += `<td class="border p-2 text-xs">Team ${match.Team_2 || 'TBD'}<br><span class="text-xs text-gray-600">${team2 ? team2.Player_1 + '/' + team2.Player_2 : ''}</span></td>`;
+                }
+                
+                html += `<td class="border p-2 font-semibold text-emerald-600 text-xs">${match.Winner || '-'}</td>`;
+                html += `<td class="border p-2">
+                    <select onchange="updateStatus('${currentFormat}', ${idx}, this.value)" class="p-1 border rounded text-xs">
+                        <option value="scheduled" ${match.Status === 'scheduled' ? 'selected' : ''}>Scheduled</option>
+                        <option value="in-progress" ${match.Status === 'in-progress' ? 'selected' : ''}>In Progress</option>
+                        <option value="completed" ${match.Status === 'completed' ? 'selected' : ''}>Completed</option>
+                    </select>
+                </td>`;
+                html += `<td class="border p-2 text-center"><button onclick="deleteMatch('${currentFormat}', ${idx})" class="text-red-600 hover:text-red-800">🗑️</button></td>`;
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // Render stats
+        function renderStats() {
+            const players = tournamentData.players[currentFormat] || [];
+            const matches = tournamentData.matches[currentFormat] || [];
+            const completed = matches.filter(m => m.Status === 'completed').length;
+            const inProgress = matches.filter(m => m.Status === 'in-progress').length;
+            const scheduled = matches.filter(m => m.Status === 'scheduled').length;
+
+            document.getElementById('statsContent').innerHTML = `
+                <div class="space-y-1 text-xs">
+                    <div>Players/Teams: <span class="font-bold">${players.length}</span></div>
+                    <div>Total Matches: <span class="font-bold">${matches.length}</span></div>
+                    <div class="text-green-700">✓ Completed: <span class="font-bold">${completed}</span></div>
+                    <div class="text-yellow-700">⏳ In Progress: <span class="font-bold">${inProgress}</span></div>
+                    <div class="text-gray-700">📅 Scheduled: <span class="font-bold">${scheduled}</span></div>
+                </div>
+            `;
+        }
+
+        // Open add match modal
+        function openAddMatchModal() {
+            const players = tournamentData.players[currentFormat] || [];
+            if (players.length === 0) {
+                alert('Please import Excel file with player data first!');
+                return;
+            }
+
+            const matches = tournamentData.matches[currentFormat] || [];
+            const nextNum = matches.length + 1;
+            document.getElementById('newMatchId').value = `${currentFormat}_${nextNum}`;
+            
+            // Set default match type settings
+            updatePointsAndSets();
+            
+            // Populate player/team dropdowns
+            const isSingles = currentFormat === 'MS' || currentFormat === 'WS';
+            const selectionHtml = isSingles ? `
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Player 1</label>
+                    <select id="newPlayer1" class="w-full px-3 py-2 border rounded-lg" required>
+                        <option value="">Select Player 1</option>
+                        ${players.map(p => `<option value="${p.Player}">${p.Player} (${p.Department || 'No dept'})</option>`).join('')}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Player 2</label>
+                    <select id="newPlayer2" class="w-full px-3 py-2 border rounded-lg" required>
+                        <option value="">Select Player 2</option>
+                        ${players.map(p => `<option value="${p.Player}">${p.Player} (${p.Department || 'No dept'})</option>`).join('')}
+                    </select>
+                </div>
+            ` : `
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Team 1</label>
+                    <select id="newTeam1" class="w-full px-3 py-2 border rounded-lg" required>
+                        <option value="">Select Team 1</option>
+                        ${players.map(p => `<option value="${p.Team_No}">Team ${p.Team_No}: ${p.Player_1}/${p.Player_2}</option>`).join('')}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Team 2</label>
+                    <select id="newTeam2" class="w-full px-3 py-2 border rounded-lg" required>
+                        <option value="">Select Team 2</option>
+                        ${players.map(p => `<option value="${p.Team_No}">Team ${p.Team_No}: ${p.Player_1}/${p.Player_2}</option>`).join('')}
+                    </select>
+                </div>
+            `;
+            
+            document.getElementById('playerSelection').innerHTML = selectionHtml;
+            document.getElementById('addMatchModal').classList.remove('hidden');
+        }
+
+        // Close add match modal
+        function closeAddMatchModal() {
+            document.getElementById('addMatchModal').classList.add('hidden');
+        }
+
+        // Update points and sets based on match type
+        function updatePointsAndSets() {
+            const matchType = document.getElementById('newMatchType').value;
+            const config = matchTypeConfig[matchType];
+            
+            if (config) {
+                document.getElementById('newPointsPerSet').value = config.points;
+                document.getElementById('newBestOfSets').value = config.sets;
+            }
+        }
+
+        // Save new match
+        function saveNewMatch() {
+            const isSingles = currentFormat === 'MS' || currentFormat === 'WS';
+            const players = tournamentData.players[currentFormat] || [];
+            
+            const newMatch = {
+                Match_ID: document.getElementById('newMatchId').value,
+                Round: document.getElementById('newRound').value,
+                Match_Type: document.getElementById('newMatchType').value,
+                Points_Per_Set: parseInt(document.getElementById('newPointsPerSet').value),
+                Best_Of_Sets: parseInt(document.getElementById('newBestOfSets').value),
+                Date: document.getElementById('newDate').value,
+                Day: document.getElementById('newDay').value,
+                Time: document.getElementById('newTime').value,
+                Court: document.getElementById('newCourt').value,
+                Score_1: '',
+                Score_2: '',
+                Winner: '',
+                Status: 'scheduled'
+            };
+
+            if (isSingles) {
+                const player1 = document.getElementById('newPlayer1').value;
+                const player2 = document.getElementById('newPlayer2').value;
+                
+                if (!player1 || !player2) {
+                    alert('Please select both players!');
+                    return;
+                }
+                
+                const p1Data = players.find(p => p.Player === player1);
+                const p2Data = players.find(p => p.Player === player2);
+                
+                newMatch.Player_1 = player1;
+                newMatch.Dept_1 = p1Data?.Department || '';
+                newMatch.Player_2 = player2;
+                newMatch.Dept_2 = p2Data?.Department || '';
+            } else {
+                const team1 = document.getElementById('newTeam1').value;
+                const team2 = document.getElementById('newTeam2').value;
+                
+                if (!team1 || !team2) {
+                    alert('Please select both teams!');
+                    return;
+                }
+                
+                const t1Data = players.find(p => p.Team_No == team1);
+                const t2Data = players.find(p => p.Team_No == team2);
+                
+                newMatch.Team_1 = team1;
+                newMatch.Players_1 = t1Data ? `${t1Data.Player_1}/${t1Data.Player_2}` : '';
+                newMatch.Dept_1 = t1Data ? `${t1Data.Department_1 || ''}/${t1Data.Department_2 || ''}` : '';
+                newMatch.Team_2 = team2;
+                newMatch.Players_2 = t2Data ? `${t2Data.Player_1}/${t2Data.Player_2}` : '';
+                newMatch.Dept_2 = t2Data ? `${t2Data.Department_1 || ''}/${t2Data.Department_2 || ''}` : '';
+            }
+
+            if (!tournamentData.matches[currentFormat]) {
+                tournamentData.matches[currentFormat] = [];
+            }
+            
+            tournamentData.matches[currentFormat].push(newMatch);
+            renderCurrentFormat();
+            closeAddMatchModal();
+        }
+
+        // Update score
+        function updateScore(format, index, field, value) {
+            tournamentData.matches[format][index][field] = value;
+            renderMatchesTable();
+            renderStats();
+        }
+
+        // Update status
+        function updateStatus(format, index, status) {
+            tournamentData.matches[format][index].Status = status;
+            renderMatchesTable();
+            renderStats();
+        }
+
+        // Delete match
+        function deleteMatch(format, index) {
+            if (confirm('Delete this match?')) {
+                tournamentData.matches[format].splice(index, 1);
+                renderMatchesTable();
+                renderStats();
+            }
+        }
+
+        // Initialize
+        initializeEmpty();
+    </script>
+</body>
+</html>

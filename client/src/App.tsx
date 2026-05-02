@@ -18,6 +18,7 @@ import Contact from './pages/Contact';
 import Navigation from './components/Navigation';
 import Footer from './components/Footer';
 import TournamentDetail from './pages/TournamentDetail';
+import FarewellBrackets from './pages/FarewellBrackets';
 
 function AppRoutes() {
   return (
@@ -36,6 +37,7 @@ function AppRoutes() {
       <Route path="/announcements" component={Announcements} />
       <Route path="/gallery" component={Gallery} />
       <Route path="/contact" component={Contact} />
+      <Route path="/farewell" component={FarewellBrackets} />
 
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

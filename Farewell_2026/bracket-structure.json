@@ -1,0 +1,105 @@
+{
+  "MS": {
+    "format": "Single Elimination",
+    "rounds": [
+      {
+        "name": "Round 1 (Quarterfinals)",
+        "matches": ["MS_1", "MS_2", "MS_3", "MS_4"]
+      },
+      {
+        "name": "Round 2 (Semifinals)", 
+        "matches": ["MS_5", "MS_6"],
+        "connections": {
+          "MS_5": { "from": ["MS_1", "MS_2"] },
+          "MS_6": { "from": ["MS_3", "MS_4"] }
+        }
+      },
+      {
+        "name": "Round 3 (Final)",
+        "matches": ["MS_7"],
+        "connections": {
+          "MS_7": { "from": ["MS_5", "MS_6"] }
+        }
+      }
+    ]
+  },
+  
+  "WS": {
+    "format": "Single Elimination",
+    "rounds": [
+      {
+        "name": "Round 1 (Quarterfinals)",
+        "matches": ["WS_1", "WS_2", "WS_3", "WS_4"]
+      },
+      {
+        "name": "Round 2 (Semifinals)",
+        "matches": ["WS_5", "WS_6"],
+        "connections": {
+          "WS_5": { "from": ["WS_1", "WS_2"] },
+          "WS_6": { "from": ["WS_3", "WS_4"] }
+        }
+      },
+      {
+        "name": "Round 3 (Final)",
+        "matches": ["WS_7"],
+        "connections": {
+          "WS_7": { "from": ["WS_5", "WS_6"] }
+        }
+      }
+    ]
+  },
+
+  "XD": {
+    "format": "League + Knockout",
+    "rounds": [
+      {
+        "name": "League Stage",
+        "matches": ["XD_1", "XD_2", "XD_3", "XD_4", "XD_5", "XD_6", "XD_7", "XD_8", "XD_9", "XD_10", "XD_11", "XD_12", "XD_13", "XD_14", "XD_15"]
+      },
+      {
+        "name": "Semifinals",
+        "matches": ["XD_16", "XD_17"],
+        "note": "Top 4 from league"
+      },
+      {
+        "name": "Final",
+        "matches": ["XD_18"],
+        "connections": {
+          "XD_18": { "from": ["XD_16", "XD_17"] }
+        }
+      }
+    ]
+  },
+
+  "MD": {
+    "format": "Round Robin",
+    "rounds": [
+      {
+        "name": "League Stage",
+        "matches": ["MD_1", "MD_2", "MD_3", "MD_4", "MD_5", "MD_6", "MD_7", "MD_8", "MD_9", "MD_10"]
+      }
+    ]
+  },
+
+  "WD": {
+    "format": "League + Knockout",
+    "rounds": [
+      {
+        "name": "League Stage",
+        "matches": ["WD_1", "WD_2", "WD_3", "WD_4", "WD_5", "WD_6", "WD_7", "WD_8", "WD_9", "WD_10", "WD_11", "WD_12", "WD_13", "WD_14", "WD_15"]
+      },
+      {
+        "name": "Semifinals",
+        "matches": ["WD_16", "WD_17"],
+        "note": "Top 4 from league"
+      },
+      {
+        "name": "Final",
+        "matches": ["WD_18"],
+        "connections": {
+          "WD_18": { "from": ["WD_16", "WD_17"] }
+        }
+      }
+    ]
+  }
+}
