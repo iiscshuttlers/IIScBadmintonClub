@@ -2,7 +2,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/NotFound';
 import { Route, Switch, Router } from 'wouter';
-import { useHashLocation } from 'wouter/use-hash-location'; // ✅ ADD THIS
+
 import StatusBanner from "@/components/StatusBanner";
 
 import ErrorBoundary from './components/ErrorBoundary';
@@ -26,12 +26,11 @@ function AppRoutes() {
       <Route path="/about" component={About} />
       <Route path="/facilities" component={Facilities} />
 
-      {/* 🔥 MOST SPECIFIC FIRST */}
+      {/* Specific routes first */}
       <Route path="/events/farewell-match" component={FarewellMatchPage} />
-
       <Route path="/events/:slug" component={TournamentDetail} />
 
-      {/* 🔥 GENERIC LAST */}
+      {/* Generic */}
       <Route path="/events" component={Events} />
 
       <Route path="/announcements" component={Announcements} />
@@ -51,17 +50,18 @@ function App() {
         <TooltipProvider>
           <Toaster />
 
-          {/* ✅ FIXED ROUTER */}
-          <Router base="/iiscshuttlers" hook={useHashLocation}>
+          {/* ✅ CLEAN ROUTER */}
+          <Router base="/iiscshuttlers">
             <div className="flex flex-col min-h-screen">
               <Navigation />
-              <StatusBanner />   {/* 🔥 ADD HERE */}
+              <StatusBanner />
               <main className="flex-1">
                 <AppRoutes />
               </main>
               <Footer />
             </div>
           </Router>
+
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
