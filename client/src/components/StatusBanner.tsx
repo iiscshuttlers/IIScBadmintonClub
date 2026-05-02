@@ -13,11 +13,13 @@ export default function StatusBanner() {
   const [index, setIndex] = useState(0);
   const [bg, setBg] = useState("bg-green-600");
 
-  const today = new Date().toLocaleDateString("en-CA", {
+  const todayDate = new Date();
+
+  const today = todayDate.toLocaleDateString("en-CA", {
     timeZone: "Asia/Kolkata",
   });
 
-  const tomorrowDate = new Date();
+  const tomorrowDate = new Date(todayDate);
   tomorrowDate.setDate(tomorrowDate.getDate() + 1);
 
   const tomorrow = tomorrowDate.toLocaleDateString("en-CA", {
@@ -38,14 +40,31 @@ export default function StatusBanner() {
       if (todayHoliday) {
         msgs.push(`🏸 Courts closed today – ${todayHoliday.name}`);
         setBg("bg-red-600");
-      } else {
-        msgs.push(`🏸 Courts open today`);
       }
 
-      // 🟡 Tomorrow warning
+      // 🟡 Tomorrow closed
       if (tomorrowHoliday) {
-        msgs.push(`⚠️ Closed tomorrow – ${tomorrowHoliday.name}`);
+        msgs.push(`⚠️ Courts closed tomorrow – ${tomorrowHoliday.name}`);
+        if (!todayHoliday) setBg("bg-yellow-500");
       }
+
+      // 📅 Upcoming closures (next 7 days, excluding today & tomorrow)
+      holidays.forEach((h: Holiday) => {
+        if (h.date !== today && h.date !== tomorrow) {
+          const diff =
+            (new Date(h.date).getTime() - new Date(today).getTime()) /
+            (1000 * 3600 * 24);
+
+          if (diff > 1 && diff <= 7) {
+            const readable = new Date(h.date).toLocaleDateString("en-IN", {
+              day: "numeric",
+              month: "short",
+            });
+
+            msgs.push(`📅 Courts closed on ${readable} – ${h.name}`);
+          }
+        }
+      });
 
       // 🔵 Events
       events.forEach((e: Event) => {
@@ -57,7 +76,6 @@ export default function StatusBanner() {
           msgs.push(`🎉 ${e.title} → Register`);
         }
 
-        // 🔔 Last day to register
         if (e.registrationDeadline === today) {
           msgs.push(`⚡ Last day to register – ${e.title}`);
         }
