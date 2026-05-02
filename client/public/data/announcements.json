@@ -1,147 +1,46 @@
-import { useEffect, useState } from "react";
-
-export default function CourtBanner() {
-  const [event, setEvent] = useState(null);
-
-  useEffect(() => {
-    fetch("/data/events.json")
-      .then(res => res.json())
-      .then(data => {
-        const bookings = data.filter(
-          e => e.category === "facility" && e.priority === "high"
-        );
-
-        bookings.forEach(event => {
-          event.slots?.sort((a, b) => {
-            return new Date(`${a.date}T${a.startTime}`) -
-                   new Date(`${b.date}T${b.startTime}`);
-          });
-        });
-
-        setEvent(bookings[0]);
-      })
-      .catch(err => console.error(err));
-  }, []);
-
-  // auto-refresh every minute
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setEvent(prev => (prev ? { ...prev } : prev));
-    }, 60000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  if (!event) return null;
-
-  const message = getBannerMessage(event);
-  if (!message) return null;
-
-  return (
-    <div className="banner whitespace-pre-line">
-      {message}
-    </div>
-  );
-}
-
-/* ---------------- LOGIC ---------------- */
-
-function getBannerMessage(event) {
-  const now = new Date();
-
-  let todayActive = [];
-  let todayUpcoming = [];
-
-  for (const slot of event.slots || []) {
-    const start = new Date(`${slot.date}T${slot.startTime}`);
-    const end = new Date(`${slot.date}T${slot.endTime}`);
-    const label = getDateLabel(slot.date);
-
-    if (label === "today") {
-      if (now >= start && now <= end) {
-        todayActive.push(slot);
-      } else if (now < start) {
-        todayUpcoming.push(slot);
-      }
+{
+  "recent": [
+    {
+      "title": "Farewell Badminton Match 🏸",
+      "date": "2026-05-05",
+      "category": "event",
+      "priority": "high",
+      "location": "IISc Badminton Hall",
+      "content": "Join us for a fun farewell match for the outgoing batch!<br><br>🏸 Friendly matches • Good vibes<br><br><a href='#/iiscshuttlers/events/farewell-match' style='display:inline-block;background:#1e3a8a;color:white;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:600;margin-top:8px;'>🏸 Register Now</a><br><br><strong>Note:</strong> Matches will be arranged based on registrations. Slots are limited and not guaranteed. Partners may be assigned if required."
+    },
+    {
+      "title": "Court Booked for RBCCPS Intra-department Tournament",
+      "date": "2026-05-02",
+      "startDate": "2026-05-02",
+      "endDate": "2026-05-03",
+      "category": "facility",
+      "priority": "high",
+      "location": "Court C3",
+      "contact": "RBCCPS Coordinator",
+      "content": "Court C3 is reserved for the RBCCPS Intra-department Tournament.<br><br><strong>📅 Saturday, 2 May 2026</strong><br>⏰ 1:30 PM – 5:30 PM<br><br><strong>📅 Sunday, 3 May 2026</strong><br>⏰ 9:30 AM – 1:30 PM"
+    },
+    {
+      "title": "Spectrum 2026 Tournament",
+      "date": "2026-04-12",
+      "category": "tournament",
+      "priority": "high",
+      "location": "IISc Badminton Hall",
+      "content": "Spectrum 2026 has successfully concluded. Thanks to all participants and organizers for making it a great event!"
+    },
+    {
+      "title": "Court Maintenance Notice",
+      "date": "2026-04-03",
+      "category": "facility",
+      "priority": "medium",
+      "location": "All Courts",
+      "content": "All courts will remain closed from <strong>3 April 2026 (9 AM)</strong> to <strong>4 April 2026 (12 PM)</strong> for maintenance."
+    },
+    {
+      "title": "Join WhatsApp Group",
+      "date": "2026-04-06",
+      "category": "general",
+      "priority": "low",
+      "content": "Visit the badminton hall notice board to join the official updates group and stay informed about matches, bookings, and events."
     }
-  }
-
-  // 🔴 TODAY BOOKINGS
-  if (todayActive.length > 0 || todayUpcoming.length > 0) {
-    let message = `🚫 ${event.location} booked today\n`;
-
-    if (todayActive.length > 0) {
-      const activeRanges = todayActive.map(slot =>
-        `${formatTime(slot.startTime)}–${formatTime(slot.endTime)}`
-      );
-      message += `🔴 Now: ${activeRanges.join(", ")}\n`;
-    }
-
-    if (todayUpcoming.length > 0) {
-      const upcomingRanges = todayUpcoming.map(slot =>
-        `${formatTime(slot.startTime)}–${formatTime(slot.endTime)}`
-      );
-      message += `⚠️ Later: ${upcomingRanges.join(", ")}`;
-    }
-
-    return message.trim();
-  }
-
-  // 🟡 FUTURE BOOKINGS
-  const futureSlots = (event.slots || []).filter(slot => {
-    const start = new Date(`${slot.date}T${slot.startTime}`);
-    return now < start;
-  });
-
-  if (futureSlots.length > 0) {
-    futureSlots.sort((a, b) => {
-      return new Date(`${a.date}T${a.startTime}`) -
-             new Date(`${b.date}T${b.startTime}`);
-    });
-
-    const next = futureSlots[0];
-    const label = getDateLabel(next.date);
-
-    const sameDaySlots = futureSlots.filter(s => {
-      return getDateLabel(s.date) === label;
-    });
-
-    const ranges = sameDaySlots.map(s =>
-      `${formatTime(s.startTime)}–${formatTime(s.endTime)}`
-    );
-
-    if (label === "tomorrow") {
-      return `⚠️ ${event.location} booked tomorrow from ${ranges.join(", ")}`;
-    }
-
-    return `⚠️ ${event.location} booked on ${label} from ${ranges.join(", ")}`;
-  }
-
-  return null;
-}
-
-/* ---------------- HELPERS ---------------- */
-
-function getDateLabel(dateStr) {
-  const today = new Date();
-  const target = new Date(dateStr);
-
-  today.setHours(0,0,0,0);
-  target.setHours(0,0,0,0);
-
-  const diff = (target - today) / (1000 * 60 * 60 * 24);
-
-  if (diff === 0) return "today";
-  if (diff === 1) return "tomorrow";
-
-  return target.toLocaleDateString("en-GB");
-}
-
-function formatTime(timeStr) {
-  const [h, m] = timeStr.split(":");
-  const hour = parseInt(h);
-  const suffix = hour >= 12 ? "PM" : "AM";
-  const formattedHour = hour % 12 || 12;
-
-  return `${formattedHour}:${m} ${suffix}`;
+  ]
 }
