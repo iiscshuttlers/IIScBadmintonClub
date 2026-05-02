@@ -67,22 +67,52 @@ export default function TournamentBrackets() {
     setLoading(false);
   };
 
-  // Simple CSV parser
   const parseCSV = (csv: string): Match[] => {
     const lines = csv.split('\n');
     const headers = lines[0].split(',');
-    
+
     return lines.slice(1)
       .filter(line => line.trim())
       .map(line => {
         const values = line.split(',');
-        const match: any = {};
+        const raw: any = {};
+
         headers.forEach((header, i) => {
-          match[header.trim()] = values[i]?.trim() || '';
+          raw[header.trim()] = values[i]?.trim() || '';
         });
-        return match;
+
+        // ✅ Handle Singles + Doubles
+        const player1 =
+          raw.Player_1 ||
+          [raw.Player_A1, raw.Player_A2].filter(Boolean).join(' & ');
+
+        const player2 =
+          raw.Player_2 ||
+          [raw.Player_B1, raw.Player_B2].filter(Boolean).join(' & ');
+
+        // ✅ Handle score mismatch
+        const set1 =
+          raw['Set-1'] ||
+          (raw.Score_1 && raw.Score_2
+            ? `${raw.Score_1}-${raw.Score_2}`
+            : '');
+
+        return {
+          Match_ID: raw.Match_ID || '',
+          Round: raw.Round || '',
+          Player_1: player1,
+          Player_2: player2,
+          'Set-1': set1,
+          'Set-2': raw['Set-2'] || '',
+          'Set-3': raw['Set-3'] || '',
+          Winner: raw.Winner || '',
+          Status: raw.Status || '',
+          Court: raw.Court || '',
+          Date: raw.Date || '',
+          Time: raw.Time || '',
+        };
       })
-      .filter(match => match.Match_ID && !match.Match_ID.includes('Select')); // Filter example rows
+      .filter(match => match.Match_ID && !match.Match_ID.includes('Select'));
   };
 
   const renderBrackets = () => {
