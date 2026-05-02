@@ -1,53 +1,93 @@
-{
-  "recent": [
-    {
-      "title": "Farewell Badminton Match 🏸",
-      "date": "2026-05-05",
-      "category": "event",
-      "priority": "high",
-      "location": "IISc Badminton Hall",
-      "content": "Join us for a fun farewell match for the outgoing batch!<br><br>🏸 Friendly matches • Good vibes<br><br><a href='#/iiscshuttlers/events/farewell-match' style='display:inline-block;background:#1e3a8a;color:white;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:600;margin-top:8px;'>🏸 Register Now</a><br><br><strong>Note:</strong> Matches will be arranged based on registrations. Slots are limited and not guaranteed. Partners may be assigned if required."
-    },
-    {
-      "title": "Court Booked for RBCCPS Intra-department Tournament",
-      "startDate": "2026-05-02",
-      "endDate": "2026-05-03",
-      "slots": [
-        {
-          "date": "2026-05-02",
-          "startTime": "13:30",
-          "endTime": "17:30"
-        },
-        {
-          "date": "2026-05-03",
-          "startTime": "09:30",
-          "endTime": "13:30"
-        }
-      ],
-      "location": "Court C3"
-    },
-    {
-      "title": "Spectrum 2026 Tournament",
-      "date": "2026-04-12",
-      "category": "tournament",
-      "priority": "high",
-      "location": "IISc Badminton Hall",
-      "content": "Spectrum 2026 has successfully concluded. Thanks to all participants and organizers for making it a great event!"
-    },
-    {
-      "title": "Court Maintenance Notice",
-      "date": "2026-04-03",
-      "category": "facility",
-      "priority": "medium",
-      "location": "All Courts",
-      "content": "All courts will remain closed from <strong>3 April 2026 (9 AM)</strong> to <strong>4 April 2026 (12 PM)</strong> for maintenance."
-    },
-    {
-      "title": "Join WhatsApp Group",
-      "date": "2026-04-06",
-      "category": "general",
-      "priority": "low",
-      "content": "Visit the badminton hall notice board to join the official updates group and stay informed about matches, bookings, and events."
+import { useEffect, useState } from "react";
+
+export default function CourtBanner() {
+  const [event, setEvent] = useState(null);
+
+  useEffect(() => {
+    fetch("/data/events.json")
+      .then(res => res.json())
+      .then(data => {
+        // get all high-priority facility events
+        const bookings = data.filter(
+          e => e.category === "facility" && e.priority === "high"
+        );
+
+        // sort by start time (important!)
+        bookings.forEach(event => {
+          event.slots?.sort((a, b) => {
+            return new Date(`${a.date}T${a.startTime}`) -
+                   new Date(`${b.date}T${b.startTime}`);
+          });
+        });
+
+        setEvent(bookings[0]); // for now: first event
+      })
+      .catch(err => console.error(err));
+  }, []);
+
+  if (!event) return null;
+
+  const message = getBannerMessage(event);
+  if (!message) return null;
+
+  return (
+    <div className="banner">
+      {message}
+    </div>
+  );
+}
+
+/* ---------------- LOGIC ---------------- */
+
+function getBannerMessage(event) {
+  const now = new Date();
+
+  for (const slot of event.slots || []) {
+    const start = new Date(`${slot.date}T${slot.startTime}`);
+    const end = new Date(`${slot.date}T${slot.endTime}`);
+
+    const label = getDateLabel(slot.date);
+
+    // 🔴 CURRENTLY CLOSED
+    if (now >= start && now <= end) {
+      return `🚫 ${event.location} closed today till ${formatTime(slot.endTime)}`;
     }
-  ]
+
+    // 🟡 UPCOMING
+    if (now < start) {
+      if (label === "today") {
+        return `⚠️ ${event.location} booked today from ${formatTime(slot.startTime)}`;
+      }
+      if (label === "tomorrow") {
+        return `⚠️ ${event.location} booked tomorrow`;
+      }
+      return `⚠️ ${event.location} booked on ${label}`;
+    }
+  }
+
+  return null;
+}
+
+function getDateLabel(dateStr) {
+  const today = new Date();
+  const target = new Date(dateStr);
+
+  today.setHours(0,0,0,0);
+  target.setHours(0,0,0,0);
+
+  const diff = (target - today) / (1000 * 60 * 60 * 24);
+
+  if (diff === 0) return "today";
+  if (diff === 1) return "tomorrow";
+
+  return target.toLocaleDateString("en-GB"); // DD/MM/YYYY
+}
+
+function formatTime(timeStr) {
+  const [h, m] = timeStr.split(":");
+  const hour = parseInt(h);
+  const suffix = hour >= 12 ? "PM" : "AM";
+  const formattedHour = hour % 12 || 12;
+
+  return `${formattedHour}:${m} ${suffix}`;
 }
