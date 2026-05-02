@@ -6,7 +6,7 @@ const SHEETS_URLS = {
   MS: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRi2oGpUY5417SR0alRBlWgV-iMu4nL1RSBZxp6Eltm7KXNawcPy-D7hTeaF_tuTKYhcYCFfyqe-TE0/pub?gid=850168809&single=true&output=csv',
   WS: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRi2oGpUY5417SR0alRBlWgV-iMu4nL1RSBZxp6Eltm7KXNawcPy-D7hTeaF_tuTKYhcYCFfyqe-TE0/pub?gid=2085483050&single=true&output=csv',
   XD: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRi2oGpUY5417SR0alRBlWgV-iMu4nL1RSBZxp6Eltm7KXNawcPy-D7hTeaF_tuTKYhcYCFfyqe-TE0/pub?gid=1547267114&single=true&output=csv',
-  MD: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRi2oGpUY5417SR0alRBlWgV-iMu4nL1RSBZxp6Eltm7KXNawcPy-D7hTeaF_tuTKYhcYCFfyqe-TE0/pub?gid=301747562&single=true&output=csv,
+  MD: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRi2oGpUY5417SR0alRBlWgV-iMu4nL1RSBZxp6Eltm7KXNawcPy-D7hTeaF_tuTKYhcYCFfyqe-TE0/pub?gid=301747562&single=true&output=csv',
   WD: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRi2oGpUY5417SR0alRBlWgV-iMu4nL1RSBZxp6Eltm7KXNawcPy-D7hTeaF_tuTKYhcYCFfyqe-TE0/pub?gid=1539434900&single=true&output=csv'
 };
 
