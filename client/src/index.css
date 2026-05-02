@@ -144,24 +144,13 @@
 }
 
 @layer components {
-  /**
-   * Custom container utility that centers content and adds responsive padding.
-   *
-   * This overrides Tailwind's default container behavior to:
-   * - Auto-center content (mx-auto)
-   * - Add responsive horizontal padding
-   * - Set max-width for large screens
-   *
-   * Usage: <div className="container">...</div>
-   *
-   * For custom widths, use max-w-* utilities directly:
-   * <div className="max-w-6xl mx-auto px-4">...</div>
-   */
+
+  /* ================== EXISTING ================== */
   .container {
     width: 100%;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 1rem; /* 16px - mobile padding */
+    padding-left: 1rem;
     padding-right: 1rem;
   }
 
@@ -172,20 +161,19 @@
 
   @media (min-width: 640px) {
     .container {
-      padding-left: 1.5rem; /* 24px - tablet padding */
+      padding-left: 1.5rem;
       padding-right: 1.5rem;
     }
   }
 
   @media (min-width: 1024px) {
     .container {
-      padding-left: 2rem; /* 32px - desktop padding */
+      padding-left: 2rem;
       padding-right: 2rem;
-      max-width: 1280px; /* Standard content width */
+      max-width: 1280px;
     }
   }
 
-  /* Dynamic Sports Energy custom components */
   .accent-bar {
     @apply bg-gradient-to-r from-emerald-500 to-orange-500 h-1;
   }
@@ -209,5 +197,46 @@
 
   .btn-accent {
     @apply bg-accent text-accent-foreground hover:bg-accent/90 transition-colors duration-200;
+  }
+
+  /* ================== FINAL BANNER SYSTEM ================== */
+
+  .banner {
+    @apply w-full text-white text-center font-semibold py-2 text-sm leading-relaxed transition-all duration-300;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    animation: slideDown 0.3s ease;
+  }
+
+  /* 🔴 Critical alerts */
+  .banner-red {
+    @apply bg-red-600;
+  }
+
+  /* 🟡 Warning alerts */
+  .banner-yellow {
+    @apply bg-yellow-400 text-black;
+  }
+
+  /* 🟢 Neutral (rarely used now) */
+  .banner-green {
+    @apply bg-green-600;
+  }
+
+  /* 🔥 Optional premium look (use for important alerts) */
+  .banner-gradient {
+    background: linear-gradient(90deg, #ef4444, #f87171);
+  }
+}
+
+/* ================== ANIMATION ================== */
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
   }
 }

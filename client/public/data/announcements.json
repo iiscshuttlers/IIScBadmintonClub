@@ -7,12 +7,10 @@ export default function CourtBanner() {
     fetch("/data/events.json")
       .then(res => res.json())
       .then(data => {
-        // get all high-priority facility events
         const bookings = data.filter(
           e => e.category === "facility" && e.priority === "high"
         );
 
-        // sort by start time (important!)
         bookings.forEach(event => {
           event.slots?.sort((a, b) => {
             return new Date(`${a.date}T${a.startTime}`) -
@@ -20,9 +18,18 @@ export default function CourtBanner() {
           });
         });
 
-        setEvent(bookings[0]); // for now: first event
+        setEvent(bookings[0]);
       })
       .catch(err => console.error(err));
+  }, []);
+
+  // auto-refresh every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setEvent(prev => (prev ? { ...prev } : prev));
+    }, 60000);
+
+    return () => clearInterval(interval);
   }, []);
 
   if (!event) return null;
@@ -31,7 +38,7 @@ export default function CourtBanner() {
   if (!message) return null;
 
   return (
-    <div className="banner">
+    <div className="banner whitespace-pre-line">
       {message}
     </div>
   );
@@ -42,31 +49,78 @@ export default function CourtBanner() {
 function getBannerMessage(event) {
   const now = new Date();
 
+  let todayActive = [];
+  let todayUpcoming = [];
+
   for (const slot of event.slots || []) {
     const start = new Date(`${slot.date}T${slot.startTime}`);
     const end = new Date(`${slot.date}T${slot.endTime}`);
-
     const label = getDateLabel(slot.date);
 
-    // 🔴 CURRENTLY CLOSED
-    if (now >= start && now <= end) {
-      return `🚫 ${event.location} closed today till ${formatTime(slot.endTime)}`;
+    if (label === "today") {
+      if (now >= start && now <= end) {
+        todayActive.push(slot);
+      } else if (now < start) {
+        todayUpcoming.push(slot);
+      }
+    }
+  }
+
+  // 🔴 TODAY BOOKINGS
+  if (todayActive.length > 0 || todayUpcoming.length > 0) {
+    let message = `🚫 ${event.location} booked today\n`;
+
+    if (todayActive.length > 0) {
+      const activeRanges = todayActive.map(slot =>
+        `${formatTime(slot.startTime)}–${formatTime(slot.endTime)}`
+      );
+      message += `🔴 Now: ${activeRanges.join(", ")}\n`;
     }
 
-    // 🟡 UPCOMING
-    if (now < start) {
-      if (label === "today") {
-        return `⚠️ ${event.location} booked today from ${formatTime(slot.startTime)}`;
-      }
-      if (label === "tomorrow") {
-        return `⚠️ ${event.location} booked tomorrow`;
-      }
-      return `⚠️ ${event.location} booked on ${label}`;
+    if (todayUpcoming.length > 0) {
+      const upcomingRanges = todayUpcoming.map(slot =>
+        `${formatTime(slot.startTime)}–${formatTime(slot.endTime)}`
+      );
+      message += `⚠️ Later: ${upcomingRanges.join(", ")}`;
     }
+
+    return message.trim();
+  }
+
+  // 🟡 FUTURE BOOKINGS
+  const futureSlots = (event.slots || []).filter(slot => {
+    const start = new Date(`${slot.date}T${slot.startTime}`);
+    return now < start;
+  });
+
+  if (futureSlots.length > 0) {
+    futureSlots.sort((a, b) => {
+      return new Date(`${a.date}T${a.startTime}`) -
+             new Date(`${b.date}T${b.startTime}`);
+    });
+
+    const next = futureSlots[0];
+    const label = getDateLabel(next.date);
+
+    const sameDaySlots = futureSlots.filter(s => {
+      return getDateLabel(s.date) === label;
+    });
+
+    const ranges = sameDaySlots.map(s =>
+      `${formatTime(s.startTime)}–${formatTime(s.endTime)}`
+    );
+
+    if (label === "tomorrow") {
+      return `⚠️ ${event.location} booked tomorrow from ${ranges.join(", ")}`;
+    }
+
+    return `⚠️ ${event.location} booked on ${label} from ${ranges.join(", ")}`;
   }
 
   return null;
 }
+
+/* ---------------- HELPERS ---------------- */
 
 function getDateLabel(dateStr) {
   const today = new Date();
@@ -80,7 +134,7 @@ function getDateLabel(dateStr) {
   if (diff === 0) return "today";
   if (diff === 1) return "tomorrow";
 
-  return target.toLocaleDateString("en-GB"); // DD/MM/YYYY
+  return target.toLocaleDateString("en-GB");
 }
 
 function formatTime(timeStr) {
