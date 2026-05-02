@@ -10,14 +10,21 @@
     },
     {
       "title": "Court Booked for RBCCPS Intra-department Tournament",
-      "date": "2026-05-02",
       "startDate": "2026-05-02",
       "endDate": "2026-05-03",
-      "category": "facility",
-      "priority": "high",
-      "location": "Court C3",
-      "contact": "RBCCPS Coordinator",
-      "content": "Court C3 is reserved for the RBCCPS Intra-department Tournament.<br><br><strong>📅 Saturday, 2 May 2026</strong><br>⏰ 1:30 PM – 5:30 PM<br><br><strong>📅 Sunday, 3 May 2026</strong><br>⏰ 9:30 AM – 1:30 PM"
+      "slots": [
+        {
+          "date": "2026-05-02",
+          "startTime": "13:30",
+          "endTime": "17:30"
+        },
+        {
+          "date": "2026-05-03",
+          "startTime": "09:30",
+          "endTime": "13:30"
+        }
+      ],
+      "location": "Court C3"
     },
     {
       "title": "Spectrum 2026 Tournament",
