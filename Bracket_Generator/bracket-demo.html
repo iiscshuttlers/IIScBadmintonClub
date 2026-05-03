@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tournament Bracket Demo</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      color: white;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .header h1 {
+      font-size: 32px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .format-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .format-tab {
+      padding: 12px 24px;
+      border-radius: 12px;
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .format-tab.active {
+      background: #10b981;
+      color: white;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.5);
+      transform: scale(1.05);
+    }
+
+    .bracket-container {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      overflow-x: auto;
+    }
+
+    .bracket {
+      display: flex;
+      gap: 48px;
+      min-width: max-content;
+    }
+
+    .round {
+      min-width: 280px;
+    }
+
+    .round-header {
+      text-align: center;
+      margin-bottom: 24px;
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(4px);
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      sticky: true;
+      top: 0;
+    }
+
+    .round-title {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.6);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    .round-name {
+      font-size: 20px;
+      font-weight: 900;
+      margin-top: 4px;
+    }
+
+    .round-progress {
+      font-size: 12px;
+      color: #10b981;
+      margin-top: 4px;
+    }
+
+    .matches {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .match {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(4px);
+      border-radius: 12px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      position: relative;
+      transition: all 0.3s;
+    }
+
+    .match.live {
+      border-color: #ef4444;
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+      animation: pulse 2s infinite;
+    }
+
+    .match.completed {
+      border-color: rgba(16, 185, 129, 0.5);
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
+      50% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.6); }
+    }
+
+    .match-id {
+      position: absolute;
+      top: -12px;
+      left: -12px;
+      background: #1e293b;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 11px;
+      font-family: 'Courier New', monospace;
+      padding: 4px 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .match-status {
+      position: absolute;
+      top: -12px;
+      right: -12px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .match-status.live {
+      background: #ef4444;
+      color: white;
+    }
+
+    .match-status.completed {
+      background: #10b981;
+      color: white;
+    }
+
+    .match-status.pending {
+      background: #64748b;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .match-content {
+      padding: 24px 16px 16px;
+    }
+
+    .player-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 8px;
+    }
+
+    .player-row.winner {
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid rgba(16, 185, 129, 0.5);
+    }
+
+    .player-name {
+      font-weight: 700;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-name.tbd {
+      color: rgba(255, 255, 255, 0.4);
+      font-style: italic;
+    }
+
+    .player-name.winner {
+      color: white;
+    }
+
+    .trophy {
+      color: #fbbf24;
+      font-size: 16px;
+    }
+
+    .scores {
+      display: flex;
+      gap: 4px;
+    }
+
+    .score-set {
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      min-width: 32px;
+      text-align: center;
+    }
+
+    .score-set.won {
+      background: #10b981;
+      color: white;
+    }
+
+    .score-set.lost {
+      background: #475569;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.2);
+      margin: 8px 0;
+    }
+
+    .info-panel {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .info-panel h3 {
+      font-size: 14px;
+      margin-bottom: 8px;
+      color: #10b981;
+    }
+
+    .info-panel p {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.6);
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🏸 Farewell Tournament 2026</h1>
+      <p style="color: rgba(255, 255, 255, 0.6); margin-top: 4px;">IISc Gymkhana</p>
+      
+      <div class="format-tabs" id="formatTabs"></div>
+    </div>
+
+    <div class="bracket-container">
+      <div class="bracket" id="bracket"></div>
+    </div>
+
+    <div class="info-panel">
+      <h3>📊 Tournament Information</h3>
+      <p>
+        <strong>Generated with seeding:</strong> Higher seeds face lower seeds in early rounds.<br>
+        <strong>Match IDs:</strong> Format follows {FORMAT}_{NUMBER} pattern (e.g., MS_1, MS_2).<br>
+        <strong>Live Demo:</strong> This is a static demo. Use React components with Firebase for real-time updates.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // Load tournament data
+    let tournamentData = null;
+
+    async function loadData() {
+      try {
+        const response = await fetch('tournament-data.json');
+        tournamentData = await response.json();
+        initializeTabs();
+        renderBracket('MS');
+      } catch (error) {
+        console.error('Error loading tournament data:', error);
+        document.getElementById('bracket').innerHTML = 
+          '<p style="color: rgba(255,255,255,0.6); padding: 40px; text-align: center;">Error loading tournament data. Make sure tournament-data.json exists.</p>';
+      }
+    }
+
+    function initializeTabs() {
+      const tabsContainer = document.getElementById('formatTabs');
+      tournamentData.formats.forEach(format => {
+        const button = document.createElement('button');
+        button.className = 'format-tab';
+        button.textContent = getFormatName(format);
+        button.onclick = () => {
+          document.querySelectorAll('.format-tab').forEach(b => b.classList.remove('active'));
+          button.classList.add('active');
+          renderBracket(format);
+        };
+        if (format === 'MS') button.classList.add('active');
+        tabsContainer.appendChild(button);
+      });
+    }
+
+    function getFormatName(code) {
+      const names = {
+        'MS': "Men's Singles",
+        'WS': "Women's Singles",
+        'MD': "Men's Doubles",
+        'WD': "Women's Doubles",
+        'XD': "Mixed Doubles"
+      };
+      return names[code] || code;
+    }
+
+    function renderBracket(format) {
+      const matches = tournamentData.matches[format];
+      const rounds = groupByRound(matches);
+      
+      const bracketHTML = rounds.map((round, idx) => `
+        <div class="round">
+          <div class="round-header">
+            <div class="round-title">Round ${idx + 1}</div>
+            <div class="round-name">${round.name}</div>
+            <div class="round-progress">
+              ${round.matches.filter(m => m.Status === 'completed').length}/${round.matches.length} Complete
+            </div>
+          </div>
+          <div class="matches">
+            ${round.matches.map(match => renderMatch(match, format)).join('')}
+          </div>
+        </div>
+      `).join('');
+      
+      document.getElementById('bracket').innerHTML = bracketHTML;
+    }
+
+    function groupByRound(matches) {
+      const roundOrder = ['Round 1', 'Round 2', 'Quarterfinals', 'Semifinals', 'Final'];
+      const grouped = {};
+      
+      matches.forEach(match => {
+        if (!grouped[match.Round]) grouped[match.Round] = [];
+        grouped[match.Round].push(match);
+      });
+      
+      return roundOrder.filter(r => grouped[r]).map(r => ({
+        name: r,
+        matches: grouped[r]
+      }));
+    }
+
+    function renderMatch(match, format) {
+      const isDoubles = ['MD', 'WD', 'XD'].includes(format);
+      const player1 = isDoubles ? match.Players_1 : match.Player_1;
+      const player2 = isDoubles ? match.Players_2 : match.Player_2;
+      
+      const statusClass = match.Status === 'in-progress' ? 'live' :
+                          match.Status === 'completed' ? 'completed' : 'pending';
+      const statusLabel = match.Status === 'in-progress' ? '🔴 LIVE' :
+                          match.Status === 'completed' ? '✓ DONE' : '⏰ PENDING';
+      
+      const scores = match.Score_1 ? match.Score_1.split(',').map(s => s.trim()) : [];
+      
+      return `
+        <div class="match ${statusClass}">
+          <div class="match-id">${match.Match_ID}</div>
+          <div class="match-status ${statusClass}">${statusLabel}</div>
+          <div class="match-content">
+            ${renderPlayerRow(player1, scores, match.Winner, false)}
+            <div class="divider"></div>
+            ${renderPlayerRow(player2, scores, match.Winner, true)}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPlayerRow(name, scores, winner, isPlayer2) {
+      const isWinner = winner === name;
+      const isTBD = name === 'TBD';
+      const isBye = name === 'Bye';
+      
+      let scoresHTML = '';
+      if (scores.length > 0 && !isTBD && !isBye) {
+        scoresHTML = '<div class="scores">' + scores.map((scoreSet, idx) => {
+          const [s1, s2] = scoreSet.split('-').map(s => parseInt(s.trim()) || 0);
+          const score = isPlayer2 ? s2 : s1;
+          const wonSet = isPlayer2 ? s2 > s1 : s1 > s2;
+          return `<div class="score-set ${wonSet ? 'won' : 'lost'}">${score}</div>`;
+        }).join('') + '</div>';
+      }
+      
+      return `
+        <div class="player-row ${isWinner ? 'winner' : ''}">
+          <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;">
+            ${isWinner ? '<span class="trophy">🏆</span>' : ''}
+            <span class="player-name ${isTBD ? 'tbd' : ''} ${isWinner ? 'winner' : ''}">${name}</span>
+          </div>
+          ${scoresHTML}
+        </div>
+      `;
+    }
+
+    // Initialize
+    loadData();
+  </script>
+</body>
+</html>

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, CalendarClock, ClipboardList, LayoutList } from 'lucide-react';
-// 1. ADDED FIREBASE IMPORTS HERE
+import { Trophy, CalendarClock, ClipboardList, LayoutList, Activity, Clock, CheckCircle } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { doc, onSnapshot } from "firebase/firestore";
 
@@ -24,7 +23,6 @@ export default function FarewellTournament() {
 
   // --- DATA FETCHING (LIVE FIREBASE LISTENER) ---
   useEffect(() => {
-    // 2. REPLACED FETCH WITH FIREBASE ONSNAPSHOT
     const unsubscribe = onSnapshot(doc(db, "live_data", "tournament"), 
       (docSnap) => {
         if (docSnap.exists()) {
@@ -43,11 +41,27 @@ export default function FarewellTournament() {
       }
     );
 
-    // Cleanup listener when component unmounts
     return () => unsubscribe();
   }, []);
 
-  // --- BRACKET HELPER LOGIC ---
+  // --- HELPER FUNCTIONS ---
+  const getAllMatches = () => {
+    if (!tournamentData) return [];
+    return Object.entries(tournamentData.matches).flatMap(([format, matches]) =>
+      matches.map((m: any) => ({ ...m, format }))
+    );
+  };
+
+  const getLiveMatches = () => {
+    return getAllMatches().filter(m => m.Status === 'in-progress');
+  };
+
+  const getRecentCompleted = () => {
+    return getAllMatches()
+      .filter(m => m.Status === 'completed')
+      .slice(-6); // Last 6 completed
+  };
+
   const currentMatches = tournamentData?.matches[activeFormat] || [];
   const rounds = currentMatches.reduce((acc, match) => {
     const roundName = match.Round || "Unassigned";
@@ -55,6 +69,9 @@ export default function FarewellTournament() {
     acc[roundName].push(match);
     return acc;
   }, {} as { [key: string]: any[] });
+
+  const liveMatches = getLiveMatches();
+  const recentCompleted = getRecentCompleted();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50 py-10 px-4">
@@ -151,6 +168,52 @@ export default function FarewellTournament() {
             </div>
           ) : (
             <>
+              {/* --- LIVE SCORES SECTION --- */}
+              {(liveMatches.length > 0 || recentCompleted.length > 0) && (
+                <div className="max-w-7xl mx-auto mb-8">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    {/* Live Matches */}
+                    {liveMatches.length > 0 && (
+                      <div className="bg-white rounded-2xl shadow-lg border-2 border-red-500 overflow-hidden">
+                        <div className="bg-gradient-to-r from-red-500 to-red-600 p-4 text-white flex items-center justify-between">
+                          <h3 className="font-black text-lg flex items-center gap-2">
+                            <Activity className="animate-pulse" size={20} />
+                            LIVE NOW
+                          </h3>
+                          <div className="flex items-center gap-2 bg-red-600 px-3 py-1 rounded-full text-sm">
+                            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                            {liveMatches.length} Match{liveMatches.length !== 1 ? 'es' : ''}
+                          </div>
+                        </div>
+                        <div className="p-4 space-y-3 max-h-96 overflow-y-auto">
+                          {liveMatches.map((match: any, idx: number) => (
+                            <LiveMatchCard key={idx} match={match} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Recent Results */}
+                    {recentCompleted.length > 0 && (
+                      <div className="bg-white rounded-2xl shadow-lg border border-emerald-200 overflow-hidden">
+                        <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-4 text-white flex items-center justify-between">
+                          <h3 className="font-black text-lg flex items-center gap-2">
+                            <CheckCircle size={20} />
+                            RECENT RESULTS
+                          </h3>
+                        </div>
+                        <div className="p-4 space-y-3 max-h-96 overflow-y-auto">
+                          {recentCompleted.map((match: any, idx: number) => (
+                            <CompletedMatchCard key={idx} match={match} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Bracket Format Sub-Tabs */}
               <div className="max-w-7xl mx-auto mb-6 flex flex-wrap gap-2">
                 {[...tournamentData.formats]
@@ -192,8 +255,8 @@ export default function FarewellTournament() {
                               const p2Won = isCompleted && match.Winner && match.Winner.includes(p2Name.split('/')[0]);
 
                               return (
-                                <div key={matchIdx} className={`border rounded-xl overflow-hidden bg-white ${isLive ? 'border-yellow-400 shadow-md' : 'border-gray-200 shadow-sm'}`}>
-                                  <div className={`px-3 py-1.5 text-xs font-semibold flex justify-between items-center ${isLive ? 'bg-yellow-50 text-yellow-700' : 'bg-gray-50 text-gray-500'}`}>
+                                <div key={matchIdx} className={`border rounded-xl overflow-hidden bg-white ${isLive ? 'border-red-500 shadow-lg shadow-red-200 ring-2 ring-red-200' : 'border-gray-200 shadow-sm'}`}>
+                                  <div className={`px-3 py-1.5 text-xs font-semibold flex justify-between items-center ${isLive ? 'bg-red-50 text-red-700' : 'bg-gray-50 text-gray-500'}`}>
                                     <span>{match.Match_ID}</span>
                                     {isLive ? <span className="animate-pulse flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500"></span> LIVE</span> : <span>{match.Status}</span>}
                                   </div>
@@ -223,6 +286,89 @@ export default function FarewellTournament() {
         </div>
       )}
 
+    </div>
+  );
+}
+
+// --- LIVE MATCH CARD COMPONENT ---
+function LiveMatchCard({ match }: { match: any }) {
+  const p1Name = match.Player_1 || match.Players_1 || 'TBD';
+  const p2Name = match.Player_2 || match.Players_2 || 'TBD';
+  const scores = match.Score_1 ? match.Score_1.split(',').map((s: string) => s.trim()) : [];
+
+  return (
+    <div className="border-2 border-red-200 rounded-xl overflow-hidden bg-red-50/50 hover:shadow-md transition-shadow">
+      <div className="bg-red-100 px-3 py-2 flex items-center justify-between">
+        <span className="font-bold text-sm text-red-900">{match.format} - {match.Match_ID}</span>
+        <span className="text-xs bg-red-500 text-white px-2 py-1 rounded-full font-bold flex items-center gap-1">
+          <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
+          LIVE
+        </span>
+      </div>
+      <div className="p-3 space-y-2">
+        <div className="flex justify-between items-center">
+          <span className="font-semibold text-gray-800">{p1Name}</span>
+          <div className="flex gap-1">
+            {scores.map((scoreSet, idx) => {
+              const [s1] = scoreSet.split('-').map(s => parseInt(s.trim()) || 0);
+              return (
+                <div key={idx} className="bg-white border border-gray-300 px-2 py-1 rounded text-xs font-bold min-w-[28px] text-center">
+                  {s1}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="font-semibold text-gray-800">{p2Name}</span>
+          <div className="flex gap-1">
+            {scores.map((scoreSet, idx) => {
+              const [, s2] = scoreSet.split('-').map(s => parseInt(s.trim()) || 0);
+              return (
+                <div key={idx} className="bg-white border border-gray-300 px-2 py-1 rounded text-xs font-bold min-w-[28px] text-center">
+                  {s2}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --- COMPLETED MATCH CARD COMPONENT ---
+function CompletedMatchCard({ match }: { match: any }) {
+  const p1Name = match.Player_1 || match.Players_1 || 'TBD';
+  const p2Name = match.Player_2 || match.Players_2 || 'TBD';
+  const p1Won = match.Winner && match.Winner.includes(p1Name.split('/')[0]);
+  const p2Won = match.Winner && match.Winner.includes(p2Name.split('/')[0]);
+
+  return (
+    <div className="border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow bg-white">
+      <div className="bg-gray-50 px-3 py-2 flex items-center justify-between">
+        <span className="font-bold text-sm text-gray-700">{match.format} - {match.Match_ID}</span>
+        <CheckCircle size={16} className="text-emerald-500" />
+      </div>
+      <div className="p-3 space-y-1">
+        <div className={`flex justify-between items-center ${p1Won ? 'font-bold text-emerald-700' : 'text-gray-600'}`}>
+          <span className="flex items-center gap-1">
+            {p1Won && <Trophy size={14} className="text-yellow-500" />}
+            {p1Name}
+          </span>
+        </div>
+        {match.Score_1 && (
+          <div className="text-center py-1 text-xs font-mono text-gray-500 bg-gray-50 rounded">
+            {match.Score_1}
+          </div>
+        )}
+        <div className={`flex justify-between items-center ${p2Won ? 'font-bold text-emerald-700' : 'text-gray-600'}`}>
+          <span className="flex items-center gap-1">
+            {p2Won && <Trophy size={14} className="text-yellow-500" />}
+            {p2Name}
+          </span>
+        </div>
+      </div>
     </div>
   );
 }

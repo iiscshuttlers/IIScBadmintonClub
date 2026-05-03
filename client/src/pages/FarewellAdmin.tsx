@@ -3,6 +3,7 @@ import { db, auth } from '../lib/firebase';
 import { doc, updateDoc, onSnapshot } from "firebase/firestore";
 import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, User } from "firebase/auth";
 import { Activity, Lock, LogOut, Trophy, Plus, Minus, PlusCircle } from 'lucide-react';
+import { advanceWinners } from '../lib/tournamentProgression';
 
 export default function FarewellAdmin() {
   const [data, setData] = useState<any>(null);
@@ -13,12 +14,9 @@ export default function FarewellAdmin() {
   const [status, setStatus] = useState('in-progress');
   const [winner, setWinner] = useState('');
 
-  // --- NEW: UMPIRE APP STATE ---
-  // Array of sets, e.g. [{p1: 21, p2: 14}, {p1: 0, p2: 0}]
   const [scores, setScores] = useState<{p1: number, p2: number}[]>([{ p1: 0, p2: 0 }]);
-  const [activeSet, setActiveSet] = useState(0); // 0 = Set 1, 1 = Set 2, etc.
+  const [activeSet, setActiveSet] = useState(0);
 
-  // Listen for Authentication state
   useEffect(() => {
     const unsubAuth = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -26,7 +24,6 @@ export default function FarewellAdmin() {
     return () => unsubAuth();
   }, []);
 
-  // Listen to live data ONLY if logged in
   useEffect(() => {
     if (!user) return;
     const unsubData = onSnapshot(doc(db, "live_data", "tournament"), (docSnap) => {
@@ -35,7 +32,6 @@ export default function FarewellAdmin() {
     return () => unsubData();
   }, [user]);
 
-  // --- AUTO-LOAD SCORES WHEN MATCH IS SELECTED ---
   useEffect(() => {
     if (!data || !selectedMatchId) {
       setScores([{ p1: 0, p2: 0 }]);
@@ -48,7 +44,6 @@ export default function FarewellAdmin() {
       setStatus(match.Status || 'in-progress');
       setWinner(match.Winner || '');
 
-      // Parse existing score string "21-14, 15-10" -> array of numbers
       if (match.Score_1) {
         try {
           const parsed = match.Score_1.split(',').map((s: string) => {
@@ -68,7 +63,6 @@ export default function FarewellAdmin() {
     }
   }, [selectedMatchId, data, selectedFormat]);
 
-
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
     try {
@@ -78,18 +72,17 @@ export default function FarewellAdmin() {
     }
   };
 
-  // --- SCORE CONTROLLERS ---
   const updateScore = (player: 'p1' | 'p2', delta: number) => {
     const newScores = [...scores];
     newScores[activeSet] = {
       ...newScores[activeSet],
-      [player]: Math.max(0, newScores[activeSet][player] + delta) // Prevent negative scores
+      [player]: Math.max(0, newScores[activeSet][player] + delta)
     };
     setScores(newScores);
   };
 
   const addNewSet = () => {
-    if (scores.length < 5) { // Max 5 sets
+    if (scores.length < 5) {
       setScores([...scores, { p1: 0, p2: 0 }]);
       setActiveSet(scores.length);
     }
@@ -106,10 +99,9 @@ export default function FarewellAdmin() {
         return;
       }
 
-      // Format scores array back to string: "21-14, 15-10"
       const scoreString = scores
         .map(s => `${s.p1}-${s.p2}`)
-        .filter(s => s !== "0-0" || scores.length === 1) // don't save empty trailing sets
+        .filter(s => s !== "0-0" || scores.length === 1)
         .join(', ');
 
       updatedMatches[idx].Score_1 = scoreString;
@@ -125,7 +117,19 @@ export default function FarewellAdmin() {
         [`matches.${selectedFormat}`]: updatedMatches,
         lastUpdated: new Date().toISOString()
       });
-      alert("Live Score Pushed!");
+
+      // ✨ AUTO-ADVANCE WINNER TO NEXT ROUND
+      if (status === 'completed' && winner) {
+        try {
+          await advanceWinners(selectedFormat, selectedMatchId);
+          alert("✅ Score updated! Winner advanced to next round.");
+        } catch (error) {
+          console.error("Advancement error:", error);
+          alert("✅ Score updated! (Note: Could not auto-advance winner)");
+        }
+      } else {
+        alert("Live Score Pushed!");
+      }
       
       if (status === 'completed') {
         setWinner('');
@@ -134,7 +138,6 @@ export default function FarewellAdmin() {
     }
   };
 
-  // --- LOGIN SCREEN (Remains unchanged) ---
   if (!user) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center bg-slate-100 p-4">
@@ -165,7 +168,6 @@ export default function FarewellAdmin() {
     <div className="min-h-screen bg-slate-100 p-2 pb-20 md:p-4">
       <div className="max-w-md mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden mt-4">
         
-        {/* Header */}
         <div className="bg-slate-900 p-6 text-white flex justify-between items-center">
           <h1 className="text-xl font-black flex items-center gap-2 tracking-wide">
             <Activity className="text-red-500 animate-pulse" /> UMPIRE MODE
@@ -177,7 +179,6 @@ export default function FarewellAdmin() {
 
         <div className="p-6 space-y-6">
           
-          {/* Match Selection */}
           <div className="space-y-3">
             <div className="flex flex-wrap gap-2">
               {data.formats.map((f: string) => (
@@ -201,11 +202,9 @@ export default function FarewellAdmin() {
             </select>
           </div>
 
-          {/* --- ACTIVE UMPIRE CONTROLS --- */}
           {selectedMatchId && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
               
-              {/* Set Navigation */}
               <div className="flex items-center gap-2 overflow-x-auto pb-2">
                 {scores.map((_, idx) => (
                   <button 
@@ -223,9 +222,7 @@ export default function FarewellAdmin() {
                 )}
               </div>
 
-              {/* Big Score Buttons */}
               <div className="grid grid-cols-2 gap-4">
-                {/* Player 1 */}
                 <div className="space-y-2">
                   <div className="text-center font-bold text-slate-600 h-10 line-clamp-2 leading-tight">{p1Name}</div>
                   <button 
@@ -240,7 +237,6 @@ export default function FarewellAdmin() {
                   </button>
                 </div>
 
-                {/* Player 2 */}
                 <div className="space-y-2">
                   <div className="text-center font-bold text-slate-600 h-10 line-clamp-2 leading-tight">{p2Name}</div>
                   <button 
@@ -256,7 +252,6 @@ export default function FarewellAdmin() {
                 </div>
               </div>
 
-              {/* Status & Match Control */}
               <div className="bg-slate-50 p-4 rounded-2xl border-2 border-slate-100 space-y-4">
                 <select 
                   className="w-full p-3 bg-white border-2 border-slate-200 rounded-xl font-bold"
