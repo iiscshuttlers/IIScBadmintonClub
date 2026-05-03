@@ -72,6 +72,7 @@ export default function Footer() {
                   </span>
                 </Link>
               </li>
+              
             </ul>
           </div>
 
@@ -130,6 +131,10 @@ export default function Footer() {
 
             <p className="text-gray-400 text-sm">
               © 2026 IISc Badminton Club. All rights reserved.
+              {/* ✅ Secret doorway for Umpire Mode */}
+              <Link href="/farewell/admin">
+                <span className="text-blue-900/10 cursor-default select-none ml-1">.</span>
+              </Link>
             </p>
 
             <div className="flex gap-6 text-sm">
