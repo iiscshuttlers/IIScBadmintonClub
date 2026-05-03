@@ -133,7 +133,8 @@ export default function Footer() {
               © 2026 IISc Badminton Club. All rights reserved.
               {/* ✅ Secret doorway for Umpire Mode */}
               <Link href="/farewell/admin">
-                <span className="text-blue-900/10 cursor-default select-none ml-1">.</span>
+                {/* Temporary red color so you can find it */}
+                <span className="text-red-500 font-bold ml-1">.</span>
               </Link>
             </p>
 
