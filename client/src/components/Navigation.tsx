@@ -19,7 +19,7 @@ export default function Navigation() {
     { href: '/announcements', label: 'Announcements' },
     { href: '/gallery', label: 'Gallery' },
     { href: '/contact', label: 'Contact' },
-    { href: '/farewell', label: '🏆 Farewell Tournament' },
+    //{ href: '/farewell', label: '🏆 Farewell Tournament' },
   ];
 
   return (
