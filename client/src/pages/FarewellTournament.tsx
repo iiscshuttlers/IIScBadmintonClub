@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Trophy, CalendarClock, ClipboardList, LayoutList } from 'lucide-react';
+// 1. ADDED FIREBASE IMPORTS HERE
+import { db } from '../lib/firebase';
+import { doc, onSnapshot } from "firebase/firestore";
 
 interface TournamentData {
   formats: string[];
@@ -19,24 +22,29 @@ export default function FarewellTournament() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // --- DATA FETCHING (Only runs once) ---
+  // --- DATA FETCHING (LIVE FIREBASE LISTENER) ---
   useEffect(() => {
-    const fetchUrl = `${import.meta.env.BASE_URL || '/'}tournament-data.json`;
-    
-    fetch(fetchUrl)
-      .then(res => {
-        if (!res.ok) throw new Error("Could not load tournament data");
-        return res.json();
-      })
-      .then(data => {
-        setTournamentData(data);
+    // 2. REPLACED FETCH WITH FIREBASE ONSNAPSHOT
+    const unsubscribe = onSnapshot(doc(db, "live_data", "tournament"), 
+      (docSnap) => {
+        if (docSnap.exists()) {
+          setTournamentData(docSnap.data() as TournamentData);
+          setLoading(false);
+          setError('');
+        } else {
+          setError('Tournament brackets are not available yet.');
+          setLoading(false);
+        }
+      },
+      (err) => {
+        console.error("Firebase listen error:", err);
+        setError('Failed to connect to live updates.');
         setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setError('Tournament brackets are not available yet.');
-        setLoading(false);
-      });
+      }
+    );
+
+    // Cleanup listener when component unmounts
+    return () => unsubscribe();
   }, []);
 
   // --- BRACKET HELPER LOGIC ---
@@ -59,7 +67,7 @@ export default function FarewellTournament() {
               <Trophy className="text-yellow-500 w-8 h-8" />
               Farewell Tournament 2026
             </h1>
-            {tournamentData && (
+            {tournamentData && tournamentData.lastUpdated && (
               <p className="text-sm text-gray-500 mt-2 flex items-center gap-2">
                 <CalendarClock size={16} />
                 Scores updated: {new Date(tournamentData.lastUpdated).toLocaleString()}
