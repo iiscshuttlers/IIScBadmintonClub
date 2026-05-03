@@ -12,13 +12,14 @@ import About from './pages/About';
 import Facilities from './pages/Facilities';
 import Events from './pages/Events';
 import Announcements from './pages/Announcements';
-import FarewellMatchPage from './pages/FarewellMatchPage';
 import Gallery from './pages/Gallery';
 import Contact from './pages/Contact';
 import Navigation from './components/Navigation';
 import Footer from './components/Footer';
 import TournamentDetail from './pages/TournamentDetail';
-import FarewellBrackets from './pages/FarewellBrackets';
+
+// ✅ Import the new merged component
+import FarewellTournament from './pages/FarewellTournament';
 
 function AppRoutes() {
   return (
@@ -28,7 +29,8 @@ function AppRoutes() {
       <Route path="/facilities" component={Facilities} />
 
       {/* Specific routes first */}
-      <Route path="/events/farewell-match" component={FarewellMatchPage} />
+      {/* ✅ Single route for the entire Farewell Hub */}
+      <Route path="/farewell" component={FarewellTournament} />
       <Route path="/events/:slug" component={TournamentDetail} />
 
       {/* Generic */}
@@ -37,7 +39,6 @@ function AppRoutes() {
       <Route path="/announcements" component={Announcements} />
       <Route path="/gallery" component={Gallery} />
       <Route path="/contact" component={Contact} />
-      <Route path="/farewell" component={FarewellBrackets} />
 
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

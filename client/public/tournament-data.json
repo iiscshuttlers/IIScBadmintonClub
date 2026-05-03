@@ -1,0 +1,45 @@
+{
+  "formats": ["MS", "WS", "MD", "WD", "XD"],
+  "lastUpdated": "2026-05-03T16:00:00Z",
+  "config": {
+    "eventName": "Farewell Tournament 2026",
+    "venue": "IISc Gymkhana"
+  },
+  "players": {},
+  "matches": {
+    "MS": [
+      { "Match_ID": "MS_R1_1", "Round": "Round of 32", "Player_1": "Aryan (CSA)", "Player_2": "Bye", "Status": "completed", "Score_1": "", "Winner": "Aryan (CSA)" },
+      { "Match_ID": "MS_R1_2", "Round": "Round of 32", "Player_1": "Vijay (EE)", "Player_2": "Sanjay (Phy)", "Status": "completed", "Score_1": "21-15, 21-18", "Winner": "Vijay (EE)" },
+      { "Match_ID": "MS_R1_3", "Round": "Round of 32", "Player_1": "Rahul (ME)", "Player_2": "Naveen (Civil)", "Status": "in-progress", "Score_1": "21-10", "Winner": "" },
+      { "Match_ID": "MS_R1_4", "Round": "Round of 32", "Player_1": "Karan (Math)", "Player_2": "Rohit (Bio)", "Status": "scheduled", "Score_1": "", "Winner": "" },
+      { "Match_ID": "MS_R2", "Round": "Round of 16", "Player_1": "Aryan (Winner R1_1)", "Player_2": "Vijay (Winner R1_2)", "Status": "scheduled", "Score_1": "", "Winner": "" },
+      { "Match_ID": "MS_QF", "Round": "Quarterfinals", "Player_1": "TBD", "Player_2": "TBD", "Status": "scheduled", "Score_1": "", "Winner": "" },
+      { "Match_ID": "MS_SF", "Round": "Semifinals", "Player_1": "TBD", "Player_2": "TBD", "Status": "scheduled", "Score_1": "", "Winner": "" },
+      { "Match_ID": "MS_FINAL", "Round": "Final", "Player_1": "TBD", "Player_2": "TBD", "Status": "scheduled", "Score_1": "", "Winner": "" }
+    ],
+    "WS": [
+      { "Match_ID": "WS_R1_1", "Round": "Quarterfinals", "Player_1": "Aditi (Phy)", "Player_2": "Bye", "Status": "completed", "Score_1": "", "Winner": "Aditi (Phy)" },
+      { "Match_ID": "WS_R1_2", "Round": "Quarterfinals", "Player_1": "Neha (CSA)", "Player_2": "Priya (EE)", "Status": "scheduled", "Score_1": "", "Winner": "" },
+      { "Match_ID": "WS_SF", "Round": "Semifinals", "Player_1": "Aditi (Winner R1_1)", "Player_2": "TBD", "Status": "scheduled", "Score_1": "", "Winner": "" },
+      { "Match_ID": "WS_FINAL", "Round": "Final", "Player_1": "TBD", "Player_2": "TBD", "Status": "scheduled", "Score_1": "", "Winner": "" }
+    ],
+    "MD": [
+      { "Match_ID": "MD_R1_1", "Round": "Round of 32", "Players_1": "Aryan/Vikram (CSA)", "Players_2": "Bye", "Status": "completed", "Score_1": "", "Winner": "Aryan/Vikram (CSA)" },
+      { "Match_ID": "MD_R1_2", "Round": "Round of 32", "Players_1": "Vijay/Akhil (EE)", "Players_2": "Sanjay/Varun (Phy)", "Status": "scheduled", "Score_1": "", "Winner": "" },
+      { "Match_ID": "MD_R2", "Round": "Round of 16", "Players_1": "TBD", "Players_2": "TBD", "Status": "scheduled", "Score_1": "", "Winner": "" },
+      { "Match_ID": "MD_FINAL", "Round": "Final", "Players_1": "TBD", "Players_2": "TBD", "Status": "scheduled", "Score_1": "", "Winner": "" }
+    ],
+    "WD": [
+      { "Match_ID": "WD_R1_1", "Round": "Quarterfinals", "Players_1": "Aditi/Sneha (Phy/Bio)", "Players_2": "Bye", "Status": "completed", "Score_1": "", "Winner": "Aditi/Sneha (Phy/Bio)" },
+      { "Match_ID": "WD_SF", "Round": "Semifinals", "Players_1": "TBD", "Players_2": "TBD", "Status": "scheduled", "Score_1": "", "Winner": "" },
+      { "Match_ID": "WD_FINAL", "Round": "Final", "Players_1": "TBD", "Players_2": "TBD", "Status": "scheduled", "Score_1": "", "Winner": "" }
+    ],
+    "XD": [
+      { "Match_ID": "XD_R1_1", "Round": "Round of 16", "Players_1": "Rahul/Aditi (ME/Phy)", "Players_2": "Bye", "Status": "completed", "Score_1": "", "Winner": "Rahul/Aditi (ME/Phy)" },
+      { "Match_ID": "XD_R1_2", "Round": "Round of 16", "Players_1": "Vikram/Neha (CSA)", "Players_2": "Sanjay/Priya (EE)", "Status": "in-progress", "Score_1": "21-15", "Winner": "" },
+      { "Match_ID": "XD_QF", "Round": "Quarterfinals", "Players_1": "TBD", "Players_2": "TBD", "Status": "scheduled", "Score_1": "", "Winner": "" },
+      { "Match_ID": "XD_SF", "Round": "Semifinals", "Players_1": "TBD", "Players_2": "TBD", "Status": "scheduled", "Score_1": "", "Winner": "" },
+      { "Match_ID": "XD_FINAL", "Round": "Final", "Players_1": "TBD", "Players_2": "TBD", "Status": "scheduled", "Score_1": "", "Winner": "" }
+    ]
+  }
+}
