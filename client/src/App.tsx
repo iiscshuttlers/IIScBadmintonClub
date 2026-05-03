@@ -7,6 +7,7 @@ import StatusBanner from "@/components/StatusBanner";
 
 import ErrorBoundary from './components/ErrorBoundary';
 import { ThemeProvider } from './contexts/ThemeContext';
+import FarewellAdmin from './pages/FarewellAdmin';
 import Home from './pages/Home';
 import About from './pages/About';
 import Facilities from './pages/Facilities';
@@ -29,6 +30,9 @@ function AppRoutes() {
       <Route path="/facilities" component={Facilities} />
 
       {/* Specific routes first */}
+      {/* ✅ Add the Admin route HERE, above the main farewell route */}
+      <Route path="/farewell/admin" component={FarewellAdmin} />
+      
       {/* ✅ Single route for the entire Farewell Hub */}
       <Route path="/farewell" component={FarewellTournament} />
       <Route path="/events/:slug" component={TournamentDetail} />

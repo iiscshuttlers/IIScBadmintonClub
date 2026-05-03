@@ -1,17 +1,20 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 
+// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyCMuJ54BJIP54sEO53jdqxhU72CcvxpEcK",
-  authDomain: "iisc-badminton.firebaseapp.com",
-  projectId: "iisc-badminton",
-  storageBucket: "iisc-badminton.firebasestorage.app",
-  messagingSenderId: "543271687226",
-  appId: "1:543271687226:web:ad8b388914ff4a531b5103"
+  apiKey: "AIzaSyBswPW816r-G3UDRoQSf5eZLRSIlFHtJnc",
+  authDomain: "iisc-badminton-hub.firebaseapp.com",
+  projectId: "iisc-badminton-hub",
+  storageBucket: "iisc-badminton-hub.firebasestorage.app",
+  messagingSenderId: "258810088674",
+  appId: "1:258810088674:web:457a6da843a1712d69a2bb"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
+// Initialize Cloud Firestore and Authentication and export them
 export const db = getFirestore(app);
 export const auth = getAuth(app);
