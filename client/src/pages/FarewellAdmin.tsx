@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { db, auth } from '../lib/firebase';
-import { doc, setDoc, updateDoc, onSnapshot } from "firebase/firestore";
-import { signInWithEmailAndPassword, onAuthStateChanged, signOut, User } from "firebase/auth";
+import { doc, updateDoc, onSnapshot } from "firebase/firestore";
+import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, User } from "firebase/auth";
 import { Activity, Lock, LogOut } from 'lucide-react';
 
 export default function FarewellAdmin() {
   const [data, setData] = useState<any>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   
   const [selectedFormat, setSelectedFormat] = useState('MS');
   const [selectedMatchId, setSelectedMatchId] = useState('');
@@ -32,12 +30,13 @@ export default function FarewellAdmin() {
     return () => unsubData();
   }, [user]);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // --- NEW GOOGLE LOGIN LOGIC ---
+  const handleGoogleLogin = async () => {
+    const provider = new GoogleAuthProvider();
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await signInWithPopup(auth, provider);
     } catch (error: any) {
-      alert("Login Failed: " + error.message);
+      alert("Google Login Failed: " + error.message);
     }
   };
 
@@ -63,34 +62,29 @@ export default function FarewellAdmin() {
   if (!user) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center bg-slate-100 p-4">
-        <form onSubmit={handleLogin} className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm space-y-6">
-          <div className="flex flex-col items-center gap-2 mb-8">
+        <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm text-center space-y-6">
+          <div className="flex flex-col items-center gap-2 mb-4">
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
               <Lock className="w-8 h-8 text-blue-900" />
             </div>
-            <h2 className="text-2xl font-bold text-slate-800">Admin Login</h2>
+            <h2 className="text-2xl font-bold text-slate-800">Admin Area</h2>
+            <p className="text-slate-500 text-sm">Secure login required to edit matches.</p>
           </div>
           
-          <div>
-            <label className="block text-sm font-bold text-slate-500 mb-2">Email</label>
-            <input type="email" required className="w-full p-3 border-2 rounded-xl" value={email} onChange={e => setEmail(e.target.value)} />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-bold text-slate-500 mb-2">Password</label>
-            <input type="password" required className="w-full p-3 border-2 rounded-xl" value={password} onChange={e => setPassword(e.target.value)} />
-          </div>
-          
-          <button type="submit" className="w-full bg-blue-900 text-white font-bold py-4 rounded-xl mt-4">
-            Sign In
+          <button 
+            onClick={handleGoogleLogin} 
+            className="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-200 text-slate-700 font-bold py-3 rounded-xl hover:bg-slate-50 transition-colors"
+          >
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" className="w-6 h-6" />
+            Sign in with Google
           </button>
-        </form>
+        </div>
       </div>
     );
   }
 
   // --- ADMIN DASHBOARD ---
-  if (!data) return <div className="text-center mt-20">Loading Database...</div>;
+  if (!data) return <div className="text-center mt-20 font-bold animate-pulse">Loading Database...</div>;
 
   return (
     <div className="min-h-screen bg-slate-100 p-4 pb-20">
