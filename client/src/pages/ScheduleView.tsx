@@ -2,6 +2,7 @@
 // Add this as a third tab in FarewellTournament.tsx
 // Import and use: <ScheduleView tournamentData={tournamentData} />
 
+import { useState } from 'react';
 import { Clock, Trophy } from 'lucide-react';
 
 const FORMAT_LABELS: Record<string, string> = {
@@ -34,6 +35,7 @@ interface ScheduleViewProps {
 
 export function ScheduleView({ tournamentData }: ScheduleViewProps) {
   if (!tournamentData) return null;
+  const [activeFormat, setActiveFormat] = useState<string>('ALL');
 
   // Flatten all matches with format tag + sort by Time
   const allMatches = Object.entries(tournamentData.matches).flatMap(
@@ -41,7 +43,9 @@ export function ScheduleView({ tournamentData }: ScheduleViewProps) {
       (matches as any[]).map((m) => ({ ...m, format }))
   );
 
-  allMatches.sort((a, b) => {
+  const filtered = activeFormat === 'ALL' ? allMatches : allMatches.filter(m => m.format === activeFormat);
+
+  filtered.sort((a, b) => {
     const toMins = (t: string) => {
       if (!t) return 9999;
       const [h, m] = t.split(':').map(Number);
@@ -52,7 +56,7 @@ export function ScheduleView({ tournamentData }: ScheduleViewProps) {
 
   // Group by time slot
   const byTime: Record<string, any[]> = {};
-  allMatches.forEach((m) => {
+  filtered.forEach((m) => {
     const key = m.Time || 'TBD';
     if (!byTime[key]) byTime[key] = [];
     byTime[key].push(m);
@@ -82,14 +86,32 @@ export function ScheduleView({ tournamentData }: ScheduleViewProps) {
   return (
     <div className="max-w-4xl mx-auto space-y-2 animate-in fade-in duration-300">
 
-      {/* Legend */}
+      {/* Filter pills */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-6">
         <div className="flex flex-wrap gap-2 justify-center">
+          <button
+            onClick={() => setActiveFormat('ALL')}
+            className={`px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${
+              activeFormat === 'ALL'
+                ? 'bg-gray-800 text-white border-gray-800'
+                : 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200'
+            }`}
+          >
+            All
+          </button>
           {Object.entries(FORMAT_LABELS).map(([code, label]) =>
             tournamentData.formats.includes(code) ? (
-              <span key={code} className={`px-3 py-1 rounded-full text-xs font-bold border ${FORMAT_COLORS[code] || 'bg-gray-100 text-gray-700'}`}>
+              <button
+                key={code}
+                onClick={() => setActiveFormat(code)}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                  activeFormat === code
+                    ? 'bg-gray-800 text-white border-gray-800'
+                    : `${FORMAT_COLORS[code]} hover:opacity-80`
+                }`}
+              >
                 {code} — {label}
-              </span>
+              </button>
             ) : null
           )}
         </div>

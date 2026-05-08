@@ -130,7 +130,7 @@ export default function FarewellTournament() {
               }`}
             >
               <Clock size={18} />
-              Schedule
+              Schedule & Live Scores
             </button>
           </div>
         </div>
