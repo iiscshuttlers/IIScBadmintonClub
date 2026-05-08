@@ -1,176 +1,210 @@
 {
-  "formats": [
-    "MS",
-    "WS",
-    "MD",
-    "WD",
-    "XD"
-  ],
-  "lastUpdated": "2026-05-07T10:18:33.494Z",
+  "formats": ["MS", "WS", "XD", "MD"],
+  "lastUpdated": "2026-05-09T09:00:00.000Z",
   "config": {
-    "eventName": "Farewell Tournament 2026",
-    "venue": "IISc Gymkhana"
+    "eventName": "Farewell Badminton Tournament 2026",
+    "date": "Saturday, 9th May 2026",
+    "venue": "IISc Badminton Court"
   },
   "matches": {
     "MS": [
       {
         "Match_ID": "MS1",
         "Round": "League",
-        "Pool": "A",
-        "Player_1": "Aneesh (UG)",
-        "Player_2": "VAISHNAV RAJ T (Civil)"
+        "Pool": "League",
+        "Player_1": "LAKHINANA HARSHAVARDHAN (ME)",
+        "Player_2": "Nikhil P V S (CeNSE)",
+        "Time": "15:00",
+        "Date": "Saturday, 9th May 2026",
+        "Status": "scheduled",
+        "Winner": "",
+        "Score_1": ""
       },
       {
         "Match_ID": "MS2",
         "Round": "League",
-        "Pool": "B",
-        "Player_1": "LAKHINANA HARSHAVARDHAN (ME)",
-        "Player_2": "Vishvajeet Verma (AI)"
+        "Pool": "League",
+        "Player_1": "Jalaj (RBCPS)",
+        "Player_2": "Winner of MS1",
+        "Time": "16:00",
+        "Date": "Saturday, 9th May 2026",
+        "Status": "scheduled",
+        "Winner": "",
+        "Score_1": ""
       },
       {
         "Match_ID": "MS3",
-        "Round": "League",
-        "Pool": "A",
-        "Player_1": "Aneesh (UG)",
-        "Player_2": "P V S Nikhil (CeNSE)"
-      },
-      {
-        "Match_ID": "MS4",
-        "Round": "League",
-        "Pool": "B",
-        "Player_1": "Jalaj (RBCCPS)",
-        "Player_2": "Vishvajeet Verma (AI)"
-      },
-      {
-        "Match_ID": "MS5",
-        "Round": "League",
-        "Pool": "A",
-        "Player_1": "P V S Nikhil (CeNSE)",
-        "Player_2": "VAISHNAV RAJ T (Civil)"
-      },
-      {
-        "Match_ID": "MS6",
-        "Round": "League",
-        "Pool": "B",
-        "Player_1": "Jalaj (RBCCPS)",
-        "Player_2": "LAKHINANA HARSHAVARDHAN (ME)"
-      },
-      {
-        "Match_ID": "MS7",
         "Round": "Finals",
-        "Pool": "",
-        "Player_1": "A1",
-        "Player_2": "B1"
+        "Pool": "Finals",
+        "Player_1": "Aneesh (UG)",
+        "Player_2": "Winner of MS2",
+        "Time": "20:00",
+        "Date": "Saturday, 9th May 2026",
+        "Status": "scheduled",
+        "Winner": "",
+        "Score_1": ""
       }
     ],
-
     "WS": [
       {
         "Match_ID": "WS1",
         "Round": "Finals",
-        "Pool": "",
+        "Pool": "Finals",
         "Player_1": "Radhika Dutt (CES)",
-        "Player_2": "Tanisha Kumar (UG)"
+        "Player_2": "Tanisha Kumar (UG)",
+        "Time": "19:30",
+        "Date": "Saturday, 9th May 2026",
+        "Status": "scheduled",
+        "Winner": "",
+        "Score_1": ""
       }
     ],
-
     "XD": [
       {
         "Match_ID": "XD1",
         "Round": "KO",
-        "Pool": "",
-        "Players_1": "Vijay Shankar Shukla (IAP) and Sweta",
-        "Players_2": "Megha Patidar (CSA) and Paras Raina (AI)"
+        "Pool": "KO",
+        "Players_1": "Vijay Shankar Shukla (IAP) & Sweta",
+        "Players_2": "Archie Gaur (CSA) & Yogesh Kumar Sahu (CSA)",
+        "Time": "15:20",
+        "Date": "Saturday, 9th May 2026",
+        "Status": "scheduled",
+        "Winner": "",
+        "Score_1": ""
       },
       {
         "Match_ID": "XD2",
-        "Round": "League",
-        "Pool": "A",
-        "Players_1": "Megha Patidar (CSA) and Paras Raina (AI)",
-        "Players_2": "Tanisha Kumar (UG) and Aneesh (UG)"
+        "Round": "League A",
+        "Pool": "League A",
+        "Players_1": "Megha Patidar (CSA) & Paras Raina (AI)",
+        "Players_2": "Tanisha Kumar (UG) & Aneesh (UG)",
+        "Time": "16:20",
+        "Date": "Saturday, 9th May 2026",
+        "Status": "scheduled",
+        "Winner": "",
+        "Score_1": ""
       },
       {
         "Match_ID": "XD3",
-        "Round": "League",
-        "Pool": "B",
-        "Players_1": "Radhika Dutt (CES) and Kaling Danggen (CES)",
-        "Players_2": "Winner of XD1"
+        "Round": "League B",
+        "Pool": "League B",
+        "Players_1": "Radhika Dutt (CES) & Kaling Danggen (CES)",
+        "Players_2": "Winner of XD1",
+        "Time": "17:20",
+        "Date": "Saturday, 9th May 2026",
+        "Status": "scheduled",
+        "Winner": "",
+        "Score_1": ""
       },
       {
         "Match_ID": "XD4",
         "Round": "Finals",
-        "Pool": "",
+        "Pool": "Finals",
         "Players_1": "Winner of XD2",
-        "Players_2": "Winner of XD3"
+        "Players_2": "Winner of XD3",
+        "Time": "20:30",
+        "Date": "Saturday, 9th May 2026",
+        "Status": "scheduled",
+        "Winner": "",
+        "Score_1": ""
       }
     ],
-
     "MD": [
       {
         "Match_ID": "MD1",
         "Round": "KO",
-        "Pool": "",
-        "Players_1": "Amandeep Nokhwal (CSA) and Ashish Nambiar (CSA)",
-        "Players_2": "Sangam Kumar Jena (RBCCPS) and Yogesh Kumar Sahu (CSA)"
+        "Pool": "KO",
+        "Players_1": "Amandeep Nokhwal (CSA) & Ashish Nambiar (CSA)",
+        "Players_2": "Lakhimana Harshavardhan (ME) & Paras Raina (AI)",
+        "Time": "15:40",
+        "Date": "Saturday, 9th May 2026",
+        "Status": "scheduled",
+        "Winner": "",
+        "Score_1": ""
       },
       {
         "Match_ID": "MD2",
-        "Round": "League",
-        "Pool": "A",
-        "Players_1": "Kaling Danggen (CES) and Raja Janmejay (AE)",
-        "Players_2": "Vaishnav Raj T (CE) and Nikhil P V S (CeNSE)"
+        "Round": "League A",
+        "Pool": "League A",
+        "Players_1": "Kaling Danggen (CES) & Raja Janmejay (AE)",
+        "Players_2": "Vaishnav Raj T (CE) & Satyam Panchal (CHEP)",
+        "Time": "16:40",
+        "Date": "Saturday, 9th May 2026",
+        "Status": "scheduled",
+        "Winner": "",
+        "Score_1": ""
       },
       {
         "Match_ID": "MD3",
-        "Round": "League",
-        "Pool": "B",
-        "Players_1": "Jalaj Siroliya (RBCCPS) and Shubham Singh (ECE)",
-        "Players_2": "Winner of MD1"
+        "Round": "League B",
+        "Pool": "League B",
+        "Players_1": "Jalaj Sirolia (RBCPS) & Shubham Singh (ECE)",
+        "Players_2": "Winner of MD1",
+        "Time": "17:00",
+        "Date": "Saturday, 9th May 2026",
+        "Status": "scheduled",
+        "Winner": "",
+        "Score_1": ""
       },
       {
         "Match_ID": "MD4",
-        "Round": "League",
-        "Pool": "A",
-        "Players_1": "Kaling Danggen (CES) and Raja Janmejay (AE)",
-        "Players_2": "Vishvajeet Verma (AI) and Paras Raina (AI)"
+        "Round": "League A",
+        "Pool": "League A",
+        "Players_1": "Kaling Danggen (CES) & Raja Janmejay (AE)",
+        "Players_2": "Vishwajeet Verma (AI) & Paras Raina (AI)",
+        "Time": "18:00",
+        "Date": "Saturday, 9th May 2026",
+        "Status": "scheduled",
+        "Winner": "",
+        "Score_1": ""
       },
       {
         "Match_ID": "MD5",
-        "Round": "League",
-        "Pool": "B",
-        "Players_1": "Anshul (UG) and Bhupendra (CE)",
-        "Players_2": "Winner of MD1"
+        "Round": "League B",
+        "Pool": "League B",
+        "Players_1": "Anshul (UG) & Bhupendra (CE)",
+        "Players_2": "Winner of MD1",
+        "Time": "17:40",
+        "Date": "Saturday, 9th May 2026",
+        "Status": "scheduled",
+        "Winner": "",
+        "Score_1": ""
       },
       {
         "Match_ID": "MD6",
-        "Round": "League",
-        "Pool": "A",
-        "Players_1": "Vishvajeet Verma (AI) and Paras Raina (AI)",
-        "Players_2": "Vaishnav Raj T (CE) and Nikhil P V S (CeNSE)"
+        "Round": "League A",
+        "Pool": "League A",
+        "Players_1": "Vishwajeet Verma (AI) & Paras Raina (AI)",
+        "Players_2": "Vaishnav Raj T (CE) & Nikhil P V S (CeNSE)",
+        "Time": "18:20",
+        "Date": "Saturday, 9th May 2026",
+        "Status": "scheduled",
+        "Winner": "",
+        "Score_1": ""
       },
       {
         "Match_ID": "MD7",
-        "Round": "League",
-        "Pool": "B",
-        "Players_1": "Jalaj Siroliya (RBCCPS) and Shubham Singh (ECE)",
-        "Players_2": "Anshul (UG) and Bhupendra (CE)"
+        "Round": "League B",
+        "Pool": "League B",
+        "Players_1": "Jalaj Sirolia (RBCPS) & Shubham Singh (ECE)",
+        "Players_2": "Anshul (UG) & Bhupendra (CE)",
+        "Time": "18:40",
+        "Date": "Saturday, 9th May 2026",
+        "Status": "scheduled",
+        "Winner": "",
+        "Score_1": ""
       },
       {
         "Match_ID": "MD8",
         "Round": "Finals",
-        "Pool": "",
-        "Players_1": "A1",
-        "Players_2": "B1"
-      }
-    ],
-
-    "WD": [
-      {
-        "Match_ID": "WD1",
-        "Round": "Finals",
-        "Pool": "",
-        "Players_1": "Megha Patidar (CSA) and Radhika Dutt (CES)",
-        "Players_2": "Archie Gaur (CSA) and Tanisha Kumar (UG)"
+        "Pool": "Finals",
+        "Players_1": "A1 (League A Winner)",
+        "Players_2": "B1 (League B Winner)",
+        "Time": "19:30",
+        "Date": "Saturday, 9th May 2026",
+        "Status": "scheduled",
+        "Winner": "",
+        "Score_1": ""
       }
     ]
   }
