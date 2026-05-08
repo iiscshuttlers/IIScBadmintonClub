@@ -1,0 +1,6 @@
+Workflow when re-seeding:
+bashnode scores-backup.cjs backup    # save scores
+node upload.cjs                  # re-seed full data
+node scores-backup.cjs restore   # put scores back
+Workflow to add advancesTo without touching anything:
+bashnode patch-progression.cjs       # patches only progression fields

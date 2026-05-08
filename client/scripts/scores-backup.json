@@ -1,0 +1,90 @@
+{
+  "WS": {
+    "WS1": {
+      "Status": "scheduled",
+      "Winner": "",
+      "Score_1": ""
+    }
+  },
+  "XD": {
+    "XD1": {
+      "Status": "scheduled",
+      "Winner": "",
+      "Score_1": ""
+    },
+    "XD2": {
+      "Status": "scheduled",
+      "Winner": "",
+      "Score_1": ""
+    },
+    "XD3": {
+      "Status": "scheduled",
+      "Winner": "",
+      "Score_1": ""
+    },
+    "XD4": {
+      "Status": "scheduled",
+      "Winner": "",
+      "Score_1": ""
+    }
+  },
+  "MD": {
+    "MD1": {
+      "Status": "scheduled",
+      "Winner": "",
+      "Score_1": ""
+    },
+    "MD2": {
+      "Status": "scheduled",
+      "Winner": "",
+      "Score_1": ""
+    },
+    "MD3": {
+      "Status": "scheduled",
+      "Winner": "",
+      "Score_1": ""
+    },
+    "MD4": {
+      "Status": "scheduled",
+      "Winner": "",
+      "Score_1": ""
+    },
+    "MD5": {
+      "Status": "scheduled",
+      "Winner": "",
+      "Score_1": ""
+    },
+    "MD6": {
+      "Status": "scheduled",
+      "Winner": "",
+      "Score_1": ""
+    },
+    "MD7": {
+      "Status": "scheduled",
+      "Winner": "",
+      "Score_1": ""
+    },
+    "MD8": {
+      "Status": "scheduled",
+      "Winner": "",
+      "Score_1": ""
+    }
+  },
+  "MS": {
+    "MS1": {
+      "Status": "scheduled",
+      "Winner": "",
+      "Score_1": "0-0"
+    },
+    "MS2": {
+      "Status": "scheduled",
+      "Winner": "",
+      "Score_1": ""
+    },
+    "MS3": {
+      "Status": "scheduled",
+      "Winner": "",
+      "Score_1": ""
+    }
+  }
+}
