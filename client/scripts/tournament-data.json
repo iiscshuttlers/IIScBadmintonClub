@@ -1,5 +1,10 @@
 {
-  "formats": ["MS", "WS", "XD", "MD"],
+  "formats": [
+    "MS",
+    "WS",
+    "XD",
+    "MD"
+  ],
   "lastUpdated": "2026-05-09T09:00:00.000Z",
   "config": {
     "eventName": "Farewell Badminton Tournament 2026",
@@ -18,7 +23,11 @@
         "Date": "Saturday, 9th May 2026",
         "Status": "scheduled",
         "Winner": "",
-        "Score_1": ""
+        "Score_1": "",
+        "advancesTo": {
+          "matchId": "MS2",
+          "position": 2
+        }
       },
       {
         "Match_ID": "MS2",
@@ -30,7 +39,11 @@
         "Date": "Saturday, 9th May 2026",
         "Status": "scheduled",
         "Winner": "",
-        "Score_1": ""
+        "Score_1": "",
+        "advancesTo": {
+          "matchId": "MS3",
+          "position": 2
+        }
       },
       {
         "Match_ID": "MS3",
@@ -70,7 +83,11 @@
         "Date": "Saturday, 9th May 2026",
         "Status": "scheduled",
         "Winner": "",
-        "Score_1": ""
+        "Score_1": "",
+        "advancesTo": {
+          "matchId": "XD3",
+          "position": 2
+        }
       },
       {
         "Match_ID": "XD2",
@@ -82,7 +99,11 @@
         "Date": "Saturday, 9th May 2026",
         "Status": "scheduled",
         "Winner": "",
-        "Score_1": ""
+        "Score_1": "",
+        "advancesTo": {
+          "matchId": "XD4",
+          "position": 1
+        }
       },
       {
         "Match_ID": "XD3",
@@ -94,7 +115,11 @@
         "Date": "Saturday, 9th May 2026",
         "Status": "scheduled",
         "Winner": "",
-        "Score_1": ""
+        "Score_1": "",
+        "advancesTo": {
+          "matchId": "XD4",
+          "position": 2
+        }
       },
       {
         "Match_ID": "XD4",
@@ -120,7 +145,11 @@
         "Date": "Saturday, 9th May 2026",
         "Status": "scheduled",
         "Winner": "",
-        "Score_1": ""
+        "Score_1": "",
+        "advancesTo": {
+          "matchId": "MD3",
+          "position": 2
+        }
       },
       {
         "Match_ID": "MD2",
