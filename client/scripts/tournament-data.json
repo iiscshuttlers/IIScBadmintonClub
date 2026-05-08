@@ -10,8 +10,8 @@
     "MS": [
       {
         "Match_ID": "MS1",
-        "Round": "League",
-        "Pool": "League",
+        "Round": "Knock-out",
+        "Pool": "Knock-out",
         "Player_1": "LAKHINANA HARSHAVARDHAN (ME)",
         "Player_2": "Nikhil P V S (CeNSE)",
         "Time": "15:00",
@@ -22,8 +22,8 @@
       },
       {
         "Match_ID": "MS2",
-        "Round": "League",
-        "Pool": "League",
+        "Round": "Knock-out",
+        "Pool": "Knock-out",
         "Player_1": "Jalaj (RBCPS)",
         "Player_2": "Winner of MS1",
         "Time": "16:00",
@@ -62,8 +62,8 @@
     "XD": [
       {
         "Match_ID": "XD1",
-        "Round": "KO",
-        "Pool": "KO",
+        "Round": "Knock-out",
+        "Pool": "Knock-out",
         "Players_1": "Vijay Shankar Shukla (IAP) & Sweta",
         "Players_2": "Archie Gaur (CSA) & Yogesh Kumar Sahu (CSA)",
         "Time": "15:20",
@@ -74,8 +74,8 @@
       },
       {
         "Match_ID": "XD2",
-        "Round": "League A",
-        "Pool": "League A",
+        "Round": "Pool A Match",
+        "Pool": "Pool A",
         "Players_1": "Megha Patidar (CSA) & Paras Raina (AI)",
         "Players_2": "Tanisha Kumar (UG) & Aneesh (UG)",
         "Time": "16:20",
@@ -86,8 +86,8 @@
       },
       {
         "Match_ID": "XD3",
-        "Round": "League B",
-        "Pool": "League B",
+        "Round": "Pool B Match",
+        "Pool": "Pool B",
         "Players_1": "Radhika Dutt (CES) & Kaling Danggen (CES)",
         "Players_2": "Winner of XD1",
         "Time": "17:20",
@@ -112,8 +112,8 @@
     "MD": [
       {
         "Match_ID": "MD1",
-        "Round": "KO",
-        "Pool": "KO",
+        "Round": "Knock-out",
+        "Pool": "Knock-out",
         "Players_1": "Amandeep Nokhwal (CSA) & Ashish Nambiar (CSA)",
         "Players_2": "Lakhimana Harshavardhan (ME) & Paras Raina (AI)",
         "Time": "15:40",
@@ -124,8 +124,8 @@
       },
       {
         "Match_ID": "MD2",
-        "Round": "League A",
-        "Pool": "League A",
+        "Round": "Pool A Match",
+        "Pool": "Pool A",
         "Players_1": "Kaling Danggen (CES) & Raja Janmejay (AE)",
         "Players_2": "Vaishnav Raj T (CE) & Satyam Panchal (CHEP)",
         "Time": "16:40",
@@ -136,8 +136,8 @@
       },
       {
         "Match_ID": "MD3",
-        "Round": "League B",
-        "Pool": "League B",
+        "Round": "Pool B Match",
+        "Pool": "Pool B",
         "Players_1": "Jalaj Sirolia (RBCPS) & Shubham Singh (ECE)",
         "Players_2": "Winner of MD1",
         "Time": "17:00",
@@ -148,8 +148,8 @@
       },
       {
         "Match_ID": "MD4",
-        "Round": "League A",
-        "Pool": "League A",
+        "Round": "Pool A Match",
+        "Pool": "Pool A",
         "Players_1": "Kaling Danggen (CES) & Raja Janmejay (AE)",
         "Players_2": "Vishwajeet Verma (AI) & Paras Raina (AI)",
         "Time": "18:00",
@@ -160,8 +160,8 @@
       },
       {
         "Match_ID": "MD5",
-        "Round": "League B",
-        "Pool": "League B",
+        "Round": "Pool B Match",
+        "Pool": "Pool B",
         "Players_1": "Anshul (UG) & Bhupendra (CE)",
         "Players_2": "Winner of MD1",
         "Time": "17:40",
@@ -172,8 +172,8 @@
       },
       {
         "Match_ID": "MD6",
-        "Round": "League A",
-        "Pool": "League A",
+        "Round": "Pool A Match",
+        "Pool": "Pool A",
         "Players_1": "Vishwajeet Verma (AI) & Paras Raina (AI)",
         "Players_2": "Vaishnav Raj T (CE) & Nikhil P V S (CeNSE)",
         "Time": "18:20",
@@ -184,8 +184,8 @@
       },
       {
         "Match_ID": "MD7",
-        "Round": "League B",
-        "Pool": "League B",
+        "Round": "Pool B Match",
+        "Pool": "Pool B",
         "Players_1": "Jalaj Sirolia (RBCPS) & Shubham Singh (ECE)",
         "Players_2": "Anshul (UG) & Bhupendra (CE)",
         "Time": "18:40",
@@ -198,8 +198,8 @@
         "Match_ID": "MD8",
         "Round": "Finals",
         "Pool": "Finals",
-        "Players_1": "A1 (League A Winner)",
-        "Players_2": "B1 (League B Winner)",
+        "Players_1": "A1 (Pool A Winner)",
+        "Players_2": "B1 (Pool B Winner)",
         "Time": "19:30",
         "Date": "Saturday, 9th May 2026",
         "Status": "scheduled",
