@@ -114,8 +114,8 @@ importers:
         specifier: ^12.12.1
         version: 12.12.1
       firebase-admin:
-        specifier: ^13.8.0
-        version: 13.8.0
+        specifier: ^13.9.0
+        version: 13.9.0
       framer-motion:
         specifier: ^12.23.22
         version: 12.38.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -3533,8 +3533,8 @@ packages:
     resolution: {integrity: sha512-aA4RyPcd3badbdABGDuTXCMTtOneUCAYH/gxoYRTZlIJdF0YPWuGqiAsIrhNnnqdXGswYk6dGujem4w80UJFhg==}
     engines: {node: '>= 0.8'}
 
-  firebase-admin@13.8.0:
-    resolution: {integrity: sha512-iawoQkmZbsA+2DY5UEuB8f6jSlskzzySoye0D2F6e3zlDZX9DUcXf0HhZqLUn/P6WhLGvTf6ZtCmshZvhAgTYg==}
+  firebase-admin@13.9.0:
+    resolution: {integrity: sha512-qiCVBBFH+kfLiCXuuE9eAbBQSckPuA43fbQ/MNvQfd9nZcHFQExmQICD/N0sZrNZDNy8FSywhjFzJJGVQzG5UA==}
     engines: {node: '>=18'}
 
   firebase@12.12.1:
@@ -9242,7 +9242,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  firebase-admin@13.8.0:
+  firebase-admin@13.9.0:
     dependencies:
       '@fastify/busboy': 3.2.0
       '@firebase/database-compat': 2.1.3
