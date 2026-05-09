@@ -67,7 +67,6 @@ export function ScheduleView({ tournamentData }: ScheduleViewProps) {
     const p1Raw = m.Player_1 || m.Players_1 || 'TBD';
     const p2Raw = m.Player_2 || m.Players_2 || 'TBD';
     
-    // Split by '&' or '/' and trim
     const p1List = p1Raw.split(/[&/]/).map((s: string) => s.trim()).filter(Boolean);
     const p2List = p2Raw.split(/[&/]/).map((s: string) => s.trim()).filter(Boolean);
     
@@ -139,7 +138,6 @@ export function ScheduleView({ tournamentData }: ScheduleViewProps) {
                   const isLive = m.Status === 'in-progress';
                   const isDone = m.Status === 'completed';
                   
-                  // Check if any player in the list won
                   const p1Won = isDone && p1List.some(p => m.Winner?.includes(p.split('(')[0].trim()));
                   const p2Won = isDone && p2List.some(p => m.Winner?.includes(p.split('(')[0].trim()));
                   
@@ -235,12 +233,20 @@ export function ScheduleView({ tournamentData }: ScheduleViewProps) {
                           </div>
                         </div>
 
+                        {/* Improved Score Display Logic */}
                         {(m.Score_1 || m.Score_2) && (
                           <div className="mt-10 flex justify-center">
                             <div className="inline-flex items-center gap-6 bg-slate-900 text-white px-8 py-3 rounded-2xl shadow-xl shadow-slate-200 ring-4 ring-white">
-                              <span className={`text-2xl font-black font-mono ${p1Won ? 'text-amber-400' : 'text-white'}`}>{m.Score_1 || '0'}</span>
-                              <div className="w-px h-6 bg-white/20" />
-                              <span className={`text-2xl font-black font-mono ${p2Won ? 'text-amber-400' : 'text-white'}`}>{m.Score_2 || '0'}</span>
+                              {/* If Score_1 contains a dash or comma, it's likely a combined score string */}
+                              {(m.Score_1?.includes('-') || m.Score_1?.includes(',')) ? (
+                                <span className="text-2xl font-black font-mono text-amber-400">{m.Score_1}</span>
+                              ) : (
+                                <>
+                                  <span className={`text-2xl font-black font-mono ${p1Won ? 'text-amber-400' : 'text-white'}`}>{m.Score_1 || '0'}</span>
+                                  <div className="w-px h-6 bg-white/20" />
+                                  <span className={`text-2xl font-black font-mono ${p2Won ? 'text-amber-400' : 'text-white'}`}>{m.Score_2 || '0'}</span>
+                                </>
+                              )}
                             </div>
                           </div>
                         )}
