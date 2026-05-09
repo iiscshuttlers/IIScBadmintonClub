@@ -34,7 +34,6 @@ export function ScheduleView({ tournamentData }: ScheduleViewProps) {
 
   const [activeFormat, setActiveFormat] = useState<string>('ALL');
 
-  // Flatten all matches with format tag
   const allMatches = Object.entries(tournamentData.matches).flatMap(
     ([format, matches]: [string, any]) =>
       (matches as any[]).map((m) => ({ ...m, format }))
@@ -45,7 +44,6 @@ export function ScheduleView({ tournamentData }: ScheduleViewProps) {
       ? allMatches
       : allMatches.filter((m) => m.format === activeFormat);
 
-  // Sort by time
   filtered.sort((a, b) => {
     const toMins = (t: string) => {
       if (!t) return 9999;
@@ -55,7 +53,6 @@ export function ScheduleView({ tournamentData }: ScheduleViewProps) {
     return toMins(a.Time) - toMins(b.Time);
   });
 
-  // Group by time
   const byTime: Record<string, any[]> = {};
   filtered.forEach((m) => {
     const key = m.Time || 'TBD';
@@ -66,11 +63,24 @@ export function ScheduleView({ tournamentData }: ScheduleViewProps) {
   const getPlayers = (m: any) => {
     const p1Raw = m.Player_1 || m.Players_1 || 'TBD';
     const p2Raw = m.Player_2 || m.Players_2 || 'TBD';
-    
     const p1List = p1Raw.split(/[&/]/).map((s: string) => s.trim()).filter(Boolean);
     const p2List = p2Raw.split(/[&/]/).map((s: string) => s.trim()).filter(Boolean);
-    
     return { p1List, p2List };
+  };
+
+  // Helper to parse scores into sets
+  const parseSets = (m: any) => {
+    const scoreStr = m.Score_1 || '';
+    if (!scoreStr) return [];
+    
+    // Handle formats like "15-7, 15-9" or "15-7 15-9"
+    return scoreStr.split(/[, ]+/).map((set: string) => {
+      const parts = set.split('-');
+      return {
+        s1: parts[0] || '0',
+        s2: parts[1] || '0'
+      };
+    });
   };
 
   return (
@@ -85,7 +95,6 @@ export function ScheduleView({ tournamentData }: ScheduleViewProps) {
           </p>
         </div>
         
-        {/* Filter Pills */}
         <div className="bg-slate-100/80 p-1 rounded-xl flex flex-wrap gap-1 border border-slate-200/50 backdrop-blur-sm">
           <button
             onClick={() => setActiveFormat('ALL')}
@@ -143,6 +152,8 @@ export function ScheduleView({ tournamentData }: ScheduleViewProps) {
                   
                   const formatStyle = FORMAT_COLORS[m.format] || { bg: 'bg-slate-50', text: 'text-slate-600', border: 'border-slate-100', dot: 'bg-slate-400' };
                   const poolGradient = POOL_COLORS[m.Pool] || POOL_COLORS[m.Round] || 'from-white to-white border-slate-200';
+                  
+                  const sets = parseSets(m);
 
                   return (
                     <div
@@ -233,21 +244,30 @@ export function ScheduleView({ tournamentData }: ScheduleViewProps) {
                           </div>
                         </div>
 
-                        {/* Improved Score Display Logic */}
-                        {(m.Score_1 || m.Score_2) && (
-                          <div className="mt-10 flex justify-center">
-                            <div className="inline-flex items-center gap-6 bg-slate-900 text-white px-8 py-3 rounded-2xl shadow-xl shadow-slate-200 ring-4 ring-white">
-                              {/* If Score_1 contains a dash or comma, it's likely a combined score string */}
-                              {(m.Score_1?.includes('-') || m.Score_1?.includes(',')) ? (
-                                <span className="text-2xl font-black font-mono text-amber-400">{m.Score_1}</span>
-                              ) : (
-                                <>
-                                  <span className={`text-2xl font-black font-mono ${p1Won ? 'text-amber-400' : 'text-white'}`}>{m.Score_1 || '0'}</span>
-                                  <div className="w-px h-6 bg-white/20" />
-                                  <span className={`text-2xl font-black font-mono ${p2Won ? 'text-amber-400' : 'text-white'}`}>{m.Score_2 || '0'}</span>
-                                </>
-                              )}
-                            </div>
+                        {/* Set-based Scoreboard UI */}
+                        {sets.length > 0 && (
+                          <div className="mt-10 flex flex-wrap justify-center gap-3">
+                            {sets.map((set, sIdx) => {
+                              const s1Num = parseInt(set.s1);
+                              const s2Num = parseInt(set.s2);
+                              const s1Won = s1Num > s2Num;
+                              const s2Won = s2Num > s1Num;
+                              
+                              return (
+                                <div key={sIdx} className="flex flex-col items-center gap-1.5">
+                                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Set {sIdx + 1}</span>
+                                  <div className="flex items-center bg-slate-900 rounded-xl overflow-hidden shadow-lg shadow-slate-200 border border-white/10">
+                                    <div className={`px-4 py-2 text-xl font-black font-mono min-w-[50px] text-center ${s1Won ? 'text-amber-400 bg-white/5' : 'text-slate-400'}`}>
+                                      {set.s1}
+                                    </div>
+                                    <div className="w-px h-6 bg-white/10" />
+                                    <div className={`px-4 py-2 text-xl font-black font-mono min-w-[50px] text-center ${s2Won ? 'text-amber-400 bg-white/5' : 'text-slate-400'}`}>
+                                      {set.s2}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
