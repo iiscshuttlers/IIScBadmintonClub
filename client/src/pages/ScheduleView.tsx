@@ -313,7 +313,7 @@ export function ScheduleView({ tournamentData }: ScheduleViewProps) {
           
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-3 sm:gap-4 w-full lg:w-auto">
             {[
-              { label: 'WS', time: '19:30' },
+              { label: 'WS', time: '19:00' },
               { label: 'MD', time: '19:30' },
               { label: 'MS', time: '20:00' },
               { label: 'XD', time: '20:30' }
