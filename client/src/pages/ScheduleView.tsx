@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Trophy, Clock, ChevronRight, Activity, CheckCircle2, Calendar } from 'lucide-react';
+import { Trophy, Clock, ChevronRight, Activity, CheckCircle2, Calendar, Users } from 'lucide-react';
 
 const FORMAT_LABELS: Record<string, string> = {
   MS: "Men's Singles",
@@ -63,10 +63,16 @@ export function ScheduleView({ tournamentData }: ScheduleViewProps) {
     byTime[key].push(m);
   });
 
-  const getPlayers = (m: any) => ({
-    p1: m.Player_1 || m.Players_1 || 'TBD',
-    p2: m.Player_2 || m.Players_2 || 'TBD',
-  });
+  const getPlayers = (m: any) => {
+    const p1Raw = m.Player_1 || m.Players_1 || 'TBD';
+    const p2Raw = m.Player_2 || m.Players_2 || 'TBD';
+    
+    // Split by '&' or '/' and trim
+    const p1List = p1Raw.split(/[&/]/).map((s: string) => s.trim()).filter(Boolean);
+    const p2List = p2Raw.split(/[&/]/).map((s: string) => s.trim()).filter(Boolean);
+    
+    return { p1List, p2List };
+  };
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8 font-sans text-slate-900">
@@ -80,7 +86,7 @@ export function ScheduleView({ tournamentData }: ScheduleViewProps) {
           </p>
         </div>
         
-        {/* Filter Pills - Modern Segmented Control Style */}
+        {/* Filter Pills */}
         <div className="bg-slate-100/80 p-1 rounded-xl flex flex-wrap gap-1 border border-slate-200/50 backdrop-blur-sm">
           <button
             onClick={() => setActiveFormat('ALL')}
@@ -112,32 +118,31 @@ export function ScheduleView({ tournamentData }: ScheduleViewProps) {
 
       {/* Timeline Container */}
       <div className="relative">
-        {/* Vertical Timeline Line */}
         <div className="absolute left-[31px] md:left-[79px] top-4 bottom-4 w-0.5 bg-gradient-to-b from-slate-200 via-slate-200 to-transparent hidden sm:block" />
 
         <div className="space-y-10">
           {Object.entries(byTime).map(([time, matches]) => (
             <div key={time} className="relative flex flex-col sm:flex-row gap-4 md:gap-8">
               
-              {/* Time Label */}
               <div className="sm:w-20 flex-shrink-0 pt-1">
                 <div className="sticky top-8 flex items-center sm:justify-end gap-3">
                   <span className="text-sm font-bold text-slate-400 font-mono bg-slate-50 px-2 py-1 rounded sm:bg-transparent sm:p-0">
                     {time}
                   </span>
-                  {/* Timeline Dot for Mobile/Small Screens */}
                   <div className="hidden sm:block w-4 h-4 rounded-full border-4 border-white bg-slate-300 shadow-sm z-10" />
                 </div>
               </div>
 
-              {/* Match Cards Group */}
               <div className="flex-1 space-y-4">
                 {matches.map((m, idx) => {
-                  const { p1, p2 } = getPlayers(m);
+                  const { p1List, p2List } = getPlayers(m);
                   const isLive = m.Status === 'in-progress';
                   const isDone = m.Status === 'completed';
-                  const p1Won = isDone && m.Winner?.includes(p1.split('/')[0]);
-                  const p2Won = isDone && m.Winner?.includes(p2.split('/')[0]);
+                  
+                  // Check if any player in the list won
+                  const p1Won = isDone && p1List.some(p => m.Winner?.includes(p.split('(')[0].trim()));
+                  const p2Won = isDone && p2List.some(p => m.Winner?.includes(p.split('(')[0].trim()));
+                  
                   const formatStyle = FORMAT_COLORS[m.format] || { bg: 'bg-slate-50', text: 'text-slate-600', border: 'border-slate-100', dot: 'bg-slate-400' };
                   const poolGradient = POOL_COLORS[m.Pool] || POOL_COLORS[m.Round] || 'from-white to-white border-slate-200';
 
@@ -148,12 +153,10 @@ export function ScheduleView({ tournamentData }: ScheduleViewProps) {
                         isLive ? 'ring-2 ring-rose-500 ring-offset-2 shadow-lg shadow-rose-100' : 'shadow-sm'
                       }`}
                     >
-                      {/* Live Indicator Bar */}
                       {isLive && (
                         <div className="absolute top-0 left-0 right-0 h-1 bg-rose-500 animate-pulse" />
                       )}
 
-                      {/* Card Header */}
                       <div className="px-5 py-3 flex items-center justify-between border-b border-black/5 bg-white/40 backdrop-blur-sm">
                         <div className="flex items-center gap-3">
                           <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
@@ -185,64 +188,67 @@ export function ScheduleView({ tournamentData }: ScheduleViewProps) {
                         </div>
                       </div>
 
-                      {/* Players & Score Section */}
-                      <div className="px-6 py-6">
-                        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-6">
+                      <div className="px-6 py-8">
+                        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-8">
                           
-                          {/* Player 1 */}
-                          <div className={`flex flex-col md:items-end gap-1 ${p1Won ? 'scale-105 origin-right transition-transform' : ''}`}>
-                            <div className="flex items-center gap-3 md:flex-row-reverse">
-                              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold ${p1Won ? 'bg-amber-100 text-amber-700 ring-2 ring-amber-200' : 'bg-slate-100 text-slate-400'}`}>
-                                {p1.charAt(0)}
+                          {/* Team 1 */}
+                          <div className={`flex flex-col md:items-end gap-2 ${p1Won ? 'scale-105 origin-right transition-transform' : ''}`}>
+                            <div className="flex items-center gap-4 md:flex-row-reverse">
+                              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-bold flex-shrink-0 ${p1Won ? 'bg-amber-100 text-amber-700 ring-2 ring-amber-200' : 'bg-slate-100 text-slate-400'}`}>
+                                {p1List.length > 1 ? <Users size={20} /> : p1List[0]?.charAt(0)}
                               </div>
-                              <div className="text-left md:text-right">
-                                <p className={`text-base font-bold leading-tight ${p1Won ? 'text-slate-900' : 'text-slate-700'}`}>
-                                  {p1}
-                                </p>
-                                {p1Won && <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1 md:justify-end"><Trophy size={10} /> Winner</span>}
+                              <div className="text-left md:text-right space-y-0.5">
+                                {p1List.map((player, pIdx) => (
+                                  <p key={pIdx} className={`text-base font-bold leading-tight ${p1Won ? 'text-slate-900' : 'text-slate-700'}`}>
+                                    {player}
+                                  </p>
+                                ))}
+                                {p1Won && <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1 md:justify-end pt-1"><Trophy size={10} /> Winner</span>}
                               </div>
                             </div>
                           </div>
 
                           {/* VS Separator */}
-                          <div className="flex flex-row md:flex-col items-center justify-center gap-3">
-                            <div className="h-px w-full md:w-px md:h-8 bg-slate-200" />
-                            <span className="text-[10px] font-black text-slate-300 tracking-[0.3em] uppercase">VS</span>
-                            <div className="h-px w-full md:w-px md:h-8 bg-slate-200" />
+                          <div className="flex flex-row md:flex-col items-center justify-center gap-4">
+                            <div className="h-px w-full md:w-px md:h-10 bg-slate-200" />
+                            <div className="bg-slate-50 px-2 py-1 rounded border border-slate-100">
+                              <span className="text-[10px] font-black text-slate-300 tracking-[0.3em] uppercase">VS</span>
+                            </div>
+                            <div className="h-px w-full md:w-px md:h-10 bg-slate-200" />
                           </div>
 
-                          {/* Player 2 */}
-                          <div className={`flex flex-col items-start gap-1 ${p2Won ? 'scale-105 origin-left transition-transform' : ''}`}>
-                            <div className="flex items-center gap-3">
-                              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold ${p2Won ? 'bg-amber-100 text-amber-700 ring-2 ring-amber-200' : 'bg-slate-100 text-slate-400'}`}>
-                                {p2.charAt(0)}
+                          {/* Team 2 */}
+                          <div className={`flex flex-col items-start gap-2 ${p2Won ? 'scale-105 origin-left transition-transform' : ''}`}>
+                            <div className="flex items-center gap-4">
+                              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-bold flex-shrink-0 ${p2Won ? 'bg-amber-100 text-amber-700 ring-2 ring-amber-200' : 'bg-slate-100 text-slate-400'}`}>
+                                {p2List.length > 1 ? <Users size={20} /> : p2List[0]?.charAt(0)}
                               </div>
-                              <div className="text-left">
-                                <p className={`text-base font-bold leading-tight ${p2Won ? 'text-slate-900' : 'text-slate-700'}`}>
-                                  {p2}
-                                </p>
-                                {p2Won && <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1"><Trophy size={10} /> Winner</span>}
+                              <div className="text-left space-y-0.5">
+                                {p2List.map((player, pIdx) => (
+                                  <p key={pIdx} className={`text-base font-bold leading-tight ${p2Won ? 'text-slate-900' : 'text-slate-700'}`}>
+                                    {player}
+                                  </p>
+                                ))}
+                                {p2Won && <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1 pt-1"><Trophy size={10} /> Winner</span>}
                               </div>
                             </div>
                           </div>
                         </div>
 
-                        {/* Score Display */}
                         {(m.Score_1 || m.Score_2) && (
-                          <div className="mt-8 flex justify-center">
-                            <div className="inline-flex items-center gap-4 bg-slate-900 text-white px-6 py-2 rounded-2xl shadow-lg shadow-slate-200">
-                              <span className={`text-xl font-black font-mono ${p1Won ? 'text-amber-400' : 'text-white'}`}>{m.Score_1 || '0'}</span>
-                              <div className="w-px h-4 bg-white/20" />
-                              <span className={`text-xl font-black font-mono ${p2Won ? 'text-amber-400' : 'text-white'}`}>{m.Score_2 || '0'}</span>
+                          <div className="mt-10 flex justify-center">
+                            <div className="inline-flex items-center gap-6 bg-slate-900 text-white px-8 py-3 rounded-2xl shadow-xl shadow-slate-200 ring-4 ring-white">
+                              <span className={`text-2xl font-black font-mono ${p1Won ? 'text-amber-400' : 'text-white'}`}>{m.Score_1 || '0'}</span>
+                              <div className="w-px h-6 bg-white/20" />
+                              <span className={`text-2xl font-black font-mono ${p2Won ? 'text-amber-400' : 'text-white'}`}>{m.Score_2 || '0'}</span>
                             </div>
                           </div>
                         )}
                       </div>
                       
-                      {/* Bottom Action/Link (Optional visual element) */}
-                      <div className="px-6 py-2 bg-black/[0.02] flex justify-end">
+                      <div className="px-6 py-3 bg-black/[0.02] flex justify-end border-t border-black/5">
                          <button className="text-[10px] font-bold text-slate-400 hover:text-slate-600 flex items-center gap-1 transition-colors">
-                           VIEW DETAILS <ChevronRight size={12} />
+                           VIEW MATCH DETAILS <ChevronRight size={12} />
                          </button>
                       </div>
                     </div>
@@ -254,9 +260,8 @@ export function ScheduleView({ tournamentData }: ScheduleViewProps) {
         </div>
       </div>
 
-      {/* Finals Callout - Premium Redesign */}
+      {/* Finals Callout */}
       <div className="relative mt-12 overflow-hidden rounded-3xl bg-slate-900 p-8 text-white shadow-2xl shadow-slate-300">
-        {/* Decorative Background Elements */}
         <div className="absolute top-0 right-0 -mt-20 -mr-20 w-64 h-64 bg-amber-500/20 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl" />
         
@@ -267,7 +272,7 @@ export function ScheduleView({ tournamentData }: ScheduleViewProps) {
             </div>
             <h3 className="text-3xl font-black tracking-tight">The Grand Finals</h3>
             <p className="text-slate-400 mt-2 max-w-md">
-              Witness the peak of the tournament as the best players compete for the ultimate glory. Don't miss the action!
+              Witness the peak of the tournament as the best players compete for the ultimate glory.
             </p>
           </div>
           
