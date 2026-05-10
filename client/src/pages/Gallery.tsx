@@ -172,12 +172,28 @@ export default function Gallery() {
       </section>
 
 {/* 🔥 VIDEOS SECTION (PRO VERSION) */}
+
+const videos = [
+  {
+    id: 1,
+    videoId: "h7rF4ZoDOXo",
+    title:
+      "Radhika and Kaling playing against Tanisha and Aneesh || Farewell Matches 2026",
+  },
+  {
+    id: 2,
+    videoId: "_ohHNia6D80",
+    title:
+      "Radhika playing against Tanisha || Farewell Matches 2026",
+  },
+];
+
 <section className="py-16 bg-gray-50">
   <div className="container mx-auto px-4">
 
     <h2
       className="text-4xl font-bold text-center mb-12 text-blue-900"
-      style={{ fontFamily: 'Playfair Display, serif' }}
+      style={{ fontFamily: "Playfair Display, serif" }}
     >
       Match Videos
     </h2>
@@ -187,9 +203,9 @@ export default function Gallery() {
       {videos.map((video) => (
         <div
           key={video.id}
-          className="bg-white rounded-xl shadow-md hover:shadow-xl overflow-hidden transition"
+          className="bg-white rounded-xl shadow-md hover:shadow-xl overflow-hidden transition duration-300"
         >
-          
+
           {/* Thumbnail */}
           <div
             className="relative cursor-pointer group"
@@ -206,9 +222,12 @@ export default function Gallery() {
               className="w-full h-56 object-cover"
             />
 
+            {/* Dark Overlay */}
+            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition duration-300"></div>
+
             {/* Play Button */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="bg-black/60 rounded-full p-4 group-hover:scale-110 transition">
+              <div className="bg-red-600 rounded-full p-4 group-hover:scale-110 transition duration-300 shadow-lg">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="white"
@@ -222,12 +241,13 @@ export default function Gallery() {
             </div>
           </div>
 
-          {/* Title */}
+          {/* Video Title */}
           <div className="p-5">
-            <h3 className="text-lg font-bold text-blue-900">
+            <h3 className="text-lg font-bold text-blue-900 leading-relaxed">
               {video.title}
             </h3>
           </div>
+
         </div>
       ))}
 
