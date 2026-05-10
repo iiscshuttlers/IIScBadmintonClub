@@ -1,10 +1,5 @@
 {
-  "formats": [
-    "MS",
-    "WS",
-    "XD",
-    "MD"
-  ],
+  "formats": ["MS", "WS", "XD", "MD"],
   "lastUpdated": "2026-05-09T09:00:00.000Z",
   "config": {
     "eventName": "Farewell Badminton Tournament 2026",
@@ -180,7 +175,7 @@
         "Round": "Pool A Match",
         "Pool": "Pool A",
         "Players_1": "Kaling Danggen (CES) & Raja Janmejay (AE)",
-        "Players_2": "Vishwajeet Verma (AI) & Paras Raina (AI)",
+        "Players_2": "Vishwajeet Verma (AI) & Sangam (AI)",
         "Time": "18:00",
         "Date": "Saturday, 9th May 2026",
         "Status": "scheduled",
@@ -203,8 +198,8 @@
         "Match_ID": "MD6",
         "Round": "Pool A Match",
         "Pool": "Pool A",
-        "Players_1": "Vishwajeet Verma (AI) & Paras Raina (AI)",
-        "Players_2": "Vaishnav Raj T (CE) & Nikhil P V S (CeNSE)",
+        "Players_1": "Vishwajeet Verma (AI) & Sangam (AI)",
+        "Players_2": "Vaishnav Raj T (CE) & Satyam Panchal (CHEP)",
         "Time": "18:20",
         "Date": "Saturday, 9th May 2026",
         "Status": "scheduled",
