@@ -144,9 +144,9 @@ export default defineConfig({
         background_color: "#ffffff",
         display: "standalone",
 
-        // 🔥 IMPORTANT (matches GitHub Pages)
-        start_url: "/iiscshuttlers/",
-        scope: "/iiscshuttlers/",
+        // 🔥 IMPORTANT (matches GitHub Pages or root for Capacitor)
+        start_url: process.env.CAPACITOR === "true" ? "/" : "/iiscshuttlers/",
+        scope: process.env.CAPACITOR === "true" ? "/" : "/iiscshuttlers/",
 
         icons: [
           {
@@ -165,7 +165,9 @@ export default defineConfig({
   ],
 
   // 🔥 CRITICAL FIX
-  base: process.env.GITHUB_PAGES === "true" ? "/iiscshuttlers/" : "/",
+  // For Capacitor, we want relative base './'. For github pages we want '/iiscshuttlers/'.
+  // Otherwise use '/'
+  base: process.env.CAPACITOR === "true" ? "./" : process.env.GITHUB_PAGES === "true" ? "/iiscshuttlers/" : "/",
 
   resolve: {
     alias: {

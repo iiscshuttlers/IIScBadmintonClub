@@ -2,6 +2,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/NotFound';
 import { Route, Switch, Router } from 'wouter';
+import { Capacitor } from '@capacitor/core';
 
 import StatusBanner from "@/components/StatusBanner";
 
@@ -55,10 +56,8 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
-          <Toaster />
-
-          {/* ✅ CLEAN ROUTER */}
-          <Router base="/iiscshuttlers">
+          {/* ✅ CLEAN ROUTER with CAPACITOR SUPPORT */}
+          <Router base={Capacitor.isNativePlatform() ? "" : "/iiscshuttlers"}>
             <div className="flex flex-col min-h-screen">
               <Navigation />
               <StatusBanner />
