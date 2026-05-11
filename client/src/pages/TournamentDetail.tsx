@@ -5,6 +5,56 @@ export default function TournamentDetail() {
   const [, params] = useRoute("/events/:slug");
   const slug = params?.slug || "";
 
+  /* ---------- FAREWELL 2026 ---------- */
+  if (slug === "farewell-match") {
+    const winners = [
+      ["Men Singles", "Jalaj (RBCCPS)"],
+      ["Men Doubles", "Kaling Danggen (CES) & Raja Janmejay (AE)"],
+      ["Women Singles", "Radhika Dutt (CES)"],
+      ["Mixed Doubles", "Radhika Dutt (CES) & Kaling Danggen (CES)"],
+    ];
+
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <section className="bg-gradient-to-r from-blue-900 to-emerald-900 text-white py-20 text-center">
+          <div className="container mx-auto px-4">
+            <h1 className="text-5xl font-bold mb-4">
+              Farewell Badminton Tournament 2026
+            </h1>
+
+            <p className="text-xl text-gray-200">
+              Archived Results
+            </p>
+          </div>
+        </section>
+
+        <section className="container mx-auto px-4 py-16 max-w-5xl">
+          <Card className="rounded-3xl shadow-md">
+            <CardContent className="p-10">
+              <h2 className="text-3xl font-bold text-blue-900 mb-10">
+                Category Winners
+              </h2>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                {winners.map(([category, winner]) => (
+                  <div
+                    key={category}
+                    className="rounded-2xl bg-yellow-50 border border-yellow-200 px-6 py-5"
+                  >
+                    <h3 className="text-xl font-semibold text-blue-800 mb-2">
+                      {category}
+                    </h3>
+                    <p className="text-lg text-gray-800">🥇 {winner}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      </div>
+    );
+  }
+
   /* ---------- SPECTRUM FIRST ---------- */
   if (slug === "spectrum-2026") {
     return (

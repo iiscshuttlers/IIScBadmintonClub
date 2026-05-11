@@ -1,8 +1,25 @@
 import { Link } from 'wouter';
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Calendar, Trophy, Radio } from 'lucide-react';
+import { Calendar, Trophy, Radio, Medal } from 'lucide-react';
 import { getTournaments } from '@/lib/tournaments';
+
+const FAREWELL_EVENT = {
+  id: 'farewell-2026',
+  slug: 'farewell-match',
+  status: 'completed',
+  type: 'special',
+  startDate: '2026-05-09',
+  name: 'Farewell Badminton Tournament 2026',
+  description:
+    'Archived results from the farewell tournament featuring singles, doubles and mixed doubles.',
+  champions: [
+    ['MS', 'Jalaj (RBCCPS)'],
+    ['MD', 'Kaling Danggen (CES) & Raja Janmejay (AE)'],
+    ['WS', 'Radhika Dutt (CES)'],
+    ['XD', 'Radhika Dutt (CES) & Kaling Danggen (CES)'],
+  ],
+};
 
 export default function Events() {
   const [events, setEvents] = useState<any[]>([]);
@@ -25,7 +42,17 @@ export default function Events() {
 
   const live = events.filter((e) => e.status === 'live');
   const upcoming = events.filter((e) => e.status === 'upcoming');
-  const completed = events.filter((e) => e.status === 'completed');
+  const completed = [
+    FAREWELL_EVENT,
+    ...events.filter((e) => e.status === 'completed' && e.slug !== FAREWELL_EVENT.slug),
+  ];
+
+  const getTypeLabel = (type: string) => {
+    if (type === 'open') return 'Open Tournament';
+    if (type === 'team') return 'Team Event';
+    if (type === 'special') return 'Special Event';
+    return type;
+  };
 
   const renderCard = (item: any, liveMode = false) => (
     <Link href={`/events/${item.slug}`} key={item.id}>
@@ -39,11 +66,7 @@ export default function Events() {
             )}
 
             <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold">
-              {item.type === "open"
-                ? "Open Tournament"
-                : item.type === "team"
-                ? "Team Event"
-                : item.type}
+              {getTypeLabel(item.type)}
             </span>
 
             <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -59,6 +82,23 @@ export default function Events() {
           <p className="text-gray-700 text-lg">
             {item.description}
           </p>
+
+          {item.champions && (
+            <div className="grid sm:grid-cols-2 gap-3 pt-2">
+              {item.champions.map(([format, winner]: [string, string]) => (
+                <div
+                  key={format}
+                  className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3"
+                >
+                  <div className="flex items-center gap-2 text-xs font-black text-amber-700 uppercase tracking-wider">
+                    <Medal className="w-4 h-4" />
+                    {format} Winner
+                  </div>
+                  <p className="mt-1 font-bold text-blue-950">{winner}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </Link>
@@ -82,35 +122,6 @@ export default function Events() {
       </section>
 
       <section className="py-16 container mx-auto px-4 space-y-16">
-      <div className="mb-12">
-        <Link href="/events/farewell-match">
-          <Card className="rounded-3xl border-2 border-blue-400 shadow-lg bg-gradient-to-r from-blue-100 to-emerald-100 hover:shadow-xl hover:-translate-y-1 transition duration-300 cursor-pointer">
-            <CardContent className="p-10 space-y-4 text-center">
-
-              <span className="px-4 py-1 rounded-full bg-blue-900 text-white text-sm font-bold">
-                🎉 Special Event
-              </span>
-
-              <h2 className="text-4xl font-bold text-blue-900">
-                Farewell Badminton Match 🏸
-              </h2>
-
-              <p className="text-lg text-gray-700 max-w-2xl mx-auto">
-                Join us for a fun mixed doubles farewell for the outgoing batch.
-                Quick matches, great vibes, and memorable rallies.
-              </p>
-
-              <div className="pt-4">
-                <span className="inline-block bg-blue-900 text-white px-6 py-3 rounded-xl font-semibold">
-                  Register Now →
-                </span>
-              </div>
-
-            </CardContent>
-          </Card>
-        </Link>
-      </div>      
-
         {loading && (
           <p className="text-center text-gray-500 text-lg">
             Loading tournaments...
