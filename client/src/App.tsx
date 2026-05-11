@@ -19,6 +19,7 @@ import Contact from './pages/Contact';
 import Navigation from './components/Navigation';
 import Footer from './components/Footer';
 import TournamentDetail from './pages/TournamentDetail';
+import WinnersWall from './pages/WinnersWall';
 
 // ✅ Import the new merged component
 import FarewellTournament from './pages/FarewellTournament';
@@ -40,6 +41,7 @@ function AppRoutes() {
 
       {/* Generic */}
       <Route path="/events" component={Events} />
+      <Route path="/winners" component={WinnersWall} />
 
       <Route path="/announcements" component={Announcements} />
       <Route path="/gallery" component={Gallery} />

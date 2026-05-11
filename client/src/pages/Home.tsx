@@ -1,6 +1,6 @@
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Trophy, Users } from 'lucide-react';
+import { ArrowRight, Bell, CalendarDays, Medal, Trophy, Users } from 'lucide-react';
 import iiscTeam from "@/assets/iisc-team.jpg";
 
 /**
@@ -58,6 +58,54 @@ export default function Home() {
 
             <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-orange-500 rounded-full opacity-20 blur-3xl z-[-1]"></div>
           </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Quick Paths Section */}
+      <section className="py-16 bg-slate-50">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                href: '/events',
+                title: 'Events',
+                description: 'Browse live, upcoming and archived tournaments.',
+                icon: CalendarDays,
+              },
+              {
+                href: '/winners',
+                title: 'Winners Wall',
+                description: 'See champions and podiums from club events.',
+                icon: Medal,
+              },
+              {
+                href: '/announcements',
+                title: 'Announcements',
+                description: 'Check court notices, event updates and club news.',
+                icon: Bell,
+              },
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link href={item.href} key={item.href}>
+                  <div className="h-full rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center mb-5">
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-blue-900 mb-2">
+                      {item.title}
+                    </h3>
+                    <p className="text-gray-600">
+                      {item.description}
+                    </p>
+                    <div className="mt-5 inline-flex items-center gap-2 font-bold text-blue-900">
+                      Open <ArrowRight className="w-4 h-4" />
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>

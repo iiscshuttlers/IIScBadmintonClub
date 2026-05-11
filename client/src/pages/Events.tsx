@@ -1,49 +1,9 @@
 import { Link } from 'wouter';
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Calendar, Trophy, Radio, Medal } from 'lucide-react';
+import { Calendar, Trophy, Radio, Medal, ArrowRight } from 'lucide-react';
 import { getTournaments } from '@/lib/tournaments';
-
-const FAREWELL_EVENT = {
-  id: 'farewell-2026',
-  slug: 'farewell-match',
-  status: 'completed',
-  type: 'special',
-  startDate: '2026-05-09',
-  name: 'Farewell Badminton Tournament 2026',
-  description:
-    'Archived results from the farewell tournament featuring singles, doubles and mixed doubles.',
-  champions: [
-    ['MS', 'Jalaj (RBCCPS)'],
-    ['MD', 'Kaling Danggen (CES) & Raja Janmejay (AE)'],
-    ['WS', 'Radhika Dutt (CES)'],
-    ['XD', 'Radhika Dutt (CES) & Kaling Danggen (CES)'],
-  ],
-};
-
-const ARCHIVED_EVENTS = [
-  FAREWELL_EVENT,
-  {
-    id: 'spectrum-2026',
-    slug: 'spectrum-2026',
-    status: 'completed',
-    type: 'team',
-    startDate: '2026',
-    name: 'SPECTRUM 2026',
-    description:
-      'Inter-department championship results featuring UG Seniors, CeNSE, ECE and AE on the final podium.',
-  },
-  {
-    id: 'open-2025',
-    slug: 'open-2025',
-    status: 'completed',
-    type: 'open',
-    startDate: '2025',
-    name: 'Open Tournament 2025',
-    description:
-      'Official category results for singles, doubles and mixed doubles from the Open Tournament 2025.',
-  },
-];
+import { ARCHIVED_TOURNAMENTS, ArchivedTournament } from '@/data/tournamentArchive';
 
 export default function Events() {
   const [events, setEvents] = useState<any[]>([]);
@@ -66,12 +26,12 @@ export default function Events() {
 
   const live = events.filter((e) => e.status === 'live');
   const upcoming = events.filter((e) => e.status === 'upcoming');
-  const completed = [
-    ...ARCHIVED_EVENTS,
+  const completed: any[] = [
+    ...ARCHIVED_TOURNAMENTS,
     ...events.filter(
       (e) =>
         e.status === 'completed' &&
-        !ARCHIVED_EVENTS.some((archived) => archived.slug === e.slug)
+        !ARCHIVED_TOURNAMENTS.some((archived) => archived.slug === e.slug)
     ),
   ];
 
@@ -82,7 +42,7 @@ export default function Events() {
     return type;
   };
 
-  const renderCard = (item: any, liveMode = false) => (
+  const renderCard = (item: any | ArchivedTournament, liveMode = false) => (
     <Link href={`/events/${item.slug}`} key={item.id}>
       <Card className="rounded-3xl border border-emerald-200 shadow-md bg-white hover:shadow-xl hover:-translate-y-1 transition duration-300 cursor-pointer">
         <CardContent className="p-8 space-y-5">
@@ -111,22 +71,43 @@ export default function Events() {
             {item.description}
           </p>
 
-          {item.champions && (
+          {'winners' in item && item.winners && (
             <div className="grid sm:grid-cols-2 gap-3 pt-2">
-              {item.champions.map(([format, winner]: [string, string]) => (
+              {item.winners.slice(0, 4).map((result) => (
                 <div
-                  key={format}
+                  key={result.category}
                   className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3"
                 >
                   <div className="flex items-center gap-2 text-xs font-black text-amber-700 uppercase tracking-wider">
                     <Medal className="w-4 h-4" />
-                    {format} Winner
+                    {result.category}
                   </div>
-                  <p className="mt-1 font-bold text-blue-950">{winner}</p>
+                  <p className="mt-1 font-bold text-blue-950">{result.winner}</p>
                 </div>
               ))}
             </div>
           )}
+
+          {'podium' in item && item.podium && (
+            <div className="grid sm:grid-cols-2 gap-3 pt-2">
+              {item.podium.map((team, index) => (
+                <div
+                  key={team}
+                  className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3"
+                >
+                  <p className="text-xs font-black text-blue-700 uppercase tracking-wider">
+                    Rank {index + 1}
+                  </p>
+                  <p className="mt-1 font-bold text-blue-950">{team}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex items-center gap-2 pt-1 font-bold text-blue-900">
+            View results
+            <ArrowRight className="w-4 h-4" />
+          </div>
         </CardContent>
       </Card>
     </Link>

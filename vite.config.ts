@@ -136,6 +136,11 @@ export default defineConfig({
 
     VitePWA({
       registerType: "autoUpdate",
+      workbox: {
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
+      },
       manifest: {
         name: "IISc Badminton Club",
         short_name: "IISc Badminton",
