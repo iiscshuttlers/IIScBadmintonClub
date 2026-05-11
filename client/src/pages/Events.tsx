@@ -21,6 +21,30 @@ const FAREWELL_EVENT = {
   ],
 };
 
+const ARCHIVED_EVENTS = [
+  FAREWELL_EVENT,
+  {
+    id: 'spectrum-2026',
+    slug: 'spectrum-2026',
+    status: 'completed',
+    type: 'team',
+    startDate: '2026',
+    name: 'SPECTRUM 2026',
+    description:
+      'Inter-department championship results featuring UG Seniors, CeNSE, ECE and AE on the final podium.',
+  },
+  {
+    id: 'open-2025',
+    slug: 'open-2025',
+    status: 'completed',
+    type: 'open',
+    startDate: '2025',
+    name: 'Open Tournament 2025',
+    description:
+      'Official category results for singles, doubles and mixed doubles from the Open Tournament 2025.',
+  },
+];
+
 export default function Events() {
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,8 +67,12 @@ export default function Events() {
   const live = events.filter((e) => e.status === 'live');
   const upcoming = events.filter((e) => e.status === 'upcoming');
   const completed = [
-    FAREWELL_EVENT,
-    ...events.filter((e) => e.status === 'completed' && e.slug !== FAREWELL_EVENT.slug),
+    ...ARCHIVED_EVENTS,
+    ...events.filter(
+      (e) =>
+        e.status === 'completed' &&
+        !ARCHIVED_EVENTS.some((archived) => archived.slug === e.slug)
+    ),
   ];
 
   const getTypeLabel = (type: string) => {
