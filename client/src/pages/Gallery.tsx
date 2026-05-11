@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Instagram, X } from 'lucide-react';
+import { Instagram, X, Youtube, PlayCircle } from 'lucide-react';
 
 export default function Gallery() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSubfolder, setSelectedSubfolder] = useState('all');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-
-  // Videos
   const [videos, setVideos] = useState<any[]>([]);
 
+  // Fetch Videos
   useEffect(() => {
     fetch(`${import.meta.env.BASE_URL}data/videos.json`)
       .then((res) => res.json())
@@ -77,41 +76,37 @@ export default function Gallery() {
 
   const filteredItems = galleryItems.filter((item) => {
     const categoryMatch =
-      selectedCategory === 'all' ||
-      item.category === selectedCategory;
+      selectedCategory === 'all' || item.category === selectedCategory;
 
     const subfolderMatch =
-      selectedSubfolder === 'all' ||
-      item.subfolder === selectedSubfolder;
+      selectedSubfolder === 'all' || item.subfolder === selectedSubfolder;
 
     return categoryMatch && subfolderMatch;
   });
 
   return (
-    <div className="min-h-screen">
-
-      {/* Hero */}
-      <section className="bg-gradient-to-r from-blue-900 to-emerald-900 text-white py-16">
+    <div className="min-h-screen font-sans">
+      {/* Hero Section */}
+      <section className="bg-gradient-to-r from-blue-900 to-emerald-900 text-white py-20">
         <div className="container mx-auto px-4 text-center">
           <h1
-            className="text-5xl font-bold mb-4"
+            className="text-6xl font-bold mb-6"
             style={{ fontFamily: 'Playfair Display, serif' }}
           >
             Gallery
           </h1>
-
-          <p className="text-xl text-gray-200 max-w-2xl mx-auto">
-            Tournaments, practice sessions, victories and badminton life at IISc.
+          <p className="text-xl text-gray-200 max-w-2xl mx-auto leading-relaxed">
+            Relive the intensity of tournaments, the focus of practice, and the 
+            vibrant badminton community at IISc.
           </p>
         </div>
       </section>
 
-      {/* Images */}
+      {/* Photo Gallery Section */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
-
-          {/* Categories */}
-          <div className="flex flex-wrap gap-3 justify-center mb-6">
+          {/* Main Category Filter */}
+          <div className="flex flex-wrap gap-3 justify-center mb-8">
             {categories.map((cat) => (
               <button
                 key={cat.id}
@@ -119,10 +114,10 @@ export default function Gallery() {
                   setSelectedCategory(cat.id);
                   setSelectedSubfolder('all');
                 }}
-                className={`px-6 py-2 rounded-full font-semibold transition ${
+                className={`px-8 py-2 rounded-full font-bold transition-all duration-300 ${
                   selectedCategory === cat.id
-                    ? 'bg-emerald-500 text-white shadow-lg'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ? 'bg-emerald-500 text-white shadow-lg scale-105'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
                 {cat.label}
@@ -130,28 +125,27 @@ export default function Gallery() {
             ))}
           </div>
 
-          {/* Subfolders */}
+          {/* Sub-folder Filter */}
           {subfolders.length > 0 && (
-            <div className="flex flex-wrap gap-3 justify-center mb-12">
+            <div className="flex flex-wrap gap-3 justify-center mb-12 animate-in fade-in slide-in-from-top-4">
               <button
                 onClick={() => setSelectedSubfolder('all')}
-                className={`px-5 py-2 rounded-full text-sm font-semibold ${
+                className={`px-5 py-1.5 rounded-full text-sm font-semibold transition ${
                   selectedSubfolder === 'all'
                     ? 'bg-blue-900 text-white'
-                    : 'bg-gray-100 text-gray-700'
+                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                 }`}
               >
-                All
+                All Albums
               </button>
-
               {subfolders.map((sub) => (
                 <button
                   key={sub}
                   onClick={() => setSelectedSubfolder(sub)}
-                  className={`px-5 py-2 rounded-full text-sm font-semibold ${
+                  className={`px-5 py-1.5 rounded-full text-sm font-semibold transition ${
                     selectedSubfolder === sub
                       ? 'bg-blue-900 text-white'
-                      : 'bg-gray-100 text-gray-700'
+                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                   }`}
                 >
                   {formatText(sub)}
@@ -165,30 +159,27 @@ export default function Gallery() {
             {filteredItems.map((item) => (
               <div
                 key={item.id}
-                className="group bg-white rounded-xl shadow-md hover:shadow-xl overflow-hidden cursor-pointer"
+                className="group relative bg-white rounded-2xl shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden cursor-pointer"
                 onClick={() => setSelectedImage(item.image)}
               >
-                <div className="h-72 overflow-hidden bg-gray-200">
+                <div className="h-72 overflow-hidden bg-gray-100">
                   <img
                     src={item.image}
                     alt={item.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
                 </div>
-
-                <div className="p-5">
-                  <div className="flex justify-between mb-3">
-                    <h3 className="text-lg font-bold text-blue-900">
+                <div className="p-6">
+                  <div className="flex justify-between items-start gap-2 mb-2">
+                    <h3 className="text-lg font-bold text-blue-900 leading-tight">
                       {item.title}
                     </h3>
-
-                    <Badge className="bg-emerald-500 text-white">
+                    <Badge className="bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 border-none shrink-0">
                       {formatText(item.category)}
                     </Badge>
                   </div>
-
                   {item.subfolder && (
-                    <p className="text-gray-600 text-sm">
+                    <p className="text-gray-500 text-sm italic">
                       {formatText(item.subfolder)}
                     </p>
                   )}
@@ -199,36 +190,29 @@ export default function Gallery() {
         </div>
       </section>
 
-      {/* MATCH VIDEOS */}
-      <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
+      {/* Match Videos Section */}
+      <section className="py-24 bg-slate-50">
         <div className="container mx-auto px-4">
-
-          {/* Heading */}
-          <div className="text-center mb-14">
+          <div className="text-center mb-16">
             <h2
-              className="text-5xl font-bold text-blue-900 mb-4"
+              className="text-5xl font-bold text-blue-900 mb-6"
               style={{ fontFamily: 'Playfair Display, serif' }}
             >
               Match Videos
             </h2>
-
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              Watch tournament highlights, intense rallies, finals, and memorable
-              moments from IISc badminton.
+              From championship points to training drills, check out the action from our 
+              YouTube channel.
             </p>
           </div>
 
-          {/* Videos Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {videos.map((video) => (
               <div
                 key={video.id}
-                className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition duration-500"
+                className="group bg-white rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition duration-500"
               >
-
-                {/* Embedded YouTube */}
-                <div className="relative aspect-video overflow-hidden">
+                <div className="relative aspect-video">
                   <iframe
                     className="w-full h-full"
                     src={`https://www.youtube.com/embed/${video.videoId}`}
@@ -237,74 +221,81 @@ export default function Gallery() {
                     allowFullScreen
                   />
                 </div>
-
-                {/* Content */}
-                <div className="p-6">
-
-                  {/* Category */}
-                  {video.category && (
-                    <div className="mb-3">
-                      <span className="inline-block bg-emerald-100 text-emerald-700 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wide">
-                        {video.category}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Title */}
-                  <h3 className="text-2xl font-bold text-blue-900 leading-snug group-hover:text-emerald-600 transition">
+                <div className="p-8">
+                  <div className="flex items-center gap-2 text-emerald-600 font-bold text-xs uppercase tracking-widest mb-3">
+                    <PlayCircle className="w-4 h-4" />
+                    {video.category || 'Match Highlight'}
+                  </div>
+                  <h3 className="text-2xl font-bold text-blue-900 group-hover:text-emerald-600 transition-colors">
                     {video.title}
                   </h3>
-
                 </div>
               </div>
             ))}
-
           </div>
 
-          {/* Empty State */}
           {videos.length === 0 && (
-            <div className="text-center mt-12">
-              <p className="text-gray-500 text-lg">
-                Videos will be uploaded soon.
-              </p>
+            <div className="text-center py-12">
+              <p className="text-gray-400 italic text-lg">New videos are being processed. Stay tuned!</p>
             </div>
           )}
 
+          <div className="mt-16 text-center">
+             <a 
+              href="https://youtube.com/@iiscbadmintonclub?si=tr_GtVnxXZpyg4T7"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-3 text-red-600 font-bold hover:text-red-700 transition-colors text-xl"
+            >
+              <Youtube className="w-8 h-8" />
+              Visit our YouTube Channel
+            </a>
+          </div>
         </div>
       </section>
 
-      {/* Instagram */}
-      <section className="py-16 bg-gradient-to-r from-blue-50 to-emerald-50">
+      {/* Social Media Call-to-Action */}
+      <section className="py-20 bg-white border-t border-gray-100">
         <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold text-blue-900 mb-10">Follow the Journey</h2>
+          
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
+            <a
+              href="https://www.instagram.com/iisc.badminton/"
+              target="_blank"
+              rel="noreferrer"
+              className="w-full sm:w-auto flex items-center justify-center gap-3 bg-gradient-to-r from-pink-500 to-orange-500 text-white px-10 py-4 rounded-full font-bold shadow-lg hover:shadow-pink-200 hover:-translate-y-1 transition-all duration-300"
+            >
+              <Instagram className="w-6 h-6" />
+              Instagram
+            </a>
 
-          <Instagram className="mx-auto w-10 h-10 text-pink-500 mb-4" />
-
-          <h2 className="text-3xl font-bold text-blue-900 mb-4">
-            Follow Us on Instagram
-          </h2>
-
-          <a
-            href="https://www.instagram.com/iisc.badminton/"
-            target="_blank"
-            rel="noreferrer"
-            className="bg-gradient-to-r from-pink-500 to-orange-500 text-white px-8 py-3 rounded-full"
-          >
-            @iisc.badminton
-          </a>
+            <a
+              href="https://youtube.com/@iiscbadmintonclub?si=tr_GtVnxXZpyg4T7"
+              target="_blank"
+              rel="noreferrer"
+              className="w-full sm:w-auto flex items-center justify-center gap-3 bg-red-600 text-white px-10 py-4 rounded-full font-bold shadow-lg hover:shadow-red-200 hover:-translate-y-1 transition-all duration-300"
+            >
+              <Youtube className="w-6 h-6" />
+              YouTube
+            </a>
+          </div>
         </div>
       </section>
 
-      {/* Image Popup */}
+      {/* Fullscreen Image Overlay */}
       {selectedImage && (
         <div
-          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center"
+          className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-4 backdrop-blur-sm transition-all"
           onClick={() => setSelectedImage(null)}
         >
-          <X className="absolute top-5 right-5 text-white w-8 h-8" />
-
+          <button className="absolute top-6 right-6 text-white hover:text-emerald-400 transition">
+            <X className="w-10 h-10" />
+          </button>
           <img
             src={selectedImage}
-            className="max-h-[90vh] rounded-xl"
+            className="max-h-[90vh] max-w-full rounded-lg shadow-2xl animate-in zoom-in-95 duration-300"
+            alt="Gallery preview"
           />
         </div>
       )}
