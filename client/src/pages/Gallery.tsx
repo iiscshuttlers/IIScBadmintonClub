@@ -172,22 +172,6 @@ export default function Gallery() {
       </section>
 
 {/* 🔥 VIDEOS SECTION (PRO VERSION) */}
-
-const videos = [
-  {
-    id: 1,
-    videoId: "h7rF4ZoDOXo",
-    title:
-      "Radhika and Kaling playing against Tanisha and Aneesh || Farewell Matches 2026",
-  },
-  {
-    id: 2,
-    videoId: "_ohHNia6D80",
-    title:
-      "Radhika playing against Tanisha || Farewell Matches 2026",
-  },
-];
-
 <section className="py-16 bg-gray-50">
   <div className="container mx-auto px-4">
 
