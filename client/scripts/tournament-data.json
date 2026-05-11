@@ -1,10 +1,18 @@
 {
   "formats": ["MS", "WS", "XD", "MD"],
-  "lastUpdated": "2026-05-09T09:00:00.000Z",
+  "lastUpdated": "2026-05-11T00:00:00.000Z",
   "config": {
     "eventName": "Farewell Badminton Tournament 2026",
     "date": "Saturday, 9th May 2026",
-    "venue": "IISc Badminton Court"
+    "venue": "IISc Badminton Court",
+    "status": "archived",
+    "archivedAt": "2026-05-11T00:00:00.000Z",
+    "champions": {
+      "MS": "Jalaj (RBCCPS)",
+      "MD": "Kaling Danggen (CES) & Raja Janmejay (AE)",
+      "WS": "Radhika Dutt (CES)",
+      "XD": "Radhika Dutt (CES) & Kaling Danggen (CES)"
+    }
   },
   "matches": {
     "MS": [
@@ -28,7 +36,7 @@
         "Match_ID": "MS2",
         "Round": "Knock-out",
         "Pool": "Knock-out",
-        "Player_1": "Jalaj (RBCPS)",
+        "Player_1": "Jalaj (RBCCPS)",
         "Player_2": "Winner of MS1",
         "Time": "16:00",
         "Date": "Saturday, 9th May 2026",
@@ -45,11 +53,11 @@
         "Round": "Finals",
         "Pool": "Finals",
         "Player_1": "Abhishek Sampath (AE)",
-        "Player_2": "Winner of MS2",
+        "Player_2": "Jalaj (RBCCPS)",
         "Time": "20:00",
         "Date": "Saturday, 9th May 2026",
-        "Status": "scheduled",
-        "Winner": "",
+        "Status": "completed",
+        "Winner": "Jalaj (RBCCPS)",
         "Score_1": ""
       }
     ],
@@ -62,8 +70,8 @@
         "Player_2": "Tanisha Kumar (UG)",
         "Time": "19:00",
         "Date": "Saturday, 9th May 2026",
-        "Status": "scheduled",
-        "Winner": "",
+        "Status": "completed",
+        "Winner": "Radhika Dutt (CES)",
         "Score_1": ""
       }
     ],
@@ -92,8 +100,8 @@
         "Players_2": "Tanisha Kumar (UG) & Aneesh (UG)",
         "Time": "16:20",
         "Date": "Saturday, 9th May 2026",
-        "Status": "scheduled",
-        "Winner": "",
+        "Status": "completed",
+        "Winner": "Radhika Dutt (CES) & Kaling Danggen (CES)",
         "Score_1": "",
         "advancesTo": {
           "matchId": "XD4",
@@ -121,11 +129,11 @@
         "Round": "Finals",
         "Pool": "Finals",
         "Players_1": "Winner of XD2",
-        "Players_2": "Winner of XD3",
+        "Players_2": "Radhika Dutt (CES) & Kaling Danggen (CES)",
         "Time": "20:30",
         "Date": "Saturday, 9th May 2026",
-        "Status": "scheduled",
-        "Winner": "",
+        "Status": "completed",
+        "Winner": "Radhika Dutt (CES) & Kaling Danggen (CES)",
         "Score_1": ""
       }
     ],
@@ -154,8 +162,8 @@
         "Players_2": "Vaishnav Raj T (CE) & Satyam Panchal (CHEP)",
         "Time": "16:40",
         "Date": "Saturday, 9th May 2026",
-        "Status": "scheduled",
-        "Winner": "",
+        "Status": "completed",
+        "Winner": "Kaling Danggen (CES) & Raja Janmejay (AE)",
         "Score_1": ""
       },
       {
@@ -178,8 +186,8 @@
         "Players_2": "Vishwajeet Verma (AI) & Sangam (AI)",
         "Time": "18:00",
         "Date": "Saturday, 9th May 2026",
-        "Status": "scheduled",
-        "Winner": "",
+        "Status": "completed",
+        "Winner": "Kaling Danggen (CES) & Raja Janmejay (AE)",
         "Score_1": ""
       },
       {
@@ -222,12 +230,12 @@
         "Match_ID": "MD8",
         "Round": "Finals",
         "Pool": "Finals",
-        "Players_1": "A1 (Pool A Winner)",
+        "Players_1": "Kaling Danggen (CES) & Raja Janmejay (AE)",
         "Players_2": "B1 (Pool B Winner)",
         "Time": "19:30",
         "Date": "Saturday, 9th May 2026",
-        "Status": "scheduled",
-        "Winner": "",
+        "Status": "completed",
+        "Winner": "Kaling Danggen (CES) & Raja Janmejay (AE)",
         "Score_1": ""
       }
     ]
