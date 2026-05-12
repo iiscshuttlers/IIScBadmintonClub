@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, Clock, MapPin, Trophy, Users } from 'lucide-react';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 export default function Facilities() {
+  usePageMeta({ title: 'Facilities', description: '3 professional indoor badminton courts at IISc Gymkhana with synthetic mat flooring and modern lighting.' });
 
   const [holidays, setHolidays] = useState<any[]>([]);
   const [nextHoliday, setNextHoliday] = useState<any>(null);

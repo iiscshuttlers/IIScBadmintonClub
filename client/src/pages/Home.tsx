@@ -2,6 +2,23 @@ import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Bell, CalendarDays, Medal, Trophy, Users } from 'lucide-react';
 import iiscTeam from "@/assets/iisc-team.jpg";
+import { usePageMeta } from '@/hooks/usePageMeta';
+import { motion } from 'framer-motion';
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 32 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
+};
+
+const stagger = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.12 } },
+};
+
+const cardVariant = {
+  hidden: { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+};
 
 /**
  * Home Page
@@ -9,6 +26,10 @@ import iiscTeam from "@/assets/iisc-team.jpg";
  * Features: Hero banner, key highlights, call-to-action sections
  */
 export default function Home() {
+  usePageMeta({
+    title: 'Home',
+    description: 'IISc Badminton Club — join a vibrant community of players, from beginners to champions, all united by passion for the sport.',
+  });
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -65,142 +86,127 @@ export default function Home() {
       {/* Quick Paths Section */}
       <section className="py-16 bg-slate-50">
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-3 gap-6">
+          <motion.div
+            className="grid md:grid-cols-3 gap-6"
+            variants={stagger}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-60px' }}
+          >
             {[
-              {
-                href: '/events',
-                title: 'Events',
-                description: 'Browse live, upcoming and archived tournaments.',
-                icon: CalendarDays,
-              },
-              {
-                href: '/winners',
-                title: 'Winners Wall',
-                description: 'See champions and podiums from club events.',
-                icon: Medal,
-              },
-              {
-                href: '/announcements',
-                title: 'Announcements',
-                description: 'Check court notices, event updates and club news.',
-                icon: Bell,
-              },
+              { href: '/events', title: 'Events', description: 'Browse live, upcoming and archived tournaments.', icon: CalendarDays },
+              { href: '/winners', title: 'Winners Wall', description: 'See champions and podiums from club events.', icon: Medal },
+              { href: '/announcements', title: 'Announcements', description: 'Check court notices, event updates and club news.', icon: Bell },
             ].map((item) => {
               const Icon = item.icon;
               return (
-                <Link href={item.href} key={item.href}>
-                  <div className="h-full rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
-                    <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center mb-5">
-                      <Icon className="w-6 h-6" />
+                <motion.div key={item.href} variants={cardVariant}>
+                  <Link href={item.href}>
+                    <div className="h-full rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm hover:shadow-lg hover:-translate-y-1 transition duration-300 cursor-pointer">
+                      <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center mb-5">
+                        <Icon className="w-6 h-6" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-blue-900 mb-2">{item.title}</h3>
+                      <p className="text-gray-600">{item.description}</p>
+                      <div className="mt-5 inline-flex items-center gap-2 font-bold text-blue-900">
+                        Open <ArrowRight className="w-4 h-4" />
+                      </div>
                     </div>
-                    <h3 className="text-2xl font-bold text-blue-900 mb-2">
-                      {item.title}
-                    </h3>
-                    <p className="text-gray-600">
-                      {item.description}
-                    </p>
-                    <div className="mt-5 inline-flex items-center gap-2 font-bold text-blue-900">
-                      Open <ArrowRight className="w-4 h-4" />
-                    </div>
-                  </div>
-                </Link>
+                  </Link>
+                </motion.div>
               );
             })}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Highlights Section */}
-      <section className="py-16 bg-white">
+      <motion.section
+        className="py-16 bg-white"
+        variants={stagger}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: '-60px' }}
+      >
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Highlight 1 */}
-            <div className="text-center p-8 rounded-lg bg-gradient-to-br from-emerald-50 to-blue-50 hover:shadow-lg transition-shadow duration-300 border border-emerald-200">
+            <motion.div variants={cardVariant} className="text-center p-8 rounded-lg bg-gradient-to-br from-emerald-50 to-blue-50 hover:shadow-lg transition-shadow duration-300 border border-emerald-200">
               <div className="inline-block p-4 bg-emerald-500 rounded-full mb-4">
                 <Trophy className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-blue-900 mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>
-                Championships
-              </h3>
-              <p className="text-gray-600">
-                Host and participate in inter-college tournaments and national championships throughout the year.
-              </p>
-            </div>
+              <h3 className="text-2xl font-bold text-blue-900 mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>Championships</h3>
+              <p className="text-gray-600">Host and participate in inter-college tournaments and national championships throughout the year.</p>
+            </motion.div>
 
-            {/* Highlight 2 */}
-            <div className="text-center p-8 rounded-lg bg-gradient-to-br from-blue-50 to-orange-50 hover:shadow-lg transition-shadow duration-300 border border-blue-200">
+            <motion.div variants={cardVariant} className="text-center p-8 rounded-lg bg-gradient-to-br from-blue-50 to-orange-50 hover:shadow-lg transition-shadow duration-300 border border-blue-200">
               <div className="inline-block p-4 bg-blue-900 rounded-full mb-4">
                 <Users className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-blue-900 mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>
-                Community
-              </h3>
-              <p className="text-gray-600">
-                Join a diverse community of badminton enthusiasts and build lasting friendships.
-              </p>
-            </div>
+              <h3 className="text-2xl font-bold text-blue-900 mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>Community</h3>
+              <p className="text-gray-600">Join a diverse community of badminton enthusiasts and build lasting friendships.</p>
+            </motion.div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Featured Section */}
-      <section className="py-20 bg-gradient-to-r from-blue-50 to-emerald-50">
+      <motion.section
+        className="py-20 bg-gradient-to-r from-blue-50 to-emerald-50"
+        variants={fadeUp}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: '-80px' }}
+      >
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-blue-900 mb-4" style={{ fontFamily: 'Playfair Display, serif' }}>
-              Why Join Us?
-            </h2>
-            <div className="w-16 h-1 bg-gradient-to-r from-emerald-500 to-orange-500 mx-auto"></div>
+            <h2 className="text-4xl font-bold text-blue-900 mb-4" style={{ fontFamily: 'Playfair Display, serif' }}>Why Join Us?</h2>
+            <div className="w-16 h-1 bg-gradient-to-r from-emerald-500 to-orange-500 mx-auto" />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <div className="flex gap-4">
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   <div className="flex items-center justify-center h-12 w-12 rounded-md bg-emerald-500 text-white">
                     <span className="text-xl">✓</span>
                   </div>
                 </div>
                 <div>
                   <h4 className="text-xl font-bold text-blue-900">State-of-the-Art Facilities</h4>
-                  <p className="text-gray-600 mt-2">
-                    Access to 3 professional indoor courts with synthetic mat on wooden floors and modern lighting.
-                  </p>
+                  <p className="text-gray-600 mt-2">Access to 3 professional indoor courts with synthetic mat on wooden floors and modern lighting.</p>
                 </div>
               </div>
 
               <div className="flex gap-4">
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-900 text-white">
                     <span className="text-xl">✓</span>
                   </div>
                 </div>
                 <div>
                   <h4 className="text-xl font-bold text-blue-900">Regular Events</h4>
-                  <p className="text-gray-600 mt-2">
-                    Participate in friendly matches, tournaments, and inter-college competitions.
-                  </p>
+                  <p className="text-gray-600 mt-2">Participate in friendly matches, tournaments, and inter-college competitions.</p>
                 </div>
               </div>
             </div>
 
             <div className="relative rounded-lg overflow-hidden shadow-xl">
-              <img
-                src={iiscTeam}
-                alt="IISc Badminton Team"
-                className="w-full h-auto object-cover"
-              />
+              <img src={iiscTeam} alt="IISc Badminton Team" loading="lazy" className="w-full h-auto object-cover" />
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-blue-900 text-white">
+      <motion.section
+        className="py-16 bg-blue-900 text-white"
+        variants={fadeUp}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: '-60px' }}
+      >
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold mb-6" style={{ fontFamily: 'Playfair Display, serif' }}>
-            Ready to Join Our Club?
-          </h2>
+          <h2 className="text-4xl font-bold mb-6" style={{ fontFamily: 'Playfair Display, serif' }}>Ready to Join Our Club?</h2>
           <p className="text-xl text-gray-200 mb-8 max-w-2xl mx-auto">
             Whether you're a seasoned player or just starting out, there's a place for you in the IISc Badminton Club.
           </p>
@@ -210,7 +216,7 @@ export default function Home() {
             </Button>
           </Link>
         </div>
-      </section>
+      </motion.section>
     </div>
   );
 }

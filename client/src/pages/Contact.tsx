@@ -1,8 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Mail, MapPin, Phone, Instagram } from 'lucide-react';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 export default function Contact() {
+  usePageMeta({ title: 'Contact Us', description: 'Get in touch with the IISc Badminton Club. Find us at the IISc Gymkhana, Bangalore.' });
   return (
     <div className="min-h-screen">
 

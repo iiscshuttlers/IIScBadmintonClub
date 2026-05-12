@@ -1,12 +1,20 @@
 import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Instagram, X, Youtube, PlayCircle } from 'lucide-react';
+import { Instagram, X, Youtube, PlayCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 export default function Gallery() {
+  usePageMeta({ title: 'Gallery', description: 'Photos and videos from IISc Badminton Club tournaments and events.' });
+
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSubfolder, setSelectedSubfolder] = useState('all');
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [videos, setVideos] = useState<any[]>([]);
+
+  // Close lightbox when filters change
+  useEffect(() => {
+    setSelectedIndex(null);
+  }, [selectedCategory, selectedSubfolder]);
 
   // Fetch Videos
   useEffect(() => {
@@ -156,16 +164,18 @@ export default function Gallery() {
 
           {/* Image Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredItems.map((item) => (
+            {filteredItems.map((item, idx) => (
               <div
                 key={item.id}
                 className="group relative bg-white rounded-2xl shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden cursor-pointer"
-                onClick={() => setSelectedImage(item.image)}
+                onClick={() => setSelectedIndex(idx)}
               >
                 <div className="h-72 overflow-hidden bg-gray-100">
                   <img
                     src={item.image}
                     alt={item.title}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
                 </div>
@@ -283,22 +293,106 @@ export default function Gallery() {
         </div>
       </section>
 
-      {/* Fullscreen Image Overlay */}
-      {selectedImage && (
-        <div
-          className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-4 backdrop-blur-sm transition-all"
-          onClick={() => setSelectedImage(null)}
-        >
-          <button className="absolute top-6 right-6 text-white hover:text-emerald-400 transition">
-            <X className="w-10 h-10" />
-          </button>
-          <img
-            src={selectedImage}
-            className="max-h-[90vh] max-w-full rounded-lg shadow-2xl animate-in zoom-in-95 duration-300"
-            alt="Gallery preview"
-          />
-        </div>
-      )}
+      {/* Enhanced Fullscreen Lightbox */}
+      <Lightbox
+        items={filteredItems}
+        index={selectedIndex}
+        onClose={() => setSelectedIndex(null)}
+        onPrev={() => setSelectedIndex(i => i !== null ? (i - 1 + filteredItems.length) % filteredItems.length : null)}
+        onNext={() => setSelectedIndex(i => i !== null ? (i + 1) % filteredItems.length : null)}
+        formatText={formatText}
+      />
+    </div>
+  );
+}
+
+function Lightbox({
+  items,
+  index,
+  onClose,
+  onPrev,
+  onNext,
+  formatText,
+}: {
+  items: { image: string; title: string; subfolder: string }[];
+  index: number | null;
+  onClose: () => void;
+  onPrev: () => void;
+  onNext: () => void;
+  formatText: (s: string) => string;
+}) {
+  useEffect(() => {
+    if (index === null) return;
+    document.body.style.overflow = 'hidden';
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      else if (e.key === 'ArrowLeft') onPrev();
+      else if (e.key === 'ArrowRight') onNext();
+    };
+    window.addEventListener('keydown', handler);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handler);
+    };
+  }, [index, onClose, onPrev, onNext]);
+
+  if (index === null || !items[index]) return null;
+
+  const item = items[index];
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/95 z-100 flex items-center justify-center backdrop-blur-sm"
+      onClick={onClose}
+    >
+      {/* Counter */}
+      <div className="absolute top-5 left-1/2 -translate-x-1/2 text-white/60 text-sm font-medium select-none">
+        {index + 1} / {items.length}
+      </div>
+
+      {/* Close */}
+      <button
+        className="absolute top-4 right-4 text-white hover:text-emerald-400 transition-colors p-2"
+        onClick={onClose}
+        aria-label="Close"
+      >
+        <X className="w-8 h-8" />
+      </button>
+
+      {/* Prev */}
+      <button
+        className="absolute left-3 top-1/2 -translate-y-1/2 text-white hover:text-emerald-400 transition-colors p-2"
+        onClick={(e) => { e.stopPropagation(); onPrev(); }}
+        aria-label="Previous"
+      >
+        <ChevronLeft className="w-10 h-10" />
+      </button>
+
+      {/* Image */}
+      <img
+        key={index}
+        src={item.image}
+        alt={item.title}
+        className="max-h-[85vh] max-w-[80vw] rounded-lg shadow-2xl object-contain animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      />
+
+      {/* Next */}
+      <button
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-white hover:text-emerald-400 transition-colors p-2"
+        onClick={(e) => { e.stopPropagation(); onNext(); }}
+        aria-label="Next"
+      >
+        <ChevronRight className="w-10 h-10" />
+      </button>
+
+      {/* Caption */}
+      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 text-center pointer-events-none">
+        <p className="text-white text-sm font-semibold">{item.title}</p>
+        {item.subfolder && (
+          <p className="text-white/50 text-xs mt-0.5">{formatText(item.subfolder)}</p>
+        )}
+      </div>
     </div>
   );
 }

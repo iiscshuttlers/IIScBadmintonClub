@@ -2,8 +2,10 @@ import { Link } from 'wouter';
 import { ArrowRight, Medal, Trophy } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ARCHIVED_TOURNAMENTS } from '@/data/tournamentArchive';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 export default function WinnersWall() {
+  usePageMeta({ title: 'Winners Wall', description: 'Champions and podium finishers from all IISc Badminton Club tournaments and events.' });
   const tournamentsWithResults = ARCHIVED_TOURNAMENTS.filter(
     (event) => event.winners || event.podium
   );

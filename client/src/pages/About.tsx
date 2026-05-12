@@ -1,10 +1,61 @@
+import { useRef, useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
-/**
- * About Page
- * Design: Dynamic Sports Energy - Information-rich layout with team highlights
- */
+function CountUpStat({
+  target,
+  suffix = '',
+  label,
+  borderClass = 'border-emerald-500',
+}: {
+  target: number;
+  suffix?: string;
+  label: string;
+  borderClass?: string;
+}) {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+  const animated = useRef(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !animated.current) {
+          animated.current = true;
+          const duration = 1400;
+          const start = performance.now();
+          const tick = (now: number) => {
+            const t = Math.min((now - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - t, 3);
+            setCount(Math.round(eased * target));
+            if (t < 1) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        }
+      },
+      { threshold: 0.3 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [target]);
+
+  return (
+    <div ref={ref} className={`bg-white p-8 rounded-lg shadow-md border-l-4 ${borderClass}`}>
+      <h3 className="text-2xl font-bold text-blue-900 mb-2">
+        {count}{suffix}
+      </h3>
+      <p className="text-gray-600">{label}</p>
+    </div>
+  );
+}
+
 export default function About() {
+  usePageMeta({
+    title: 'About',
+    description: 'Learn about the IISc Badminton Club — our mission, values, history, and leadership team.',
+  });
   const teamMembers = [
     { role: 'Convener', name: 'Raja Janmejay', description: 'Leading the club with vision and passion' },
     { role: 'Co-Convener', name: 'Aneesh Varla', description: 'Helping members connect, compete, and grow through the sport' },
@@ -116,22 +167,10 @@ export default function About() {
             Notable Achievements
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <div className="bg-white p-8 rounded-lg shadow-md border-l-4 border-emerald-500">
-              <h3 className="text-2xl font-bold text-blue-900 mb-2">350+</h3>
-              <p className="text-gray-600">Active Members</p>
-            </div>
-            <div className="bg-white p-8 rounded-lg shadow-md border-l-4 border-orange-500">
-              <h3 className="text-2xl font-bold text-blue-900 mb-2">20+</h3>
-              <p className="text-gray-600">Tournaments Hosted</p>
-            </div>
-            <div className="bg-white p-8 rounded-lg shadow-md border-l-4 border-blue-900">
-              <h3 className="text-2xl font-bold text-blue-900 mb-2">3</h3>
-              <p className="text-gray-600">Professional Courts</p>
-            </div>
-            <div className="bg-white p-8 rounded-lg shadow-md border-l-4 border-blue-900">
-              <h3 className="text-2xl font-bold text-blue-900 mb-2">10+</h3>
-              <p className="text-gray-600">IISM Trophies</p>
-            </div>            
+            <CountUpStat target={350} suffix="+" label="Active Members" borderClass="border-emerald-500" />
+            <CountUpStat target={20} suffix="+" label="Tournaments Hosted" borderClass="border-orange-500" />
+            <CountUpStat target={3} label="Professional Courts" borderClass="border-blue-900" />
+            <CountUpStat target={10} suffix="+" label="IISM Trophies" borderClass="border-blue-900" />
           </div>
         </div>
       </section>

@@ -4,8 +4,28 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Calendar, Trophy, Radio, Medal, ArrowRight } from 'lucide-react';
 import { getTournaments } from '@/lib/tournaments';
 import { ARCHIVED_TOURNAMENTS, ArchivedTournament } from '@/data/tournamentArchive';
+import { usePageMeta } from '@/hooks/usePageMeta';
+
+function EventSkeleton() {
+  return (
+    <div className="rounded-3xl border border-gray-200 shadow-md bg-white p-8 space-y-5 animate-pulse">
+      <div className="flex gap-3">
+        <div className="h-6 w-24 rounded-full bg-gray-200" />
+        <div className="h-6 w-36 rounded-full bg-gray-200" />
+      </div>
+      <div className="h-8 w-3/4 rounded bg-gray-200" />
+      <div className="space-y-2">
+        <div className="h-4 w-full rounded bg-gray-200" />
+        <div className="h-4 w-2/3 rounded bg-gray-200" />
+      </div>
+      <div className="h-5 w-28 rounded bg-gray-200" />
+    </div>
+  );
+}
 
 export default function Events() {
+  usePageMeta({ title: 'Events & Championships', description: 'Browse live, upcoming and completed badminton tournaments at IISc.' });
+
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -132,9 +152,9 @@ export default function Events() {
 
       <section className="py-16 container mx-auto px-4 space-y-16">
         {loading && (
-          <p className="text-center text-gray-500 text-lg">
-            Loading tournaments...
-          </p>
+          <div className="grid md:grid-cols-2 gap-8">
+            {Array.from({ length: 4 }).map((_, i) => <EventSkeleton key={i} />)}
+          </div>
         )}
 
         {!loading && live.length > 0 && (

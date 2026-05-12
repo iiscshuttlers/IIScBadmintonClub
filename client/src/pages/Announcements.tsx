@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Bell, Pin } from 'lucide-react';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
 type Announcement = {
   title: string;
@@ -13,6 +14,7 @@ type Announcement = {
 };
 
 export default function Announcements() {
+  usePageMeta({ title: 'Announcements', description: 'Latest news, court notices, event updates and club announcements from IISc Badminton Club.' });
   const [pinnedAnnouncements, setPinnedAnnouncements] = useState<Announcement[]>([]);
   const [recentAnnouncements, setRecentAnnouncements] = useState<Announcement[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('all');

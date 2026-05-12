@@ -1,15 +1,18 @@
-import { useState } from 'react';
-import { Link } from 'wouter';
+import { useState, useEffect } from 'react';
+import { Link, useLocation } from 'wouter';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-/**
- * Navigation Component
- * Fixed mobile + tablet responsive layout
- * Desktop unchanged
- */
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
+  const [location] = useLocation();
+
+  useEffect(() => {
+    setIsOpen(false);
+  }, [location]);
+
+  const isActive = (href: string) =>
+    href === '/' ? location === '/' : location.startsWith(href);
 
   const navLinks = [
     { href: '/', label: 'Home' },
@@ -50,7 +53,11 @@ export default function Navigation() {
               <Link key={link.href} href={link.href}>
                 <Button
                   variant="ghost"
-                  className="text-blue-900 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                  className={`transition-colors ${
+                    isActive(link.href)
+                      ? 'text-emerald-600 bg-emerald-50 font-semibold'
+                      : 'text-blue-900 hover:text-emerald-600 hover:bg-emerald-50'
+                  }`}
                 >
                   {link.label}
                 </Button>
@@ -80,8 +87,11 @@ export default function Navigation() {
                 <Link key={link.href} href={link.href}>
                   <Button
                     variant="ghost"
-                    className="w-full justify-start text-blue-900 hover:text-emerald-600 hover:bg-emerald-50"
-                    onClick={() => setIsOpen(false)}
+                    className={`w-full justify-start transition-colors ${
+                      isActive(link.href)
+                        ? 'text-emerald-600 bg-emerald-50 font-semibold'
+                        : 'text-blue-900 hover:text-emerald-600 hover:bg-emerald-50'
+                    }`}
                   >
                     {link.label}
                   </Button>
