@@ -78,17 +78,25 @@ export default function WinnersWall() {
 
               {event.podium && (
                 <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {event.podium.map((team, index) => (
-                    <div
-                      key={team}
-                      className="rounded-2xl border border-blue-100 bg-blue-50 p-5"
-                    >
-                      <p className="text-xs font-black text-blue-700 uppercase tracking-wider">
-                        Rank {index + 1}
-                      </p>
-                      <p className="mt-2 font-bold text-blue-950">{team}</p>
-                    </div>
-                  ))}
+                  {event.podium.map((team, index) => {
+                    const rankConfig = [
+                      { label: '🥇 Gold',   border: 'border-amber-300', bg: 'bg-amber-50',  text: 'text-amber-700' },
+                      { label: '🥈 Silver', border: 'border-slate-300', bg: 'bg-slate-50',  text: 'text-slate-600' },
+                      { label: '🥉 Bronze', border: 'border-orange-300', bg: 'bg-orange-50', text: 'text-orange-700' },
+                    ];
+                    const rank = rankConfig[index] ?? { label: `Rank ${index + 1}`, border: 'border-blue-100', bg: 'bg-blue-50', text: 'text-blue-700' };
+                    return (
+                      <div
+                        key={team}
+                        className={`rounded-2xl border ${rank.border} ${rank.bg} p-5`}
+                      >
+                        <p className={`text-xs font-black uppercase tracking-wider ${rank.text}`}>
+                          {rank.label}
+                        </p>
+                        <p className="mt-2 font-bold text-blue-950">{team}</p>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>

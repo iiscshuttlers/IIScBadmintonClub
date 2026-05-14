@@ -1,10 +1,23 @@
 import { Link } from 'wouter';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Calendar, Trophy, Radio, Medal, ArrowRight } from 'lucide-react';
+import { Calendar, Trophy, Radio, Medal, ArrowRight, Clock } from 'lucide-react';
 import { getTournaments } from '@/lib/tournaments';
-import { ARCHIVED_TOURNAMENTS, ArchivedTournament } from '@/data/tournamentArchive';
+import { ARCHIVED_TOURNAMENTS, ArchivedTournament, TournamentStatus } from '@/data/tournamentArchive';
 import { usePageMeta } from '@/hooks/usePageMeta';
+
+type LiveTournament = {
+  id: string;
+  name: string;
+  subtitle?: string;
+  description?: string;
+  startDate: string;
+  endDate?: string;
+  status: TournamentStatus;
+  location?: string;
+  type?: string;
+  categories?: string[];
+};
 
 function EventSkeleton() {
   return (
@@ -23,10 +36,68 @@ function EventSkeleton() {
   );
 }
 
+function NoUpcomingEvents() {
+  return (
+    <div className="rounded-3xl border-2 border-dashed border-emerald-200 bg-emerald-50 p-12 text-center">
+      <Calendar className="w-12 h-12 text-emerald-400 mx-auto mb-4" />
+      <h3 className="text-xl font-bold text-blue-900 mb-2">No upcoming tournaments</h3>
+      <p className="text-gray-500 max-w-md mx-auto">
+        No events are scheduled right now — check back soon, or browse our completed events below.
+      </p>
+    </div>
+  );
+}
+
+function UpcomingCountdown({ event }: { event: any }) {
+  const calcTime = () => {
+    const diff = new Date(event.startDate).getTime() - Date.now();
+    if (diff <= 0) return null;
+    return {
+      days: Math.floor(diff / 86400000),
+      hours: Math.floor((diff % 86400000) / 3600000),
+      minutes: Math.floor((diff % 3600000) / 60000),
+      seconds: Math.floor((diff % 60000) / 1000),
+    };
+  };
+
+  const [time, setTime] = useState(calcTime);
+  const ref = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    ref.current = setInterval(() => setTime(calcTime()), 1000);
+    return () => { if (ref.current) clearInterval(ref.current); };
+  }, [event.startDate]);
+
+  if (!time) return null;
+
+  return (
+    <div className="rounded-3xl bg-gradient-to-r from-blue-900 to-emerald-900 text-white p-8 mb-8 shadow-xl">
+      <div className="flex flex-col md:flex-row md:items-center gap-6">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 text-emerald-400 font-black text-xs uppercase tracking-widest mb-2">
+            <Clock className="w-4 h-4" />
+            Next Tournament
+          </div>
+          <h2 className="text-3xl font-bold">{event.name}</h2>
+          <p className="text-gray-300 mt-1">{event.startDate}</p>
+        </div>
+        <div className="flex gap-4 text-center">
+          {[['Days', time.days], ['Hrs', time.hours], ['Min', time.minutes], ['Sec', time.seconds]].map(([label, val]) => (
+            <div key={label as string} className="bg-white/10 rounded-2xl px-4 py-3 min-w-[64px]">
+              <div className="text-3xl font-black tabular-nums">{String(val).padStart(2, '0')}</div>
+              <div className="text-xs text-emerald-300 font-bold mt-1">{label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Events() {
   usePageMeta({ title: 'Events & Championships', description: 'Browse live, upcoming and completed badminton tournaments at IISc.' });
 
-  const [events, setEvents] = useState<any[]>([]);
+  const [events, setEvents] = useState<LiveTournament[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -170,6 +241,15 @@ export default function Events() {
               {live.map((item) => renderCard(item, true))}
             </div>
           </div>
+        )}
+
+        {!loading && upcoming.length === 0 && live.length === 0 && (
+          <NoUpcomingEvents />
+        )}
+
+        {/* Countdown for next upcoming tournament */}
+        {!loading && upcoming.length > 0 && (
+          <UpcomingCountdown event={upcoming[0]} />
         )}
 
         {!loading && upcoming.length > 0 && (

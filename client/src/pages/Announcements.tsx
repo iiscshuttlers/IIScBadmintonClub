@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Bell, Pin } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import DOMPurify from 'dompurify';
 
 type Announcement = {
   title: string;
@@ -52,16 +53,16 @@ export default function Announcements() {
   }, []);
 
   const categories = [
-    { id: 'all', label: 'All', color: 'bg-gray-100 text-gray-700' },
-    { id: 'tournament', label: 'Tournaments', color: 'bg-emerald-100 text-emerald-700' },
-    { id: 'facility', label: 'Facilities', color: 'bg-blue-100 text-blue-700' },
-    { id: 'general', label: 'General', color: 'bg-purple-100 text-purple-700' },
-    { id: 'others', label: 'Others', color: 'bg-orange-100 text-orange-700' }
+    { id: 'all',        label: 'All',         color: 'bg-gray-100 text-gray-700',       icon: '🗂️' },
+    { id: 'tournament', label: 'Tournament',  color: 'bg-emerald-100 text-emerald-800', icon: '🏸' },
+    { id: 'facility',   label: 'Facility',    color: 'bg-blue-100 text-blue-800',       icon: '🏟️' },
+    { id: 'general',    label: 'General',     color: 'bg-purple-100 text-purple-800',   icon: '📢' },
+    { id: 'others',     label: 'Others',      color: 'bg-orange-100 text-orange-800',   icon: '📌' },
   ];
 
-  const getCategoryColor = (category: string) => {
+  const getCategoryBadge = (category: string) => {
     const found = categories.find((c) => c.id === category);
-    return found ? found.color : 'bg-gray-100 text-gray-700';
+    return found ?? { label: category, color: 'bg-gray-100 text-gray-700', icon: '•' };
   };
 
   const filteredRecent =
@@ -126,8 +127,23 @@ export default function Announcements() {
 
       {/* Loading */}
       {loading && (
-        <section className="py-20 text-center">
-          <p className="text-gray-600 text-lg">Loading announcements...</p>
+        <section className="py-16">
+          <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="rounded-2xl border border-gray-200 bg-white p-6 space-y-4 animate-pulse">
+                <div className="h-6 w-3/4 rounded bg-gray-200" />
+                <div className="flex gap-3">
+                  <div className="h-5 w-20 rounded-full bg-gray-200" />
+                  <div className="h-5 w-16 rounded-full bg-gray-200" />
+                </div>
+                <div className="space-y-2">
+                  <div className="h-4 w-full rounded bg-gray-200" />
+                  <div className="h-4 w-5/6 rounded bg-gray-200" />
+                  <div className="h-4 w-2/3 rounded bg-gray-200" />
+                </div>
+              </div>
+            ))}
+          </div>
         </section>
       )}
 
@@ -156,16 +172,17 @@ export default function Announcements() {
                             {item.title}
                           </CardTitle>
 
-                          <div className="flex flex-wrap gap-3 text-sm text-gray-600 mt-3">
-                            <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap gap-2 text-sm text-gray-600 mt-3">
+                            <div className="flex items-center gap-1.5">
                               <Calendar className="w-4 h-4 text-emerald-500" />
-                              {item.date}
+                              <span className="text-gray-500 text-sm">{item.date}</span>
                             </div>
-
-                            <Badge className={getCategoryColor(item.category)}>
-                              {item.category}
-                            </Badge>
-                            <Badge className={getStatusColor(status)}>
+                            {(() => { const b = getCategoryBadge(item.category); return (
+                              <Badge className={`${b.color} border-0 font-semibold`}>
+                                {b.icon} {b.label}
+                              </Badge>
+                            ); })()}
+                            <Badge className={`${getStatusColor(status)} border-0 font-semibold capitalize`}>
                               {status}
                             </Badge>
                           </div>
@@ -173,7 +190,7 @@ export default function Announcements() {
                         <CardContent>
                           <p
                             className="text-gray-700 leading-relaxed"
-                            dangerouslySetInnerHTML={{ __html: item.content }}
+                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(item.content) }}
                           />
                         </CardContent>
                       </Card>
@@ -233,16 +250,17 @@ export default function Announcements() {
                             {item.title}
                           </CardTitle>
 
-                          <div className="flex flex-wrap gap-3 text-sm text-gray-600 mt-2">
-                            <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap gap-2 text-sm text-gray-600 mt-2">
+                            <div className="flex items-center gap-1.5">
                               <Calendar className="w-4 h-4 text-emerald-500" />
-                              {item.date}
+                              <span className="text-gray-500 text-sm">{item.date}</span>
                             </div>
-
-                            <Badge className={getCategoryColor(item.category)}>
-                              {item.category}
-                            </Badge>
-                            <Badge className={getStatusColor(status)}>
+                            {(() => { const b = getCategoryBadge(item.category); return (
+                              <Badge className={`${b.color} border-0 font-semibold`}>
+                                {b.icon} {b.label}
+                              </Badge>
+                            ); })()}
+                            <Badge className={`${getStatusColor(status)} border-0 font-semibold capitalize`}>
                               {status}
                             </Badge>
                           </div>
@@ -251,7 +269,7 @@ export default function Announcements() {
                         <CardContent>
                           <p
                             className="text-gray-700 text-sm leading-relaxed"
-                            dangerouslySetInnerHTML={{ __html: item.content }}
+                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(item.content) }}
                           />
                         </CardContent>
                       </Card>

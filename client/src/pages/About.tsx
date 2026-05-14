@@ -145,17 +145,30 @@ export default function About() {
             Club Leadership
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {teamMembers.map((member, idx) => (
-              <Card key={idx} className="border-2 border-emerald-200 hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <CardTitle className="text-emerald-600">{member.role}</CardTitle>
-                  <CardDescription className="text-blue-900 font-semibold">{member.name}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-600 text-sm">{member.description}</p>
-                </CardContent>
-              </Card>
-            ))}
+            {teamMembers.map((member, idx) => {
+              const avatarColors = [
+                'from-emerald-500 to-teal-600',
+                'from-blue-600 to-indigo-700',
+                'from-orange-500 to-red-600',
+                'from-purple-500 to-violet-600',
+              ];
+              const initials = member.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
+              const colorClass = avatarColors[idx % avatarColors.length];
+              return (
+                <div key={idx} className="flex items-start gap-5 p-6 rounded-2xl border-2 border-emerald-100 bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                  {/* Avatar */}
+                  <div className={`flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-br ${colorClass} flex items-center justify-center shadow-md`}>
+                    <span className="text-white text-xl font-black tracking-wide">{initials}</span>
+                  </div>
+                  {/* Info */}
+                  <div className="min-w-0">
+                    <span className="inline-block text-xs font-black text-emerald-600 uppercase tracking-widest mb-1">{member.role}</span>
+                    <h3 className="text-xl font-bold text-blue-900 leading-tight">{member.name}</h3>
+                    <p className="text-gray-500 text-sm mt-1 leading-relaxed">{member.description}</p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>

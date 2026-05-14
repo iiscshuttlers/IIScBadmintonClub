@@ -1,9 +1,10 @@
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Bell, CalendarDays, Medal, Trophy, Users } from 'lucide-react';
+import { ArrowRight, Bell, CalendarDays, CheckCircle2, Medal, Trophy, Users } from 'lucide-react';
 import iiscTeam from "@/assets/iisc-team.jpg";
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { motion } from 'framer-motion';
+import { useRef, useState, useEffect } from 'react';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 32 },
@@ -33,15 +34,28 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-emerald-900 text-white">
-        {/* Diagonal divider at bottom */}
-        <div className="absolute inset-0 opacity-10">
-          <svg className="w-full h-full" viewBox="0 0 1200 600" preserveAspectRatio="none">
-            <polygon points="0,0 1200,0 1200,400 0,600" fill="white" />
-          </svg>
+      <section className="relative overflow-hidden text-white">
+
+        {/* Mobile: team photo background (hidden on lg+) */}
+        <div className="lg:hidden absolute inset-0 z-0">
+          <img
+            src={iiscTeam}
+            alt="IISc Badminton Team"
+            className="w-full h-full object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-blue-900/85 via-blue-900/70 to-emerald-900/90" />
         </div>
 
-        <div className="container mx-auto px-4 py-20 relative z-10">
+        {/* Desktop: gradient background (hidden on mobile) */}
+        <div className="hidden lg:block absolute inset-0 bg-gradient-to-br from-blue-900 via-blue-800 to-emerald-900 z-0">
+          <div className="absolute inset-0 opacity-10">
+            <svg className="w-full h-full" viewBox="0 0 1200 600" preserveAspectRatio="none">
+              <polygon points="0,0 1200,0 1200,400 0,600" fill="white" />
+            </svg>
+          </div>
+        </div>
+
+        <div className="container mx-auto px-4 py-20 lg:py-20 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
             <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-700">
@@ -70,15 +84,13 @@ export default function Home() {
               </div>
             </div>
 
-          {/* Right Image / Animated Logo */}
-          <div className="relative animate-in fade-in slide-in-from-right-4 duration-700 delay-200">
-            
-            <div className="relative flex items-center justify-center">
-              <AnimatedLogo />
+            {/* Right: Animated Logo (desktop only) */}
+            <div className="hidden lg:flex relative animate-in fade-in slide-in-from-right-4 duration-700 delay-200">
+              <div className="relative flex items-center justify-center">
+                <AnimatedLogo />
+              </div>
+              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-orange-500 rounded-full opacity-20 blur-3xl z-[-1]"></div>
             </div>
-
-            <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-orange-500 rounded-full opacity-20 blur-3xl z-[-1]"></div>
-          </div>
           </div>
         </div>
       </section>
@@ -120,31 +132,44 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Highlights Section */}
+      {/* Stats Section */}
       <motion.section
-        className="py-16 bg-white"
+        className="py-16 bg-white dark:bg-slate-900"
         variants={stagger}
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: '-60px' }}
       >
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <motion.div variants={cardVariant} className="text-center p-8 rounded-lg bg-gradient-to-br from-emerald-50 to-blue-50 hover:shadow-lg transition-shadow duration-300 border border-emerald-200">
-              <div className="inline-block p-4 bg-emerald-500 rounded-full mb-4">
-                <Trophy className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold text-blue-900 mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>Championships</h3>
-              <p className="text-gray-600">Host and participate in inter-college tournaments and national championships throughout the year.</p>
-            </motion.div>
-
-            <motion.div variants={cardVariant} className="text-center p-8 rounded-lg bg-gradient-to-br from-blue-50 to-orange-50 hover:shadow-lg transition-shadow duration-300 border border-blue-200">
-              <div className="inline-block p-4 bg-blue-900 rounded-full mb-4">
-                <Users className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold text-blue-900 mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>Community</h3>
-              <p className="text-gray-600">Join a diverse community of badminton enthusiasts and build lasting friendships.</p>
-            </motion.div>
+          <motion.h2
+            variants={fadeUp}
+            className="text-center text-3xl font-bold text-blue-900 dark:text-white mb-10"
+            style={{ fontFamily: 'Playfair Display, serif' }}
+          >
+            Club at a Glance
+          </motion.h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {[
+              { target: 350, suffix: '+', label: 'Active Members', icon: Users, color: 'bg-emerald-500' },
+              { target: 20,  suffix: '+', label: 'Tournaments Hosted', icon: Trophy, color: 'bg-amber-500' },
+              { target: 3,   suffix: '',  label: 'Indoor Courts', icon: CalendarDays, color: 'bg-blue-900' },
+              { target: 10,  suffix: '+', label: 'IISM Trophies', icon: Medal, color: 'bg-orange-500' },
+            ].map((stat) => {
+              const Icon = stat.icon;
+              return (
+                <motion.div
+                  key={stat.label}
+                  variants={cardVariant}
+                  className="text-center p-6 rounded-2xl bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-700 border border-gray-100 dark:border-slate-700 shadow-sm hover:shadow-lg transition-all duration-300"
+                >
+                  <div className={`inline-flex p-3 ${stat.color} rounded-xl mb-4`}>
+                    <Icon className="w-6 h-6 text-white" />
+                  </div>
+                  <CountUpNumber target={stat.target} suffix={stat.suffix} />
+                  <p className="text-gray-500 dark:text-slate-400 text-sm mt-1">{stat.label}</p>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </motion.section>
@@ -165,29 +190,19 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <div className="flex gap-4">
-                <div className="shrink-0">
-                  <div className="flex items-center justify-center h-12 w-12 rounded-md bg-emerald-500 text-white">
-                    <span className="text-xl">✓</span>
+              {[
+                { title: 'State-of-the-Art Facilities', desc: 'Access to 3 professional indoor courts with synthetic mat on wooden floors and modern lighting.', color: 'text-emerald-500' },
+                { title: 'Regular Events', desc: 'Participate in friendly matches, tournaments, and inter-college competitions.', color: 'text-emerald-500' },
+                { title: 'Open to All Levels', desc: 'Whether you\'re a beginner or seasoned player, there\'s a place for you at IISc Badminton Club.', color: 'text-emerald-500' },
+              ].map((item) => (
+                <div key={item.title} className="flex gap-4 items-start">
+                  <CheckCircle2 className={`w-6 h-6 mt-1 shrink-0 ${item.color}`} />
+                  <div>
+                    <h4 className="text-xl font-bold text-blue-900 dark:text-white">{item.title}</h4>
+                    <p className="text-gray-600 dark:text-slate-400 mt-1">{item.desc}</p>
                   </div>
                 </div>
-                <div>
-                  <h4 className="text-xl font-bold text-blue-900">State-of-the-Art Facilities</h4>
-                  <p className="text-gray-600 mt-2">Access to 3 professional indoor courts with synthetic mat on wooden floors and modern lighting.</p>
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                <div className="shrink-0">
-                  <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-900 text-white">
-                    <span className="text-xl">✓</span>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="text-xl font-bold text-blue-900">Regular Events</h4>
-                  <p className="text-gray-600 mt-2">Participate in friendly matches, tournaments, and inter-college competitions.</p>
-                </div>
-              </div>
+              ))}
             </div>
 
             <div className="relative rounded-lg overflow-hidden shadow-xl">
@@ -223,14 +238,53 @@ export default function Home() {
 
 
 // ==========================================
+// Count-up number for the stats section
+// ==========================================
+function CountUpNumber({ target, suffix = '' }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+  const animated = useRef(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !animated.current) {
+          animated.current = true;
+          const duration = 1200;
+          const start = performance.now();
+          const tick = (now: number) => {
+            const t = Math.min((now - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - t, 3);
+            setCount(Math.round(eased * target));
+            if (t < 1) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        }
+      },
+      { threshold: 0.3 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [target]);
+
+  return (
+    <div ref={ref} className="text-3xl font-black text-blue-900 dark:text-white">
+      {count}{suffix}
+    </div>
+  );
+}
+
+// ==========================================
 // The Animated Logo Component
 // ==========================================
 function AnimatedLogo() {
   return (
     <div className="relative flex items-center justify-center bg-transparent overflow-visible">
       
-      {/* Scaling wrapper */}
-      <div className="relative w-[380px] h-[380px] flex-shrink-0">
+      {/* Scaling wrapper — responsive on mobile */}
+      <div className="relative flex-shrink-0" style={{ width: 'min(380px, 85vw)', height: 'min(380px, 85vw)' }}>
         
         {/* Outer Ring & Badge Background */}
         <div className="relative w-full h-full rounded-full bg-gradient-to-br from-blue-950 to-slate-900 shadow-2xl border-[8px] border-slate-950 flex flex-col items-center justify-center overflow-hidden ring-[6px] ring-amber-500 z-0">

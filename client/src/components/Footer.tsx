@@ -1,5 +1,6 @@
 import { Link } from 'wouter';
-import { Mail, MapPin, Phone, Instagram, Youtube } from 'lucide-react';
+import { Mail, MapPin, Instagram, Youtube } from 'lucide-react';
+
 
 export default function Footer() {
   const quickLinks = [
@@ -82,10 +83,6 @@ export default function Footer() {
                   office.gym@iisc.ac.in
                 </a>
               </div>
-              <div className="flex gap-2 items-center">
-                <Phone className="w-5 h-5 text-emerald-400 shrink-0" />
-                <span className="text-gray-300">+91 (080) 2293 xxxx</span>
-              </div>
             </div>
           </div>
 
@@ -113,10 +110,9 @@ export default function Footer() {
                 <span className="text-blue-900 ml-1 select-none">·</span>
               </Link>
             </p>
-            <div className="flex gap-6 text-sm">
-              <a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors">Privacy Policy</a>
-              <a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors">Terms of Service</a>
-            </div>
+            <p className="text-gray-400 text-sm">
+              Built with ❤️ by the IISc Badminton Club team
+            </p>
           </div>
         </div>
       </div>

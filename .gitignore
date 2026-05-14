@@ -7,3 +7,7 @@ dist
 .DS_Store
 Thumbs.db
 client/scripts/serviceAccountKey.json
+
+# Large generated files
+all_items.txt
+*.csv
