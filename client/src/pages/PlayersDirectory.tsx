@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, SlidersHorizontal, Users, Trophy, Sword, Sparkles,
-  UserCircle, LogIn, PlusCircle, Pencil, ChevronRight, X
+  UserCircle, LogIn, PlusCircle, Pencil, ChevronRight, X, Trash2
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
@@ -43,7 +43,7 @@ const itemVariants = {
 };
 
 /* ── Small reusable player card ─────────────────────────────────────── */
-function PlayerCard({ player, isOwn = false }: { player: Player; isOwn?: boolean }) {
+function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, onEdit }: { player: Player; isOwn?: boolean; isAdmin?: boolean; onDelete?: (id: string) => void; onEdit?: (id: string) => void; }) {
   return (
     <Card
       className={`h-full rounded-[2rem] overflow-hidden cursor-pointer border bg-white dark:bg-slate-900
@@ -57,6 +57,24 @@ function PlayerCard({ player, isOwn = false }: { player: Player; isOwn?: boolean
         <span className="absolute top-3 right-3 z-10 px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-black uppercase tracking-widest shadow">
           You
         </span>
+      )}
+      
+      {/* Admin Actions */}
+      {isAdmin && !isOwn && (
+        <div className="absolute top-3 right-3 z-20 flex gap-2" onClick={(e) => e.preventDefault()}>
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit?.(player.id); }}
+            className="w-7 h-7 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 shadow transition"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete?.(player.id); }}
+            className="w-7 h-7 flex items-center justify-center rounded-full bg-rose-100 text-rose-600 hover:bg-rose-200 shadow transition"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
       )}
       <CardContent className="p-6 flex flex-col items-center text-center space-y-4 h-full relative">
         {/* Department chip */}
@@ -132,6 +150,7 @@ export default function PlayersDirectory() {
   const [session, setSession]             = useState<any>(null);
   const [ownProfile, setOwnProfile]       = useState<Player | null>(null);
   const [authLoading, setAuthLoading]     = useState(true);
+  const [isAdmin, setIsAdmin]             = useState(false);
   const [isLogMatchOpen, setIsLogMatchOpen] = useState(false);
   const [pendingMatches, setPendingMatches] = useState<any[]>([]);
 
@@ -149,6 +168,9 @@ export default function PlayersDirectory() {
       setSession(session);
 
       if (session) {
+        const adminStatus = session.user.email === 'iiscbadmintonclub@gmail.com' || session.user.email === 'janmejay@iisc.ac.in';
+        setIsAdmin(adminStatus);
+        
         const { data } = await supabase
           .from("players")
           .select("id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating")
@@ -175,6 +197,7 @@ export default function PlayersDirectory() {
     supabase
       .from("players")
       .select("id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating")
+      .is("deleted_at", null)
       .order("elo_rating", { ascending: false })
       .then(({ data, error }) => {
         if (!error && data) setPlayers(data);
@@ -240,6 +263,23 @@ export default function PlayersDirectory() {
     } catch (e: any) {
       alert("Error rejecting match: " + e.message);
     }
+  };
+
+  const handleAdminDelete = async (playerId: string) => {
+    if (confirm("Are you sure you want to delete this player? They can be restored within 30 days.")) {
+      try {
+        const { error } = await supabase.rpc("soft_delete_player", { player_id: playerId, admin_email: session?.user?.email });
+        if (error) throw error;
+        alert("Player successfully soft-deleted.");
+        fetchPlayers();
+      } catch (err: any) {
+        alert("Delete failed: " + err.message);
+      }
+    }
+  };
+
+  const handleAdminEdit = (playerId: string) => {
+    setLocation(`/player/${playerId}/edit`);
   };
 
   /* ── Auth banner (top of page) ─────────────────────────────────── */
@@ -553,7 +593,12 @@ export default function PlayersDirectory() {
               {filteredPlayers.map((player) => (
                 <motion.div key={player.id} variants={itemVariants} className="group h-full">
                   <Link href={`/player/${player.id}`}>
-                    <PlayerCard player={player} />
+                    <PlayerCard 
+                      player={player} 
+                      isAdmin={isAdmin}
+                      onDelete={handleAdminDelete}
+                      onEdit={handleAdminEdit}
+                    />
                   </Link>
                 </motion.div>
               ))}

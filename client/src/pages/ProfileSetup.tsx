@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useParams } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   UserCircle, Trophy, Save, Sparkles, Activity, 
@@ -8,10 +8,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 
-export default function ProfileSetup() {
   const [, setLocation] = useLocation();
+  const { id: paramId } = useParams();
   const [loading, setLoading] = useState(false);
   const [session, setSession] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [targetUserId, setTargetUserId] = useState<string | null>(null);
 
   // Active Tab
   const [activeTab, setActiveTab] = useState<"basic" | "badminton" | "equipment" | "highlights" | "media">("basic");
@@ -23,6 +25,9 @@ export default function ProfileSetup() {
   // Section 1: Basic Info
   const [fullName, setFullName] = useState("");
   const [nickname, setNickname] = useState("");
+  const [iiscEmail, setIiscEmail] = useState("");
+  const [contactNumber, setContactNumber] = useState("");
+  const [srNumber, setSrNumber] = useState("");
   const [department, setDepartment] = useState("");
   const [joinedYear, setJoinedYear] = useState("");
   const [nationality, setNationality] = useState("");
@@ -131,18 +136,28 @@ export default function ProfileSetup() {
         setSession(session);
 
 
-        // Check if player profile already exists
-        supabase
-          .from("players")
-          .select("*")
-          .eq("user_id", session.user.id)
+        const adminStatus = session.user.email === 'iiscbadmintonclub@gmail.com' || session.user.email === 'janmejay@iisc.ac.in';
+        setIsAdmin(adminStatus);
+
+        let query = supabase.from("players").select("*");
+        if (paramId && adminStatus) {
+           query = query.eq("id", paramId);
+        } else {
+           query = query.eq("user_id", session.user.id);
+        }
+
+        query
           .maybeSingle()
           .then(({ data: profile, error }) => {
             if (profile && !error) {
+              setTargetUserId(profile.user_id);
               setIsEditing(true);
               setPlayerSlug(profile.id);
               setFullName(profile.full_name || "");
               setNickname(profile.nickname || "");
+              setIiscEmail(profile.iisc_email || "");
+              setContactNumber(profile.contact_number || "");
+              setSrNumber(profile.sr_number || "");
               setDepartment(profile.department || "");
               setJoinedYear(profile.joined_year?.toString() || "");
               setPlayingLevel(profile.playing_level || "Intermediate");
@@ -290,6 +305,9 @@ export default function ProfileSetup() {
     const payload = {
       full_name: fullName,
       nickname: nickname || null,
+      iisc_email: iiscEmail || null,
+      contact_number: contactNumber || null,
+      sr_number: srNumber || null,
       department: department,
       joined_year: joinedYear ? parseInt(joinedYear) : null,
       playing_level: playingLevel,
@@ -329,7 +347,7 @@ export default function ProfileSetup() {
         const { error } = await supabase
           .from("players")
           .update(payload)
-          .eq("user_id", session.user.id);
+          .eq("user_id", targetUserId || session.user.id);
 
         if (error) throw error;
         
@@ -504,6 +522,42 @@ export default function ProfileSetup() {
                           onChange={(e) => setNickname(e.target.value)}
                           className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
                           placeholder="e.g. Jordan"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">IISc Email *</label>
+                        <input
+                          required
+                          type="email"
+                          value={iiscEmail}
+                          onChange={(e) => setIiscEmail(e.target.value)}
+                          className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                          placeholder="e.g. name@iisc.ac.in"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Contact Number *</label>
+                        <input
+                          required
+                          type="tel"
+                          value={contactNumber}
+                          onChange={(e) => setContactNumber(e.target.value)}
+                          className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                          placeholder="e.g. +91 9876543210"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">SR Number *</label>
+                        <input
+                          required
+                          type="text"
+                          value={srNumber}
+                          onChange={(e) => setSrNumber(e.target.value)}
+                          className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                          placeholder="e.g. 04-01-00-xxxx"
                         />
                       </div>
                     </div>
