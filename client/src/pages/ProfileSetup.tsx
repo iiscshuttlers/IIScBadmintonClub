@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 
+export default function ProfileSetup() {
   const [, setLocation] = useLocation();
   const { id: paramId } = useParams();
   const [loading, setLoading] = useState(false);
