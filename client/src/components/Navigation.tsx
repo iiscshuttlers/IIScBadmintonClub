@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, UserCircle, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/lib/supabase';
+import type { Session, AuthChangeEvent } from "@supabase/supabase-js";
 
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [scrolled, setScrolled] = useState(false);
+  const [myPlayerId, setMyPlayerId] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -17,6 +21,23 @@ export default function Navigation() {
   useEffect(() => {
     setIsOpen(false);
   }, [location]);
+
+  useEffect(() => {
+    const loadAuth = async (session: Session | null) => {
+      setIsLoggedIn(!!session);
+      if (session) {
+        const { data } = await supabase.from("players").select("id").eq("user_id", session.user.id).maybeSingle();
+        setMyPlayerId(data?.id ?? null);
+      } else {
+        setMyPlayerId(null);
+      }
+    };
+
+    supabase.auth.getSession().then(({ data: { session } }) => loadAuth(session));
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => loadAuth(session));
+    return () => subscription.unsubscribe();
+  }, []);
 
   const isActive = (href: string) =>
     href === '/' ? location === '/' : location.startsWith(href);

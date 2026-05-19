@@ -175,7 +175,7 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light" switchable>
         <TooltipProvider>
-          <Router base={Capacitor.isNativePlatform() ? "" : "/iiscshuttlers"}>
+          <Router base={Capacitor.isNativePlatform() ? "" : import.meta.env.BASE_URL.replace(/\/$/, "")}>
             <ScrollToTop />
             <ScrollProgress />
             <div className="flex flex-col min-h-screen">

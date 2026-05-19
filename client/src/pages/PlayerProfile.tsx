@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Trophy, User, Activity, MapPin, Calendar, Swords, Zap,
   Target, Dna, Crosshair, Sparkles, Quote, Medal, ArrowLeft,
-  TrendingUp, Award, Flame, BarChart3, Share2,
+  TrendingUp, Award, Flame, BarChart3, Share2, Trash2,
   Instagram, Mail, Users, Star, Hash, Ruler, BookOpen,
   ChevronRight, Footprints, Shirt, ArrowUpRight, Clock, LogOut
 } from "lucide-react";
@@ -459,6 +459,9 @@ export default function PlayerProfile() {
   const streak = player.stats?.currentStreak;
   const isWinStreak = streak?.startsWith("W");
 
+  const ADMIN_EMAILS = ["iiscbadmintonclub@gmail.com", "janmejayraja@iisc.ac.in", "raja79sharma@gmail.com"];
+  const isAdmin = ADMIN_EMAILS.includes(currentUser?.email ?? "");
+
   const handleShare = async () => {
     const url = window.location.href;
     if (navigator.share) {
@@ -466,6 +469,18 @@ export default function PlayerProfile() {
     } else {
       try { await navigator.clipboard.writeText(url); alert("Profile link copied!"); } catch { }
     }
+  };
+
+  const handleAdminDelete = async () => {
+    if (!player || !currentUser) return;
+    if (!confirm(`Delete "${player.fullName}"? This soft-deletes the player and removes them from the directory.`)) return;
+    const { error } = await supabase.rpc("soft_delete_player", {
+      player_id: player.id,
+      admin_email: currentUser.email,
+    });
+    if (error) { alert("Delete failed: " + error.message); return; }
+    alert(`${player.fullName} has been removed.`);
+    setLocation('/');
   };
 
   return (
@@ -494,52 +509,70 @@ export default function PlayerProfile() {
 
         {/* Back button */}
         <button
-          onClick={() => setLocation('/')}
-          className="absolute top-6 left-6 z-20 flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm font-semibold hover:bg-white/20 transition"
+          onClick={() => setLocation('/players')}
+          className="absolute top-4 left-4 z-20 flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm font-semibold hover:bg-white/20 transition"
         >
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
 
-        {/* Share button */}
-        <button
-          onClick={handleShare}
-          className="absolute top-6 right-6 z-20 flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm font-semibold hover:bg-white/20 transition"
-        >
-          <Share2 className="w-4 h-4" /> Share
-        </button>
+        {/* Right-side actions — flex row so they never overlap */}
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+          {/* Admin: delete this player */}
+          {isAdmin && player && currentUser?.id !== player.userId && (
+            <button
+              onClick={handleAdminDelete}
+              className="p-2 rounded-full bg-rose-600/80 backdrop-blur-md border border-rose-500 text-white hover:bg-rose-700 transition shadow-lg shadow-rose-500/25"
+              title="Admin: Delete player"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
 
-        {/* Challenge button (other player's profile, logged in with own profile) */}
-        {currentUser && player && currentUser.id !== player.userId && ownPlayerProfile && (
+          {/* Challenge / Log Match (other player's profile, logged in with own profile) */}
+          {currentUser && player && currentUser.id !== player.userId && ownPlayerProfile && (
+            <button
+              onClick={() => setIsLogMatchOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-blue-600/80 backdrop-blur-md border border-blue-500 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-lg shadow-blue-500/25"
+            >
+              <Swords className="w-4 h-4" />
+              <span className="hidden sm:inline">Log Match</span>
+            </button>
+          )}
+
+          {/* Own profile: Edit Profile + Log Out */}
+          {currentUser && player && currentUser.id === player.userId && (
+            <>
+              <button
+                onClick={() => setLocation('/profile/setup')}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-emerald-600/80 backdrop-blur-md border border-emerald-500 text-white text-sm font-semibold hover:bg-emerald-700 transition shadow-lg shadow-emerald-500/25"
+              >
+                <Sparkles className="w-4 h-4 animate-pulse" />
+                <span className="hidden sm:inline">Edit</span>
+              </button>
+              <button
+                onClick={async () => {
+                  if (confirm("Are you sure you want to sign out?")) {
+                    await supabase.auth.signOut();
+                    setLocation('/join');
+                  }
+                }}
+                className="p-2 rounded-full bg-rose-600/80 backdrop-blur-md border border-rose-500 text-white hover:bg-rose-700 transition shadow-lg shadow-rose-500/25"
+                title="Sign Out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </>
+          )}
+
+          {/* Share */}
           <button
-            onClick={() => setIsLogMatchOpen(true)}
-            className="absolute top-6 right-28 sm:right-32 z-20 flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600 border border-blue-500 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-lg shadow-blue-500/25"
+            onClick={handleShare}
+            className="p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 transition"
+            title="Share profile"
           >
-            <Swords className="w-4 h-4" /> Challenge
+            <Share2 className="w-4 h-4" />
           </button>
-        )}
-
-        {/* Edit Profile button (only for the owner) */}
-        {currentUser && player && currentUser.id === player.userId && (
-          <>
-            <button
-              onClick={async () => {
-                if (confirm("Are you sure you want to sign out?")) {
-                  await supabase.auth.signOut();
-                  setLocation('/join');
-                }
-              }}
-              className="absolute top-6 right-52 sm:right-60 z-20 flex items-center gap-2 px-4 py-2 rounded-full bg-rose-600 border border-rose-500 text-white text-sm font-semibold hover:bg-rose-700 transition shadow-lg shadow-rose-500/25"
-            >
-              <LogOut className="w-4 h-4" /> Log Out
-            </button>
-            <button
-              onClick={() => setLocation('/profile/setup')}
-              className="absolute top-6 right-28 sm:right-32 z-20 flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-600 border border-emerald-500 text-white text-sm font-semibold hover:bg-emerald-700 transition shadow-lg shadow-emerald-500/25"
-            >
-              <Sparkles className="w-4 h-4 animate-pulse" /> Edit Profile
-            </button>
-          </>
-        )}
+        </div>
       </div>
 
       <motion.div

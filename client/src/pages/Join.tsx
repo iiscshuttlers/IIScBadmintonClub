@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, ShieldCheck, ArrowRight, KeyRound, Lock, Eye, EyeOff, UserPlus, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 
-type Mode = "signin" | "signup" | "otp-email" | "otp-verify";
+type Mode = "welcome" | "signin" | "signup" | "otp-email" | "otp-verify";
 
 const IISC_DOMAIN = "@iisc.ac.in";
 
@@ -18,7 +18,7 @@ function validateEmail(email: string) {
 export default function Join() {
   const [, setLocation] = useLocation();
   const [loading, setLoading]       = useState(false);
-  const [mode, setMode]             = useState<Mode>("signin");
+  const [mode, setMode]             = useState<Mode>("welcome");
   const [email, setEmail]           = useState("");
   const [password, setPassword]     = useState("");
   const [confirm, setConfirm]       = useState("");
@@ -28,6 +28,15 @@ export default function Join() {
   const [errorMsg, setErrorMsg]     = useState("");
 
   const reset = () => { setPassword(""); setConfirm(""); setOtp(""); setInfoMsg(""); setErrorMsg(""); };
+
+  // Redirect if already logged in
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) return;
+      const { data: profile } = await supabase.from("players").select("id").eq("user_id", session.user.id).maybeSingle();
+      setLocation(profile ? `/player/${profile.id}` : "/profile/setup");
+    });
+  }, []);
 
   async function afterAuth(session: any) {
     const { data: profile } = await supabase
@@ -154,6 +163,37 @@ export default function Join() {
 
           <AnimatePresence mode="wait">
 
+            {/* ── WELCOME ── */}
+            {mode === "welcome" && (
+              <motion.div key="welcome" className="space-y-4 py-2"
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
+                <div className="text-center space-y-1 pb-2">
+                  <p className="text-base font-bold text-slate-700 dark:text-slate-200">Your campus shuttlers hub</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500">Track matches · Climb the ladder · Connect with players</p>
+                </div>
+                <button
+                  onClick={() => { reset(); setMode("signin"); }}
+                  className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-lg shadow-emerald-500/25 transition"
+                >
+                  <LogIn className="w-4 h-4" /> Sign In
+                </button>
+                <button
+                  onClick={() => { reset(); setMode("signup"); }}
+                  className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold text-sm hover:border-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-400 transition"
+                >
+                  <UserPlus className="w-4 h-4" /> Create Account
+                </button>
+                <div className="pt-1 text-center">
+                  <button
+                    onClick={() => { sessionStorage.setItem("guest_mode", "1"); setLocation("/"); }}
+                    className="text-sm text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-semibold transition"
+                  >
+                    Continue as Guest →
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
             {/* ── SIGN IN ── */}
             {mode === "signin" && (
               <motion.form key="signin" onSubmit={handleSignIn} className="space-y-5"
@@ -181,10 +221,14 @@ export default function Join() {
                   className="w-full py-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all text-base flex items-center justify-center gap-2">
                   {loading ? <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : <><LogIn className="w-5 h-5" /> Sign In</>}
                 </Button>
-                <div className="text-center pt-1">
+                <div className="text-center pt-1 flex items-center justify-between">
+                  <button type="button" onClick={() => { setMode("welcome"); reset(); }}
+                    className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition font-semibold">
+                    ← Back
+                  </button>
                   <button type="button" onClick={() => { setMode("otp-email"); reset(); }}
                     className="text-xs text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition font-semibold">
-                    Forgot password? Sign in with OTP →
+                    Forgot password? OTP →
                   </button>
                 </div>
               </motion.form>
@@ -225,6 +269,12 @@ export default function Join() {
                   className="w-full py-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all text-base flex items-center justify-center gap-2">
                   {loading ? <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : <><UserPlus className="w-5 h-5" /> Create Account</>}
                 </Button>
+                <div className="text-center">
+                  <button type="button" onClick={() => { setMode("welcome"); reset(); }}
+                    className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition font-semibold">
+                    ← Back
+                  </button>
+                </div>
               </motion.form>
             )}
 

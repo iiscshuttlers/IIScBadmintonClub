@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  UserCircle, Trophy, Save, Sparkles, Activity, 
-  Swords, BookOpen, Quote, LogOut, Video, Image, Play, Upload
+import {
+  UserCircle, Trophy, Save, Sparkles, Activity,
+  Swords, BookOpen, Quote, LogOut, Video, Image, Play, Upload, ArrowLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -423,6 +423,14 @@ export default function ProfileSetup() {
           
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
             <div className="text-center sm:text-left">
+              {isEditing && (playerSlug || paramId) && (
+                <button
+                  onClick={() => setLocation(`/player/${playerSlug || paramId}`)}
+                  className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 mb-3 transition"
+                >
+                  <ArrowLeft className="w-4 h-4" /> Back to Profile
+                </button>
+              )}
               <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center justify-center sm:justify-start gap-2">
                 <Sparkles className="w-8 h-8 text-emerald-500 animate-pulse" />
                 {isEditing ? "Edit Your Player Profile" : "Complete Your Profile"}
@@ -431,7 +439,7 @@ export default function ProfileSetup() {
                 {isEditing ? "Keep your badminton card updated with your latest achievements!" : "Welcome to IISc Badminton Club! Tell us about your game."}
               </p>
             </div>
-            
+
             <button
               onClick={handleSignOut}
               className="flex items-center gap-2 px-4 py-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-xl text-sm font-semibold border border-rose-100 dark:border-rose-900/30 transition shadow-sm"

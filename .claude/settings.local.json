@@ -3,7 +3,8 @@
     "allow": [
       "Bash(Get-ChildItem -Force)",
       "Bash(Select-Object Name)",
-      "Bash(pnpm build *)"
+      "Bash(pnpm build *)",
+      "Bash(dir \"e:\\\\Github\\\\iiscshuttlers\\\\client\")"
     ]
   }
 }
