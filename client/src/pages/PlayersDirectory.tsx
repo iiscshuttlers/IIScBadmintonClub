@@ -331,6 +331,7 @@ export default function PlayersDirectory() {
               </button>
             </div>
           </div>
+          </div>
         </motion.div>
       );
     }
