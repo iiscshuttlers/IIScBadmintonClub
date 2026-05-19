@@ -140,8 +140,8 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
-        // Serve offline.html when navigation requests fail offline
-        navigateFallback: "offline.html",
+        // Serve index.html for all navigation requests (SPA routing)
+        navigateFallback: "index.html",
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
