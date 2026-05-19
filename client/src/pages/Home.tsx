@@ -1,4 +1,4 @@
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Bell, CalendarDays, CheckCircle2, Medal, Trophy, Users } from 'lucide-react';
 import iiscTeam from "@/assets/iisc-team.jpg";
@@ -6,6 +6,7 @@ import { usePageMeta } from '@/hooks/usePageMeta';
 import { motion } from 'framer-motion';
 import { useRef, useState, useEffect } from 'react';
 import RunningFlyer from '@/components/RunningFlyer';
+import { supabase } from '@/lib/supabase';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 32 },
@@ -32,8 +33,17 @@ export default function Home() {
     title: 'Home',
     description: 'IISc Badminton Club — join a vibrant community of players, from beginners to champions, all united by passion for the sport.',
   });
-  
+
+  const [, setLocation] = useLocation();
   const [isImageOpen, setIsImageOpen] = useState(false);
+
+  // On PWA launch: redirect to /join if not logged in and haven't chosen Guest this session
+  useEffect(() => {
+    if (sessionStorage.getItem("guest_mode")) return;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) setLocation("/join");
+    });
+  }, []);
 
   return (
     <div className="min-h-screen">

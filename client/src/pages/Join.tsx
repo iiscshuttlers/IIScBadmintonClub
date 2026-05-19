@@ -126,7 +126,7 @@ export default function Join() {
             <ShieldCheck className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
           </div>
           <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">IISc Badminton Club</h1>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Member portal · <span className="font-semibold text-slate-600 dark:text-slate-300">@iisc.ac.in</span> only</p>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Member portal · Campus Badminton Community</p>
         </div>
 
         <div className="bg-white dark:bg-slate-900 py-8 px-6 shadow-xl shadow-slate-200/50 dark:shadow-none sm:rounded-3xl sm:px-10 border border-slate-100 dark:border-slate-800">
@@ -199,11 +199,11 @@ export default function Join() {
               <motion.form key="signin" onSubmit={handleSignIn} className="space-y-5"
                 initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 15 }} transition={{ duration: 0.2 }}>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">IISc Email</label>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Email</label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input required type="email" value={email} onChange={e => setEmail(e.target.value)}
-                      placeholder="yourname@iisc.ac.in" className={`${input} pl-10`} />
+                      placeholder="your@email.com" className={`${input} pl-10`} />
                   </div>
                 </div>
                 <div>
@@ -239,11 +239,11 @@ export default function Join() {
               <motion.form key="signup" onSubmit={handleSignUp} className="space-y-5"
                 initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }} transition={{ duration: 0.2 }}>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">IISc Email</label>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Email</label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input required type="email" value={email} onChange={e => setEmail(e.target.value)}
-                      placeholder="yourname@iisc.ac.in" className={`${input} pl-10`} />
+                      placeholder="your@email.com" className={`${input} pl-10`} />
                   </div>
                 </div>
                 <div>
@@ -287,11 +287,11 @@ export default function Join() {
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">We'll email you a login code — no password needed.</p>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">IISc Email</label>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Email</label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input required type="email" value={email} onChange={e => setEmail(e.target.value)}
-                      placeholder="yourname@iisc.ac.in" className={`${input} pl-10`} />
+                      placeholder="your@email.com" className={`${input} pl-10`} />
                   </div>
                 </div>
                 <Button type="submit" disabled={loading}
@@ -336,11 +336,6 @@ export default function Join() {
 
           </AnimatePresence>
 
-          <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800 text-center">
-            <p className="text-xs text-slate-400 dark:text-slate-500">
-              Restricted to <span className="font-semibold text-slate-500 dark:text-slate-400">@iisc.ac.in</span> accounts only
-            </p>
-          </div>
         </div>
       </div>
     </div>

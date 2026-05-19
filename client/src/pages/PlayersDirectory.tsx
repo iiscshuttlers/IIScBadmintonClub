@@ -227,6 +227,7 @@ export default function PlayersDirectory() {
   /* Directory state */
   const [players, setPlayers]             = useState<Player[]>([]);
   const [loading, setLoading]             = useState(true);
+  const [fetchError, setFetchError]       = useState(false);
   const [searchQuery, setSearchQuery]     = useState("");
   const [levelFilter, setLevelFilter]     = useState("All");
   const [styleFilter, setStyleFilter]     = useState("All");
@@ -265,13 +266,17 @@ export default function PlayersDirectory() {
 
   /* 2. Fetch all players */
   const fetchPlayers = () => {
+    setFetchError(false);
+    const timeout = setTimeout(() => { setLoading(false); setFetchError(true); }, 10000);
     supabase
       .from("players")
       .select("id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating")
       .is("deleted_at", null)
       .order("elo_rating", { ascending: false })
       .then(({ data, error }) => {
+        clearTimeout(timeout);
         if (!error && data) setPlayers(data);
+        else if (error) setFetchError(true);
         setLoading(false);
       });
   };
@@ -670,6 +675,15 @@ export default function PlayersDirectory() {
           <div className="flex flex-col items-center justify-center py-20 space-y-4">
             <div className="w-12 h-12 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin" />
             <p className="text-slate-500 dark:text-slate-400 font-bold">Assembling club roster...</p>
+          </div>
+        ) : fetchError ? (
+          <div className="flex flex-col items-center justify-center py-20 space-y-4 text-center">
+            <p className="text-2xl">🔌</p>
+            <p className="text-slate-700 dark:text-slate-300 font-bold">No connection to server</p>
+            <p className="text-slate-400 text-sm">This app requires internet to load player data.</p>
+            <button onClick={fetchPlayers} className="mt-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition">
+              Retry
+            </button>
           </div>
         ) : filteredPlayers.length > 0 ? (
           <>

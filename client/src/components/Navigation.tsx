@@ -7,10 +7,11 @@ import type { Session, AuthChangeEvent } from "@supabase/supabase-js";
 
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
-  const [location, setLocation] = useLocation();
+  const [location] = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [myPlayerId, setMyPlayerId] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -31,11 +32,14 @@ export default function Navigation() {
       } else {
         setMyPlayerId(null);
       }
+      setAuthLoading(false);
     };
 
-    supabase.auth.getSession().then(({ data: { session } }) => loadAuth(session));
+    (async () => { const { data } = await supabase.auth.getSession(); loadAuth(data.session); })();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => loadAuth(session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event: AuthChangeEvent, session: Session | null) => loadAuth(session)
+    );
     return () => subscription.unsubscribe();
   }, []);
 
@@ -89,6 +93,22 @@ export default function Navigation() {
                 </Button>
               </Link>
             ))}
+            <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1" />
+            {authLoading ? (
+              <div className="w-24 h-9 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />
+            ) : isLoggedIn ? (
+              <Link href={myPlayerId ? `/player/${myPlayerId}` : "/profile/setup"}>
+                <Button className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-3">
+                  <UserCircle className="w-4 h-4" /> My Profile
+                </Button>
+              </Link>
+            ) : (
+              <Link href="/join">
+                <Button className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-3">
+                  <LogIn className="w-4 h-4" /> Sign In
+                </Button>
+              </Link>
+            )}
             <DarkModeToggle />
           </div>
 
@@ -127,6 +147,23 @@ export default function Navigation() {
                   </Button>
                 </Link>
               ))}
+              <div className="pt-1 border-t border-slate-100 dark:border-slate-800">
+                {authLoading ? (
+                  <div className="h-10 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />
+                ) : isLoggedIn ? (
+                  <Link href={myPlayerId ? `/player/${myPlayerId}` : "/profile/setup"}>
+                    <Button className="w-full justify-start flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                      <UserCircle className="w-4 h-4" /> My Profile
+                    </Button>
+                  </Link>
+                ) : (
+                  <Link href="/join">
+                    <Button className="w-full justify-start flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                      <LogIn className="w-4 h-4" /> Sign In
+                    </Button>
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
         )}
