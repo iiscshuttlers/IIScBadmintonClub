@@ -10,6 +10,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Navigation from './components/Navigation';
 import Footer from './components/Footer';
+import { supabase } from './lib/supabase';
 
 // Eagerly loaded (small, always needed)
 import Home from './pages/Home';
@@ -28,6 +29,8 @@ const FarewellTournament = lazy(() => import('./pages/FarewellTournament'));
 const FarewellAdmin    = lazy(() => import('./pages/FarewellAdmin'));
 const PlayerProfile    = lazy(() => import('./pages/PlayerProfile'));
 const Join             = lazy(() => import('./pages/Join'));
+const ProfileSetup     = lazy(() => import('./pages/ProfileSetup'));
+const PlayersDirectory = lazy(() => import('./pages/PlayersDirectory'));
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -124,6 +127,9 @@ function AppRoutes() {
             <Route path="/gallery" component={Gallery} />
             <Route path="/contact" component={Contact} />
             <Route path="/join" component={Join} />
+            <Route path="/profile/setup" component={ProfileSetup} />
+            <Route path="/players" component={PlayersDirectory} />
+            <Route path="/player/:id/edit" component={ProfileSetup} />
             <Route path="/player/:id" component={PlayerProfile} />
 
             <Route path="/404" component={NotFound} />
@@ -136,6 +142,35 @@ function AppRoutes() {
 }
 
 function App() {
+  // Global Session Auto-Logout on Inactivity (15 Minutes)
+  useEffect(() => {
+    let timeoutId: any;
+
+    const resetTimer = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          await supabase.auth.signOut();
+          alert("Your session has expired due to inactivity. Please log in again.");
+          window.location.href = "/iiscshuttlers/join";
+        }
+      }, 5 * 60 * 1000); // 5 minutes of complete inactivity
+    };
+
+    // Track user movements/inputs
+    const events = ["mousemove", "keypress", "click", "scroll", "touchstart"];
+    events.forEach((name) => window.addEventListener(name, resetTimer, { passive: true }));
+
+    // Start timer on load
+    resetTimer();
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      events.forEach((name) => window.removeEventListener(name, resetTimer));
+    };
+  }, []);
+
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light" switchable>

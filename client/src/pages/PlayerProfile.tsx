@@ -6,7 +6,7 @@ import {
   Target, Dna, Crosshair, Sparkles, Quote, Medal, ArrowLeft,
   TrendingUp, Award, Flame, BarChart3, Share2,
   Instagram, Mail, Users, Star, Hash, Ruler, BookOpen,
-  ChevronRight, Footprints, Shirt, ArrowUpRight, Clock
+  ChevronRight, Footprints, Shirt, ArrowUpRight, Clock, LogOut
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,7 @@ interface PlayerStats {
     doubles?: CategoryStat;
     mixed?: CategoryStat;
   };
+  media?: { type: string; url: string; caption?: string; }[];
 }
 
 interface CareerHighlight { year: number; title: string; description?: string; }
@@ -85,8 +86,10 @@ interface Player {
   frequentPartners?: Partner[];
   careerHighlights?: CareerHighlight[];
   shoes?: string;
+  shoesList?: { name: string; primary: boolean; }[];
   apparel?: string;
   social?: Social;
+  userId?: string;
 }
 
 /* ------------------------------------------------------------------ */
@@ -206,14 +209,31 @@ const KPI = ({
 /*  Main component                                                     */
 /* ------------------------------------------------------------------ */
 
+function getYouTubeId(url: string) {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+}
+
 export default function PlayerProfile() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
   const [player, setPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    
+    // Fetch logged-in user session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setCurrentUser(session.user);
+      }
+    });
+
     async function fetchPlayer() {
       setLoading(true);
       try {
@@ -259,9 +279,23 @@ export default function PlayerProfile() {
             recentMatches: data.recent_matches,
             frequentPartners: data.frequent_partners,
             careerHighlights: data.career_highlights,
-            shoes: data.shoes,
+            shoes: data.shoes && data.shoes.startsWith("[") 
+              ? (JSON.parse(data.shoes).find((s: any) => s.primary)?.name || JSON.parse(data.shoes)[0]?.name || "")
+              : data.shoes,
+            shoesList: (() => {
+              if (!data.shoes) return [];
+              try {
+                if (data.shoes.startsWith("[")) {
+                  return JSON.parse(data.shoes);
+                }
+                return [{ name: data.shoes, primary: true }];
+              } catch {
+                return [{ name: data.shoes, primary: true }];
+              }
+            })(),
             apparel: data.apparel,
             social: data.instagram || data.email ? { instagram: data.instagram, email: data.email } : undefined,
+            userId: data.user_id,
           };
           setPlayer(formattedPlayer);
         } else {
@@ -385,6 +419,29 @@ export default function PlayerProfile() {
         >
           <Share2 className="w-4 h-4" /> Share
         </button>
+
+        {/* Edit Profile button (only for the owner) */}
+        {currentUser && player && currentUser.id === player.userId && (
+          <>
+            <button
+              onClick={async () => {
+                if (confirm("Are you sure you want to sign out?")) {
+                  await supabase.auth.signOut();
+                  setLocation('/join');
+                }
+              }}
+              className="absolute top-6 right-52 sm:right-60 z-20 flex items-center gap-2 px-4 py-2 rounded-full bg-rose-600 border border-rose-500 text-white text-sm font-semibold hover:bg-rose-700 transition shadow-lg shadow-rose-500/25"
+            >
+              <LogOut className="w-4 h-4" /> Log Out
+            </button>
+            <button
+              onClick={() => setLocation('/profile/setup')}
+              className="absolute top-6 right-28 sm:right-32 z-20 flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-600 border border-emerald-500 text-white text-sm font-semibold hover:bg-emerald-700 transition shadow-lg shadow-emerald-500/25"
+            >
+              <Sparkles className="w-4 h-4 animate-pulse" /> Edit Profile
+            </button>
+          </>
+        )}
       </div>
 
       <motion.div
@@ -457,6 +514,18 @@ export default function PlayerProfile() {
                   </div>
                 )}
               </div>
+
+              {/* Edit Profile button inline for mobile */}
+              {currentUser && currentUser.id === player.userId && (
+                <div className="mt-4 flex justify-center sm:justify-start">
+                  <button
+                    onClick={() => setLocation('/profile/setup')}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-850 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold uppercase tracking-wider transition border border-slate-200 dark:border-slate-750 shadow-sm"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-500 animate-spin" style={{ animationDuration: '4s' }} /> Edit Your Profile
+                  </button>
+                </div>
+              )}
 
               {/* Recent form */}
               {player.recentForm && player.recentForm.length > 0 && (
@@ -665,9 +734,33 @@ export default function PlayerProfile() {
                 })}
 
                 {/* Shoes & apparel */}
-                {(player.shoes || player.apparel) && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                    {player.shoes && (
+                {((player.shoesList && player.shoesList.length > 0) || player.shoes || player.apparel) && (
+                  <div className="space-y-4 mt-4">
+                    {player.shoesList && player.shoesList.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {player.shoesList.map((shoe, idx) => (
+                          <div key={idx} className="bg-white dark:bg-slate-800/50 rounded-3xl p-5 border border-slate-200 dark:border-slate-700/50 flex items-center justify-between gap-4 relative overflow-hidden group">
+                            {shoe.primary && (
+                              <div className="absolute -right-10 -top-10 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl" />
+                            )}
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center shrink-0">
+                                <Footprints className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                              </div>
+                              <div>
+                                <div className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold font-sans">Footwear</div>
+                                <div className="font-bold text-slate-800 dark:text-slate-100 text-sm">{shoe.name}</div>
+                              </div>
+                            </div>
+                            {shoe.primary && (
+                              <span className="text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 bg-emerald-500 text-white rounded z-10 shrink-0">
+                                Primary
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : player.shoes ? (
                       <div className="bg-white dark:bg-slate-800/50 rounded-3xl p-5 border border-slate-200 dark:border-slate-700/50 flex items-center gap-4">
                         <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center">
                           <Footprints className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -677,7 +770,8 @@ export default function PlayerProfile() {
                           <div className="font-bold text-slate-800 dark:text-slate-100">{player.shoes}</div>
                         </div>
                       </div>
-                    )}
+                    ) : null}
+
                     {player.apparel && (
                       <div className="bg-white dark:bg-slate-800/50 rounded-3xl p-5 border border-slate-200 dark:border-slate-700/50 flex items-center gap-4">
                         <div className="w-12 h-12 rounded-2xl bg-violet-100 dark:bg-violet-500/20 flex items-center justify-center">
@@ -787,17 +881,39 @@ export default function PlayerProfile() {
               {validAchievements.length > 0 && (
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-xs uppercase tracking-widest font-black text-slate-400 dark:text-slate-500 mb-4 flex items-center gap-2">
-                      <Medal className="w-4 h-4" /> Top Achievements
+                    <h3 className="text-xs uppercase tracking-widest font-black text-slate-400 dark:text-slate-500 mb-6 flex items-center gap-2">
+                      <Medal className="w-4 h-4 text-emerald-500" /> Timeline of Achievements
                     </h3>
-                    <ul className="space-y-4">
-                      {validAchievements.map((ach, idx) => (
-                        <li key={idx} className="flex items-start gap-3 group">
-                          <div className="mt-1.5 w-2 h-2 rounded-full bg-gradient-to-r from-amber-400 to-amber-600 shrink-0 shadow-sm shadow-amber-500/50 group-hover:scale-150 transition-transform" />
-                          <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 leading-relaxed">{ach}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    <div className="relative border-l border-dashed border-emerald-500/30 ml-3 space-y-6 py-2">
+                      {validAchievements.map((ach, idx) => {
+                        const getAchievementIcon = (text: string) => {
+                          const lower = text.toLowerCase();
+                          if (lower.includes("winner") || lower.includes("gold") || lower.includes("champion") || lower.includes("1st")) {
+                            return <span className="text-sm select-none">🥇</span>;
+                          }
+                          if (lower.includes("runner-up") || lower.includes("silver") || lower.includes("2nd")) {
+                            return <span className="text-sm select-none">🥈</span>;
+                          }
+                          if (lower.includes("bronze") || lower.includes("3rd") || lower.includes("semifinalist")) {
+                            return <span className="text-sm select-none">🥉</span>;
+                          }
+                          return <span className="text-xs select-none">⭐</span>;
+                        };
+                        return (
+                          <div key={idx} className="relative pl-7 group">
+                            {/* Timeline dot/badge */}
+                            <div className="absolute -left-[14px] top-1.5 w-7 h-7 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                              {getAchievementIcon(ach)}
+                            </div>
+                            
+                            {/* Content Card */}
+                            <div className="p-3 bg-slate-50/50 dark:bg-slate-900/30 rounded-2xl border border-slate-100/50 dark:border-slate-800/50 group-hover:border-emerald-500/20 group-hover:bg-slate-50 dark:group-hover:bg-slate-900/50 transition-all duration-300">
+                              <span className="text-sm font-bold text-slate-750 dark:text-slate-300 leading-relaxed block">{ach}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               )}
@@ -881,7 +997,115 @@ export default function PlayerProfile() {
 
           </div>
         </div>
+
+        {/* Media Showcase */}
+        {player.stats?.media && player.stats.media.length > 0 && (
+          <motion.section variants={itemVariants} className="mt-12 pt-12 border-t border-slate-200 dark:border-slate-800">
+            <h2 className="text-3xl font-black text-slate-850 dark:text-slate-100 mb-8 flex items-center gap-3 ml-2 font-sans">
+              <Play className="w-8 h-8 text-rose-500 fill-rose-500" />
+              Media Showcase
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Game Photos Grid */}
+              {player.stats.media.some(m => m.type === "image") && (
+                <div className="space-y-4">
+                  <h3 className="text-xl font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-2 mb-2 font-sans">
+                    <Image className="w-5 h-5 text-emerald-500" /> Game Photos
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {player.stats.media.filter(m => m.type === "image").map((img, idx) => (
+                      <div 
+                        key={idx}
+                        onClick={() => setLightboxImage(img.url)}
+                        className="group relative aspect-video rounded-3xl overflow-hidden cursor-pointer border border-slate-200 dark:border-slate-800 shadow-md hover:-translate-y-1 hover:shadow-lg transition-all duration-305"
+                      >
+                        <img src={img.url} alt={img.caption || "Game Photo"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                          <span className="text-white text-xs font-bold leading-tight line-clamp-2">{img.caption || "Zoom View"}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* YouTube Match Videos Grid */}
+              {player.stats.media.some(m => m.type === "video") && (
+                <div className="space-y-4">
+                  <h3 className="text-xl font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-2 mb-2 font-sans">
+                    <Video className="w-5 h-5 text-red-500" /> Video Highlights
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {player.stats.media.filter(m => m.type === "video").map((vid, idx) => {
+                      const yId = getYouTubeId(vid.url);
+                      const thumbUrl = yId ? `https://img.youtube.com/vi/${yId}/mqdefault.jpg` : "";
+                      return (
+                        <div 
+                          key={idx}
+                          onClick={() => yId && setActiveVideoId(yId)}
+                          className="group relative aspect-video rounded-3xl overflow-hidden cursor-pointer border border-slate-200 dark:border-slate-800 shadow-md hover:-translate-y-1 hover:shadow-lg transition-all duration-305 bg-slate-900"
+                        >
+                          {thumbUrl ? (
+                            <img src={thumbUrl} alt={vid.caption || "Video Thumbnail"} className="w-full h-full object-cover opacity-75 group-hover:opacity-90 group-hover:scale-105 transition-all duration-500" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Play className="w-12 h-12 text-slate-600" />
+                            </div>
+                          )}
+                          <div className="absolute inset-0 flex items-center justify-center z-10">
+                            <div className="w-12 h-12 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-lg group-hover:bg-red-500 group-hover:scale-110 transition-all duration-300">
+                              <Play className="w-5 h-5 fill-white ml-0.5" />
+                            </div>
+                          </div>
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent flex items-end p-4">
+                            <span className="text-white text-xs font-bold leading-tight line-clamp-2">{vid.caption || "Watch Video"}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.section>
+        )}
+
       </motion.div>
+
+      {/* Photo Lightbox Modal */}
+      {lightboxImage && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer"
+          onClick={() => setLightboxImage(null)}
+        >
+          <button className="absolute top-6 right-6 text-white hover:text-slate-350 text-3xl font-light">×</button>
+          <img src={lightboxImage} alt="Fullscreen View" className="max-w-full max-h-[85vh] rounded-3xl object-contain shadow-2xl" />
+        </div>
+      )}
+
+      {/* YouTube Video Player Modal */}
+      {activeVideoId && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer"
+          onClick={() => setActiveVideoId(null)}
+        >
+          <button className="absolute top-6 right-6 text-white hover:text-slate-350 text-3xl font-light">×</button>
+          <div 
+            className="w-full max-w-4xl aspect-video rounded-3xl overflow-hidden shadow-2xl border border-slate-800"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <iframe 
+              src={`https://www.youtube.com/embed/${activeVideoId}?autoplay=1`}
+              title="YouTube video player"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              className="w-full h-full"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
