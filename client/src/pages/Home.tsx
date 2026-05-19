@@ -47,7 +47,7 @@ export default function Home() {
           <img
             src={iiscTeam}
             alt="IISc Badminton Team"
-            className="w-full h-full object-cover object-[75%_center]"
+            className="w-full h-full object-cover object-[25%_center]"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-blue-900/85 via-blue-900/70 to-emerald-900/90" />
         </div>

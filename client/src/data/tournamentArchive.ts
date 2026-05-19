@@ -112,6 +112,28 @@ export const ARCHIVED_TOURNAMENTS: ArchivedTournament[] = [
       },
     ],
   },
+  {
+    id: 'open-2024',
+    slug: 'open-2024',
+    status: 'completed',
+    type: 'open',
+    startDate: '2024',
+    name: 'Open Tournament 2024 (Gandhi Cup)',
+    subtitle: 'Official Results',
+    description: 'Results for the Gandhi Cup Badminton Tournament, featuring Category 1 (IISM Eligible) and Category 2 events.',
+    winners: [
+      { category: "Cat 1: Men's Singles", winner: 'Gokul', runnerUp: 'Varun' },
+      { category: "Cat 1: Women's Singles", winner: 'Tanisha', runnerUp: 'Renu' },
+      { category: "Cat 1: Men's Doubles", winner: 'Gokul & Piyush', runnerUp: 'Arun & Varun' },
+      { category: "Cat 1: Women's Doubles", winner: 'Tanisha & Renu', runnerUp: 'Radhika & Madhuvanti' },
+      { category: "Cat 1: Mixed Doubles", winner: 'Kaling & Aditi', runnerUp: 'Atul & Ritul' },
+      { category: "Cat 2: Men's Singles", winner: 'Arindhan', runnerUp: 'Krishnendu' },
+      { category: "Cat 2: Women's Singles", winner: 'Shaili', runnerUp: 'Dimple' },
+      { category: "Cat 2: Men's Doubles", winner: 'Arindhan & Krishnendu', runnerUp: 'Dilshad & Gowtham' },
+      { category: "Cat 2: Women's Doubles", winner: 'Dimple & Rakshita', runnerUp: 'Sneha & Aparna' },
+      { category: "Cat 2: Mixed Doubles", winner: 'Shaili & Dilshad', runnerUp: 'Abhishek & Sonali' },
+    ],
+  },
 ];
 
 export function getArchivedTournament(slug: string) {

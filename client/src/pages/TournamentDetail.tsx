@@ -107,16 +107,35 @@ export default function TournamentDetail() {
               </div>
 
               {tournament.winners && (
-                <div className="grid md:grid-cols-2 gap-5">
-                  {tournament.winners.map((result) => (
-                    <div key={result.category} className="rounded-2xl bg-white border border-amber-200 p-5 shadow-sm">
-                      <div className="flex items-center gap-2 text-amber-700 font-black text-xs uppercase tracking-wider">
-                        <Medal className="w-4 h-4" />
-                        {result.category}
+                <div className="space-y-8">
+                  {Object.entries(
+                    tournament.winners.reduce((acc, curr) => {
+                      const [group, ...rest] = curr.category.includes(':') ? curr.category.split(':') : ['Overall', curr.category];
+                      const catName = rest.length > 0 ? rest.join(':').trim() : curr.category;
+                      if (!acc[group]) acc[group] = [];
+                      acc[group].push({ ...curr, category: catName });
+                      return acc;
+                    }, {} as Record<string, typeof tournament.winners>)
+                  ).map(([group, results]) => (
+                    <div key={group} className="space-y-4">
+                      {group !== 'Overall' && (
+                        <h3 className="text-xl font-bold text-blue-900 border-b border-emerald-100 pb-2">
+                          {group}
+                        </h3>
+                      )}
+                      <div className="grid md:grid-cols-2 gap-5">
+                        {results.map((result) => (
+                          <div key={result.category} className="rounded-2xl bg-white border border-amber-200 p-5 shadow-sm">
+                            <div className="flex items-center gap-2 text-amber-700 font-black text-xs uppercase tracking-wider">
+                              <Medal className="w-4 h-4" />
+                              {result.category}
+                            </div>
+                            <p className="mt-3 text-lg font-bold text-blue-950 flex items-center gap-2"><span title="Winner">🥇 {result.winner}</span></p>
+                            {result.runnerUp && <p className="mt-1 text-sm font-semibold text-slate-700 flex items-center gap-2"><span title="Runner-up">🥈 {result.runnerUp}</span></p>}
+                            {result.bronze && <p className="mt-1 text-sm font-semibold text-slate-700 flex items-center gap-2"><span title="Third place">🥉 {result.bronze.join(' / ')}</span></p>}
+                          </div>
+                        ))}
                       </div>
-                      <p className="mt-3 text-lg font-bold text-blue-950">Winner: {result.winner}</p>
-                      {result.runnerUp && <p className="mt-1 text-gray-700">Runner-up: {result.runnerUp}</p>}
-                      {result.bronze && <p className="mt-1 text-gray-700">Third place: {result.bronze.join(' / ')}</p>}
                     </div>
                   ))}
                 </div>

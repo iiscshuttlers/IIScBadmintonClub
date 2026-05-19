@@ -58,19 +58,43 @@ export default function WinnersWall() {
               </div>
 
               {event.winners && (
-                <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {event.winners.map((result) => (
-                    <div
-                      key={result.category}
-                      className="rounded-2xl border border-amber-200 bg-amber-50 p-5"
-                    >
-                      <div className="flex items-center gap-2 text-xs font-black text-amber-700 uppercase tracking-wider">
-                        <Medal className="w-4 h-4" />
-                        {result.category}
+                <div className="space-y-8">
+                  {Object.entries(
+                    event.winners.reduce((acc, curr) => {
+                      const [group, ...rest] = curr.category.includes(':') ? curr.category.split(':') : ['Overall', curr.category];
+                      const catName = rest.length > 0 ? rest.join(':').trim() : curr.category;
+                      if (!acc[group]) acc[group] = [];
+                      acc[group].push({ ...curr, category: catName });
+                      return acc;
+                    }, {} as Record<string, typeof event.winners>)
+                  ).map(([group, results]) => (
+                    <div key={group} className="space-y-4">
+                      {group !== 'Overall' && (
+                        <h3 className="text-xl font-bold text-blue-900 border-b border-emerald-100 pb-2">
+                          {group}
+                        </h3>
+                      )}
+                      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        {results.map((result) => (
+                          <div
+                            key={result.category}
+                            className="rounded-2xl border border-amber-200 bg-amber-50 p-5"
+                          >
+                            <div className="flex items-center gap-2 text-xs font-black text-amber-700 uppercase tracking-wider">
+                              <Medal className="w-4 h-4" />
+                              {result.category}
+                            </div>
+                            <p className="mt-2 text-lg font-bold text-blue-950 flex items-center gap-2">
+                              <span title="Winner">🥇 {result.winner}</span>
+                            </p>
+                            {result.runnerUp && (
+                              <p className="mt-1 text-sm font-semibold text-slate-700 flex items-center gap-2">
+                                <span title="Runner-Up">🥈 {result.runnerUp}</span>
+                              </p>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                      <p className="mt-2 font-bold text-blue-950">
-                        {result.winner}
-                      </p>
                     </div>
                   ))}
                 </div>
