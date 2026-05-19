@@ -111,7 +111,7 @@ export default function Footer() {
               </Link>
             </p>
             <p className="text-gray-400 text-sm">
-              Built with ❤️ by the IISc Badminton Club team
+              Built with ❤️
             </p>
           </div>
         </div>

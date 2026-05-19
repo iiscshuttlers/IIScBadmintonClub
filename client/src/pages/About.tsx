@@ -56,9 +56,12 @@ export default function About() {
     title: 'About',
     description: 'Learn about the IISc Badminton Club — our mission, values, history, and leadership team.',
   });
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+
   const teamMembers = [
-    { role: 'Convener', name: 'Raja Janmejay', description: 'Leading the club with vision and passion' },
-    { role: 'Co-Convener', name: 'Aneesh Varla', description: 'Helping members connect, compete, and grow through the sport' },
+    { role: 'Convener', name: 'Raja Janmejay', description: 'Leading the club with vision and passion', image: `${import.meta.env.BASE_URL}convener.png` },
+    { role: 'Co-Convener', name: 'Aneesh Varla', description: 'Helping members connect, compete, and grow through the sport', image: `${import.meta.env.BASE_URL}co_convener.png` },
 ];
 
   return (
@@ -155,10 +158,30 @@ export default function About() {
               const initials = member.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
               const colorClass = avatarColors[idx % avatarColors.length];
               return (
-                <div key={idx} className="flex items-start gap-5 p-6 rounded-2xl border-2 border-emerald-100 bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                <div 
+                  key={idx} 
+                  className="flex flex-col sm:flex-row items-center sm:items-center text-center sm:text-left gap-6 p-6 sm:p-8 rounded-2xl border-2 border-emerald-100 bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
+                  onClick={() => 'image' in member && member.image && !imageErrors[member.name] ? setSelectedImage(member.image) : null}
+                >
                   {/* Avatar */}
-                  <div className={`flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-br ${colorClass} flex items-center justify-center shadow-md`}>
-                    <span className="text-white text-xl font-black tracking-wide">{initials}</span>
+                  <div className={`flex-shrink-0 w-32 h-32 rounded-full bg-gradient-to-br ${colorClass} flex items-center justify-center shadow-md overflow-hidden border-[3px] border-emerald-50 relative group-hover:scale-105 transition-transform duration-300`}>
+                    {'image' in member && member.image && !imageErrors[member.name] ? (
+                      <>
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors z-10 flex items-center justify-center pointer-events-none">
+                          <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 drop-shadow-md transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                          </svg>
+                        </div>
+                        <img 
+                          src={member.image} 
+                          alt={member.name} 
+                          className="w-full h-full object-cover" 
+                          onError={() => setImageErrors(prev => ({ ...prev, [member.name]: true }))}
+                        />
+                      </>
+                    ) : (
+                      <span className="text-white text-4xl sm:text-5xl font-black tracking-wide">{initials}</span>
+                    )}
                   </div>
                   {/* Info */}
                   <div className="min-w-0">
@@ -187,6 +210,32 @@ export default function About() {
           </div>
         </div>
       </section>
+
+      {/* Fullscreen Image Modal */}
+      {selectedImage && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm"
+          onClick={() => setSelectedImage(null)}
+        >
+          <button 
+            className="absolute top-6 right-6 text-white/70 hover:text-white bg-black/50 hover:bg-black/80 rounded-full p-2 transition-all"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedImage(null);
+            }}
+          >
+            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <img 
+            src={selectedImage} 
+            alt="Leadership Full" 
+            className="max-w-[90vw] max-h-[90vh] rounded-xl object-contain shadow-2xl" 
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 }

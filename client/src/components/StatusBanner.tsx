@@ -48,14 +48,14 @@ export default function StatusBanner() {
         if (!todayHoliday) setBg("bg-yellow-500");
       }
 
-      // 📅 Upcoming closures (next 7 days, excluding today & tomorrow)
+      // 📅 Upcoming closures (next 2 days, excluding today & tomorrow)
       holidays.forEach((h: Holiday) => {
         if (h.date !== today && h.date !== tomorrow) {
           const diff =
             (new Date(h.date).getTime() - new Date(today).getTime()) /
             (1000 * 3600 * 24);
 
-          if (diff > 1 && diff <= 7) {
+          if (diff > 1 && diff <= 2) {
             const readable = new Date(h.date).toLocaleDateString("en-IN", {
               day: "numeric",
               month: "short",

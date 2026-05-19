@@ -1,6 +1,16 @@
 {
   "recent": [
     {
+      "title": "INVICTA Open Tournament",
+      "date": "2026-05-19",
+      "startDate": "2026-06-01",
+      "endDate": "2026-06-30",
+      "category": "tournament",
+      "priority": "high",
+      "location": "IISc Badminton Hall",
+      "content": "Get ready for the badminton showdown! <strong>INVICTA Open Tournament</strong> is tentatively scheduled for <strong>June 2026</strong>.<br><br>Registrations will start soon. Stay tuned for details. Open to all IISc members."
+    },
+    {
       "title": "Farewell Badminton Match 🏸",
       "date": "2026-05-05",
       "category": "event",

@@ -5,6 +5,7 @@ import iiscTeam from "@/assets/iisc-team.jpg";
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { motion } from 'framer-motion';
 import { useRef, useState, useEffect } from 'react';
+import RunningFlyer from '@/components/RunningFlyer';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 32 },
@@ -31,8 +32,13 @@ export default function Home() {
     title: 'Home',
     description: 'IISc Badminton Club — join a vibrant community of players, from beginners to champions, all united by passion for the sport.',
   });
+  
+  const [isImageOpen, setIsImageOpen] = useState(false);
+
   return (
     <div className="min-h-screen">
+      <RunningFlyer />
+
       {/* Hero Section */}
       <section className="relative overflow-hidden text-white">
 
@@ -151,9 +157,9 @@ export default function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
               { target: 350, suffix: '+', label: 'Active Members', icon: Users, color: 'bg-emerald-500' },
-              { target: 20,  suffix: '+', label: 'Tournaments Hosted', icon: Trophy, color: 'bg-amber-500' },
-              { target: 3,   suffix: '',  label: 'Indoor Courts', icon: CalendarDays, color: 'bg-blue-900' },
-              { target: 10,  suffix: '+', label: 'IISM Trophies', icon: Medal, color: 'bg-orange-500' },
+              { target: 20, suffix: '+', label: 'Tournaments Hosted', icon: Trophy, color: 'bg-amber-500' },
+              { target: 3, suffix: '', label: 'Indoor Courts', icon: CalendarDays, color: 'bg-blue-900' },
+              { target: 10, suffix: '+', label: 'IISM Trophies', icon: Medal, color: 'bg-orange-500' },
             ].map((stat) => {
               const Icon = stat.icon;
               return (
@@ -205,8 +211,14 @@ export default function Home() {
               ))}
             </div>
 
-            <div className="relative rounded-lg overflow-hidden shadow-xl">
-              <img src={iiscTeam} alt="IISc Badminton Team" loading="lazy" className="w-full h-auto object-cover" />
+            <div 
+              className="relative rounded-lg overflow-hidden shadow-xl cursor-pointer group"
+              onClick={() => setIsImageOpen(true)}
+            >
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors z-10 flex items-center justify-center">
+                <span className="text-white opacity-0 group-hover:opacity-100 font-semibold drop-shadow-md transition-opacity">Click to enlarge</span>
+              </div>
+              <img src={iiscTeam} alt="IISc Badminton Team" loading="lazy" className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500" />
             </div>
           </div>
         </div>
@@ -232,6 +244,32 @@ export default function Home() {
           </Link>
         </div>
       </motion.section>
+
+      {/* Fullscreen Image Modal */}
+      {isImageOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm"
+          onClick={() => setIsImageOpen(false)}
+        >
+          <button 
+            className="absolute top-6 right-6 text-white/70 hover:text-white bg-black/50 hover:bg-black/80 rounded-full p-2 transition-all"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsImageOpen(false);
+            }}
+          >
+            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <img 
+            src={iiscTeam} 
+            alt="IISc Badminton Team Full" 
+            className="max-w-full max-h-full rounded-xl object-contain shadow-2xl" 
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -282,13 +320,13 @@ function CountUpNumber({ target, suffix = '' }: { target: number; suffix?: strin
 function AnimatedLogo() {
   return (
     <div className="relative flex items-center justify-center bg-transparent overflow-visible">
-      
+
       {/* Scaling wrapper — responsive on mobile */}
       <div className="relative flex-shrink-0" style={{ width: 'min(380px, 85vw)', height: 'min(380px, 85vw)' }}>
-        
+
         {/* Outer Ring & Badge Background */}
         <div className="relative w-full h-full rounded-full bg-gradient-to-br from-blue-950 to-slate-900 shadow-2xl border-[8px] border-slate-950 flex flex-col items-center justify-center overflow-hidden ring-[6px] ring-amber-500 z-0">
-          
+
           {/* Subtle Background Grid (Court Feel) */}
           <div className="absolute inset-0 opacity-15 pointer-events-none">
             <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
@@ -304,7 +342,7 @@ function AnimatedLogo() {
           {/* IISc Main Building Silhouette */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[280px] opacity-20 text-amber-500 pointer-events-none mt-2 z-0">
             <svg viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
-              <line x1="15" y1="180" x2="185" y2="180" strokeWidth="3"/>
+              <line x1="15" y1="180" x2="185" y2="180" strokeWidth="3" />
               <rect x="75" y="80" width="50" height="100" />
               <circle cx="100" cy="105" r="9" />
               <polyline points="100,100 100,105 104,105" />
@@ -334,7 +372,7 @@ function AnimatedLogo() {
 
           {/* Central Animation Zone */}
           <div className="absolute inset-0 z-20 pointer-events-none">
-            
+
             {/* Racket Container */}
             <div className="racket-anim absolute top-1/2 left-1/2 -ml-[50px] -mt-[50px] w-[100px] h-[180px]">
               <svg width="100" height="180" viewBox="0 0 100 180">
@@ -391,7 +429,19 @@ function AnimatedLogo() {
       </div>
 
       {/* Internal Stylesheet for Animations */}
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        .marquee-anim {
+          display: flex;
+          width: max-content;
+          animation: marquee 25s linear infinite;
+        }
+
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+
         .racket-anim {
           transform-origin: 50px 170px;
           animation: swing 1.5s infinite ease-in-out;

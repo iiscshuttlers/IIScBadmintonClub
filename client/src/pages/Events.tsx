@@ -5,6 +5,7 @@ import { Calendar, Trophy, Radio, Medal, ArrowRight, Clock } from 'lucide-react'
 import { getTournaments } from '@/lib/tournaments';
 import { ARCHIVED_TOURNAMENTS, ArchivedTournament, TournamentStatus } from '@/data/tournamentArchive';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import RunningFlyer from '@/components/RunningFlyer';
 
 type LiveTournament = {
   id: string;
@@ -133,9 +134,11 @@ export default function Events() {
     return type;
   };
 
-  const renderCard = (item: any | ArchivedTournament, liveMode = false) => (
-    <Link href={`/events/${item.slug}`} key={item.id}>
-      <Card className="rounded-3xl border border-emerald-200 shadow-md bg-white hover:shadow-xl hover:-translate-y-1 transition duration-300 cursor-pointer">
+  const renderCard = (item: any | ArchivedTournament, liveMode = false) => {
+    const isUpcoming = item.status === 'upcoming';
+    
+    const cardContent = (
+      <Card className="rounded-3xl border border-emerald-200 shadow-md bg-white hover:shadow-xl hover:-translate-y-1 transition duration-300 cursor-pointer h-full">
         <CardContent className="p-8 space-y-5">
           <div className="flex flex-wrap items-center gap-3">
             {liveMode && (
@@ -164,7 +167,7 @@ export default function Events() {
 
           {'winners' in item && item.winners && (
             <div className="grid sm:grid-cols-2 gap-3 pt-2">
-              {item.winners.slice(0, 4).map((result) => (
+              {item.winners.slice(0, 4).map((result: any) => (
                 <div
                   key={result.category}
                   className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3"
@@ -181,7 +184,7 @@ export default function Events() {
 
           {'podium' in item && item.podium && (
             <div className="grid sm:grid-cols-2 gap-3 pt-2">
-              {item.podium.map((team, index) => (
+              {item.podium.map((team: string, index: number) => (
                 <div
                   key={team}
                   className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3"
@@ -196,16 +199,31 @@ export default function Events() {
           )}
 
           <div className="flex items-center gap-2 pt-1 font-bold text-blue-900">
-            View results
+            {isUpcoming ? 'Registrations starting soon' : item.status === 'live' ? 'View live fixtures' : 'View results'}
             <ArrowRight className="w-4 h-4" />
           </div>
         </CardContent>
       </Card>
-    </Link>
-  );
+    );
+
+    if (isUpcoming) {
+      return (
+        <div key={item.id} onClick={() => alert("Registrations will start soon! Stay tuned for more details.")} className="h-full">
+          {cardContent}
+        </div>
+      );
+    }
+
+    return (
+      <Link href={`/events/${item.slug}`} key={item.id}>
+        {cardContent}
+      </Link>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <RunningFlyer />
       <section className="bg-gradient-to-r from-blue-900 to-emerald-900 text-white py-20">
         <div className="container mx-auto px-4 text-center">
           <h1
@@ -247,10 +265,7 @@ export default function Events() {
           <NoUpcomingEvents />
         )}
 
-        {/* Countdown for next upcoming tournament */}
-        {!loading && upcoming.length > 0 && (
-          <UpcomingCountdown event={upcoming[0]} />
-        )}
+
 
         {!loading && upcoming.length > 0 && (
           <div>
