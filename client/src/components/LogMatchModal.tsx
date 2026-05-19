@@ -15,10 +15,11 @@ interface LogMatchModalProps {
   currentUser: Player;
   otherPlayers: Player[];
   onSuccess: () => void;
+  defaultOpponentId?: string;
 }
 
-export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlayers, onSuccess }: LogMatchModalProps) {
-  const [opponentId, setOpponentId] = useState("");
+export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlayers, onSuccess, defaultOpponentId }: LogMatchModalProps) {
+  const [opponentId, setOpponentId] = useState(defaultOpponentId ?? "");
   const [score, setScore] = useState("");
   const [winnerId, setWinnerId] = useState(currentUser.id);
   const [loading, setLoading] = useState(false);

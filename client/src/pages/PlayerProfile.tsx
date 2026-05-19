@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
+import LogMatchModal from "@/components/LogMatchModal";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -225,14 +226,31 @@ export default function PlayerProfile() {
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
   const [isAvatarOpen, setIsAvatarOpen] = useState(false);
+  const [eloRank, setEloRank] = useState<number | null>(null);
+  const [liveMatches, setLiveMatches] = useState<any[]>([]);
+  const [h2hRecord, setH2hRecord] = useState<{ wins: number; losses: number } | null>(null);
+  const [ownPlayerProfile, setOwnPlayerProfile] = useState<{ id: string; full_name: string; avatar_url?: string } | null>(null);
+  const [allPlayers, setAllPlayers] = useState<{ id: string; full_name: string; avatar_url?: string }[]>([]);
+  const [isLogMatchOpen, setIsLogMatchOpen] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
     
     // Fetch logged-in user session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
         setCurrentUser(session.user);
+        const { data: ownProfile } = await supabase
+          .from("players")
+          .select("id, full_name, avatar_url")
+          .eq("user_id", session.user.id)
+          .maybeSingle();
+        if (ownProfile) setOwnPlayerProfile(ownProfile);
+        const { data: everyone } = await supabase
+          .from("players")
+          .select("id, full_name, avatar_url")
+          .is("deleted_at", null);
+        if (everyone) setAllPlayers(everyone);
       }
     });
 
@@ -315,6 +333,75 @@ export default function PlayerProfile() {
     }
   }, [id]);
 
+  // ELO club rank
+  useEffect(() => {
+    if (!id) return;
+    supabase
+      .from("players")
+      .select("id, elo_rating")
+      .is("deleted_at", null)
+      .order("elo_rating", { ascending: false })
+      .then(({ data }) => {
+        if (data) {
+          const rank = data.findIndex((p) => p.id === id) + 1;
+          setEloRank(rank > 0 ? rank : null);
+        }
+      });
+  }, [id]);
+
+  // Live confirmed matches for this player
+  useEffect(() => {
+    if (!id) return;
+    supabase
+      .from("matches")
+      .select("*, player1:players!player1_id(id, full_name), player2:players!player2_id(id, full_name)")
+      .eq("status", "confirmed")
+      .or(`player1_id.eq.${id},player2_id.eq.${id}`)
+      .order("created_at", { ascending: false })
+      .limit(10)
+      .then(({ data }) => {
+        if (data) setLiveMatches(data);
+      });
+  }, [id]);
+
+  // H2H record vs logged-in user
+  useEffect(() => {
+    if (!ownPlayerProfile || !id || ownPlayerProfile.id === id || liveMatches.length === 0) return;
+    const h2h = liveMatches.filter(
+      (m) =>
+        (m.player1_id === ownPlayerProfile.id && m.player2_id === id) ||
+        (m.player1_id === id && m.player2_id === ownPlayerProfile.id)
+    );
+    if (h2h.length === 0) return;
+    const wins   = h2h.filter((m) => m.winner_id === ownPlayerProfile.id).length;
+    const losses = h2h.filter((m) => m.winner_id === id).length;
+    setH2hRecord({ wins, losses });
+  }, [liveMatches, ownPlayerProfile, id]);
+
+  const validAchievements = useMemo(
+    () => (player ? player.achievements.filter((a) => a && a.trim() !== "") : []),
+    [player]
+  );
+
+  const profileCompleteness = useMemo(() => {
+    if (!player) return 0;
+    const checks = [
+      !!player.avatar,
+      !!player.bio,
+      !!player.quote,
+      !!player.nationality,
+      !!player.height,
+      !!player.coach,
+      player.yearsPlaying != null,
+      player.racketDetails.length > 0,
+      !!(player.shoesList?.length || player.shoes),
+      !!player.social?.instagram,
+      !!(player.stats?.media?.length),
+      validAchievements.length > 0,
+    ];
+    return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+  }, [player, validAchievements]);
+
   // Derive a computed win % if not provided explicitly
   const winPct = useMemo(() => {
     if (!player) return 0;
@@ -369,7 +456,6 @@ export default function PlayerProfile() {
     );
   }
 
-  const validAchievements = player.achievements.filter(a => a && a.trim() !== "");
   const streak = player.stats?.currentStreak;
   const isWinStreak = streak?.startsWith("W");
 
@@ -421,6 +507,16 @@ export default function PlayerProfile() {
         >
           <Share2 className="w-4 h-4" /> Share
         </button>
+
+        {/* Challenge button (other player's profile, logged in with own profile) */}
+        {currentUser && player && currentUser.id !== player.userId && ownPlayerProfile && (
+          <button
+            onClick={() => setIsLogMatchOpen(true)}
+            className="absolute top-6 right-28 sm:right-32 z-20 flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600 border border-blue-500 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-lg shadow-blue-500/25"
+          >
+            <Swords className="w-4 h-4" /> Challenge
+          </button>
+        )}
 
         {/* Edit Profile button (only for the owner) */}
         {currentUser && player && currentUser.id === player.userId && (
@@ -522,6 +618,12 @@ export default function PlayerProfile() {
                     <span>{player.elo_rating} ELO</span>
                   </div>
                 )}
+                {eloRank != null && (
+                  <div className="flex items-center gap-2 bg-gradient-to-r from-emerald-400/20 to-teal-500/20 px-3 py-1.5 rounded-lg border border-emerald-300/30 text-emerald-700 dark:text-emerald-400 font-black">
+                    <Hash className="w-4 h-4" />
+                    <span>Club Rank #{eloRank}</span>
+                  </div>
+                )}
               </div>
 
               {/* Edit Profile button inline for mobile */}
@@ -545,6 +647,31 @@ export default function PlayerProfile() {
                       <FormPill key={i} result={r} index={i} />
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Profile completeness (own profile only) */}
+              {currentUser && currentUser.id === player.userId && (
+                <div className="mt-5 space-y-1.5 max-w-xs">
+                  <div className="flex items-center justify-between text-xs font-bold">
+                    <span className="text-slate-500 dark:text-slate-400">Profile completeness</span>
+                    <span className={profileCompleteness === 100 ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}>
+                      {profileCompleteness}%
+                    </span>
+                  </div>
+                  <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${profileCompleteness}%` }}
+                      transition={{ duration: 1, ease: "easeOut" }}
+                      className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full"
+                    />
+                  </div>
+                  {profileCompleteness < 100 && (
+                    <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                      Add more details to complete your profile
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -660,42 +787,82 @@ export default function PlayerProfile() {
               </motion.section>
             )}
 
-            {/* Recent Matches */}
-            {player.recentMatches && player.recentMatches.length > 0 && (
+            {/* Recent Matches — live DB data, fallback to static */}
+            {(liveMatches.length > 0 || (player.recentMatches && player.recentMatches.length > 0)) && (
               <motion.section variants={itemVariants}>
                 <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-3 ml-2">
                   <Clock className="w-6 h-6 text-blue-500" />
                   Recent Matches
+                  {liveMatches.length > 0 && (
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400">Live</span>
+                  )}
                 </h2>
                 <div className="bg-white dark:bg-slate-800/80 rounded-3xl shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 overflow-hidden">
                   <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
-                    {player.recentMatches.map((m, idx) => (
-                      <div key={idx} className="p-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                        <div className="flex items-start gap-4">
-                          <div className={`shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center font-black text-sm shadow-md
-                            ${m.result === "W"
-                              ? "bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-emerald-500/30"
-                              : "bg-gradient-to-br from-rose-400 to-rose-600 text-white shadow-rose-500/30"}`}>
-                            {m.result}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-wrap items-center gap-2 mb-1">
-                              <span className="text-sm font-bold text-slate-800 dark:text-slate-100">{m.tournament}</span>
-                              <span className="text-xs px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 font-semibold">{m.category}</span>
-                              <span className="text-xs px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-semibold">{m.round}</span>
+                    {liveMatches.length > 0
+                      ? liveMatches.map((m, idx) => {
+                          const isP1 = m.player1_id === id;
+                          const opponent = isP1 ? m.player2 : m.player1;
+                          const won = m.winner_id === id;
+                          return (
+                            <div key={idx} className="p-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                              <div className="flex items-center gap-4">
+                                <div className={`shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center font-black text-sm shadow-md
+                                  ${won
+                                    ? "bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-emerald-500/30"
+                                    : "bg-gradient-to-br from-rose-400 to-rose-600 text-white shadow-rose-500/30"}`}>
+                                  {won ? "W" : "L"}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                                    <span className="text-xs px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 font-semibold">Friendly</span>
+                                  </div>
+                                  <div className="text-sm text-slate-600 dark:text-slate-300">
+                                    vs{" "}
+                                    <button
+                                      onClick={() => opponent?.id && setLocation(`/player/${opponent.id}`)}
+                                      className="font-semibold text-slate-800 dark:text-slate-100 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                                    >
+                                      {opponent?.full_name ?? "Unknown"}
+                                    </button>
+                                  </div>
+                                  <div className="mt-1 font-mono text-sm font-bold text-slate-700 dark:text-slate-200 tracking-tight">{m.score}</div>
+                                </div>
+                                <div className="text-xs text-slate-500 dark:text-slate-400 font-medium shrink-0 hidden sm:block">
+                                  {new Date(m.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}
+                                </div>
+                              </div>
                             </div>
-                            <div className="text-sm text-slate-600 dark:text-slate-300">
-                              vs <span className="font-semibold text-slate-800 dark:text-slate-100">{m.opponent}</span>
-                              {m.partner && <> · with <span className="font-semibold text-slate-800 dark:text-slate-100">{m.partner}</span></>}
+                          );
+                        })
+                      : (player.recentMatches ?? []).map((m, idx) => (
+                          <div key={idx} className="p-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                            <div className="flex items-start gap-4">
+                              <div className={`shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center font-black text-sm shadow-md
+                                ${m.result === "W"
+                                  ? "bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-emerald-500/30"
+                                  : "bg-gradient-to-br from-rose-400 to-rose-600 text-white shadow-rose-500/30"}`}>
+                                {m.result}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex flex-wrap items-center gap-2 mb-1">
+                                  <span className="text-sm font-bold text-slate-800 dark:text-slate-100">{m.tournament}</span>
+                                  <span className="text-xs px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 font-semibold">{m.category}</span>
+                                  {m.round && <span className="text-xs px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-semibold">{m.round}</span>}
+                                </div>
+                                <div className="text-sm text-slate-600 dark:text-slate-300">
+                                  vs <span className="font-semibold text-slate-800 dark:text-slate-100">{m.opponent}</span>
+                                  {m.partner && <> · with <span className="font-semibold text-slate-800 dark:text-slate-100">{m.partner}</span></>}
+                                </div>
+                                <div className="mt-1 font-mono text-sm font-bold text-slate-700 dark:text-slate-200 tracking-tight">{m.score}</div>
+                              </div>
+                              <div className="text-xs text-slate-500 dark:text-slate-400 font-medium shrink-0 hidden sm:block">
+                                {new Date(m.date).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}
+                              </div>
                             </div>
-                            <div className="mt-1 font-mono text-sm font-bold text-slate-700 dark:text-slate-200 tracking-tight">{m.score}</div>
                           </div>
-                          <div className="text-xs text-slate-500 dark:text-slate-400 font-medium shrink-0 hidden sm:block">
-                            {new Date(m.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                        ))
+                    }
                   </div>
                 </div>
               </motion.section>
@@ -965,6 +1132,30 @@ export default function PlayerProfile() {
               </motion.section>
             )}
 
+            {/* Head-to-Head vs logged-in user */}
+            {h2hRecord && ownPlayerProfile && (
+              <motion.section variants={itemVariants}
+                className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-[2rem] p-7 shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50">
+                <h2 className="text-lg font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 mb-5">
+                  <Swords className="w-5 h-5 text-rose-500" /> Head-to-Head vs You
+                </h2>
+                <div className="flex items-center justify-center gap-6">
+                  <div className="text-center">
+                    <div className="text-4xl font-black text-emerald-600 dark:text-emerald-400">{h2hRecord.wins}</div>
+                    <div className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mt-1">Your Wins</div>
+                  </div>
+                  <div className="text-3xl font-black text-slate-300 dark:text-slate-600">–</div>
+                  <div className="text-center">
+                    <div className="text-4xl font-black text-rose-500">{h2hRecord.losses}</div>
+                    <div className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mt-1">Their Wins</div>
+                  </div>
+                </div>
+                <p className="text-center text-xs text-slate-500 dark:text-slate-400 mt-4">
+                  {h2hRecord.wins + h2hRecord.losses} match{h2hRecord.wins + h2hRecord.losses !== 1 ? "es" : ""} played
+                </p>
+              </motion.section>
+            )}
+
             {/* Social */}
             {player.social && player.social.instagram && (
               <motion.section variants={itemVariants}
@@ -1107,6 +1298,18 @@ export default function PlayerProfile() {
         )}
       </AnimatePresence>
 
+
+      {/* Log Match Modal (challenge another player) */}
+      {isLogMatchOpen && ownPlayerProfile && (
+        <LogMatchModal
+          isOpen={isLogMatchOpen}
+          onClose={() => setIsLogMatchOpen(false)}
+          currentUser={ownPlayerProfile}
+          otherPlayers={allPlayers.filter((p) => p.id !== ownPlayerProfile.id)}
+          defaultOpponentId={player?.id}
+          onSuccess={() => {}}
+        />
+      )}
 
       {/* YouTube Video Player Modal */}
       {activeVideoId && (

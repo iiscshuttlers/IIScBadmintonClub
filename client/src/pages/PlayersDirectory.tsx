@@ -3,10 +3,9 @@ import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, SlidersHorizontal, Users, Trophy, Sword, Sparkles,
-  UserCircle, LogIn, PlusCircle, Pencil, ChevronRight, X, Trash2
+  UserCircle, LogIn, PlusCircle, Pencil, ChevronRight, X, Trash2, Share2, ArrowUpDown
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { Card, CardContent } from "@/components/ui/card";
 import { Card, CardContent } from "@/components/ui/card";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import LogMatchModal from "@/components/LogMatchModal";
@@ -24,6 +23,30 @@ interface Player {
   current_racket?: string;
   user_id?: string;
   elo_rating?: number;
+  win_loss_record?: string;
+  recent_form?: string[];
+}
+
+const AVATAR_GRADIENTS = [
+  "from-emerald-400 to-teal-500",
+  "from-blue-400 to-indigo-500",
+  "from-violet-400 to-purple-500",
+  "from-amber-400 to-orange-500",
+  "from-rose-400 to-pink-500",
+  "from-cyan-400 to-sky-500",
+];
+
+function avatarGradient(name: string) {
+  const sum = name.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+  return AVATAR_GRADIENTS[sum % AVATAR_GRADIENTS.length];
+}
+
+function parseWinPct(record?: string): number | null {
+  if (!record) return null;
+  const m = record.match(/(\d+)\s*W\s*-\s*(\d+)\s*L/i);
+  if (!m) return null;
+  const w = +m[1], l = +m[2];
+  return w + l ? Math.round((w / (w + l)) * 100) : null;
 }
 
 const levelColor: Record<string, string> = {
@@ -44,6 +67,19 @@ const itemVariants = {
 
 /* ── Small reusable player card ─────────────────────────────────────── */
 function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, onEdit }: { player: Player; isOwn?: boolean; isAdmin?: boolean; onDelete?: (id: string) => void; onEdit?: (id: string) => void; }) {
+  const winPct = parseWinPct(player.win_loss_record);
+
+  const handleShare = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const url = `${window.location.origin}/player/${player.id}`;
+    if (navigator.share) {
+      navigator.share({ title: player.full_name, url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url).then(() => alert("Profile link copied!")).catch(() => {});
+    }
+  };
+
   return (
     <Card
       className={`h-full rounded-[2rem] overflow-hidden cursor-pointer border bg-white dark:bg-slate-900
@@ -54,14 +90,23 @@ function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, onEdit }
           : "border-slate-100 dark:border-slate-800"}`}
     >
       {isOwn && (
-        <span className="absolute top-3 right-3 z-10 px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-black uppercase tracking-widest shadow">
+        <span className="absolute top-3 left-3 z-10 px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-black uppercase tracking-widest shadow">
           You
         </span>
       )}
-      
+
+      {/* Share button — always visible on hover */}
+      <button
+        onClick={handleShare}
+        className="absolute top-3 right-3 z-20 w-7 h-7 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 shadow transition opacity-0 group-hover:opacity-100"
+        title="Copy profile link"
+      >
+        <Share2 className="w-3.5 h-3.5" />
+      </button>
+
       {/* Admin Actions */}
       {isAdmin && !isOwn && (
-        <div className="absolute top-3 right-3 z-20 flex gap-2" onClick={(e) => e.preventDefault()}>
+        <div className="absolute top-3 right-10 z-20 flex gap-1.5" onClick={(e) => e.preventDefault()}>
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit?.(player.id); }}
             className="w-7 h-7 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 shadow transition"
@@ -76,7 +121,8 @@ function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, onEdit }
           </button>
         </div>
       )}
-      <CardContent className="p-6 flex flex-col items-center text-center space-y-4 h-full relative">
+
+      <CardContent className="p-6 flex flex-col items-center text-center space-y-3 h-full relative">
         {/* Department chip */}
         <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-black uppercase tracking-wider">
           {player.department.split(" ").slice(0, 2).join(" ")}
@@ -90,13 +136,13 @@ function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, onEdit }
         )}
 
         {/* Avatar */}
-        <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-slate-100 dark:border-slate-800 shadow-md group-hover:scale-105 transition-transform duration-300 bg-slate-200 dark:bg-slate-800 flex items-center justify-center shrink-0">
+        <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-slate-100 dark:border-slate-800 shadow-md group-hover:scale-105 transition-transform duration-300 shrink-0 mt-4">
           {player.avatar_url ? (
             <img src={player.avatar_url} alt={player.full_name} className="w-full h-full object-cover" />
           ) : (
-            <span className="text-slate-400 dark:text-slate-600 text-3xl font-bold uppercase">
-              {player.full_name.charAt(0)}
-            </span>
+            <div className={`w-full h-full bg-gradient-to-br ${avatarGradient(player.full_name)} flex items-center justify-center text-white font-black text-3xl`}>
+              {player.full_name.charAt(0).toUpperCase()}
+            </div>
           )}
         </div>
 
@@ -113,7 +159,7 @@ function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, onEdit }
         </div>
 
         {/* Badges */}
-        <div className="flex flex-wrap gap-1.5 justify-center py-2">
+        <div className="flex flex-wrap gap-1.5 justify-center">
           <span className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-widest ${levelColor[player.playing_level] ?? levelColor.Beginner}`}>
             {player.playing_level}
           </span>
@@ -124,9 +170,33 @@ function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, onEdit }
           )}
         </div>
 
+        {/* Win % + Recent Form */}
+        {(winPct !== null || (player.recent_form && player.recent_form.length > 0)) && (
+          <div className="flex flex-col items-center gap-1.5 w-full">
+            {winPct !== null && (
+              <span className="text-xs font-black text-slate-600 dark:text-slate-300">
+                {winPct}% win rate · <span className="text-slate-400 font-semibold">{player.win_loss_record}</span>
+              </span>
+            )}
+            {player.recent_form && player.recent_form.length > 0 && (
+              <div className="flex gap-1 justify-center">
+                {player.recent_form.slice(-5).map((r, i) => (
+                  <div
+                    key={i}
+                    className={`w-5 h-5 rounded text-[9px] font-black flex items-center justify-center text-white
+                      ${r === "W" ? "bg-emerald-500" : "bg-rose-500"}`}
+                  >
+                    {r}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Racket */}
         {player.current_racket && (
-          <div className="w-full pt-3 border-t border-slate-100 dark:border-slate-850 flex items-center justify-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-bold mt-auto">
+          <div className="w-full pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-bold mt-auto">
             <Sword className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
             <span className="truncate max-w-[150px]">{player.current_racket}</span>
           </div>
@@ -161,6 +231,7 @@ export default function PlayersDirectory() {
   const [levelFilter, setLevelFilter]     = useState("All");
   const [styleFilter, setStyleFilter]     = useState("All");
   const [showFilters, setShowFilters]     = useState(false);
+  const [sortBy, setSortBy]               = useState<"elo" | "winpct" | "name">("elo");
 
   /* 1. Check auth session + own profile */
   useEffect(() => {
@@ -173,7 +244,7 @@ export default function PlayersDirectory() {
         
         const { data } = await supabase
           .from("players")
-          .select("id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating")
+          .select("id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating, win_loss_record, recent_form")
           .eq("user_id", session.user.id)
           .maybeSingle();
         setOwnProfile(data ?? null);
@@ -219,20 +290,27 @@ export default function PlayersDirectory() {
     fetchPlayers();
   }, []);
 
-  /* Filter logic */
+  /* Filter + sort logic */
   const otherPlayers = players.filter((p) => p.user_id !== session?.user?.id);
-  const filteredPlayers = otherPlayers.filter((player) => {
-    const q = searchQuery.toLowerCase();
-    const matchesSearch =
-      player.full_name.toLowerCase().includes(q) ||
-      (player.nickname && player.nickname.toLowerCase().includes(q)) ||
-      player.department.toLowerCase().includes(q);
-    const matchesLevel = levelFilter === "All" || player.playing_level === levelFilter;
-    const matchesStyle =
-      styleFilter === "All" ||
-      player.playing_style?.toLowerCase().includes(styleFilter.toLowerCase());
-    return matchesSearch && matchesLevel && matchesStyle;
-  });
+  const filteredPlayers = otherPlayers
+    .filter((player) => {
+      const q = searchQuery.toLowerCase();
+      const matchesSearch =
+        player.full_name.toLowerCase().includes(q) ||
+        (player.nickname && player.nickname.toLowerCase().includes(q)) ||
+        player.department.toLowerCase().includes(q);
+      const matchesLevel = levelFilter === "All" || player.playing_level === levelFilter;
+      const matchesStyle =
+        styleFilter === "All" ||
+        player.playing_style?.toLowerCase().includes(styleFilter.toLowerCase());
+      return matchesSearch && matchesLevel && matchesStyle;
+    })
+    .sort((a, b) => {
+      if (sortBy === "elo")    return (b.elo_rating ?? 0) - (a.elo_rating ?? 0);
+      if (sortBy === "name")   return a.full_name.localeCompare(b.full_name);
+      if (sortBy === "winpct") return (parseWinPct(b.win_loss_record) ?? 0) - (parseWinPct(a.win_loss_record) ?? 0);
+      return 0;
+    });
 
   const handleSignOut = async () => {
     if (confirm("Sign out of your account?")) {
@@ -494,20 +572,36 @@ export default function PlayersDirectory() {
               )}
             </div>
 
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-4 py-3 rounded-2xl border text-sm font-bold transition shrink-0
-                ${showFilters
-                  ? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400"
-                  : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600"
-                }`}
-            >
-              <SlidersHorizontal className="w-4 h-4" />
-              Filters
-              {(levelFilter !== "All" || styleFilter !== "All") && (
-                <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-              )}
-            </button>
+            <div className="flex gap-2 shrink-0">
+              {/* Sort selector */}
+              <div className="relative">
+                <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as "elo" | "winpct" | "name")}
+                  className="pl-9 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500 appearance-none cursor-pointer"
+                >
+                  <option value="elo">By ELO</option>
+                  <option value="winpct">By Win %</option>
+                  <option value="name">By Name</option>
+                </select>
+              </div>
+
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center gap-2 px-4 py-3 rounded-2xl border text-sm font-bold transition
+                  ${showFilters
+                    ? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400"
+                    : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600"
+                  }`}
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+                Filters
+                {(levelFilter !== "All" || styleFilter !== "All") && (
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Expandable filters */}

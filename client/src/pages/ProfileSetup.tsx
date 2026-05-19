@@ -100,6 +100,26 @@ export default function ProfileSetup() {
   const [selCategory, setSelCategory] = useState(EVENT_CATEGORIES[0]);
   const [selResult, setSelResult] = useState(PLACEMENT_RESULTS[0]);
 
+  function getYouTubeId(url: string): string | null {
+    const m = url.match(/(?:youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]{11})/);
+    return m ? m[1] : null;
+  }
+
+  function handleImageBlur(idx: number, url: string) {
+    if (!url) return;
+    const img = new window.Image();
+    img.onload = () =>
+      setImagePreviewStatus((prev) => { const n = [...prev]; n[idx] = "ok"; return n; });
+    img.onerror = () =>
+      setImagePreviewStatus((prev) => { const n = [...prev]; n[idx] = "error"; return n; });
+    img.src = url;
+  }
+
+  function handleVideoBlur(idx: number, url: string) {
+    const ytId = getYouTubeId(url);
+    setVideoPreviewIds((prev) => { const n = [...prev]; n[idx] = ytId; return n; });
+  }
+
   const addOfficialAchievement = () => {
     const tournamentName = selTournament === "Other (Type Custom below)" ? customTournamentText.trim() : selTournament;
     if (!tournamentName) {
@@ -123,6 +143,8 @@ export default function ProfileSetup() {
   // Section 5: Media Gallery (Images & YouTube Videos)
   const [mediaImages, setMediaImages] = useState<{ url: string; caption: string; }[]>([]);
   const [mediaVideos, setMediaVideos] = useState<{ url: string; caption: string; }[]>([]);
+  const [imagePreviewStatus, setImagePreviewStatus] = useState<("ok" | "error" | "idle")[]>([]);
+  const [videoPreviewIds, setVideoPreviewIds] = useState<(string | null)[]>([]);
 
   const [isEditing, setIsEditing] = useState(false);
   const [playerSlug, setPlayerSlug] = useState("");
@@ -1187,10 +1209,21 @@ export default function ProfileSetup() {
                                     const updated = [...mediaImages];
                                     updated[idx].url = e.target.value;
                                     setMediaImages(updated);
+                                    setImagePreviewStatus((prev) => { const n = [...prev]; n[idx] = "idle"; return n; });
                                   }}
-                                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500"
+                                  onBlur={(e) => handleImageBlur(idx, e.target.value)}
+                                  className={`w-full px-3 py-2 rounded-xl border bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500
+                                    ${imagePreviewStatus[idx] === "error" ? "border-rose-400 dark:border-rose-500" : "border-slate-200 dark:border-slate-700"}`}
                                   placeholder="e.g. https://images.unsplash.com/photo-..."
                                 />
+                                {imagePreviewStatus[idx] === "ok" && img.url && (
+                                  <div className="mt-2 rounded-xl overflow-hidden border border-emerald-200 dark:border-emerald-800 w-full aspect-video bg-slate-100 dark:bg-slate-800">
+                                    <img src={img.url} alt="preview" className="w-full h-full object-cover" />
+                                  </div>
+                                )}
+                                {imagePreviewStatus[idx] === "error" && (
+                                  <p className="mt-1 text-[11px] text-rose-500 font-semibold">Could not load image — check the URL.</p>
+                                )}
                               </div>
                               <div>
                                 <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Caption</label>
@@ -1254,10 +1287,30 @@ export default function ProfileSetup() {
                                     const updated = [...mediaVideos];
                                     updated[idx].url = e.target.value;
                                     setMediaVideos(updated);
+                                    setVideoPreviewIds((prev) => { const n = [...prev]; n[idx] = null; return n; });
                                   }}
-                                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500"
+                                  onBlur={(e) => handleVideoBlur(idx, e.target.value)}
+                                  className={`w-full px-3 py-2 rounded-xl border bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500
+                                    ${vid.url && videoPreviewIds[idx] === null && videoPreviewIds.length > idx ? "border-rose-400 dark:border-rose-500" : "border-slate-200 dark:border-slate-700"}`}
                                   placeholder="e.g. https://www.youtube.com/watch?v=dQw4w9WgXcQ"
                                 />
+                                {videoPreviewIds[idx] && (
+                                  <div className="mt-2 relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 w-full aspect-video bg-slate-900">
+                                    <img
+                                      src={`https://img.youtube.com/vi/${videoPreviewIds[idx]}/mqdefault.jpg`}
+                                      alt="YouTube thumbnail"
+                                      className="w-full h-full object-cover opacity-80"
+                                    />
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                      <div className="w-10 h-10 rounded-full bg-red-600/90 flex items-center justify-center shadow-lg">
+                                        <Play className="w-4 h-4 fill-white text-white ml-0.5" />
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                                {vid.url && videoPreviewIds.length > idx && videoPreviewIds[idx] === null && (
+                                  <p className="mt-1 text-[11px] text-rose-500 font-semibold">Not a valid YouTube URL.</p>
+                                )}
                               </div>
                               <div>
                                 <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Caption</label>
