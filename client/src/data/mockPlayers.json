@@ -1,0 +1,110 @@
+[
+  {
+  "id": "1",
+  "fullName": "Raja Janmejay",
+  "nickname": "Jordan",
+  "avatar": "https://i.pravatar.cc/300?u=janmejay",
+  "department": "Aerospace Engineering",
+  "joinedYear": 2022,
+  "playingLevel": "Advanced",
+  "dominantHand": "Right-handed",
+  "playingStyle": "Aggressive",
+  "favoriteShot": "Net Cross Drop",
+  "favoriteIdol": "Viktor Axelsen",
+  "quote": "Enjoying the Game is best strategy",
+  "currentRacket": "Apacs Finapi 232 Reborn",
+  "nationality": "Indian",
+  "homeState": "Bihar",
+  "height": "175 cm",
+  "yearsPlaying": 8,
+  "coach": "Self-coached",
+  "bio": "PhD researcher at IISc Bengaluru. Started playing in 2018 — known for aggressive net play and quick reflexes at the front court.",
+  "currentRanking": 3,
+  "highestRanking": 2,
+  "stats": {
+    "totalMatches": 30,
+    "wins": 24,
+    "losses": 6,
+    "winPercentage": 80,
+    "titlesWon": 2,
+    "runnerUp": 1,
+    "semifinals": 1,
+    "currentStreak": "W4",
+    "longestWinStreak": 8,
+    "categoryStats": {
+      "singles": {
+        "wins": 8,
+        "losses": 3
+      },
+      "doubles": {
+        "wins": 12,
+        "losses": 2
+      },
+      "mixed": {
+        "wins": 4,
+        "losses": 1
+      }
+    }
+  },
+  "recentForm": [
+    "W",
+    "W",
+    "L",
+    "W",
+    "W"
+  ],
+  "recentMatches": [
+    {
+      "date": "2026-03-15",
+      "tournament": "Farewell 2026",
+      "category": "Men's Doubles",
+      "round": "Final",
+      "opponent": "A. Kumar / R. Sharma",
+      "partner": "Suresh K.",
+      "score": "21-18, 19-21, 21-15",
+      "result": "W"
+    }
+  ],
+  "frequentPartners": [
+    {
+      "name": "Suresh Kumar",
+      "id": "5",
+      "matchesTogether": 12,
+      "winRate": 75
+    }
+  ],
+  "careerHighlights": [
+    {
+      "year": 2026,
+      "title": "Farewell 2026 Champion",
+      "description": "Won Men's Doubles title"
+    },
+    {
+      "year": 2025,
+      "title": "Mixed Doubles Winner",
+      "description": "Open Tournament 2025"
+    }
+  ],
+  "shoes": "Yonex Power Cushion 65 Z3",
+  "apparel": "Yonex",
+  "tournamentHistory": [
+    "Farewell 2026",
+    "BPL 2026",
+    "Spectrum 2026"
+  ],
+  "achievements": [
+    "Men's Doubles Winner - Farewell 2026"
+  ],
+  "winLossRecord": "24W - 6L",
+  "social": {
+    "instagram": "@raja_janmejay"
+  },
+  "racketDetails": [
+    {
+      "name": "Apacs Finapi 232 Reborn",
+      "string": "Victor VBS66 Nano",
+      "tension": "28 lbs"
+    }
+  ]
+  }
+]

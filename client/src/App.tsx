@@ -26,6 +26,8 @@ const TournamentDetail = lazy(() => import('./pages/TournamentDetail'));
 const WinnersWall      = lazy(() => import('./pages/WinnersWall'));
 const FarewellTournament = lazy(() => import('./pages/FarewellTournament'));
 const FarewellAdmin    = lazy(() => import('./pages/FarewellAdmin'));
+const PlayerProfile    = lazy(() => import('./pages/PlayerProfile'));
+const Join             = lazy(() => import('./pages/Join'));
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -121,6 +123,8 @@ function AppRoutes() {
             <Route path="/announcements" component={Announcements} />
             <Route path="/gallery" component={Gallery} />
             <Route path="/contact" component={Contact} />
+            <Route path="/join" component={Join} />
+            <Route path="/player/:id" component={PlayerProfile} />
 
             <Route path="/404" component={NotFound} />
             <Route component={NotFound} />
