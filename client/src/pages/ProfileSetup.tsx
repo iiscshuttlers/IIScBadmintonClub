@@ -273,7 +273,13 @@ export default function ProfileSetup() {
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
+    if (file.size > 512 * 1024) {
+      alert("Image too large. Please choose a file under 512 KB.");
+      e.target.value = "";
+      return;
+    }
+
     setLoading(true);
     try {
       const fileExt = file.name.split('.').pop();
@@ -364,28 +370,31 @@ export default function ProfileSetup() {
       tournament_history: tournamentsRaw ? tournamentsRaw.split(",").map(s => s.trim()).filter(Boolean) : [],
     };
 
+    const timeoutMs = 15000;
+    const mkTimeout = () => new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Save timed out — please check your connection and try again.")), timeoutMs)
+    );
+
     try {
       if (isEditing) {
         // UPDATE existing profile
-        const { error } = await supabase
-          .from("players")
-          .update(payload)
-          .eq("user_id", targetUserId || session.user.id);
+        const { error } = (await Promise.race([
+          supabase.from("players").update(payload).eq("user_id", targetUserId || session.user.id),
+          mkTimeout()
+        ])) as { error: any };
 
         if (error) throw error;
-        
+
         // Success! Go back to their updated profile
         setLocation(`/player/${playerSlug}`);
       } else {
         // INSERT new profile
         const slug = fullName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
 
-        const { error } = await supabase.from("players").insert({
-          id: slug,
-          user_id: session.user.id,
-          email: session.user.email,
-          ...payload
-        });
+        const { error } = (await Promise.race([
+          supabase.from("players").insert({ id: slug, user_id: session.user.id, email: session.user.email, ...payload }),
+          mkTimeout()
+        ])) as { error: any };
 
         if (error) {
           if (error.code === '23505') {
@@ -1073,13 +1082,19 @@ export default function ProfileSetup() {
                       <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 space-y-3">
                         {achievementsRaw.split(",").map(s => s.trim()).filter(Boolean).length > 0 && (
                           <div className="flex flex-wrap gap-2">
-                            {achievementsRaw.split(",").map(s => s.trim()).filter(Boolean).map((ach, idx) => (
+                            {[...achievementsRaw.split(",").map(s => s.trim()).filter(Boolean)]
+                              .sort((a, b) => {
+                                const ya = parseInt(a.match(/\d{4}/)?.[0] ?? "0");
+                                const yb = parseInt(b.match(/\d{4}/)?.[0] ?? "0");
+                                return yb - ya;
+                              })
+                              .map((ach, idx) => (
                               <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs font-bold">
                                 🏆 {ach}
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    const updated = achievementsRaw.split(",").map(s => s.trim()).filter(Boolean).filter((_, i) => i !== idx);
+                                    const updated = achievementsRaw.split(",").map(s => s.trim()).filter(Boolean).filter(item => item !== ach);
                                     setAchievementsRaw(updated.join(", "));
                                   }}
                                   className="ml-0.5 text-emerald-500 hover:text-rose-500 transition font-black text-sm leading-none"
@@ -1125,13 +1140,19 @@ export default function ProfileSetup() {
                       <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 space-y-3">
                         {tournamentsRaw.split(",").map(s => s.trim()).filter(Boolean).length > 0 && (
                           <div className="flex flex-wrap gap-2">
-                            {tournamentsRaw.split(",").map(s => s.trim()).filter(Boolean).map((t, idx) => (
+                            {[...tournamentsRaw.split(",").map(s => s.trim()).filter(Boolean)]
+                              .sort((a, b) => {
+                                const ya = parseInt(a.match(/\d{4}/)?.[0] ?? "0");
+                                const yb = parseInt(b.match(/\d{4}/)?.[0] ?? "0");
+                                return yb - ya;
+                              })
+                              .map((t, idx) => (
                               <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400 text-xs font-bold">
                                 🏸 {t}
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    const updated = tournamentsRaw.split(",").map(s => s.trim()).filter(Boolean).filter((_, i) => i !== idx);
+                                    const updated = tournamentsRaw.split(",").map(s => s.trim()).filter(Boolean).filter(item => item !== t);
                                     setTournamentsRaw(updated.join(", "));
                                   }}
                                   className="ml-0.5 text-blue-500 hover:text-rose-500 transition font-black text-sm leading-none"
