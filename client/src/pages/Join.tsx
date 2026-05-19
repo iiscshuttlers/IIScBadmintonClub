@@ -1,214 +1,297 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, ShieldCheck, ArrowRight, KeyRound } from "lucide-react";
+import { Mail, ShieldCheck, ArrowRight, KeyRound, Lock, Eye, EyeOff, UserPlus, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 
+type Mode = "signin" | "signup" | "otp-email" | "otp-verify";
+
+const IISC_DOMAIN = "@iisc.ac.in";
+
+function validateEmail(email: string) {
+  // Temporarily allowed all email domains for testing
+  return null;
+}
+
+
 export default function Join() {
   const [, setLocation] = useLocation();
-  const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
-  const [step, setStep] = useState<"email" | "otp">("email"); // "email" or "otp"
+  const [loading, setLoading]       = useState(false);
+  const [mode, setMode]             = useState<Mode>("signin");
+  const [email, setEmail]           = useState("");
+  const [password, setPassword]     = useState("");
+  const [confirm, setConfirm]       = useState("");
+  const [showPwd, setShowPwd]       = useState(false);
+  const [otp, setOtp]               = useState("");
+  const [infoMsg, setInfoMsg]       = useState("");
+  const [errorMsg, setErrorMsg]     = useState("");
 
-  const handleSendOtp = async (e: React.FormEvent) => {
+  const reset = () => { setPassword(""); setConfirm(""); setOtp(""); setInfoMsg(""); setErrorMsg(""); };
+
+  async function afterAuth(session: any) {
+    const { data: profile } = await supabase
+      .from("players")
+      .select("id")
+      .eq("user_id", session.user.id)
+      .maybeSingle();
+    setLocation(profile ? `/player/${profile.id}` : "/profile/setup");
+  }
+
+  /* ── Sign In ────────────────────────────────────────────── */
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.endsWith("@iisc.ac.in") && !email.endsWith("@gmail.com")) {
-      alert("Access Denied! During testing, please use an @iisc.ac.in or @gmail.com email.");
-      return;
-    }
-
-    setLoading(true);
+    const err = validateEmail(email);
+    if (err) { setErrorMsg(err); return; }
+    setLoading(true); setErrorMsg("");
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          shouldCreateUser: true, // Auto-registers new players!
-          emailRedirectTo: `${window.location.origin}/iiscshuttlers/profile/setup`,
-        },
-      });
-
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      setStep("otp");
+      if (data.session) await afterAuth(data.session);
     } catch (err: any) {
-      console.error("Failed to send OTP:", err);
-      alert("Failed to send login code. " + err.message);
-    } finally {
-      setLoading(false);
-    }
+      setErrorMsg(err.message.includes("Invalid") ? "Incorrect email or password." : err.message);
+    } finally { setLoading(false); }
   };
 
-  const handleVerifyOtp = async (e: React.FormEvent) => {
+  /* ── Sign Up ────────────────────────────────────────────── */
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
+    const err = validateEmail(email);
+    if (err) { setErrorMsg(err); return; }
+    if (password.length < 8) { setErrorMsg("Password must be at least 8 characters."); return; }
+    if (password !== confirm) { setErrorMsg("Passwords do not match."); return; }
+    setLoading(true); setErrorMsg("");
     try {
-      const { error, data } = await supabase.auth.verifyOtp({
-        email,
-        token: otp,
-        type: "email",
-      });
-
+      const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) throw error;
-
-      // Successfully logged in! Check if they already have a profile
       if (data.session) {
-        const { data: profile } = await supabase
-          .from("players")
-          .select("id")
-          .eq("user_id", data.session.user.id)
-          .single();
-
-        if (profile) {
-          // Already registered, go to profile!
-          setLocation(`/player/${profile.id}`);
-        } else {
-          // New player, complete the setup!
-          setLocation("/profile/setup");
-        }
+        await afterAuth(data.session);
+      } else {
+        setInfoMsg("Account created! Check your email to confirm, then sign in.");
+        setMode("signin");
       }
     } catch (err: any) {
-      console.error("Failed to verify OTP:", err);
-      alert("Invalid code. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+      setErrorMsg(err.message);
+    } finally { setLoading(false); }
   };
+
+  /* ── OTP Send ───────────────────────────────────────────── */
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const err = validateEmail(email);
+    if (err) { setErrorMsg(err); return; }
+    setLoading(true); setErrorMsg("");
+    try {
+      const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
+      if (error) throw error;
+      setMode("otp-verify");
+      setInfoMsg(`Login code sent to ${email}`);
+    } catch (err: any) {
+      setErrorMsg(err.message.includes("not found") ? "No account found with this email. Please sign up first." : err.message);
+    } finally { setLoading(false); }
+  };
+
+  /* ── OTP Verify ─────────────────────────────────────────── */
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true); setErrorMsg("");
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({ email, token: otp, type: "email" });
+      if (error) throw error;
+      if (data.session) await afterAuth(data.session);
+    } catch (err: any) {
+      setErrorMsg("Invalid or expired code. Please try again.");
+    } finally { setLoading(false); }
+  };
+
+  /* ── Shared field styles ────────────────────────────────── */
+  const input = "block w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm";
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md px-4">
-        
-        {/* Header Icon & Text */}
+
+        {/* Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm border border-emerald-200 dark:border-emerald-800">
             <ShieldCheck className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            IISc Badminton Club
-          </h2>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-            Secure sign-in for the IISc Shuttlers community.
-          </p>
+          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">IISc Badminton Club</h1>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Member portal · <span className="font-semibold text-slate-600 dark:text-slate-300">@iisc.ac.in</span> only</p>
         </div>
 
-        {/* Dynamic Multi-Step Form */}
         <div className="bg-white dark:bg-slate-900 py-8 px-6 shadow-xl shadow-slate-200/50 dark:shadow-none sm:rounded-3xl sm:px-10 border border-slate-100 dark:border-slate-800">
+
+          {/* Mode tabs (only for signin/signup) */}
+          {(mode === "signin" || mode === "signup") && (
+            <div className="flex rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
+              <button
+                onClick={() => { setMode("signin"); reset(); }}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold transition-all ${mode === "signin" ? "bg-emerald-600 text-white" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"}`}
+              >
+                <LogIn className="w-4 h-4" /> Sign In
+              </button>
+              <button
+                onClick={() => { setMode("signup"); reset(); }}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold transition-all ${mode === "signup" ? "bg-emerald-600 text-white" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"}`}
+              >
+                <UserPlus className="w-4 h-4" /> Create Account
+              </button>
+            </div>
+          )}
+
+          {/* Info / Error messages */}
+          {infoMsg && (
+            <div className="mb-4 px-4 py-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-sm font-medium">
+              {infoMsg}
+            </div>
+          )}
+          {errorMsg && (
+            <div className="mb-4 px-4 py-3 rounded-xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400 text-sm font-medium">
+              {errorMsg}
+            </div>
+          )}
+
           <AnimatePresence mode="wait">
-            {step === "email" ? (
-              
-              // STEP 1: Email Input
-              <motion.div
-                key="email-step"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.2 }}
-              >
-                <form onSubmit={handleSendOtp} className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                      IISc Institutional Email
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Mail className="h-5 h-5 text-slate-400" />
-                      </div>
-                      <input
-                        required
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="yourname@iisc.ac.in"
-                        className="block w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-                      />
-                    </div>
+
+            {/* ── SIGN IN ── */}
+            {mode === "signin" && (
+              <motion.form key="signin" onSubmit={handleSignIn} className="space-y-5"
+                initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 15 }} transition={{ duration: 0.2 }}>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">IISc Email</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input required type="email" value={email} onChange={e => setEmail(e.target.value)}
+                      placeholder="yourname@iisc.ac.in" className={`${input} pl-10`} />
                   </div>
-
-                  <Button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full py-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all text-base flex items-center justify-center gap-2"
-                  >
-                    {loading ? (
-                      <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                    ) : (
-                      <>
-                        Get Secure Login Code
-                        <ArrowRight className="w-5 h-5" />
-                      </>
-                    )}
-                  </Button>
-                </form>
-              </motion.div>
-            ) : (
-              
-              // STEP 2: OTP Verification
-              <motion.div
-                key="otp-step"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
-              >
-                <form onSubmit={handleVerifyOtp} className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                      Enter the 6-digit Code
-                    </label>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
-                      We sent a secure validation code to <strong className="text-slate-700 dark:text-slate-300">{email}</strong>.
-                    </p>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <KeyRound className="h-5 h-5 text-slate-400" />
-                      </div>
-                      <input
-                        required
-                        type="text"
-                        maxLength={6}
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value)}
-                        placeholder="123456"
-                        className="block w-full pl-10 pr-4 py-3 tracking-widest text-center text-lg font-bold border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full py-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all text-base flex items-center justify-center gap-2"
-                    >
-                      {loading ? (
-                        <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                      ) : (
-                        "Verify & Log In"
-                      )}
-                    </Button>
-
-                    <button
-                      type="button"
-                      onClick={() => setStep("email")}
-                      className="w-full text-center text-sm font-semibold text-emerald-600 dark:text-emerald-400 hover:underline py-2"
-                    >
-                      Change email address
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input required type={showPwd ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)}
+                      placeholder="Your password" className={`${input} pl-10 pr-10`} />
+                    <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                      {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
-                </form>
-              </motion.div>
+                </div>
+                <Button type="submit" disabled={loading}
+                  className="w-full py-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all text-base flex items-center justify-center gap-2">
+                  {loading ? <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : <><LogIn className="w-5 h-5" /> Sign In</>}
+                </Button>
+                <div className="text-center pt-1">
+                  <button type="button" onClick={() => { setMode("otp-email"); reset(); }}
+                    className="text-xs text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition font-semibold">
+                    Forgot password? Sign in with OTP →
+                  </button>
+                </div>
+              </motion.form>
             )}
+
+            {/* ── SIGN UP ── */}
+            {mode === "signup" && (
+              <motion.form key="signup" onSubmit={handleSignUp} className="space-y-5"
+                initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }} transition={{ duration: 0.2 }}>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">IISc Email</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input required type="email" value={email} onChange={e => setEmail(e.target.value)}
+                      placeholder="yourname@iisc.ac.in" className={`${input} pl-10`} />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input required type={showPwd ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)}
+                      placeholder="Min. 8 characters" className={`${input} pl-10 pr-10`} />
+                    <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                      {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Confirm Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input required type={showPwd ? "text" : "password"} value={confirm} onChange={e => setConfirm(e.target.value)}
+                      placeholder="Repeat password" className={`${input} pl-10`} />
+                  </div>
+                </div>
+                <Button type="submit" disabled={loading}
+                  className="w-full py-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all text-base flex items-center justify-center gap-2">
+                  {loading ? <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : <><UserPlus className="w-5 h-5" /> Create Account</>}
+                </Button>
+              </motion.form>
+            )}
+
+            {/* ── OTP EMAIL ── */}
+            {mode === "otp-email" && (
+              <motion.form key="otp-email" onSubmit={handleSendOtp} className="space-y-5"
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
+                <div className="text-center mb-2">
+                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Sign in with a one-time code</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">We'll email you a login code — no password needed.</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">IISc Email</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input required type="email" value={email} onChange={e => setEmail(e.target.value)}
+                      placeholder="yourname@iisc.ac.in" className={`${input} pl-10`} />
+                  </div>
+                </div>
+                <Button type="submit" disabled={loading}
+                  className="w-full py-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all text-base flex items-center justify-center gap-2">
+                  {loading ? <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : <>Send Login Code <ArrowRight className="w-5 h-5" /></>}
+                </Button>
+                <div className="text-center">
+                  <button type="button" onClick={() => { setMode("signin"); reset(); }}
+                    className="text-xs text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition font-semibold">
+                    ← Back to Sign In
+                  </button>
+                </div>
+              </motion.form>
+            )}
+
+            {/* ── OTP VERIFY ── */}
+            {mode === "otp-verify" && (
+              <motion.form key="otp-verify" onSubmit={handleVerifyOtp} className="space-y-5"
+                initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
+                <div className="text-center">
+                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Enter the code from your email</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 break-all">Sent to <strong>{email}</strong></p>
+                </div>
+                <div className="relative">
+                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input required type="text" maxLength={8} value={otp} onChange={e => setOtp(e.target.value)}
+                    placeholder="Enter code" autoComplete="one-time-code"
+                    className={`${input} pl-10 text-center tracking-[0.4em] text-xl font-bold`} />
+                </div>
+                <Button type="submit" disabled={loading}
+                  className="w-full py-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all text-base flex items-center justify-center gap-2">
+                  {loading ? <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : "Verify & Log In"}
+                </Button>
+                <div className="text-center">
+                  <button type="button" onClick={() => { setMode("otp-email"); reset(); }}
+                    className="text-xs text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition font-semibold">
+                    ← Change email / resend code
+                  </button>
+                </div>
+              </motion.form>
+            )}
+
           </AnimatePresence>
 
-          <div className="mt-6 text-center border-t border-slate-100 dark:border-slate-800 pt-6">
+          <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800 text-center">
             <p className="text-xs text-slate-400 dark:text-slate-500">
-              * Fully restricted to official `@iisc.ac.in` domain accounts.
+              Restricted to <span className="font-semibold text-slate-500 dark:text-slate-400">@iisc.ac.in</span> accounts only
             </p>
           </div>
         </div>
-
       </div>
     </div>
   );

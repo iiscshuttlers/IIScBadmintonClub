@@ -1,14 +1,20 @@
--- 1. Link Player Profiles to Secure Authentication Accounts
-ALTER TABLE players ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id);
+CREATE OR REPLACE FUNCTION auth.restrict_to_iisc_domain()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.email = 'iiscbadmintonclub@gmail.com' THEN
+    RETURN NEW;
+  END IF;
 
--- 2. Enforce Unique Emails (Anti-Duplication!)
-ALTER TABLE players ADD CONSTRAINT players_email_key UNIQUE (email);
+  IF NEW.email NOT LIKE '%@iisc.ac.in' THEN
+    RAISE EXCEPTION 'Registration is restricted to @iisc.ac.in email addresses only.';
+  END IF;
 
--- 3. Enable Secure Profile Management (RLS Policies)
--- Allow authenticated users to create their own profile
-CREATE POLICY "Users can create their own profile" ON players 
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Allow authenticated users to edit their own profile
-CREATE POLICY "Users can update their own profile" ON players 
-  FOR UPDATE USING (auth.uid() = user_id);
+DROP TRIGGER IF EXISTS enforce_iisc_email_domain ON auth.users;
+CREATE TRIGGER enforce_iisc_email_domain
+  BEFORE INSERT ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION auth.restrict_to_iisc_domain();

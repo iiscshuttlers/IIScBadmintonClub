@@ -24,10 +24,10 @@ export default function Navigation() {
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/about', label: 'About' },
-    { href: '/players', label: 'Players' },
     { href: '/facilities', label: 'Facilities' },
     { href: '/events', label: 'Events' },
     { href: '/winners', label: 'Winners' },
+    { href: '/players', label: 'Players' },
     { href: '/announcements', label: 'Announcements' },
     { href: '/gallery', label: 'Gallery' },
     { href: '/contact', label: 'Contact' },

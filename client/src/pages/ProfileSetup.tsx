@@ -127,14 +127,9 @@ export default function ProfileSetup() {
       if (!session) {
         setLocation("/join");
       } else {
-        // STRICT IISc Domain Check (Bypassed for @gmail.com during testing)
-        if (!session.user.email?.endsWith("@iisc.ac.in") && !session.user.email?.endsWith("@gmail.com")) {
-          alert("Access Denied! You must use an official @iisc.ac.in email address.");
-          supabase.auth.signOut().then(() => setLocation("/join"));
-          return;
-        }
-
+        // Strict IISc Domain Check temporarily bypassed for testing
         setSession(session);
+
 
         // Check if player profile already exists
         supabase
@@ -983,29 +978,112 @@ export default function ProfileSetup() {
                       </div>
                     </div>
 
+                    {/* Achievements tag chips */}
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Top Achievements (comma-separated)</label>
-                      <input
-                        type="text"
-                        value={achievementsRaw}
-                        onChange={(e) => setAchievementsRaw(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
-                        placeholder="e.g. Men's Doubles Winner - Farewell 2026, Open Runner-up"
-                      />
+                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Top Achievements</label>
+                      <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 space-y-3">
+                        {achievementsRaw.split(",").map(s => s.trim()).filter(Boolean).length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {achievementsRaw.split(",").map(s => s.trim()).filter(Boolean).map((ach, idx) => (
+                              <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs font-bold">
+                                🏆 {ach}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = achievementsRaw.split(",").map(s => s.trim()).filter(Boolean).filter((_, i) => i !== idx);
+                                    setAchievementsRaw(updated.join(", "));
+                                  }}
+                                  className="ml-0.5 text-emerald-500 hover:text-rose-500 transition font-black text-sm leading-none"
+                                >×</button>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            id="achInput"
+                            placeholder="e.g. Men's Doubles Winner - Farewell 2026"
+                            className="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ',') {
+                                e.preventDefault();
+                                const val = (e.target as HTMLInputElement).value.trim();
+                                if (val) {
+                                  setAchievementsRaw(achievementsRaw.trim() ? achievementsRaw.trim() + ", " + val : val);
+                                  (e.target as HTMLInputElement).value = '';
+                                }
+                              }
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const inp = document.getElementById('achInput') as HTMLInputElement;
+                              const val = inp?.value.trim();
+                              if (val) { setAchievementsRaw(achievementsRaw.trim() ? achievementsRaw.trim() + ", " + val : val); inp.value = ''; }
+                            }}
+                            className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shrink-0"
+                          >Add</button>
+                        </div>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500">Press Enter or comma to add · Click × to remove · Or use the builder above</p>
+                      </div>
                     </div>
 
+                    {/* Tournaments tag chips */}
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Tournaments Played (comma-separated)</label>
-                      <input
-                        type="text"
-                        value={tournamentsRaw}
-                        onChange={(e) => setTournamentsRaw(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
-                        placeholder="e.g. Farewell 2026, BPL 2026, Spectrum 2026"
-                      />
+                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Tournaments Played</label>
+                      <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 space-y-3">
+                        {tournamentsRaw.split(",").map(s => s.trim()).filter(Boolean).length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {tournamentsRaw.split(",").map(s => s.trim()).filter(Boolean).map((t, idx) => (
+                              <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400 text-xs font-bold">
+                                🏸 {t}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = tournamentsRaw.split(",").map(s => s.trim()).filter(Boolean).filter((_, i) => i !== idx);
+                                    setTournamentsRaw(updated.join(", "));
+                                  }}
+                                  className="ml-0.5 text-blue-500 hover:text-rose-500 transition font-black text-sm leading-none"
+                                >×</button>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            id="tourInput"
+                            placeholder="e.g. Farewell 2026"
+                            className="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ',') {
+                                e.preventDefault();
+                                const val = (e.target as HTMLInputElement).value.trim();
+                                if (val) {
+                                  setTournamentsRaw(tournamentsRaw.trim() ? tournamentsRaw.trim() + ", " + val : val);
+                                  (e.target as HTMLInputElement).value = '';
+                                }
+                              }
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const inp = document.getElementById('tourInput') as HTMLInputElement;
+                              const val = inp?.value.trim();
+                              if (val) { setTournamentsRaw(tournamentsRaw.trim() ? tournamentsRaw.trim() + ", " + val : val); inp.value = ''; }
+                            }}
+                            className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shrink-0"
+                          >Add</button>
+                        </div>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500">Press Enter or comma to add · Click × to remove</p>
+                      </div>
                     </div>
                   </motion.div>
                 )}
+
 
                 {/* TAB 5: MEDIA SHOWCASE (Images & YouTube Videos) */}
                 {activeTab === "media" && (

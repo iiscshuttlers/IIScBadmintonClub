@@ -1,6 +1,6 @@
 import { useParams, useLocation } from "wouter";
 import { useEffect, useState, useMemo } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Trophy, User, Activity, MapPin, Calendar, Swords, Zap,
   Target, Dna, Crosshair, Sparkles, Quote, Medal, ArrowLeft,
@@ -90,6 +90,7 @@ interface Player {
   apparel?: string;
   social?: Social;
   userId?: string;
+  elo_rating?: number;
 }
 
 /* ------------------------------------------------------------------ */
@@ -223,6 +224,7 @@ export default function PlayerProfile() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
+  const [isAvatarOpen, setIsAvatarOpen] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -465,7 +467,8 @@ export default function PlayerProfile() {
               <img
                 src={player.avatar}
                 alt={player.fullName}
-                className="relative w-40 h-40 sm:w-52 sm:h-52 rounded-full object-cover border-4 border-white dark:border-slate-800 shadow-2xl transform group-hover:scale-105 transition duration-500"
+                onClick={() => setIsAvatarOpen(true)}
+                className="relative w-40 h-40 sm:w-52 sm:h-52 rounded-full object-cover border-4 border-white dark:border-slate-800 shadow-2xl transform group-hover:scale-105 transition duration-500 cursor-zoom-in"
               />
               {player.currentRanking != null && (
                 <div className="absolute -bottom-2 -right-2 w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex flex-col items-center justify-center shadow-xl shadow-amber-500/40 border-2 border-white dark:border-slate-900">
@@ -511,6 +514,12 @@ export default function PlayerProfile() {
                   <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
                     <Ruler className="w-4 h-4 text-violet-500" />
                     <span>{player.height}</span>
+                  </div>
+                )}
+                {player.elo_rating != null && (
+                  <div className="flex items-center gap-2 bg-gradient-to-r from-amber-400/20 to-orange-500/20 px-3 py-1.5 rounded-lg border border-amber-300/30 text-amber-700 dark:text-amber-400 font-black">
+                    <Trophy className="w-4 h-4" />
+                    <span>{player.elo_rating} ELO</span>
                   </div>
                 )}
               </div>
@@ -884,36 +893,25 @@ export default function PlayerProfile() {
                     <h3 className="text-xs uppercase tracking-widest font-black text-slate-400 dark:text-slate-500 mb-6 flex items-center gap-2">
                       <Medal className="w-4 h-4 text-emerald-500" /> Timeline of Achievements
                     </h3>
-                    <div className="relative border-l border-dashed border-emerald-500/30 ml-3 space-y-6 py-2">
+                    <div className="space-y-2">
                       {validAchievements.map((ach, idx) => {
-                        const getAchievementIcon = (text: string) => {
-                          const lower = text.toLowerCase();
-                          if (lower.includes("winner") || lower.includes("gold") || lower.includes("champion") || lower.includes("1st")) {
-                            return <span className="text-sm select-none">🥇</span>;
-                          }
-                          if (lower.includes("runner-up") || lower.includes("silver") || lower.includes("2nd")) {
-                            return <span className="text-sm select-none">🥈</span>;
-                          }
-                          if (lower.includes("bronze") || lower.includes("3rd") || lower.includes("semifinalist")) {
-                            return <span className="text-sm select-none">🥉</span>;
-                          }
-                          return <span className="text-xs select-none">⭐</span>;
-                        };
+                        const lower = ach.toLowerCase();
+                        const icon = lower.includes("winner") || lower.includes("champion") || lower.includes("1st") || lower.includes("gold")
+                          ? "🥇"
+                          : lower.includes("runner-up") || lower.includes("2nd") || lower.includes("silver")
+                          ? "🥈"
+                          : lower.includes("semifinalist") || lower.includes("bronze") || lower.includes("3rd")
+                          ? "🥉"
+                          : "⭐";
                         return (
-                          <div key={idx} className="relative pl-7 group">
-                            {/* Timeline dot/badge */}
-                            <div className="absolute -left-[14px] top-1.5 w-7 h-7 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                              {getAchievementIcon(ach)}
-                            </div>
-                            
-                            {/* Content Card */}
-                            <div className="p-3 bg-slate-50/50 dark:bg-slate-900/30 rounded-2xl border border-slate-100/50 dark:border-slate-800/50 group-hover:border-emerald-500/20 group-hover:bg-slate-50 dark:group-hover:bg-slate-900/50 transition-all duration-300">
-                              <span className="text-sm font-bold text-slate-750 dark:text-slate-300 leading-relaxed block">{ach}</span>
-                            </div>
+                          <div key={idx} className="flex items-start gap-2.5 py-2 px-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
+                            <span className="text-base shrink-0 mt-0.5">{icon}</span>
+                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 leading-snug">{ach}</span>
                           </div>
                         );
                       })}
                     </div>
+
                   </div>
                 </div>
               )}
@@ -968,7 +966,7 @@ export default function PlayerProfile() {
             )}
 
             {/* Social */}
-            {player.social && (player.social.instagram || player.social.email) && (
+            {player.social && player.social.instagram && (
               <motion.section variants={itemVariants}
                 className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-[2rem] p-6 shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50">
                 <h2 className="text-xs uppercase tracking-widest font-black text-slate-500 dark:text-slate-400 mb-4">Connect</h2>
@@ -981,14 +979,6 @@ export default function PlayerProfile() {
                     >
                       <Instagram className="w-4 h-4" /> {player.social.instagram}
                       <ArrowUpRight className="w-3 h-3" />
-                    </a>
-                  )}
-                  {player.social.email && (
-                    <a
-                      href={`mailto:${player.social.email}`}
-                      className="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                    >
-                      <Mail className="w-4 h-4" /> Email
                     </a>
                   )}
                 </div>
@@ -1083,6 +1073,40 @@ export default function PlayerProfile() {
           <img src={lightboxImage} alt="Fullscreen View" className="max-w-full max-h-[85vh] rounded-3xl object-contain shadow-2xl" />
         </div>
       )}
+
+      {/* Avatar Modal */}
+      <AnimatePresence>
+        {isAvatarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsAvatarOpen(false)}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 cursor-zoom-out"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative max-w-4xl max-h-[90vh] overflow-hidden rounded-full sm:rounded-[3rem] border-4 border-white/10 shadow-[0_0_100px_rgba(16,185,129,0.3)] bg-slate-900"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img
+                src={player.avatar}
+                alt={player.fullName}
+                className="max-w-[85vw] max-h-[85vh] object-cover"
+              />
+              <button
+                onClick={() => setIsAvatarOpen(false)}
+                className="absolute top-6 right-6 bg-black/40 hover:bg-black/70 backdrop-blur-md border border-white/20 text-white rounded-full w-10 h-10 flex items-center justify-center text-xl font-light transition"
+              >
+                ×
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
 
       {/* YouTube Video Player Modal */}
       {activeVideoId && (
