@@ -12,7 +12,7 @@ CREATE OR REPLACE FUNCTION soft_delete_player(
 ) RETURNS BOOLEAN AS $$
 BEGIN
   -- Strict Admin check
-  IF admin_email != 'iiscbadmintonclub@gmail.com' AND admin_email != 'janmejay@iisc.ac.in' THEN
+  IF admin_email != 'iiscbadmintonclub@gmail.com' AND admin_email != 'janmejayraja@iisc.ac.in' THEN
     RAISE EXCEPTION 'Unauthorized: Only verified admins can delete players.';
   END IF;
 
