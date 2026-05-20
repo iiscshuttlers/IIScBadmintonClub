@@ -22,7 +22,7 @@ export default function ProfileSetup() {
   // ==========================================
   // Form State variables matching DB columns
   // ==========================================
-  
+
   // Section 1: Basic Info
   const [fullName, setFullName] = useState("");
   const [nickname, setNickname] = useState("");
@@ -164,9 +164,9 @@ export default function ProfileSetup() {
 
         let query = supabase.from("players").select("*");
         if (paramId && adminStatus) {
-           query = query.eq("id", paramId);
+          query = query.eq("id", paramId);
         } else {
-           query = query.eq("user_id", session.user.id);
+          query = query.eq("user_id", session.user.id);
         }
 
         query
@@ -190,7 +190,7 @@ export default function ProfileSetup() {
               setFavoriteIdol(profile.favorite_idol || "");
               setQuote(profile.quote || "");
               setAvatarUrl(profile.avatar_url || "");
-              
+
               // Load original stats for preservation
               setOriginalStats(profile.stats || {});
 
@@ -433,7 +433,7 @@ export default function ProfileSetup() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          
+
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
             <div className="text-center sm:text-left">
               {isEditing && (playerSlug || paramId) && (
@@ -472,8 +472,8 @@ export default function ProfileSetup() {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
                   className={`flex items-center gap-2 px-6 py-3 font-semibold text-sm rounded-xl transition-all whitespace-nowrap outline-none
-                    ${isActive 
-                      ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-500" 
+                    ${isActive
+                      ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-500"
                       : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900/50"}`}
                 >
                   <Icon className="w-4 h-4" />
@@ -485,9 +485,9 @@ export default function ProfileSetup() {
 
           <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
-              
+
               <AnimatePresence mode="wait">
-                
+
                 {/* TAB 1: BASIC INFO */}
                 {activeTab === "basic" && (
                   <motion.div
@@ -651,7 +651,7 @@ export default function ProfileSetup() {
                           value={homeState}
                           onChange={(e) => setHomeState(e.target.value)}
                           className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
-                          placeholder="e.g. Bihar"
+                          placeholder="e.g. Rajasthan"
                         />
                       </div>
 
@@ -805,8 +805,8 @@ export default function ProfileSetup() {
                       <div className="space-y-4">
                         {rackets.map((item, index) => (
                           <div key={index} className={`p-4 border rounded-2xl relative space-y-4 shadow-sm transition-all
-                            ${index === primaryRacketIndex 
-                              ? "bg-emerald-50/30 dark:bg-emerald-950/10 border-emerald-300 dark:border-emerald-800" 
+                            ${index === primaryRacketIndex
+                              ? "bg-emerald-50/30 dark:bg-emerald-950/10 border-emerald-300 dark:border-emerald-800"
                               : "bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800"}`}
                           >
                             <div className="flex justify-between items-center pr-12">
@@ -905,8 +905,8 @@ export default function ProfileSetup() {
                       <div className="space-y-4">
                         {shoesList.map((item, index) => (
                           <div key={index} className={`p-4 border rounded-2xl relative space-y-4 shadow-sm transition-all
-                            ${index === primaryShoeIndex 
-                              ? "bg-emerald-50/30 dark:bg-emerald-950/10 border-emerald-300 dark:border-emerald-800" 
+                            ${index === primaryShoeIndex
+                              ? "bg-emerald-50/30 dark:bg-emerald-950/10 border-emerald-300 dark:border-emerald-800"
                               : "bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800"}`}
                           >
                             <div className="flex justify-between items-center pr-12">
@@ -1089,18 +1089,18 @@ export default function ProfileSetup() {
                                 return yb - ya;
                               })
                               .map((ach, idx) => (
-                              <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs font-bold">
-                                🏆 {ach}
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const updated = achievementsRaw.split(",").map(s => s.trim()).filter(Boolean).filter(item => item !== ach);
-                                    setAchievementsRaw(updated.join(", "));
-                                  }}
-                                  className="ml-0.5 text-emerald-500 hover:text-rose-500 transition font-black text-sm leading-none"
-                                >×</button>
-                              </span>
-                            ))}
+                                <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs font-bold">
+                                  🏆 {ach}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const updated = achievementsRaw.split(",").map(s => s.trim()).filter(Boolean).filter(item => item !== ach);
+                                      setAchievementsRaw(updated.join(", "));
+                                    }}
+                                    className="ml-0.5 text-emerald-500 hover:text-rose-500 transition font-black text-sm leading-none"
+                                  >×</button>
+                                </span>
+                              ))}
                           </div>
                         )}
                         <div className="flex gap-2">
@@ -1147,18 +1147,18 @@ export default function ProfileSetup() {
                                 return yb - ya;
                               })
                               .map((t, idx) => (
-                              <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400 text-xs font-bold">
-                                🏸 {t}
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const updated = tournamentsRaw.split(",").map(s => s.trim()).filter(Boolean).filter(item => item !== t);
-                                    setTournamentsRaw(updated.join(", "));
-                                  }}
-                                  className="ml-0.5 text-blue-500 hover:text-rose-500 transition font-black text-sm leading-none"
-                                >×</button>
-                              </span>
-                            ))}
+                                <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400 text-xs font-bold">
+                                  🏸 {t}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const updated = tournamentsRaw.split(",").map(s => s.trim()).filter(Boolean).filter(item => item !== t);
+                                      setTournamentsRaw(updated.join(", "));
+                                    }}
+                                    className="ml-0.5 text-blue-500 hover:text-rose-500 transition font-black text-sm leading-none"
+                                  >×</button>
+                                </span>
+                              ))}
                           </div>
                         )}
                         <div className="flex gap-2">
@@ -1390,7 +1390,7 @@ export default function ProfileSetup() {
                     </>
                   )}
                 </Button>
-                
+
                 <button
                   type="button"
                   onClick={() => setLocation(playerSlug ? `/player/${playerSlug}` : "/")}
