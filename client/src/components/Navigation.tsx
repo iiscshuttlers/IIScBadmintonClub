@@ -51,6 +51,7 @@ export default function Navigation() {
     { href: '/about', label: 'About' },
     { href: '/facilities', label: 'Facilities' },
     { href: '/events', label: 'Events' },
+    { href: '/invicta', label: 'INVICTA' },
     { href: '/winners', label: 'Winners' },
     { href: '/players', label: 'Players' },
     { href: '/announcements', label: 'Announcements' },

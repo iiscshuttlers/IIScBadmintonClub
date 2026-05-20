@@ -18,8 +18,8 @@ export async function getTournaments() {
     slug: 'invicta-2026',
     name: 'INVICTA Open Tournament',
     subtitle: 'Registrations starting soon!',
-    description: 'Get ready for the badminton showdown! The INVICTA Open Tournament is tentatively scheduled for June 2026. Registrations will start soon. Open to all IISc members.',
-    startDate: '2026-06-15',
+    description: 'Get ready for the badminton showdown! The INVICTA Open Tournament is tentatively scheduled from 1st June to 21st June. Registrations will open soon. Open to all IISc members.',
+    startDate: '2026-06-01',
     status: 'upcoming',
     type: 'open',
   };

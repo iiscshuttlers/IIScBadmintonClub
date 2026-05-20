@@ -199,7 +199,7 @@ export default function Events() {
           )}
 
           <div className="flex items-center gap-2 pt-1 font-bold text-blue-900">
-            {isUpcoming ? 'Registrations starting soon' : item.status === 'live' ? 'View live fixtures' : 'View results'}
+            {isUpcoming ? (item.slug === 'invicta-2026' ? 'View Details' : 'Registrations starting soon') : item.status === 'live' ? 'View live fixtures' : 'View results'}
             <ArrowRight className="w-4 h-4" />
           </div>
         </CardContent>
@@ -207,6 +207,13 @@ export default function Events() {
     );
 
     if (isUpcoming) {
+      if (item.slug === 'invicta-2026') {
+        return (
+          <Link href="/invicta" key={item.id}>
+            {cardContent}
+          </Link>
+        );
+      }
       return (
         <div key={item.id} onClick={() => alert("Registrations will start soon! Stay tuned for more details.")} className="h-full">
           {cardContent}

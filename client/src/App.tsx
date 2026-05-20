@@ -31,6 +31,7 @@ const PlayerProfile    = lazy(() => import('./pages/PlayerProfile'));
 const Join             = lazy(() => import('./pages/Join'));
 const ProfileSetup     = lazy(() => import('./pages/ProfileSetup'));
 const PlayersDirectory = lazy(() => import('./pages/PlayersDirectory'));
+const Invicta          = lazy(() => import('./pages/Invicta'));
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -121,6 +122,7 @@ function AppRoutes() {
             <Route path="/events/:slug" component={TournamentDetail} />
 
             <Route path="/events" component={Events} />
+            <Route path="/invicta" component={Invicta} />
             <Route path="/winners" component={WinnersWall} />
 
             <Route path="/announcements" component={Announcements} />

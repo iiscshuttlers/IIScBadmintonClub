@@ -645,7 +645,7 @@ export default function PlayerProfile() {
                     <span>{player.height}</span>
                   </div>
                 )}
-                {player.elo_rating != null && (
+                {/* {player.elo_rating != null && (
                   <div className="flex items-center gap-2 bg-gradient-to-r from-amber-400/20 to-orange-500/20 px-3 py-1.5 rounded-lg border border-amber-300/30 text-amber-700 dark:text-amber-400 font-black">
                     <Trophy className="w-4 h-4" />
                     <span>{player.elo_rating} ELO</span>
@@ -656,7 +656,7 @@ export default function PlayerProfile() {
                     <Hash className="w-4 h-4" />
                     <span>Club Rank #{eloRank}</span>
                   </div>
-                )}
+                )} */}
               </div>
 
               {/* Edit Profile button inline for mobile */}

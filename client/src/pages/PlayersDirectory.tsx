@@ -128,12 +128,12 @@ function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, onEdit }
           {player.department.split(" ").slice(0, 2).join(" ")}
         </span>
 
-        {/* Elo Rating chip */}
+        {/* Elo Rating chip
         {player.elo_rating != null && (
           <span className="absolute top-4 right-4 px-3 py-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black uppercase tracking-wider shadow-lg shadow-orange-500/20">
             {player.elo_rating} ELO
           </span>
-        )}
+        )} */}
 
         {/* Avatar */}
         <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-slate-100 dark:border-slate-800 shadow-md group-hover:scale-105 transition-transform duration-300 shrink-0 mt-4">
@@ -232,7 +232,7 @@ export default function PlayersDirectory() {
   const [levelFilter, setLevelFilter]     = useState("All");
   const [styleFilter, setStyleFilter]     = useState("All");
   const [showFilters, setShowFilters]     = useState(false);
-  const [sortBy, setSortBy]               = useState<"elo" | "winpct" | "name">("elo");
+  const [sortBy, setSortBy]               = useState<"elo" | "winpct" | "name">("name");
 
   /* 1. Check auth session + own profile */
   useEffect(() => {
@@ -586,7 +586,7 @@ export default function PlayersDirectory() {
                   onChange={(e) => setSortBy(e.target.value as "elo" | "winpct" | "name")}
                   className="pl-9 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500 appearance-none cursor-pointer"
                 >
-                  <option value="elo">By ELO</option>
+                  {/* <option value="elo">By ELO</option> */}
                   <option value="winpct">By Win %</option>
                   <option value="name">By Name</option>
                 </select>
