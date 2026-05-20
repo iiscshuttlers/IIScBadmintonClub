@@ -1,8 +1,71 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ExternalLink, Trophy, Calendar, MapPin, Users } from 'lucide-react';
+import { Trophy, Calendar, MapPin, Users, GitBranch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+type BracketMatch = { player1: string; player2: string; winner?: string; score?: string };
+type BracketRound = { label: string; matches: BracketMatch[] };
+
+function generateEmptyBracket(size: number): BracketRound[] {
+  const rounds: BracketRound[] = [];
+  let currentSize = size;
+  let roundNum = 1;
+  
+  while (currentSize >= 2) {
+    const matchCount = currentSize / 2;
+    const matches: BracketMatch[] = Array.from({ length: matchCount }).map(() => ({
+      player1: 'TBD',
+      player2: 'TBD',
+    }));
+    
+    let label = `Round ${roundNum}`;
+    if (currentSize === 8) label = 'Quarterfinals';
+    if (currentSize === 4) label = 'Semifinals';
+    if (currentSize === 2) label = 'Final';
+    
+    rounds.push({ label, matches });
+    currentSize /= 2;
+    roundNum++;
+  }
+  
+  return rounds;
+}
+
+function BracketViewer({ rounds }: { rounds: BracketRound[] }) {
+  return (
+    <div className="overflow-x-auto pb-4">
+      <div className="flex gap-6 min-w-max">
+        {rounds.map((round, ri) => (
+          <div key={ri} className="flex flex-col gap-4 min-w-[220px]">
+            <h4 className="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest text-center mb-2">
+              {round.label}
+            </h4>
+            <div className="flex-1 flex flex-col justify-around gap-6">
+              {round.matches.map((match, mi) => (
+                <div key={mi} className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm text-sm">
+                  {[match.player1, match.player2].map((player, pi) => (
+                    <div
+                      key={pi}
+                      className="px-3 py-2 border-b border-slate-100 dark:border-slate-700 last:border-b-0 flex justify-between items-center bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 italic"
+                    >
+                      <span className="truncate max-w-[150px]">{player}</span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Invicta() {
+  const [bracketSize, setBracketSize] = useState<number>(16);
+  const [format, setFormat] = useState('MS');
+  const dummyBracket = generateEmptyBracket(bracketSize);
+
   return (
     <div className="py-12 bg-slate-50 dark:bg-slate-900 min-h-[calc(100vh-80px)]">
       <div className="container mx-auto px-4 max-w-5xl">
