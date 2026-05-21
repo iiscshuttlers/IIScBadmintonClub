@@ -72,7 +72,15 @@ export default function Join() {
     setLoading(true); setErrorMsg("");
     try {
       const { data, error } = await supabase.auth.signUp({ email, password });
+      
+      // Supabase enumeration protection check
+      if (data?.user && data.user.identities && data.user.identities.length === 0) {
+        setErrorMsg("This email is already registered. Please Sign In, or use 'Forgot password? OTP' if you forgot your password.");
+        return;
+      }
+      
       if (error) throw error;
+      
       if (data.session) {
         await afterAuth(data.session);
       } else {
@@ -80,7 +88,11 @@ export default function Join() {
         setMode("signin");
       }
     } catch (err: any) {
-      setErrorMsg(err.message);
+      if (err.message.includes("already registered") || err.message.includes("already exists")) {
+        setErrorMsg("This email is already registered. Please Sign In, or use 'Forgot password? OTP' if you forgot your password.");
+      } else {
+        setErrorMsg(err.message);
+      }
     } finally { setLoading(false); }
   };
 
