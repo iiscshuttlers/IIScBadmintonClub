@@ -12,6 +12,7 @@ import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import LogMatchModal from "@/components/LogMatchModal";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
+import { isAdminEmail } from "@/lib/admin";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -504,8 +505,7 @@ export default function PlayerProfile() {
   const streak = player.stats?.currentStreak;
   const isWinStreak = streak?.startsWith("W");
 
-  const ADMIN_EMAILS = ["iiscbadmintonclub@gmail.com", "janmejayraja@iisc.ac.in", "raja79sharma@gmail.com"];
-  const isAdmin = ADMIN_EMAILS.includes(currentUser?.email ?? "");
+  const isAdmin = isAdminEmail(currentUser?.email);
 
   const handleShare = async () => {
     const url = window.location.href;

@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import LogMatchModal from "@/components/LogMatchModal";
+import { isAdminEmail } from "@/lib/admin";
 
 interface Player {
   id: string;
@@ -248,7 +249,7 @@ export default function PlayersDirectory() {
       setSession(session);
 
       if (session) {
-        const adminStatus = session.user.email === 'iiscbadmintonclub@gmail.com' || session.user.email === 'janmejay@iisc.ac.in';
+        const adminStatus = isAdminEmail(session.user.email);
         setIsAdmin(adminStatus);
         
         const { data } = await supabase

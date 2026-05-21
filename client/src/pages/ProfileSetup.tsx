@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
+import { isAdminEmail } from "@/lib/admin";
 
 export default function ProfileSetup() {
   const [, setLocation] = useLocation();
@@ -157,8 +158,7 @@ export default function ProfileSetup() {
         // Strict IISc Domain Check temporarily bypassed for testing
         setSession(session);
 
-
-        const adminStatus = session.user.email === 'iiscbadmintonclub@gmail.com' || session.user.email === 'janmejay@iisc.ac.in';
+        const adminStatus = isAdminEmail(session.user.email);
         setIsAdmin(adminStatus);
 
         let query = supabase.from("players").select("*");
