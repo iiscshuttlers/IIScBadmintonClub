@@ -85,13 +85,13 @@ export default function Join() {
       }
 
       const { data, error } = await supabase.auth.signUp({ email, password });
-      
+
       // Fallback Supabase enumeration protection check (for auth accounts without a profile yet)
       if (data?.user && data.user.identities && data.user.identities.length === 0) {
         setErrorMsg("This email is already registered. Please Sign In, or use 'Forgot password? OTP' if you forgot your password.");
         return;
       }
-      
+
       if (error) throw error;
 
       if (data.session) {
