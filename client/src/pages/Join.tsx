@@ -17,15 +17,15 @@ function validateEmail(email: string) {
 
 export default function Join() {
   const [, setLocation] = useLocation();
-  const [loading, setLoading]       = useState(false);
-  const [mode, setMode]             = useState<Mode>("welcome");
-  const [email, setEmail]           = useState("");
-  const [password, setPassword]     = useState("");
-  const [confirm, setConfirm]       = useState("");
-  const [showPwd, setShowPwd]       = useState(false);
-  const [otp, setOtp]               = useState("");
-  const [infoMsg, setInfoMsg]       = useState("");
-  const [errorMsg, setErrorMsg]     = useState("");
+  const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState<Mode>("welcome");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [showPwd, setShowPwd] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [infoMsg, setInfoMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
   const reset = () => { setPassword(""); setConfirm(""); setOtp(""); setInfoMsg(""); setErrorMsg(""); };
 
@@ -72,15 +72,15 @@ export default function Join() {
     setLoading(true); setErrorMsg("");
     try {
       const { data, error } = await supabase.auth.signUp({ email, password });
-      
+
       // Supabase enumeration protection check
       if (data?.user && data.user.identities && data.user.identities.length === 0) {
         setErrorMsg("This email is already registered. Please Sign In, or use 'Forgot password? OTP' if you forgot your password.");
         return;
       }
-      
+
       if (error) throw error;
-      
+
       if (data.session) {
         await afterAuth(data.session);
       } else {
