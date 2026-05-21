@@ -526,6 +526,31 @@ export default function PlayerProfile() {
     setLocation('/');
   };
 
+  const handleSelfDelete = async () => {
+    if (!player || !currentUser) return;
+    const confirmed = window.confirm(
+      "Are you absolutely sure you want to delete your profile? \n\n" +
+      "This will immediately hide your profile from the directory and matches. " +
+      "It will remain in the database bin for 30 days before permanent deletion by an admin."
+    );
+    if (!confirmed) return;
+    
+    // RLS allows users to update their own profile
+    const { error } = await supabase
+      .from('players')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', player.id);
+      
+    if (error) {
+      alert("Failed to delete profile: " + error.message);
+      return;
+    }
+    
+    alert("Your profile has been deleted.");
+    await supabase.auth.signOut();
+    setLocation('/join');
+  };
+
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0B1121] pb-24 selection:bg-emerald-500/30 font-sans">
 
@@ -591,6 +616,14 @@ export default function PlayerProfile() {
               >
                 <Sparkles className="w-4 h-4 animate-pulse" />
                 <span className="hidden sm:inline">Edit</span>
+              </button>
+              <button
+                onClick={handleSelfDelete}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-rose-600/80 backdrop-blur-md border border-rose-500 text-white text-sm font-semibold hover:bg-rose-700 transition shadow-lg shadow-rose-500/25"
+                title="Delete your profile"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span className="hidden sm:inline">Delete</span>
               </button>
               <button
                 onClick={async () => {
