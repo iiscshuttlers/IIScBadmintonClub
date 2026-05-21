@@ -50,15 +50,28 @@ export default function Join() {
   /* ── Sign In ────────────────────────────────────────────── */
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    const err = validateEmail(email);
-    if (err) { setErrorMsg(err); return; }
-    setLoading(true); setErrorMsg("");
+    setLoading(true); setErrorMsg(""); setInfoMsg("");
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       if (data.session) await afterAuth(data.session);
     } catch (err: any) {
-      setErrorMsg(err.message.includes("Invalid") ? "Incorrect email or password." : err.message);
+      if (err.message === "Email not confirmed") {
+        setErrorMsg("Email not confirmed");
+      } else {
+        setErrorMsg(err.message.includes("Invalid") ? "Incorrect email or password." : err.message);
+      }
+    } finally { setLoading(false); }
+  };
+
+  const handleResendLink = async () => {
+    setLoading(true); setErrorMsg(""); setInfoMsg("");
+    try {
+      const { error } = await supabase.auth.resend({ type: 'signup', email });
+      if (error) throw error;
+      setInfoMsg("A new verification link has been sent to your email!");
+    } catch (err: any) {
+      setErrorMsg(err.message);
     } finally { setLoading(false); }
   };
 
@@ -246,6 +259,22 @@ export default function Join() {
                   className="w-full py-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all text-base flex items-center justify-center gap-2">
                   {loading ? <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : <><LogIn className="w-5 h-5" /> Sign In</>}
                 </Button>
+
+                {errorMsg === "Email not confirmed" && (
+                  <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-xl text-center">
+                    <p className="text-sm text-amber-800 dark:text-amber-300 font-medium mb-3">You haven't verified your email yet.</p>
+                    <Button 
+                      onClick={handleResendLink} 
+                      disabled={loading}
+                      variant="outline" 
+                      type="button"
+                      className="w-full border-amber-300 text-amber-700 hover:bg-amber-100 hover:text-amber-800"
+                    >
+                      Resend Verification Link
+                    </Button>
+                  </div>
+                )}
+
                 <div className="text-center pt-1 flex items-center justify-between">
                   <button type="button" onClick={() => { setMode("welcome"); reset(); }}
                     className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition font-semibold">
