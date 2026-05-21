@@ -362,16 +362,8 @@ export default function PlayersDirectory() {
   };
 
   useEffect(() => {
-    // Always fetch players - don't wait on auth to finish
-    fetchPlayers(0, session, isAdmin);
+    fetchPlayers();
   }, []);
-
-  // Re-fetch when auth changes (to apply admin filter etc)
-  useEffect(() => {
-    if (!authLoading) {
-      fetchPlayers(0, session, isAdmin);
-    }
-  }, [authLoading]);
 
   // Auto-refresh player list every 60s (silently, scroll preserved)
   const silentRefresh = useCallback(async () => {
