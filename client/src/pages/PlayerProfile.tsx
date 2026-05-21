@@ -269,25 +269,78 @@ export default function PlayerProfile() {
   const [pendingMatches, setPendingMatches] = useState<any[]>([]);
   const [matchHistoryFilter, setMatchHistoryFilter] = useState<"all" | "friendly" | "tournament">("all");
 
-  const fetchPendingMatches = async (profileId: string) => {
-    const { data } = await supabase
-      .from("matches")
-      .select("*, player1:players!player1_id(full_name), player2:players!player2_id(full_name)")
-      .eq("status", "pending")
-      .neq("submitted_by", profileId)
-      .or(`player1_id.eq.${profileId},player2_id.eq.${profileId}`);
-    setPendingMatches(data || []);
-  };
+  /* ── Shared helper: map DB row → Player interface ──────────────── */
+  function formatPlayerData(data: any): Player {
+    const parseShoesList = (shoes: string | null) => {
+      if (!shoes) return [];
+      try {
+        if (shoes.startsWith("[")) return JSON.parse(shoes);
+        return [{ name: shoes, primary: true }];
+      } catch { return [{ name: shoes, primary: true }]; }
+    };
+    return {
+      id: data.id,
+      fullName: data.full_name,
+      nickname: data.nickname,
+      avatar: data.avatar_url,
+      department: data.department,
+      joinedYear: data.joined_year,
+      playingLevel: data.playing_level,
+      dominantHand: data.dominant_hand,
+      playingStyle: data.playing_style,
+      favoriteShot: data.favorite_shot,
+      favoriteIdol: data.favorite_idol,
+      quote: data.quote,
+      currentRacket: data.current_racket,
+      racketDetails: data.racket_details || [],
+      tournamentHistory: data.tournament_history || [],
+      achievements: data.achievements || [],
+      winLossRecord: data.win_loss_record || `${data.stats?.wins || 0}W - ${data.stats?.losses || 0}L`,
+      nationality: data.nationality,
+      homeState: data.home_state,
+      height: data.height,
+      yearsPlaying: data.years_playing,
+      coach: data.coach,
+      bio: data.bio,
+      currentRanking: data.current_ranking,
+      highestRanking: data.highest_ranking,
+      stats: data.stats,
+      recentForm: data.recent_form,
+      recentMatches: data.recent_matches,
+      frequentPartners: data.frequent_partners,
+      careerHighlights: data.career_highlights,
+      shoes: data.shoes && data.shoes.startsWith("[")
+        ? (JSON.parse(data.shoes).find((s: any) => s.primary)?.name || JSON.parse(data.shoes)[0]?.name || "")
+        : data.shoes,
+      shoesList: parseShoesList(data.shoes),
+      apparel: data.apparel,
+      social: data.instagram || data.email ? { instagram: data.instagram, email: data.email } : undefined,
+      userId: data.user_id,
+      isApproved: data.is_approved,
+    };
+  }
 
+  /* ── Fetch pending matches for verification ────────────────────── */
+  const fetchPendingMatches = useCallback(async (profileId: string) => {
+    try {
+      const { data } = await supabase
+        .from("matches")
+        .select("*, player1:players!player1_id(full_name), player2:players!player2_id(full_name)")
+        .eq("status", "pending")
+        .neq("submitted_by", profileId)
+        .or(`player1_id.eq.${profileId},player2_id.eq.${profileId}`);
+      setPendingMatches(data || []);
+    } catch (err) { console.warn("fetchPendingMatches error:", err); }
+  }, []);
+
+  /* ── Match action handlers ─────────────────────────────────────── */
   const handleConfirmMatch = async (matchId: string) => {
     try {
       const { data, error } = await supabase.rpc("confirm_friendly_match", { match_uuid: matchId, confirmer_id: ownPlayerProfile?.id });
       if (error) throw error;
       alert(`Match Confirmed! Elo Ratings Updated.\nYour Elo Change: ${data.p1_elo_change || data.p2_elo_change}`);
-      fetchPendingMatches(ownPlayerProfile!.id);
-    } catch (e: any) {
-      alert("Error confirming match: " + e.message);
-    }
+      if (ownPlayerProfile) fetchPendingMatches(ownPlayerProfile.id);
+    } catch (e: any) { alert("Error confirming match: " + e.message); }
   };
 
   const handleRejectMatch = async (matchId: string) => {
@@ -295,10 +348,8 @@ export default function PlayerProfile() {
       const { error } = await supabase.rpc("reject_friendly_match", { match_uuid: matchId, rejecter_id: ownPlayerProfile?.id });
       if (error) throw error;
       alert("Match Rejected.");
-      fetchPendingMatches(ownPlayerProfile!.id);
-    } catch (e: any) {
-      alert("Error rejecting match: " + e.message);
-    }
+      if (ownPlayerProfile) fetchPendingMatches(ownPlayerProfile.id);
+    } catch (e: any) { alert("Error rejecting match: " + e.message); }
   };
 
   const handleWithdrawMatch = async (matchId: string) => {
@@ -309,199 +360,117 @@ export default function PlayerProfile() {
       alert("Match withdrawn successfully.");
       setLiveMatches(prev => prev.filter(m => m.id !== matchId));
       if (ownPlayerProfile) fetchPendingMatches(ownPlayerProfile.id);
-    } catch (e: any) {
-      alert("Error withdrawing match: " + e.message);
-    }
+    } catch (e: any) { alert("Error withdrawing match: " + e.message); }
   };
 
+  /* ══════════════════════════════════════════════════════════════════
+     EFFECT 1: Load page data (player profile, matches, ELO rank).
+     Fires when the player `id` changes.
+     Uses AbortController for clean cancellation on unmount/re-render.
+     ══════════════════════════════════════════════════════════════════ */
   useEffect(() => {
     window.scrollTo(0, 0);
+    if (!id) { setLoading(false); return; }
+
+    const controller = new AbortController();
+    const { signal } = controller;
+
+    (async () => {
+      setLoading(true);
+      try {
+        // Fire all 3 requests in parallel — zero waterfalls
+        const [playerRes, matchesRes, eloRes] = await Promise.all([
+          supabase.from("players").select("*")
+            .eq("id", id).maybeSingle().abortSignal(signal),
+          supabase.from("matches")
+            .select("*, player1:players!player1_id(id, full_name), player2:players!player2_id(id, full_name)")
+            .in("status", ["confirmed", "pending"])
+            .or(`player1_id.eq.${id},player2_id.eq.${id}`)
+            .order("created_at", { ascending: false })
+            .limit(50).abortSignal(signal),
+          supabase.from("players").select("id, elo_rating")
+            .is("deleted_at", null)
+            .order("elo_rating", { ascending: false })
+            .abortSignal(signal),
+        ]);
+
+        if (signal.aborted) return;
+
+        // Player profile
+        if (playerRes.error) {
+          console.error("Player fetch error:", playerRes.error.message);
+          setPlayer(null);
+        } else {
+          setPlayer(playerRes.data ? formatPlayerData(playerRes.data) : null);
+        }
+
+        // Match history (confirmed + pending)
+        setLiveMatches(matchesRes.data || []);
+
+        // ELO rank
+        if (eloRes.data) {
+          const rank = eloRes.data.findIndex((p: any) => p.id === id) + 1;
+          setEloRank(rank > 0 ? rank : null);
+        }
+      } catch (err: any) {
+        if (signal.aborted) return;
+        console.error("loadPageData error:", err?.message);
+        setPlayer(null);
+      } finally {
+        if (!signal.aborted) setLoading(false);
+      }
+    })();
+
+    return () => controller.abort();
+  }, [id]);
+
+  /* ══════════════════════════════════════════════════════════════════
+     EFFECT 2: Auth — fetch session, own profile, all players list.
+     Independent from Effect 1. Never touches the `loading` flag.
+     ══════════════════════════════════════════════════════════════════ */
+  useEffect(() => {
     let cancelled = false;
 
-    // Single getSession call — fetch own profile + all players
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session || cancelled) return;
       setCurrentUser(session.user);
-      const [ownProfileRes, everyoneRes] = await Promise.all([
-        supabase.from("players").select("id, full_name, avatar_url, gender").eq("user_id", session.user.id).maybeSingle(),
-        supabase.from("players").select("id, full_name, avatar_url, gender").is("deleted_at", null)
+
+      const [ownRes, everyoneRes] = await Promise.all([
+        supabase.from("players").select("id, full_name, avatar_url, gender")
+          .eq("user_id", session.user.id).maybeSingle(),
+        supabase.from("players").select("id, full_name, avatar_url, gender")
+          .is("deleted_at", null),
       ]);
       if (cancelled) return;
-      if (ownProfileRes.data) {
-        setOwnPlayerProfile(ownProfileRes.data);
-        fetchPendingMatches(ownProfileRes.data.id);
+      if (ownRes.data) {
+        setOwnPlayerProfile(ownRes.data);
+        fetchPendingMatches(ownRes.data.id);
       }
       if (everyoneRes.data) setAllPlayers(everyoneRes.data);
-    }).catch(err => { console.error("Auth session error:", err); });
-
-    async function fetchPlayer() {
-      setLoading(true);
-      const TIMEOUT_MS = 10000;
-      try {
-        const fetchPromise = supabase
-          .from("players")
-          .select("*")
-          .eq("id", id)
-          .maybeSingle();
-
-        const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("Request timed out")), TIMEOUT_MS)
-        );
-
-        const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
-
-        if (cancelled) return;
-
-        if (error) {
-          console.error("Error fetching player:", error);
-          setPlayer(null);
-        } else if (data) {
-          // Map database snake_case columns back to camelCase frontend interface
-          const formattedPlayer: Player = {
-            id: data.id,
-            fullName: data.full_name,
-            nickname: data.nickname,
-            avatar: data.avatar_url,
-            department: data.department,
-            joinedYear: data.joined_year,
-            playingLevel: data.playing_level,
-            dominantHand: data.dominant_hand,
-            playingStyle: data.playing_style,
-            favoriteShot: data.favorite_shot,
-            favoriteIdol: data.favorite_idol,
-            quote: data.quote,
-            currentRacket: data.current_racket,
-            racketDetails: data.racket_details || [],
-            tournamentHistory: data.tournament_history || [],
-            achievements: data.achievements || [],
-            winLossRecord: data.win_loss_record || `${data.stats?.wins || 0}W - ${data.stats?.losses || 0}L`,
-            nationality: data.nationality,
-            homeState: data.home_state,
-            height: data.height,
-            yearsPlaying: data.years_playing,
-            coach: data.coach,
-            bio: data.bio,
-            currentRanking: data.current_ranking,
-            highestRanking: data.highest_ranking,
-            stats: data.stats,
-            recentForm: data.recent_form,
-            recentMatches: data.recent_matches,
-            frequentPartners: data.frequent_partners,
-            careerHighlights: data.career_highlights,
-            shoes: data.shoes && data.shoes.startsWith("[") 
-              ? (JSON.parse(data.shoes).find((s: any) => s.primary)?.name || JSON.parse(data.shoes)[0]?.name || "")
-              : data.shoes,
-            shoesList: (() => {
-              if (!data.shoes) return [];
-              try {
-                if (data.shoes.startsWith("[")) {
-                  return JSON.parse(data.shoes);
-                }
-                return [{ name: data.shoes, primary: true }];
-              } catch {
-                return [{ name: data.shoes, primary: true }];
-              }
-            })(),
-            apparel: data.apparel,
-            social: data.instagram || data.email ? { instagram: data.instagram, email: data.email } : undefined,
-            userId: data.user_id,
-            isApproved: data.is_approved,
-          };
-          setPlayer(formattedPlayer);
-        } else {
-          setPlayer(null);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          console.error("fetchPlayer error:", err);
-          setPlayer(null);
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    if (id) {
-      fetchPlayer();
-    } else {
-      setLoading(false);
-    }
+    }).catch(err => console.error("Auth session error:", err));
 
     return () => { cancelled = true; };
-  }, [id]);
+  }, [fetchPendingMatches]);
 
-  // ELO club rank
-  useEffect(() => {
-    if (!id) return;
-    supabase
-      .from("players")
-      .select("id, elo_rating")
-      .is("deleted_at", null)
-      .order("elo_rating", { ascending: false })
-      .then(({ data }) => {
-        if (data) {
-          const rank = data.findIndex((p) => p.id === id) + 1;
-          setEloRank(rank > 0 ? rank : null);
-        }
-      });
-  }, [id]);
-
-  // All matches for this player (confirmed + pending for full history)
-  useEffect(() => {
-    if (!id) return;
-    supabase
-      .from("matches")
-      .select("*, player1:players!player1_id(id, full_name), player2:players!player2_id(id, full_name)")
-      .in("status", ["confirmed", "pending"])
-      .or(`player1_id.eq.${id},player2_id.eq.${id}`)
-      .order("created_at", { ascending: false })
-      .limit(50)
-      .then(({ data }) => {
-        if (data) setLiveMatches(data);
-      });
-  }, [id]);
-
-  // Auto-refresh player + matches every 30s (silently, scroll preserved)
+  /* ── Silent background refresh (every 30s, no loading spinner) ── */
   const silentRefresh = useCallback(async () => {
     if (!id) return;
     try {
-      // Re-fetch player data
-      const { data: pData } = await supabase.from("players").select("*").eq("id", id).single();
-      if (pData) {
-        const formattedPlayer: Player = {
-          id: pData.id, fullName: pData.full_name, nickname: pData.nickname,
-          avatar: pData.avatar_url, department: pData.department, joinedYear: pData.joined_year,
-          playingLevel: pData.playing_level, dominantHand: pData.dominant_hand,
-          playingStyle: pData.playing_style, favoriteShot: pData.favorite_shot,
-          favoriteIdol: pData.favorite_idol, quote: pData.quote,
-          currentRacket: pData.current_racket, racketDetails: pData.racket_details || [],
-          tournamentHistory: pData.tournament_history || [], achievements: pData.achievements || [],
-          winLossRecord: pData.win_loss_record || `${pData.stats?.wins || 0}W - ${pData.stats?.losses || 0}L`,
-          nationality: pData.nationality, homeState: pData.home_state, height: pData.height,
-          yearsPlaying: pData.years_playing, coach: pData.coach, bio: pData.bio,
-          currentRanking: pData.current_ranking, highestRanking: pData.highest_ranking,
-          stats: pData.stats, recentForm: pData.recent_form, recentMatches: pData.recent_matches,
-          frequentPartners: pData.frequent_partners, careerHighlights: pData.career_highlights,
-          shoes: pData.shoes && pData.shoes.startsWith("[") 
-            ? (JSON.parse(pData.shoes).find((s: any) => s.primary)?.name || JSON.parse(pData.shoes)[0]?.name || "")
-            : pData.shoes,
-          shoesList: (() => { try { if (!pData.shoes) return []; if (pData.shoes.startsWith("[")) return JSON.parse(pData.shoes); return [{ name: pData.shoes, primary: true }]; } catch { return [{ name: pData.shoes, primary: true }]; } })(),
-          apparel: pData.apparel,
-          social: pData.instagram || pData.email ? { instagram: pData.instagram, email: pData.email } : undefined,
-          userId: pData.user_id,
-        };
-        setPlayer(formattedPlayer);
-      }
-      // Re-fetch matches
-      const { data: mData } = await supabase.from("matches")
-        .select("*, player1:players!player1_id(id, full_name), player2:players!player2_id(id, full_name)")
-        .eq("status", "confirmed")
-        .or(`player1_id.eq.${id},player2_id.eq.${id}`)
-        .order("created_at", { ascending: false }).limit(10);
-      if (mData) setLiveMatches(mData);
-    } catch {}
+      const [playerRes, matchesRes] = await Promise.all([
+        supabase.from("players").select("*").eq("id", id).maybeSingle(),
+        supabase.from("matches")
+          .select("*, player1:players!player1_id(id, full_name), player2:players!player2_id(id, full_name)")
+          .in("status", ["confirmed", "pending"])
+          .or(`player1_id.eq.${id},player2_id.eq.${id}`)
+          .order("created_at", { ascending: false })
+          .limit(50),
+      ]);
+      if (playerRes.data) setPlayer(formatPlayerData(playerRes.data));
+      if (matchesRes.data) setLiveMatches(matchesRes.data);
+    } catch { /* silent — don't disturb the user */ }
   }, [id]);
-  useAutoRefresh(silentRefresh, 30_000, !loading);
+
+
 
   // H2H record vs logged-in user
   useEffect(() => {
