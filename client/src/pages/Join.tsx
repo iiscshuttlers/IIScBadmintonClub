@@ -75,7 +75,7 @@ export default function Join() {
       const { data: existingPlayer } = await supabase
         .from('players')
         .select('email')
-        .eq('email', email)
+        .ilike('email', email)
         .maybeSingle();
 
       if (existingPlayer) {
@@ -97,7 +97,7 @@ export default function Join() {
       if (data.session) {
         await afterAuth(data.session);
       } else {
-        setInfoMsg("Account created! Check your email to confirm, then sign in.");
+        setInfoMsg("Verification link sent! Please check your email (and spam folder) to confirm, then sign in.");
         setMode("signin");
       }
     } catch (err: any) {
