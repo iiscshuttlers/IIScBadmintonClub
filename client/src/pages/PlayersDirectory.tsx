@@ -264,21 +264,50 @@ export default function PlayersDirectory() {
     return () => subscription.unsubscribe();
   }, []);
 
-  /* 2. Fetch all players */
-  const fetchPlayers = () => {
+  /* 2. Fetch all players (with retry logic) */
+  const fetchPlayers = async (retryCount = 0) => {
     setFetchError(false);
-    const timeout = setTimeout(() => { setLoading(false); setFetchError(true); }, 10000);
-    supabase
-      .from("players")
-      .select("id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating")
-      .is("deleted_at", null)
-      .order("elo_rating", { ascending: false })
-      .then(({ data, error }) => {
-        clearTimeout(timeout);
-        if (!error && data) setPlayers(data);
-        else if (error) setFetchError(true);
+    setLoading(true);
+
+    const MAX_RETRIES = 2;
+    const TIMEOUT_MS = 20000;
+
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+      const { data, error } = await supabase
+        .from("players")
+        .select("id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating")
+        .is("deleted_at", null)
+        .order("elo_rating", { ascending: false })
+        .abortSignal(controller.signal);
+
+      clearTimeout(timeout);
+
+      if (!error && data) {
+        setPlayers(data);
         setLoading(false);
-      });
+      } else if (error) {
+        console.warn("Supabase fetch error:", error.message);
+        if (retryCount < MAX_RETRIES) {
+          const delay = 1000 * Math.pow(2, retryCount);
+          await new Promise((r) => setTimeout(r, delay));
+          return fetchPlayers(retryCount + 1);
+        }
+        setFetchError(true);
+        setLoading(false);
+      }
+    } catch (err: any) {
+      console.warn("Network error fetching players:", err?.message);
+      if (retryCount < MAX_RETRIES) {
+        const delay = 1000 * Math.pow(2, retryCount);
+        await new Promise((r) => setTimeout(r, delay));
+        return fetchPlayers(retryCount + 1);
+      }
+      setFetchError(true);
+      setLoading(false);
+    }
   };
 
   const fetchPendingMatches = async (profileId: string) => {

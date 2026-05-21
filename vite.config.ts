@@ -142,6 +142,8 @@ export default defineConfig({
         skipWaiting: true,
         // Serve index.html for all navigation requests (SPA routing)
         navigateFallback: "index.html",
+        // Never intercept API calls with navigation fallback
+        navigateFallbackDenylist: [/^https:\/\/.*\.supabase\.co/, /\/rest\//, /\/auth\//],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
