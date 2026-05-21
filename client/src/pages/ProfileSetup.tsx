@@ -506,7 +506,7 @@ export default function ProfileSetup() {
                       <div className="flex flex-col sm:flex-row items-center gap-6">
                         <div className="w-20 h-20 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden shrink-0 border border-slate-300 dark:border-slate-700">
                           {avatarUrl ? (
-                            <img src={avatarUrl} alt="Avatar Preview" className="w-full h-full object-cover" />
+                            <img loading="lazy" src={avatarUrl} alt="Avatar Preview" className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-slate-400 dark:text-slate-600 text-3xl font-bold uppercase">
                               {fullName ? fullName.charAt(0) : "U"}
@@ -1240,7 +1240,7 @@ export default function ProfileSetup() {
                                 />
                                 {imagePreviewStatus[idx] === "ok" && img.url && (
                                   <div className="mt-2 rounded-xl overflow-hidden border border-emerald-200 dark:border-emerald-800 w-full aspect-video bg-slate-100 dark:bg-slate-800">
-                                    <img src={img.url} alt="preview" className="w-full h-full object-cover" />
+                                    <img loading="lazy" src={img.url} alt="preview" className="w-full h-full object-cover" />
                                   </div>
                                 )}
                                 {imagePreviewStatus[idx] === "error" && (

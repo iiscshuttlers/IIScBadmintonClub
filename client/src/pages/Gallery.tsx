@@ -36,7 +36,7 @@ function LazyImage({
   return (
     <div ref={ref} className={className} onClick={onClick}>
       {src ? (
-        <img src={src} alt={alt} className="w-full h-full object-cover" />
+        <img loading="lazy" src={src} alt={alt} className="w-full h-full object-cover" />
       ) : (
         <div className="w-full h-full bg-gray-200 animate-pulse" />
       )}

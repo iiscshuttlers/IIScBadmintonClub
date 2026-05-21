@@ -272,7 +272,7 @@ export default function Home() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-          <img 
+          <img loading="lazy" 
             src={iiscTeam} 
             alt="IISc Badminton Team Full" 
             className="max-w-full max-h-full rounded-xl object-contain shadow-2xl" 

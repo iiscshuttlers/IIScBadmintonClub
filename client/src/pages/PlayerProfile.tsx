@@ -1317,7 +1317,7 @@ export default function PlayerProfile() {
                         onClick={() => setLightboxImage(img.url)}
                         className="group relative aspect-video rounded-3xl overflow-hidden cursor-pointer border border-slate-200 dark:border-slate-800 shadow-md hover:-translate-y-1 hover:shadow-lg transition-all duration-305"
                       >
-                        <img src={img.url} alt={img.caption || "Game Photo"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <img loading="lazy" src={img.url} alt={img.caption || "Game Photo"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
                           <span className="text-white text-xs font-bold leading-tight line-clamp-2">{img.caption || "Zoom View"}</span>
                         </div>
@@ -1344,7 +1344,7 @@ export default function PlayerProfile() {
                           className="group relative aspect-video rounded-3xl overflow-hidden cursor-pointer border border-slate-200 dark:border-slate-800 shadow-md hover:-translate-y-1 hover:shadow-lg transition-all duration-305 bg-slate-900"
                         >
                           {thumbUrl ? (
-                            <img src={thumbUrl} alt={vid.caption || "Video Thumbnail"} className="w-full h-full object-cover opacity-75 group-hover:opacity-90 group-hover:scale-105 transition-all duration-500" />
+                            <img loading="lazy" src={thumbUrl} alt={vid.caption || "Video Thumbnail"} className="w-full h-full object-cover opacity-75 group-hover:opacity-90 group-hover:scale-105 transition-all duration-500" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
                               <Play className="w-12 h-12 text-slate-600" />
@@ -1377,7 +1377,7 @@ export default function PlayerProfile() {
           onClick={() => setLightboxImage(null)}
         >
           <button className="absolute top-6 right-6 text-white hover:text-slate-350 text-3xl font-light">×</button>
-          <img src={lightboxImage} alt="Fullscreen View" className="max-w-full max-h-[85vh] rounded-3xl object-contain shadow-2xl" />
+          <img loading="lazy" src={lightboxImage} alt="Fullscreen View" className="max-w-full max-h-[85vh] rounded-3xl object-contain shadow-2xl" />
         </div>
       )}
 

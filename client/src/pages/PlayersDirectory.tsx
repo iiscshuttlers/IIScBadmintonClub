@@ -143,7 +143,7 @@ function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, onEdit }
         {/* Avatar */}
         <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-slate-100 dark:border-slate-800 shadow-md group-hover:scale-105 transition-transform duration-300 shrink-0 mt-4">
           {player.avatar_url ? (
-            <img src={player.avatar_url} alt={player.full_name} className="w-full h-full object-cover" />
+            <img loading="lazy" src={player.avatar_url} alt={player.full_name} className="w-full h-full object-cover" />
           ) : (
             <div className={`w-full h-full bg-gradient-to-br ${avatarGradient(player.full_name)} flex items-center justify-center text-white font-black text-3xl`}>
               {player.full_name.charAt(0).toUpperCase()}
@@ -484,7 +484,7 @@ export default function PlayersDirectory() {
             <Link href={`/player/${ownProfile.id}`} className="flex items-center gap-4 flex-1 group min-w-0">
               <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-emerald-400 shadow-md shrink-0">
                 {ownProfile.avatar_url ? (
-                  <img src={ownProfile.avatar_url} alt={ownProfile.full_name} className="w-full h-full object-cover" />
+                  <img loading="lazy" src={ownProfile.avatar_url} alt={ownProfile.full_name} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-2xl font-black text-emerald-600">
                     {ownProfile.full_name.charAt(0)}

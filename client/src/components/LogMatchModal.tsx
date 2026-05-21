@@ -20,7 +20,7 @@ interface LogMatchModalProps {
 
 function PlayerAvatar({ player }: { player: Player | undefined }) {
   if (!player) return <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-600">?</div>;
-  if (player.avatar_url) return <img src={player.avatar_url} className="w-full h-full object-cover" />;
+  if (player.avatar_url) return <img loading="lazy" src={player.avatar_url} className="w-full h-full object-cover" />;
   return <div className="w-full h-full flex items-center justify-center text-xl font-bold">{player.full_name[0]}</div>;
 }
 

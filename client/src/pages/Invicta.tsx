@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Calendar, MapPin, Users, GitBranch } from 'lucide-react';
+import { Trophy, Calendar, MapPin, Users, UserCheck, FileText, Upload, X, Loader2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '../lib/supabase';
+import { isAdminEmail } from '../lib/admin';
 
 type BracketMatch = { player1: string; player2: string; winner?: string; score?: string };
 type BracketRound = { label: string; matches: BracketMatch[] };
@@ -31,40 +33,72 @@ function generateEmptyBracket(size: number): BracketRound[] {
   return rounds;
 }
 
-function BracketViewer({ rounds }: { rounds: BracketRound[] }) {
-  return (
-    <div className="overflow-x-auto pb-4">
-      <div className="flex gap-6 min-w-max">
-        {rounds.map((round, ri) => (
-          <div key={ri} className="flex flex-col gap-4 min-w-[220px]">
-            <h4 className="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest text-center mb-2">
-              {round.label}
-            </h4>
-            <div className="flex-1 flex flex-col justify-around gap-6">
-              {round.matches.map((match, mi) => (
-                <div key={mi} className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm text-sm">
-                  {[match.player1, match.player2].map((player, pi) => (
-                    <div
-                      key={pi}
-                      className="px-3 py-2 border-b border-slate-100 dark:border-slate-700 last:border-b-0 flex justify-between items-center bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 italic"
-                    >
-                      <span className="truncate max-w-[150px]">{player}</span>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export default function Invicta() {
-  const [bracketSize, setBracketSize] = useState<number>(16);
-  const [format, setFormat] = useState('MS');
-  const dummyBracket = generateEmptyBracket(bracketSize);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [files, setFiles] = useState<any[]>([]);
+  const [loadingFiles, setLoadingFiles] = useState(true);
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    // Check if user is admin
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session && session.user.email) {
+        setIsAdmin(isAdminEmail(session.user.email));
+      }
+    });
+
+    fetchNotices();
+  }, []);
+
+  const fetchNotices = async () => {
+    setLoadingFiles(true);
+    try {
+      // Assuming a public bucket named 'invicta_notices' exists in Supabase
+      const { data, error } = await supabase.storage.from('invicta_notices').list('');
+      if (error) {
+        console.error("Bucket might not exist yet:", error.message);
+        setFiles([]);
+      } else {
+        // Filter out any hidden system files like .emptyFolderPlaceholder
+        setFiles(data?.filter(f => !f.name.startsWith('.')) || []);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingFiles(false);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const { error } = await supabase.storage.from('invicta_notices').upload(fileName, file, { upsert: true });
+      if (error) throw error;
+      
+      alert("File uploaded successfully!");
+      fetchNotices(); // Refresh the list
+    } catch (err: any) {
+      alert("Upload failed. Make sure the 'invicta_notices' bucket exists and has correct RLS policies. Error: " + err.message);
+    } finally {
+      setUploading(false);
+      e.target.value = ''; // Reset input
+    }
+  };
+
+  const handleDeleteFile = async (fileName: string) => {
+    if (!confirm("Are you sure you want to delete this notice?")) return;
+    try {
+      const { error } = await supabase.storage.from('invicta_notices').remove([fileName]);
+      if (error) throw error;
+      fetchNotices();
+    } catch (err: any) {
+      alert("Delete failed: " + err.message);
+    }
+  };
 
   return (
     <div className="py-12 bg-slate-50 dark:bg-slate-900 min-h-[calc(100vh-80px)]">
@@ -89,25 +123,30 @@ export default function Invicta() {
 
           {/* Content */}
           <div className="p-8 md:p-12">
-            <div className="grid md:grid-cols-3 gap-8 mb-12">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
               <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-2xl flex flex-col items-center text-center border border-slate-100 dark:border-slate-700">
-                <Calendar className="w-10 h-10 text-emerald-500 mb-4" />
-                <h3 className="font-bold text-lg text-slate-800 dark:text-slate-200 mb-1">Dates</h3>
-                <p className="text-slate-600 dark:text-slate-400">1st June - 21st June (Tentative)</p>
+                <Calendar className="w-8 h-8 text-emerald-500 mb-3" />
+                <h3 className="font-bold text-sm text-slate-800 dark:text-slate-200 mb-1">Dates</h3>
+                <p className="text-slate-600 dark:text-slate-400 text-xs">1st June - 21st June</p>
               </div>
               <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-2xl flex flex-col items-center text-center border border-slate-100 dark:border-slate-700">
-                <MapPin className="w-10 h-10 text-emerald-500 mb-4" />
-                <h3 className="font-bold text-lg text-slate-800 dark:text-slate-200 mb-1">Venue</h3>
-                <p className="text-slate-600 dark:text-slate-400">Gymkhana Badminton Courts</p>
+                <MapPin className="w-8 h-8 text-emerald-500 mb-3" />
+                <h3 className="font-bold text-sm text-slate-800 dark:text-slate-200 mb-1">Venue</h3>
+                <p className="text-slate-600 dark:text-slate-400 text-xs">Gymkhana Courts</p>
               </div>
               <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-2xl flex flex-col items-center text-center border border-slate-100 dark:border-slate-700">
-                <Users className="w-10 h-10 text-emerald-500 mb-4" />
-                <h3 className="font-bold text-lg text-slate-800 dark:text-slate-200 mb-1">Categories</h3>
-                <p className="text-slate-600 dark:text-slate-400">MS, WS, MD, WD, XD</p>
+                <Users className="w-8 h-8 text-emerald-500 mb-3" />
+                <h3 className="font-bold text-sm text-slate-800 dark:text-slate-200 mb-1">Categories</h3>
+                <p className="text-slate-600 dark:text-slate-400 text-xs">MS, WS, MD, WD, XD</p>
+              </div>
+              <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-2xl flex flex-col items-center text-center border border-slate-100 dark:border-slate-700">
+                <UserCheck className="w-8 h-8 text-emerald-500 mb-3" />
+                <h3 className="font-bold text-sm text-slate-800 dark:text-slate-200 mb-1">Eligibility</h3>
+                <p className="text-slate-600 dark:text-slate-400 text-xs">All IISc Members</p>
               </div>
             </div>
 
-            <div className="text-center bg-emerald-50 dark:bg-emerald-950/30 p-8 rounded-3xl border border-emerald-100 dark:border-emerald-900/50">
+            <div className="text-center bg-emerald-50 dark:bg-emerald-950/30 p-8 rounded-3xl border border-emerald-100 dark:border-emerald-900/50 mb-12">
               <h2 className="text-2xl md:text-3xl font-bold text-blue-900 dark:text-emerald-400 mb-4">
                 Registrations are now open!
               </h2>
@@ -122,6 +161,71 @@ export default function Invicta() {
                   <span>Register Now (Microsoft Form)</span>
                 </Button>
               </a>
+            </div>
+
+            {/* Notices & Announcements Section */}
+            <div className="bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl p-6 md:p-8">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                  <FileText className="text-emerald-500" />
+                  Official Notices & Announcements
+                </h3>
+                
+                {isAdmin && (
+                  <label className="cursor-pointer bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors border border-emerald-200">
+                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                    {uploading ? 'Uploading...' : 'Upload Notice'}
+                    <input type="file" className="hidden" onChange={handleFileUpload} accept=".pdf,image/*" disabled={uploading} />
+                  </label>
+                )}
+              </div>
+
+              {loadingFiles ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+                </div>
+              ) : files.length === 0 ? (
+                <div className="text-center py-10 bg-slate-50 dark:bg-slate-900 rounded-xl text-slate-500 text-sm">
+                  No official notices have been uploaded yet. Check back later!
+                </div>
+              ) : (
+                <div className="grid gap-3">
+                  {files.map((file, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-emerald-200 transition-colors">
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <div className="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-600 flex-shrink-0">
+                          <FileText className="w-5 h-5" />
+                        </div>
+                        <div className="truncate">
+                          <p className="font-semibold text-slate-800 dark:text-slate-200 truncate">{file.name.replace(/^\d+_/, '')}</p>
+                          <p className="text-xs text-slate-500">{(file.metadata?.size / 1024).toFixed(1)} KB • Uploaded {(new Date(file.created_at)).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <a 
+                          href={supabase.storage.from('invicta_notices').getPublicUrl(file.name).data.publicUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                          title="Download / View"
+                        >
+                          <Download className="w-5 h-5" />
+                        </a>
+                        {isAdmin && (
+                          <button 
+                            onClick={() => handleDeleteFile(file.name)}
+                            className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                            title="Delete File"
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             
             <div className="mt-12 text-center text-slate-500 dark:text-slate-400">
