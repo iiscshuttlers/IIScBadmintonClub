@@ -7,12 +7,12 @@ import { supabase } from "@/lib/supabase";
 
 type Mode = "welcome" | "signin" | "signup" | "otp-email" | "otp-verify";
 
+import { ADMIN_EMAILS } from "@/lib/admin";
+
 const IISC_DOMAIN = "@iisc.ac.in";
 
 function validateEmail(email: string) {
-  if (!email.toLowerCase().endsWith(IISC_DOMAIN)) {
-    return `Please use your valid ${IISC_DOMAIN} email address.`;
-  }
+  // We now allow any email address to sign up, per user request.
   return null;
 }
 
