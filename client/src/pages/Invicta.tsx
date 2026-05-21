@@ -109,15 +109,19 @@ export default function Invicta() {
 
             <div className="text-center bg-emerald-50 dark:bg-emerald-950/30 p-8 rounded-3xl border border-emerald-100 dark:border-emerald-900/50">
               <h2 className="text-2xl md:text-3xl font-bold text-blue-900 dark:text-emerald-400 mb-4">
-                Registrations opening soon!
+                Registrations are now open!
               </h2>
               <p className="text-slate-700 dark:text-slate-300 mb-8 max-w-2xl mx-auto text-lg">
-                The official Microsoft Form for registration will be available here soon. Note: The form will be restricted to IISc members.
+                Don't miss the chance to compete and showcase your skills. The form is restricted to IISc members.
+                <br />
+                <strong className="text-rose-600 dark:text-rose-400">Deadline: 26 May 2026</strong>
               </p>
               
-              <Button disabled className="bg-slate-300 dark:bg-slate-800 text-slate-500 font-bold text-lg px-8 py-6 rounded-full cursor-not-allowed gap-3">
-                <span>Registration Link Coming Soon</span>
-              </Button>
+              <a href="https://forms.cloud.microsoft/r/c82F9mgTv5" target="_blank" rel="noopener noreferrer">
+                <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all gap-3">
+                  <span>Register Now (Microsoft Form)</span>
+                </Button>
+              </a>
             </div>
             
             <div className="mt-12 text-center text-slate-500 dark:text-slate-400">

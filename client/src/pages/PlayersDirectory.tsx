@@ -241,6 +241,13 @@ export default function PlayersDirectory() {
 
   /* 1. Check auth session + own profile */
   useEffect(() => {
+    let isMounted = true;
+
+    // Failsafe to ensure we NEVER get stuck loading indefinitely
+    const failsafeTimeout = setTimeout(() => {
+      if (isMounted) setAuthLoading(false);
+    }, 5000);
+
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
 
@@ -248,20 +255,33 @@ export default function PlayersDirectory() {
         const adminStatus = isAdminEmail(session.user.email);
         setIsAdmin(adminStatus);
         
-        const { data } = await supabase
-          .from("players")
-          .select("id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating, win_loss_record, recent_form, is_approved")
-          .eq("user_id", session.user.id)
-          .maybeSingle();
-        setOwnProfile(data ?? null);
-        if (data) {
-          fetchPendingMatches(data.id);
+        try {
+          const { data } = await supabase
+            .from("players")
+            .select("id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating, win_loss_record, recent_form")
+            .eq("user_id", session.user.id)
+            .maybeSingle();
+          if (isMounted) {
+            setOwnProfile(data ?? null);
+            if (data) {
+              fetchPendingMatches(data.id);
+            }
+          }
+        } catch (e) {
+          console.warn("Error fetching own profile:", e);
         }
       }
-      setAuthLoading(false);
+      
+      if (isMounted) {
+        clearTimeout(failsafeTimeout);
+        setAuthLoading(false);
+      }
     }).catch(err => {
       console.error("Auth session error:", err);
-      setAuthLoading(false);
+      if (isMounted) {
+        clearTimeout(failsafeTimeout);
+        setAuthLoading(false);
+      }
     });
 
     // Listen for auth state changes (e.g. sign-in in another tab)
@@ -286,7 +306,7 @@ export default function PlayersDirectory() {
 
       let query = supabase
         .from("players")
-        .select("id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating, is_approved")
+        .select("id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating")
         .is("deleted_at", null)
         .order("elo_rating", { ascending: false });
 

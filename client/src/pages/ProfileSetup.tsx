@@ -367,7 +367,7 @@ export default function ProfileSetup() {
       tournament_history: tournamentsRaw ? tournamentsRaw.split(",").map(s => s.trim()).filter(Boolean) : [],
     };
 
-    const timeoutMs = 15000;
+    const timeoutMs = 60000;
     const mkTimeout = () => new Promise<never>((_, reject) =>
       setTimeout(() => reject(new Error("Save timed out — please check your connection and try again.")), timeoutMs)
     );
@@ -552,7 +552,7 @@ export default function ProfileSetup() {
                           value={fullName}
                           onChange={(e) => setFullName(e.target.value)}
                           className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
-                          placeholder="e.g. Raja Sharma"
+                          placeholder="e.g. Tanu Singh"
                         />
                       </div>
 
@@ -563,7 +563,7 @@ export default function ProfileSetup() {
                           value={nickname}
                           onChange={(e) => setNickname(e.target.value)}
                           className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
-                          placeholder="e.g. Jordan"
+                          placeholder="e.g. Tanya"
                         />
                       </div>
                     </div>
@@ -577,7 +577,7 @@ export default function ProfileSetup() {
                           value={iiscEmail}
                           onChange={(e) => setIiscEmail(e.target.value)}
                           className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
-                          placeholder="e.g. name@iisc.ac.in"
+                          placeholder="e.g. tanu@iisc.ac.in"
                         />
                       </div>
                       <div>
@@ -663,7 +663,7 @@ export default function ProfileSetup() {
                         value={instagram}
                         onChange={(e) => setInstagram(e.target.value)}
                         className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
-                        placeholder="e.g. @raja_janmejay"
+                        placeholder="e.g. @tanu_singh"
                       />
                     </div>
                   </motion.div>
