@@ -14,6 +14,7 @@ export default function ProfileSetup() {
   const { id: paramId } = useParams();
   const [loading, setLoading] = useState(false);
   const [session, setSession] = useState<any>(null);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [targetUserId, setTargetUserId] = useState<string | null>(null);
 
@@ -151,14 +152,20 @@ export default function ProfileSetup() {
   const [originalStats, setOriginalStats] = useState<any>({});
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        setLocation("/join");
-      } else {
-        // Strict IISc Domain Check temporarily bypassed for testing
-        setSession(session);
+    let mounted = true;
+    
+    const loadProfile = async (currentSession: any) => {
+      if (!currentSession) {
+        if (mounted) {
+          setIsInitializing(false);
+          setLocation("/join");
+        }
+        return;
+      }
 
-        const adminStatus = isAdminEmail(session.user.email);
+      if (mounted) {
+        setSession(currentSession);
+        const adminStatus = isAdminEmail(currentSession.user.email);
         setIsAdmin(adminStatus);
 
         let query = supabase.from("players").select("*");
@@ -248,18 +255,33 @@ export default function ProfileSetup() {
               setInstagram(profile.instagram || "");
               setAchievementsRaw(profile.achievements ? profile.achievements.join(", ") : "");
               setTournamentsRaw(profile.tournament_history ? profile.tournament_history.join(", ") : "");
+              if (mounted) setIsInitializing(false);
             } else {
-              if (session.user.user_metadata?.full_name) {
-                setFullName(session.user.user_metadata.full_name);
+              if (currentSession.user.user_metadata?.full_name && mounted) {
+                setFullName(currentSession.user.user_metadata.full_name);
               }
-              if (session.user.user_metadata?.avatar_url) {
-                setAvatarUrl(session.user.user_metadata.avatar_url);
+              if (currentSession.user.user_metadata?.avatar_url && mounted) {
+                setAvatarUrl(currentSession.user.user_metadata.avatar_url);
               }
+              if (mounted) setIsInitializing(false);
             }
           });
       }
+    };
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      loadProfile(session);
     });
-  }, [setLocation]);
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      loadProfile(session);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [setLocation, paramId]);
 
   const handleSignOut = async () => {
     if (confirm("Are you sure you want to sign out?")) {
@@ -412,11 +434,13 @@ export default function ProfileSetup() {
     }
   };
 
-  if (!session) return (
+  if (isInitializing) return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="w-8 h-8 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin" />
     </div>
   );
+
+  if (!session) return null; // Wait for redirect
 
   const tabs = [
     { id: "basic", label: "Basic Info", icon: UserCircle },
@@ -506,7 +530,7 @@ export default function ProfileSetup() {
                       <div className="flex flex-col sm:flex-row items-center gap-6">
                         <div className="w-20 h-20 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden shrink-0 border border-slate-300 dark:border-slate-700">
                           {avatarUrl ? (
-                            <img loading="lazy" src={avatarUrl} alt="Avatar Preview" className="w-full h-full object-cover" />
+                            <img src={avatarUrl} alt="Avatar Preview" className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-slate-400 dark:text-slate-600 text-3xl font-bold uppercase">
                               {fullName ? fullName.charAt(0) : "U"}
@@ -663,7 +687,7 @@ export default function ProfileSetup() {
                         value={instagram}
                         onChange={(e) => setInstagram(e.target.value)}
                         className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
-                        placeholder="e.g. @tanu_singh"
+                        placeholder="e.g. @iiscbadmintonclub"
                       />
                     </div>
                   </motion.div>
@@ -1240,7 +1264,7 @@ export default function ProfileSetup() {
                                 />
                                 {imagePreviewStatus[idx] === "ok" && img.url && (
                                   <div className="mt-2 rounded-xl overflow-hidden border border-emerald-200 dark:border-emerald-800 w-full aspect-video bg-slate-100 dark:bg-slate-800">
-                                    <img loading="lazy" src={img.url} alt="preview" className="w-full h-full object-cover" />
+                                    <img src={img.url} alt="preview" className="w-full h-full object-cover" />
                                   </div>
                                 )}
                                 {imagePreviewStatus[idx] === "error" && (

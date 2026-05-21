@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sword, Trophy, Loader2, Users, User } from "lucide-react";
+import { X, Sword, Trophy, Loader2, Users, User, Plus, Minus, Clock, Lock } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { isAdminEmail } from "@/lib/admin";
 
 interface Player {
   id: string;
   full_name: string;
   avatar_url?: string;
+  gender?: string;
 }
 
 interface LogMatchModalProps {
@@ -16,6 +18,7 @@ interface LogMatchModalProps {
   otherPlayers: Player[];
   onSuccess: () => void;
   defaultOpponentId?: string;
+  userEmail?: string;
 }
 
 function PlayerAvatar({ player }: { player: Player | undefined }) {
@@ -42,42 +45,127 @@ function PlayerSelect({ value, onChange, players, placeholder }: {
   );
 }
 
-export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlayers, onSuccess, defaultOpponentId }: LogMatchModalProps) {
+// Determine doubles category from genders
+function getDoublesCategory(players: (Player | undefined)[]): string {
+  const genders = players.filter(Boolean).map(p => p!.gender?.toLowerCase());
+  if (genders.length < 2 || genders.some(g => !g)) return "Doubles";
+  const allMale = genders.every(g => g === "male");
+  const allFemale = genders.every(g => g === "female");
+  if (allMale) return "Men's Doubles";
+  if (allFemale) return "Women's Doubles";
+  return "Mixed Doubles";
+}
+
+interface SetScore {
+  p1: string;
+  p2: string;
+}
+
+export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlayers, onSuccess, defaultOpponentId, userEmail }: LogMatchModalProps) {
   const [matchType, setMatchType] = useState<"singles" | "doubles">("singles");
+  const [matchCategory, setMatchCategory] = useState<"friendly" | "tournament">("friendly");
   const [opponentId, setOpponentId] = useState(defaultOpponentId ?? "");
   const [partnerId, setPartnerId] = useState("");
   const [opponentPartnerId, setOpponentPartnerId] = useState("");
-  const [score, setScore] = useState("");
+  const [sets, setSets] = useState<SetScore[]>([{ p1: "", p2: "" }]);
   const [myTeamWon, setMyTeamWon] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isAdmin = isAdminEmail(userEmail);
+  const now = new Date();
+  const timestamp = now.toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
+
+  const addSet = () => {
+    if (sets.length < 3) setSets([...sets, { p1: "", p2: "" }]);
+  };
+
+  const removeSet = (idx: number) => {
+    if (sets.length > 1) setSets(sets.filter((_, i) => i !== idx));
+  };
+
+  const updateSet = (idx: number, field: "p1" | "p2", val: string) => {
+    // Allow only digits 0-30
+    const num = val.replace(/\D/g, "").slice(0, 2);
+    setSets(sets.map((s, i) => i === idx ? { ...s, [field]: num } : s));
+  };
+
+  // Format sets into readable score string: "21-18, 19-21, 21-15"
+  const formatScore = (): string => {
+    return sets
+      .filter(s => s.p1 !== "" && s.p2 !== "")
+      .map(s => `${s.p1}-${s.p2}`)
+      .join(", ");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!opponentId) { setError("Please select the main opponent."); return; }
     if (matchType === "doubles" && !partnerId) { setError("Please select your doubles partner."); return; }
     if (matchType === "doubles" && !opponentPartnerId) { setError("Please select the opponent's partner."); return; }
-    if (!score) { setError("Please enter the match score."); return; }
+
+    const filledSets = sets.filter(s => s.p1 !== "" && s.p2 !== "");
+    if (filledSets.length === 0) { setError("Please enter at least one set score."); return; }
+
+    // Validate each set has reasonable scores
+    for (let i = 0; i < filledSets.length; i++) {
+      const p1 = parseInt(filledSets[i].p1);
+      const p2 = parseInt(filledSets[i].p2);
+      if (isNaN(p1) || isNaN(p2)) { setError(`Set ${i + 1}: Invalid score.`); return; }
+      if (p1 === p2) { setError(`Set ${i + 1}: Scores cannot be equal.`); return; }
+    }
 
     setLoading(true);
     setError(null);
 
     try {
       const winnerId = myTeamWon ? currentUser.id : opponentId;
-      const scoreWithDoubles = matchType === "doubles"
-        ? `${score} [Doubles: ${currentUser.full_name}+${otherPlayers.find(p => p.id === partnerId)?.full_name ?? ""} vs ${otherPlayers.find(p => p.id === opponentId)?.full_name ?? ""}+${otherPlayers.find(p => p.id === opponentPartnerId)?.full_name ?? ""}]`
-        : score;
+      const scoreStr = formatScore();
+
+      // Build descriptive score for doubles
+      let finalScore = scoreStr;
+      if (matchType === "doubles") {
+        const partnerName = otherPlayers.find(p => p.id === partnerId)?.full_name ?? "";
+        const opp1Name = otherPlayers.find(p => p.id === opponentId)?.full_name ?? "";
+        const opp2Name = otherPlayers.find(p => p.id === opponentPartnerId)?.full_name ?? "";
+
+        // Auto-detect category from genders
+        const team1 = [currentUser, otherPlayers.find(p => p.id === partnerId)];
+        const team2 = [otherPlayers.find(p => p.id === opponentId), otherPlayers.find(p => p.id === opponentPartnerId)];
+        const category = getDoublesCategory([...team1, ...team2]);
+
+        finalScore = `${scoreStr} [${category}: ${currentUser.full_name}+${partnerName} vs ${opp1Name}+${opp2Name}]`;
+      }
 
       const { error: rpcError } = await supabase.rpc("submit_friendly_match", {
         submitter_id: currentUser.id,
         opponent_id: opponentId,
         match_winner_id: winnerId,
-        match_score: scoreWithDoubles,
+        match_score: finalScore,
       });
 
       if (rpcError) throw rpcError;
 
-      alert("Match submitted! Waiting for opponent to confirm.");
+      // If tournament match, also mark it as non-friendly directly
+      // The RPC always inserts as is_friendly=true, so override for tournament
+      if (matchCategory === "tournament") {
+        // We need to update the match after creation — get latest pending match
+        const { data: latestMatch } = await supabase
+          .from("matches")
+          .select("id")
+          .eq("submitted_by", currentUser.id)
+          .eq("status", "pending")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
+        if (latestMatch) {
+          await supabase.from("matches").update({ is_friendly: false, round: "Tournament" }).eq("id", latestMatch.id);
+        }
+      }
+
+      alert(matchCategory === "friendly" 
+        ? "Match submitted! Waiting for opponent to confirm." 
+        : "Tournament match logged! Waiting for opponent to confirm.");
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -108,7 +196,7 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
           <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
             <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
               <Sword className="w-5 h-5 text-emerald-500" />
-              Log Friendly Match
+              Log {matchCategory === "tournament" ? "Tournament" : "Friendly"} Match
             </h2>
             <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition">
               <X className="w-5 h-5" />
@@ -117,6 +205,31 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-6 space-y-5">
+
+            {/* Timestamp */}
+            <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-xl px-3 py-2 border border-slate-100 dark:border-slate-800">
+              <Clock className="w-3.5 h-3.5" /> Logging at: <span className="text-slate-700 dark:text-slate-200">{timestamp}</span>
+            </div>
+
+            {/* Friendly / Tournament toggle */}
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => setMatchCategory("friendly")}
+                className={`flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold border transition
+                  ${matchCategory === "friendly" ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 text-emerald-700 dark:text-emerald-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"}`}>
+                🏸 Friendly
+              </button>
+              <button type="button"
+                onClick={() => { if (isAdmin) setMatchCategory("tournament"); }}
+                disabled={!isAdmin}
+                className={`flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold border transition
+                  ${matchCategory === "tournament" ? "bg-amber-50 dark:bg-amber-900/30 border-amber-500 text-amber-700 dark:text-amber-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"}
+                  ${!isAdmin ? "opacity-40 cursor-not-allowed" : ""}`}>
+                🏆 Tournament {!isAdmin && <Lock className="w-3 h-3" />}
+              </button>
+            </div>
+            {!isAdmin && matchCategory === "friendly" && (
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 -mt-3">Tournament match logging is admin-only</p>
+            )}
 
             {/* Singles / Doubles toggle */}
             <div className="grid grid-cols-2 gap-2">
@@ -194,38 +307,77 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
 
             <hr className="border-slate-100 dark:border-slate-800" />
 
-            {/* Match Details */}
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Match Score</label>
-                <input
-                  type="text"
-                  placeholder="e.g. 21-18, 19-21, 21-15"
-                  value={score}
-                  onChange={(e) => setScore(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white placeholder-slate-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                  Who won?
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button type="button" onClick={() => setMyTeamWon(true)}
-                    className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition border
-                      ${myTeamWon ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 text-emerald-700 dark:text-emerald-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"}`}>
-                    {myTeamWon && <Trophy className="w-4 h-4" />}
-                    {matchType === "doubles" ? "My Team Won" : "I Won"}
-                  </button>
-                  <button type="button" onClick={() => setMyTeamWon(false)} disabled={!opponentId}
-                    className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition border
-                      ${!myTeamWon ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 text-emerald-700 dark:text-emerald-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"}
-                      ${!opponentId ? "opacity-50 cursor-not-allowed" : ""}`}>
-                    {!myTeamWon && <Trophy className="w-4 h-4" />}
-                    {matchType === "doubles" ? "They Won" : "Opponent Won"}
-                  </button>
+            {/* Set-by-Set Score Input */}
+            <div className="space-y-3">
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Set Scores</label>
+              
+              {sets.map((set, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-slate-400 dark:text-slate-500 w-12 shrink-0">Set {idx + 1}</span>
+                  <div className="flex-1 flex items-center gap-2">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={2}
+                      value={set.p1}
+                      onChange={(e) => updateSet(idx, "p1", e.target.value)}
+                      placeholder="0"
+                      className="w-14 text-center px-2 py-2.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl text-sm font-black text-emerald-700 dark:text-emerald-400 outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                    <span className="text-lg font-black text-slate-300 dark:text-slate-600">—</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={2}
+                      value={set.p2}
+                      onChange={(e) => updateSet(idx, "p2", e.target.value)}
+                      placeholder="0"
+                      className="w-14 text-center px-2 py-2.5 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-xl text-sm font-black text-rose-700 dark:text-rose-400 outline-none focus:ring-2 focus:ring-rose-500"
+                    />
+                  </div>
+                  {sets.length > 1 && (
+                    <button type="button" onClick={() => removeSet(idx)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition">
+                      <Minus className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
+              ))}
+
+              {sets.length < 3 && (
+                <button type="button" onClick={addSet}
+                  className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition px-2 py-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20">
+                  <Plus className="w-3.5 h-3.5" /> Add Set
+                </button>
+              )}
+
+              {/* Live Score Preview */}
+              {formatScore() && (
+                <div className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-xl px-3 py-2 border border-slate-100 dark:border-slate-800">
+                  Score: <span className="font-bold text-slate-700 dark:text-slate-200">{formatScore()}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Who Won */}
+            <div>
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                Who won?
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button type="button" onClick={() => setMyTeamWon(true)}
+                  className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition border
+                    ${myTeamWon ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 text-emerald-700 dark:text-emerald-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"}`}>
+                  {myTeamWon && <Trophy className="w-4 h-4" />}
+                  {matchType === "doubles" ? "My Team Won" : "I Won"}
+                </button>
+                <button type="button" onClick={() => setMyTeamWon(false)} disabled={!opponentId}
+                  className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition border
+                    ${!myTeamWon ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 text-emerald-700 dark:text-emerald-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"}
+                    ${!opponentId ? "opacity-50 cursor-not-allowed" : ""}`}>
+                  {!myTeamWon && <Trophy className="w-4 h-4" />}
+                  {matchType === "doubles" ? "They Won" : "Opponent Won"}
+                </button>
               </div>
             </div>
 

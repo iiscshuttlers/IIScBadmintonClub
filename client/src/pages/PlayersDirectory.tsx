@@ -510,12 +510,6 @@ export default function PlayersDirectory() {
             {/* Action buttons */}
             <div className="flex flex-wrap gap-3 shrink-0">
               <button
-                onClick={() => setIsLogMatchOpen(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-md shadow-blue-500/25 transition"
-              >
-                <Sword className="w-4 h-4" /> Log Match
-              </button>
-              <button
                 onClick={() => setLocation(`/player/${ownProfile.id}/edit`)}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-md shadow-emerald-500/25 transition"
               >

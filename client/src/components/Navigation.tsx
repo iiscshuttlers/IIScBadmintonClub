@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Menu, X, UserCircle, LogIn } from 'lucide-react';
+import { Menu, X, UserCircle, LogIn, User, Settings, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/lib/supabase';
 import type { Session, AuthChangeEvent } from "@supabase/supabase-js";
 
@@ -12,6 +13,7 @@ export default function Navigation() {
   const [myPlayerId, setMyPlayerId] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
+  const [userName, setUserName] = useState<string>("");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -27,10 +29,12 @@ export default function Navigation() {
     const loadAuth = async (session: Session | null) => {
       setIsLoggedIn(!!session);
       if (session) {
-        const { data } = await supabase.from("players").select("id").eq("user_id", session.user.id).maybeSingle();
+        const { data } = await supabase.from("players").select("id, full_name").eq("user_id", session.user.id).maybeSingle();
         setMyPlayerId(data?.id ?? null);
+        setUserName(data?.full_name?.split(" ")[0] ?? session.user.email?.split("@")[0] ?? "Player");
       } else {
         setMyPlayerId(null);
+        setUserName("");
       }
       setAuthLoading(false);
     };
@@ -98,11 +102,37 @@ export default function Navigation() {
             {authLoading ? (
               <div className="w-24 h-9 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />
             ) : isLoggedIn ? (
-              <Link href={myPlayerId ? `/player/${myPlayerId}` : "/profile/setup"}>
-                <Button className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-3">
-                  <UserCircle className="w-4 h-4" /> My Profile
-                </Button>
-              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-3">
+                    <UserCircle className="w-4 h-4" /> Hi, {userName}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl">
+                  <Link href={myPlayerId ? `/player/${myPlayerId}` : "/profile/setup"}>
+                    <DropdownMenuItem className="cursor-pointer font-medium focus:bg-slate-50 dark:focus:bg-slate-800">
+                      <User className="mr-2 h-4 w-4" /> My Profile
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link href={myPlayerId ? `/player/${myPlayerId}/edit` : "/profile/setup"}>
+                    <DropdownMenuItem className="cursor-pointer font-medium focus:bg-slate-50 dark:focus:bg-slate-800">
+                      <Settings className="mr-2 h-4 w-4" /> Edit Profile
+                    </DropdownMenuItem>
+                  </Link>
+                  <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800" />
+                  <DropdownMenuItem 
+                    className="cursor-pointer text-rose-600 dark:text-rose-400 font-medium focus:bg-rose-50 dark:focus:bg-rose-950/30 focus:text-rose-700 dark:focus:text-rose-300"
+                    onClick={async () => {
+                      if (confirm("Are you sure you want to sign out?")) {
+                        await supabase.auth.signOut();
+                        window.location.href = "/join";
+                      }
+                    }}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" /> Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Link href="/join">
                 <Button className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-3">
@@ -152,11 +182,30 @@ export default function Navigation() {
                 {authLoading ? (
                   <div className="h-10 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />
                 ) : isLoggedIn ? (
-                  <Link href={myPlayerId ? `/player/${myPlayerId}` : "/profile/setup"}>
-                    <Button className="w-full justify-start flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
-                      <UserCircle className="w-4 h-4" /> My Profile
+                  <div className="flex flex-col gap-1 mt-2 border-t border-slate-100 dark:border-slate-800 pt-2">
+                    <Link href={myPlayerId ? `/player/${myPlayerId}` : "/profile/setup"}>
+                      <Button variant="ghost" className="w-full justify-start text-emerald-600 dark:text-emerald-400 font-medium hover:bg-emerald-50 dark:hover:bg-emerald-950/50">
+                        <User className="mr-2 h-4 w-4" /> My Profile
+                      </Button>
+                    </Link>
+                    <Link href={myPlayerId ? `/player/${myPlayerId}/edit` : "/profile/setup"}>
+                      <Button variant="ghost" className="w-full justify-start text-emerald-600 dark:text-emerald-400 font-medium hover:bg-emerald-50 dark:hover:bg-emerald-950/50">
+                        <Settings className="mr-2 h-4 w-4" /> Edit Profile & Password
+                      </Button>
+                    </Link>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start text-rose-600 dark:text-rose-400 font-medium hover:bg-rose-50 dark:hover:bg-rose-950/50"
+                      onClick={async () => {
+                        if (confirm("Are you sure you want to sign out?")) {
+                          await supabase.auth.signOut();
+                          window.location.href = "/join";
+                        }
+                      }}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" /> Sign Out
                     </Button>
-                  </Link>
+                  </div>
                 ) : (
                   <Link href="/join">
                     <Button className="w-full justify-start flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold">

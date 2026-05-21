@@ -6,7 +6,8 @@ import {
   Target, Dna, Crosshair, Sparkles, Quote, Medal, ArrowLeft,
   TrendingUp, Award, Flame, BarChart3, Share2, Trash2,
   Instagram, Mail, Users, Star, Hash, Ruler, BookOpen,
-  ChevronRight, Footprints, Shirt, ArrowUpRight, Clock, LogOut
+  ChevronRight, Footprints, Shirt, ArrowUpRight, Clock, LogOut,
+  CheckCircle, XCircle
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -232,9 +233,43 @@ export default function PlayerProfile() {
   const [eloRank, setEloRank] = useState<number | null>(null);
   const [liveMatches, setLiveMatches] = useState<any[]>([]);
   const [h2hRecord, setH2hRecord] = useState<{ wins: number; losses: number } | null>(null);
-  const [ownPlayerProfile, setOwnPlayerProfile] = useState<{ id: string; full_name: string; avatar_url?: string } | null>(null);
-  const [allPlayers, setAllPlayers] = useState<{ id: string; full_name: string; avatar_url?: string }[]>([]);
+  const [ownPlayerProfile, setOwnPlayerProfile] = useState<{ id: string; full_name: string; avatar_url?: string; gender?: string } | null>(null);
+  const [allPlayers, setAllPlayers] = useState<{ id: string; full_name: string; avatar_url?: string; gender?: string }[]>([]);
   const [isLogMatchOpen, setIsLogMatchOpen] = useState(false);
+  const [pendingMatches, setPendingMatches] = useState<any[]>([]);
+  const [matchHistoryFilter, setMatchHistoryFilter] = useState<"all" | "friendly" | "tournament">("all");
+
+  const fetchPendingMatches = async (profileId: string) => {
+    const { data } = await supabase
+      .from("matches")
+      .select("*, player1:players!player1_id(full_name), player2:players!player2_id(full_name)")
+      .eq("status", "pending")
+      .neq("submitted_by", profileId)
+      .or(`player1_id.eq.${profileId},player2_id.eq.${profileId}`);
+    setPendingMatches(data || []);
+  };
+
+  const handleConfirmMatch = async (matchId: string) => {
+    try {
+      const { data, error } = await supabase.rpc("confirm_friendly_match", { match_uuid: matchId, confirmer_id: ownPlayerProfile?.id });
+      if (error) throw error;
+      alert(`Match Confirmed! Elo Ratings Updated.\nYour Elo Change: ${data.p1_elo_change || data.p2_elo_change}`);
+      fetchPendingMatches(ownPlayerProfile!.id);
+    } catch (e: any) {
+      alert("Error confirming match: " + e.message);
+    }
+  };
+
+  const handleRejectMatch = async (matchId: string) => {
+    try {
+      const { error } = await supabase.rpc("reject_friendly_match", { match_uuid: matchId, rejecter_id: ownPlayerProfile?.id });
+      if (error) throw error;
+      alert("Match Rejected.");
+      fetchPendingMatches(ownPlayerProfile!.id);
+    } catch (e: any) {
+      alert("Error rejecting match: " + e.message);
+    }
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -245,19 +280,31 @@ export default function PlayerProfile() {
         setCurrentUser(session.user);
         const { data: ownProfile } = await supabase
           .from("players")
-          .select("id, full_name, avatar_url")
+          .select("id, full_name, avatar_url, gender")
           .eq("user_id", session.user.id)
           .maybeSingle();
         if (ownProfile) setOwnPlayerProfile(ownProfile);
         const { data: everyone } = await supabase
           .from("players")
-          .select("id, full_name, avatar_url")
+          .select("id, full_name, avatar_url, gender")
           .is("deleted_at", null);
         if (everyone) setAllPlayers(everyone);
       }
     }).catch(err => {
       console.error("Auth session error:", err);
     });
+
+    // Fetch pending matches for own profile
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session) {
+        const { data: ownProfile } = await supabase
+          .from("players")
+          .select("id")
+          .eq("user_id", session.user.id)
+          .maybeSingle();
+        if (ownProfile) fetchPendingMatches(ownProfile.id);
+      }
+    }).catch(() => {});
 
     async function fetchPlayer() {
       setLoading(true);
@@ -336,6 +383,8 @@ export default function PlayerProfile() {
     }
     if (id) {
       fetchPlayer();
+    } else {
+      setLoading(false);
     }
   }, [id]);
 
@@ -355,16 +404,16 @@ export default function PlayerProfile() {
       });
   }, [id]);
 
-  // Live confirmed matches for this player
+  // All matches for this player (confirmed + pending for full history)
   useEffect(() => {
     if (!id) return;
     supabase
       .from("matches")
       .select("*, player1:players!player1_id(id, full_name), player2:players!player2_id(id, full_name)")
-      .eq("status", "confirmed")
+      .in("status", ["confirmed", "pending"])
       .or(`player1_id.eq.${id},player2_id.eq.${id}`)
       .order("created_at", { ascending: false })
-      .limit(10)
+      .limit(50)
       .then(({ data }) => {
         if (data) setLiveMatches(data);
       });
@@ -475,6 +524,44 @@ export default function PlayerProfile() {
     if (m) return +m[1] + +m[2];
     return (player.stats?.wins ?? 0) + (player.stats?.losses ?? 0);
   }, [player]);
+
+  // ---- BWF-style Split Stats (Friendly vs Tournament) ----
+  const splitStats = useMemo(() => {
+    if (!id) return null;
+    const confirmed = liveMatches.filter(m => m.status === "confirmed");
+    const friendly = confirmed.filter(m => m.is_friendly !== false);
+    const tournament = confirmed.filter(m => m.is_friendly === false);
+
+    const computeStats = (matches: any[]) => {
+      const wins = matches.filter(m => m.winner_id === id).length;
+      const losses = matches.length - wins;
+      const winPct = matches.length > 0 ? Math.round((wins / matches.length) * 100) : 0;
+
+      // Recent form (last 5)
+      const recentForm = matches.slice(0, 5).map(m => m.winner_id === id ? "W" : "L") as ("W" | "L")[];
+
+      // Current streak
+      let streak = "";
+      if (matches.length > 0) {
+        const firstResult = matches[0].winner_id === id ? "W" : "L";
+        let count = 0;
+        for (const m of matches) {
+          const r = m.winner_id === id ? "W" : "L";
+          if (r === firstResult) count++;
+          else break;
+        }
+        streak = `${firstResult}${count}`;
+      }
+
+      return { wins, losses, total: matches.length, winPct, recentForm, streak };
+    };
+
+    return {
+      friendly: computeStats(friendly),
+      tournament: computeStats(tournament),
+      all: computeStats(confirmed),
+    };
+  }, [liveMatches, id]);
 
   if (loading) {
     return (
@@ -672,6 +759,47 @@ export default function PlayerProfile() {
         >
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-400 via-teal-500 to-blue-500" />
 
+          {/* Pending Match Verification Banner (own profile only) */}
+          {currentUser && player && currentUser.id === player.userId && pendingMatches.length > 0 && (
+            <div className="mb-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-2xl p-5 shadow-md">
+              <h3 className="text-amber-800 dark:text-amber-400 font-black mb-4 flex items-center gap-2 text-sm">
+                <Swords className="w-5 h-5" /> Pending Match Verifications ({pendingMatches.length})
+              </h3>
+              <div className="space-y-3">
+                {pendingMatches.map(m => (
+                  <div key={m.id} className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white/70 dark:bg-black/20 p-4 rounded-xl border border-amber-100 dark:border-amber-800/30">
+                    <div className="text-sm font-semibold text-slate-700 dark:text-slate-300 text-center sm:text-left">
+                      <span className="font-bold">{m.player1?.full_name}</span>
+                      <span className="text-amber-600 dark:text-amber-500 font-black italic mx-2">VS</span>
+                      <span className="font-bold">{m.player2?.full_name}</span>
+                      <div className="text-xs text-slate-500 mt-1">
+                        Score: <span className="font-bold">{m.score}</span>
+                        {" • Winner: "}
+                        <span className="font-bold text-emerald-600">
+                          {m.winner_id === m.player1_id ? m.player1?.full_name : m.player2?.full_name}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 w-full sm:w-auto">
+                      <button
+                        onClick={() => handleConfirmMatch(m.id)}
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition"
+                      >
+                        <CheckCircle className="w-3.5 h-3.5" /> Confirm
+                      </button>
+                      <button
+                        onClick={() => handleRejectMatch(m.id)}
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-lg transition"
+                      >
+                        <XCircle className="w-3.5 h-3.5" /> Reject
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-col sm:flex-row items-center sm:items-end gap-8">
             {/* Avatar */}
             <div className="relative z-10 shrink-0">
@@ -794,43 +922,94 @@ export default function PlayerProfile() {
           </div>
         </motion.div>
 
-        {/* ============== KPI Row ============== */}
-        <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+        {/* ============== BWF-Style Split Stats ============== */}
+        {splitStats && (splitStats.all.total > 0) && (
+          <motion.div variants={itemVariants} className="mb-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-          {/* Win % – special: uses circular progress */}
-          <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-5 shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 flex items-center gap-4 relative overflow-hidden group">
-            <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full blur-2xl bg-emerald-500/20 group-hover:bg-emerald-500/40 transition-opacity" />
-            <CircularProgress value={winPct} />
-            <div className="relative z-10 min-w-0">
-              <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-0.5">Win Rate</div>
-              <div className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">{player.winLossRecord}</div>
+              {/* Friendly Stats Card */}
+              <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-6 shadow-xl shadow-slate-200/40 dark:shadow-none border border-emerald-100 dark:border-emerald-700/30 relative overflow-hidden">
+                <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full blur-3xl bg-emerald-500/10" />
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="text-lg">🏸</span>
+                    <h3 className="text-sm font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-400">Friendly Matches</h3>
+                  </div>
+                  <div className="flex items-center gap-6 mb-4">
+                    <div>
+                      <div className="text-3xl font-black text-slate-900 dark:text-white">{splitStats.friendly.wins}W - {splitStats.friendly.losses}L</div>
+                      <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-0.5">{splitStats.friendly.total} matches · {splitStats.friendly.winPct}% win rate</div>
+                    </div>
+                    {splitStats.friendly.streak && (
+                      <div className={`px-3 py-1.5 rounded-xl text-sm font-black ${splitStats.friendly.streak.startsWith("W") ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400" : "bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400"}`}>
+                        {splitStats.friendly.streak}
+                      </div>
+                    )}
+                  </div>
+                  {splitStats.friendly.recentForm.length > 0 && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mr-1">Form</span>
+                      {splitStats.friendly.recentForm.map((r, i) => (
+                        <FormPill key={`fr-${i}`} result={r} index={i} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Tournament Stats Card */}
+              <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-6 shadow-xl shadow-slate-200/40 dark:shadow-none border border-amber-100 dark:border-amber-700/30 relative overflow-hidden">
+                <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full blur-3xl bg-amber-500/10" />
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="text-lg">🏆</span>
+                    <h3 className="text-sm font-black uppercase tracking-widest text-amber-700 dark:text-amber-400">Tournament Matches</h3>
+                  </div>
+                  {splitStats.tournament.total > 0 ? (
+                    <>
+                      <div className="flex items-center gap-6 mb-4">
+                        <div>
+                          <div className="text-3xl font-black text-slate-900 dark:text-white">{splitStats.tournament.wins}W - {splitStats.tournament.losses}L</div>
+                          <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-0.5">{splitStats.tournament.total} matches · {splitStats.tournament.winPct}% win rate</div>
+                        </div>
+                        {splitStats.tournament.streak && (
+                          <div className={`px-3 py-1.5 rounded-xl text-sm font-black ${splitStats.tournament.streak.startsWith("W") ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400" : "bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400"}`}>
+                            {splitStats.tournament.streak}
+                          </div>
+                        )}
+                      </div>
+                      {splitStats.tournament.recentForm.length > 0 && (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 mr-1">Form</span>
+                          {splitStats.tournament.recentForm.map((r, i) => (
+                            <FormPill key={`tn-${i}`} result={r} index={i} />
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-sm text-slate-400 dark:text-slate-500 italic">No tournament matches logged yet</div>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
 
-          <KPI
-            icon={Trophy}
-            label="Titles Won"
-            value={player.stats?.titlesWon ?? "—"}
-            sub={player.stats?.runnerUp != null ? `${player.stats.runnerUp} runner-up` : undefined}
-            accent="bg-amber-500"
-          />
-
-          <KPI
-            icon={Flame}
-            label="Current Streak"
-            value={streak ?? "—"}
-            sub={isWinStreak ? "on a hot run" : streak ? "rebuilding" : undefined}
-            accent={isWinStreak ? "bg-rose-500" : "bg-slate-500"}
-          />
-
-          <KPI
-            icon={BarChart3}
-            label="Total Matches"
-            value={totalMatches || "—"}
-            sub={player.stats?.longestWinStreak != null ? `Best streak: ${player.stats.longestWinStreak}` : undefined}
-            accent="bg-blue-500"
-          />
-        </motion.div>
+            {/* Overall Summary Bar */}
+            <div className="mt-4 bg-white dark:bg-slate-800/80 rounded-2xl p-4 shadow-md border border-slate-100 dark:border-slate-700/50 flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <CircularProgress value={splitStats.all.winPct} size={56} stroke={5} />
+                <div>
+                  <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Overall</div>
+                  <div className="text-lg font-black text-slate-900 dark:text-white">{splitStats.all.wins}W - {splitStats.all.losses}L</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 text-sm">
+                <KPI icon={Trophy} label="Titles Won" value={player.stats?.titlesWon ?? "—"} sub={player.stats?.runnerUp != null ? `${player.stats.runnerUp} runner-up` : undefined} accent="bg-amber-500" />
+                <KPI icon={BarChart3} label="Total Matches" value={splitStats.all.total || "—"} accent="bg-blue-500" />
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* ============== Main grid ============== */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -903,86 +1082,156 @@ export default function PlayerProfile() {
               </motion.section>
             )}
 
-            {/* Recent Matches — live DB data, fallback to static */}
-            {(liveMatches.length > 0 || (player.recentMatches && player.recentMatches.length > 0)) && (
-              <motion.section variants={itemVariants}>
-                <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-3 ml-2">
-                  <Clock className="w-6 h-6 text-blue-500" />
-                  Recent Matches
-                  {liveMatches.length > 0 && (
-                    <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400">Live</span>
-                  )}
-                </h2>
-                <div className="bg-white dark:bg-slate-800/80 rounded-3xl shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 overflow-hidden">
-                  <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
-                    {liveMatches.length > 0
-                      ? liveMatches.map((m, idx) => {
+            {/* ============== BWF-Style Match History ============== */}
+            {liveMatches.length > 0 && (() => {
+              const confirmedMatches = liveMatches.filter(m => m.status === "confirmed");
+              const pendingMatchesList = liveMatches.filter(m => m.status === "pending");
+              const filteredMatches = matchHistoryFilter === "all"
+                ? confirmedMatches
+                : matchHistoryFilter === "friendly"
+                  ? confirmedMatches.filter(m => m.is_friendly !== false)
+                  : confirmedMatches.filter(m => m.is_friendly === false);
+
+              return (
+                <motion.section variants={itemVariants}>
+                  <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-2 flex items-center gap-3 ml-2">
+                    <Clock className="w-6 h-6 text-blue-500" />
+                    Match History
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400">{confirmedMatches.length}</span>
+                  </h2>
+
+                  {/* Filter Tabs */}
+                  <div className="flex gap-2 ml-2 mb-4">
+                    {(["all", "friendly", "tournament"] as const).map(tab => (
+                      <button
+                        key={tab}
+                        onClick={() => setMatchHistoryFilter(tab)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition border
+                          ${matchHistoryFilter === tab
+                            ? tab === "tournament"
+                              ? "bg-amber-50 dark:bg-amber-900/30 border-amber-400 text-amber-700 dark:text-amber-400"
+                              : tab === "friendly"
+                                ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-400 text-emerald-700 dark:text-emerald-400"
+                                : "bg-blue-50 dark:bg-blue-900/30 border-blue-400 text-blue-700 dark:text-blue-400"
+                            : "border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
+                          }`}
+                      >
+                        {tab === "all" ? `All (${confirmedMatches.length})` : tab === "friendly" ? `🏸 Friendly (${confirmedMatches.filter(m => m.is_friendly !== false).length})` : `🏆 Tournament (${confirmedMatches.filter(m => m.is_friendly === false).length})`}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Pending Matches Banner */}
+                  {pendingMatchesList.length > 0 && (
+                    <div className="bg-amber-50 dark:bg-amber-900/15 border border-amber-200 dark:border-amber-800/40 rounded-2xl p-4 mb-4 ml-2">
+                      <div className="text-xs font-bold text-amber-700 dark:text-amber-400 mb-2">⏳ {pendingMatchesList.length} Pending Verification</div>
+                      <div className="space-y-2">
+                        {pendingMatchesList.map((m, idx) => {
                           const isP1 = m.player1_id === id;
                           const opponent = isP1 ? m.player2 : m.player1;
-                          const won = m.winner_id === id;
                           return (
-                            <div key={idx} className="p-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                              <div className="flex items-center gap-4">
-                                <div className={`shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center font-black text-sm shadow-md
-                                  ${won
-                                    ? "bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-emerald-500/30"
-                                    : "bg-gradient-to-br from-rose-400 to-rose-600 text-white shadow-rose-500/30"}`}>
-                                  {won ? "W" : "L"}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex flex-wrap items-center gap-2 mb-0.5">
-                                    <span className="text-xs px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 font-semibold">Friendly</span>
-                                  </div>
-                                  <div className="text-sm text-slate-600 dark:text-slate-300">
-                                    vs{" "}
-                                    <button
-                                      onClick={() => opponent?.id && setLocation(`/player/${opponent.id}`)}
-                                      className="font-semibold text-slate-800 dark:text-slate-100 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
-                                    >
-                                      {opponent?.full_name ?? "Unknown"}
-                                    </button>
-                                  </div>
-                                  <div className="mt-1 font-mono text-sm font-bold text-slate-700 dark:text-slate-200 tracking-tight">{m.score}</div>
-                                </div>
-                                <div className="text-xs text-slate-500 dark:text-slate-400 font-medium shrink-0 hidden sm:block">
-                                  {new Date(m.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}
-                                </div>
+                            <div key={`pen-${idx}`} className="flex items-center gap-3 text-sm">
+                              <div className="w-8 h-8 rounded-lg bg-amber-200 dark:bg-amber-800/40 flex items-center justify-center text-xs font-black text-amber-700 dark:text-amber-400">?</div>
+                              <div className="flex-1 min-w-0">
+                                <span className="text-slate-600 dark:text-slate-300">vs </span>
+                                <span className="font-bold text-slate-800 dark:text-slate-200">{opponent?.full_name ?? "Unknown"}</span>
+                                <span className="text-slate-400 mx-1">·</span>
+                                <span className="font-mono text-xs font-bold text-slate-600 dark:text-slate-400">{m.score}</span>
                               </div>
+                              <div className="text-[10px] text-slate-400">{new Date(m.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</div>
                             </div>
                           );
-                        })
-                      : (player.recentMatches ?? []).map((m, idx) => (
-                          <div key={idx} className="p-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                            <div className="flex items-start gap-4">
-                              <div className={`shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center font-black text-sm shadow-md
-                                ${m.result === "W"
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Match List — BWF table style */}
+                  <div className="bg-white dark:bg-slate-800/80 rounded-3xl shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 overflow-hidden">
+                    {/* Table Header */}
+                    <div className="hidden sm:grid grid-cols-12 gap-2 px-5 py-3 bg-slate-50 dark:bg-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-700/50">
+                      <div className="col-span-1 text-center">Result</div>
+                      <div className="col-span-1">Type</div>
+                      <div className="col-span-4">Opponent</div>
+                      <div className="col-span-3">Score</div>
+                      <div className="col-span-3 text-right">Date & Time</div>
+                    </div>
+
+                    <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
+                      {filteredMatches.length > 0 ? filteredMatches.map((m, idx) => {
+                        const isP1 = m.player1_id === id;
+                        const opponent = isP1 ? m.player2 : m.player1;
+                        const won = m.winner_id === id;
+                        const matchDate = new Date(m.created_at);
+                        const isFriendly = m.is_friendly !== false;
+
+                        return (
+                          <div key={idx} className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-2 p-4 sm:px-5 sm:py-4 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors items-center">
+                            {/* Result Badge */}
+                            <div className="col-span-1 flex sm:justify-center">
+                              <div className={`w-10 h-10 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center font-black text-sm shadow-md
+                                ${won
                                   ? "bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-emerald-500/30"
                                   : "bg-gradient-to-br from-rose-400 to-rose-600 text-white shadow-rose-500/30"}`}>
-                                {m.result}
+                                {won ? "W" : "L"}
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex flex-wrap items-center gap-2 mb-1">
-                                  <span className="text-sm font-bold text-slate-800 dark:text-slate-100">{m.tournament}</span>
-                                  <span className="text-xs px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 font-semibold">{m.category}</span>
-                                  {m.round && <span className="text-xs px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-semibold">{m.round}</span>}
-                                </div>
-                                <div className="text-sm text-slate-600 dark:text-slate-300">
-                                  vs <span className="font-semibold text-slate-800 dark:text-slate-100">{m.opponent}</span>
-                                  {m.partner && <> · with <span className="font-semibold text-slate-800 dark:text-slate-100">{m.partner}</span></>}
-                                </div>
-                                <div className="mt-1 font-mono text-sm font-bold text-slate-700 dark:text-slate-200 tracking-tight">{m.score}</div>
+                            </div>
+
+                            {/* Match Type */}
+                            <div className="col-span-1">
+                              <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${
+                                isFriendly
+                                  ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/30"
+                                  : "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/30"
+                              }`}>
+                                {isFriendly ? "FRD" : "TRN"}
+                              </span>
+                            </div>
+
+                            {/* Opponent */}
+                            <div className="col-span-4">
+                              <div className="text-sm text-slate-600 dark:text-slate-300">
+                                <span className="text-slate-400 mr-1">vs</span>
+                                <button
+                                  onClick={() => opponent?.id && setLocation(`/player/${opponent.id}`)}
+                                  className="font-bold text-slate-800 dark:text-slate-100 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                                >
+                                  {opponent?.full_name ?? "Unknown"}
+                                </button>
                               </div>
-                              <div className="text-xs text-slate-500 dark:text-slate-400 font-medium shrink-0 hidden sm:block">
-                                {new Date(m.date).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}
+                              {m.round && m.round !== "Tournament" && (
+                                <div className="text-[10px] text-slate-400 font-medium mt-0.5">{m.round}</div>
+                              )}
+                            </div>
+
+                            {/* Score */}
+                            <div className="col-span-3">
+                              <div className="font-mono text-sm font-black text-slate-700 dark:text-slate-200 tracking-tight">
+                                {m.score?.replace(/\s*\[.*\]/, "") || "—"}
+                              </div>
+                            </div>
+
+                            {/* Date & Time */}
+                            <div className="col-span-3 text-right">
+                              <div className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                                {matchDate.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                              </div>
+                              <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                                {matchDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}
                               </div>
                             </div>
                           </div>
-                        ))
-                    }
+                        );
+                      }) : (
+                        <div className="p-8 text-center text-sm text-slate-400 dark:text-slate-500 italic">
+                          No {matchHistoryFilter === "all" ? "" : matchHistoryFilter} matches found
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </motion.section>
-            )}
+                </motion.section>
+              );
+            })()}
 
             {/* Equipment Arsenal */}
             <motion.section variants={itemVariants}>
@@ -1424,6 +1673,7 @@ export default function PlayerProfile() {
           otherPlayers={allPlayers.filter((p) => p.id !== ownPlayerProfile.id)}
           defaultOpponentId={player?.id}
           onSuccess={() => {}}
+          userEmail={currentUser?.email}
         />
       )}
 
