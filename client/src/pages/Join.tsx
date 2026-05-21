@@ -84,15 +84,11 @@ export default function Join() {
     if (password !== confirm) { setErrorMsg("Passwords do not match."); return; }
     setLoading(true); setErrorMsg("");
     try {
-      // Direct check against our public players table to bypass Supabase's silent enumeration protection
-      const { data: existingPlayer } = await supabase
-        .from('players')
-        .select('email')
-        .ilike('email', email)
-        .maybeSingle();
+      // 1. Check if email exists in auth.users (covers unverified users in limbo)
+      const { data: emailExists, error: rpcError } = await supabase.rpc('check_email_exists', { lookup_email: email });
 
-      if (existingPlayer) {
-        setErrorMsg("This email is already registered. Please Sign In, or use 'Forgot password? OTP' if you forgot your password.");
+      if (emailExists) {
+        setErrorMsg("You already have an account! Please go to Sign In (if you haven't verified yet, log in to resend the link).");
         setLoading(false);
         return;
       }
