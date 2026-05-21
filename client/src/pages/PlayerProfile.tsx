@@ -221,6 +221,36 @@ function getYouTubeId(url: string) {
   return (match && match[2].length === 11) ? match[2] : null;
 }
 
+function LoadingScreen() {
+  const [showRetry, setShowRetry] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setShowRetry(true), 8000);
+    return () => clearTimeout(t);
+  }, []);
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 py-20 px-4">
+      <div className="relative w-16 h-16">
+        <div className="absolute inset-0 rounded-full border-4 border-emerald-500/20" />
+        <div className="absolute inset-0 rounded-full border-4 border-t-emerald-500 animate-spin" />
+      </div>
+      <p className="mt-4 text-sm font-semibold text-slate-500 dark:text-slate-400 animate-pulse">
+        Loading Player Profile...
+      </p>
+      {showRetry && (
+        <div className="mt-6 text-center">
+          <p className="text-sm text-slate-400 dark:text-slate-500 mb-3">Taking too long?</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition-colors shadow-lg shadow-emerald-500/25"
+          >
+            Tap to Retry
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function PlayerProfile() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
@@ -286,47 +316,41 @@ export default function PlayerProfile() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    
-    // Fetch logged-in user session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session) {
-        setCurrentUser(session.user);
-        const { data: ownProfile } = await supabase
-          .from("players")
-          .select("id, full_name, avatar_url, gender")
-          .eq("user_id", session.user.id)
-          .maybeSingle();
-        if (ownProfile) setOwnPlayerProfile(ownProfile);
-        const { data: everyone } = await supabase
-          .from("players")
-          .select("id, full_name, avatar_url, gender")
-          .is("deleted_at", null);
-        if (everyone) setAllPlayers(everyone);
-      }
-    }).catch(err => {
-      console.error("Auth session error:", err);
-    });
+    let cancelled = false;
 
-    // Fetch pending matches for own profile
+    // Single getSession call — fetch own profile + all players
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session) {
-        const { data: ownProfile } = await supabase
-          .from("players")
-          .select("id")
-          .eq("user_id", session.user.id)
-          .maybeSingle();
-        if (ownProfile) fetchPendingMatches(ownProfile.id);
+      if (!session || cancelled) return;
+      setCurrentUser(session.user);
+      const [ownProfileRes, everyoneRes] = await Promise.all([
+        supabase.from("players").select("id, full_name, avatar_url, gender").eq("user_id", session.user.id).maybeSingle(),
+        supabase.from("players").select("id, full_name, avatar_url, gender").is("deleted_at", null)
+      ]);
+      if (cancelled) return;
+      if (ownProfileRes.data) {
+        setOwnPlayerProfile(ownProfileRes.data);
+        fetchPendingMatches(ownProfileRes.data.id);
       }
-    }).catch(() => {});
+      if (everyoneRes.data) setAllPlayers(everyoneRes.data);
+    }).catch(err => { console.error("Auth session error:", err); });
 
     async function fetchPlayer() {
       setLoading(true);
+      const TIMEOUT_MS = 10000;
       try {
-        const { data, error } = await supabase
+        const fetchPromise = supabase
           .from("players")
           .select("*")
           .eq("id", id)
-          .single();
+          .maybeSingle();
+
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Request timed out")), TIMEOUT_MS)
+        );
+
+        const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
+
+        if (cancelled) return;
 
         if (error) {
           console.error("Error fetching player:", error);
@@ -388,17 +412,22 @@ export default function PlayerProfile() {
           setPlayer(null);
         }
       } catch (err) {
-        console.error(err);
-        setPlayer(null);
+        if (!cancelled) {
+          console.error("fetchPlayer error:", err);
+          setPlayer(null);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
+
     if (id) {
       fetchPlayer();
     } else {
       setLoading(false);
     }
+
+    return () => { cancelled = true; };
   }, [id]);
 
   // ELO club rank
@@ -578,15 +607,7 @@ export default function PlayerProfile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 py-20 px-4">
-        <div className="relative w-16 h-16">
-          <div className="absolute inset-0 rounded-full border-4 border-emerald-500/20" />
-          <div className="absolute inset-0 rounded-full border-4 border-t-emerald-500 animate-spin" />
-        </div>
-        <p className="mt-4 text-sm font-semibold text-slate-500 dark:text-slate-400 animate-pulse">
-          Loading Player Profile...
-        </p>
-      </div>
+      <LoadingScreen />
     );
   }
 
