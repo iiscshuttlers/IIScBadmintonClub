@@ -1,8 +1,9 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState, useRef } from 'react';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Route, Switch, Router, useLocation } from 'wouter';
 import { Capacitor } from '@capacitor/core';
+import { App as CapApp } from '@capacitor/app';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import StatusBanner from "@/components/StatusBanner";
@@ -144,7 +145,56 @@ function AppRoutes() {
 }
 
 function App() {
-  // Global Session Auto-Logout on Inactivity (15 Minutes)
+  const backPressedRef = useRef(false);
+
+  // Android hardware back button handler
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    const handleBackButton = CapApp.addListener('backButton', ({ canGoBack }) => {
+      const currentPath = window.location.pathname;
+      const isHomePage = currentPath === '/' || currentPath === '' ||
+        currentPath === '/iiscshuttlers' || currentPath === '/iiscshuttlers/';
+
+      if (!isHomePage && canGoBack) {
+        // Navigate back within the app
+        window.history.back();
+        return;
+      }
+
+      // On home screen — double-back to exit
+      if (backPressedRef.current) {
+        CapApp.exitApp();
+        return;
+      }
+
+      backPressedRef.current = true;
+      // Show a toast-style overlay
+      const toast = document.createElement('div');
+      toast.textContent = 'Press back again to exit';
+      Object.assign(toast.style, {
+        position: 'fixed', bottom: '40px', left: '50%',
+        transform: 'translateX(-50%)',
+        background: 'rgba(15,23,42,0.92)', color: '#fff',
+        padding: '10px 22px', borderRadius: '30px',
+        fontSize: '14px', fontWeight: '600',
+        zIndex: '99999', backdropFilter: 'blur(8px)',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+        transition: 'opacity 0.3s ease',
+        pointerEvents: 'none',
+      });
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => { document.body.removeChild(toast); backPressedRef.current = false; }, 300);
+      }, 2000);
+    });
+
+    return () => { handleBackButton.then(h => h.remove()); };
+  }, []);
+
+  // Global Session Auto-Logout on Inactivity (30 Minutes)
   useEffect(() => {
     let timeoutId: any;
 
@@ -157,7 +207,7 @@ function App() {
           alert("Your session has expired due to inactivity. Please log in again.");
           window.location.href = "/iiscshuttlers/join";
         }
-      }, 5 * 60 * 1000); // 5 minutes of complete inactivity
+      }, 30 * 60 * 1000); // 30 minutes of inactivity
     };
 
     // Track user movements/inputs
