@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'wouter';
 import { Menu, X, UserCircle, LogIn, User, Settings, LogOut, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ export default function Navigation() {
   const [authLoading, setAuthLoading] = useState(true);
   const [userName, setUserName] = useState<string>("");
   const [savedAccounts, setSavedAccounts] = useState<any[]>([]);
+  const authRequestIdRef = useRef(0);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -27,35 +28,74 @@ export default function Navigation() {
   }, [location]);
 
   useEffect(() => {
+    const readSavedAccounts = () => JSON.parse(localStorage.getItem("iisc_saved_accounts") || "[]");
+
+    const clearAuthState = (accounts = readSavedAccounts()) => {
+      setIsLoggedIn(false);
+      setMyPlayerId(null);
+      setUserName("");
+      setSavedAccounts(accounts);
+      setAuthLoading(false);
+    };
+
+    const removeSavedAccount = (userId?: string) => {
+      if (!userId) return readSavedAccounts();
+      const nextAccounts = readSavedAccounts().filter((a: any) => a.id !== userId);
+      localStorage.setItem("iisc_saved_accounts", JSON.stringify(nextAccounts));
+      return nextAccounts;
+    };
+
     const loadAuth = async (session: Session | null) => {
-      setIsLoggedIn(!!session);
-      let accounts = JSON.parse(localStorage.getItem("iisc_saved_accounts") || "[]");
+      const requestId = ++authRequestIdRef.current;
+      setAuthLoading(true);
 
-      if (session) {
-        const { data } = await supabase.from("players").select("id, full_name, email").eq("user_id", session.user.id).maybeSingle();
-        setMyPlayerId(data?.id ?? null);
-        const name = data?.full_name?.split(" ")[0] ?? session.user.email?.split("@")[0] ?? "Player";
-        setUserName(name);
+      if (!session) {
+        clearAuthState();
+        return;
+      }
 
-        // Save session logic
-        const existingIdx = accounts.findIndex((a: any) => a.id === session.user.id);
+      try {
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        if (requestId !== authRequestIdRef.current) return;
+
+        if (userError || !userData.user || userData.user.id !== session.user.id) {
+          const accounts = removeSavedAccount(session.user.id);
+          clearAuthState(accounts);
+          await supabase.auth.signOut();
+          return;
+        }
+
+        const { data } = await supabase
+          .from("players")
+          .select("id, full_name, email")
+          .eq("user_id", userData.user.id)
+          .maybeSingle();
+        if (requestId !== authRequestIdRef.current) return;
+
+        const name = data?.full_name?.split(" ")[0] ?? userData.user.email?.split("@")[0] ?? "Player";
+        const accounts = readSavedAccounts();
+        const existingIdx = accounts.findIndex((a: any) => a.id === userData.user.id);
         const newAccount = {
-          id: session.user.id,
-          email: session.user.email,
-          name: name,
-          session: session
+          id: userData.user.id,
+          email: userData.user.email,
+          name,
+          session
         };
         if (existingIdx >= 0) accounts[existingIdx] = newAccount;
         else accounts.push(newAccount);
         localStorage.setItem("iisc_saved_accounts", JSON.stringify(accounts));
-      } else {
-        setMyPlayerId(null);
-        setUserName("");
+
+        setIsLoggedIn(true);
+        setMyPlayerId(data?.id ?? null);
+        setUserName(name);
+        setSavedAccounts(accounts.filter((a: any) => a.id !== userData.user.id));
+        setAuthLoading(false);
+      } catch (err) {
+        if (requestId !== authRequestIdRef.current) return;
+        console.warn("Auth validation failed:", err);
+        const accounts = removeSavedAccount(session.user.id);
+        clearAuthState(accounts);
       }
-      
-      // Filter out the current user for the switcher list
-      setSavedAccounts(accounts.filter((a: any) => !session || a.id !== session.user.id));
-      setAuthLoading(false);
     };
 
     (async () => { const { data } = await supabase.auth.getSession(); loadAuth(data.session); })();
@@ -63,7 +103,18 @@ export default function Navigation() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event: AuthChangeEvent, session: Session | null) => loadAuth(session)
     );
-    return () => subscription.unsubscribe();
+
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === "sb-auth-token" || event.key?.includes("auth-token")) {
+        supabase.auth.getSession().then(({ data }) => loadAuth(data.session));
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => {
+      authRequestIdRef.current += 1;
+      subscription.unsubscribe();
+      window.removeEventListener("storage", onStorage);
+    };
   }, []);
 
   const isActive = (href: string) =>
@@ -81,6 +132,27 @@ export default function Navigation() {
     { href: '/gallery', label: 'Gallery' },
     { href: '/contact', label: 'Contact' },
   ];
+
+  const handleSignOut = async (message = "Are you sure you want to sign out?") => {
+    if (!confirm(message)) return;
+
+    authRequestIdRef.current += 1;
+    setIsLoggedIn(false);
+    setMyPlayerId(null);
+    setUserName("");
+    setIsOpen(false);
+
+    const { data } = await supabase.auth.getSession();
+    if (data.session?.user?.id) {
+      const accounts = JSON.parse(localStorage.getItem("iisc_saved_accounts") || "[]")
+        .filter((a: any) => a.id !== data.session!.user.id);
+      localStorage.setItem("iisc_saved_accounts", JSON.stringify(accounts));
+      setSavedAccounts(accounts);
+    }
+
+    await supabase.auth.signOut();
+    window.location.href = `${import.meta.env.BASE_URL}join`;
+  };
 
   return (
     <nav className={`sticky top-0 z-50 bg-white dark:bg-slate-900 border-b-4 border-emerald-500 transition-all duration-300 ${scrolled ? 'shadow-xl' : 'shadow-md'}`}>
@@ -171,18 +243,7 @@ export default function Navigation() {
                   <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800" />
                   <DropdownMenuItem 
                     className="cursor-pointer text-rose-600 dark:text-rose-400 font-medium focus:bg-rose-50 dark:focus:bg-rose-950/30 focus:text-rose-700 dark:focus:text-rose-300"
-                    onClick={async () => {
-                      if (confirm("Are you sure you want to sign out of this account?")) {
-                        const { data } = await supabase.auth.getSession();
-                        if (data.session) {
-                          let accounts = JSON.parse(localStorage.getItem("iisc_saved_accounts") || "[]");
-                          accounts = accounts.filter((a: any) => a.id !== data.session!.user.id);
-                          localStorage.setItem("iisc_saved_accounts", JSON.stringify(accounts));
-                        }
-                        await supabase.auth.signOut();
-                        window.location.href = "/join";
-                      }
-                    }}
+                    onClick={() => handleSignOut("Are you sure you want to sign out of this account?")}
                   >
                     <LogOut className="mr-2 h-4 w-4" /> Sign Out
                   </DropdownMenuItem>
@@ -251,12 +312,7 @@ export default function Navigation() {
                     <Button 
                       variant="ghost" 
                       className="w-full justify-start text-rose-600 dark:text-rose-400 font-medium hover:bg-rose-50 dark:hover:bg-rose-950/50"
-                      onClick={async () => {
-                        if (confirm("Are you sure you want to sign out?")) {
-                          await supabase.auth.signOut();
-                          window.location.href = "/join";
-                        }
-                      }}
+                      onClick={() => handleSignOut()}
                     >
                       <LogOut className="mr-2 h-4 w-4" /> Sign Out
                     </Button>

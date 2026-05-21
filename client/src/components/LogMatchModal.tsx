@@ -137,12 +137,25 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
         finalScore = `${scoreStr} [${category}: ${currentUser.full_name}+${partnerName} vs ${opp1Name}+${opp2Name}]`;
       }
 
-      const { error: rpcError } = await supabase.rpc("submit_friendly_match", {
+      const matchPayload = {
         submitter_id: currentUser.id,
         opponent_id: opponentId,
         match_winner_id: winnerId,
         match_score: finalScore,
-      });
+        submitter_partner_id: matchType === "doubles" ? partnerId : null,
+        opponent_partner_id: matchType === "doubles" ? opponentPartnerId : null,
+      };
+
+      let { error: rpcError } = await supabase.rpc("submit_friendly_match", matchPayload);
+      if (rpcError && matchType === "singles") {
+        const { error: legacyRpcError } = await supabase.rpc("submit_friendly_match", {
+          submitter_id: currentUser.id,
+          opponent_id: opponentId,
+          match_winner_id: winnerId,
+          match_score: finalScore,
+        });
+        rpcError = legacyRpcError;
+      }
 
       if (rpcError) throw rpcError;
 

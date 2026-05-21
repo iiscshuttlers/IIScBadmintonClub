@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -67,6 +67,53 @@ const itemVariants = {
   hidden: { opacity: 0, y: 15 },
   show:   { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } },
 };
+
+const PLAYER_SELECT =
+  "id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating, win_loss_record, recent_form";
+const PLAYERS_CACHE_KEY = "iisc_players_directory_cache_v1";
+const REQUEST_TIMEOUT_MS = 10_000;
+const MAX_FETCH_RETRIES = 1;
+
+function readCachedPlayers(): Player[] {
+  try {
+    const raw = window.localStorage.getItem(PLAYERS_CACHE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed?.players) ? parsed.players : [];
+  } catch {
+    return [];
+  }
+}
+
+function cachePlayers(players: Player[]) {
+  try {
+    window.localStorage.setItem(
+      PLAYERS_CACHE_KEY,
+      JSON.stringify({ players, savedAt: Date.now() })
+    );
+  } catch {}
+}
+
+async function withTimeout<T>(
+  promise: PromiseLike<T>,
+  timeoutMs: number,
+  onTimeout: () => void
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      Promise.resolve(promise),
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => {
+          onTimeout();
+          reject(new Error("Roster request timed out"));
+        }, timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
 
 /* ── Small reusable player card ─────────────────────────────────────── */
 function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, onEdit }: { player: Player; isOwn?: boolean; isAdmin?: boolean; onDelete?: (id: string) => void; onEdit?: (id: string) => void; }) {
@@ -220,6 +267,8 @@ export default function PlayersDirectory() {
   });
 
   const [, setLocation] = useLocation();
+  const isMountedRef = useRef(true);
+  const fetchRequestIdRef = useRef(0);
 
   /* Auth + own-profile state */
   const [session, setSession]             = useState<any>(null);
@@ -239,6 +288,13 @@ export default function PlayersDirectory() {
   const [showFilters, setShowFilters]     = useState(false);
   const [sortBy, setSortBy]               = useState<"elo" | "winpct" | "name">("name");
 
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      fetchRequestIdRef.current += 1;
+    };
+  }, []);
+
   /* 1. Check auth session + own profile */
   useEffect(() => {
     let isMounted = true;
@@ -248,18 +304,37 @@ export default function PlayersDirectory() {
       if (isMounted) setAuthLoading(false);
     }, 5000);
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    const applySession = async (session: any) => {
+      if (!session) {
+        if (isMounted) {
+          setSession(null);
+          setOwnProfile(null);
+          setIsAdmin(false);
+        }
+        return;
+      }
+
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (!isMounted) return;
+      if (userError || !userData.user || userData.user.id !== session.user.id) {
+        setSession(null);
+        setOwnProfile(null);
+        setIsAdmin(false);
+        await supabase.auth.signOut();
+        return;
+      }
+
       setSession(session);
 
       if (session) {
-        const adminStatus = isAdminEmail(session.user.email);
+        const adminStatus = isAdminEmail(userData.user.email);
         setIsAdmin(adminStatus);
         
         try {
           const { data } = await supabase
             .from("players")
-            .select("id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating, win_loss_record, recent_form")
-            .eq("user_id", session.user.id)
+            .select(PLAYER_SELECT)
+            .eq("user_id", userData.user.id)
             .maybeSingle();
           if (isMounted) {
             setOwnProfile(data ?? null);
@@ -271,6 +346,10 @@ export default function PlayersDirectory() {
           console.warn("Error fetching own profile:", e);
         }
       }
+    };
+
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      await applySession(session);
       
       if (isMounted) {
         clearTimeout(failsafeTimeout);
@@ -286,96 +365,110 @@ export default function PlayersDirectory() {
 
     // Listen for auth state changes (e.g. sign-in in another tab)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
-      setSession(newSession);
       if (!newSession) {
+        setSession(null);
         setOwnProfile(null);
+        setIsAdmin(false);
       } else {
         // Re-fetch own profile on auth change
-        const { data } = await supabase
-          .from("players")
-          .select("id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating, win_loss_record, recent_form")
-          .eq("user_id", newSession.user.id)
-          .maybeSingle();
-        if (isMounted) setOwnProfile(data ?? null);
+        await applySession(newSession);
       }
     });
     return () => { isMounted = false; subscription.unsubscribe(); };
   }, []);
 
-  /* 2. Fetch all players (with retry logic) */
-  const fetchPlayers = async (retryCount = 0, currentSession = session, currentIsAdmin = isAdmin) => {
-    setFetchError(false);
-    setLoading(true);
+  /* 2. Fetch all players. Every code path settles, even if the WebView hangs. */
+  const fetchPlayers = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
+    const requestId = ++fetchRequestIdRef.current;
 
-    const MAX_RETRIES = 2;
-    const TIMEOUT_MS = 20000;
+    if (!silent) {
+      setFetchError(false);
+      setLoading(true);
 
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
-      let query = supabase
-        .from("players")
-        .select("id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating")
-        .is("deleted_at", null)
-        .order("elo_rating", { ascending: false });
-
-
-
-      const { data, error } = await query.abortSignal(controller.signal);
-
-      clearTimeout(timeout);
-
-      if (!error) {
-        setPlayers(data || []);
-        setLoading(false);
-      } else {
-        console.warn("Supabase fetch error:", error.message);
-        if (retryCount < MAX_RETRIES) {
-          const delay = 1000 * Math.pow(2, retryCount);
-          await new Promise((r) => setTimeout(r, delay));
-          return fetchPlayers(retryCount + 1, currentSession, currentIsAdmin);
-        }
-        setFetchError(true);
-        setLoading(false);
+      const cachedPlayers = readCachedPlayers();
+      if (cachedPlayers.length > 0) {
+        setPlayers(cachedPlayers);
       }
-    } catch (err: any) {
-      console.warn("Network error fetching players:", err?.message);
-      if (retryCount < MAX_RETRIES) {
-        const delay = 1000 * Math.pow(2, retryCount);
-        await new Promise((r) => setTimeout(r, delay));
-        return fetchPlayers(retryCount + 1, currentSession, currentIsAdmin);
-      }
-      setFetchError(true);
-      setLoading(false);
     }
-  };
+
+    for (let attempt = 0; attempt <= MAX_FETCH_RETRIES; attempt += 1) {
+      const controller = new AbortController();
+
+      try {
+        const response = await withTimeout(
+          supabase
+            .from("players")
+            .select(PLAYER_SELECT)
+            .is("deleted_at", null)
+            .order("elo_rating", { ascending: false })
+            .abortSignal(controller.signal),
+          REQUEST_TIMEOUT_MS,
+          () => controller.abort()
+        );
+
+        if (!isMountedRef.current || requestId !== fetchRequestIdRef.current) return;
+
+        if (response.error) {
+          throw response.error;
+        }
+
+        const nextPlayers = response.data || [];
+        setPlayers(nextPlayers);
+        cachePlayers(nextPlayers);
+        setFetchError(false);
+        setLoading(false);
+        return;
+      } catch (err: any) {
+        if (requestId !== fetchRequestIdRef.current) return;
+
+        console.warn(`Player directory fetch failed (attempt ${attempt + 1}):`, err?.message ?? err);
+
+        if (attempt < MAX_FETCH_RETRIES) {
+          await new Promise((resolve) => setTimeout(resolve, 750 * (attempt + 1)));
+          if (!isMountedRef.current || requestId !== fetchRequestIdRef.current) return;
+          continue;
+        }
+
+        if (!isMountedRef.current) return;
+
+        const cachedPlayers = readCachedPlayers();
+        if (cachedPlayers.length > 0) {
+          setPlayers(cachedPlayers);
+          setFetchError(false);
+        } else if (!silent) {
+          setFetchError(true);
+        }
+        setLoading(false);
+      }
+    }
+  }, []);
 
   const fetchPendingMatches = async (profileId: string) => {
-    const { data } = await supabase
+    const fullRes = await supabase
       .from("matches")
       .select("*, player1:players!player1_id(full_name), player2:players!player2_id(full_name)")
       .eq("status", "pending")
       .neq("submitted_by", profileId)
-      .or(`player1_id.eq.${profileId},player2_id.eq.${profileId}`);
-    setPendingMatches(data || []);
+      .or(`player1_id.eq.${profileId},player2_id.eq.${profileId},team1_partner_id.eq.${profileId},team2_partner_id.eq.${profileId}`);
+    const res = fullRes.error
+      ? await supabase
+        .from("matches")
+        .select("*, player1:players!player1_id(full_name), player2:players!player2_id(full_name)")
+        .eq("status", "pending")
+        .neq("submitted_by", profileId)
+        .or(`player1_id.eq.${profileId},player2_id.eq.${profileId}`)
+      : fullRes;
+    setPendingMatches(res.data || []);
   };
 
   useEffect(() => {
     fetchPlayers();
-  }, []);
+  }, [fetchPlayers]);
 
   // Auto-refresh player list every 60s (silently, scroll preserved)
   const silentRefresh = useCallback(async () => {
-    try {
-      const { data } = await supabase
-        .from("players")
-        .select("id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating")
-        .is("deleted_at", null)
-        .order("elo_rating", { ascending: false });
-      if (data) setPlayers(data);
-    } catch {}
-  }, []);
+    await fetchPlayers({ silent: true });
+  }, [fetchPlayers]);
   useAutoRefresh(silentRefresh, 60_000, !loading);
 
   /* Filter + sort logic */

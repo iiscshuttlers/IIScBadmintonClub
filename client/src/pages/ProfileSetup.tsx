@@ -8,6 +8,23 @@ import {
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { isAdminEmail } from "@/lib/admin";
+import { toast } from "sonner";
+
+const PASSWORD_UPDATE_TIMEOUT_MS = 12_000;
+
+async function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number, message: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      Promise.resolve(promise),
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(message)), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
 
 export default function ProfileSetup() {
   const [, setLocation] = useLocation();
@@ -159,7 +176,18 @@ export default function ProfileSetup() {
     }
     setPasswordLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      const { data: { session: currentSession } } = await withTimeout(
+        supabase.auth.getSession(),
+        PASSWORD_UPDATE_TIMEOUT_MS,
+        "Could not verify your login session. Please try again."
+      );
+      if (!currentSession) throw new Error("Your login session expired. Please sign in again.");
+
+      const { error } = await withTimeout(
+        supabase.auth.updateUser({ password: newPassword }),
+        PASSWORD_UPDATE_TIMEOUT_MS,
+        "Password update timed out. Please check your connection and try again."
+      );
       if (error) throw error;
       setNewPassword("");
       toast("Password Updated", { description: "You can now log in using your email and password.", icon: "🔒" });
@@ -478,25 +506,25 @@ export default function ProfileSetup() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
 
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
-            <div className="text-center sm:text-left">
+          <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 mb-6 sm:mb-8">
+            <div className="text-center sm:text-left min-w-0">
               {isEditing && (playerSlug || paramId) && (
                 <button
                   onClick={() => setLocation(`/player/${playerSlug || paramId}`)}
-                  className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 mb-3 transition"
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 mb-3 transition"
                 >
                   <ArrowLeft className="w-4 h-4" /> Back to Profile
                 </button>
               )}
-              <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center justify-center sm:justify-start gap-2">
-                <Sparkles className="w-8 h-8 text-emerald-500 animate-pulse" />
+              <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white flex items-center justify-center sm:justify-start gap-2 leading-tight">
+                <Sparkles className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-500 animate-pulse shrink-0" />
                 {isEditing ? "Edit Your Player Profile" : "Complete Your Profile"}
               </h1>
-              <p className="mt-2 text-slate-600 dark:text-slate-400">
+              <p className="mt-2 text-slate-600 dark:text-slate-400 text-base sm:text-lg">
                 {isEditing ? "Keep your badminton card updated with your latest achievements!" : "Welcome to IISc Badminton Club! Tell us about your game."}
               </p>
             </div>
@@ -504,7 +532,7 @@ export default function ProfileSetup() {
             <button
               type="button"
               onClick={handleSignOut}
-              className="flex items-center gap-2 px-4 py-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-xl text-sm font-semibold border border-rose-100 dark:border-rose-900/30 transition shadow-sm"
+              className="self-center sm:self-auto flex items-center justify-center gap-2 px-4 py-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-xl text-sm font-semibold border border-rose-100 dark:border-rose-900/30 transition shadow-sm"
             >
               <LogOut className="w-4 h-4" />
               Sign Out
@@ -512,7 +540,7 @@ export default function ProfileSetup() {
           </div>
 
           {/* Sleek Tab Navigation */}
-          <div className="flex border-b border-slate-200 dark:border-slate-800 mb-8 overflow-x-auto gap-1 pb-1 scrollbar-none">
+          <div className="-mx-4 sm:mx-0 px-4 sm:px-0 flex border-b border-slate-200 dark:border-slate-800 mb-6 sm:mb-8 overflow-x-auto gap-2 pb-2 scrollbar-none snap-x">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -520,7 +548,7 @@ export default function ProfileSetup() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center gap-2 px-6 py-3 font-semibold text-sm rounded-xl transition-all whitespace-nowrap outline-none
+                  className={`snap-start shrink-0 flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 font-semibold text-sm rounded-xl transition-all whitespace-nowrap outline-none
                     ${isActive
                       ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-500"
                       : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900/50"}`}
@@ -532,7 +560,7 @@ export default function ProfileSetup() {
             })}
           </div>
 
-          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 p-8">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 p-5 sm:p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
 
               <AnimatePresence mode="wait">
@@ -719,11 +747,11 @@ export default function ProfileSetup() {
                     </div>
 
                     {/* Change Password Section */}
-                    <div className="pt-6 border-t border-slate-200 dark:border-slate-700/50 mt-6">
-                      <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
+                    <div className="pt-6 border-t border-slate-200 dark:border-slate-700/50 mt-6 space-y-3">
+                      <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                         <Lock className="w-4 h-4 text-emerald-500" /> Account Security
                       </h3>
-                      <div className="flex flex-col sm:flex-row gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
                         <div className="flex-1 relative">
                           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                           <input
@@ -738,12 +766,17 @@ export default function ProfileSetup() {
                           type="button"
                           onClick={handlePasswordChange}
                           disabled={passwordLoading || !newPassword}
-                          className="px-6 py-3 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:hover:bg-emerald-800/40 text-emerald-700 dark:text-emerald-400 font-bold rounded-xl transition-all whitespace-nowrap disabled:opacity-50 flex items-center justify-center gap-2"
+                          className="min-h-[48px] px-5 py-3 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:hover:bg-emerald-800/40 text-emerald-700 dark:text-emerald-400 font-bold rounded-xl transition-all whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
-                          {passwordLoading ? <div className="w-4 h-4 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" /> : "Set Password"}
+                          {passwordLoading ? (
+                            <>
+                              <div className="w-4 h-4 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+                              Updating...
+                            </>
+                          ) : "Set Password"}
                         </button>
                       </div>
-                      <p className="text-xs text-slate-500 mt-2">Setting a password allows you to log in with your email and password instead of using OTP codes.</p>
+                      <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">Setting a password allows you to log in with your email and password instead of using OTP codes.</p>
                     </div>
                   </motion.div>
                 )}
@@ -1443,14 +1476,17 @@ export default function ProfileSetup() {
 
               </AnimatePresence>
 
-              <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row gap-3">
+              <div className="pt-5 sm:pt-6 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-500/25 transition-all text-lg flex items-center justify-center gap-2"
+                  className="w-full min-h-[52px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-3.5 rounded-xl shadow-lg shadow-emerald-500/25 transition-all text-base sm:text-lg flex items-center justify-center gap-2 disabled:opacity-70"
                 >
                   {loading ? (
-                    <div className="w-6 h-6 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                    <>
+                      <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                      Saving...
+                    </>
                   ) : (
                     <>
                       <Save className="w-5 h-5" />
@@ -1462,7 +1498,8 @@ export default function ProfileSetup() {
                 <button
                   type="button"
                   onClick={() => setLocation(playerSlug ? `/player/${playerSlug}` : "/")}
-                  className="px-6 py-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold transition"
+                  disabled={loading}
+                  className="min-h-[52px] px-6 py-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>

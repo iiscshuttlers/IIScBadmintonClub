@@ -66,9 +66,16 @@ CREATE TABLE matches (
   round TEXT NOT NULL,
   player1_id TEXT REFERENCES players(id),
   player2_id TEXT REFERENCES players(id),
+  team1_partner_id TEXT REFERENCES players(id),
+  team2_partner_id TEXT REFERENCES players(id),
   winner_id TEXT REFERENCES players(id),
   score TEXT NOT NULL,
   date DATE NOT NULL,
+  is_friendly BOOLEAN DEFAULT false,
+  status TEXT DEFAULT 'confirmed',
+  submitted_by TEXT REFERENCES players(id),
+  elo_change_p1 INTEGER,
+  elo_change_p2 INTEGER,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -80,7 +87,16 @@ ALTER TABLE matches ENABLE ROW LEVEL SECURITY;
 -- 6. RLS Policies
 CREATE POLICY "Allow public read access to players"     ON players     FOR SELECT USING (true);
 CREATE POLICY "Allow public read access to tournaments" ON tournaments FOR SELECT USING (true);
-CREATE POLICY "Allow public read access to matches"     ON matches     FOR SELECT USING (true);
+CREATE POLICY "Allow public read access to matches"     ON matches     FOR SELECT USING (status IS DISTINCT FROM 'pending');
+CREATE POLICY "Players can read their pending matches"  ON matches     FOR SELECT USING (
+  status = 'pending'
+  AND EXISTS (
+    SELECT 1
+    FROM players viewer
+    WHERE viewer.user_id = auth.uid()
+      AND viewer.id IN (matches.player1_id, matches.player2_id, matches.team1_partner_id, matches.team2_partner_id)
+  )
+);
 CREATE POLICY "Users can create their own profile"      ON players     FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update their own profile"      ON players     FOR UPDATE USING (auth.uid() = user_id);
 

@@ -98,6 +98,52 @@ interface Player {
   isApproved?: boolean;
 }
 
+const MATCH_SELECT =
+  "*, player1:players!player1_id(id, full_name), player2:players!player2_id(id, full_name)";
+
+function matchParticipantIds(match: any): string[] {
+  return [
+    match.player1_id,
+    match.player2_id,
+    match.team1_partner_id,
+    match.team2_partner_id,
+  ].filter(Boolean);
+}
+
+function isMatchParticipant(match: any, playerId?: string | null): boolean {
+  return !!playerId && matchParticipantIds(match).includes(playerId);
+}
+
+function visibleMatchesForViewer(matches: any[], viewerPlayerId?: string | null): any[] {
+  return matches.filter((match) => (
+    match.status === "confirmed" || isMatchParticipant(match, viewerPlayerId)
+  ));
+}
+
+async function fetchProfileMatches(profileId: string, signal?: AbortSignal) {
+  const runQuery = (participantFilter: string) => {
+    const query = supabase
+      .from("matches")
+      .select(MATCH_SELECT)
+      .in("status", ["confirmed", "pending"])
+      .or(participantFilter)
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    return signal ? query.abortSignal(signal) : query;
+  };
+
+  const fullParticipantFilter =
+    `player1_id.eq.${profileId},player2_id.eq.${profileId},team1_partner_id.eq.${profileId},team2_partner_id.eq.${profileId}`;
+  const legacyParticipantFilter = `player1_id.eq.${profileId},player2_id.eq.${profileId}`;
+
+  const fullRes = await runQuery(fullParticipantFilter);
+  if (!fullRes.error) return fullRes;
+
+  console.warn("Falling back to legacy match participant query:", fullRes.error.message);
+  return runQuery(legacyParticipantFilter);
+}
+
 /* ------------------------------------------------------------------ */
 /*  Animation variants                                                 */
 /* ------------------------------------------------------------------ */
@@ -268,6 +314,7 @@ export default function PlayerProfile() {
   const [isLogMatchOpen, setIsLogMatchOpen] = useState(false);
   const [pendingMatches, setPendingMatches] = useState<any[]>([]);
   const [matchHistoryFilter, setMatchHistoryFilter] = useState<"all" | "friendly" | "tournament">("all");
+  const [isMatchHistoryOpen, setIsMatchHistoryOpen] = useState(false);
 
   /* ── Shared helper: map DB row → Player interface ──────────────── */
   function formatPlayerData(data: any): Player {
@@ -323,13 +370,21 @@ export default function PlayerProfile() {
   /* ── Fetch pending matches for verification ────────────────────── */
   const fetchPendingMatches = useCallback(async (profileId: string) => {
     try {
-      const { data } = await supabase
+      const fullRes = await supabase
         .from("matches")
         .select("*, player1:players!player1_id(full_name), player2:players!player2_id(full_name)")
         .eq("status", "pending")
         .neq("submitted_by", profileId)
-        .or(`player1_id.eq.${profileId},player2_id.eq.${profileId}`);
-      setPendingMatches(data || []);
+        .or(`player1_id.eq.${profileId},player2_id.eq.${profileId},team1_partner_id.eq.${profileId},team2_partner_id.eq.${profileId}`);
+      const res = fullRes.error
+        ? await supabase
+          .from("matches")
+          .select("*, player1:players!player1_id(full_name), player2:players!player2_id(full_name)")
+          .eq("status", "pending")
+          .neq("submitted_by", profileId)
+          .or(`player1_id.eq.${profileId},player2_id.eq.${profileId}`)
+        : fullRes;
+      setPendingMatches((res.data || []).filter((match) => isMatchParticipant(match, profileId)));
     } catch (err) { console.warn("fetchPendingMatches error:", err); }
   }, []);
 
@@ -382,12 +437,7 @@ export default function PlayerProfile() {
         const [playerRes, matchesRes, eloRes] = await Promise.all([
           supabase.from("players").select("*")
             .eq("id", id).maybeSingle().abortSignal(signal),
-          supabase.from("matches")
-            .select("*, player1:players!player1_id(id, full_name), player2:players!player2_id(id, full_name)")
-            .in("status", ["confirmed", "pending"])
-            .or(`player1_id.eq.${id},player2_id.eq.${id}`)
-            .order("created_at", { ascending: false })
-            .limit(50).abortSignal(signal),
+          fetchProfileMatches(id, signal),
           supabase.from("players").select("id, elo_rating")
             .is("deleted_at", null)
             .order("elo_rating", { ascending: false })
@@ -405,7 +455,7 @@ export default function PlayerProfile() {
         }
 
         // Match history (confirmed + pending)
-        setLiveMatches(matchesRes.data || []);
+        setLiveMatches(visibleMatchesForViewer(matchesRes.data || [], ownPlayerProfile?.id));
 
         // ELO rank
         if (eloRes.data) {
@@ -422,7 +472,7 @@ export default function PlayerProfile() {
     })();
 
     return () => controller.abort();
-  }, [id]);
+  }, [id, ownPlayerProfile?.id]);
 
   /* ══════════════════════════════════════════════════════════════════
      EFFECT 2: Auth — fetch session, own profile, all players list.
@@ -431,13 +481,31 @@ export default function PlayerProfile() {
   useEffect(() => {
     let cancelled = false;
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session || cancelled) return;
-      setCurrentUser(session.user);
+    const clearViewer = () => {
+      setCurrentUser(null);
+      setOwnPlayerProfile(null);
+      setPendingMatches([]);
+    };
+
+    const loadViewer = async (session: any) => {
+      if (!session) {
+        if (!cancelled) clearViewer();
+        return;
+      }
+
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (cancelled) return;
+      if (userError || !userData.user || userData.user.id !== session.user.id) {
+        clearViewer();
+        await supabase.auth.signOut();
+        return;
+      }
+
+      setCurrentUser(userData.user);
 
       const [ownRes, everyoneRes] = await Promise.all([
         supabase.from("players").select("id, full_name, avatar_url, gender")
-          .eq("user_id", session.user.id).maybeSingle(),
+          .eq("user_id", userData.user.id).maybeSingle(),
         supabase.from("players").select("id, full_name, avatar_url, gender")
           .is("deleted_at", null),
       ]);
@@ -447,9 +515,23 @@ export default function PlayerProfile() {
         fetchPendingMatches(ownRes.data.id);
       }
       if (everyoneRes.data) setAllPlayers(everyoneRes.data);
-    }).catch(err => console.error("Auth session error:", err));
+    };
 
-    return () => { cancelled = true; };
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => loadViewer(session))
+      .catch(err => {
+        console.error("Auth session error:", err);
+        clearViewer();
+      });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      loadViewer(session);
+    });
+
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, [fetchPendingMatches]);
 
   /* ── Silent background refresh (every 30s, no loading spinner) ── */
@@ -458,17 +540,12 @@ export default function PlayerProfile() {
     try {
       const [playerRes, matchesRes] = await Promise.all([
         supabase.from("players").select("*").eq("id", id).maybeSingle(),
-        supabase.from("matches")
-          .select("*, player1:players!player1_id(id, full_name), player2:players!player2_id(id, full_name)")
-          .in("status", ["confirmed", "pending"])
-          .or(`player1_id.eq.${id},player2_id.eq.${id}`)
-          .order("created_at", { ascending: false })
-          .limit(50),
+        fetchProfileMatches(id),
       ]);
       if (playerRes.data) setPlayer(formatPlayerData(playerRes.data));
-      if (matchesRes.data) setLiveMatches(matchesRes.data);
+      if (matchesRes.data) setLiveMatches(visibleMatchesForViewer(matchesRes.data, ownPlayerProfile?.id));
     } catch { /* silent — don't disturb the user */ }
-  }, [id]);
+  }, [id, ownPlayerProfile?.id]);
 
 
 
@@ -1098,154 +1175,193 @@ export default function PlayerProfile() {
 
               return (
                 <motion.section variants={itemVariants}>
-                  <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-2 flex items-center gap-3 ml-2">
-                    <Clock className="w-6 h-6 text-blue-500" />
-                    Match History
-                    <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400">{confirmedMatches.length}</span>
-                  </h2>
-
-                  {/* Filter Tabs */}
-                  <div className="flex gap-2 ml-2 mb-4">
-                    {(["all", "friendly", "tournament"] as const).map(tab => (
-                      <button
-                        key={tab}
-                        onClick={() => setMatchHistoryFilter(tab)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition border
-                          ${matchHistoryFilter === tab
-                            ? tab === "tournament"
-                              ? "bg-amber-50 dark:bg-amber-900/30 border-amber-400 text-amber-700 dark:text-amber-400"
-                              : tab === "friendly"
-                                ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-400 text-emerald-700 dark:text-emerald-400"
-                                : "bg-blue-50 dark:bg-blue-900/30 border-blue-400 text-blue-700 dark:text-blue-400"
-                            : "border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
-                          }`}
-                      >
-                        {tab === "all" ? `All (${confirmedMatches.length})` : tab === "friendly" ? `🏸 Friendly (${confirmedMatches.filter(m => m.is_friendly !== false).length})` : `🏆 Tournament (${confirmedMatches.filter(m => m.is_friendly === false).length})`}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Pending Matches Banner */}
-                  {pendingMatchesList.length > 0 && (
-                    <div className="bg-amber-50 dark:bg-amber-900/15 border border-amber-200 dark:border-amber-800/40 rounded-2xl p-4 mb-4 ml-2">
-                      <div className="text-xs font-bold text-amber-700 dark:text-amber-400 mb-2">⏳ {pendingMatchesList.length} Pending Verification</div>
-                      <div className="space-y-2">
-                        {pendingMatchesList.map((m, idx) => {
-                          const isP1 = m.player1_id === id;
-                          const opponent = isP1 ? m.player2 : m.player1;
-                          const canWithdraw = (currentUser && m.submitted_by === currentUser.id) ||
-                            (ownPlayerProfile && (m.player1_id === ownPlayerProfile.id || m.player2_id === ownPlayerProfile.id));
-
-                          return (
-                            <div key={`pen-${m.id || idx}`} className="flex flex-col sm:flex-row sm:items-center gap-3 text-sm bg-white/50 dark:bg-slate-900/50 p-3 rounded-xl border border-amber-200/50 dark:border-amber-700/30">
-                              <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <div className="w-8 h-8 rounded-lg bg-amber-200 dark:bg-amber-800/40 flex items-center justify-center text-xs font-black text-amber-700 dark:text-amber-400 shrink-0">?</div>
-                                <div className="flex-1 min-w-0">
-                                  <span className="text-slate-600 dark:text-slate-300">vs </span>
-                                  <span className="font-bold text-slate-800 dark:text-slate-200">{opponent?.full_name ?? "Unknown"}</span>
-                                  <span className="text-slate-400 mx-1">·</span>
-                                  <span className="font-mono text-xs font-bold text-slate-600 dark:text-slate-400">{m.score}</span>
-                                </div>
-                                <div className="text-[10px] text-slate-400 shrink-0">{new Date(m.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</div>
-                              </div>
-                              {canWithdraw && (
-                                <button
-                                  onClick={() => handleWithdrawMatch(m.id)}
-                                  className="text-xs font-bold px-3 py-1.5 rounded-lg bg-rose-100 hover:bg-rose-200 dark:bg-rose-900/30 dark:hover:bg-rose-800/40 text-rose-700 dark:text-rose-400 transition-colors w-full sm:w-auto mt-2 sm:mt-0 border border-rose-200 dark:border-rose-800/50"
-                                >
-                                  Withdraw Match
-                                </button>
-                              )}
-                            </div>
-                          );
-                        })}
+                  <button
+                    type="button"
+                    onClick={() => setIsMatchHistoryOpen((open) => !open)}
+                    aria-expanded={isMatchHistoryOpen}
+                    className="w-full bg-white dark:bg-slate-800/80 rounded-3xl shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 p-5 sm:p-6 flex items-center justify-between gap-4 text-left hover:border-blue-200 dark:hover:border-blue-800/60 transition-colors"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-11 h-11 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
+                        <Clock className="w-5 h-5 text-blue-500" />
+                      </div>
+                      <div className="min-w-0">
+                        <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100">
+                          Match History
+                        </h2>
+                        <div className="mt-1 flex flex-wrap gap-2 text-[10px] sm:text-xs font-bold">
+                          <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400">
+                            {confirmedMatches.length} confirmed
+                          </span>
+                          {pendingMatchesList.length > 0 && (
+                            <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400">
+                              {pendingMatchesList.length} pending
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  )}
+                    <ChevronRight
+                      className={`w-5 h-5 text-slate-400 shrink-0 transition-transform duration-200 ${isMatchHistoryOpen ? "rotate-90" : ""}`}
+                    />
+                  </button>
 
-                  {/* Match List — BWF table style */}
-                  <div className="bg-white dark:bg-slate-800/80 rounded-3xl shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 overflow-hidden">
-                    {/* Table Header */}
-                    <div className="hidden sm:grid grid-cols-12 gap-2 px-5 py-3 bg-slate-50 dark:bg-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-700/50">
-                      <div className="col-span-1 text-center">Result</div>
-                      <div className="col-span-1">Type</div>
-                      <div className="col-span-4">Opponent</div>
-                      <div className="col-span-3">Score</div>
-                      <div className="col-span-3 text-right">Date & Time</div>
-                    </div>
+                  <AnimatePresence initial={false}>
+                    {isMatchHistoryOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.22, ease: "easeOut" }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pt-4">
+                          {/* Filter Tabs */}
+                          <div className="flex gap-2 ml-2 mb-4 overflow-x-auto pb-1">
+                            {(["all", "friendly", "tournament"] as const).map(tab => (
+                              <button
+                                key={tab}
+                                onClick={() => setMatchHistoryFilter(tab)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition border shrink-0
+                                  ${matchHistoryFilter === tab
+                                    ? tab === "tournament"
+                                      ? "bg-amber-50 dark:bg-amber-900/30 border-amber-400 text-amber-700 dark:text-amber-400"
+                                      : tab === "friendly"
+                                        ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-400 text-emerald-700 dark:text-emerald-400"
+                                        : "bg-blue-50 dark:bg-blue-900/30 border-blue-400 text-blue-700 dark:text-blue-400"
+                                    : "border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                  }`}
+                              >
+                                {tab === "all" ? `All (${confirmedMatches.length})` : tab === "friendly" ? `🏸 Friendly (${confirmedMatches.filter(m => m.is_friendly !== false).length})` : `🏆 Tournament (${confirmedMatches.filter(m => m.is_friendly === false).length})`}
+                              </button>
+                            ))}
+                          </div>
 
-                    <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
-                      {filteredMatches.length > 0 ? filteredMatches.map((m, idx) => {
-                        const isP1 = m.player1_id === id;
-                        const opponent = isP1 ? m.player2 : m.player1;
-                        const won = m.winner_id === id;
-                        const matchDate = new Date(m.created_at);
-                        const isFriendly = m.is_friendly !== false;
+                          {/* Pending Matches Banner */}
+                          {pendingMatchesList.length > 0 && (
+                            <div className="bg-amber-50 dark:bg-amber-900/15 border border-amber-200 dark:border-amber-800/40 rounded-2xl p-4 mb-4 ml-2">
+                              <div className="text-xs font-bold text-amber-700 dark:text-amber-400 mb-2">⏳ {pendingMatchesList.length} Pending Verification</div>
+                              <div className="space-y-2">
+                                {pendingMatchesList.map((m, idx) => {
+                                  const isP1 = m.player1_id === id;
+                                  const opponent = isP1 ? m.player2 : m.player1;
+                                  const canWithdraw = (currentUser && m.submitted_by === currentUser.id) ||
+                                    isMatchParticipant(m, ownPlayerProfile?.id);
 
-                        return (
-                          <div key={idx} className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-2 p-4 sm:px-5 sm:py-4 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors items-center">
-                            {/* Result Badge */}
-                            <div className="col-span-1 flex sm:justify-center">
-                              <div className={`w-10 h-10 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center font-black text-sm shadow-md
-                                ${won
-                                  ? "bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-emerald-500/30"
-                                  : "bg-gradient-to-br from-rose-400 to-rose-600 text-white shadow-rose-500/30"}`}>
-                                {won ? "W" : "L"}
+                                  return (
+                                    <div key={`pen-${m.id || idx}`} className="flex flex-col sm:flex-row sm:items-center gap-3 text-sm bg-white/50 dark:bg-slate-900/50 p-3 rounded-xl border border-amber-200/50 dark:border-amber-700/30">
+                                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                                        <div className="w-8 h-8 rounded-lg bg-amber-200 dark:bg-amber-800/40 flex items-center justify-center text-xs font-black text-amber-700 dark:text-amber-400 shrink-0">?</div>
+                                        <div className="flex-1 min-w-0">
+                                          <span className="text-slate-600 dark:text-slate-300">vs </span>
+                                          <span className="font-bold text-slate-800 dark:text-slate-200">{opponent?.full_name ?? "Unknown"}</span>
+                                          <span className="text-slate-400 mx-1">·</span>
+                                          <span className="font-mono text-xs font-bold text-slate-600 dark:text-slate-400">{m.score}</span>
+                                        </div>
+                                        <div className="text-[10px] text-slate-400 shrink-0">{new Date(m.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</div>
+                                      </div>
+                                      {canWithdraw && (
+                                        <button
+                                          onClick={() => handleWithdrawMatch(m.id)}
+                                          className="text-xs font-bold px-3 py-1.5 rounded-lg bg-rose-100 hover:bg-rose-200 dark:bg-rose-900/30 dark:hover:bg-rose-800/40 text-rose-700 dark:text-rose-400 transition-colors w-full sm:w-auto mt-2 sm:mt-0 border border-rose-200 dark:border-rose-800/50"
+                                        >
+                                          Withdraw Match
+                                        </button>
+                                      )}
+                                    </div>
+                                  );
+                                })}
                               </div>
                             </div>
+                          )}
 
-                            {/* Match Type */}
-                            <div className="col-span-1">
-                              <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${
-                                isFriendly
-                                  ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/30"
-                                  : "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/30"
-                              }`}>
-                                {isFriendly ? "FRD" : "TRN"}
-                              </span>
+                          {/* Match List — BWF table style */}
+                          <div className="bg-white dark:bg-slate-800/80 rounded-3xl shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 overflow-hidden">
+                            {/* Table Header */}
+                            <div className="hidden sm:grid grid-cols-12 gap-2 px-5 py-3 bg-slate-50 dark:bg-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-700/50">
+                              <div className="col-span-1 text-center">Result</div>
+                              <div className="col-span-1">Type</div>
+                              <div className="col-span-4">Opponent</div>
+                              <div className="col-span-3">Score</div>
+                              <div className="col-span-3 text-right">Date & Time</div>
                             </div>
 
-                            {/* Opponent */}
-                            <div className="col-span-4">
-                              <div className="text-sm text-slate-600 dark:text-slate-300">
-                                <span className="text-slate-400 mr-1">vs</span>
-                                <button
-                                  onClick={() => opponent?.id && setLocation(`/player/${opponent.id}`)}
-                                  className="font-bold text-slate-800 dark:text-slate-100 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
-                                >
-                                  {opponent?.full_name ?? "Unknown"}
-                                </button>
-                              </div>
-                              {m.round && m.round !== "Tournament" && (
-                                <div className="text-[10px] text-slate-400 font-medium mt-0.5">{m.round}</div>
+                            <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
+                              {filteredMatches.length > 0 ? filteredMatches.map((m, idx) => {
+                                const isP1 = m.player1_id === id;
+                                const opponent = isP1 ? m.player2 : m.player1;
+                                const won = m.winner_id === id;
+                                const matchDate = new Date(m.created_at);
+                                const isFriendly = m.is_friendly !== false;
+
+                                return (
+                                  <div key={idx} className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-2 p-4 sm:px-5 sm:py-4 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors items-center">
+                                    {/* Result Badge */}
+                                    <div className="col-span-1 flex sm:justify-center">
+                                      <div className={`w-10 h-10 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center font-black text-sm shadow-md
+                                        ${won
+                                          ? "bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-emerald-500/30"
+                                          : "bg-gradient-to-br from-rose-400 to-rose-600 text-white shadow-rose-500/30"}`}>
+                                        {won ? "W" : "L"}
+                                      </div>
+                                    </div>
+
+                                    {/* Match Type */}
+                                    <div className="col-span-1">
+                                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${
+                                        isFriendly
+                                          ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/30"
+                                          : "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/30"
+                                      }`}>
+                                        {isFriendly ? "FRD" : "TRN"}
+                                      </span>
+                                    </div>
+
+                                    {/* Opponent */}
+                                    <div className="col-span-4">
+                                      <div className="text-sm text-slate-600 dark:text-slate-300">
+                                        <span className="text-slate-400 mr-1">vs</span>
+                                        <button
+                                          onClick={() => opponent?.id && setLocation(`/player/${opponent.id}`)}
+                                          className="font-bold text-slate-800 dark:text-slate-100 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                                        >
+                                          {opponent?.full_name ?? "Unknown"}
+                                        </button>
+                                      </div>
+                                      {m.round && m.round !== "Tournament" && (
+                                        <div className="text-[10px] text-slate-400 font-medium mt-0.5">{m.round}</div>
+                                      )}
+                                    </div>
+
+                                    {/* Score */}
+                                    <div className="col-span-3">
+                                      <div className="font-mono text-sm font-black text-slate-700 dark:text-slate-200 tracking-tight">
+                                        {m.score?.replace(/\s*\[.*\]/, "") || "—"}
+                                      </div>
+                                    </div>
+
+                                    {/* Date & Time */}
+                                    <div className="col-span-3 text-right">
+                                      <div className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                                        {matchDate.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                                      </div>
+                                      <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                                        {matchDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              }) : (
+                                <div className="p-8 text-center text-sm text-slate-400 dark:text-slate-500 italic">
+                                  No {matchHistoryFilter === "all" ? "" : matchHistoryFilter} matches found
+                                </div>
                               )}
                             </div>
-
-                            {/* Score */}
-                            <div className="col-span-3">
-                              <div className="font-mono text-sm font-black text-slate-700 dark:text-slate-200 tracking-tight">
-                                {m.score?.replace(/\s*\[.*\]/, "") || "—"}
-                              </div>
-                            </div>
-
-                            {/* Date & Time */}
-                            <div className="col-span-3 text-right">
-                              <div className="text-xs font-bold text-slate-600 dark:text-slate-300">
-                                {matchDate.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                              </div>
-                              <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-                                {matchDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}
-                              </div>
-                            </div>
                           </div>
-                        );
-                      }) : (
-                        <div className="p-8 text-center text-sm text-slate-400 dark:text-slate-500 italic">
-                          No {matchHistoryFilter === "all" ? "" : matchHistoryFilter} matches found
                         </div>
-                      )}
-                    </div>
-                  </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.section>
               );
             })()}

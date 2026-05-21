@@ -12,13 +12,45 @@ ALTER TABLE matches ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'confirmed'; --
 ALTER TABLE matches ADD COLUMN IF NOT EXISTS submitted_by TEXT REFERENCES players(id);
 ALTER TABLE matches ADD COLUMN IF NOT EXISTS elo_change_p1 INTEGER;
 ALTER TABLE matches ADD COLUMN IF NOT EXISTS elo_change_p2 INTEGER;
+ALTER TABLE matches ADD COLUMN IF NOT EXISTS team1_partner_id TEXT REFERENCES players(id);
+ALTER TABLE matches ADD COLUMN IF NOT EXISTS team2_partner_id TEXT REFERENCES players(id);
+
+-- Pending matches are private to the involved players. Confirmed matches remain public.
+DROP POLICY IF EXISTS "Allow public read access to matches" ON matches;
+DROP POLICY IF EXISTS "Allow public read access to confirmed matches" ON matches;
+DROP POLICY IF EXISTS "Players can read their pending matches" ON matches;
+
+CREATE POLICY "Allow public read access to confirmed matches"
+  ON matches
+  FOR SELECT
+  USING (status IS DISTINCT FROM 'pending');
+
+CREATE POLICY "Players can read their pending matches"
+  ON matches
+  FOR SELECT
+  USING (
+    status = 'pending'
+    AND EXISTS (
+      SELECT 1
+      FROM players viewer
+      WHERE viewer.user_id = auth.uid()
+        AND viewer.id IN (
+          matches.player1_id,
+          matches.player2_id,
+          matches.team1_partner_id,
+          matches.team2_partner_id
+        )
+    )
+  );
 
 -- 3. RPC to SUBMIT a match (Leaves it 'pending', NO Elo update yet)
 CREATE OR REPLACE FUNCTION submit_friendly_match(
   submitter_id TEXT, 
   opponent_id TEXT, 
   match_winner_id TEXT, 
-  match_score TEXT
+  match_score TEXT,
+  submitter_partner_id TEXT DEFAULT NULL,
+  opponent_partner_id TEXT DEFAULT NULL
 ) RETURNS UUID AS $$
 DECLARE
   new_match_id UUID;
@@ -28,9 +60,31 @@ BEGIN
   END IF;
 
   INSERT INTO matches (
-    category, round, player1_id, player2_id, winner_id, score, date, is_friendly, status, submitted_by
+    category,
+    round,
+    player1_id,
+    player2_id,
+    team1_partner_id,
+    team2_partner_id,
+    winner_id,
+    score,
+    date,
+    is_friendly,
+    status,
+    submitted_by
   ) VALUES (
-    'Singles', 'Friendly', submitter_id, opponent_id, match_winner_id, match_score, CURRENT_DATE, true, 'pending', submitter_id
+    CASE WHEN submitter_partner_id IS NULL AND opponent_partner_id IS NULL THEN 'Singles' ELSE 'Doubles' END,
+    'Friendly',
+    submitter_id,
+    opponent_id,
+    submitter_partner_id,
+    opponent_partner_id,
+    match_winner_id,
+    match_score,
+    CURRENT_DATE,
+    true,
+    'pending',
+    submitter_id
   ) RETURNING id INTO new_match_id;
   
   RETURN new_match_id;
@@ -76,7 +130,10 @@ BEGIN
     RAISE EXCEPTION 'You cannot confirm a match you submitted yourself to prevent fraud.';
   END IF;
   
-  IF confirmer_id != m_record.player1_id AND confirmer_id != m_record.player2_id THEN
+  IF confirmer_id IS DISTINCT FROM m_record.player1_id
+    AND confirmer_id IS DISTINCT FROM m_record.player2_id
+    AND confirmer_id IS DISTINCT FROM m_record.team1_partner_id
+    AND confirmer_id IS DISTINCT FROM m_record.team2_partner_id THEN
     RAISE EXCEPTION 'You were not a part of this match.';
   END IF;
 
@@ -136,7 +193,10 @@ BEGIN
     RAISE EXCEPTION 'You cannot reject your own submission.';
   END IF;
   
-  IF rejecter_id != m_record.player1_id AND rejecter_id != m_record.player2_id THEN
+  IF rejecter_id IS DISTINCT FROM m_record.player1_id
+    AND rejecter_id IS DISTINCT FROM m_record.player2_id
+    AND rejecter_id IS DISTINCT FROM m_record.team1_partner_id
+    AND rejecter_id IS DISTINCT FROM m_record.team2_partner_id THEN
     RAISE EXCEPTION 'You were not a part of this match.';
   END IF;
 
