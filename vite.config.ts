@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 import fs from "node:fs";
 import path from "node:path";
 import { defineConfig, type Plugin, type ViteDevServer } from "vite";
-import { VitePWA } from "vite-plugin-pwa";
+// VitePWA removed to prevent caching
 import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
 
 /* ===================== Debug + Storage Plugins (unchanged) ===================== */
@@ -134,61 +134,7 @@ export default defineConfig({
     vitePluginManusDebugCollector(),
     vitePluginStorageProxy(),
 
-    VitePWA({
-      registerType: "autoUpdate",
-      workbox: {
-        cleanupOutdatedCaches: true,
-        clientsClaim: true,
-        skipWaiting: true,
-        navigateFallback: "index.html",
-        // Never intercept Supabase API calls
-        navigateFallbackDenylist: [/^https:\/\/.*\.supabase\.co/, /\/rest\//, /\/auth\//],
-        runtimeCaching: [
-          {
-            // Use NetworkFirst for all navigation to prevent stale pages
-            urlPattern: ({ request }) => request.mode === 'navigate',
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'pages',
-              cacheableResponse: { statuses: [200] }
-            }
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "google-fonts",
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
-            },
-          },
-        ],
-      },
-      manifest: {
-        name: "IISc Badminton Club",
-        short_name: "IISc Badminton",
-        description: "Official IISc Badminton Club App",
-        theme_color: "#0f172a",
-        background_color: "#ffffff",
-        display: "standalone",
-
-        // 🔥 IMPORTANT (matches GitHub Pages or root for Capacitor)
-        start_url: process.env.CAPACITOR === "true" ? "/" : "/iiscshuttlers/",
-        scope: process.env.CAPACITOR === "true" ? "/" : "/iiscshuttlers/",
-
-        icons: [
-          {
-            src: "/iiscshuttlers/icon-192.png",
-            sizes: "192x192",
-            type: "image/png",
-          },
-          {
-            src: "/iiscshuttlers/icon-512.png",
-            sizes: "512x512",
-            type: "image/png",
-          },
-        ],
-      },
-    }),
+    // VitePWA removed
   ],
 
   // 🔥 CRITICAL FIX

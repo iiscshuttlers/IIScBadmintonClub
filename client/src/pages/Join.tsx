@@ -10,7 +10,9 @@ type Mode = "welcome" | "signin" | "signup" | "otp-email" | "otp-verify";
 const IISC_DOMAIN = "@iisc.ac.in";
 
 function validateEmail(email: string) {
-  // Temporarily allowed all email domains for testing
+  if (!email.toLowerCase().endsWith(IISC_DOMAIN)) {
+    return `Please use your valid ${IISC_DOMAIN} email address.`;
+  }
   return null;
 }
 

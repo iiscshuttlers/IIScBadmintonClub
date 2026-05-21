@@ -98,11 +98,7 @@ function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, onEdit }
         </span>
       )}
 
-      {isAdmin && player.is_approved === false && (
-        <span className="absolute top-3 right-3 z-10 px-2 py-0.5 rounded-full bg-amber-500 text-white text-[9px] font-black uppercase tracking-widest shadow animate-pulse">
-          Pending
-        </span>
-      )}
+
 
       {/* Share button — always visible on hover */}
       <button
@@ -263,6 +259,9 @@ export default function PlayersDirectory() {
         }
       }
       setAuthLoading(false);
+    }).catch(err => {
+      console.error("Auth session error:", err);
+      setAuthLoading(false);
     });
 
     // Listen for auth state changes (e.g. sign-in in another tab)
@@ -274,7 +273,7 @@ export default function PlayersDirectory() {
   }, []);
 
   /* 2. Fetch all players (with retry logic) */
-  const fetchPlayers = async (retryCount = 0) => {
+  const fetchPlayers = async (retryCount = 0, currentSession = session, currentIsAdmin = isAdmin) => {
     setFetchError(false);
     setLoading(true);
 
@@ -291,27 +290,21 @@ export default function PlayersDirectory() {
         .is("deleted_at", null)
         .order("elo_rating", { ascending: false });
 
-      if (!isAdmin) {
-        if (session?.user?.id) {
-          query = query.or(`is_approved.eq.true,user_id.eq.${session.user.id}`);
-        } else {
-          query = query.eq("is_approved", true);
-        }
-      }
+
 
       const { data, error } = await query.abortSignal(controller.signal);
 
       clearTimeout(timeout);
 
-      if (!error && data) {
-        setPlayers(data);
+      if (!error) {
+        setPlayers(data || []);
         setLoading(false);
-      } else if (error) {
+      } else {
         console.warn("Supabase fetch error:", error.message);
         if (retryCount < MAX_RETRIES) {
           const delay = 1000 * Math.pow(2, retryCount);
           await new Promise((r) => setTimeout(r, delay));
-          return fetchPlayers(retryCount + 1);
+          return fetchPlayers(retryCount + 1, currentSession, currentIsAdmin);
         }
         setFetchError(true);
         setLoading(false);
@@ -321,7 +314,7 @@ export default function PlayersDirectory() {
       if (retryCount < MAX_RETRIES) {
         const delay = 1000 * Math.pow(2, retryCount);
         await new Promise((r) => setTimeout(r, delay));
-        return fetchPlayers(retryCount + 1);
+        return fetchPlayers(retryCount + 1, currentSession, currentIsAdmin);
       }
       setFetchError(true);
       setLoading(false);
@@ -339,8 +332,10 @@ export default function PlayersDirectory() {
   };
 
   useEffect(() => {
-    fetchPlayers();
-  }, []);
+    if (!authLoading) {
+      fetchPlayers(0, session, isAdmin);
+    }
+  }, [authLoading, session?.user?.id, isAdmin]);
 
   // Auto-refresh player list every 60s (silently, scroll preserved)
   const silentRefresh = useCallback(async () => {
@@ -741,7 +736,7 @@ export default function PlayersDirectory() {
             <p className="text-2xl">🔌</p>
             <p className="text-slate-700 dark:text-slate-300 font-bold">No connection to server</p>
             <p className="text-slate-400 text-sm">This app requires internet to load player data.</p>
-            <button onClick={fetchPlayers} className="mt-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition">
+            <button onClick={() => fetchPlayers()} className="mt-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition">
               Retry
             </button>
           </div>

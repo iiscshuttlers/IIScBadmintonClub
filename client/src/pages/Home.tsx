@@ -42,7 +42,7 @@ export default function Home() {
     if (sessionStorage.getItem("guest_mode")) return;
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) setLocation("/join");
-    });
+    }).catch(err => console.error("Auth session error:", err));
   }, []);
 
   return (

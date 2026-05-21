@@ -255,6 +255,8 @@ export default function PlayerProfile() {
           .is("deleted_at", null);
         if (everyone) setAllPlayers(everyone);
       }
+    }).catch(err => {
+      console.error("Auth session error:", err);
     });
 
     async function fetchPlayer() {
@@ -528,16 +530,7 @@ export default function PlayerProfile() {
     setLocation('/');
   };
 
-  const handleApproveProfile = async () => {
-    if (!player) return;
-    const { error } = await supabase.from('players').update({ is_approved: true }).eq('id', player.id);
-    if (!error) {
-      alert("Profile approved! It is now visible to everyone in the directory.");
-      setPlayer({ ...player, isApproved: true });
-    } else {
-      alert("Approval failed: " + error.message);
-    }
-  };
+
 
   const handleSelfDelete = async () => {
     if (!player || !currentUser) return;
@@ -670,23 +663,7 @@ export default function PlayerProfile() {
         animate="visible"
         className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-32 sm:-mt-48 relative z-20"
       >
-        {/* Pending Approval Banner */}
-        {player && player.isApproved === false && (
-          <motion.div variants={itemVariants} className="bg-amber-100 border-l-4 border-amber-500 text-amber-800 p-5 mb-8 rounded-xl shadow-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <p className="font-black text-lg flex items-center gap-2"><Sparkles className="w-5 h-5"/> Profile Pending Approval</p>
-              <p className="text-sm font-medium opacity-90">This profile is hidden from the public directory until an admin approves it.</p>
-            </div>
-            {isAdmin && (
-              <button 
-                onClick={handleApproveProfile} 
-                className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-lg shadow-amber-500/30 transition-all shrink-0"
-              >
-                Approve Profile Now
-              </button>
-            )}
-          </motion.div>
-        )}
+
 
         {/* ============== Identity Card ============== */}
         <motion.div
