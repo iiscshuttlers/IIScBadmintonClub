@@ -10,11 +10,7 @@ import {
 } from 'firebase/auth';
 import { Activity, Lock, LogOut, Trophy, Plus, Minus, PlusCircle } from 'lucide-react';
 import { advanceWinners } from '../lib/tournamentProgression';
-const ALLOWED_ADMINS = [
-  'iiscbadmintonclub@gmail.com',
-  'rajajanmejaya@gmail.com',
-  // add whoever needs access
-];
+import { isAdminEmail } from '../lib/admin';
 
 export default function FarewellAdmin() {
   const [data, setData] = useState<any>(null);
@@ -30,7 +26,7 @@ export default function FarewellAdmin() {
 
   useEffect(() => {
     const unsubAuth = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser && !ALLOWED_ADMINS.includes(currentUser.email ?? '')) {
+      if (currentUser && !isAdminEmail(currentUser.email)) {
         await signOut(auth);
         setUser(null);
       } else {
@@ -83,7 +79,7 @@ export default function FarewellAdmin() {
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
-      if (!ALLOWED_ADMINS.includes(result.user.email ?? '')) {
+      if (!isAdminEmail(result.user.email)) {
         await signOut(auth);
         alert('Access denied. Your account is not authorized.');
       }
