@@ -147,6 +147,29 @@ export default function ProfileSetup() {
   const [imagePreviewStatus, setImagePreviewStatus] = useState<("ok" | "error" | "idle")[]>([]);
   const [videoPreviewIds, setVideoPreviewIds] = useState<(string | null)[]>([]);
 
+  // Password Change State
+  const [newPassword, setNewPassword] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPassword || newPassword.length < 6) {
+      toast("Password too short", { description: "Password must be at least 6 characters.", icon: "⚠️" });
+      return;
+    }
+    setPasswordLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      setNewPassword("");
+      toast("Password Updated", { description: "You can now log in using your email and password.", icon: "🔒" });
+    } catch (err: any) {
+      toast("Update failed", { description: err.message, icon: "❌" });
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
   const [isEditing, setIsEditing] = useState(false);
   const [playerSlug, setPlayerSlug] = useState("");
   const [originalStats, setOriginalStats] = useState<any>({});
@@ -689,6 +712,34 @@ export default function ProfileSetup() {
                         className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
                         placeholder="e.g. @iiscbadmintonclub"
                       />
+                    </div>
+
+                    {/* Change Password Section */}
+                    <div className="pt-6 border-t border-slate-200 dark:border-slate-700/50 mt-6">
+                      <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
+                        <Lock className="w-4 h-4 text-emerald-500" /> Account Security
+                      </h3>
+                      <div className="flex flex-col sm:flex-row gap-4">
+                        <div className="flex-1 relative">
+                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                          <input
+                            type="password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className="w-full px-4 py-3 pl-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                            placeholder="Enter new password (min 6 chars)"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handlePasswordChange}
+                          disabled={passwordLoading || !newPassword}
+                          className="px-6 py-3 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:hover:bg-emerald-800/40 text-emerald-700 dark:text-emerald-400 font-bold rounded-xl transition-all whitespace-nowrap disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                          {passwordLoading ? <div className="w-4 h-4 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" /> : "Set Password"}
+                        </button>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-2">Setting a password allows you to log in with your email and password instead of using OTP codes.</p>
                     </div>
                   </motion.div>
                 )}

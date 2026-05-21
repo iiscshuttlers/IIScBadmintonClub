@@ -271,6 +271,19 @@ export default function PlayerProfile() {
     }
   };
 
+  const handleWithdrawMatch = async (matchId: string) => {
+    if (!confirm("Are you sure you want to withdraw this pending match log? It will be deleted permanently.")) return;
+    try {
+      const { error } = await supabase.from("matches").delete().eq("id", matchId);
+      if (error) throw error;
+      alert("Match withdrawn successfully.");
+      setLiveMatches(prev => prev.filter(m => m.id !== matchId));
+      if (ownPlayerProfile) fetchPendingMatches(ownPlayerProfile.id);
+    } catch (e: any) {
+      alert("Error withdrawing match: " + e.message);
+    }
+  };
+
   useEffect(() => {
     window.scrollTo(0, 0);
     
@@ -1085,7 +1098,7 @@ export default function PlayerProfile() {
             {/* ============== BWF-Style Match History ============== */}
             {liveMatches.length > 0 && (() => {
               const confirmedMatches = liveMatches.filter(m => m.status === "confirmed");
-              const pendingMatchesList = liveMatches.filter(m => m.status === "pending");
+              const pendingMatchesList = liveMatches.filter(m => m.status === "pending").sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
               const filteredMatches = matchHistoryFilter === "all"
                 ? confirmedMatches
                 : matchHistoryFilter === "friendly"
@@ -1129,16 +1142,28 @@ export default function PlayerProfile() {
                         {pendingMatchesList.map((m, idx) => {
                           const isP1 = m.player1_id === id;
                           const opponent = isP1 ? m.player2 : m.player1;
+                          const canWithdraw = currentUser && (m.submitted_by === currentUser.id || m.player1_id === currentUser.id || m.player2_id === currentUser.id);
+
                           return (
-                            <div key={`pen-${idx}`} className="flex items-center gap-3 text-sm">
-                              <div className="w-8 h-8 rounded-lg bg-amber-200 dark:bg-amber-800/40 flex items-center justify-center text-xs font-black text-amber-700 dark:text-amber-400">?</div>
-                              <div className="flex-1 min-w-0">
-                                <span className="text-slate-600 dark:text-slate-300">vs </span>
-                                <span className="font-bold text-slate-800 dark:text-slate-200">{opponent?.full_name ?? "Unknown"}</span>
-                                <span className="text-slate-400 mx-1">·</span>
-                                <span className="font-mono text-xs font-bold text-slate-600 dark:text-slate-400">{m.score}</span>
+                            <div key={`pen-${m.id || idx}`} className="flex flex-col sm:flex-row sm:items-center gap-3 text-sm bg-white/50 dark:bg-slate-900/50 p-3 rounded-xl border border-amber-200/50 dark:border-amber-700/30">
+                              <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <div className="w-8 h-8 rounded-lg bg-amber-200 dark:bg-amber-800/40 flex items-center justify-center text-xs font-black text-amber-700 dark:text-amber-400 shrink-0">?</div>
+                                <div className="flex-1 min-w-0">
+                                  <span className="text-slate-600 dark:text-slate-300">vs </span>
+                                  <span className="font-bold text-slate-800 dark:text-slate-200">{opponent?.full_name ?? "Unknown"}</span>
+                                  <span className="text-slate-400 mx-1">·</span>
+                                  <span className="font-mono text-xs font-bold text-slate-600 dark:text-slate-400">{m.score}</span>
+                                </div>
+                                <div className="text-[10px] text-slate-400 shrink-0">{new Date(m.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</div>
                               </div>
-                              <div className="text-[10px] text-slate-400">{new Date(m.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</div>
+                              {canWithdraw && (
+                                <button
+                                  onClick={() => handleWithdrawMatch(m.id)}
+                                  className="text-xs font-bold px-3 py-1.5 rounded-lg bg-rose-100 hover:bg-rose-200 dark:bg-rose-900/30 dark:hover:bg-rose-800/40 text-rose-700 dark:text-rose-400 transition-colors w-full sm:w-auto mt-2 sm:mt-0 border border-rose-200 dark:border-rose-800/50"
+                                >
+                                  Withdraw Match
+                                </button>
+                              )}
                             </div>
                           );
                         })}
