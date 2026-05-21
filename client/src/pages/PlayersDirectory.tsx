@@ -97,6 +97,12 @@ function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, onEdit }
         </span>
       )}
 
+      {isAdmin && player.is_approved === false && (
+        <span className="absolute top-3 right-3 z-10 px-2 py-0.5 rounded-full bg-amber-500 text-white text-[9px] font-black uppercase tracking-widest shadow animate-pulse">
+          Pending
+        </span>
+      )}
+
       {/* Share button — always visible on hover */}
       <button
         onClick={handleShare}
