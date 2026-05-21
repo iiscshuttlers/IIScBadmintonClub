@@ -3,7 +3,7 @@ import { useLocation, useParams } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   UserCircle, Trophy, Save, Sparkles, Activity,
-  Swords, BookOpen, Quote, LogOut, Video, Image, Play, Upload, ArrowLeft
+  Swords, BookOpen, Quote, LogOut, Video, Image, Play, Upload, ArrowLeft, Lock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
