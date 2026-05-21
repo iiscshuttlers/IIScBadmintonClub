@@ -1117,9 +1117,10 @@ export default function PlayerProfile() {
             )}
 
             {/* ============== BWF-Style Match History ============== */}
-            {liveMatches.length > 0 && (() => {
+            {(() => {
               const confirmedMatches = liveMatches.filter(m => m.status === "confirmed");
               const pendingMatchesList = liveMatches.filter(m => m.status === "pending").sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+              if (confirmedMatches.length === 0 && pendingMatchesList.length === 0) return null;
               const filteredMatches = matchHistoryFilter === "all"
                 ? confirmedMatches
                 : matchHistoryFilter === "friendly"
@@ -1163,7 +1164,8 @@ export default function PlayerProfile() {
                         {pendingMatchesList.map((m, idx) => {
                           const isP1 = m.player1_id === id;
                           const opponent = isP1 ? m.player2 : m.player1;
-                          const canWithdraw = currentUser && (m.submitted_by === currentUser.id || m.player1_id === currentUser.id || m.player2_id === currentUser.id);
+                          const canWithdraw = (currentUser && m.submitted_by === currentUser.id) ||
+                            (ownPlayerProfile && (m.player1_id === ownPlayerProfile.id || m.player2_id === ownPlayerProfile.id));
 
                           return (
                             <div key={`pen-${m.id || idx}`} className="flex flex-col sm:flex-row sm:items-center gap-3 text-sm bg-white/50 dark:bg-slate-900/50 p-3 rounded-xl border border-amber-200/50 dark:border-amber-700/30">

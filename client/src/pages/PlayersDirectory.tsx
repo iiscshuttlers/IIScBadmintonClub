@@ -285,11 +285,21 @@ export default function PlayersDirectory() {
     });
 
     // Listen for auth state changes (e.g. sign-in in another tab)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (!session) setOwnProfile(null);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+      setSession(newSession);
+      if (!newSession) {
+        setOwnProfile(null);
+      } else {
+        // Re-fetch own profile on auth change
+        const { data } = await supabase
+          .from("players")
+          .select("id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating, win_loss_record, recent_form")
+          .eq("user_id", newSession.user.id)
+          .maybeSingle();
+        if (isMounted) setOwnProfile(data ?? null);
+      }
     });
-    return () => subscription.unsubscribe();
+    return () => { isMounted = false; subscription.unsubscribe(); };
   }, []);
 
   /* 2. Fetch all players (with retry logic) */
@@ -352,10 +362,16 @@ export default function PlayersDirectory() {
   };
 
   useEffect(() => {
+    // Always fetch players - don't wait on auth to finish
+    fetchPlayers(0, session, isAdmin);
+  }, []);
+
+  // Re-fetch when auth changes (to apply admin filter etc)
+  useEffect(() => {
     if (!authLoading) {
       fetchPlayers(0, session, isAdmin);
     }
-  }, [authLoading, session?.user?.id, isAdmin]);
+  }, [authLoading]);
 
   // Auto-refresh player list every 60s (silently, scroll preserved)
   const silentRefresh = useCallback(async () => {
@@ -442,6 +458,7 @@ export default function PlayersDirectory() {
 
   /* ── Auth banner (top of page) ─────────────────────────────────── */
   const renderAuthBanner = () => {
+    // Still loading auth — show nothing (prevents flash of "not logged in")
     if (authLoading) return null;
 
     /* Logged in + has a profile */
@@ -560,7 +577,8 @@ export default function PlayersDirectory() {
       );
     }
 
-    /* Not logged in */
+    /* Not logged in — but only show this if we are SURE there's no session */
+    if (session) return null; // session exists, ownProfile is still loading
     return (
       <motion.div
         initial={{ opacity: 0, y: -10 }}
