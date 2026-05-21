@@ -28,7 +28,6 @@ export default function ProfileSetup() {
   const [nickname, setNickname] = useState("");
   const [iiscEmail, setIiscEmail] = useState("");
   const [contactNumber, setContactNumber] = useState("");
-  const [srNumber, setSrNumber] = useState("");
   const [department, setDepartment] = useState("");
   const [joinedYear, setJoinedYear] = useState("");
   const [nationality, setNationality] = useState("");
@@ -180,7 +179,6 @@ export default function ProfileSetup() {
               setNickname(profile.nickname || "");
               setIiscEmail(profile.iisc_email || "");
               setContactNumber(profile.contact_number || "");
-              setSrNumber(profile.sr_number || "");
               setDepartment(profile.department || "");
               setJoinedYear(profile.joined_year?.toString() || "");
               setPlayingLevel(profile.playing_level || "Intermediate");
@@ -336,7 +334,6 @@ export default function ProfileSetup() {
       nickname: nickname || null,
       iisc_email: iiscEmail || null,
       contact_number: contactNumber || null,
-      sr_number: srNumber || null,
       department: department,
       joined_year: joinedYear ? parseInt(joinedYear) : null,
       playing_level: playingLevel,
@@ -454,6 +451,7 @@ export default function ProfileSetup() {
             </div>
 
             <button
+              type="button"
               onClick={handleSignOut}
               className="flex items-center gap-2 px-4 py-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-xl text-sm font-semibold border border-rose-100 dark:border-rose-900/30 transition shadow-sm"
             >
@@ -587,21 +585,12 @@ export default function ProfileSetup() {
                         <input
                           required
                           type="tel"
+                          pattern="[0-9]{10}"
+                          title="Please enter exactly 10 digits"
                           value={contactNumber}
-                          onChange={(e) => setContactNumber(e.target.value)}
+                          onChange={(e) => setContactNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
                           className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
-                          placeholder="e.g. +91 9876543210"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">SR Number *</label>
-                        <input
-                          required
-                          type="text"
-                          value={srNumber}
-                          onChange={(e) => setSrNumber(e.target.value)}
-                          className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
-                          placeholder="e.g. 04-01-00-xxxx"
+                          placeholder="e.g. 9876543210"
                         />
                       </div>
                     </div>
@@ -656,13 +645,13 @@ export default function ProfileSetup() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Height</label>
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Height (in cm)</label>
                         <input
-                          type="text"
+                          type="number"
                           value={height}
                           onChange={(e) => setHeight(e.target.value)}
                           className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
-                          placeholder="e.g. 175 cm"
+                          placeholder="e.g. 175"
                         />
                       </div>
                     </div>

@@ -26,6 +26,7 @@ interface Player {
   elo_rating?: number;
   win_loss_record?: string;
   recent_form?: string[];
+  is_approved?: boolean;
 }
 
 const AVATAR_GRADIENTS = [
@@ -246,7 +247,7 @@ export default function PlayersDirectory() {
         
         const { data } = await supabase
           .from("players")
-          .select("id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating, win_loss_record, recent_form")
+          .select("id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating, win_loss_record, recent_form, is_approved")
           .eq("user_id", session.user.id)
           .maybeSingle();
         setOwnProfile(data ?? null);
@@ -277,12 +278,21 @@ export default function PlayersDirectory() {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("players")
-        .select("id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating")
+        .select("id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating, is_approved")
         .is("deleted_at", null)
-        .order("elo_rating", { ascending: false })
-        .abortSignal(controller.signal);
+        .order("elo_rating", { ascending: false });
+
+      if (!isAdmin) {
+        if (session?.user?.id) {
+          query = query.or(`is_approved.eq.true,user_id.eq.${session.user.id}`);
+        } else {
+          query = query.eq("is_approved", true);
+        }
+      }
+
+      const { data, error } = await query.abortSignal(controller.signal);
 
       clearTimeout(timeout);
 
