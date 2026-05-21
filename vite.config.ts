@@ -135,26 +135,10 @@ export default defineConfig({
     vitePluginStorageProxy(),
 
     VitePWA({
-      registerType: "autoUpdate",
-      workbox: {
-        cleanupOutdatedCaches: true,
-        clientsClaim: true,
-        skipWaiting: true,
-        // Serve index.html for all navigation requests (SPA routing)
-        navigateFallback: "index.html",
-        // Never intercept API calls with navigation fallback
-        navigateFallbackDenylist: [/^https:\/\/.*\.supabase\.co/, /\/rest\//, /\/auth\//],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "google-fonts",
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
-            },
-          },
-        ],
-      },
+      // Keep manifest for "Add to Home Screen" but kill the service worker.
+      // selfDestroying unregisters any existing SW on users' devices,
+      // preventing stale caches from blocking Supabase API calls.
+      selfDestroying: true,
       manifest: {
         name: "IISc Badminton Club",
         short_name: "IISc Badminton",

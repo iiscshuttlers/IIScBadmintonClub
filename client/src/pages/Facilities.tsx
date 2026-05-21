@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, Clock, MapPin, Trophy, Users } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 
 type Holiday = {
   date: string;
@@ -14,13 +15,13 @@ export default function Facilities() {
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [nextHoliday, setNextHoliday] = useState<Holiday | null>(null);
 
-  useEffect(() => {
-    fetch(`${import.meta.env.BASE_URL}data/holidays.json`)
+  const loadHolidays = useCallback(() => {
+    fetch(`${import.meta.env.BASE_URL}data/holidays.json?v=${Date.now()}`, { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
         setHolidays(data);
 
-        // 🔥 Find next upcoming holiday
+        // Find next upcoming holiday
         const today = new Date().toLocaleDateString("en-CA", {
           timeZone: "Asia/Kolkata",
         });
@@ -30,6 +31,13 @@ export default function Facilities() {
       })
       .catch(err => console.error("Error loading holidays:", err));
   }, []);
+
+  useEffect(() => {
+    loadHolidays();
+  }, [loadHolidays]);
+
+  // Auto-refresh every 5 min (holidays rarely change)
+  useAutoRefresh(loadHolidays, 300_000);
 
   const facilities = [
     {

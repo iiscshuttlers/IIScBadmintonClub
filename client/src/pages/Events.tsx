@@ -1,10 +1,11 @@
 import { Link } from 'wouter';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Calendar, Trophy, Radio, Medal, ArrowRight, Clock } from 'lucide-react';
 import { getTournaments } from '@/lib/tournaments';
 import { ARCHIVED_TOURNAMENTS, ArchivedTournament, TournamentStatus } from '@/data/tournamentArchive';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 import RunningFlyer from '@/components/RunningFlyer';
 
 type LiveTournament = {
@@ -101,20 +102,23 @@ export default function Events() {
   const [events, setEvents] = useState<LiveTournament[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const data = await getTournaments();
-        setEvents(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
+  const loadEvents = useCallback(async () => {
+    try {
+      const data = await getTournaments();
+      setEvents(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-
-    load();
   }, []);
+
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
+
+  // Auto-refresh every 60s
+  useAutoRefresh(loadEvents, 60_000, !loading);
 
   const live = events.filter((e) => e.status === 'live');
   const upcoming = events.filter((e) => e.status === 'upcoming');

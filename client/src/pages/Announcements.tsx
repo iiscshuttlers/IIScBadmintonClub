@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Bell, Pin } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 import DOMPurify from 'dompurify';
 
 type Announcement = {
@@ -28,8 +29,8 @@ export default function Announcements() {
     );
   }
 
-  useEffect(() => {
-    fetch(`${import.meta.env.BASE_URL}data/announcements.json?v=1`, {
+  const loadAnnouncements = useCallback(() => {
+    fetch(`${import.meta.env.BASE_URL}data/announcements.json?v=${Date.now()}`, {
       cache: 'no-store'
     })
       .then((res) => res.json())
@@ -51,6 +52,13 @@ export default function Announcements() {
         setLoading(false);
       });
   }, []);
+
+  useEffect(() => {
+    loadAnnouncements();
+  }, [loadAnnouncements]);
+
+  // Auto-refresh every 60s
+  useAutoRefresh(loadAnnouncements, 60_000, !loading);
 
   const categories = [
     { id: 'all',        label: 'All',         color: 'bg-gray-100 text-gray-700',       icon: '🗂️' },

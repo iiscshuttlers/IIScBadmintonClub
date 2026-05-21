@@ -1,5 +1,5 @@
 import { useParams, useLocation } from "wouter";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Trophy, User, Activity, MapPin, Calendar, Swords, Zap,
@@ -11,6 +11,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import LogMatchModal from "@/components/LogMatchModal";
+import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -363,6 +364,48 @@ export default function PlayerProfile() {
         if (data) setLiveMatches(data);
       });
   }, [id]);
+
+  // Auto-refresh player + matches every 30s (silently, scroll preserved)
+  const silentRefresh = useCallback(async () => {
+    if (!id) return;
+    try {
+      // Re-fetch player data
+      const { data: pData } = await supabase.from("players").select("*").eq("id", id).single();
+      if (pData) {
+        const formattedPlayer: Player = {
+          id: pData.id, fullName: pData.full_name, nickname: pData.nickname,
+          avatar: pData.avatar_url, department: pData.department, joinedYear: pData.joined_year,
+          playingLevel: pData.playing_level, dominantHand: pData.dominant_hand,
+          playingStyle: pData.playing_style, favoriteShot: pData.favorite_shot,
+          favoriteIdol: pData.favorite_idol, quote: pData.quote,
+          currentRacket: pData.current_racket, racketDetails: pData.racket_details || [],
+          tournamentHistory: pData.tournament_history || [], achievements: pData.achievements || [],
+          winLossRecord: pData.win_loss_record || `${pData.stats?.wins || 0}W - ${pData.stats?.losses || 0}L`,
+          nationality: pData.nationality, homeState: pData.home_state, height: pData.height,
+          yearsPlaying: pData.years_playing, coach: pData.coach, bio: pData.bio,
+          currentRanking: pData.current_ranking, highestRanking: pData.highest_ranking,
+          stats: pData.stats, recentForm: pData.recent_form, recentMatches: pData.recent_matches,
+          frequentPartners: pData.frequent_partners, careerHighlights: pData.career_highlights,
+          shoes: pData.shoes && pData.shoes.startsWith("[") 
+            ? (JSON.parse(pData.shoes).find((s: any) => s.primary)?.name || JSON.parse(pData.shoes)[0]?.name || "")
+            : pData.shoes,
+          shoesList: (() => { try { if (!pData.shoes) return []; if (pData.shoes.startsWith("[")) return JSON.parse(pData.shoes); return [{ name: pData.shoes, primary: true }]; } catch { return [{ name: pData.shoes, primary: true }]; } })(),
+          apparel: pData.apparel,
+          social: pData.instagram || pData.email ? { instagram: pData.instagram, email: pData.email } : undefined,
+          userId: pData.user_id,
+        };
+        setPlayer(formattedPlayer);
+      }
+      // Re-fetch matches
+      const { data: mData } = await supabase.from("matches")
+        .select("*, player1:players!player1_id(id, full_name), player2:players!player2_id(id, full_name)")
+        .eq("status", "confirmed")
+        .or(`player1_id.eq.${id},player2_id.eq.${id}`)
+        .order("created_at", { ascending: false }).limit(10);
+      if (mData) setLiveMatches(mData);
+    } catch {}
+  }, [id]);
+  useAutoRefresh(silentRefresh, 30_000, !loading);
 
   // H2H record vs logged-in user
   useEffect(() => {

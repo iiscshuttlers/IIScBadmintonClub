@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Instagram, X, Youtube, PlayCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 
 // ─── Lazy Image Component ───────────────────────────────────────────────────
 function LazyImage({
@@ -69,12 +70,19 @@ export default function Gallery() {
     setLightboxSrc(null);
   }, [selectedCategory, selectedSubfolder]);
 
-  useEffect(() => {
-    fetch(`${import.meta.env.BASE_URL}data/videos.json`)
+  const loadVideos = useCallback(() => {
+    fetch(`${import.meta.env.BASE_URL}data/videos.json?v=${Date.now()}`, { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => setVideos(data))
       .catch((err) => console.error('Error loading videos:', err));
   }, []);
+
+  useEffect(() => {
+    loadVideos();
+  }, [loadVideos]);
+
+  // Auto-refresh every 2 min
+  useAutoRefresh(loadVideos, 120_000);
 
   // ── LAZY glob (not eager) ──────────────────────────────────────────
   const imageModules = import.meta.glob(

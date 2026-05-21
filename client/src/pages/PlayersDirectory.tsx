@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -8,6 +8,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import LogMatchModal from "@/components/LogMatchModal";
 
 interface Player {
@@ -323,6 +324,19 @@ export default function PlayersDirectory() {
   useEffect(() => {
     fetchPlayers();
   }, []);
+
+  // Auto-refresh player list every 60s (silently, scroll preserved)
+  const silentRefresh = useCallback(async () => {
+    try {
+      const { data } = await supabase
+        .from("players")
+        .select("id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating")
+        .is("deleted_at", null)
+        .order("elo_rating", { ascending: false });
+      if (data) setPlayers(data);
+    } catch {}
+  }, []);
+  useAutoRefresh(silentRefresh, 60_000, !loading);
 
   /* Filter + sort logic */
   const otherPlayers = players.filter((p) => p.user_id !== session?.user?.id);
