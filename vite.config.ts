@@ -135,10 +135,34 @@ export default defineConfig({
     vitePluginStorageProxy(),
 
     VitePWA({
-      // Keep manifest for "Add to Home Screen" but kill the service worker.
-      // selfDestroying unregisters any existing SW on users' devices,
-      // preventing stale caches from blocking Supabase API calls.
-      selfDestroying: true,
+      registerType: "autoUpdate",
+      workbox: {
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
+        navigateFallback: "index.html",
+        // Never intercept Supabase API calls
+        navigateFallbackDenylist: [/^https:\/\/.*\.supabase\.co/, /\/rest\//, /\/auth\//],
+        runtimeCaching: [
+          {
+            // Use NetworkFirst for all navigation to prevent stale pages
+            urlPattern: ({ request }) => request.mode === 'navigate',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'pages',
+              cacheableResponse: { statuses: [200] }
+            }
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "google-fonts",
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
+            },
+          },
+        ],
+      },
       manifest: {
         name: "IISc Badminton Club",
         short_name: "IISc Badminton",
