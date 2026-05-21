@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Menu, X, UserCircle, LogIn, User, Settings, LogOut } from 'lucide-react';
+import { Menu, X, UserCircle, LogIn, User, Settings, LogOut, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/lib/supabase';
@@ -14,6 +14,7 @@ export default function Navigation() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
   const [userName, setUserName] = useState<string>("");
+  const [savedAccounts, setSavedAccounts] = useState<any[]>([]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -28,14 +29,32 @@ export default function Navigation() {
   useEffect(() => {
     const loadAuth = async (session: Session | null) => {
       setIsLoggedIn(!!session);
+      let accounts = JSON.parse(localStorage.getItem("iisc_saved_accounts") || "[]");
+
       if (session) {
-        const { data } = await supabase.from("players").select("id, full_name").eq("user_id", session.user.id).maybeSingle();
+        const { data } = await supabase.from("players").select("id, full_name, email").eq("user_id", session.user.id).maybeSingle();
         setMyPlayerId(data?.id ?? null);
-        setUserName(data?.full_name?.split(" ")[0] ?? session.user.email?.split("@")[0] ?? "Player");
+        const name = data?.full_name?.split(" ")[0] ?? session.user.email?.split("@")[0] ?? "Player";
+        setUserName(name);
+
+        // Save session logic
+        const existingIdx = accounts.findIndex((a: any) => a.id === session.user.id);
+        const newAccount = {
+          id: session.user.id,
+          email: session.user.email,
+          name: name,
+          session: session
+        };
+        if (existingIdx >= 0) accounts[existingIdx] = newAccount;
+        else accounts.push(newAccount);
+        localStorage.setItem("iisc_saved_accounts", JSON.stringify(accounts));
       } else {
         setMyPlayerId(null);
         setUserName("");
       }
+      
+      // Filter out the current user for the switcher list
+      setSavedAccounts(accounts.filter((a: any) => !session || a.id !== session.user.id));
       setAuthLoading(false);
     };
 
@@ -120,10 +139,46 @@ export default function Navigation() {
                     </DropdownMenuItem>
                   </Link>
                   <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800" />
+                  
+                  {savedAccounts.length > 0 && (
+                    <>
+                      <div className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-wider">Switch Account</div>
+                      {savedAccounts.map(acc => (
+                        <DropdownMenuItem 
+                          key={acc.id}
+                          className="cursor-pointer font-medium focus:bg-slate-50 dark:focus:bg-slate-800"
+                          onClick={async () => {
+                             await supabase.auth.setSession(acc.session);
+                             window.location.reload();
+                          }}
+                        >
+                          <div className="flex flex-col">
+                            <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{acc.name}</span>
+                            <span className="text-[10px] text-slate-500">{acc.email}</span>
+                          </div>
+                        </DropdownMenuItem>
+                      ))}
+                      <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800" />
+                    </>
+                  )}
+                  
+                  <DropdownMenuItem className="cursor-pointer font-medium focus:bg-slate-50 dark:focus:bg-slate-800" asChild>
+                    <Link href="/join?add_account=true" className="w-full flex items-center">
+                      <UserPlus className="mr-2 h-4 w-4" /> Add Account
+                    </Link>
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800" />
                   <DropdownMenuItem 
                     className="cursor-pointer text-rose-600 dark:text-rose-400 font-medium focus:bg-rose-50 dark:focus:bg-rose-950/30 focus:text-rose-700 dark:focus:text-rose-300"
                     onClick={async () => {
-                      if (confirm("Are you sure you want to sign out?")) {
+                      if (confirm("Are you sure you want to sign out of this account?")) {
+                        const { data } = await supabase.auth.getSession();
+                        if (data.session) {
+                          let accounts = JSON.parse(localStorage.getItem("iisc_saved_accounts") || "[]");
+                          accounts = accounts.filter((a: any) => a.id !== data.session!.user.id);
+                          localStorage.setItem("iisc_saved_accounts", JSON.stringify(accounts));
+                        }
                         await supabase.auth.signOut();
                         window.location.href = "/join";
                       }

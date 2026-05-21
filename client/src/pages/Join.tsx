@@ -31,10 +31,12 @@ export default function Join() {
 
   const reset = () => { setPassword(""); setConfirm(""); setOtp(""); setInfoMsg(""); setErrorMsg(""); };
 
-  // Redirect if already logged in
+  // Redirect if already logged in unless adding a new account
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) return;
+      if (new URLSearchParams(window.location.search).get("add_account") === "true") return;
+      
       const { data: profile } = await supabase.from("players").select("id").eq("user_id", session.user.id).maybeSingle();
       setLocation(profile ? `/player/${profile.id}` : "/profile/setup");
     });
