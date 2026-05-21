@@ -12,7 +12,7 @@ import { Activity, Lock, LogOut, Trophy, Plus, Minus, PlusCircle } from 'lucide-
 import { advanceWinners } from '../lib/tournamentProgression';
 import { isAdminEmail } from '../lib/admin';
 
-export default function FarewellAdmin() {
+export default function TournamentAdmin() {
   const [data, setData] = useState<any>(null);
   const [user, setUser] = useState<User | null>(null);
 

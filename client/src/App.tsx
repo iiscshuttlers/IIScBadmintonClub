@@ -25,8 +25,8 @@ const Announcements    = lazy(() => import('./pages/Announcements'));
 const Gallery          = lazy(() => import('./pages/Gallery'));
 const TournamentDetail = lazy(() => import('./pages/TournamentDetail'));
 const WinnersWall      = lazy(() => import('./pages/WinnersWall'));
-const FarewellTournament = lazy(() => import('./pages/FarewellTournament'));
-const FarewellAdmin    = lazy(() => import('./pages/FarewellAdmin'));
+const LiveTournament = lazy(() => import('./pages/LiveTournament'));
+const TournamentAdmin = lazy(() => import('./pages/TournamentAdmin'));
 const PlayerProfile    = lazy(() => import('./pages/PlayerProfile'));
 const Join             = lazy(() => import('./pages/Join'));
 const ProfileSetup     = lazy(() => import('./pages/ProfileSetup'));
@@ -117,8 +117,8 @@ function AppRoutes() {
             <Route path="/about" component={About} />
             <Route path="/facilities" component={Facilities} />
 
-            <Route path="/farewell/admin" component={FarewellAdmin} />
-            <Route path="/farewell" component={FarewellTournament} />
+            <Route path="/tournament/admin" component={TournamentAdmin} />
+            <Route path="/tournament" component={LiveTournament} />
             <Route path="/events/:slug" component={TournamentDetail} />
 
             <Route path="/events" component={Events} />

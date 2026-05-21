@@ -22,7 +22,7 @@ interface TournamentData {
   lastUpdated: string;
 }
 
-export default function FarewellTournament() {
+export default function LiveTournament() {
   // --- STATE ---
   const [activeTab, setActiveTab] = useState<'register' | 'brackets' | 'schedule'>('schedule');
   const [activeFormat, setActiveFormat] = useState('MS');
@@ -94,7 +94,7 @@ export default function FarewellTournament() {
           <div>
             <h1 className="text-3xl md:text-4xl font-bold text-gray-800 flex items-center gap-3">
               <Trophy className="text-yellow-500 w-8 h-8" />
-              Farewell Tournament 2026
+              Live Tournament Dashboard
             </h1>
             {tournamentData && tournamentData.lastUpdated && (
               <p className="text-sm text-gray-500 mt-2 flex items-center gap-2">
