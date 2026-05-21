@@ -71,14 +71,27 @@ export default function Join() {
     if (password !== confirm) { setErrorMsg("Passwords do not match."); return; }
     setLoading(true); setErrorMsg("");
     try {
-      const { data, error } = await supabase.auth.signUp({ email, password });
+      // Direct check against our public players table to bypass Supabase's silent enumeration protection
+      const { data: existingPlayer } = await supabase
+        .from('players')
+        .select('email')
+        .eq('email', email)
+        .maybeSingle();
 
-      // Supabase enumeration protection check
+      if (existingPlayer) {
+        setErrorMsg("This email is already registered. Please Sign In, or use 'Forgot password? OTP' if you forgot your password.");
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      
+      // Fallback Supabase enumeration protection check (for auth accounts without a profile yet)
       if (data?.user && data.user.identities && data.user.identities.length === 0) {
         setErrorMsg("This email is already registered. Please Sign In, or use 'Forgot password? OTP' if you forgot your password.");
         return;
       }
-
+      
       if (error) throw error;
 
       if (data.session) {
