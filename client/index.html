@@ -25,14 +25,35 @@
       }
     })();
 
-    // ✅ FORCE 0 CACHE: Unregister any existing service workers from VitePWA
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        for(let registration of registrations) {
-          registration.unregister();
+    // ✅ FORCE 0 CACHE & HARD REFRESH: Obliterate Service Workers and Cache Storage
+    (async function clearAllCaches() {
+      let needsReload = false;
+
+      // 1. Unregister all service workers
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of registrations) {
+          await registration.unregister();
+          needsReload = true;
         }
-      });
-    }
+      }
+
+      // 2. Clear all cache storage (this is where VitePWA keeps old assets)
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        for (const name of cacheNames) {
+          await caches.delete(name);
+          needsReload = true;
+        }
+      }
+
+      // 3. Force a hard reload if we cleared anything, using a cache-busting param
+      if (needsReload && !window.location.search.includes('nocache=')) {
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set('nocache', Date.now().toString());
+        window.location.replace(newUrl.toString());
+      }
+    })();
   </script>
 
   <!-- ✅ NO CACHE HEADERS -->
