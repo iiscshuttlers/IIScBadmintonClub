@@ -195,7 +195,7 @@ export default function ProfileSetup() {
         if (paramId && adminStatus) {
           query = query.eq("id", paramId);
         } else {
-          query = query.eq("user_id", session.user.id);
+          query = query.eq("user_id", currentSession.user.id);
         }
 
         query
@@ -288,6 +288,10 @@ export default function ProfileSetup() {
               }
               if (mounted) setIsInitializing(false);
             }
+          })
+          .catch((err) => {
+            console.error("Error loading profile:", err);
+            if (mounted) setIsInitializing(false);
           });
       }
     };
