@@ -5,7 +5,7 @@ import {
   Search, SlidersHorizontal, Users, Trophy, Sword, Sparkles,
   UserCircle, LogIn, PlusCircle, Pencil, ChevronRight, X, Trash2, Share2, ArrowUpDown
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
@@ -391,6 +391,19 @@ export default function PlayersDirectory() {
       }
     }
 
+    if (!isSupabaseConfigured) {
+      if (!isMountedRef.current || requestId !== fetchRequestIdRef.current) return;
+
+      const cachedPlayers = readCachedPlayers();
+      if (cachedPlayers.length > 0) {
+        setPlayers(cachedPlayers);
+      } else if (!silent) {
+        setFetchError(true);
+      }
+      setLoading(false);
+      return;
+    }
+
     for (let attempt = 0; attempt <= MAX_FETCH_RETRIES; attempt += 1) {
       const controller = new AbortController();
 
@@ -464,6 +477,25 @@ export default function PlayersDirectory() {
   useEffect(() => {
     fetchPlayers();
   }, [fetchPlayers]);
+
+  useEffect(() => {
+    if (!loading) return;
+
+    const stuckLoaderTimeout = setTimeout(() => {
+      if (!isMountedRef.current) return;
+
+      const cachedPlayers = readCachedPlayers();
+      if (cachedPlayers.length > 0) {
+        setPlayers(cachedPlayers);
+        setFetchError(false);
+      } else {
+        setFetchError(true);
+      }
+      setLoading(false);
+    }, REQUEST_TIMEOUT_MS * (MAX_FETCH_RETRIES + 2));
+
+    return () => clearTimeout(stuckLoaderTimeout);
+  }, [loading]);
 
   // Auto-refresh player list every 60s (silently, scroll preserved)
   const silentRefresh = useCallback(async () => {
@@ -850,9 +882,14 @@ export default function PlayersDirectory() {
           </div>
         ) : fetchError ? (
           <div className="flex flex-col items-center justify-center py-20 space-y-4 text-center">
-            <p className="text-2xl">🔌</p>
-            <p className="text-slate-700 dark:text-slate-300 font-bold">No connection to server</p>
-            <p className="text-slate-400 text-sm">This app requires internet to load player data.</p>
+            <p className="text-slate-700 dark:text-slate-300 font-bold">
+              {isSupabaseConfigured ? "No connection to server" : "Player directory is not configured"}
+            </p>
+            <p className="text-slate-400 text-sm max-w-md">
+              {isSupabaseConfigured
+                ? "This app requires internet to load player data."
+                : "The deployed site is missing Supabase environment variables."}
+            </p>
             <button onClick={() => fetchPlayers()} className="mt-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition">
               Retry
             </button>

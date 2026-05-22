@@ -36,6 +36,8 @@ jobs:
       - name: Build site
         env:
           GITHUB_PAGES: "true"
+          VITE_SUPABASE_URL: "https://gewnvlanitzlukaiiznu.supabase.co"
+          VITE_SUPABASE_ANON_KEY: "sb_publishable_dWERfMPzKYO5Cxyj35vsUg_xnjwzdNx"
         run: pnpm build
 
       - name: Upload artifact
