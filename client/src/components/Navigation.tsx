@@ -41,73 +41,50 @@ export default function Navigation() {
       setAuthLoading(false);
     };
 
-    const removeSavedAccount = (userId?: string) => {
-      if (!userId) return readSavedAccounts();
-      const nextAccounts = readSavedAccounts().filter((a: any) => a.id !== userId);
-      localStorage.setItem("iisc_saved_accounts", JSON.stringify(nextAccounts));
-      return nextAccounts;
-    };
-
     const loadAuth = async (session: Session | null) => {
       const requestId = ++authRequestIdRef.current;
-      setAuthLoading(true);
 
       if (!session) {
         clearAuthState();
         return;
       }
 
+      // Show the user button immediately using session data — no network round-trip needed
+      const user = session.user;
+      const quickName = user.email?.split("@")[0] ?? "Player";
+      setIsLoggedIn(true);
+      setIsAdmin(isAdminEmail(user.email));
+      setUserName(quickName);
+      setAuthLoading(false);
+
+      // Fetch player profile in background to get display name + profile link
       try {
-        const { data: userData, error: userError } = await supabase.auth.getUser();
-        if (requestId !== authRequestIdRef.current) return;
-
-        if (userError || !userData.user || userData.user.id !== session.user.id) {
-          const accounts = removeSavedAccount(session.user.id);
-          clearAuthState(accounts);
-          await supabase.auth.signOut();
-          return;
-        }
-
         const { data } = await supabase
           .from("players")
-          .select("id, full_name, email")
-          .eq("user_id", userData.user.id)
+          .select("id, full_name")
+          .eq("user_id", user.id)
           .maybeSingle();
         if (requestId !== authRequestIdRef.current) return;
 
-        const name = data?.full_name?.split(" ")[0] ?? userData.user.email?.split("@")[0] ?? "Player";
+        const name = data?.full_name?.split(" ")[0] ?? quickName;
         const accounts = readSavedAccounts();
-        const existingIdx = accounts.findIndex((a: any) => a.id === userData.user.id);
-        const newAccount = {
-          id: userData.user.id,
-          email: userData.user.email,
-          name,
-          session
-        };
+        const existingIdx = accounts.findIndex((a: any) => a.id === user.id);
+        const newAccount = { id: user.id, email: user.email, name, session };
         if (existingIdx >= 0) accounts[existingIdx] = newAccount;
         else accounts.push(newAccount);
         localStorage.setItem("iisc_saved_accounts", JSON.stringify(accounts));
 
-        setIsLoggedIn(true);
-        setIsAdmin(isAdminEmail(userData.user.email));
         setMyPlayerId(data?.id ?? null);
         setUserName(name);
-        setSavedAccounts(accounts.filter((a: any) => a.id !== userData.user.id));
-        setAuthLoading(false);
+        setSavedAccounts(accounts.filter((a: any) => a.id !== user.id));
       } catch (err) {
-        if (requestId !== authRequestIdRef.current) return;
-        console.warn("Auth validation failed:", err);
-        const accounts = removeSavedAccount(session.user.id);
-        clearAuthState(accounts);
+        console.warn("Player profile fetch failed:", err);
       }
     };
 
     let isMounted = true;
-    const failsafeTimeout = setTimeout(() => {
-      if (isMounted) setAuthLoading(false);
-    }, 5000);
 
-    (async () => { 
+    (async () => {
       try {
         const { data } = await supabase.auth.getSession(); 
         if (isMounted) loadAuth(data?.session || null); 
@@ -132,8 +109,7 @@ export default function Navigation() {
     window.addEventListener("storage", onStorage);
     return () => {
       isMounted = false;
-      clearTimeout(failsafeTimeout);
-      authRequestIdRef.current += 1;
+authRequestIdRef.current += 1;
       subscription.unsubscribe();
       window.removeEventListener("storage", onStorage);
     };
