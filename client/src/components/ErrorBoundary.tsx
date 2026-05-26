@@ -31,7 +31,10 @@ class ErrorBoundary extends Component<Props, State> {
       const reloaded = sessionStorage.getItem("chunk_error_reloaded");
       if (!reloaded) {
         sessionStorage.setItem("chunk_error_reloaded", "true");
-        window.location.reload();
+        // Hard redirect with cache-buster — forces browser to re-fetch index.html fresh
+        const url = new URL(window.location.href);
+        url.searchParams.set("nocache", Date.now().toString());
+        window.location.replace(url.toString());
       }
     } else {
       sessionStorage.removeItem("chunk_error_reloaded");
