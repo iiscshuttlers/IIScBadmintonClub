@@ -22,7 +22,10 @@
       "Bash(gh --version)",
       "Bash(winget install *)",
       "PowerShell(Get-ChildItem \"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" -ErrorAction SilentlyContinue; Get-ChildItem \"$env:LOCALAPPDATA\\\\Programs\\\\GitHub CLI\\\\gh.exe\" -ErrorAction SilentlyContinue; where.exe gh 2>$null)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "PowerShell(& \"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" release view v1.1-build2 --repo iiscshuttlers/iiscshuttlers)",
+      "PowerShell(& \"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" release upload v1.1-build2 \"E:\\\\Github\\\\iiscshuttlers\\\\android\\\\app\\\\build\\\\outputs\\\\apk\\\\release\\\\app-release.apk#IIScShuttlers.apk\" --repo iiscshuttlers/iiscshuttlers --clobber)",
+      "PowerShell(& \"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" release view v1.1-build2 --repo iiscshuttlers/iiscshuttlers --json assets --jq '.assets[].name')"
     ]
   }
 }
