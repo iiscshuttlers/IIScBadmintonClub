@@ -439,19 +439,8 @@ function UmpireMode() {
 
   if (!fbUser) return (
     <div className="flex items-center justify-center py-16">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 text-center border border-slate-200 dark:border-slate-800 shadow-xl max-w-sm w-full space-y-5">
-        <div className="w-14 h-14 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto">
-          <Lock className="w-7 h-7 text-slate-600 dark:text-slate-300" />
-        </div>
-        <div>
-          <h3 className="text-xl font-black text-slate-900 dark:text-white">Umpire Mode</h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Sign in with Google to access live scoring.</p>
-        </div>
-        <button onClick={handleGoogleLogin}
-          className="w-full flex items-center justify-center gap-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold py-3 rounded-xl hover:border-emerald-400 transition">
-          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" className="w-5 h-5" />
-          Sign in with Google
-        </button>
+      <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 font-bold animate-pulse">
+        <Loader2 className="w-5 h-5 animate-spin" /> Connecting to live data...
       </div>
     </div>
   );
