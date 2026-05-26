@@ -13,6 +13,42 @@ import Navigation from './components/Navigation';
 import Footer from './components/Footer';
 import { supabase } from './lib/supabase';
 
+/* ── App Update Dialog ──────────────────────────────────────────── */
+function UpdateDialog({ info, onDismiss }: { info: { versionName: string; downloadUrl: string; changelog: string }; onDismiss: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-sm w-full p-7 space-y-5">
+        <div className="text-center space-y-1">
+          <div className="text-4xl mb-2">🏸</div>
+          <h2 className="text-xl font-black text-slate-900 dark:text-white">Update Available</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Version {info.versionName} is ready</p>
+        </div>
+        {info.changelog && (
+          <p className="text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-3">
+            {info.changelog}
+          </p>
+        )}
+        <div className="flex flex-col gap-2">
+          <a
+            href={info.downloadUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-center transition-colors"
+          >
+            Download Update
+          </a>
+          <button
+            onClick={onDismiss}
+            className="w-full text-slate-500 dark:text-slate-400 font-medium py-2 text-sm hover:text-slate-700 transition-colors"
+          >
+            Remind me later
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Eagerly loaded (small, always needed)
 import Home from './pages/Home';
 import About from './pages/About';
@@ -148,6 +184,24 @@ function AppRoutes() {
 
 function App() {
   const backPressedRef = useRef(false);
+  const [updateInfo, setUpdateInfo] = useState<{ versionName: string; downloadUrl: string; changelog: string } | null>(null);
+
+  // Check for app update on launch (native only)
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    (async () => {
+      try {
+        const [info, res] = await Promise.all([
+          CapApp.getInfo(),
+          fetch(`${(import.meta as any).env.BASE_URL}data/app-version.json?v=${Date.now()}`),
+        ]);
+        const latest = await res.json();
+        if (parseInt(info.build) < latest.versionCode) {
+          setUpdateInfo({ versionName: latest.versionName, downloadUrl: latest.downloadUrl, changelog: latest.changelog });
+        }
+      } catch { /* ignore — don't block app on update check failure */ }
+    })();
+  }, []);
 
   // Android hardware back button handler
   useEffect(() => {
@@ -243,6 +297,7 @@ function App() {
             <BackToTop />
           </Router>
           <Toaster />
+          {updateInfo && <UpdateDialog info={updateInfo} onDismiss={() => setUpdateInfo(null)} />}
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
