@@ -71,7 +71,7 @@ const itemVariants = {
 const PLAYER_SELECT =
   "id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating, win_loss_record, recent_form";
 const PLAYERS_CACHE_KEY = "iisc_players_directory_cache_v1";
-const REQUEST_TIMEOUT_MS = 10_000;
+const REQUEST_TIMEOUT_MS = 15_000;
 const MAX_FETCH_RETRIES = 1;
 
 function readCachedPlayers(): Player[] {
@@ -92,27 +92,6 @@ function cachePlayers(players: Player[]) {
       JSON.stringify({ players, savedAt: Date.now() })
     );
   } catch {}
-}
-
-async function withTimeout<T>(
-  promise: PromiseLike<T>,
-  timeoutMs: number,
-  onTimeout: () => void
-): Promise<T> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  try {
-    return await Promise.race([
-      Promise.resolve(promise),
-      new Promise<T>((_, reject) => {
-        timer = setTimeout(() => {
-          onTimeout();
-          reject(new Error("Roster request timed out"));
-        }, timeoutMs);
-      }),
-    ]);
-  } finally {
-    if (timer) clearTimeout(timer);
-  }
 }
 
 /* ── Small reusable player card ─────────────────────────────────────── */
@@ -289,6 +268,7 @@ export default function PlayersDirectory() {
   const [sortBy, setSortBy]               = useState<"elo" | "winpct" | "name">("name");
 
   useEffect(() => {
+    isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
       fetchRequestIdRef.current += 1;
@@ -406,18 +386,17 @@ export default function PlayersDirectory() {
 
     for (let attempt = 0; attempt <= MAX_FETCH_RETRIES; attempt += 1) {
       const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
       try {
-        const response = await withTimeout(
-          supabase
-            .from("players")
-            .select(PLAYER_SELECT)
-            .is("deleted_at", null)
-            .order("elo_rating", { ascending: false })
-            .abortSignal(controller.signal),
-          REQUEST_TIMEOUT_MS,
-          () => controller.abort()
-        );
+        const response = await supabase
+          .from("players")
+          .select(PLAYER_SELECT)
+          .is("deleted_at", null)
+          .order("elo_rating", { ascending: false })
+          .abortSignal(controller.signal);
+
+        clearTimeout(timeoutId);
 
         if (!isMountedRef.current || requestId !== fetchRequestIdRef.current) return;
 

@@ -98,7 +98,23 @@ export default function Navigation() {
       }
     };
 
-    (async () => { const { data } = await supabase.auth.getSession(); loadAuth(data.session); })();
+    let isMounted = true;
+    const failsafeTimeout = setTimeout(() => {
+      if (isMounted) setAuthLoading(false);
+    }, 5000);
+
+    (async () => { 
+      try {
+        const { data } = await supabase.auth.getSession(); 
+        if (isMounted) loadAuth(data?.session || null); 
+      } catch (e) {
+        console.warn("Initial getSession failed:", e);
+        if (isMounted) {
+          clearAuthState();
+          setAuthLoading(false);
+        }
+      }
+    })();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event: AuthChangeEvent, session: Session | null) => loadAuth(session)
@@ -106,11 +122,13 @@ export default function Navigation() {
 
     const onStorage = (event: StorageEvent) => {
       if (event.key === "sb-auth-token" || event.key?.includes("auth-token")) {
-        supabase.auth.getSession().then(({ data }) => loadAuth(data.session));
+        supabase.auth.getSession().then(({ data }) => loadAuth(data.session)).catch(() => setAuthLoading(false));
       }
     };
     window.addEventListener("storage", onStorage);
     return () => {
+      isMounted = false;
+      clearTimeout(failsafeTimeout);
       authRequestIdRef.current += 1;
       subscription.unsubscribe();
       window.removeEventListener("storage", onStorage);

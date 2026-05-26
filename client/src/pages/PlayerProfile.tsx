@@ -139,6 +139,10 @@ async function fetchProfileMatches(profileId: string, signal?: AbortSignal) {
 
   const fullRes = await runQuery(fullParticipantFilter);
   if (!fullRes.error) return fullRes;
+  
+  if (signal?.aborted || fullRes.error?.message?.includes("aborted")) {
+    return fullRes;
+  }
 
   console.warn("Falling back to legacy match participant query:", fullRes.error.message);
   return runQuery(legacyParticipantFilter);
