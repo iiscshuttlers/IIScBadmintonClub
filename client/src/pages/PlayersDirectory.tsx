@@ -357,17 +357,25 @@ export default function PlayersDirectory() {
     return () => { isMounted = false; subscription.unsubscribe(); };
   }, []);
 
-  /* 2. Fetch all players. Every code path settles, even if the WebView hangs. */
+  /* 2. Fetch all players — stale-while-revalidate.
+        If we have cached data, show it instantly and refresh in the background.
+        The loading spinner only appears on the very first visit (empty cache). */
   const fetchPlayers = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
     const requestId = ++fetchRequestIdRef.current;
 
     if (!silent) {
       setFetchError(false);
-      setLoading(true);
 
       const cachedPlayers = readCachedPlayers();
       if (cachedPlayers.length > 0) {
+        // Show stale data instantly — no spinner
         setPlayers(cachedPlayers);
+        setLoading(false);
+        // From here on, treat this as a silent background refresh
+        silent = true;
+      } else {
+        // No cache at all — first visit, show spinner
+        setLoading(true);
       }
     }
 
@@ -411,6 +419,7 @@ export default function PlayersDirectory() {
         setLoading(false);
         return;
       } catch (err: any) {
+        clearTimeout(timeoutId);
         if (requestId !== fetchRequestIdRef.current) return;
 
         console.warn(`Player directory fetch failed (attempt ${attempt + 1}):`, err?.message ?? err);
