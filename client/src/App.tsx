@@ -28,6 +28,7 @@ const TournamentDetail = lazy(() => import('./pages/TournamentDetail'));
 const WinnersWall      = lazy(() => import('./pages/WinnersWall'));
 const LiveTournament = lazy(() => import('./pages/LiveTournament'));
 const TournamentAdmin = lazy(() => import('./pages/TournamentAdmin'));
+const SiteAdmin        = lazy(() => import('./pages/SiteAdmin'));
 const PlayerProfile    = lazy(() => import('./pages/PlayerProfile'));
 const Join             = lazy(() => import('./pages/Join'));
 const ProfileSetup     = lazy(() => import('./pages/ProfileSetup'));
@@ -118,6 +119,7 @@ function AppRoutes() {
             <Route path="/about" component={About} />
             <Route path="/facilities" component={Facilities} />
 
+            <Route path="/admin" component={SiteAdmin} />
             <Route path="/tournament/admin" component={TournamentAdmin} />
             <Route path="/tournament" component={LiveTournament} />
             <Route path="/events/:slug" component={TournamentDetail} />

@@ -4,6 +4,9 @@ import { Menu, X, UserCircle, LogIn, User, Settings, LogOut, UserPlus } from 'lu
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/lib/supabase';
+import { isAdminEmail } from '@/lib/admin';
+import type { Session, AuthChangeEvent } from "@supabase/supabase-js";
+import { isAdminEmail } from '@/lib/admin';
 import type { Session, AuthChangeEvent } from "@supabase/supabase-js";
 
 export default function Navigation() {
@@ -12,6 +15,7 @@ export default function Navigation() {
   const [scrolled, setScrolled] = useState(false);
   const [myPlayerId, setMyPlayerId] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
   const [userName, setUserName] = useState<string>("");
   const [savedAccounts, setSavedAccounts] = useState<any[]>([]);
@@ -32,6 +36,7 @@ export default function Navigation() {
 
     const clearAuthState = (accounts = readSavedAccounts()) => {
       setIsLoggedIn(false);
+      setIsAdmin(false);
       setMyPlayerId(null);
       setUserName("");
       setSavedAccounts(accounts);
@@ -86,6 +91,7 @@ export default function Navigation() {
         localStorage.setItem("iisc_saved_accounts", JSON.stringify(accounts));
 
         setIsLoggedIn(true);
+        setIsAdmin(isAdminEmail(userData.user.email));
         setMyPlayerId(data?.id ?? null);
         setUserName(name);
         setSavedAccounts(accounts.filter((a: any) => a.id !== userData.user.id));
@@ -156,6 +162,7 @@ export default function Navigation() {
 
     authRequestIdRef.current += 1;
     setIsLoggedIn(false);
+    setIsAdmin(false);
     setMyPlayerId(null);
     setUserName("");
     setIsOpen(false);
@@ -228,6 +235,13 @@ export default function Navigation() {
                       <Settings className="mr-2 h-4 w-4" /> Edit Profile
                     </DropdownMenuItem>
                   </Link>
+                  {isAdmin && (
+                    <Link href="/admin">
+                      <DropdownMenuItem className="cursor-pointer font-medium text-purple-600 focus:bg-slate-50 dark:focus:bg-slate-800">
+                        <Settings className="mr-2 h-4 w-4" /> Site Admin
+                      </DropdownMenuItem>
+                    </Link>
+                  )}
                   <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800" />
                   
                   {savedAccounts.length > 0 && (
@@ -327,12 +341,18 @@ export default function Navigation() {
                         <Settings className="mr-2 h-4 w-4" /> Edit Profile & Password
                       </Button>
                     </Link>
+                    {isAdmin && (
+                      <Link href="/admin">
+                        <Button variant="ghost" className="w-full justify-start text-purple-600 font-medium hover:bg-purple-50 dark:hover:bg-purple-950/50">
+                          <Settings className="mr-2 h-4 w-4" /> Site Admin
+                        </Button>
+                      </Link>
+                    )}
                     <Button 
                       variant="ghost" 
                       className="w-full justify-start text-rose-600 dark:text-rose-400 font-medium hover:bg-rose-50 dark:hover:bg-rose-950/50"
                       onClick={() => handleSignOut()}
                     >
-                      <LogOut className="mr-2 h-4 w-4" /> Sign Out
                     </Button>
                   </div>
                 ) : (
