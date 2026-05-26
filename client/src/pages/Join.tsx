@@ -55,15 +55,30 @@ export default function Join() {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true); setErrorMsg(""); setInfoMsg("");
+
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Request timed out. Check your connection and try again.")), 15000)
+    );
+
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await Promise.race([
+        supabase.auth.signInWithPassword({ email, password }),
+        timeout,
+      ]) as Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>;
       if (error) throw error;
-      if (data.session) await afterAuth(data.session);
-    } catch (err: any) {
-      if (err.message === "Email not confirmed") {
-        setErrorMsg("Email not confirmed");
+      if (data.session) {
+        await afterAuth(data.session);
       } else {
-        setErrorMsg(err.message.includes("Invalid") ? "Incorrect email or password." : err.message);
+        setErrorMsg("Sign in failed — no session returned. Please try again.");
+      }
+    } catch (err: any) {
+      const msg: string = err?.message ?? "An unexpected error occurred.";
+      if (msg === "Email not confirmed") {
+        setErrorMsg("Email not confirmed");
+      } else if (msg.toLowerCase().includes("invalid")) {
+        setErrorMsg("Incorrect email or password.");
+      } else {
+        setErrorMsg(msg);
       }
     } finally { setLoading(false); }
   };
@@ -134,7 +149,8 @@ export default function Join() {
       setMode("otp-verify");
       setInfoMsg(`Login code sent to ${email}`);
     } catch (err: any) {
-      setErrorMsg(err.message.includes("not found") ? "No account found with this email. Please sign up first." : err.message);
+      const msg: string = err?.message ?? "";
+      setErrorMsg(msg.includes("not found") ? "No account found with this email. Please sign up first." : (msg || "An error occurred. Please try again."));
     } finally { setLoading(false); }
   };
 

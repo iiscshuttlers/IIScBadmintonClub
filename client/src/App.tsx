@@ -27,7 +27,7 @@ const Gallery          = lazy(() => import('./pages/Gallery'));
 const TournamentDetail = lazy(() => import('./pages/TournamentDetail'));
 const WinnersWall      = lazy(() => import('./pages/WinnersWall'));
 const LiveTournament = lazy(() => import('./pages/LiveTournament'));
-const TournamentAdmin = lazy(() => import('./pages/TournamentAdmin'));
+// TournamentAdmin merged into SiteAdmin — /tournament/admin redirects to /admin
 const SiteAdmin        = lazy(() => import('./pages/SiteAdmin'));
 const PlayerProfile    = lazy(() => import('./pages/PlayerProfile'));
 const Join             = lazy(() => import('./pages/Join'));
@@ -120,7 +120,7 @@ function AppRoutes() {
             <Route path="/facilities" component={Facilities} />
 
             <Route path="/admin" component={SiteAdmin} />
-            <Route path="/tournament/admin" component={TournamentAdmin} />
+            <Route path="/tournament/admin" component={SiteAdmin} />
             <Route path="/tournament" component={LiveTournament} />
             <Route path="/events/:slug" component={TournamentDetail} />
 

@@ -106,7 +106,7 @@ export default function Footer() {
             <p className="text-gray-400 text-sm">
               © {new Date().getFullYear()} IISc Badminton Club. All rights reserved.
               {/* Hidden admin doorway */}
-              <Link href="/tournament/admin">
+              <Link href="/admin">
                 <span className="text-blue-900 ml-1 select-none">·</span>
               </Link>
             </p>
