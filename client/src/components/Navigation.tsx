@@ -1,11 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Menu, X, UserCircle, LogIn, User, Settings, LogOut, UserPlus } from 'lucide-react';
+import { Menu, X, UserCircle, LogIn, User, Settings, LogOut, UserPlus, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/lib/supabase';
-import { isAdminEmail } from '@/lib/admin';
-import type { Session, AuthChangeEvent } from "@supabase/supabase-js";
 import { isAdminEmail } from '@/lib/admin';
 import type { Session, AuthChangeEvent } from "@supabase/supabase-js";
 
@@ -144,17 +142,30 @@ export default function Navigation() {
   const isActive = (href: string) =>
     href === '/' ? location === '/' : location.startsWith(href);
 
-  const navLinks = [
-    { href: '/', label: 'Home' },
-    { href: '/about', label: 'About' },
-    { href: '/facilities', label: 'Facilities' },
-    { href: '/events', label: 'Events' },
-    { href: '/invicta', label: 'INVICTA' },
-    { href: '/winners', label: 'Winners' },
-    { href: '/players', label: 'Players' },
-    { href: '/announcements', label: 'Announcements' },
-    { href: '/gallery', label: 'Gallery' },
-    { href: '/contact', label: 'Contact' },
+  const navGroups = [
+    {
+      label: 'About',
+      links: [
+        { href: '/about', label: 'About Us' },
+        { href: '/facilities', label: 'Facilities' },
+      ],
+    },
+    {
+      label: 'Events',
+      links: [
+        { href: '/events', label: 'All Events' },
+        { href: '/invicta', label: 'INVICTA' },
+        { href: '/winners', label: 'Winners Wall' },
+      ],
+    },
+    {
+      label: 'Community',
+      links: [
+        { href: '/players', label: 'Players' },
+        { href: '/announcements', label: 'Announcements' },
+        { href: '/gallery', label: 'Gallery' },
+      ],
+    },
   ];
 
   const handleSignOut = async (message = "Are you sure you want to sign out?") => {
@@ -200,20 +211,61 @@ export default function Navigation() {
 
           {/* Desktop Navigation — large screens only */}
           <div className="hidden lg:flex gap-1 items-center">
-            {navLinks.map((link) => (
-              <Link key={link.href} href={link.href}>
-                <Button
-                  variant="ghost"
-                  className={`transition-colors ${
-                    isActive(link.href)
-                      ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950 font-semibold'
-                      : 'text-blue-900 dark:text-slate-200 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950'
-                  }`}
-                >
-                  {link.label}
-                </Button>
-              </Link>
+            {/* Standalone: Home */}
+            <Link href="/">
+              <Button
+                variant="ghost"
+                className={`transition-colors ${
+                  isActive('/')
+                    ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950 font-semibold'
+                    : 'text-blue-900 dark:text-slate-200 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950'
+                }`}
+              >
+                Home
+              </Button>
+            </Link>
+
+            {/* Grouped dropdowns */}
+            {navGroups.map((group) => (
+              <DropdownMenu key={group.label}>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className={`transition-colors flex items-center gap-1 ${
+                      group.links.some(l => isActive(l.href))
+                        ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950 font-semibold'
+                        : 'text-blue-900 dark:text-slate-200 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950'
+                    }`}
+                  >
+                    {group.label}
+                    <ChevronDown className="w-3.5 h-3.5 opacity-60" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-44 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl">
+                  {group.links.map(link => (
+                    <Link key={link.href} href={link.href}>
+                      <DropdownMenuItem className={`cursor-pointer font-medium focus:bg-slate-50 dark:focus:bg-slate-800 ${isActive(link.href) ? 'text-emerald-600' : ''}`}>
+                        {link.label}
+                      </DropdownMenuItem>
+                    </Link>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             ))}
+
+            {/* Standalone: Contact */}
+            <Link href="/contact">
+              <Button
+                variant="ghost"
+                className={`transition-colors ${
+                  isActive('/contact')
+                    ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950 font-semibold'
+                    : 'text-blue-900 dark:text-slate-200 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950'
+                }`}
+              >
+                Contact
+              </Button>
+            </Link>
             <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1" />
             {authLoading ? (
               <div className="w-24 h-9 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />
@@ -311,8 +363,13 @@ export default function Navigation() {
         {/* Mobile Dropdown */}
         {isOpen && (
           <div className="lg:hidden mt-4 pb-4 border-t border-gray-200 dark:border-slate-700 pt-4 animate-in fade-in slide-in-from-top-2">
-            <div className="flex flex-col gap-2">
-              {navLinks.map((link) => (
+            <div className="flex flex-col gap-1">
+              {/* Flat list of all links for mobile */}
+              {[
+                { href: '/', label: 'Home' },
+                ...navGroups.flatMap(g => g.links),
+                { href: '/contact', label: 'Contact' },
+              ].map((link) => (
                 <Link key={link.href} href={link.href}>
                   <Button
                     variant="ghost"
@@ -348,11 +405,12 @@ export default function Navigation() {
                         </Button>
                       </Link>
                     )}
-                    <Button 
-                      variant="ghost" 
+                    <Button
+                      variant="ghost"
                       className="w-full justify-start text-rose-600 dark:text-rose-400 font-medium hover:bg-rose-50 dark:hover:bg-rose-950/50"
                       onClick={() => handleSignOut()}
                     >
+                      <LogOut className="mr-2 h-4 w-4" /> Sign Out
                     </Button>
                   </div>
                 ) : (
