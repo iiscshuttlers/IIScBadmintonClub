@@ -91,7 +91,7 @@ const versionJsonPath = resolve(root, 'client/public/data/app-version.json');
 writeFileSync(versionJsonPath, JSON.stringify({
   versionCode: newCode,
   versionName: newName,
-  downloadUrl: `https://github.com/${REPO}/releases/latest/download/IIScShuttlers.apk`,
+  downloadUrl: `https://github.com/${REPO}/releases/latest/download/app-release.apk`,
   changelog,
 }, null, 2) + '\n');
 ok('app-version.json updated');
@@ -130,7 +130,7 @@ try { execSync(`gh release delete ${tag} --repo ${REPO} --yes`, { stdio: 'pipe' 
 try { execSync(`gh api repos/${REPO}/git/refs/tags/${tag} -X DELETE`, { stdio: 'pipe' }); } catch {}
 
 run(
-  `gh release create ${tag} "${APK_SRC}#IIScShuttlers.apk" ` +
+  `gh release create ${tag} "${APK_SRC}" ` +
   `--repo ${REPO} ` +
   `--title "v${newName}" ` +
   `--notes "${changelog.replace(/"/g, "'")}" ` +
