@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, Bell, Pin } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useAutoRefresh } from '@/hooks/useAutoRefresh';
+import { fetchSiteData } from '@/lib/siteData';
 import DOMPurify from 'dompurify';
 
 type Announcement = {
@@ -30,10 +31,7 @@ export default function Announcements() {
   }
 
   const loadAnnouncements = useCallback(() => {
-    fetch(`${import.meta.env.BASE_URL}data/announcements.json?v=${Date.now()}`, {
-      cache: 'no-store'
-    })
-      .then((res) => res.json())
+    fetchSiteData<{ recent: Announcement[] }>("announcements", "announcements.json")
       .then((data) => {
       const allAnnouncements = data.recent || [];
 
@@ -48,7 +46,7 @@ export default function Announcements() {
         setLoading(false);
       })
       .catch((err) => {
-        console.error('Announcements JSON load failed:', err);
+        console.error('Announcements load failed:', err);
         setLoading(false);
       });
   }, []);

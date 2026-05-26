@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, Clock, MapPin, Trophy, Users } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useAutoRefresh } from '@/hooks/useAutoRefresh';
+import { fetchSiteData } from '@/lib/siteData';
 
 type Holiday = {
   date: string;
@@ -16,8 +17,7 @@ export default function Facilities() {
   const [nextHoliday, setNextHoliday] = useState<Holiday | null>(null);
 
   const loadHolidays = useCallback(() => {
-    fetch(`${import.meta.env.BASE_URL}data/holidays.json?v=${Date.now()}`, { cache: 'no-store' })
-      .then(res => res.json())
+    fetchSiteData<Holiday[]>("holidays", "holidays.json")
       .then(data => {
         setHolidays(data);
 
@@ -27,7 +27,7 @@ export default function Facilities() {
         });
 
         const upcoming = data.find((h: any) => h.date >= today);
-        setNextHoliday(upcoming);
+        setNextHoliday(upcoming || null);
       })
       .catch(err => console.error("Error loading holidays:", err));
   }, []);

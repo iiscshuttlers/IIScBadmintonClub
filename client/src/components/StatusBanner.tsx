@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { fetchSiteData } from "@/lib/siteData";
 
 type Holiday = { date: string; name: string };
 type Event = {
@@ -28,8 +29,8 @@ export default function StatusBanner() {
 
   useEffect(() => {
     Promise.all([
-      fetch(`${import.meta.env.BASE_URL}data/holidays.json`).then(res => res.json()),
-      fetch(`${import.meta.env.BASE_URL}data/events.json`).then(res => res.json()),
+      fetchSiteData<Holiday[]>("holidays", "holidays.json"),
+      fetchSiteData<Event[]>("events", "events.json"),
     ]).then(([holidays, events]) => {
       let msgs: string[] = [];
 
@@ -82,7 +83,7 @@ export default function StatusBanner() {
       });
 
       setMessages(msgs);
-    });
+    }).catch(err => console.warn("StatusBanner data fetch failed:", err));
   }, []);
 
   // 🔁 Rotation
