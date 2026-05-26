@@ -61,15 +61,27 @@ const codeMatch = gradle.match(/versionCode (\d+)/);
 const nameMatch = gradle.match(/versionName "([^"]+)"/);
 if (!codeMatch || !nameMatch) fail('Could not parse versionCode/versionName from build.gradle');
 
-const oldCode = parseInt(codeMatch[1]);
-const oldName = nameMatch[1];
-const newCode = oldCode + 1;
-const newName = bumpVersion(oldName);
+// Check if a previous run already bumped but didn't commit (retry-safe)
+const dirtyFiles = execSync('git status --porcelain', { cwd: root }).toString();
+const alreadyBumped = dirtyFiles.includes('android/app/build.gradle');
 
-gradle = gradle
-  .replace(`versionCode ${oldCode}`, `versionCode ${newCode}`)
-  .replace(`versionName "${oldName}"`, `versionName "${newName}"`);
-writeFileSync(gradlePath, gradle);
+let oldCode, oldName, newCode, newName;
+if (alreadyBumped) {
+  newCode = parseInt(codeMatch[1]);
+  newName = nameMatch[1];
+  const prevCode = newCode - 1;
+  console.log(`  ↩ Previous bump detected — retrying v${newName} (build ${newCode})`);
+  oldCode = prevCode; oldName = newName;
+} else {
+  oldCode = parseInt(codeMatch[1]);
+  oldName = nameMatch[1];
+  newCode = oldCode + 1;
+  newName = bumpVersion(oldName);
+  gradle = gradle
+    .replace(`versionCode ${oldCode}`, `versionCode ${newCode}`)
+    .replace(`versionName "${oldName}"`, `versionName "${newName}"`);
+  writeFileSync(gradlePath, gradle);
+}
 ok(`${oldName} (${oldCode})  →  ${newName} (${newCode})`);
 
 /* ── 2. Update app-version.json ─────────────────────────────────── */
@@ -118,12 +130,11 @@ try { execSync(`gh release delete ${tag} --repo ${REPO} --yes`, { stdio: 'pipe' 
 try { execSync(`gh api repos/${REPO}/git/refs/tags/${tag} -X DELETE`, { stdio: 'pipe' }); } catch {}
 
 run(
-  `gh release create ${tag} "${APK_SRC}" ` +
+  `gh release create ${tag} "${APK_SRC}#IIScShuttlers.apk" ` +
   `--repo ${REPO} ` +
   `--title "v${newName}" ` +
   `--notes "${changelog.replace(/"/g, "'")}" ` +
-  `--latest ` +
-  `--asset-name IIScShuttlers.apk`
+  `--latest`
 );
 ok(`GitHub Release v${newName} published`);
 
