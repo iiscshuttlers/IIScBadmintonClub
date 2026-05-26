@@ -1,7 +1,8 @@
 export const ADMIN_EMAILS = [
   "iiscbadmintonclub@gmail.com",
   "janmejayraja@iisc.ac.in",
-  "raja79sharma@gmail.com"
+  "raja79sharma@gmail.com",
+  "rajajanmejaya@gmail.com"
 ];
 
 export const isAdminEmail = (email?: string | null) => {
