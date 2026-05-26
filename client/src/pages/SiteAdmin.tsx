@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { db, auth } from "@/lib/firebase";
 import { doc, updateDoc, onSnapshot } from "firebase/firestore";
 import {
-  signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, User as FirebaseUser,
+  signInAnonymously, onAuthStateChanged, User as FirebaseUser,
 } from "firebase/auth";
 import { advanceWinners } from "@/lib/tournamentProgression";
 
@@ -377,10 +377,10 @@ function UmpireMode() {
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async user => {
-      if (user && !isAdminEmail(user.email)) {
-        await signOut(auth); setFbUser(null);
-      } else {
+      if (user) {
         setFbUser(user);
+      } else {
+        try { await signInAnonymously(auth); } catch (err) { console.warn("Firebase anon sign-in failed:", err); }
       }
     });
     return () => unsub();
@@ -412,18 +412,6 @@ function UmpireMode() {
     setStatus(match?.Status || "in-progress");
     setWinner(match?.Winner || "");
   }, [selectedMatchId, data, selectedFormat]);
-
-  const handleGoogleLogin = async () => {
-    try {
-      const result = await signInWithPopup(auth, new GoogleAuthProvider());
-      if (!isAdminEmail(result.user.email)) {
-        await signOut(auth);
-        toast("Access denied — your Google account is not an admin.", { icon: "🚫" });
-      }
-    } catch (err: any) {
-      toast("Google login failed: " + (err?.message ?? "Unknown error"), { icon: "❌" });
-    }
-  };
 
   const updateScore = (player: "p1" | "p2", delta: number) => {
     const next = [...scores];
