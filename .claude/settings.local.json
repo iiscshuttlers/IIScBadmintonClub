@@ -4,7 +4,12 @@
       "Bash(Get-ChildItem -Force)",
       "Bash(Select-Object Name)",
       "Bash(pnpm build *)",
-      "Bash(dir \"e:\\\\Github\\\\iiscshuttlers\\\\client\")"
+      "Bash(dir \"e:\\\\Github\\\\iiscshuttlers\\\\client\")",
+      "Bash(Get-ChildItem -Path 'e:\\\\Github\\\\iiscshuttlers' -Force)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "Bash(Format-Table)",
+      "PowerShell(tree /L 3 'e:\\\\Github\\\\iiscshuttlers' 2>$null || Get-ChildItem -Path 'e:\\\\Github\\\\iiscshuttlers' -Recurse -Force -ErrorAction SilentlyContinue | Select-Object @{Name=\"Path\";Expression={$_.FullName.Replace\\('e:\\\\Github\\\\iiscshuttlers', ''\\)}} | Sort-Object Path | Format-Table -Wrap)",
+      "PowerShell(cd 'e:\\\\Github\\\\iiscshuttlers' -ErrorAction Stop; Get-ChildItem -Recurse -Force -ErrorAction SilentlyContinue | Where-Object { -not $_.FullName.Contains\\('\\\\node_modules\\\\'\\) -and -not $_.FullName.Contains\\('\\\\.git\\\\'\\) -and -not $_.FullName.Contains\\('\\\\dist\\\\'\\) -and -not $_.FullName.Contains\\('\\\\.manus-logs\\\\'\\) } | Sort-Object FullName | Select-Object @{Name=\"Path\";Expression={$_.FullName.Replace\\(\\(Get-Location\\).Path + '\\\\', ''\\)}} | Format-List)"
     ]
   }
 }
