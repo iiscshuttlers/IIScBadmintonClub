@@ -110,9 +110,19 @@ export default function Footer() {
                 <span className="text-blue-900 ml-1 select-none">·</span>
               </Link>
             </p>
-            <p className="text-gray-400 text-sm">
-              Built with ❤️
-            </p>
+            <div className="flex items-center gap-4">
+              <p className="text-gray-400 text-sm">Built with ❤️</p>
+              <a
+                href="https://github.com/iiscshuttlers/iiscshuttlers/releases/latest/download/IIScShuttlers.apk"
+                className="text-gray-500 hover:text-gray-300 text-xs transition-colors flex items-center gap-1"
+                title="Download Android App"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.523 15.341 14 13.438V8h-4v5.438l-3.523 1.903A1 1 0 0 0 6 16.277V20h12v-3.723a1 1 0 0 0-.477-.936zM8.008 6.192l1.5-2.598A.5.5 0 0 1 10 3.5h4a.5.5 0 0 1 .492.094l1.5 2.598A6.978 6.978 0 0 0 12 5a6.978 6.978 0 0 0-3.992 1.192z"/>
+                </svg>
+                Android App
+              </a>
+            </div>
           </div>
         </div>
       </div>
