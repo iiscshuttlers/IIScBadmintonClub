@@ -40,6 +40,13 @@ CREATE POLICY "Admins can manage site_data" ON site_data
       'janmejayraja@iisc.ac.in',
       'raja79sharma@gmail.com'
     )
+  ) WITH CHECK (
+    auth.jwt() ->> 'email' IN (
+      'rajajanmejaya@gmail.com',
+      'iiscbadmintonclub@gmail.com',
+      'janmejayraja@iisc.ac.in',
+      'raja79sharma@gmail.com'
+    )
   );
 
 -- ============================================================
