@@ -146,21 +146,13 @@ export default function Invicta() {
               </div>
             </div>
 
-            <div className="text-center bg-emerald-50 dark:bg-emerald-950/30 p-8 rounded-3xl border border-emerald-100 dark:border-emerald-900/50 mb-12">
-              <h2 className="text-2xl md:text-3xl font-bold text-blue-900 dark:text-emerald-400 mb-4">
-                Registrations are now open!
+            <div className="text-center bg-slate-50 dark:bg-slate-800/50 p-8 rounded-3xl border border-slate-200 dark:border-slate-700 mb-12">
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-700 dark:text-slate-300 mb-4">
+                Registrations are now closed
               </h2>
-              <p className="text-slate-700 dark:text-slate-300 mb-8 max-w-2xl mx-auto text-lg">
-                Don't miss the chance to compete and showcase your skills. The form is restricted to IISc members.
-                <br />
-                <strong className="text-rose-600 dark:text-rose-400">Deadline: 26 May 2026</strong>
+              <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto text-lg">
+                The registration deadline (26 May 2026) has passed. Stay tuned for tournament updates.
               </p>
-              
-              <a href="https://forms.cloud.microsoft/r/c82F9mgTv5" target="_blank" rel="noopener noreferrer">
-                <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all gap-3">
-                  <span>Register Now (Microsoft Form)</span>
-                </Button>
-              </a>
             </div>
 
             {/* Notices & Announcements Section */}

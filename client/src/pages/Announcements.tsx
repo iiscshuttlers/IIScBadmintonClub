@@ -7,6 +7,16 @@ import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 import { fetchSiteData } from '@/lib/siteData';
 import DOMPurify from 'dompurify';
 
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+function sanitize(html: string) {
+  const clean = DOMPurify.sanitize(html);
+  if (!BASE) return clean;
+  // Prepend base URL to internal absolute links that don't already have it
+  return clean.replace(/href="(\/[^"/][^"]*)"/g, (_, path) =>
+    path.startsWith(BASE) ? `href="${path}"` : `href="${BASE}${path}"`
+  );
+}
+
 type Announcement = {
   title: string;
   date?: string;
@@ -196,7 +206,7 @@ export default function Announcements() {
                         <CardContent>
                           <p
                             className="text-gray-700 leading-relaxed"
-                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(item.content) }}
+                            dangerouslySetInnerHTML={{ __html: sanitize(item.content) }}
                           />
                         </CardContent>
                       </Card>
@@ -275,7 +285,7 @@ export default function Announcements() {
                         <CardContent>
                           <p
                             className="text-gray-700 text-sm leading-relaxed"
-                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(item.content) }}
+                            dangerouslySetInnerHTML={{ __html: sanitize(item.content) }}
                           />
                         </CardContent>
                       </Card>
