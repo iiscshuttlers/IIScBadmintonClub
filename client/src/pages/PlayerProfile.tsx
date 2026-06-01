@@ -313,6 +313,7 @@ export default function PlayerProfile() {
   const [isAvatarOpen, setIsAvatarOpen] = useState(false);
   const [eloRank, setEloRank] = useState<number | null>(null);
   const [liveMatches, setLiveMatches] = useState<any[]>([]);
+  const [rawMatches, setRawMatches] = useState<any[]>([]); // unfiltered matches — filtered into liveMatches reactively
   const [h2hRecord, setH2hRecord] = useState<{ wins: number; losses: number } | null>(null);
   const [ownPlayerProfile, setOwnPlayerProfile] = useState<{ id: string; full_name: string; avatar_url?: string; gender?: string } | null>(null);
   const [allPlayers, setAllPlayers] = useState<{ id: string; full_name: string; avatar_url?: string; gender?: string }[]>([]);
@@ -418,15 +419,16 @@ export default function PlayerProfile() {
       const { error } = await supabase.from("matches").delete().eq("id", matchId);
       if (error) throw error;
       alert("Match withdrawn successfully.");
-      setLiveMatches(prev => prev.filter(m => m.id !== matchId));
+      setRawMatches(prev => prev.filter(m => m.id !== matchId));
       if (ownPlayerProfile) fetchPendingMatches(ownPlayerProfile.id);
     } catch (e: any) { alert("Error withdrawing match: " + e.message); }
   };
 
   /* ══════════════════════════════════════════════════════════════════
      EFFECT 1: Load page data (player profile, matches, ELO rank).
-     Fires when the player `id` changes.
+     Fires ONLY when the player `id` changes — never on auth changes.
      Uses AbortController for clean cancellation on unmount/re-render.
+     A 15-second failsafe prevents permanent loading on slow networks.
      ══════════════════════════════════════════════════════════════════ */
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -434,6 +436,14 @@ export default function PlayerProfile() {
 
     const controller = new AbortController();
     const { signal } = controller;
+
+    // Failsafe: force-clear loading if fetch hangs for 15 seconds
+    const failsafe = setTimeout(() => {
+      if (!signal.aborted) {
+        console.warn("[PlayerProfile] Effect 1 failsafe — clearing loading state.");
+        setLoading(false);
+      }
+    }, 15_000);
 
     (async () => {
       setLoading(true);
@@ -459,8 +469,8 @@ export default function PlayerProfile() {
           setPlayer(playerRes.data ? formatPlayerData(playerRes.data) : null);
         }
 
-        // Match history (confirmed + pending)
-        setLiveMatches(visibleMatchesForViewer(matchesRes.data || [], ownPlayerProfile?.id));
+        // Store raw matches — filtered into liveMatches by a separate reactive effect
+        setRawMatches(matchesRes.data || []);
 
         // ELO rank
         if (eloRes.data) {
@@ -473,11 +483,17 @@ export default function PlayerProfile() {
         setPlayer(null);
       } finally {
         if (!signal.aborted) setLoading(false);
+        clearTimeout(failsafe);
       }
     })();
 
-    return () => controller.abort();
-  }, [id, ownPlayerProfile?.id]);
+    return () => { controller.abort(); clearTimeout(failsafe); };
+  }, [id]);
+
+  /* ── Derive liveMatches from rawMatches + ownPlayerProfile (no network, no spinner) ── */
+  useEffect(() => {
+    setLiveMatches(visibleMatchesForViewer(rawMatches, ownPlayerProfile?.id));
+  }, [rawMatches, ownPlayerProfile?.id]);
 
   /* ══════════════════════════════════════════════════════════════════
      EFFECT 2: Auth — fetch session, own profile, all players list.
@@ -527,8 +543,6 @@ export default function PlayerProfile() {
 
     return () => { cancelled = true; };
   }, [authSession, fetchPendingMatches]);
-
-  /* ── Silent background refresh (every 30s, no loading spinner) ── */
   const silentRefresh = useCallback(async () => {
     if (!id) return;
     try {
