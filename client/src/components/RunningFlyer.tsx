@@ -1,7 +1,7 @@
 import { Link } from 'wouter';
 
 export default function RunningFlyer() {
-  const message = `🏸 Upcoming Event: INVICTA Open Tournament (Tentative: June 2026) - Registrations starting soon! 🏸`;
+  const message = `🏸 Upcoming Event: INVICTA Open Tournament (Tentative: June 2026) - Registrations are closed !! 🏸`;
 
   return (
     <Link href="/events">

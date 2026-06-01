@@ -140,7 +140,7 @@ export default function Events() {
 
   const renderCard = (item: any | ArchivedTournament, liveMode = false) => {
     const isUpcoming = item.status === 'upcoming';
-    
+
     const cardContent = (
       <Card className="rounded-3xl border border-emerald-200 shadow-md bg-white hover:shadow-xl hover:-translate-y-1 transition duration-300 cursor-pointer h-full">
         <CardContent className="p-8 space-y-5">
@@ -203,7 +203,7 @@ export default function Events() {
           )}
 
           <div className="flex items-center gap-2 pt-1 font-bold text-blue-900">
-            {isUpcoming ? (item.slug === 'invicta-2026' ? 'View Details' : 'Registrations starting soon') : item.status === 'live' ? 'View live fixtures' : 'View results'}
+            {isUpcoming ? (item.slug === 'invicta-2026' ? 'View Details' : 'Registrations are Closed !!') : item.status === 'live' ? 'View live fixtures' : 'View results'}
             <ArrowRight className="w-4 h-4" />
           </div>
         </CardContent>
@@ -219,7 +219,7 @@ export default function Events() {
         );
       }
       return (
-        <div key={item.id} onClick={() => alert("Registrations will start soon! Stay tuned for more details.")} className="h-full">
+        <div key={item.id} onClick={() => alert("Registrations are Closed !!")} className="h-full">
           {cardContent}
         </div>
       );

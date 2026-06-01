@@ -115,12 +115,12 @@ export default function Gallery() {
     selectedCategory === 'all'
       ? []
       : Array.from(
-          new Set(
-            galleryItems
-              .filter((item) => item.category === selectedCategory && item.subfolder !== '')
-              .map((item) => item.subfolder)
-          )
-        );
+        new Set(
+          galleryItems
+            .filter((item) => item.category === selectedCategory && item.subfolder !== '')
+            .map((item) => item.subfolder)
+        )
+      );
 
   const filteredItems = galleryItems.filter((item) => {
     const categoryMatch = selectedCategory === 'all' || item.category === selectedCategory;
@@ -164,11 +164,10 @@ export default function Gallery() {
               <button
                 key={cat.id}
                 onClick={() => { setSelectedCategory(cat.id); setSelectedSubfolder('all'); }}
-                className={`px-8 py-2 rounded-full font-bold transition-all duration-300 ${
-                  selectedCategory === cat.id
+                className={`px-8 py-2 rounded-full font-bold transition-all duration-300 ${selectedCategory === cat.id
                     ? 'bg-emerald-500 text-white shadow-lg scale-105'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
+                  }`}
               >
                 {cat.label}
               </button>
@@ -180,9 +179,8 @@ export default function Gallery() {
             <div className="flex flex-wrap gap-3 justify-center mb-12 animate-in fade-in slide-in-from-top-4">
               <button
                 onClick={() => setSelectedSubfolder('all')}
-                className={`px-5 py-1.5 rounded-full text-sm font-semibold transition ${
-                  selectedSubfolder === 'all' ? 'bg-blue-900 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                }`}
+                className={`px-5 py-1.5 rounded-full text-sm font-semibold transition ${selectedSubfolder === 'all' ? 'bg-blue-900 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                  }`}
               >
                 All Albums
               </button>
@@ -190,9 +188,8 @@ export default function Gallery() {
                 <button
                   key={sub}
                   onClick={() => setSelectedSubfolder(sub)}
-                  className={`px-5 py-1.5 rounded-full text-sm font-semibold transition ${
-                    selectedSubfolder === sub ? 'bg-blue-900 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                  }`}
+                  className={`px-5 py-1.5 rounded-full text-sm font-semibold transition ${selectedSubfolder === sub ? 'bg-blue-900 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                    }`}
                 >
                   {formatText(sub)}
                 </button>

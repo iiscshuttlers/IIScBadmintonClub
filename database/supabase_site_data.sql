@@ -79,7 +79,7 @@ INSERT INTO site_data (key, value) VALUES
       "category": "tournament",
       "priority": "high",
       "location": "IISc Badminton Hall",
-      "content": "Get ready for the badminton showdown! <strong>INVICTA Open Tournament</strong> is tentatively scheduled from <strong>1st June to 21st June</strong>.<br><br>Registrations are now OPEN! <a href=''/invicta'' style=''color:#10b981;font-weight:bold;text-decoration:underline;''>Click here to register.</a> Open to all IISc members."
+      "content": "Get ready for the badminton showdown! <strong>INVICTA Open Tournament</strong> is tentatively scheduled from <strong>1st June to 21st June</strong>.<br><br>Registrations are Closed !! <a href=''/invicta'' style=''color:#10b981;font-weight:bold;text-decoration:underline;''>Click here to register.</a> Open to all IISc members."
     },
     {
       "title": "Farewell Badminton Match 🏸",

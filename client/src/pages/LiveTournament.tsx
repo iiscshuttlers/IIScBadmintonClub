@@ -112,22 +112,20 @@ export default function LiveTournament() {
             </div>
             <button
               onClick={() => setActiveTab('brackets')}
-              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-bold transition-all ${
-                activeTab === 'brackets'
+              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-bold transition-all ${activeTab === 'brackets'
                   ? 'bg-white text-emerald-700 shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
-              }`}
+                }`}
             >
               <LayoutList size={18} />
               Live Brackets
             </button>
             <button
               onClick={() => setActiveTab('schedule')}
-              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-bold transition-all ${
-                activeTab === 'schedule'
+              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-bold transition-all ${activeTab === 'schedule'
                   ? 'bg-white text-emerald-700 shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
-              }`}
+                }`}
             >
               <Clock size={18} />
               Schedule & Live Scores
@@ -216,11 +214,10 @@ export default function LiveTournament() {
                     <button
                       key={format}
                       onClick={() => setActiveFormat(format)}
-                      className={`px-6 py-2 rounded-full font-bold transition-all shadow-sm ${
-                        activeFormat === format
+                      className={`px-6 py-2 rounded-full font-bold transition-all shadow-sm ${activeFormat === format
                           ? 'bg-emerald-600 text-white'
                           : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
-                      }`}
+                        }`}
                     >
                       {format}
                     </button>

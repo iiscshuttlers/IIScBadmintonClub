@@ -43,16 +43,16 @@ export default function Announcements() {
   const loadAnnouncements = useCallback(() => {
     fetchSiteData<{ recent: Announcement[] }>("announcements", "announcements.json")
       .then((data) => {
-      const allAnnouncements = data.recent || [];
+        const allAnnouncements = data.recent || [];
 
-      const pinned = allAnnouncements.filter((item: Announcement) => {
-        const status = getStatus(item);
+        const pinned = allAnnouncements.filter((item: Announcement) => {
+          const status = getStatus(item);
 
-        return status === 'ongoing' || status === 'upcoming';
-      });
+          return status === 'ongoing' || status === 'upcoming';
+        });
 
-      setPinnedAnnouncements(sortByNewest(pinned));
-      setRecentAnnouncements(sortByNewest(allAnnouncements));
+        setPinnedAnnouncements(sortByNewest(pinned));
+        setRecentAnnouncements(sortByNewest(allAnnouncements));
         setLoading(false);
       })
       .catch((err) => {
@@ -69,11 +69,11 @@ export default function Announcements() {
   useAutoRefresh(loadAnnouncements, 60_000, !loading);
 
   const categories = [
-    { id: 'all',        label: 'All',         color: 'bg-gray-100 text-gray-700',       icon: '🗂️' },
-    { id: 'tournament', label: 'Tournament',  color: 'bg-emerald-100 text-emerald-800', icon: '🏸' },
-    { id: 'facility',   label: 'Facility',    color: 'bg-blue-100 text-blue-800',       icon: '🏟️' },
-    { id: 'general',    label: 'General',     color: 'bg-purple-100 text-purple-800',   icon: '📢' },
-    { id: 'others',     label: 'Others',      color: 'bg-orange-100 text-orange-800',   icon: '📌' },
+    { id: 'all', label: 'All', color: 'bg-gray-100 text-gray-700', icon: '🗂️' },
+    { id: 'tournament', label: 'Tournament', color: 'bg-emerald-100 text-emerald-800', icon: '🏸' },
+    { id: 'facility', label: 'Facility', color: 'bg-blue-100 text-blue-800', icon: '🏟️' },
+    { id: 'general', label: 'General', color: 'bg-purple-100 text-purple-800', icon: '📢' },
+    { id: 'others', label: 'Others', color: 'bg-orange-100 text-orange-800', icon: '📌' },
   ];
 
   const getCategoryBadge = (category: string) => {
@@ -193,11 +193,13 @@ export default function Announcements() {
                               <Calendar className="w-4 h-4 text-emerald-500" />
                               <span className="text-gray-500 text-sm">{item.date}</span>
                             </div>
-                            {(() => { const b = getCategoryBadge(item.category); return (
-                              <Badge className={`${b.color} border-0 font-semibold`}>
-                                {b.icon} {b.label}
-                              </Badge>
-                            ); })()}
+                            {(() => {
+                              const b = getCategoryBadge(item.category); return (
+                                <Badge className={`${b.color} border-0 font-semibold`}>
+                                  {b.icon} {b.label}
+                                </Badge>
+                              );
+                            })()}
                             <Badge className={`${getStatusColor(status)} border-0 font-semibold capitalize`}>
                               {status}
                             </Badge>
@@ -226,8 +228,8 @@ export default function Announcements() {
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
                     className={`px-5 py-2 rounded-full font-semibold transition ${selectedCategory === cat.id
-                        ? 'bg-emerald-500 text-white shadow-md'
-                        : `${cat.color} hover:shadow`
+                      ? 'bg-emerald-500 text-white shadow-md'
+                      : `${cat.color} hover:shadow`
                       }`}
                   >
                     {cat.label}
@@ -271,11 +273,13 @@ export default function Announcements() {
                               <Calendar className="w-4 h-4 text-emerald-500" />
                               <span className="text-gray-500 text-sm">{item.date}</span>
                             </div>
-                            {(() => { const b = getCategoryBadge(item.category); return (
-                              <Badge className={`${b.color} border-0 font-semibold`}>
-                                {b.icon} {b.label}
-                              </Badge>
-                            ); })()}
+                            {(() => {
+                              const b = getCategoryBadge(item.category); return (
+                                <Badge className={`${b.color} border-0 font-semibold`}>
+                                  {b.icon} {b.label}
+                                </Badge>
+                              );
+                            })()}
                             <Badge className={`${getStatusColor(status)} border-0 font-semibold capitalize`}>
                               {status}
                             </Badge>
