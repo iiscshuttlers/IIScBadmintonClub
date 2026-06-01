@@ -6,7 +6,7 @@ import { usePageMeta } from '@/hooks/usePageMeta';
 import { motion } from 'framer-motion';
 import { useRef, useState, useEffect } from 'react';
 import RunningFlyer from '@/components/RunningFlyer';
-import { supabase } from '@/lib/supabase';
+import { useSupabaseSession } from '@/hooks/useSupabaseSession';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 32 },
@@ -36,14 +36,14 @@ export default function Home() {
 
   const [, setLocation] = useLocation();
   const [isImageOpen, setIsImageOpen] = useState(false);
+  const { session, loading: authLoading } = useSupabaseSession();
 
   // On PWA launch: redirect to /join if not logged in and haven't chosen Guest this session
   useEffect(() => {
+    if (authLoading) return; // wait for session to resolve
     if (sessionStorage.getItem("guest_mode")) return;
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) setLocation("/join");
-    }).catch(err => console.error("Auth session error:", err));
-  }, []);
+    if (!session) setLocation("/join");
+  }, [authLoading, session, setLocation]);
 
   return (
     <div className="min-h-screen">

@@ -260,8 +260,9 @@ function App() {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           await supabase.auth.signOut();
-          alert("Your session has expired due to inactivity. Please log in again.");
-          window.location.href = "/iiscshuttlers/join";
+          // Store reason so Join page can show a friendly message instead of alert()
+          sessionStorage.setItem("logout_reason", "inactivity");
+          window.location.href = `${import.meta.env.BASE_URL}join`;
         }
       }, 30 * 60 * 1000); // 30 minutes of inactivity
     };

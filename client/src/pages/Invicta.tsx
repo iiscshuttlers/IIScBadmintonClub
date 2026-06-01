@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Calendar, MapPin, Users, UserCheck, FileText, Upload, X, Loader2, Download } from 'lucide-react';
+import { Trophy, Calendar, MapPin, Users, UserCheck, FileText, Upload, X, Loader2, Download, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '../lib/supabase';
 import { isAdminEmail } from '../lib/admin';
+import { useSupabaseSession } from '../hooks/useSupabaseSession';
 
 type BracketMatch = { player1: string; player2: string; winner?: string; score?: string };
 type BracketRound = { label: string; matches: BracketMatch[] };
@@ -34,38 +35,43 @@ function generateEmptyBracket(size: number): BracketRound[] {
 }
 
 export default function Invicta() {
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { session } = useSupabaseSession();
+  const isAdmin = isAdminEmail(session?.user?.email);
   const [files, setFiles] = useState<any[]>([]);
   const [loadingFiles, setLoadingFiles] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
-    // Check if user is admin
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session && session.user.email) {
-        setIsAdmin(isAdminEmail(session.user.email));
-      }
-    });
+    mountedRef.current = true;
+    // Failsafe: never leave the spinner running indefinitely
+    const failsafe = setTimeout(() => {
+      if (mountedRef.current) setLoadingFiles(false);
+    }, 10_000);
 
-    fetchNotices();
+    fetchNotices().finally(() => clearTimeout(failsafe));
+
+    return () => { mountedRef.current = false; clearTimeout(failsafe); };
   }, []);
 
   const fetchNotices = async () => {
+    if (!mountedRef.current) return;
     setLoadingFiles(true);
     try {
-      // Assuming a public bucket named 'invicta_notices' exists in Supabase
       const { data, error } = await supabase.storage.from('invicta_notices').list('');
+      if (!mountedRef.current) return;
       if (error) {
         console.error("Bucket might not exist yet:", error.message);
         setFiles([]);
       } else {
-        // Filter out any hidden system files like .emptyFolderPlaceholder
         setFiles(data?.filter(f => !f.name.startsWith('.')) || []);
       }
     } catch (err) {
       console.error(err);
+      if (mountedRef.current) setFiles([]);
     } finally {
-      setLoadingFiles(false);
+      if (mountedRef.current) setLoadingFiles(false);
     }
   };
 
@@ -74,18 +80,17 @@ export default function Invicta() {
     if (!file) return;
 
     setUploading(true);
+    setUploadError(null);
     try {
       const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
       const { error } = await supabase.storage.from('invicta_notices').upload(fileName, file, { upsert: true });
       if (error) throw error;
-      
-      alert("File uploaded successfully!");
-      fetchNotices(); // Refresh the list
+      await fetchNotices();
     } catch (err: any) {
-      alert("Upload failed. Make sure the 'invicta_notices' bucket exists and has correct RLS policies. Error: " + err.message);
+      setUploadError("Upload failed: " + (err.message ?? "Unknown error"));
     } finally {
       setUploading(false);
-      e.target.value = ''; // Reset input
+      e.target.value = '';
     }
   };
 
@@ -94,9 +99,9 @@ export default function Invicta() {
     try {
       const { error } = await supabase.storage.from('invicta_notices').remove([fileName]);
       if (error) throw error;
-      fetchNotices();
+      await fetchNotices();
     } catch (err: any) {
-      alert("Delete failed: " + err.message);
+      setUploadError("Delete failed: " + (err.message ?? "Unknown error"));
     }
   };
 
@@ -171,6 +176,15 @@ export default function Invicta() {
                   </label>
                 )}
               </div>
+
+              {/* Inline error banner — replaces alert() */}
+              {uploadError && (
+                <div className="mb-4 flex items-start gap-2 px-4 py-3 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 rounded-xl text-rose-700 dark:text-rose-400 text-sm font-medium">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{uploadError}</span>
+                  <button onClick={() => setUploadError(null)} className="ml-auto text-rose-400 hover:text-rose-600"><X className="w-4 h-4" /></button>
+                </div>
+              )}
 
               {loadingFiles ? (
                 <div className="flex justify-center py-8">

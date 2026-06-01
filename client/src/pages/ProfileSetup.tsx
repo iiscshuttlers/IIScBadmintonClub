@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useLocation, useParams } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { isAdminEmail } from "@/lib/admin";
 import { toast } from "sonner";
+import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 
 const PASSWORD_UPDATE_TIMEOUT_MS = 12_000;
 
@@ -30,10 +31,11 @@ export default function ProfileSetup() {
   const [, setLocation] = useLocation();
   const { id: paramId } = useParams();
   const [loading, setLoading] = useState(false);
-  const [session, setSession] = useState<any>(null);
-  const [isInitializing, setIsInitializing] = useState(true);
+  const { session, loading: isInitializing } = useSupabaseSession();
   const [isAdmin, setIsAdmin] = useState(false);
   const [targetUserId, setTargetUserId] = useState<string | null>(null);
+  // Tracks whether we've run the DB profile fetch for the current session
+  const profileLoadedRef = useRef<string | null>(null);
 
   // Active Tab
   const [activeTab, setActiveTab] = useState<"basic" | "badminton" | "equipment" | "highlights" | "media">("basic");
@@ -202,141 +204,119 @@ export default function ProfileSetup() {
   const [playerSlug, setPlayerSlug] = useState("");
   const [originalStats, setOriginalStats] = useState<any>({});
 
+  // Redirect unauthenticated users once session is resolved
   useEffect(() => {
+    if (!isInitializing && !session) {
+      setLocation("/join");
+    }
+  }, [isInitializing, session, setLocation]);
+
+  // Load player profile from DB — runs once per unique (session user + paramId) combination
+  useEffect(() => {
+    if (isInitializing || !session) return;
+
+    const adminStatus = isAdminEmail(session.user.email);
+    // Build a cache key so we don't re-fetch if nothing has changed
+    const cacheKey = `${session.user.id}:${paramId ?? ""}:${adminStatus}`;
+    if (profileLoadedRef.current === cacheKey) return;
+    profileLoadedRef.current = cacheKey;
+
     let mounted = true;
-    
-    const loadProfile = async (currentSession: any) => {
-      if (!currentSession) {
-        if (mounted) {
-          setIsInitializing(false);
-          setLocation("/join");
-        }
-        return;
-      }
+    setIsAdmin(adminStatus);
 
-      if (mounted) {
-        setSession(currentSession);
-        const adminStatus = isAdminEmail(currentSession.user.email);
-        setIsAdmin(adminStatus);
+    let query = supabase.from("players").select("*");
+    if (paramId && adminStatus) {
+      query = query.eq("id", paramId);
+    } else {
+      query = query.eq("user_id", session.user.id);
+    }
 
-        let query = supabase.from("players").select("*");
-        if (paramId && adminStatus) {
-          query = query.eq("id", paramId);
-        } else {
-          query = query.eq("user_id", currentSession.user.id);
-        }
+    query
+      .maybeSingle()
+      .then(({ data: profile, error }) => {
+        if (!mounted) return;
+        if (profile && !error) {
+          setTargetUserId(profile.user_id);
+          setIsEditing(true);
+          setPlayerSlug(profile.id);
+          setFullName(profile.full_name || "");
+          setNickname(profile.nickname || "");
+          setIiscEmail(profile.iisc_email || "");
+          setContactNumber(profile.contact_number || "");
+          setDepartment(profile.department || "");
+          setJoinedYear(profile.joined_year?.toString() || "");
+          setPlayingLevel(profile.playing_level || "Intermediate");
+          setPlayingStyle(profile.playing_style || "");
+          setDominantHand(profile.dominant_hand || "Right-handed");
+          setFavoriteShot(profile.favorite_shot || "");
+          setFavoriteIdol(profile.favorite_idol || "");
+          setQuote(profile.quote || "");
+          setAvatarUrl(profile.avatar_url || "");
 
-        query
-          .maybeSingle()
-          .then(({ data: profile, error }) => {
-            if (profile && !error) {
-              setTargetUserId(profile.user_id);
-              setIsEditing(true);
-              setPlayerSlug(profile.id);
-              setFullName(profile.full_name || "");
-              setNickname(profile.nickname || "");
-              setIiscEmail(profile.iisc_email || "");
-              setContactNumber(profile.contact_number || "");
-              setDepartment(profile.department || "");
-              setJoinedYear(profile.joined_year?.toString() || "");
-              setPlayingLevel(profile.playing_level || "Intermediate");
-              setPlayingStyle(profile.playing_style || "");
-              setDominantHand(profile.dominant_hand || "Right-handed");
-              setFavoriteShot(profile.favorite_shot || "");
-              setFavoriteIdol(profile.favorite_idol || "");
-              setQuote(profile.quote || "");
-              setAvatarUrl(profile.avatar_url || "");
+          setOriginalStats(profile.stats || {});
 
-              // Load original stats for preservation
-              setOriginalStats(profile.stats || {});
+          if (profile.stats?.media) {
+            const imgs = profile.stats.media.filter((m: any) => m.type === "image");
+            const vids = profile.stats.media.filter((m: any) => m.type === "video");
+            setMediaImages(imgs.map((i: any) => ({ url: i.url || "", caption: i.caption || "" })));
+            setMediaVideos(vids.map((v: any) => ({ url: v.url || "", caption: v.caption || "" })));
+          }
 
-              // Load media gallery from stats
-              if (profile.stats && profile.stats.media) {
-                const imgs = profile.stats.media.filter((m: any) => m.type === "image");
-                const vids = profile.stats.media.filter((m: any) => m.type === "video");
-                setMediaImages(imgs.map((i: any) => ({ url: i.url || "", caption: i.caption || "" })));
-                setMediaVideos(vids.map((v: any) => ({ url: v.url || "", caption: v.caption || "" })));
-              }
+          if (profile.racket_details?.length > 0) {
+            setRackets(profile.racket_details.map((r: any) => ({
+              name: r.name || "",
+              string: r.string || "",
+              tension: (r.tension || "").replace(/[^0-9]/g, "")
+            })));
+            const primIdx = profile.racket_details.findIndex((r: any) => r.primary === true || r.name === profile.current_racket);
+            setPrimaryRacketIndex(primIdx >= 0 ? primIdx : 0);
+          } else if (profile.current_racket) {
+            setRackets([{ name: profile.current_racket, string: "", tension: "" }]);
+            setPrimaryRacketIndex(0);
+          } else {
+            setRackets([{ name: "", string: "", tension: "" }]);
+            setPrimaryRacketIndex(0);
+          }
 
-              // Load Rackets and identify primary
-              if (profile.racket_details && profile.racket_details.length > 0) {
-                setRackets(profile.racket_details.map((r: any) => ({
-                  name: r.name || "",
-                  string: r.string || "",
-                  tension: (r.tension || "").replace(/[^0-9]/g, "")
-                })));
-                const primIdx = profile.racket_details.findIndex((r: any) => r.primary === true || r.name === profile.current_racket);
-                setPrimaryRacketIndex(primIdx >= 0 ? primIdx : 0);
-              } else if (profile.current_racket) {
-                setRackets([{ name: profile.current_racket, string: "", tension: "" }]);
-                setPrimaryRacketIndex(0);
+          if (profile.shoes) {
+            try {
+              if (profile.shoes.startsWith("[")) {
+                const parsedShoes = JSON.parse(profile.shoes);
+                setShoesList(parsedShoes.map((s: any) => ({ name: s.name || "" })));
+                const primShoeIdx = parsedShoes.findIndex((s: any) => s.primary === true);
+                setPrimaryShoeIndex(primShoeIdx >= 0 ? primShoeIdx : 0);
               } else {
-                setRackets([{ name: "", string: "", tension: "" }]);
-                setPrimaryRacketIndex(0);
-              }
-
-              // Load Shoes and identify primary
-              if (profile.shoes) {
-                try {
-                  if (profile.shoes.startsWith("[")) {
-                    const parsedShoes = JSON.parse(profile.shoes);
-                    setShoesList(parsedShoes.map((s: any) => ({ name: s.name || "" })));
-                    const primShoeIdx = parsedShoes.findIndex((s: any) => s.primary === true);
-                    setPrimaryShoeIndex(primShoeIdx >= 0 ? primShoeIdx : 0);
-                  } else {
-                    setShoesList([{ name: profile.shoes }]);
-                    setPrimaryShoeIndex(0);
-                  }
-                } catch {
-                  setShoesList([{ name: profile.shoes }]);
-                  setPrimaryShoeIndex(0);
-                }
-              } else {
-                setShoesList([{ name: "" }]);
+                setShoesList([{ name: profile.shoes }]);
                 setPrimaryShoeIndex(0);
               }
-
-              setNationality(profile.nationality || "");
-              setHomeState(profile.home_state || "");
-              setHeight(profile.height || "");
-              setYearsPlaying(profile.years_playing?.toString() || "");
-              setCoach(profile.coach || "");
-              setBio(profile.bio || "");
-              setApparel(profile.apparel || "");
-              setInstagram(profile.instagram || "");
-              setAchievementsRaw(profile.achievements ? profile.achievements.join(", ") : "");
-              setTournamentsRaw(profile.tournament_history ? profile.tournament_history.join(", ") : "");
-              if (mounted) setIsInitializing(false);
-            } else {
-              if (currentSession.user.user_metadata?.full_name && mounted) {
-                setFullName(currentSession.user.user_metadata.full_name);
-              }
-              if (currentSession.user.user_metadata?.avatar_url && mounted) {
-                setAvatarUrl(currentSession.user.user_metadata.avatar_url);
-              }
-              if (mounted) setIsInitializing(false);
+            } catch {
+              setShoesList([{ name: profile.shoes }]);
+              setPrimaryShoeIndex(0);
             }
-          })
-          .catch((err) => {
-            console.error("Error loading profile:", err);
-            if (mounted) setIsInitializing(false);
-          });
-      }
-    };
+          } else {
+            setShoesList([{ name: "" }]);
+            setPrimaryShoeIndex(0);
+          }
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      loadProfile(session);
-    });
+          setNationality(profile.nationality || "");
+          setHomeState(profile.home_state || "");
+          setHeight(profile.height || "");
+          setYearsPlaying(profile.years_playing?.toString() || "");
+          setCoach(profile.coach || "");
+          setBio(profile.bio || "");
+          setApparel(profile.apparel || "");
+          setInstagram(profile.instagram || "");
+          setAchievementsRaw(profile.achievements ? profile.achievements.join(", ") : "");
+          setTournamentsRaw(profile.tournament_history ? profile.tournament_history.join(", ") : "");
+        } else {
+          if (session.user.user_metadata?.full_name) setFullName(session.user.user_metadata.full_name);
+          if (session.user.user_metadata?.avatar_url) setAvatarUrl(session.user.user_metadata.avatar_url);
+        }
+      })
+      .catch((err) => console.error("Error loading profile:", err));
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      loadProfile(session);
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, [setLocation, paramId]);
+    return () => { mounted = false; };
+  }, [isInitializing, session, paramId]);
 
   const handleSignOut = async () => {
     if (confirm("Are you sure you want to sign out?")) {

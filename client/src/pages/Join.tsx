@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, ShieldCheck, ArrowRight, KeyRound, Lock, Eye, EyeOff, UserPlus, LogIn } from "lucide-react";
+import { Mail, ShieldCheck, ArrowRight, KeyRound, Lock, Eye, EyeOff, UserPlus, LogIn, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
+import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 
 type Mode = "welcome" | "signin" | "signup" | "otp-email" | "otp-verify";
 
@@ -29,18 +30,32 @@ export default function Join() {
   const [infoMsg, setInfoMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
+  // Read inactivity logout reason set by App.tsx
+  const [inactivityLogout, setInactivityLogout] = useState(false);
+
   const reset = () => { setPassword(""); setConfirm(""); setOtp(""); setInfoMsg(""); setErrorMsg(""); };
+
+  const { session, loading: authLoading } = useSupabaseSession();
+
+  // Show inactivity banner if redirected here after timeout
+  useEffect(() => {
+    if (sessionStorage.getItem("logout_reason") === "inactivity") {
+      sessionStorage.removeItem("logout_reason");
+      setInactivityLogout(true);
+    }
+  }, []);
 
   // Redirect if already logged in unless adding a new account
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) return;
-      if (new URLSearchParams(window.location.search).get("add_account") === "true") return;
-      
-      const { data: profile } = await supabase.from("players").select("id").eq("user_id", session.user.id).maybeSingle();
-      setLocation(profile ? `/player/${profile.id}` : "/profile/setup");
-    });
-  }, []);
+    if (authLoading) return; // wait for session resolution — prevents premature redirect on slow networks
+    if (!session) return;
+    if (new URLSearchParams(window.location.search).get("add_account") === "true") return;
+
+    supabase.from("players").select("id").eq("user_id", session.user.id).maybeSingle()
+      .then(({ data: profile }) => {
+        setLocation(profile ? `/player/${profile.id}` : "/profile/setup");
+      });
+  }, [authLoading, session, setLocation]);
 
   async function afterAuth(session: any) {
     const { data: profile } = await supabase
@@ -184,6 +199,15 @@ export default function Join() {
         </div>
 
         <div className="bg-white dark:bg-slate-900 py-8 px-6 shadow-xl shadow-slate-200/50 dark:shadow-none sm:rounded-3xl sm:px-10 border border-slate-100 dark:border-slate-800">
+
+          {/* Inactivity logout notice */}
+          {inactivityLogout && (
+            <div className="mb-5 flex items-center gap-3 px-4 py-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-700 rounded-xl text-amber-800 dark:text-amber-300 text-sm font-medium">
+              <Clock className="w-4 h-4 shrink-0" />
+              <span>Your session expired due to inactivity. Please sign in again.</span>
+              <button onClick={() => setInactivityLogout(false)} className="ml-auto text-amber-400 hover:text-amber-600 text-lg leading-none">×</button>
+            </div>
+          )}
 
           {/* Mode tabs (only for signin/signup) */}
           {(mode === "signin" || mode === "signup") && (

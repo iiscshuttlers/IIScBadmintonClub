@@ -1,5 +1,6 @@
 import { useParams, useLocation } from "wouter";
 import { useEffect, useState, useMemo, useCallback } from "react";
+import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Trophy, User, Activity, MapPin, Calendar, Swords, Zap,
@@ -482,6 +483,7 @@ export default function PlayerProfile() {
      EFFECT 2: Auth — fetch session, own profile, all players list.
      Independent from Effect 1. Never touches the `loading` flag.
      ══════════════════════════════════════════════════════════════════ */
+  const { session: authSession } = useSupabaseSession();
   useEffect(() => {
     let cancelled = false;
 
@@ -491,15 +493,15 @@ export default function PlayerProfile() {
       setPendingMatches([]);
     };
 
-    const loadViewer = async (session: any) => {
-      if (!session) {
-        if (!cancelled) clearViewer();
-        return;
-      }
+    if (!authSession) {
+      clearViewer();
+      return;
+    }
 
+    const loadViewer = async () => {
       const { data: userData, error: userError } = await supabase.auth.getUser();
       if (cancelled) return;
-      if (userError || !userData.user || userData.user.id !== session.user.id) {
+      if (userError || !userData.user || userData.user.id !== authSession.user.id) {
         clearViewer();
         await supabase.auth.signOut();
         return;
@@ -521,22 +523,10 @@ export default function PlayerProfile() {
       if (everyoneRes.data) setAllPlayers(everyoneRes.data);
     };
 
-    supabase.auth.getSession()
-      .then(({ data: { session } }) => loadViewer(session))
-      .catch(err => {
-        console.error("Auth session error:", err);
-        clearViewer();
-      });
+    loadViewer().catch(err => console.error("Auth viewer load error:", err));
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      loadViewer(session);
-    });
-
-    return () => {
-      cancelled = true;
-      subscription.unsubscribe();
-    };
-  }, [fetchPendingMatches]);
+    return () => { cancelled = true; };
+  }, [authSession, fetchPendingMatches]);
 
   /* ── Silent background refresh (every 30s, no loading spinner) ── */
   const silentRefresh = useCallback(async () => {

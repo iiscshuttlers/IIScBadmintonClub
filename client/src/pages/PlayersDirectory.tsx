@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -252,7 +253,6 @@ export default function PlayersDirectory() {
   /* Auth + own-profile state */
   const [session, setSession]             = useState<any>(null);
   const [ownProfile, setOwnProfile]       = useState<Player | null>(null);
-  const [authLoading, setAuthLoading]     = useState(true);
   const [isAdmin, setIsAdmin]             = useState(false);
   const [isLogMatchOpen, setIsLogMatchOpen] = useState(false);
   const [pendingMatches, setPendingMatches] = useState<any[]>([]);
@@ -276,13 +276,9 @@ export default function PlayersDirectory() {
   }, []);
 
   /* 1. Check auth session + own profile */
+  const { session: authSession, loading: authLoading } = useSupabaseSession();
   useEffect(() => {
     let isMounted = true;
-
-    // Failsafe to ensure we NEVER get stuck loading indefinitely
-    const failsafeTimeout = setTimeout(() => {
-      if (isMounted) setAuthLoading(false);
-    }, 5000);
 
     const applySession = async (session: any) => {
       if (!session) {
@@ -328,34 +324,10 @@ export default function PlayersDirectory() {
       }
     };
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      await applySession(session);
-      
-      if (isMounted) {
-        clearTimeout(failsafeTimeout);
-        setAuthLoading(false);
-      }
-    }).catch(err => {
-      console.error("Auth session error:", err);
-      if (isMounted) {
-        clearTimeout(failsafeTimeout);
-        setAuthLoading(false);
-      }
-    });
+    applySession(authSession).catch(err => console.error("Auth apply error:", err));
 
-    // Listen for auth state changes (e.g. sign-in in another tab)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
-      if (!newSession) {
-        setSession(null);
-        setOwnProfile(null);
-        setIsAdmin(false);
-      } else {
-        // Re-fetch own profile on auth change
-        await applySession(newSession);
-      }
-    });
-    return () => { isMounted = false; subscription.unsubscribe(); };
-  }, []);
+    return () => { isMounted = false; };
+  }, [authSession]);
 
   /* 2. Fetch all players — stale-while-revalidate.
         If we have cached data, show it instantly and refresh in the background.
