@@ -291,7 +291,7 @@ function LoadingScreen() {
         <div className="mt-6 text-center">
           <p className="text-sm text-slate-400 dark:text-slate-500 mb-3">Taking too long?</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => { localStorage.clear(); sessionStorage.clear(); window.location.reload(); }}
             className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition-colors shadow-lg shadow-emerald-500/25"
           >
             Tap to Retry

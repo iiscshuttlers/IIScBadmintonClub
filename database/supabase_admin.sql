@@ -27,3 +27,12 @@ BEGIN
   RETURN true;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Admins can delete any match
+CREATE POLICY "Admins can delete any match" ON matches FOR DELETE USING (
+  EXISTS (
+    SELECT 1 FROM players p 
+    WHERE p.user_id = auth.uid() 
+    AND p.email IN ('iiscbadmintonclub@gmail.com', 'janmejayraja@iisc.ac.in', 'janmejay@iisc.ac.in', 'raja79sharma@gmail.com')
+  )
+);
