@@ -4,7 +4,7 @@ import { Trophy, Calendar, MapPin, Users, UserCheck, FileText, Upload, X, Loader
 import { Button } from '@/components/ui/button';
 import { supabase } from '../lib/supabase';
 import { isAdminEmail } from '../lib/admin';
-import { useSupabaseSession } from '../hooks/useSupabaseSession';
+import { useAuth } from '../contexts/AuthContext';
 
 type BracketMatch = { player1: string; player2: string; winner?: string; score?: string };
 type BracketRound = { label: string; matches: BracketMatch[] };
@@ -35,7 +35,7 @@ function generateEmptyBracket(size: number): BracketRound[] {
 }
 
 export default function Invicta() {
-  const { session } = useSupabaseSession();
+  const { session } = useAuth();
   const isAdmin = isAdminEmail(session?.user?.email);
   const [files, setFiles] = useState<any[]>([]);
   const [loadingFiles, setLoadingFiles] = useState(true);

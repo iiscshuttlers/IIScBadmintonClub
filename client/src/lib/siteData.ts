@@ -20,12 +20,13 @@ export async function fetchSiteData<T>(
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
-      const { data, error } = await supabase
+      const query = supabase
         .from("site_data")
         .select("value")
         .eq("key", key)
-        .maybeSingle()
-        .abortSignal(controller.signal);
+        .maybeSingle();
+
+      const { data, error } = await (query as any).abortSignal(controller.signal);
 
       clearTimeout(timeoutId);
 

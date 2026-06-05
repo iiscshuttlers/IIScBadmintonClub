@@ -4,16 +4,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Mail, ShieldCheck, ArrowRight, KeyRound, Lock, Eye, EyeOff, UserPlus, LogIn, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
-import { useSupabaseSession } from "@/hooks/useSupabaseSession";
+import { useAuth } from "@/contexts/AuthContext";
+import { ADMIN_EMAILS } from "@/lib/admin";
 
 type Mode = "welcome" | "signin" | "signup" | "otp-email" | "otp-verify";
-
-import { ADMIN_EMAILS } from "@/lib/admin";
 
 const IISC_DOMAIN = "@iisc.ac.in";
 
 function validateEmail(email: string) {
-  // We now allow any email address to sign up, per user request.
   return null;
 }
 
@@ -35,7 +33,7 @@ export default function Join() {
 
   const reset = () => { setPassword(""); setConfirm(""); setOtp(""); setInfoMsg(""); setErrorMsg(""); };
 
-  const { session, loading: authLoading } = useSupabaseSession();
+  const { session, profile, isInitializing } = useAuth();
 
   // Show inactivity banner if redirected here after timeout
   useEffect(() => {
@@ -47,43 +45,16 @@ export default function Join() {
 
   // Redirect if already logged in unless adding a new account
   useEffect(() => {
-    if (authLoading) return; // wait for session resolution — prevents premature redirect on slow networks
+    if (isInitializing) return;
     if (!session) return;
     if (new URLSearchParams(window.location.search).get("add_account") === "true") return;
 
-    const fallbackTimeout = new Promise<{data: null, error: Error}>((resolve) =>
-      setTimeout(() => resolve({ data: null, error: new Error("Redirect lookup timed out") }), 8000)
-    );
-
-    Promise.race([
-      supabase.from("players").select("id").eq("user_id", session.user.id).maybeSingle(),
-      fallbackTimeout
-    ]).then(({ data: profile, error }) => {
-      if (error) console.warn("Auto-redirect lookup failed:", error);
-      setLocation(profile ? `/player/${profile.id}` : "/profile/setup");
-    }).catch(() => {
-      setLocation("/profile/setup");
-    });
-  }, [authLoading, session, setLocation]);
-
-  async function afterAuth(session: any) {
-    const fallbackTimeout = new Promise<{data: null, error: Error}>((resolve) =>
-      setTimeout(() => resolve({ data: null, error: new Error("Profile lookup timed out") }), 8000)
-    );
-
-    try {
-      const { data: profile, error } = await Promise.race([
-        supabase.from("players").select("id").eq("user_id", session.user.id).maybeSingle(),
-        fallbackTimeout
-      ]);
-      
-      if (error) console.warn("afterAuth profile lookup failed:", error);
-      setLocation(profile ? `/player/${profile.id}` : "/profile/setup");
-    } catch (err) {
-      console.error("Unexpected error in afterAuth:", err);
+    if (profile) {
+      setLocation(`/player/${profile.id}`);
+    } else {
       setLocation("/profile/setup");
     }
-  }
+  }, [isInitializing, session, profile, setLocation]);
 
   /* ── Sign In ────────────────────────────────────────────── */
   const handleSignIn = async (e: React.FormEvent) => {
@@ -100,21 +71,17 @@ export default function Join() {
         timeout,
       ]) as Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>;
       if (error) throw error;
-      if (data.session) {
-        await afterAuth(data.session);
-      } else {
-        setErrorMsg("Sign in failed — no session returned. Please try again.");
+      if (!data.session) {
+        throw new Error("Sign in failed — no session returned. Please try again.");
       }
+      // Success! We do not set loading to false. The AuthContext will catch the session, load profile, and redirect.
     } catch (err: any) {
       const msg: string = err?.message ?? "An unexpected error occurred.";
-      if (msg === "Email not confirmed") {
-        setErrorMsg("Email not confirmed");
-      } else if (msg.toLowerCase().includes("invalid")) {
-        setErrorMsg("Incorrect email or password.");
-      } else {
-        setErrorMsg(msg);
-      }
-    } finally { setLoading(false); }
+      if (msg === "Email not confirmed") setErrorMsg("Email not confirmed");
+      else if (msg.toLowerCase().includes("invalid")) setErrorMsg("Incorrect email or password.");
+      else setErrorMsg(msg);
+      setLoading(false);
+    }
   };
 
   const handleResendLink = async () => {
@@ -156,19 +123,20 @@ export default function Join() {
 
       if (error) throw error;
 
-      if (data.session) {
-        await afterAuth(data.session);
-      } else {
+      if (!data.session) {
         setInfoMsg("Verification link sent! Please check your email (and spam folder) to confirm, then sign in.");
         setMode("signin");
+        setLoading(false);
       }
+      // If we have a session, we do not clear loading. AuthContext will redirect.
     } catch (err: any) {
       if (err.message.includes("already registered") || err.message.includes("already exists")) {
         setErrorMsg("This email is already registered. Please Sign In, or use 'Forgot password? OTP' if you forgot your password.");
       } else {
         setErrorMsg(err.message);
       }
-    } finally { setLoading(false); }
+      setLoading(false);
+    }
   };
 
   /* ── OTP Send ───────────────────────────────────────────── */
@@ -195,10 +163,11 @@ export default function Join() {
     try {
       const { data, error } = await supabase.auth.verifyOtp({ email, token: otp, type: "email" });
       if (error) throw error;
-      if (data.session) await afterAuth(data.session);
+      if (!data.session) setLoading(false);
     } catch (err: any) {
       setErrorMsg("Invalid or expired code. Please try again.");
-    } finally { setLoading(false); }
+      setLoading(false);
+    }
   };
 
   /* ── Shared field styles ────────────────────────────────── */

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useSupabaseSession } from "@/hooks/useSupabaseSession";
+import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "wouter";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 import {
   Search, SlidersHorizontal, Users, Trophy, Sword, Sparkles,
   UserCircle, LogIn, PlusCircle, Pencil, ChevronRight, X, Trash2, Share2, ArrowUpDown
@@ -60,11 +60,11 @@ const levelColor: Record<string, string> = {
   Beginner:      "bg-slate-100  dark:bg-slate-800      text-slate-600   dark:text-slate-300",
 };
 
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   show:   { opacity: 1, transition: { staggerChildren: 0.05 } },
 };
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 15 },
   show:   { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } },
 };
@@ -276,7 +276,7 @@ export default function PlayersDirectory() {
   }, []);
 
   /* 1. Check auth session + own profile */
-  const { session: authSession, loading: authLoading } = useSupabaseSession();
+  const { session: authSession, isInitializing: authLoading, profile } = useAuth();
   useEffect(() => {
     let isMounted = true;
 

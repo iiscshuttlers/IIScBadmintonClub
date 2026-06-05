@@ -1,6 +1,6 @@
 import { useParams, useLocation } from "wouter";
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { useSupabaseSession } from "@/hooks/useSupabaseSession";
+import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Trophy, User, Activity, MapPin, Calendar, Swords, Zap,
@@ -307,7 +307,7 @@ export default function PlayerProfile() {
   const [, setLocation] = useLocation();
   const [player, setPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const { session: authSession, user: currentUser, profile: ownPlayerProfile, isAdmin } = useAuth();
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
   const [isAvatarOpen, setIsAvatarOpen] = useState(false);
@@ -315,7 +315,6 @@ export default function PlayerProfile() {
   const [liveMatches, setLiveMatches] = useState<any[]>([]);
   const [rawMatches, setRawMatches] = useState<any[]>([]); // unfiltered matches — filtered into liveMatches reactively
   const [h2hRecord, setH2hRecord] = useState<{ wins: number; losses: number } | null>(null);
-  const [ownPlayerProfile, setOwnPlayerProfile] = useState<{ id: string; full_name: string; avatar_url?: string; gender?: string } | null>(null);
   const [allPlayers, setAllPlayers] = useState<{ id: string; full_name: string; avatar_url?: string; gender?: string }[]>([]);
   const [isLogMatchOpen, setIsLogMatchOpen] = useState(false);
   const [pendingMatches, setPendingMatches] = useState<any[]>([]);
@@ -500,53 +499,31 @@ export default function PlayerProfile() {
   }, [rawMatches, ownPlayerProfile?.id]);
 
   /* ══════════════════════════════════════════════════════════════════
-     EFFECT 2: Auth — fetch session, own profile, all players list.
+     EFFECT 2: Auth — trigger pending matches & all players load.
      Independent from Effect 1. Never touches the `loading` flag.
      ══════════════════════════════════════════════════════════════════ */
-  const { session: authSession } = useSupabaseSession();
   useEffect(() => {
     let cancelled = false;
 
-    const clearViewer = () => {
-      setCurrentUser(null);
-      setOwnPlayerProfile(null);
-      setPendingMatches([]);
-    };
-
     if (!authSession) {
-      clearViewer();
+      setPendingMatches([]);
       return;
     }
 
-    const loadViewer = async () => {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
+    const loadAuxData = async () => {
+      const { data } = await supabase.from("players").select("id, full_name, avatar_url, gender").is("deleted_at", null);
       if (cancelled) return;
-      if (userError || !userData.user || userData.user.id !== authSession.user.id) {
-        clearViewer();
-        await supabase.auth.signOut();
-        return;
-      }
-
-      setCurrentUser(userData.user);
-
-      const [ownRes, everyoneRes] = await Promise.all([
-        supabase.from("players").select("id, full_name, avatar_url, gender")
-          .eq("user_id", userData.user.id).maybeSingle(),
-        supabase.from("players").select("id, full_name, avatar_url, gender")
-          .is("deleted_at", null),
-      ]);
-      if (cancelled) return;
-      if (ownRes.data) {
-        setOwnPlayerProfile(ownRes.data);
-        fetchPendingMatches(ownRes.data.id);
-      }
-      if (everyoneRes.data) setAllPlayers(everyoneRes.data);
+      if (data) setAllPlayers(data);
     };
 
-    loadViewer().catch(err => console.error("Auth viewer load error:", err));
+    loadAuxData();
+
+    if (ownPlayerProfile?.id) {
+      fetchPendingMatches(ownPlayerProfile.id);
+    }
 
     return () => { cancelled = true; };
-  }, [authSession, fetchPendingMatches]);
+  }, [authSession, ownPlayerProfile?.id, fetchPendingMatches]);
   const silentRefresh = useCallback(async () => {
     if (!id) return;
     try {
@@ -686,7 +663,7 @@ export default function PlayerProfile() {
   const streak = player.stats?.currentStreak;
   const isWinStreak = streak?.startsWith("W");
 
-  const isAdmin = isAdminEmail(currentUser?.email);
+  // isAdmin is now pulled directly from useAuth()
 
   const handleShare = async () => {
     const url = window.location.href;

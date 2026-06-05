@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { db, auth } from "@/lib/firebase";
 import { doc, updateDoc, onSnapshot } from "firebase/firestore";
 import {
-  signInAnonymously, onAuthStateChanged, User as FirebaseUser,
+  signInAnonymously, onAuthStateChanged, signOut, User as FirebaseUser,
 } from "firebase/auth";
 import { advanceWinners } from "@/lib/tournamentProgression";
 

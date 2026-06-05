@@ -10,6 +10,7 @@ import RunningFlyer from '@/components/RunningFlyer';
 
 type LiveTournament = {
   id: string;
+  slug?: string;
   name: string;
   subtitle?: string;
   description?: string;

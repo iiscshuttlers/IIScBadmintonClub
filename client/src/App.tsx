@@ -1,24 +1,22 @@
-import { lazy, Suspense, useEffect, useState, useRef } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Route, Switch, Router, useLocation } from 'wouter';
 import { Capacitor } from '@capacitor/core';
-import { App as CapApp } from '@capacitor/app';
 import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowUp } from 'lucide-react';
 
 import StatusBanner from "@/components/StatusBanner";
 import ErrorBoundary from './components/ErrorBoundary';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { AuthProvider } from './contexts/AuthContext';
 import Navigation from './components/Navigation';
 import Footer from './components/Footer';
-import { supabase, validateStoredSession } from './lib/supabase';
+import { useAppUpdate, type AppUpdateInfo } from './hooks/useAppUpdate';
+import { useInactivityLogout } from './hooks/useInactivityLogout';
+import { useNativeBackButton } from './hooks/useNativeBackButton';
 
-// Proactive session health check — runs ONCE on app startup.
-// Clears zombie sessions before any component tries to use them.
-validateStoredSession().catch(() => {});
-
-/* ── App Update Dialog ──────────────────────────────────────────── */
-function UpdateDialog({ info, onDismiss }: { info: { versionName: string; downloadUrl: string; changelog: string }; onDismiss: () => void }) {
+function UpdateDialog({ info, onDismiss }: { info: AppUpdateInfo; onDismiss: () => void }) {
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-sm w-full p-7 space-y-5">
@@ -108,9 +106,7 @@ function BackToTop() {
       aria-label="Back to top"
       className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg hover:shadow-emerald-200 hover:-translate-y-1 transition-all duration-300 flex items-center justify-center"
     >
-      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M18 15l-6-6-6 6"/>
-      </svg>
+      <ArrowUp className="w-5 h-5" strokeWidth={2.5} />
     </button>
   );
 }
@@ -187,123 +183,32 @@ function AppRoutes() {
 }
 
 function App() {
-  const backPressedRef = useRef(false);
-  const [updateInfo, setUpdateInfo] = useState<{ versionName: string; downloadUrl: string; changelog: string } | null>(null);
-
-  // Check for app update on launch (native only)
-  useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return;
-    (async () => {
-      try {
-        const [info, res] = await Promise.all([
-          CapApp.getInfo(),
-          fetch(`${(import.meta as any).env.BASE_URL}data/app-version.json?v=${Date.now()}`),
-        ]);
-        const latest = await res.json();
-        if (parseInt(info.build) < latest.versionCode) {
-          setUpdateInfo({ versionName: latest.versionName, downloadUrl: latest.downloadUrl, changelog: latest.changelog });
-        }
-      } catch { /* ignore — don't block app on update check failure */ }
-    })();
-  }, []);
-
-  // Android hardware back button handler
-  useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return;
-
-    const handleBackButton = CapApp.addListener('backButton', ({ canGoBack }) => {
-      const currentPath = window.location.pathname;
-      const isHomePage = currentPath === '/' || currentPath === '' ||
-        currentPath === '/iiscshuttlers' || currentPath === '/iiscshuttlers/';
-
-      if (!isHomePage && canGoBack) {
-        // Navigate back within the app
-        window.history.back();
-        return;
-      }
-
-      // On home screen — double-back to exit
-      if (backPressedRef.current) {
-        CapApp.exitApp();
-        return;
-      }
-
-      backPressedRef.current = true;
-      // Show a toast-style overlay
-      const toast = document.createElement('div');
-      toast.textContent = 'Press back again to exit';
-      Object.assign(toast.style, {
-        position: 'fixed', bottom: '40px', left: '50%',
-        transform: 'translateX(-50%)',
-        background: 'rgba(15,23,42,0.92)', color: '#fff',
-        padding: '10px 22px', borderRadius: '30px',
-        fontSize: '14px', fontWeight: '600',
-        zIndex: '99999', backdropFilter: 'blur(8px)',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-        transition: 'opacity 0.3s ease',
-        pointerEvents: 'none',
-      });
-      document.body.appendChild(toast);
-
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => { document.body.removeChild(toast); backPressedRef.current = false; }, 300);
-      }, 2000);
-    });
-
-    return () => { handleBackButton.then(h => h.remove()); };
-  }, []);
-
-  // Global Session Auto-Logout on Inactivity (30 Minutes)
-  useEffect(() => {
-    let timeoutId: any;
-
-    const resetTimer = () => {
-      if (timeoutId) clearTimeout(timeoutId);
-      timeoutId = setTimeout(async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          await supabase.auth.signOut();
-          // Store reason so Join page can show a friendly message instead of alert()
-          sessionStorage.setItem("logout_reason", "inactivity");
-          window.location.href = `${import.meta.env.BASE_URL}join`;
-        }
-      }, 30 * 60 * 1000); // 30 minutes of inactivity
-    };
-
-    // Track user movements/inputs
-    const events = ["mousemove", "keypress", "click", "scroll", "touchstart"];
-    events.forEach((name) => window.addEventListener(name, resetTimer, { passive: true }));
-
-    // Start timer on load
-    resetTimer();
-
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-      events.forEach((name) => window.removeEventListener(name, resetTimer));
-    };
-  }, []);
+  const { updateInfo, dismissUpdate } = useAppUpdate();
+  useNativeBackButton();
+  useInactivityLogout();
 
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light" switchable>
-        <TooltipProvider>
-          <Router base={Capacitor.isNativePlatform() ? "" : import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <ScrollToTop />
-            <ScrollProgress />
-            <div className="flex flex-col min-h-screen">
-              <Navigation />
-              <StatusBanner />
-              <main className="flex-1">
-                <AppRoutes />
-              </main>
-              <Footer />
-            </div>
-            <BackToTop />
-          </Router>
-          <Toaster />
-          {updateInfo && <UpdateDialog info={updateInfo} onDismiss={() => setUpdateInfo(null)} />}
-        </TooltipProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Router base={Capacitor.isNativePlatform() ? "" : import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <ScrollToTop />
+              <ScrollProgress />
+              <div className="flex flex-col min-h-screen">
+                <Navigation />
+                <StatusBanner />
+                <main className="flex-1">
+                  <AppRoutes />
+                </main>
+                <Footer />
+              </div>
+              <BackToTop />
+            </Router>
+            <Toaster />
+            {updateInfo && <UpdateDialog info={updateInfo} onDismiss={dismissUpdate} />}
+          </TooltipProvider>
+        </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

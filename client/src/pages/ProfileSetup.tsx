@@ -7,9 +7,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
-import { isAdminEmail } from "@/lib/admin";
 import { toast } from "sonner";
-import { useSupabaseSession } from "@/hooks/useSupabaseSession";
+import { useAuth } from "@/contexts/AuthContext";
 
 const PASSWORD_UPDATE_TIMEOUT_MS = 12_000;
 
@@ -29,10 +28,9 @@ async function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number, messag
 
 export default function ProfileSetup() {
   const [, setLocation] = useLocation();
-  const { id: paramId } = useParams();
+  const { id: paramId } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(false);
-  const { session, loading: isInitializing } = useSupabaseSession();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { session, profile: authProfile, isInitializing, isAdmin } = useAuth();
   const [targetUserId, setTargetUserId] = useState<string | null>(null);
   // Tracks whether we've run the DB profile fetch for the current session
   const profileLoadedRef = useRef<string | null>(null);
@@ -215,24 +213,26 @@ export default function ProfileSetup() {
   useEffect(() => {
     if (isInitializing || !session) return;
 
-    const adminStatus = isAdminEmail(session.user.email);
     // Build a cache key so we don't re-fetch if nothing has changed
-    const cacheKey = `${session.user.id}:${paramId ?? ""}:${adminStatus}`;
+    const cacheKey = `${session.user.id}:${paramId ?? ""}:${isAdmin}`;
     if (profileLoadedRef.current === cacheKey) return;
     profileLoadedRef.current = cacheKey;
 
     let mounted = true;
-    setIsAdmin(adminStatus);
+
+    // If we are just editing ourselves, we can seed it with the global profile directly
+    const isSelfEdit = !paramId || (authProfile && authProfile.id === paramId);
 
     let query = supabase.from("players").select("*");
-    if (paramId && adminStatus) {
+    if (paramId && isAdmin && !isSelfEdit) {
       query = query.eq("id", paramId);
     } else {
       query = query.eq("user_id", session.user.id);
     }
 
-    query
+    Promise.resolve(query
       .maybeSingle()
+    )
       .then(({ data: profile, error }) => {
         if (!mounted) return;
         if (profile && !error) {

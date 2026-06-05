@@ -3,22 +3,22 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, Bell, CalendarDays, CheckCircle2, Medal, Trophy, Users } from 'lucide-react';
 import iiscTeam from "@/assets/iisc-team.jpg";
 import { usePageMeta } from '@/hooks/usePageMeta';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { useRef, useState, useEffect } from 'react';
 import RunningFlyer from '@/components/RunningFlyer';
-import { useSupabaseSession } from '@/hooks/useSupabaseSession';
+import { useAuth } from '@/contexts/AuthContext';
 
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 32 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
 };
 
-const stagger = {
+const stagger: Variants = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.12 } },
 };
 
-const cardVariant = {
+const cardVariant: Variants = {
   hidden: { opacity: 0, y: 24 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
 };
@@ -36,7 +36,7 @@ export default function Home() {
 
   const [, setLocation] = useLocation();
   const [isImageOpen, setIsImageOpen] = useState(false);
-  const { session, loading: authLoading } = useSupabaseSession();
+  const { session, isInitializing: authLoading } = useAuth();
 
   // On PWA launch: redirect to /join if not logged in and haven't chosen Guest this session
   useEffect(() => {

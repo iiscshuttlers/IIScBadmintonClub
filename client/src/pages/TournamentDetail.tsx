@@ -52,8 +52,9 @@ function BracketViewer({ rounds }: { rounds: BracketRound[] }) {
 }
 
 export default function TournamentDetail() {
-  const [, params] = useRoute('/events/:slug');
-  const slug = params?.slug || '';
+  const [, routeParams] = useRoute('/events/:slug');
+  const params = routeParams ?? { slug: '' };
+  const slug = params.slug;
   const tournament = getArchivedTournament(slug);
 
   if (!tournament) {

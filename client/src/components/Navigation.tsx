@@ -1,23 +1,51 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Menu, X, UserCircle, LogIn, User, Settings, LogOut, UserPlus, ChevronDown } from 'lucide-react';
+import { Menu, X, UserCircle, LogIn, User, Settings, LogOut, UserPlus, ChevronDown, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { supabase } from '@/lib/supabase';
-import { isAdminEmail } from '@/lib/admin';
-import type { Session, AuthChangeEvent } from "@supabase/supabase-js";
+import { useTheme } from '@/contexts/ThemeContext';
+import { useNavigationAuth } from '@/hooks/useNavigationAuth';
+
+const navGroups = [
+  {
+    label: 'About',
+    links: [
+      { href: '/about', label: 'About Us' },
+      { href: '/facilities', label: 'Facilities' },
+    ],
+  },
+  {
+    label: 'Events',
+    links: [
+      { href: '/events', label: 'All Events' },
+      { href: '/invicta', label: 'INVICTA' },
+      { href: '/winners', label: 'Winners Wall' },
+    ],
+  },
+  {
+    label: 'Community',
+    links: [
+      { href: '/players', label: 'Players' },
+      { href: '/announcements', label: 'Announcements' },
+      { href: '/gallery', label: 'Gallery' },
+    ],
+  },
+];
 
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [location] = useLocation();
   const [scrolled, setScrolled] = useState(false);
-  const [myPlayerId, setMyPlayerId] = useState<string | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [userName, setUserName] = useState<string>("");
-  const [savedAccounts, setSavedAccounts] = useState<any[]>([]);
-  const authRequestIdRef = useRef(0);
+  const {
+    authLoading,
+    isAdmin,
+    isLoggedIn,
+    myPlayerId,
+    savedAccounts,
+    signOut,
+    switchAccount,
+    userName,
+  } = useNavigationAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -29,141 +57,13 @@ export default function Navigation() {
     setIsOpen(false);
   }, [location]);
 
-  useEffect(() => {
-    const readSavedAccounts = () => JSON.parse(localStorage.getItem("iisc_saved_accounts") || "[]");
-
-    const clearAuthState = (accounts = readSavedAccounts()) => {
-      setIsLoggedIn(false);
-      setIsAdmin(false);
-      setMyPlayerId(null);
-      setUserName("");
-      setSavedAccounts(accounts);
-      setAuthLoading(false);
-    };
-
-    const loadAuth = async (session: Session | null) => {
-      const requestId = ++authRequestIdRef.current;
-
-      if (!session) {
-        clearAuthState();
-        return;
-      }
-
-      // Show the user button immediately using session data — no network round-trip needed
-      const user = session.user;
-      const quickName = user.email?.split("@")[0] ?? "Player";
-      setIsLoggedIn(true);
-      setIsAdmin(isAdminEmail(user.email));
-      setUserName(quickName);
-      setAuthLoading(false);
-
-      // Fetch player profile in background to get display name + profile link
-      try {
-        const { data } = await supabase
-          .from("players")
-          .select("id, full_name")
-          .eq("user_id", user.id)
-          .maybeSingle();
-        if (requestId !== authRequestIdRef.current) return;
-
-        const name = data?.full_name?.split(" ")[0] ?? quickName;
-        const accounts = readSavedAccounts();
-        const existingIdx = accounts.findIndex((a: any) => a.id === user.id);
-        const newAccount = { id: user.id, email: user.email, name, session };
-        if (existingIdx >= 0) accounts[existingIdx] = newAccount;
-        else accounts.push(newAccount);
-        localStorage.setItem("iisc_saved_accounts", JSON.stringify(accounts));
-
-        setMyPlayerId(data?.id ?? null);
-        setUserName(name);
-        setSavedAccounts(accounts.filter((a: any) => a.id !== user.id));
-      } catch (err) {
-        console.warn("Player profile fetch failed:", err);
-      }
-    };
-
-    let isMounted = true;
-
-    (async () => {
-      try {
-        const { data } = await supabase.auth.getSession(); 
-        if (isMounted) loadAuth(data?.session || null); 
-      } catch (e) {
-        console.warn("Initial getSession failed:", e);
-        if (isMounted) {
-          clearAuthState();
-          setAuthLoading(false);
-        }
-      }
-    })();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event: AuthChangeEvent, session: Session | null) => loadAuth(session)
-    );
-
-    const onStorage = (event: StorageEvent) => {
-      if (event.key === "sb-auth-token" || event.key?.includes("auth-token")) {
-        supabase.auth.getSession().then(({ data }) => loadAuth(data.session)).catch(() => setAuthLoading(false));
-      }
-    };
-    window.addEventListener("storage", onStorage);
-    return () => {
-      isMounted = false;
-authRequestIdRef.current += 1;
-      subscription.unsubscribe();
-      window.removeEventListener("storage", onStorage);
-    };
-  }, []);
-
   const isActive = (href: string) =>
     href === '/' ? location === '/' : location.startsWith(href);
 
-  const navGroups = [
-    {
-      label: 'About',
-      links: [
-        { href: '/about', label: 'About Us' },
-        { href: '/facilities', label: 'Facilities' },
-      ],
-    },
-    {
-      label: 'Events',
-      links: [
-        { href: '/events', label: 'All Events' },
-        { href: '/invicta', label: 'INVICTA' },
-        { href: '/winners', label: 'Winners Wall' },
-      ],
-    },
-    {
-      label: 'Community',
-      links: [
-        { href: '/players', label: 'Players' },
-        { href: '/announcements', label: 'Announcements' },
-        { href: '/gallery', label: 'Gallery' },
-      ],
-    },
-  ];
-
   const handleSignOut = async (message = "Are you sure you want to sign out?") => {
     if (!confirm(message)) return;
-
-    authRequestIdRef.current += 1;
-    setIsLoggedIn(false);
-    setIsAdmin(false);
-    setMyPlayerId(null);
-    setUserName("");
     setIsOpen(false);
-
-    const { data } = await supabase.auth.getSession();
-    if (data.session?.user?.id) {
-      const accounts = JSON.parse(localStorage.getItem("iisc_saved_accounts") || "[]")
-        .filter((a: any) => a.id !== data.session!.user.id);
-      localStorage.setItem("iisc_saved_accounts", JSON.stringify(accounts));
-      setSavedAccounts(accounts);
-    }
-
-    await supabase.auth.signOut();
-    window.location.href = `${import.meta.env.BASE_URL}join`;
+    await signOut();
   };
 
   return (
@@ -280,8 +180,7 @@ authRequestIdRef.current += 1;
                           key={acc.id}
                           className="cursor-pointer font-medium focus:bg-slate-50 dark:focus:bg-slate-800"
                           onClick={async () => {
-                             await supabase.auth.setSession(acc.session);
-                             window.location.reload();
+                             await switchAccount(acc);
                           }}
                         >
                           <div className="flex flex-col">
@@ -406,42 +305,17 @@ authRequestIdRef.current += 1;
 }
 
 function DarkModeToggle() {
-  const [isDark, setIsDark] = useState(
-    () => typeof window !== 'undefined' && document.documentElement.classList.contains('dark')
-  );
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains('dark'));
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => observer.disconnect();
-  }, []);
-
-  const toggle = () => {
-    const root = document.documentElement;
-    const goingDark = !root.classList.contains('dark');
-    root.classList.toggle('dark', goingDark);
-    localStorage.setItem('theme', goingDark ? 'dark' : 'light');
-  };
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
 
   return (
     <button
-      onClick={toggle}
+      onClick={toggleTheme}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       className="p-2 rounded-lg text-blue-900 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-slate-800 hover:text-emerald-600 transition-colors"
     >
-      {isDark ? (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="4"/>
-          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
-        </svg>
-      ) : (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-        </svg>
-      )}
+      {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
     </button>
   );
 }
