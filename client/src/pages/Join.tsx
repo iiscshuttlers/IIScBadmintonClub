@@ -51,19 +51,38 @@ export default function Join() {
     if (!session) return;
     if (new URLSearchParams(window.location.search).get("add_account") === "true") return;
 
-    supabase.from("players").select("id").eq("user_id", session.user.id).maybeSingle()
-      .then(({ data: profile }) => {
-        setLocation(profile ? `/player/${profile.id}` : "/profile/setup");
-      });
+    const fallbackTimeout = new Promise<{data: null, error: Error}>((resolve) =>
+      setTimeout(() => resolve({ data: null, error: new Error("Redirect lookup timed out") }), 8000)
+    );
+
+    Promise.race([
+      supabase.from("players").select("id").eq("user_id", session.user.id).maybeSingle(),
+      fallbackTimeout
+    ]).then(({ data: profile, error }) => {
+      if (error) console.warn("Auto-redirect lookup failed:", error);
+      setLocation(profile ? `/player/${profile.id}` : "/profile/setup");
+    }).catch(() => {
+      setLocation("/profile/setup");
+    });
   }, [authLoading, session, setLocation]);
 
   async function afterAuth(session: any) {
-    const { data: profile } = await supabase
-      .from("players")
-      .select("id")
-      .eq("user_id", session.user.id)
-      .maybeSingle();
-    setLocation(profile ? `/player/${profile.id}` : "/profile/setup");
+    const fallbackTimeout = new Promise<{data: null, error: Error}>((resolve) =>
+      setTimeout(() => resolve({ data: null, error: new Error("Profile lookup timed out") }), 8000)
+    );
+
+    try {
+      const { data: profile, error } = await Promise.race([
+        supabase.from("players").select("id").eq("user_id", session.user.id).maybeSingle(),
+        fallbackTimeout
+      ]);
+      
+      if (error) console.warn("afterAuth profile lookup failed:", error);
+      setLocation(profile ? `/player/${profile.id}` : "/profile/setup");
+    } catch (err) {
+      console.error("Unexpected error in afterAuth:", err);
+      setLocation("/profile/setup");
+    }
   }
 
   /* ── Sign In ────────────────────────────────────────────── */
