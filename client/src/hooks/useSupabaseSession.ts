@@ -34,8 +34,11 @@ export interface SupabaseSessionResult {
  *    they don't re-trigger "initializing" logic.
  * 3. `getSession()` is called as a **fallback only**, in case the auth listener
  *    does not fire (e.g. no cached session + Supabase not configured).
- * 4. A **10-second failsafe** clears `loading` unconditionally to prevent any
- *    permanent spinner, regardless of network conditions.
+ * 4. A **5-second failsafe** clears `loading` unconditionally to prevent any
+ *    permanent spinner, regardless of network conditions. (Reduced from 10s
+ *    because the startup `validateStoredSession()` in supabase.ts already
+ *    handles zombie sessions; if we're still stuck after 5s, something is very
+ *    wrong and we should unblock the UI.)
  *
  * ### Usage
  * ```ts
@@ -54,14 +57,14 @@ export function useSupabaseSession(): SupabaseSessionResult {
   useEffect(() => {
     let mounted = true;
 
-    // Failsafe: if nothing resolves within 10s, clear the loading flag.
+    // Failsafe: if nothing resolves within 5s, clear the loading flag.
     const failsafe = setTimeout(() => {
       if (mounted && !hasResolved.current) {
         console.warn("[useSupabaseSession] Failsafe triggered — clearing loading state.");
         hasResolved.current = true;
         setLoading(false);
       }
-    }, 10_000);
+    }, 5_000);
 
     const resolve = (s: Session | null) => {
       if (!mounted) return;

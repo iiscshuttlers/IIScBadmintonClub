@@ -294,7 +294,7 @@ function LoadingScreen() {
             onClick={() => { localStorage.clear(); sessionStorage.clear(); window.location.reload(); }}
             className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition-colors shadow-lg shadow-emerald-500/25"
           >
-            Tap to Retry
+            Clear Cache & Retry
           </button>
         </div>
       )}
@@ -416,8 +416,12 @@ export default function PlayerProfile() {
   const handleWithdrawMatch = async (matchId: string) => {
     if (!confirm("Are you sure you want to withdraw this pending match log? It will be deleted permanently.")) return;
     try {
-      const { error } = await supabase.from("matches").delete().eq("id", matchId);
+      const { data, error } = await supabase.from("matches").delete().eq("id", matchId).select("id");
       if (error) throw error;
+      // Supabase RLS silently returns 0 rows if DELETE is denied — detect that.
+      if (!data || data.length === 0) {
+        throw new Error("Delete was denied by the server. You may not have permission to withdraw this match.");
+      }
       alert("Match withdrawn successfully.");
       setRawMatches(prev => prev.filter(m => m.id !== matchId));
       if (ownPlayerProfile) fetchPendingMatches(ownPlayerProfile.id);
@@ -1253,7 +1257,7 @@ export default function PlayerProfile() {
                                 {pendingMatchesList.map((m, idx) => {
                                   const isP1 = m.player1_id === id;
                                   const opponent = isP1 ? m.player2 : m.player1;
-                                  const canWithdraw = (currentUser && m.submitted_by === currentUser.id) ||
+                                  const canWithdraw = (ownPlayerProfile && m.submitted_by === ownPlayerProfile.id) ||
                                     isMatchParticipant(m, ownPlayerProfile?.id);
 
                                   return (

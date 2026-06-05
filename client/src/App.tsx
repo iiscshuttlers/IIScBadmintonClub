@@ -11,7 +11,11 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Navigation from './components/Navigation';
 import Footer from './components/Footer';
-import { supabase } from './lib/supabase';
+import { supabase, validateStoredSession } from './lib/supabase';
+
+// Proactive session health check — runs ONCE on app startup.
+// Clears zombie sessions before any component tries to use them.
+validateStoredSession().catch(() => {});
 
 /* ── App Update Dialog ──────────────────────────────────────────── */
 function UpdateDialog({ info, onDismiss }: { info: { versionName: string; downloadUrl: string; changelog: string }; onDismiss: () => void }) {

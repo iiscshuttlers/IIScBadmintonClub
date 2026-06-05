@@ -89,18 +89,6 @@ CREATE POLICY "Allow public read access to players"     ON players     FOR SELEC
 CREATE POLICY "Allow public read access to tournaments" ON tournaments FOR SELECT USING (true);
 CREATE POLICY "Allow public read access to matches"     ON matches     FOR SELECT USING (status IS DISTINCT FROM 'pending');
 CREATE POLICY "Players can read their pending matches"  ON matches     FOR SELECT USING (
-CREATE POLICY "Players can withdraw their pending matches"  ON matches     FOR DELETE USING (
-  status = 'pending'
-  AND (
-    submitted_by = auth.uid()::text
-    OR EXISTS (
-      SELECT 1
-      FROM players viewer
-      WHERE viewer.user_id = auth.uid()
-        AND viewer.id IN (matches.player1_id, matches.player2_id, matches.team1_partner_id, matches.team2_partner_id)
-    )
-  )
-);
   status = 'pending'
   AND EXISTS (
     SELECT 1
