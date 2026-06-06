@@ -5,6 +5,7 @@ import { Calendar, Bell, Pin } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 import { fetchSiteData } from '@/lib/siteData';
+import { SocialCTA } from '@/components/SocialCTA';
 import DOMPurify from 'dompurify';
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -36,7 +37,7 @@ export default function Announcements() {
   function sortByNewest(items: Announcement[]) {
     return [...items].sort(
       (a, b) =>
-        new Date(b.date).getTime() - new Date(a.date).getTime()
+        new Date(b.date ?? 0).getTime() - new Date(a.date ?? 0).getTime()
     );
   }
 
@@ -316,41 +317,8 @@ export default function Announcements() {
           {/* Stay Informed */}
           <section className="py-14 bg-gradient-to-br from-blue-50 to-emerald-50 dark:from-slate-900 dark:to-slate-800">
             <div className="container mx-auto px-4">
-              <div className="max-w-4xl mx-auto bg-gradient-to-br from-blue-900 to-emerald-900 p-10 rounded-3xl shadow-xl text-white relative overflow-hidden">
-                <div className="absolute inset-0 hero-pattern" />
-                <div className="relative z-10">
-                  <h2
-                    className="text-2xl font-black mb-6"
-                    style={{ fontFamily: 'Playfair Display, serif' }}
-                  >
-                    Stay Informed
-                  </h2>
-
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="bg-white/10 border border-white/20 rounded-2xl p-5 space-y-2">
-                      <p className="font-bold text-white text-base">
-                        📱 WhatsApp Updates
-                      </p>
-                      <p className="text-gray-300 text-sm">
-                        Visit the badminton hall notice board to join the official WhatsApp group for real-time updates.
-                      </p>
-                    </div>
-
-                    <div className="bg-white/10 border border-white/20 rounded-2xl p-5 space-y-2">
-                      <p className="font-bold text-white text-base">
-                        📸 Follow on Instagram
-                      </p>
-                      <a
-                        href="https://www.instagram.com/badminton.iisc/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 text-emerald-300 font-bold hover:text-emerald-200 transition-colors text-sm"
-                      >
-                        @badminton.iisc →
-                      </a>
-                    </div>
-                  </div>
-                </div>
+              <div className="max-w-4xl mx-auto">
+                <SocialCTA />
               </div>
             </div>
           </section>

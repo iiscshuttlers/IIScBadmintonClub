@@ -150,7 +150,7 @@ export default function Facilities() {
           <div className="flex items-center gap-3 mb-8">
             <div className="w-2 h-8 bg-gradient-to-b from-red-500 to-orange-500 rounded-full" />
             <h2 className="text-2xl font-black text-blue-900 dark:text-white">
-              Court Closure Days — 2026
+              Court Closure Days — {new Date().getFullYear()}
             </h2>
             <CalendarX className="w-5 h-5 text-red-500" />
           </div>

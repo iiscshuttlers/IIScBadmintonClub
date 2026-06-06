@@ -281,49 +281,12 @@ export function ScheduleView({ tournamentData }: ScheduleViewProps) {
                         )}
                       </div>
                       
-                      <div className="px-4 sm:px-6 py-2 sm:py-3 bg-black/[0.02] flex justify-end border-t border-black/5">
-                         <button className="text-[8px] sm:text-[10px] font-bold text-slate-400 hover:text-slate-600 flex items-center gap-1 transition-colors">
-                           VIEW DETAILS <ChevronRight size={10} className="sm:w-3 sm:h-3" />
-                         </button>
-                      </div>
                     </div>
                   );
                 })}
               </div>
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* Finals Callout - Optimized for Mobile */}
-      <div className="relative mt-8 sm:mt-12 overflow-hidden rounded-2xl sm:rounded-3xl bg-slate-900 p-6 sm:p-8 text-white shadow-xl sm:shadow-2xl">
-        <div className="absolute top-0 right-0 -mt-20 -mr-20 w-48 h-48 sm:w-64 sm:h-64 bg-amber-500/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-48 h-48 sm:w-64 sm:h-64 bg-blue-500/10 rounded-full blur-3xl" />
-        
-        <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-8">
-          <div className="text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[8px] sm:text-[10px] font-black tracking-widest uppercase mb-3 sm:mb-4">
-              <Trophy size={10} className="sm:w-3 sm:h-3" /> Championship Night
-            </div>
-            <h3 className="text-2xl sm:text-3xl font-black tracking-tight">The Grand Finals</h3>
-            <p className="text-slate-400 text-xs sm:text-sm mt-2 max-w-md mx-auto lg:mx-0">
-              Witness the peak of the tournament as the best players compete for the ultimate glory.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-3 sm:gap-4 w-full lg:w-auto">
-            {[
-              { label: 'WS', time: '19:00' },
-              { label: 'MD', time: '19:30' },
-              { label: 'MS', time: '20:00' },
-              { label: 'XD', time: '20:30' }
-            ].map((item) => (
-              <div key={item.label} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl sm:rounded-2xl p-3 sm:p-4 flex flex-col items-center justify-center min-w-[80px] sm:min-w-[100px]">
-                <span className="text-amber-400 font-black text-base sm:text-lg">{item.label}</span>
-                <span className="text-slate-300 font-mono text-xs sm:text-sm">{item.time}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>

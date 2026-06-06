@@ -12,6 +12,10 @@ type Mode = "welcome" | "signin" | "signup" | "otp-email" | "otp-verify";
 const IISC_DOMAIN = "@iisc.ac.in";
 
 function validateEmail(email: string) {
+  // Relaxed validation: check for domain but allow admin bypass
+  if (!email.toLowerCase().endsWith(IISC_DOMAIN) && !ADMIN_EMAILS.includes(email.toLowerCase())) {
+    return `Please use your ${IISC_DOMAIN} email address.`;
+  }
   return null;
 }
 
@@ -74,6 +78,7 @@ export default function Join() {
       if (!data.session) {
         throw new Error("Sign in failed — no session returned. Please try again.");
       }
+      sessionStorage.removeItem("guest_mode");
       // Success! We do not set loading to false. The AuthContext will catch the session, load profile, and redirect.
     } catch (err: any) {
       const msg: string = err?.message ?? "An unexpected error occurred.";

@@ -226,7 +226,7 @@ export default function PlayersDirectory() {
     }
   }, []);
 
-  const fetchPendingMatches = async (profileId: string) => {
+  const fetchPendingMatches = useCallback(async (profileId: string) => {
     const fullRes = await supabase
       .from("matches")
       .select("*, player1:players!player1_id(full_name), player2:players!player2_id(full_name)")
@@ -242,7 +242,7 @@ export default function PlayersDirectory() {
         .or(`player1_id.eq.${profileId},player2_id.eq.${profileId}`)
       : fullRes;
     setPendingMatches(res.data || []);
-  };
+  }, []);
 
   useEffect(() => {
     fetchPlayers();
@@ -560,7 +560,7 @@ export default function PlayersDirectory() {
                   onChange={(e) => setSortBy(e.target.value as "elo" | "winpct" | "name")}
                   className="pl-9 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500 appearance-none cursor-pointer"
                 >
-                  {/* <option value="elo">By ELO</option> */}
+                  <option value="elo">By ELO</option>
                   <option value="winpct">By Win %</option>
                   <option value="name">By Name</option>
                 </select>

@@ -134,6 +134,48 @@ export const ARCHIVED_TOURNAMENTS: ArchivedTournament[] = [
       { category: "Cat 2: Mixed Doubles", winner: 'Shaili & Dilshad', runnerUp: 'Abhishek & Sonali' },
     ],
   },
+  {
+    id: 'iism-2025',
+    slug: 'iism-2025',
+    status: 'completed',
+    type: 'team',
+    startDate: '2025-12-15',
+    name: 'IISM 2025 (IIT Kanpur)',
+    subtitle: 'Inter-IISER Sports Meet',
+    description: 'IISc Shuttlers represented the institute at the Inter-IISER Sports Meet 2025 hosted by IIT Kanpur. Results are pending archive entry.',
+    highlights: [
+      'Strong representation from IISc.',
+      'Check the gallery for match photos.'
+    ],
+  },
+  {
+    id: 'iism-2024',
+    slug: 'iism-2024',
+    status: 'completed',
+    type: 'team',
+    startDate: '2024-12-10',
+    name: 'IISM 2024 (IISER Pune)',
+    subtitle: 'Inter-IISER Sports Meet',
+    description: 'IISc Shuttlers represented the institute at the Inter-IISER Sports Meet 2024 hosted by IISER Pune. Results are pending archive entry.',
+    highlights: [
+      'Strong representation from IISc.',
+      'Check the gallery for match photos.'
+    ],
+  },
+  {
+    id: 'bpl-2024',
+    slug: 'bpl-2024',
+    status: 'completed',
+    type: 'open',
+    startDate: '2024',
+    name: 'BPL 2024',
+    subtitle: 'Badminton Premier League',
+    description: 'The premier franchise-based badminton league at IISc. Historical records are currently being compiled.',
+    highlights: [
+      'Franchise-based team tournament.',
+      'Check the gallery for action shots.'
+    ],
+  },
 ];
 
 export function getArchivedTournament(slug: string) {

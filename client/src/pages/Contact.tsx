@@ -1,8 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mail, MapPin, Phone, Instagram, Youtube, ExternalLink, ChevronDown } from 'lucide-react';
+import { Mail, MapPin, Phone, ExternalLink, ChevronDown } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useState } from 'react';
+import { SocialCTA } from '@/components/SocialCTA';
 
 const faqs = [
   {
@@ -171,43 +172,7 @@ export default function Contact() {
       <section className="py-16 bg-white dark:bg-slate-950">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            <div className="bg-gradient-to-br from-blue-900 to-emerald-900 text-white p-10 md:p-12 rounded-3xl shadow-xl relative overflow-hidden">
-              <div className="absolute inset-0 hero-pattern" />
-              <div className="relative z-10">
-                <h2
-                  className="text-3xl font-black mb-3"
-                  style={{ fontFamily: 'Playfair Display, serif' }}
-                >
-                  Follow the Journey
-                </h2>
-                <p className="mb-8 text-gray-300 max-w-xl">
-                  Stay updated with match photos, tournament announcements, and behind-the-scenes moments from the club.
-                </p>
-
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <a
-                    href="https://www.instagram.com/badminton.iisc/"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <Button className="bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 text-white font-bold px-7 py-6 rounded-xl flex items-center gap-2 shadow-lg hover:-translate-y-0.5 transition-all">
-                      <Instagram className="w-5 h-5" />
-                      Instagram
-                    </Button>
-                  </a>
-                  <a
-                    href="https://youtube.com/@iiscbadmintonclub"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <Button className="bg-red-600 hover:bg-red-700 text-white font-bold px-7 py-6 rounded-xl flex items-center gap-2 shadow-lg hover:-translate-y-0.5 transition-all">
-                      <Youtube className="w-5 h-5" />
-                      YouTube
-                    </Button>
-                  </a>
-                </div>
-              </div>
-            </div>
+            <SocialCTA />
           </div>
         </div>
       </section>

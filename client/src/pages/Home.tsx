@@ -1,27 +1,36 @@
-import { Link, useLocation } from 'wouter';
+import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Bell, CalendarDays, CheckCircle2, Medal, Trophy, Users, ChevronRight, Star } from 'lucide-react';
+import { ArrowRight, Bell, CalendarDays, Medal, Trophy, Users, ChevronRight, Star } from 'lucide-react';
 import iiscTeam from "@/assets/iisc-team.jpg";
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { motion, type Variants } from 'framer-motion';
-import { useRef, useState, useEffect } from 'react';
+import { useState } from 'react';
 import RunningFlyer from '@/components/RunningFlyer';
-import { useAuth } from '@/contexts/AuthContext';
+import { CountUpNumber } from '@/components/CountUpNumber';
+import { ARCHIVED_TOURNAMENTS } from '@/data/tournamentArchive';
 
+// ── Animation variants ────────────────────────────────────────────────────────
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 32 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: 'easeOut' } },
 };
-
 const stagger: Variants = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.12 } },
 };
-
 const cardVariant: Variants = {
   hidden: { opacity: 0, y: 24 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: 'easeOut' } },
 };
+
+// ── Derive the latest completed tournament for the highlight banner ───────────
+function getLatestHighlight() {
+  const completed = ARCHIVED_TOURNAMENTS.filter(t => t.status === 'completed');
+  if (!completed.length) return null;
+  // Sort newest first (use startDate string — ISO or year)
+  const sorted = [...completed].sort((a, b) => b.startDate.localeCompare(a.startDate));
+  return sorted[0];
+}
 
 export default function Home() {
   usePageMeta({
@@ -29,15 +38,13 @@ export default function Home() {
     description: 'IISc Badminton Club — join a vibrant community of players, from beginners to champions, all united by passion for the sport.',
   });
 
-  const [, setLocation] = useLocation();
-  const [isImageOpen, setIsImageOpen] = useState(false);
-  const { session, isInitializing: authLoading } = useAuth();
 
-  useEffect(() => {
-    if (authLoading) return;
-    if (sessionStorage.getItem("guest_mode")) return;
-    if (!session) setLocation("/join");
-  }, [authLoading, session, setLocation]);
+  const [isImageOpen, setIsImageOpen] = useState(false);
+
+
+  // No longer redirect to /join — Home page should be the first impression for everyone
+
+  const highlight = getLatestHighlight();
 
   return (
     <div className="min-h-screen">
@@ -229,7 +236,7 @@ export default function Home() {
                   <div className={`inline-flex p-3 bg-gradient-to-br ${stat.color} rounded-xl mb-4 shadow-md`}>
                     <Icon className="w-6 h-6 text-white" />
                   </div>
-                  <CountUpNumber target={stat.target} suffix={stat.suffix} />
+                  <CountUpNumber target={stat.target} suffix={stat.suffix} className="text-4xl font-black text-blue-900 dark:text-white" />
                   <p className="text-gray-500 dark:text-slate-400 text-sm mt-1 font-medium">{stat.label}</p>
                 </motion.div>
               );
@@ -312,43 +319,45 @@ export default function Home() {
       </motion.section>
 
       {/* ── Recent Achievement Highlight ─────────────────────────────────── */}
-      <motion.section
-        className="py-16 bg-white dark:bg-slate-900"
-        variants={fadeUp}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: '-60px' }}
-      >
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center gap-8 bg-gradient-to-r from-blue-900 to-emerald-900 rounded-3xl p-8 md:p-12 text-white shadow-xl overflow-hidden relative">
-            <div className="absolute inset-0 hero-pattern opacity-50" />
-            <div className="relative z-10 flex-1 space-y-3">
-              <div className="inline-flex items-center gap-2 bg-amber-400/20 border border-amber-400/30 text-amber-300 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                <Star className="w-3 h-3" />
-                Recent Highlights
+      {highlight && (
+        <motion.section
+          className="py-16 bg-white dark:bg-slate-900"
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-60px' }}
+        >
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col md:flex-row items-center gap-8 bg-gradient-to-r from-blue-900 to-emerald-900 rounded-3xl p-8 md:p-12 text-white shadow-xl overflow-hidden relative">
+              <div className="absolute inset-0 hero-pattern opacity-50" />
+              <div className="relative z-10 flex-1 space-y-3">
+                <div className="inline-flex items-center gap-2 bg-amber-400/20 border border-amber-400/30 text-amber-300 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                  <Star className="w-3 h-3" />
+                  Recent Highlight
+                </div>
+                <h3 className="text-2xl md:text-3xl font-black" style={{ fontFamily: 'Playfair Display, serif' }}>
+                  {highlight.name}
+                </h3>
+                <p className="text-gray-300 text-sm leading-relaxed max-w-xl">
+                  {highlight.description}
+                </p>
               </div>
-              <h3 className="text-2xl md:text-3xl font-black" style={{ fontFamily: 'Playfair Display, serif' }}>
-                Spectrum 2026 Champions
-              </h3>
-              <p className="text-gray-300">
-                UG Seniors claimed the inter-department crown in an electrifying Spectrum 2026 championship, edging out CeNSE and ECE in a closely contested final.
-              </p>
-            </div>
-            <div className="relative z-10 flex gap-3 flex-wrap justify-center md:justify-end">
-              <Link href="/winners">
-                <Button className="bg-white text-blue-900 hover:bg-gray-100 font-bold px-6 py-3 rounded-xl flex items-center gap-2">
-                  Winners Wall <Trophy className="w-4 h-4" />
-                </Button>
-              </Link>
-              <Link href="/gallery">
-                <Button variant="outline" className="border-white/30 text-white hover:bg-white/10 font-semibold px-6 py-3 rounded-xl">
-                  Gallery
-                </Button>
-              </Link>
+              <div className="relative z-10 flex gap-3 flex-wrap justify-center md:justify-end">
+                <Link href={`/events/${highlight.slug}`}>
+                  <Button className="bg-white text-blue-900 hover:bg-gray-100 font-bold px-6 py-3 rounded-xl flex items-center gap-2">
+                    View Results <Trophy className="w-4 h-4" />
+                  </Button>
+                </Link>
+                <Link href="/winners">
+                  <Button variant="outline" className="border-white/30 text-white hover:bg-white/10 font-semibold px-6 py-3 rounded-xl">
+                    Winners Wall
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-      </motion.section>
+        </motion.section>
+      )}
 
       {/* ── CTA Section ──────────────────────────────────────────────────── */}
       <motion.section
@@ -405,43 +414,6 @@ export default function Home() {
           />
         </div>
       )}
-    </div>
-  );
-}
-
-// ── Count-up number ──────────────────────────────────────────────────────────
-function CountUpNumber({ target, suffix = '' }: { target: number; suffix?: string }) {
-  const [count, setCount] = useState(0);
-  const ref = useRef<HTMLDivElement>(null);
-  const animated = useRef(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !animated.current) {
-          animated.current = true;
-          const duration = 1200;
-          const start = performance.now();
-          const tick = (now: number) => {
-            const t = Math.min((now - start) / duration, 1);
-            const eased = 1 - Math.pow(1 - t, 3);
-            setCount(Math.round(eased * target));
-            if (t < 1) requestAnimationFrame(tick);
-          };
-          requestAnimationFrame(tick);
-        }
-      },
-      { threshold: 0.3 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [target]);
-
-  return (
-    <div ref={ref} className="text-4xl font-black text-blue-900 dark:text-white tabular-nums">
-      {count}{suffix}
     </div>
   );
 }

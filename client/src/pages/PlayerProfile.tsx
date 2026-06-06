@@ -18,6 +18,7 @@ import { isAdminEmail } from "@/lib/admin";
 import { MatchHistorySection } from "@/components/player-profile/MatchHistorySection";
 import { EquipmentArsenalSection, CareerHighlightsSection } from "@/components/player-profile/PlayerProfileSections";
 import { LoadingScreen, FormPill, CircularProgress, KPI, CategoryBar } from "@/components/player-profile/PlayerProfileWidgets";
+import { toast } from "sonner";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -271,33 +272,40 @@ export default function PlayerProfile() {
     try {
       const { data, error } = await supabase.rpc("confirm_friendly_match", { match_uuid: matchId, confirmer_id: ownPlayerProfile?.id });
       if (error) throw error;
-      alert(`Match Confirmed! Elo Ratings Updated.\nYour Elo Change: ${data.p1_elo_change || data.p2_elo_change}`);
+      toast.success("Match Confirmed!", { description: `Elo Ratings Updated. Your Elo Change: ${data.p1_elo_change || data.p2_elo_change}` });
       if (ownPlayerProfile) fetchPendingMatches(ownPlayerProfile.id);
-    } catch (e: any) { alert("Error confirming match: " + e.message); }
+    } catch (e: any) { toast.error("Error confirming match", { description: e.message }); }
   };
 
   const handleRejectMatch = async (matchId: string) => {
     try {
       const { error } = await supabase.rpc("reject_friendly_match", { match_uuid: matchId, rejecter_id: ownPlayerProfile?.id });
       if (error) throw error;
-      alert("Match Rejected.");
+      toast.info("Match Rejected.");
       if (ownPlayerProfile) fetchPendingMatches(ownPlayerProfile.id);
-    } catch (e: any) { alert("Error rejecting match: " + e.message); }
+    } catch (e: any) { toast.error("Error rejecting match", { description: e.message }); }
   };
 
   const handleWithdrawMatch = async (matchId: string) => {
-    if (!confirm("Are you sure you want to withdraw this pending match log? It will be deleted permanently.")) return;
-    try {
-      const { data, error } = await supabase.from("matches").delete().eq("id", matchId).select("id");
-      if (error) throw error;
-      // Supabase RLS silently returns 0 rows if DELETE is denied — detect that.
-      if (!data || data.length === 0) {
-        throw new Error("Delete was denied by the server. You may not have permission to withdraw this match.");
-      }
-      alert("Match withdrawn successfully.");
-      setRawMatches(prev => prev.filter(m => m.id !== matchId));
-      if (ownPlayerProfile) fetchPendingMatches(ownPlayerProfile.id);
-    } catch (e: any) { alert("Error withdrawing match: " + e.message); }
+    toast("Withdraw this match?", {
+      description: "Are you sure you want to withdraw this pending match log? It will be deleted permanently.",
+      action: {
+        label: "Withdraw",
+        onClick: async () => {
+          try {
+            const { data, error } = await supabase.from("matches").delete().eq("id", matchId).select("id");
+            if (error) throw error;
+            if (!data || data.length === 0) {
+              throw new Error("Delete was denied by the server. You may not have permission to withdraw this match.");
+            }
+            toast.success("Match withdrawn successfully.");
+            setRawMatches(prev => prev.filter(m => m.id !== matchId));
+            if (ownPlayerProfile) fetchPendingMatches(ownPlayerProfile.id);
+          } catch (e: any) { toast.error("Error withdrawing match", { description: e.message }); }
+        }
+      },
+      cancel: { label: "Cancel", onClick: () => {} }
+    });
   };
 
   /* ══════════════════════════════════════════════════════════════════
@@ -543,32 +551,32 @@ export default function PlayerProfile() {
     if (navigator.share) {
       try { await navigator.share({ title: player.fullName, url }); } catch { }
     } else {
-      try { await navigator.clipboard.writeText(url); alert("Profile link copied!"); } catch { }
+      try { await navigator.clipboard.writeText(url); toast.success("Profile link copied!"); } catch { }
     }
   };
 
   const handleAdminDelete = async () => {
     if (!player || !currentUser) return;
-    if (!confirm(`Delete "${player.fullName}"? This soft-deletes the player and removes them from the directory.`)) return;
-    const { error } = await supabase.rpc("soft_delete_player", {
-      player_id: player.id,
-      admin_email: currentUser.email,
+    toast("Delete Player?", {
+      description: `Delete "${player.fullName}"? This soft-deletes the player and removes them from the directory.`,
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          const { error } = await supabase.rpc("soft_delete_player", {
+            player_id: player.id,
+            admin_email: currentUser.email,
+          });
+          if (error) { toast.error("Delete failed", { description: error.message }); return; }
+          toast.success(`${player.fullName} has been removed.`);
+          setLocation('/');
+        }
+      },
+      cancel: { label: "Cancel", onClick: () => {} }
     });
-    if (error) { alert("Delete failed: " + error.message); return; }
-    alert(`${player.fullName} has been removed.`);
-    setLocation('/');
   };
-
-
 
   const handleSelfDelete = async () => {
     if (!player || !currentUser) return;
-    const confirmed = window.confirm(
-      "Are you absolutely sure you want to delete your profile? \n\n" +
-      "This will immediately hide your profile from the directory and matches. " +
-      "It will remain in the database bin for 30 days before permanent deletion by an admin."
-    );
-    if (!confirmed) return;
     
     // RLS allows users to update their own profile
     const { error } = await supabase

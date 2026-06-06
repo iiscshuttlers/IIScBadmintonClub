@@ -24,7 +24,7 @@ interface TournamentData {
 
 export default function LiveTournament() {
   // --- STATE ---
-  const [activeTab, setActiveTab] = useState<'register' | 'brackets' | 'schedule'>('schedule');
+  const [activeTab, setActiveTab] = useState<'brackets' | 'schedule'>('schedule');
   const [activeFormat, setActiveFormat] = useState('MS');
   const [tournamentData, setTournamentData] = useState<TournamentData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -69,7 +69,14 @@ export default function LiveTournament() {
   const getRecentCompleted = () => {
     return getAllMatches()
       .filter((m) => m.Status === 'completed')
-      .slice(-6); // Last 6 completed
+      .sort((a, b) => {
+        // Fallback to insertion order if time is not available
+        if (!a.Time || !b.Time) return 0;
+        const [ah, am] = a.Time.split(':').map(Number);
+        const [bh, bm] = b.Time.split(':').map(Number);
+        return (bh * 60 + bm) - (ah * 60 + am); // Descending (newest first)
+      })
+      .slice(0, 6); // Top 6 most recent
   };
 
   const currentMatches = tournamentData?.matches[activeFormat] || [];
@@ -106,10 +113,7 @@ export default function LiveTournament() {
 
           {/* View Toggle Buttons */}
           <div className="flex bg-gray-100 p-1 rounded-xl w-full md:w-auto">
-            <div className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-gray-400 text-sm font-bold cursor-not-allowed">
-              <ClipboardList size={18} />
-              Registration Closed
-            </div>
+
             <button
               onClick={() => setActiveTab('brackets')}
               className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-bold transition-all ${activeTab === 'brackets'
@@ -134,14 +138,7 @@ export default function LiveTournament() {
         </div>
       </div>
 
-      {/* --- TAB CONTENT: REGISTRATION --- */}
-      {activeTab === 'register' && (
-        <div className="max-w-xl mx-auto py-20 text-center text-gray-500">
-          <p className="text-5xl mb-4">🏸</p>
-          <p className="text-2xl font-bold text-gray-700 mb-2">Registrations Closed</p>
-          <p className="text-gray-500">Check the schedule or live brackets below.</p>
-        </div>
-      )}
+
 
       {/* --- TAB CONTENT: BRACKETS --- */}
       {activeTab === 'brackets' && (

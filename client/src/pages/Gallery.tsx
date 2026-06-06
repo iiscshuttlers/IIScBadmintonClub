@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Instagram, X, Youtube, PlayCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Youtube, PlayCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 import { fetchSiteData } from '@/lib/siteData';
+import { SocialCTA } from '@/components/SocialCTA';
 
 // ─── Lazy Image Component ───────────────────────────────────────────────────
 function LazyImage({
@@ -160,22 +161,28 @@ export default function Gallery() {
       </section>
 
       {/* Photo Gallery Section */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-white dark:bg-slate-950">
         <div className="container mx-auto px-4">
           {/* Main Category Filter */}
           <div className="flex flex-wrap gap-3 justify-center mb-8">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => { setSelectedCategory(cat.id); setSelectedSubfolder('all'); }}
-                className={`px-8 py-2 rounded-full font-bold transition-all duration-300 ${selectedCategory === cat.id
+            {categories.map((cat) => {
+              const count = cat.id === 'all' ? galleryItems.length : galleryItems.filter(i => i.category === cat.id).length;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => { setSelectedCategory(cat.id); setSelectedSubfolder('all'); }}
+                  className={`px-6 py-2 rounded-full font-bold transition-all duration-300 flex items-center gap-2 ${selectedCategory === cat.id
                     ? 'bg-emerald-500 text-white shadow-lg scale-105'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700'
                   }`}
-              >
-                {cat.label}
-              </button>
-            ))}
+                >
+                  {cat.label}
+                  <span className={`text-xs font-black px-1.5 py-0.5 rounded-full ${selectedCategory === cat.id ? 'bg-white/25' : 'bg-gray-200 dark:bg-slate-700 text-gray-500 dark:text-slate-400'}`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Sub-folder Filter */}
@@ -183,7 +190,7 @@ export default function Gallery() {
             <div className="flex flex-wrap gap-3 justify-center mb-12 animate-in fade-in slide-in-from-top-4">
               <button
                 onClick={() => setSelectedSubfolder('all')}
-                className={`px-5 py-1.5 rounded-full text-sm font-semibold transition ${selectedSubfolder === 'all' ? 'bg-blue-900 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                className={`px-5 py-1.5 rounded-full text-sm font-semibold transition ${selectedSubfolder === 'all' ? 'bg-blue-900 dark:bg-blue-700 text-white' : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-700'
                   }`}
               >
                 All Albums
@@ -192,7 +199,7 @@ export default function Gallery() {
                 <button
                   key={sub}
                   onClick={() => setSelectedSubfolder(sub)}
-                  className={`px-5 py-1.5 rounded-full text-sm font-semibold transition ${selectedSubfolder === sub ? 'bg-blue-900 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                  className={`px-5 py-1.5 rounded-full text-sm font-semibold transition ${selectedSubfolder === sub ? 'bg-blue-900 dark:bg-blue-700 text-white' : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-700'
                     }`}
                 >
                   {formatText(sub)}
@@ -237,7 +244,7 @@ export default function Gallery() {
           </div>
 
           {filteredItems.length === 0 && (
-            <div className="text-center py-20 text-gray-400 text-lg italic">
+            <div className="text-center py-20 text-gray-400 dark:text-slate-500 text-lg italic">
               No photos in this category yet.
             </div>
           )}
@@ -245,20 +252,23 @@ export default function Gallery() {
       </section>
 
       {/* Match Videos Section */}
-      <section className="py-24 bg-slate-50">
+      <section className="py-20 bg-slate-50 dark:bg-slate-900">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-5xl font-bold text-blue-900 mb-6" style={{ fontFamily: 'Playfair Display, serif' }}>
-              Match Videos
-            </h2>
-            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              From championship points to training drills, check out the action from our YouTube channel.
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-3 mb-3">
+              <div className="w-2 h-8 bg-gradient-to-b from-red-500 to-orange-500 rounded-full" />
+              <h2 className="text-3xl font-black text-blue-900 dark:text-white" style={{ fontFamily: 'Playfair Display, serif' }}>
+                Match Videos
+              </h2>
+            </div>
+            <p className="text-gray-600 dark:text-slate-400 max-w-2xl mx-auto">
+              Championship points, finals and highlights from our YouTube channel.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {videos.map((video) => (
-              <div key={video.id} className="group bg-white rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition duration-500">
+              <div key={video.id} className="group bg-white dark:bg-slate-800 rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl border border-slate-100 dark:border-slate-700 transition duration-500">
                 <div className="relative aspect-video">
                   <iframe
                     className="w-full h-full"
@@ -268,12 +278,12 @@ export default function Gallery() {
                     allowFullScreen
                   />
                 </div>
-                <div className="p-8">
-                  <div className="flex items-center gap-2 text-emerald-600 font-bold text-xs uppercase tracking-widest mb-3">
+                <div className="p-7">
+                  <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-xs uppercase tracking-widest mb-3">
                     <PlayCircle className="w-4 h-4" />
                     {video.category || 'Match Highlight'}
                   </div>
-                  <h3 className="text-2xl font-bold text-blue-900 group-hover:text-emerald-600 transition-colors">
+                  <h3 className="text-xl font-bold text-blue-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                     {video.title}
                   </h3>
                 </div>
@@ -282,19 +292,19 @@ export default function Gallery() {
           </div>
 
           {videos.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-gray-400 italic text-lg">New videos are being processed. Stay tuned!</p>
+            <div className="text-center py-12 rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-700">
+              <p className="text-gray-400 dark:text-slate-500 italic">New videos are being processed. Stay tuned!</p>
             </div>
           )}
 
-          <div className="mt-16 text-center">
+          <div className="mt-12 text-center">
             <a
               href="https://youtube.com/@iiscbadmintonclub?si=tr_GtVnxXZpyg4T7"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-3 text-red-600 font-bold hover:text-red-700 transition-colors text-xl"
+              className="inline-flex items-center gap-3 text-red-600 dark:text-red-400 font-bold hover:text-red-700 dark:hover:text-red-300 transition-colors text-lg"
             >
-              <Youtube className="w-8 h-8" />
+              <Youtube className="w-7 h-7" />
               Visit our YouTube Channel
             </a>
           </div>
@@ -302,29 +312,9 @@ export default function Gallery() {
       </section>
 
       {/* Social Media */}
-      <section className="py-20 bg-white border-t border-gray-100">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-blue-900 mb-10">Follow the Journey</h2>
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
-            <a
-              href="https://www.instagram.com/badminton.iisc/"
-              target="_blank"
-              rel="noreferrer"
-              className="w-full sm:w-auto flex items-center justify-center gap-3 bg-gradient-to-r from-pink-500 to-orange-500 text-white px-10 py-4 rounded-full font-bold shadow-lg hover:shadow-pink-200 hover:-translate-y-1 transition-all duration-300"
-            >
-              <Instagram className="w-6 h-6" />
-              Instagram
-            </a>
-            <a
-              href="https://youtube.com/@iiscbadmintonclub?si=tr_GtVnxXZpyg4T7"
-              target="_blank"
-              rel="noreferrer"
-              className="w-full sm:w-auto flex items-center justify-center gap-3 bg-red-600 text-white px-10 py-4 rounded-full font-bold shadow-lg hover:shadow-red-200 hover:-translate-y-1 transition-all duration-300"
-            >
-              <Youtube className="w-6 h-6" />
-              YouTube
-            </a>
-          </div>
+      <section className="py-16 bg-white dark:bg-slate-950 border-t border-gray-100 dark:border-slate-800">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <SocialCTA />
         </div>
       </section>
 

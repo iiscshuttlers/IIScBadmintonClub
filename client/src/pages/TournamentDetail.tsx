@@ -11,43 +11,7 @@ const PODIUM_CONFIGS = [
   { label: 'Fourth Place',   border: 'border-blue-200',   bg: 'bg-blue-50 dark:bg-blue-950/20',      text: 'text-blue-700 dark:text-blue-400',     ring: '' },
 ];
 
-type BracketMatch = { player1: string; player2: string; winner?: string; score?: string };
-type BracketRound = { label: string; matches: BracketMatch[] };
 
-function BracketViewer({ rounds }: { rounds: BracketRound[] }) {
-  return (
-    <div className="overflow-x-auto pb-2">
-      <div className="flex gap-6 min-w-max">
-        {rounds.map((round, ri) => (
-          <div key={ri} className="flex flex-col gap-4 min-w-[200px]">
-            <h4 className="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest text-center mb-2">
-              {round.label}
-            </h4>
-            {round.matches.map((match, mi) => (
-              <div key={mi} className="rounded-xl border border-gray-200 dark:border-slate-600 overflow-hidden shadow-sm text-sm">
-                {[match.player1, match.player2].map((player, pi) => (
-                  <div
-                    key={pi}
-                    className={`px-3 py-2.5 border-b last:border-b-0 flex justify-between items-center dark:border-slate-600 ${
-                      match.winner === player
-                        ? 'bg-emerald-50 dark:bg-emerald-950/30 font-bold text-emerald-800 dark:text-emerald-300'
-                        : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-400'
-                    }`}
-                  >
-                    <span className="truncate max-w-[130px]">{player || 'TBD'}</span>
-                    {match.winner === player && match.score && (
-                      <span className="text-xs text-emerald-600 dark:text-emerald-400 ml-2 shrink-0 font-bold">{match.score}</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -278,32 +242,7 @@ export default function TournamentDetail() {
           </motion.div>
         </div>
 
-        {/* Bracket Viewer */}
-        <motion.div custom={2} variants={fadeUp} initial="hidden" animate="visible">
-          <Card className="rounded-3xl shadow-md border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
-            <div className="h-1 bg-gradient-to-r from-purple-500 to-blue-600" />
-            <CardContent className="p-8 sm:p-10">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2.5 bg-purple-100 dark:bg-purple-950/30 rounded-xl">
-                  <GitBranch className="w-5 h-5 text-purple-700 dark:text-purple-400" />
-                </div>
-                <h2 className="text-xl font-black text-blue-900 dark:text-white">Tournament Bracket</h2>
-              </div>
 
-              {(tournament as any).bracket ? (
-                <BracketViewer rounds={(tournament as any).bracket} />
-              ) : (
-                <div className="rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-900 py-14 text-center">
-                  <GitBranch className="w-10 h-10 text-gray-300 dark:text-slate-600 mx-auto mb-3" />
-                  <p className="text-gray-400 dark:text-slate-500 font-semibold">Bracket not archived</p>
-                  <p className="text-gray-400 dark:text-slate-600 text-sm mt-1">
-                    Live bracket tracking is available for ongoing tournaments.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
 
       </section>
     </div>

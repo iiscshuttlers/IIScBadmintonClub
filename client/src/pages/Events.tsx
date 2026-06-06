@@ -213,7 +213,7 @@ export default function Events() {
           )}
 
           <div className="flex items-center gap-2 pt-1 font-bold text-emerald-600 dark:text-emerald-400 text-sm">
-            {isUpcoming ? (item.slug === 'invicta-2026' ? 'View Details' : 'Registrations are Closed') : item.status === 'live' ? 'View live fixtures' : 'View results'}
+            {isUpcoming ? (item.slug ? 'View Details' : 'Coming Soon') : item.status === 'live' ? 'View live fixtures' : 'View results'}
             <ArrowRight className="w-4 h-4" />
           </div>
         </CardContent>
@@ -221,9 +221,10 @@ export default function Events() {
     );
 
     if (isUpcoming) {
-      if (item.slug === 'invicta-2026') {
+      if (item.slug) {
+        const href = item.slug === 'invicta-2026' ? '/invicta' : `/events/${item.slug}`;
         return (
-          <Link href="/invicta" key={item.id}>
+          <Link href={href} key={item.id}>
             {cardContent}
           </Link>
         );
@@ -231,7 +232,7 @@ export default function Events() {
       return (
         <div
           key={item.id}
-          onClick={() => toast.info("Registrations are closed for this tournament.", { icon: <Info className="w-4 h-4" /> })}
+          onClick={() => toast.info("Details coming soon.", { icon: <Info className="w-4 h-4" /> })}
           className="h-full cursor-pointer"
         >
           {cardContent}
