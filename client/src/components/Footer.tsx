@@ -132,7 +132,7 @@ export default function Footer() {
                 <span className="text-slate-900 ml-1 select-none">·</span>
               </Link>
             </p>
-            <p className="text-slate-600 text-xs">Built with ❤️ by the IISc Shuttlers community</p>
+            <p className="text-slate-600 text-xs">Built with ❤️ </p>
           </div>
         </div>
       </div>
