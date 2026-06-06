@@ -110,6 +110,7 @@ export default function Navigation() {
               </Button>
             </Link>
 
+            <DarkModeToggle />
             <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-2" />
             {authLoading ? (
               <div className="w-24 h-9 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />
@@ -183,6 +184,20 @@ export default function Navigation() {
                 </Button>
               </Link>
             )}
+          </div>
+
+          {/* Mobile Navigation Toggle & Theme */}
+          <div className="flex lg:hidden items-center gap-1">
+            <DarkModeToggle />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsOpen(!isOpen)}
+              className="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+              aria-label="Toggle menu"
+            >
+              {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </Button>
           </div>
         </div>
 
