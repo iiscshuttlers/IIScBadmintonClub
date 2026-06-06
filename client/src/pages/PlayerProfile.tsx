@@ -1,20 +1,23 @@
 import { useParams, useLocation } from "wouter";
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 import {
   Trophy, User, Activity, MapPin, Calendar, Swords, Zap,
   Target, Dna, Crosshair, Sparkles, Quote, Medal, ArrowLeft,
   TrendingUp, Award, Flame, BarChart3, Share2, Trash2,
   Instagram, Mail, Users, Star, Hash, Ruler, BookOpen,
   ChevronRight, Footprints, Shirt, ArrowUpRight, Clock, LogOut,
-  CheckCircle, XCircle
+  CheckCircle, XCircle, Play, Image, Video
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import LogMatchModal from "@/components/LogMatchModal";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { isAdminEmail } from "@/lib/admin";
+import { MatchHistorySection } from "@/components/player-profile/MatchHistorySection";
+import { EquipmentArsenalSection, CareerHighlightsSection } from "@/components/player-profile/PlayerProfileSections";
+import { LoadingScreen, FormPill, CircularProgress, KPI, CategoryBar } from "@/components/player-profile/PlayerProfileWidgets";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -131,7 +134,7 @@ async function fetchProfileMatches(profileId: string, signal?: AbortSignal) {
       .order("created_at", { ascending: false })
       .limit(50);
 
-    return signal ? query.abortSignal(signal) : query;
+    return signal ? query : query;
   };
 
   const fullParticipantFilter =
@@ -153,114 +156,14 @@ async function fetchProfileMatches(profileId: string, signal?: AbortSignal) {
 /*  Animation variants                                                 */
 /* ------------------------------------------------------------------ */
 
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.07 } }
 };
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" as const } }
 };
-
-/* ------------------------------------------------------------------ */
-/*  Helper components                                                  */
-/* ------------------------------------------------------------------ */
-
-const CircularProgress = ({ value, size = 72, stroke = 7 }: { value: number; size?: number; stroke?: number; }) => {
-  const radius = (size - stroke) / 2;
-  const c = radius * 2 * Math.PI;
-  const offset = c - (Math.min(100, Math.max(0, value)) / 100) * c;
-  return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={radius} stroke="currentColor"
-          strokeWidth={stroke} fill="none" className="text-slate-200 dark:text-slate-700" />
-        <motion.circle
-          cx={size / 2} cy={size / 2} r={radius}
-          stroke="url(#progressGrad)" strokeWidth={stroke} fill="none"
-          strokeLinecap="round"
-          strokeDasharray={c}
-          initial={{ strokeDashoffset: c }}
-          animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 1.2, ease: "easeOut" }}
-        />
-        <defs>
-          <linearGradient id="progressGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#10b981" />
-            <stop offset="100%" stopColor="#06b6d4" />
-          </linearGradient>
-        </defs>
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-lg font-black text-slate-900 dark:text-white">{Math.round(value)}%</span>
-      </div>
-    </div>
-  );
-};
-
-const FormPill = ({ result, index }: { result: MatchResult; index: number; }) => (
-  <motion.div
-    initial={{ opacity: 0, scale: 0.6 }}
-    animate={{ opacity: 1, scale: 1 }}
-    transition={{ delay: 0.4 + index * 0.07, type: "spring", stiffness: 220 }}
-    className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black shadow-md
-      ${result === "W"
-        ? "bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-emerald-500/40"
-        : "bg-gradient-to-br from-rose-400 to-rose-600 text-white shadow-rose-500/40"}`}
-  >
-    {result}
-  </motion.div>
-);
-
-const CategoryBar = ({ label, wins, losses, color }: { label: string; wins: number; losses: number; color: string; }) => {
-  const total = wins + losses;
-  const winPct = total ? (wins / total) * 100 : 0;
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{label}</span>
-          <span className="text-xs text-slate-500 dark:text-slate-400">({total} matches)</span>
-        </div>
-        <div className="text-sm font-bold text-slate-800 dark:text-slate-100">
-          {wins}<span className="text-slate-400 font-normal">W</span> – {losses}<span className="text-slate-400 font-normal">L</span>
-        </div>
-      </div>
-      <div className="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${winPct}%` }}
-          transition={{ duration: 1, ease: "easeOut" }}
-          className={`h-full ${color}`}
-        />
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${100 - winPct}%` }}
-          transition={{ duration: 1, ease: "easeOut", delay: 0.1 }}
-          className="h-full bg-slate-300 dark:bg-slate-700"
-        />
-      </div>
-    </div>
-  );
-};
-
-const KPI = ({
-  icon: Icon, label, value, sub, accent
-}: { icon: any; label: string; value: string | number; sub?: string; accent: string; }) => (
-  <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-5 shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
-    <div className={`absolute -right-6 -top-6 w-24 h-24 rounded-full blur-2xl opacity-20 group-hover:opacity-40 transition-opacity ${accent}`} />
-    <div className="relative z-10">
-      <div className="flex items-center justify-between mb-3">
-        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${accent} bg-opacity-15`}>
-          <Icon className="w-5 h-5 text-white" />
-        </div>
-      </div>
-      <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">{label}</div>
-      <div className="text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none">{value}</div>
-      {sub && <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">{sub}</div>}
-    </div>
-  </div>
-);
 
 /* ------------------------------------------------------------------ */
 /*  Main component                                                     */
@@ -272,38 +175,8 @@ function getYouTubeId(url: string) {
   return (match && match[2].length === 11) ? match[2] : null;
 }
 
-function LoadingScreen() {
-  const [showRetry, setShowRetry] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setShowRetry(true), 8000);
-    return () => clearTimeout(t);
-  }, []);
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 py-20 px-4">
-      <div className="relative w-16 h-16">
-        <div className="absolute inset-0 rounded-full border-4 border-emerald-500/20" />
-        <div className="absolute inset-0 rounded-full border-4 border-t-emerald-500 animate-spin" />
-      </div>
-      <p className="mt-4 text-sm font-semibold text-slate-500 dark:text-slate-400 animate-pulse">
-        Loading Player Profile...
-      </p>
-      {showRetry && (
-        <div className="mt-6 text-center">
-          <p className="text-sm text-slate-400 dark:text-slate-500 mb-3">Taking too long?</p>
-          <button
-            onClick={() => { localStorage.clear(); sessionStorage.clear(); window.location.reload(); }}
-            className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition-colors shadow-lg shadow-emerald-500/25"
-          >
-            Clear Cache & Retry
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function PlayerProfile() {
-  const { id } = useParams();
+  const { id } = useParams<{id: string}>();
   const [, setLocation] = useLocation();
   const [player, setPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
@@ -454,12 +327,12 @@ export default function PlayerProfile() {
         // Fire all 3 requests in parallel — zero waterfalls
         const [playerRes, matchesRes, eloRes] = await Promise.all([
           supabase.from("players").select("*")
-            .eq("id", id).maybeSingle().abortSignal(signal),
+            .eq("id", id).maybeSingle(),
           fetchProfileMatches(id, signal),
           supabase.from("players").select("id, elo_rating")
             .is("deleted_at", null)
             .order("elo_rating", { ascending: false })
-            .abortSignal(signal),
+            ,
         ]);
 
         if (signal.aborted) return;
@@ -1152,326 +1025,18 @@ export default function PlayerProfile() {
             )}
 
             {/* ============== BWF-Style Match History ============== */}
-            {(() => {
-              const confirmedMatches = liveMatches.filter(m => m.status === "confirmed");
-              const pendingMatchesList = liveMatches.filter(m => m.status === "pending").sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-              if (confirmedMatches.length === 0 && pendingMatchesList.length === 0) return null;
-              const filteredMatches = matchHistoryFilter === "all"
-                ? confirmedMatches
-                : matchHistoryFilter === "friendly"
-                  ? confirmedMatches.filter(m => m.is_friendly !== false)
-                  : confirmedMatches.filter(m => m.is_friendly === false);
-
-              return (
-                <motion.section variants={itemVariants}>
-                  <button
-                    type="button"
-                    onClick={() => setIsMatchHistoryOpen((open) => !open)}
-                    aria-expanded={isMatchHistoryOpen}
-                    className="w-full bg-white dark:bg-slate-800/80 rounded-3xl shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 p-5 sm:p-6 flex items-center justify-between gap-4 text-left hover:border-blue-200 dark:hover:border-blue-800/60 transition-colors"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-11 h-11 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
-                        <Clock className="w-5 h-5 text-blue-500" />
-                      </div>
-                      <div className="min-w-0">
-                        <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100">
-                          Match History
-                        </h2>
-                        <div className="mt-1 flex flex-wrap gap-2 text-[10px] sm:text-xs font-bold">
-                          <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400">
-                            {confirmedMatches.length} confirmed
-                          </span>
-                          {pendingMatchesList.length > 0 && (
-                            <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400">
-                              {pendingMatchesList.length} pending
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <ChevronRight
-                      className={`w-5 h-5 text-slate-400 shrink-0 transition-transform duration-200 ${isMatchHistoryOpen ? "rotate-90" : ""}`}
-                    />
-                  </button>
-
-                  <AnimatePresence initial={false}>
-                    {isMatchHistoryOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.22, ease: "easeOut" }}
-                        className="overflow-hidden"
-                      >
-                        <div className="pt-4">
-                          {/* Filter Tabs */}
-                          <div className="flex gap-2 ml-2 mb-4 overflow-x-auto pb-1">
-                            {(["all", "friendly", "tournament"] as const).map(tab => (
-                              <button
-                                key={tab}
-                                onClick={() => setMatchHistoryFilter(tab)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition border shrink-0
-                                  ${matchHistoryFilter === tab
-                                    ? tab === "tournament"
-                                      ? "bg-amber-50 dark:bg-amber-900/30 border-amber-400 text-amber-700 dark:text-amber-400"
-                                      : tab === "friendly"
-                                        ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-400 text-emerald-700 dark:text-emerald-400"
-                                        : "bg-blue-50 dark:bg-blue-900/30 border-blue-400 text-blue-700 dark:text-blue-400"
-                                    : "border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
-                                  }`}
-                              >
-                                {tab === "all" ? `All (${confirmedMatches.length})` : tab === "friendly" ? `🏸 Friendly (${confirmedMatches.filter(m => m.is_friendly !== false).length})` : `🏆 Tournament (${confirmedMatches.filter(m => m.is_friendly === false).length})`}
-                              </button>
-                            ))}
-                          </div>
-
-                          {/* Pending Matches Banner */}
-                          {pendingMatchesList.length > 0 && (
-                            <div className="bg-amber-50 dark:bg-amber-900/15 border border-amber-200 dark:border-amber-800/40 rounded-2xl p-4 mb-4 ml-2">
-                              <div className="text-xs font-bold text-amber-700 dark:text-amber-400 mb-2">⏳ {pendingMatchesList.length} Pending Verification</div>
-                              <div className="space-y-2">
-                                {pendingMatchesList.map((m, idx) => {
-                                  const isP1 = m.player1_id === id;
-                                  const opponent = isP1 ? m.player2 : m.player1;
-                                  const canWithdraw = (ownPlayerProfile && m.submitted_by === ownPlayerProfile.id) ||
-                                    isMatchParticipant(m, ownPlayerProfile?.id);
-
-                                  return (
-                                    <div key={`pen-${m.id || idx}`} className="flex flex-col sm:flex-row sm:items-center gap-3 text-sm bg-white/50 dark:bg-slate-900/50 p-3 rounded-xl border border-amber-200/50 dark:border-amber-700/30">
-                                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                                        <div className="w-8 h-8 rounded-lg bg-amber-200 dark:bg-amber-800/40 flex items-center justify-center text-xs font-black text-amber-700 dark:text-amber-400 shrink-0">?</div>
-                                        <div className="flex-1 min-w-0">
-                                          <span className="text-slate-600 dark:text-slate-300">vs </span>
-                                          <span className="font-bold text-slate-800 dark:text-slate-200">{opponent?.full_name ?? "Unknown"}</span>
-                                          <span className="text-slate-400 mx-1">·</span>
-                                          <span className="font-mono text-xs font-bold text-slate-600 dark:text-slate-400">{m.score}</span>
-                                        </div>
-                                        <div className="text-[10px] text-slate-400 shrink-0">{new Date(m.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</div>
-                                      </div>
-                                      {canWithdraw && (
-                                        <button
-                                          onClick={() => handleWithdrawMatch(m.id)}
-                                          className="text-xs font-bold px-3 py-1.5 rounded-lg bg-rose-100 hover:bg-rose-200 dark:bg-rose-900/30 dark:hover:bg-rose-800/40 text-rose-700 dark:text-rose-400 transition-colors w-full sm:w-auto mt-2 sm:mt-0 border border-rose-200 dark:border-rose-800/50"
-                                        >
-                                          Withdraw Match
-                                        </button>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Match List — BWF table style */}
-                          <div className="bg-white dark:bg-slate-800/80 rounded-3xl shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 overflow-hidden">
-                            {/* Table Header */}
-                            <div className="hidden sm:grid grid-cols-12 gap-2 px-5 py-3 bg-slate-50 dark:bg-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-700/50">
-                              <div className="col-span-1 text-center">Result</div>
-                              <div className="col-span-1">Type</div>
-                              <div className="col-span-4">Opponent</div>
-                              <div className="col-span-3">Score</div>
-                              <div className="col-span-3 text-right">Date & Time</div>
-                            </div>
-
-                            <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
-                              {filteredMatches.length > 0 ? filteredMatches.map((m, idx) => {
-                                const isP1 = m.player1_id === id;
-                                const opponent = isP1 ? m.player2 : m.player1;
-                                const won = m.winner_id === id;
-                                const matchDate = new Date(m.created_at);
-                                const isFriendly = m.is_friendly !== false;
-
-                                return (
-                                  <div key={idx} className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-2 p-4 sm:px-5 sm:py-4 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors items-center">
-                                    {/* Result Badge */}
-                                    <div className="col-span-1 flex sm:justify-center">
-                                      <div className={`w-10 h-10 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center font-black text-sm shadow-md
-                                        ${won
-                                          ? "bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-emerald-500/30"
-                                          : "bg-gradient-to-br from-rose-400 to-rose-600 text-white shadow-rose-500/30"}`}>
-                                        {won ? "W" : "L"}
-                                      </div>
-                                    </div>
-
-                                    {/* Match Type */}
-                                    <div className="col-span-1">
-                                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${
-                                        isFriendly
-                                          ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/30"
-                                          : "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/30"
-                                      }`}>
-                                        {isFriendly ? "FRD" : "TRN"}
-                                      </span>
-                                    </div>
-
-                                    {/* Opponent */}
-                                    <div className="col-span-4">
-                                      <div className="text-sm text-slate-600 dark:text-slate-300">
-                                        <span className="text-slate-400 mr-1">vs</span>
-                                        <button
-                                          onClick={() => opponent?.id && setLocation(`/player/${opponent.id}`)}
-                                          className="font-bold text-slate-800 dark:text-slate-100 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
-                                        >
-                                          {opponent?.full_name ?? "Unknown"}
-                                        </button>
-                                      </div>
-                                      {m.round && m.round !== "Tournament" && (
-                                        <div className="text-[10px] text-slate-400 font-medium mt-0.5">{m.round}</div>
-                                      )}
-                                    </div>
-
-                                    {/* Score */}
-                                    <div className="col-span-3">
-                                      <div className="font-mono text-sm font-black text-slate-700 dark:text-slate-200 tracking-tight">
-                                        {m.score?.replace(/\s*\[.*\]/, "") || "—"}
-                                      </div>
-                                    </div>
-
-                                    {/* Date & Time */}
-                                    <div className="col-span-3 text-right">
-                                      <div className="text-xs font-bold text-slate-600 dark:text-slate-300">
-                                        {matchDate.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                                      </div>
-                                      <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-                                        {matchDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              }) : (
-                                <div className="p-8 text-center text-sm text-slate-400 dark:text-slate-500 italic">
-                                  No {matchHistoryFilter === "all" ? "" : matchHistoryFilter} matches found
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.section>
-              );
-            })()}
+            <MatchHistorySection
+              id={id}
+              liveMatches={liveMatches}
+              ownPlayerProfile={ownPlayerProfile}
+              handleWithdrawMatch={handleWithdrawMatch}
+            />
 
             {/* Equipment Arsenal */}
-            <motion.section variants={itemVariants}>
-              <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-3 ml-2">
-                <Target className="w-6 h-6 text-rose-500" />
-                Equipment Arsenal
-              </h2>
-
-              <div className="space-y-4">
-                {player.racketDetails.map((racket, idx) => {
-                  const isMain = racket.name === player.currentRacket;
-                  return (
-                    <div
-                      key={idx}
-                      className={`relative overflow-hidden p-6 rounded-3xl border transition-all duration-300 group
-                        ${isMain
-                          ? 'bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 border-emerald-500/30 shadow-lg shadow-emerald-500/5'
-                          : 'bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/50 hover:border-emerald-500/30'}`}
-                    >
-                      {isMain && (
-                        <div className="absolute -right-10 -top-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-colors" />
-                      )}
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
-                        <div>
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="font-bold text-xl text-slate-900 dark:text-white">{racket.name}</h3>
-                            {isMain && (
-                              <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 bg-emerald-500 text-white rounded-lg shadow-sm">
-                                Primary
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate-600 dark:text-slate-400">
-                            <span className="flex items-center gap-1.5"><Dna className="w-4 h-4 text-blue-500" /> String: <span className="font-semibold text-slate-800 dark:text-slate-200">{racket.string}</span></span>
-                            <span className="flex items-center gap-1.5"><Activity className="w-4 h-4 text-rose-500" /> Tension: <span className="font-semibold text-slate-800 dark:text-slate-200">{racket.tension}</span></span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {/* Shoes & apparel */}
-                {((player.shoesList && player.shoesList.length > 0) || player.shoes || player.apparel) && (
-                  <div className="space-y-4 mt-4">
-                    {player.shoesList && player.shoesList.length > 0 ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {player.shoesList.map((shoe, idx) => (
-                          <div key={idx} className="bg-white dark:bg-slate-800/50 rounded-3xl p-5 border border-slate-200 dark:border-slate-700/50 flex items-center justify-between gap-4 relative overflow-hidden group">
-                            {shoe.primary && (
-                              <div className="absolute -right-10 -top-10 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl" />
-                            )}
-                            <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center shrink-0">
-                                <Footprints className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                              </div>
-                              <div>
-                                <div className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold font-sans">Footwear</div>
-                                <div className="font-bold text-slate-800 dark:text-slate-100 text-sm">{shoe.name}</div>
-                              </div>
-                            </div>
-                            {shoe.primary && (
-                              <span className="text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 bg-emerald-500 text-white rounded z-10 shrink-0">
-                                Primary
-                              </span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    ) : player.shoes ? (
-                      <div className="bg-white dark:bg-slate-800/50 rounded-3xl p-5 border border-slate-200 dark:border-slate-700/50 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center">
-                          <Footprints className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                        </div>
-                        <div>
-                          <div className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold">Footwear</div>
-                          <div className="font-bold text-slate-800 dark:text-slate-100">{player.shoes}</div>
-                        </div>
-                      </div>
-                    ) : null}
-
-                    {player.apparel && (
-                      <div className="bg-white dark:bg-slate-800/50 rounded-3xl p-5 border border-slate-200 dark:border-slate-700/50 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-violet-100 dark:bg-violet-500/20 flex items-center justify-center">
-                          <Shirt className="w-5 h-5 text-violet-600 dark:text-violet-400" />
-                        </div>
-                        <div>
-                          <div className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold">Apparel</div>
-                          <div className="font-bold text-slate-800 dark:text-slate-100">{player.apparel}</div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </motion.section>
+            <EquipmentArsenalSection player={player} />
 
             {/* Career Highlights Timeline */}
-            {player.careerHighlights && player.careerHighlights.length > 0 && (
-              <motion.section variants={itemVariants}>
-                <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-3 ml-2">
-                  <Star className="w-6 h-6 text-amber-500" />
-                  Career Highlights
-                </h2>
-                <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-7 shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50">
-                  <ol className="relative border-l-2 border-dashed border-emerald-500/30 ml-2 space-y-6">
-                    {player.careerHighlights.map((h, idx) => (
-                      <li key={idx} className="ml-6">
-                        <span className="absolute -left-[11px] w-5 h-5 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 ring-4 ring-white dark:ring-slate-800 shadow shadow-emerald-500/30" />
-                        <div className="text-xs font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">{h.year}</div>
-                        <div className="text-lg font-bold text-slate-800 dark:text-slate-100">{h.title}</div>
-                        {h.description && <div className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">{h.description}</div>}
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-              </motion.section>
-            )}
+            <CareerHighlightsSection player={player} />
           </div>
 
           {/* ============== RIGHT COLUMN ============== */}
@@ -1824,3 +1389,6 @@ export default function PlayerProfile() {
     </div>
   );
 }
+
+
+

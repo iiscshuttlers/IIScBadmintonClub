@@ -42,11 +42,11 @@ function CountUpStat({
   }, [target]);
 
   return (
-    <div ref={ref} className={`bg-white p-8 rounded-lg shadow-md border-l-4 ${borderClass}`}>
-      <h3 className="text-2xl font-bold text-blue-900 mb-2">
+    <div ref={ref}>
+      <h3 className="text-3xl font-black text-white mb-1 tabular-nums">
         {count}{suffix}
       </h3>
-      <p className="text-gray-600">{label}</p>
+      <p className="text-gray-400 text-sm">{label}</p>
     </div>
   );
 }
@@ -67,14 +67,22 @@ export default function About() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-900 to-emerald-900 text-white py-16">
-        <div className="container mx-auto px-4">
-          <h1 className="text-5xl font-bold mb-4" style={{ fontFamily: 'Playfair Display, serif' }}>
-            About IISc Badminton Club
-          </h1>
-          <p className="text-xl text-gray-200 max-w-2xl">
-            Discover our mission, values, and the vibrant community that makes us thrive.
-          </p>
+      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-emerald-950 text-white py-20 relative overflow-hidden">
+        <div className="absolute inset-0 hero-pattern" />
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 px-4 py-2 rounded-full text-sm font-semibold mb-5">
+              🏸 Our Story
+            </div>
+            <h1 className="text-5xl md:text-6xl font-black mb-4" style={{ fontFamily: 'Playfair Display, serif' }}>
+              About IISc
+              <br />
+              <span className="text-emerald-400">Badminton Club</span>
+            </h1>
+            <p className="text-xl text-gray-300 max-w-2xl">
+              Discover our mission, values, and the vibrant community that makes us thrive.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -197,16 +205,27 @@ export default function About() {
       </section>
 
       {/* Achievements */}
-      <section className="py-16 bg-gradient-to-r from-emerald-50 to-orange-50">
+      <section className="py-16 bg-gradient-to-br from-blue-950 to-emerald-950 text-white">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-blue-900 mb-12 text-center" style={{ fontFamily: 'Playfair Display, serif' }}>
-            Notable Achievements
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <CountUpStat target={350} suffix="+" label="Active Members" borderClass="border-emerald-500" />
-            <CountUpStat target={20} suffix="+" label="Tournaments Hosted" borderClass="border-orange-500" />
-            <CountUpStat target={3} label="Professional Courts" borderClass="border-blue-900" />
-            <CountUpStat target={10} suffix="+" label="IISM Trophies" borderClass="border-blue-900" />
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-black text-white mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>
+              By the Numbers
+            </h2>
+            <div className="w-12 h-1 bg-gradient-to-r from-emerald-500 to-orange-500 mx-auto mt-3 rounded-full" />
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+            <div className="text-center p-6 bg-white/10 border border-white/20 rounded-2xl">
+              <CountUpStat target={350} suffix="+" label="Active Members" borderClass="border-emerald-500" />
+            </div>
+            <div className="text-center p-6 bg-white/10 border border-white/20 rounded-2xl">
+              <CountUpStat target={20} suffix="+" label="Tournaments Hosted" borderClass="border-orange-500" />
+            </div>
+            <div className="text-center p-6 bg-white/10 border border-white/20 rounded-2xl">
+              <CountUpStat target={3} label="Professional Courts" borderClass="border-blue-500" />
+            </div>
+            <div className="text-center p-6 bg-white/10 border border-white/20 rounded-2xl">
+              <CountUpStat target={10} suffix="+" label="IISM Trophies" borderClass="border-amber-500" />
+            </div>
           </div>
         </div>
       </section>

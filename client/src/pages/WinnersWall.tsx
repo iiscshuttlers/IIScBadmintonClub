@@ -11,22 +11,23 @@ export default function WinnersWall() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <section className="bg-gradient-to-r from-blue-900 to-emerald-900 text-white py-20">
-        <div className="container mx-auto px-4 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 text-sm font-bold mb-5">
-            <Trophy className="w-4 h-4 text-amber-300" />
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-emerald-950 text-white py-24 relative overflow-hidden">
+        <div className="absolute inset-0 hero-pattern" />
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-400/20 border border-amber-400/30 text-amber-300 text-sm font-bold mb-5">
+            <Trophy className="w-4 h-4" />
             Club Records
           </div>
 
           <h1
-            className="text-4xl sm:text-5xl font-bold mb-5"
+            className="text-4xl sm:text-5xl md:text-6xl font-black mb-5"
             style={{ fontFamily: 'Playfair Display, serif' }}
           >
             Winners Wall
           </h1>
 
-          <p className="text-xl text-gray-200 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
             Champions, podiums and archived results from IISc Badminton Club events.
           </p>
         </div>

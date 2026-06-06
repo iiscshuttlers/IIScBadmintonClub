@@ -1,172 +1,214 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mail, MapPin, Phone, Instagram } from 'lucide-react';
+import { Mail, MapPin, Phone, Instagram, Youtube, ExternalLink, ChevronDown } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { useState } from 'react';
+
+const faqs = [
+  {
+    question: 'How do I join the club?',
+    answer: 'IISc students, faculty and staff can access facilities through Gymkhana membership. Visit the Gymkhana office on the 2nd floor of Janta Bazar, IISc.',
+    color: 'border-emerald-500',
+  },
+  {
+    question: 'Do you offer coaching?',
+    answer: 'We do not provide formal coaching, but we have a vibrant community of experienced players across all levels who are happy to help you improve.',
+    color: 'border-blue-500',
+  },
+  {
+    question: 'Can I play tournaments?',
+    answer: 'Yes! Internal tournaments (Spectrum, Invicta), open events (Gandhi Cup), inter-college (IISM), and friendly club matches are conducted regularly.',
+    color: 'border-orange-500',
+  },
+  {
+    question: 'What are the court timings?',
+    answer: 'Courts are open Monday to Sunday, 6:00 AM to 10:20 PM. Closed on Gymkhana holidays. Check the Facilities page for closure dates.',
+    color: 'border-purple-500',
+  },
+  {
+    question: 'How do I register for tournaments?',
+    answer: 'Registrations are announced via the WhatsApp group and on this website under Announcements. Join the WhatsApp group via the notice board at the badminton hall.',
+    color: 'border-amber-500',
+  },
+];
+
+function FAQItem({ faq }: { faq: typeof faqs[0] }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div
+      className={`bg-white dark:bg-slate-800 rounded-2xl shadow-sm border-l-4 ${faq.color} border border-gray-100 dark:border-slate-700 overflow-hidden transition-all duration-300 ${open ? 'shadow-md' : ''}`}
+    >
+      <button
+        className="w-full text-left px-6 py-5 flex items-center justify-between gap-4 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+      >
+        <h3 className="font-bold text-blue-900 dark:text-white text-sm md:text-base">{faq.question}</h3>
+        <ChevronDown className={`w-5 h-5 text-gray-400 flex-shrink-0 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="px-6 pb-5">
+          <p className="text-gray-600 dark:text-slate-400 text-sm leading-relaxed">{faq.answer}</p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Contact() {
   usePageMeta({ title: 'Contact Us', description: 'Get in touch with the IISc Badminton Club. Find us at the IISc Gymkhana, Bangalore.' });
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen dark:bg-slate-950">
 
       {/* Hero */}
-      <section className="bg-gradient-to-r from-blue-900 to-emerald-900 text-white py-16">
-        <div className="container mx-auto px-4 text-center">
+      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-emerald-950 text-white py-20 relative overflow-hidden">
+        <div className="absolute inset-0 hero-pattern" />
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 px-4 py-2 rounded-full text-sm font-semibold mb-5">
+            ✉️ Reach Us
+          </div>
           <h1
-            className="text-5xl font-bold mb-4"
+            className="text-5xl md:text-6xl font-black mb-4"
             style={{ fontFamily: 'Playfair Display, serif' }}
           >
             Get In Touch
           </h1>
-
-          <p className="text-xl text-gray-200 max-w-3xl mx-auto">
-            For memberships, coaching, tournaments, collaborations and club
-            activities, feel free to connect with IISc Badminton Club.
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            For memberships, tournaments, collaborations and club activities — we'd love to hear from you.
           </p>
         </div>
       </section>
 
       {/* Contact Cards */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-white dark:bg-slate-900">
         <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-
-            <Card className="border-2 border-emerald-200 shadow-md">
+            <Card className="border-0 shadow-md bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-emerald-600">
-                  <Mail className="w-5 h-5" />
-                  Email
-                </CardTitle>
+                <div className="w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center mb-2">
+                  <Mail className="w-6 h-6 text-white" />
+                </div>
+                <CardTitle className="text-emerald-700 dark:text-emerald-400 text-base">Email</CardTitle>
               </CardHeader>
-
               <CardContent>
-                <p className="font-semibold text-gray-800">
+                <a href="mailto:office.gym@iisc.ac.in" className="font-bold text-gray-900 dark:text-white hover:text-emerald-600 transition-colors">
                   office.gym@iisc.ac.in
-                </p>
-                <p className="text-sm text-gray-600 mt-2">
-                  Best mode for membership and official queries.
+                </a>
+                <p className="text-sm text-gray-500 dark:text-slate-400 mt-2">
+                  Best for membership and official queries.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-2 border-orange-200 shadow-md">
+            <Card className="border-0 shadow-md bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-orange-600">
-                  <Phone className="w-5 h-5" />
-                  Phone
-                </CardTitle>
+                <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center mb-2">
+                  <Phone className="w-6 h-6 text-white" />
+                </div>
+                <CardTitle className="text-orange-700 dark:text-orange-400 text-base">Phone</CardTitle>
               </CardHeader>
-
               <CardContent>
-                <p className="font-semibold text-gray-800">
+                <p className="font-bold text-gray-900 dark:text-white">
                   +91 (080) 2293 xxxx
                 </p>
-                <p className="text-sm text-gray-600 mt-2">
-                  IISc Main Contact
+                <p className="text-sm text-gray-500 dark:text-slate-400 mt-2">
+                  IISc Gymkhana Office
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-2 border-blue-200 shadow-md">
+            <Card className="border-0 shadow-md bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-blue-900">
-                  <MapPin className="w-5 h-5" />
-                  Location
-                </CardTitle>
+                <div className="w-12 h-12 rounded-xl bg-blue-900 flex items-center justify-center mb-2">
+                  <MapPin className="w-6 h-6 text-white" />
+                </div>
+                <CardTitle className="text-blue-900 dark:text-blue-400 text-base">Location</CardTitle>
               </CardHeader>
-
               <CardContent>
-                <p className="font-semibold text-gray-800">
-                  Gymkhana Office, 2nd Floor, Janta Bazar, IISc
+                <p className="font-bold text-gray-900 dark:text-white">
+                  Gymkhana Office, 2nd Floor
                 </p>
-                <p className="text-sm text-gray-600 mt-2">
-                  Bengaluru - 560012, India
+                <p className="text-sm text-gray-700 dark:text-slate-300">Janta Bazar, IISc</p>
+                <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
+                  Bengaluru — 560012, India
                 </p>
+                <a
+                  href="https://maps.app.goo.gl/pBTtJGYEPwnu6qd78"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 mt-3 text-sm text-blue-900 dark:text-blue-400 font-semibold hover:underline"
+                >
+                  View on Maps <ExternalLink className="w-3.5 h-3.5" />
+                </a>
               </CardContent>
             </Card>
 
           </div>
-
         </div>
       </section>
 
       {/* FAQ */}
-      <section className="py-16 bg-gradient-to-r from-blue-50 to-emerald-50">
+      <section className="py-16 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
         <div className="container mx-auto px-4">
-
-          <h2
-            className="text-3xl font-bold text-blue-900 mb-10 text-center"
-            style={{ fontFamily: 'Playfair Display, serif' }}
-          >
-            Frequently Asked Questions
-          </h2>
-
-          <div className="max-w-4xl mx-auto space-y-5">
-
-            <div className="bg-white p-6 rounded-xl shadow border-l-4 border-emerald-500">
-              <h3 className="font-bold text-blue-900 mb-2">
-                How do I join the club?
-              </h3>
-              <p className="text-gray-700">
-                IISc students, faculty and staff can access facilities through
-                Gymkhana membership.
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow border-l-4 border-orange-500">
-              <h3 className="font-bold text-blue-900 mb-2">
-                Do you offer coaching?
-              </h3>
-              <p className="text-gray-700">
-                No. We do not provide coaching, but we have a vibrant community of players across all levels.
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow border-l-4 border-blue-500">
-              <h3 className="font-bold text-blue-900 mb-2">
-                Can I play tournaments?
-              </h3>
-              <p className="text-gray-700">
-                Yes. Internal tournaments, open events and inter-department
-                competitions are conducted regularly.
-              </p>
-            </div>
-
+          <div className="text-center mb-12">
+            <h2
+              className="text-3xl font-black text-blue-900 dark:text-white"
+              style={{ fontFamily: 'Playfair Display, serif' }}
+            >
+              Frequently Asked Questions
+            </h2>
+            <div className="w-12 h-1 bg-gradient-to-r from-emerald-500 to-orange-500 mx-auto mt-3 rounded-full" />
           </div>
 
+          <div className="max-w-3xl mx-auto space-y-3">
+            {faqs.map((faq, i) => <FAQItem key={i} faq={faq} />)}
+          </div>
         </div>
       </section>
 
-      {/* Social */}
-      <section className="py-16 bg-white">
+      {/* Social + CTA */}
+      <section className="py-16 bg-white dark:bg-slate-950">
         <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-gradient-to-br from-blue-900 to-emerald-900 text-white p-10 md:p-12 rounded-3xl shadow-xl relative overflow-hidden">
+              <div className="absolute inset-0 hero-pattern" />
+              <div className="relative z-10">
+                <h2
+                  className="text-3xl font-black mb-3"
+                  style={{ fontFamily: 'Playfair Display, serif' }}
+                >
+                  Follow the Journey
+                </h2>
+                <p className="mb-8 text-gray-300 max-w-xl">
+                  Stay updated with match photos, tournament announcements, and behind-the-scenes moments from the club.
+                </p>
 
-          <div className="max-w-3xl mx-auto bg-gradient-to-r from-blue-900 to-emerald-900 text-white p-10 rounded-2xl shadow-lg text-center">
-
-            <h2
-              className="text-3xl font-bold mb-4"
-              style={{ fontFamily: 'Playfair Display, serif' }}
-            >
-              Follow Us
-            </h2>
-
-            <p className="mb-6 text-gray-200">
-              Stay updated with tournaments, match photos and announcements.
-            </p>
-
-            <a
-              href="https://www.instagram.com/iisc.badminton/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              <Button className="bg-white text-blue-900 hover:bg-gray-100 font-semibold px-6">
-                <Instagram className="w-5 h-5 mr-2" />
-                Instagram
-              </Button>
-            </a>
-
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <a
+                    href="https://www.instagram.com/iisc.badminton/"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <Button className="bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 text-white font-bold px-7 py-6 rounded-xl flex items-center gap-2 shadow-lg hover:-translate-y-0.5 transition-all">
+                      <Instagram className="w-5 h-5" />
+                      Instagram
+                    </Button>
+                  </a>
+                  <a
+                    href="https://youtube.com/@iiscbadmintonclub"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <Button className="bg-red-600 hover:bg-red-700 text-white font-bold px-7 py-6 rounded-xl flex items-center gap-2 shadow-lg hover:-translate-y-0.5 transition-all">
+                      <Youtube className="w-5 h-5" />
+                      YouTube
+                    </Button>
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
-
         </div>
       </section>
 

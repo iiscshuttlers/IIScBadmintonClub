@@ -62,17 +62,20 @@ export default function Facilities() {
     <div className="min-h-screen">
 
       {/* Hero */}
-      <section className="bg-gradient-to-r from-blue-900 to-emerald-900 text-white py-14">
-        <div className="container mx-auto px-4 text-center">
+      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-emerald-950 text-white py-20 relative overflow-hidden">
+        <div className="absolute inset-0 hero-pattern" />
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 px-4 py-2 rounded-full text-sm font-semibold mb-5">
+            🏟️ Our Infrastructure
+          </div>
           <h1
-            className="text-4xl md:text-5xl font-bold mb-4"
+            className="text-5xl md:text-6xl font-black mb-4"
             style={{ fontFamily: 'Playfair Display, serif' }}
           >
             Our Facilities
           </h1>
-
-          <p className="text-lg md:text-xl text-gray-200 max-w-3xl mx-auto">
-            Premium badminton facilities designed to support players at every level.
+          <p className="text-lg md:text-xl text-gray-300 max-w-3xl mx-auto">
+            Premium badminton facilities at IISc Gymkhana, designed to support players at every level.
           </p>
         </div>
       </section>

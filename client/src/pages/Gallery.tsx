@@ -144,12 +144,16 @@ export default function Gallery() {
   return (
     <div className="min-h-screen font-sans">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-900 to-emerald-900 text-white py-20">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-6xl font-bold mb-6" style={{ fontFamily: 'Playfair Display, serif' }}>
+      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-emerald-950 text-white py-20 relative overflow-hidden">
+        <div className="absolute inset-0 hero-pattern" />
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 px-4 py-2 rounded-full text-sm font-semibold mb-5">
+            📸 Photos & Videos
+          </div>
+          <h1 className="text-5xl md:text-6xl font-black mb-5" style={{ fontFamily: 'Playfair Display, serif' }}>
             Gallery
           </h1>
-          <p className="text-xl text-gray-200 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
             Relive the intensity of tournaments, the focus of practice, and the vibrant badminton community at IISc.
           </p>
         </div>

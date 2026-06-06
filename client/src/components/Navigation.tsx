@@ -67,7 +67,7 @@ export default function Navigation() {
   };
 
   return (
-    <nav className={`sticky top-0 z-50 bg-white dark:bg-slate-900 border-b-4 border-emerald-500 transition-all duration-300 ${scrolled ? 'shadow-xl' : 'shadow-md'}`}>
+    <nav className={`sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b-[3px] border-emerald-500 transition-all duration-300 ${scrolled ? 'shadow-xl' : 'shadow-sm'}`}>
       <div className={`container mx-auto px-4 transition-all duration-300 ${scrolled ? 'py-2' : 'py-3'}`}>
         <div className="flex justify-between items-center">
 

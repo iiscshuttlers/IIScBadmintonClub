@@ -124,19 +124,23 @@ export default function Announcements() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-slate-950">
       {/* Hero */}
-      <section className="bg-gradient-to-r from-blue-900 to-emerald-900 text-white py-16">
-        <div className="container mx-auto px-4 text-center">
+      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-emerald-950 text-white py-20 relative overflow-hidden">
+        <div className="absolute inset-0 hero-pattern" />
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 px-4 py-2 rounded-full text-sm font-semibold mb-5">
+            <Bell className="w-4 h-4 text-emerald-400" />
+            Stay Updated
+          </div>
           <h1
-            className="text-4xl md:text-5xl font-bold mb-4"
+            className="text-4xl md:text-5xl font-black mb-4"
             style={{ fontFamily: 'Playfair Display, serif' }}
           >
             Announcements & News
           </h1>
-
-          <p className="text-lg text-gray-200 max-w-2xl mx-auto">
-            Stay updated with tournaments, events, facility notices and latest IISc Badminton Club news.
+          <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+            Tournaments, events, facility notices and latest IISc Badminton Club news.
           </p>
         </div>
       </section>
@@ -167,31 +171,35 @@ export default function Announcements() {
         <>
           {/* Pinned */}
           {pinnedAnnouncements.length > 0 && (
-            <section className="py-16 bg-gradient-to-r from-orange-50 to-blue-50">
+            <section className="py-14 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-slate-900 dark:to-slate-800">
               <div className="container mx-auto px-4">
-                <h2
-                  className="text-3xl font-bold text-blue-900 mb-8 flex items-center gap-3"
-                  style={{ fontFamily: 'Playfair Display, serif' }}
-                >
-                  <Pin className="w-8 h-8 text-orange-500" />
-                  Important Announcements
-                </h2>
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="w-2 h-8 bg-gradient-to-b from-orange-500 to-amber-500 rounded-full" />
+                  <h2
+                    className="text-2xl font-black text-blue-900 dark:text-white flex items-center gap-2"
+                    style={{ fontFamily: 'Playfair Display, serif' }}
+                  >
+                    <Pin className="w-6 h-6 text-orange-500" />
+                    Important Announcements
+                  </h2>
+                </div>
 
-                <div className="space-y-5">
+                <div className="space-y-4">
                   {pinnedAnnouncements.map((item, index) => {
                     const status = getStatus(item);
 
                     return (
-                      <Card key={index} className="border-2 border-orange-300 hover:shadow-lg transition">
+                      <Card key={index} className="border-2 border-orange-300 dark:border-orange-900/50 bg-white dark:bg-slate-800 hover:shadow-lg transition-all duration-300 overflow-hidden">
+                        <div className="h-1 bg-gradient-to-r from-orange-500 to-amber-400" />
                         <CardHeader>
-                          <CardTitle className="text-blue-900 text-xl">
+                          <CardTitle className="text-blue-900 dark:text-white text-xl">
                             {item.title}
                           </CardTitle>
 
                           <div className="flex flex-wrap gap-2 text-sm text-gray-600 mt-3">
                             <div className="flex items-center gap-1.5">
                               <Calendar className="w-4 h-4 text-emerald-500" />
-                              <span className="text-gray-500 text-sm">{item.date}</span>
+                              <span className="text-gray-500 dark:text-slate-400 text-sm">{item.date}</span>
                             </div>
                             {(() => {
                               const b = getCategoryBadge(item.category); return (
@@ -207,7 +215,7 @@ export default function Announcements() {
                         </CardHeader>
                         <CardContent>
                           <p
-                            className="text-gray-700 leading-relaxed"
+                            className="text-gray-700 dark:text-slate-300 leading-relaxed"
                             dangerouslySetInnerHTML={{ __html: sanitize(item.content) }}
                           />
                         </CardContent>
@@ -220,19 +228,19 @@ export default function Announcements() {
           )}
 
           {/* Filter */}
-          <section className="py-8 border-b bg-white">
+          <section className="py-6 border-b bg-white dark:bg-slate-950 sticky top-16 z-10 shadow-sm">
             <div className="container mx-auto px-4">
-              <div className="flex flex-wrap gap-3 justify-center">
+              <div className="flex flex-wrap gap-2.5 justify-center">
                 {categories.map((cat) => (
                   <button
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
-                    className={`px-5 py-2 rounded-full font-semibold transition ${selectedCategory === cat.id
-                      ? 'bg-emerald-500 text-white shadow-md'
-                      : `${cat.color} hover:shadow`
+                    className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${selectedCategory === cat.id
+                      ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200 dark:shadow-emerald-900/40 scale-105'
+                      : `${cat.color} hover:shadow-sm dark:bg-slate-800 dark:text-slate-300`
                       }`}
                   >
-                    {cat.label}
+                    {cat.icon} {cat.label}
                   </button>
                 ))}
               </div>
@@ -240,47 +248,52 @@ export default function Announcements() {
           </section>
 
           {/* Recent */}
-          <section className="py-16">
+          <section className="py-14 dark:bg-slate-950">
             <div className="container mx-auto px-4">
-              <h2
-                className="text-3xl font-bold text-blue-900 mb-8 flex items-center gap-3"
-                style={{ fontFamily: 'Playfair Display, serif' }}
-              >
-                <Bell className="w-8 h-8 text-emerald-500" />
-                Recent Updates
-              </h2>
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-2 h-8 bg-gradient-to-b from-emerald-500 to-teal-600 rounded-full" />
+                <h2
+                  className="text-2xl font-black text-blue-900 dark:text-white flex items-center gap-2"
+                  style={{ fontFamily: 'Playfair Display, serif' }}
+                >
+                  <Bell className="w-6 h-6 text-emerald-500" />
+                  Recent Updates
+                </h2>
+              </div>
 
               {filteredRecent.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-gray-600 text-lg">
-                    No announcements found.
-                  </p>
+                <div className="text-center py-16 rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-700">
+                  <p className="text-gray-500 dark:text-slate-400 text-lg">No announcements found.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {filteredRecent.map((item, index) => {
                     const status = getStatus(item);
 
                     return (
-                      <Card key={index} className="border border-gray-200 hover:shadow-lg transition">
-                        <CardHeader>
-                          <CardTitle className="text-blue-900 text-lg">
+                      <Card key={index} className="border border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
+                        <div className={`h-0.5 w-full ${
+                          status === 'upcoming' ? 'bg-emerald-400' :
+                          status === 'ongoing' ? 'bg-blue-400' : 'bg-gray-200 dark:bg-slate-600'
+                        }`} />
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-blue-900 dark:text-white text-base font-bold">
                             {item.title}
                           </CardTitle>
 
                           <div className="flex flex-wrap gap-2 text-sm text-gray-600 mt-2">
                             <div className="flex items-center gap-1.5">
-                              <Calendar className="w-4 h-4 text-emerald-500" />
-                              <span className="text-gray-500 text-sm">{item.date}</span>
+                              <Calendar className="w-3.5 h-3.5 text-emerald-500" />
+                              <span className="text-gray-500 dark:text-slate-400 text-xs">{item.date}</span>
                             </div>
                             {(() => {
                               const b = getCategoryBadge(item.category); return (
-                                <Badge className={`${b.color} border-0 font-semibold`}>
+                                <Badge className={`${b.color} border-0 font-semibold text-xs`}>
                                   {b.icon} {b.label}
                                 </Badge>
                               );
                             })()}
-                            <Badge className={`${getStatusColor(status)} border-0 font-semibold capitalize`}>
+                            <Badge className={`${getStatusColor(status)} border-0 font-semibold capitalize text-xs`}>
                               {status}
                             </Badge>
                           </div>
@@ -288,7 +301,7 @@ export default function Announcements() {
 
                         <CardContent>
                           <p
-                            className="text-gray-700 text-sm leading-relaxed"
+                            className="text-gray-600 dark:text-slate-400 text-sm leading-relaxed"
                             dangerouslySetInnerHTML={{ __html: sanitize(item.content) }}
                           />
                         </CardContent>
@@ -301,46 +314,42 @@ export default function Announcements() {
           </section>
 
           {/* Stay Informed */}
-          <section className="py-16 bg-gradient-to-r from-blue-50 to-emerald-50">
+          <section className="py-14 bg-gradient-to-br from-blue-50 to-emerald-50 dark:from-slate-900 dark:to-slate-800">
             <div className="container mx-auto px-4">
-              <h2
-                className="text-3xl font-bold text-blue-900 mb-8 text-center"
-                style={{ fontFamily: 'Playfair Display, serif' }}
-              >
-                Stay Informed
-              </h2>
+              <div className="max-w-4xl mx-auto bg-gradient-to-br from-blue-900 to-emerald-900 p-10 rounded-3xl shadow-xl text-white relative overflow-hidden">
+                <div className="absolute inset-0 hero-pattern" />
+                <div className="relative z-10">
+                  <h2
+                    className="text-2xl font-black mb-6"
+                    style={{ fontFamily: 'Playfair Display, serif' }}
+                  >
+                    Stay Informed
+                  </h2>
 
-              <div className="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-md border-l-4 border-emerald-500">
-                <p className="text-gray-700 text-lg leading-relaxed mb-6">
-                  Don't miss important moments! Follow us on Instagram.
-                </p>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="bg-white/10 border border-white/20 rounded-2xl p-5 space-y-2">
+                      <p className="font-bold text-white text-base">
+                        📱 WhatsApp Updates
+                      </p>
+                      <p className="text-gray-300 text-sm">
+                        Visit the badminton hall notice board to join the official WhatsApp group for real-time updates.
+                      </p>
+                    </div>
 
-                <div className="bg-emerald-50 p-6 rounded-xl border border-emerald-200 space-y-6">
-
-                  <div>
-                    <p className="font-semibold text-blue-900 text-xl mb-2">
-                      📱 For important updates:
-                    </p>
-                    <p className="text-gray-700 text-lg">
-                      Join our official WhatsApp group.
-                    </p>
+                    <div className="bg-white/10 border border-white/20 rounded-2xl p-5 space-y-2">
+                      <p className="font-bold text-white text-base">
+                        📸 Follow on Instagram
+                      </p>
+                      <a
+                        href="https://www.instagram.com/iisc.badminton/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-emerald-300 font-bold hover:text-emerald-200 transition-colors text-sm"
+                      >
+                        @iisc.badminton →
+                      </a>
+                    </div>
                   </div>
-
-                  <div>
-                    <p className="font-semibold text-blue-900 text-xl mb-2">
-                      📸 Follow us on Instagram:
-                    </p>
-
-                    <a
-                      href="https://www.instagram.com/iisc.badminton/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-emerald-600 font-semibold hover:underline text-lg"
-                    >
-                      @iisc.badminton
-                    </a>
-                  </div>
-
                 </div>
               </div>
             </div>
