@@ -34,7 +34,7 @@ export default function Footer() {
             </p>
             <div className="flex gap-3 pt-1">
               <a
-                href="https://www.instagram.com/iisc.badminton/"
+                href="https://www.instagram.com/badminton.iisc/"
                 target="_blank"
                 rel="noreferrer"
                 aria-label="Instagram"

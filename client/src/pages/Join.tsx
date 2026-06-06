@@ -174,19 +174,35 @@ export default function Join() {
   const input = "block w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm";
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-emerald-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Decorative background */}
+      <div className="absolute inset-0 hero-pattern opacity-50" />
+      <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 left-1/4 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+      {/* Subtle court lines */}
+      <div className="absolute inset-0 opacity-5 pointer-events-none">
+        <svg className="w-full h-full" viewBox="0 0 800 600" preserveAspectRatio="none">
+          <line x1="400" y1="0" x2="400" y2="600" stroke="white" strokeWidth="1.5" />
+          <line x1="0" y1="300" x2="800" y2="300" stroke="white" strokeWidth="1.5" />
+          <ellipse cx="400" cy="300" rx="120" ry="90" stroke="white" strokeWidth="1.5" fill="none" />
+          <rect x="120" y="100" width="560" height="400" stroke="white" strokeWidth="2" fill="none" />
+        </svg>
+      </div>
+
+      <div className="sm:mx-auto sm:w-full sm:max-w-md px-4 relative z-10">
 
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm border border-emerald-200 dark:border-emerald-800">
-            <ShieldCheck className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+          <div className="w-16 h-16 bg-white/10 border border-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg backdrop-blur-sm">
+            <ShieldCheck className="w-8 h-8 text-emerald-400" />
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">IISc Badminton Club</h1>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Member portal · Campus Badminton Community</p>
+          <h1 className="text-3xl font-black text-white tracking-tight" style={{ fontFamily: 'Playfair Display, serif' }}>
+            IISc Badminton Club
+          </h1>
+          <p className="mt-2 text-sm text-blue-300">Member portal · Campus Badminton Community</p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 py-8 px-6 shadow-xl shadow-slate-200/50 dark:shadow-none sm:rounded-3xl sm:px-10 border border-slate-100 dark:border-slate-800">
+        <div className="bg-white dark:bg-slate-900 py-8 px-6 shadow-2xl sm:rounded-3xl sm:px-10 border border-white/10 backdrop-blur-sm">
 
           {/* Inactivity logout notice */}
           {inactivityLogout && (

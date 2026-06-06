@@ -307,7 +307,7 @@ export default function Gallery() {
           <h2 className="text-3xl font-bold text-blue-900 mb-10">Follow the Journey</h2>
           <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
             <a
-              href="https://www.instagram.com/iisc.badminton/"
+              href="https://www.instagram.com/badminton.iisc/"
               target="_blank"
               rel="noreferrer"
               className="w-full sm:w-auto flex items-center justify-center gap-3 bg-gradient-to-r from-pink-500 to-orange-500 text-white px-10 py-4 rounded-full font-bold shadow-lg hover:shadow-pink-200 hover:-translate-y-1 transition-all duration-300"

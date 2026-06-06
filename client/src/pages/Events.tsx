@@ -1,12 +1,13 @@
 import { Link } from 'wouter';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Calendar, Trophy, Radio, Medal, ArrowRight, Clock } from 'lucide-react';
+import { Calendar, Trophy, Radio, Medal, ArrowRight, Clock, Info } from 'lucide-react';
 import { getTournaments } from '@/lib/tournaments';
 import { ARCHIVED_TOURNAMENTS, ArchivedTournament, TournamentStatus } from '@/data/tournamentArchive';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 import RunningFlyer from '@/components/RunningFlyer';
+import { toast } from 'sonner';
 
 type LiveTournament = {
   id: string;
@@ -228,7 +229,11 @@ export default function Events() {
         );
       }
       return (
-        <div key={item.id} onClick={() => alert("Registrations are Closed !!")} className="h-full">
+        <div
+          key={item.id}
+          onClick={() => toast.info("Registrations are closed for this tournament.", { icon: <Info className="w-4 h-4" /> })}
+          className="h-full cursor-pointer"
+        >
           {cardContent}
         </div>
       );

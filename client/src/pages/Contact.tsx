@@ -186,7 +186,7 @@ export default function Contact() {
 
                 <div className="flex flex-col sm:flex-row gap-4">
                   <a
-                    href="https://www.instagram.com/iisc.badminton/"
+                    href="https://www.instagram.com/badminton.iisc/"
                     target="_blank"
                     rel="noreferrer"
                   >

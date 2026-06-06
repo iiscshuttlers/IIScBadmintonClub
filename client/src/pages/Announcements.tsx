@@ -341,12 +341,12 @@ export default function Announcements() {
                         📸 Follow on Instagram
                       </p>
                       <a
-                        href="https://www.instagram.com/iisc.badminton/"
+                        href="https://www.instagram.com/badminton.iisc/"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 text-emerald-300 font-bold hover:text-emerald-200 transition-colors text-sm"
                       >
-                        @iisc.badminton →
+                        @badminton.iisc →
                       </a>
                     </div>
                   </div>
