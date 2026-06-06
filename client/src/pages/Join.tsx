@@ -9,16 +9,17 @@ import { ADMIN_EMAILS } from "@/lib/admin";
 
 type Mode = "welcome" | "signin" | "signup" | "otp-email" | "otp-verify";
 
-const IISC_DOMAIN = "@iisc.ac.in";
+// Validation removed to allow any email domain
 
-function validateEmail(email: string) {
-  // Relaxed validation: check for domain but allow admin bypass
-  if (!email.toLowerCase().endsWith(IISC_DOMAIN) && !ADMIN_EMAILS.includes(email.toLowerCase())) {
-    return `Please use your ${IISC_DOMAIN} email address.`;
-  }
-  return null;
+function getPasswordStrength(pwd: string) {
+  let score = 0;
+  if (!pwd) return 0;
+  if (pwd.length >= 8) score += 1;
+  if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) score += 1;
+  if (/[0-9]/.test(pwd)) score += 1;
+  if (/[^A-Za-z0-9]/.test(pwd)) score += 1;
+  return score;
 }
-
 
 export default function Join() {
   const [, setLocation] = useLocation();
@@ -103,8 +104,6 @@ export default function Join() {
   /* ── Sign Up ────────────────────────────────────────────── */
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    const err = validateEmail(email);
-    if (err) { setErrorMsg(err); return; }
     if (password.length < 8) { setErrorMsg("Password must be at least 8 characters."); return; }
     if (password !== confirm) { setErrorMsg("Passwords do not match."); return; }
     setLoading(true); setErrorMsg("");
@@ -147,8 +146,6 @@ export default function Join() {
   /* ── OTP Send ───────────────────────────────────────────── */
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    const err = validateEmail(email);
-    if (err) { setErrorMsg(err); return; }
     setLoading(true); setErrorMsg("");
     try {
       const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
@@ -359,6 +356,32 @@ export default function Join() {
                       {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
+                  {password && (
+                    <div className="mt-2.5">
+                      <div className="flex gap-1.5 mb-1.5">
+                        {[1, 2, 3, 4].map((level) => {
+                          const strength = getPasswordStrength(password);
+                          let color = 'bg-slate-200 dark:bg-slate-700';
+                          if (level <= strength) {
+                            if (strength <= 1) color = 'bg-rose-500';
+                            else if (strength === 2) color = 'bg-orange-500';
+                            else if (strength === 3) color = 'bg-amber-500';
+                            else color = 'bg-emerald-500';
+                          }
+                          return <div key={level} className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${color}`} />
+                        })}
+                      </div>
+                      <p className="text-right text-[10px] font-bold uppercase tracking-wider">
+                        {(() => {
+                           const s = getPasswordStrength(password);
+                           if (s <= 1) return <span className="text-rose-500">Weak</span>;
+                           if (s === 2) return <span className="text-orange-500">Fair</span>;
+                           if (s === 3) return <span className="text-amber-500">Good</span>;
+                           return <span className="text-emerald-500">Strong</span>;
+                        })()}
+                      </p>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Confirm Password</label>

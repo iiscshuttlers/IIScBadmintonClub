@@ -31,9 +31,9 @@ export const ARCHIVED_TOURNAMENTS: ArchivedTournament[] = [
     type: 'special',
     startDate: '2026-05-09',
     name: 'Farewell Badminton Tournament 2026',
-    subtitle: 'Archived Results',
+    subtitle: 'Official Results',
     description:
-      'Archived results from the farewell tournament featuring singles, doubles and mixed doubles.',
+      'Final results from the farewell tournament featuring singles, doubles and mixed doubles.',
     winners: [
       { category: "Men's Singles", winner: 'Jalaj (RBCCPS)' },
       {
@@ -49,7 +49,6 @@ export const ARCHIVED_TOURNAMENTS: ArchivedTournament[] = [
     highlights: [
       'Farewell event for the outgoing batch.',
       'Championship matches covered singles, doubles and mixed doubles.',
-      'Results archived for future club records.',
     ],
   },
   {
@@ -139,13 +138,15 @@ export const ARCHIVED_TOURNAMENTS: ArchivedTournament[] = [
     slug: 'iism-2025',
     status: 'completed',
     type: 'team',
-    startDate: '2025-12-15',
-    name: 'IISM 2025 (IIT Kanpur)',
+    startDate: '2025-12',
+    name: 'IISM 2025 (NISER Bhubaneswar)',
     subtitle: 'Inter-IISER Sports Meet',
-    description: 'IISc Shuttlers represented the institute at the Inter-IISER Sports Meet 2025 hosted by IIT Kanpur. Results are pending archive entry.',
+    description: 'IISc Shuttlers dominated IISM 2025 hosted by NISER Bhubaneswar, winning Gold in all three categories — Men\'s Singles/Doubles, Women\'s Singles/Doubles, and Mixed Doubles.',
     highlights: [
-      'Strong representation from IISc.',
-      'Check the gallery for match photos.'
+      'Gold medal — Men\'s category.',
+      'Gold medal — Women\'s category.',
+      'Gold medal — Mixed category.',
+      'IISc swept all three categories at IISM 2025.',
     ],
   },
   {
@@ -153,27 +154,14 @@ export const ARCHIVED_TOURNAMENTS: ArchivedTournament[] = [
     slug: 'iism-2024',
     status: 'completed',
     type: 'team',
-    startDate: '2024-12-10',
+    startDate: '2024-12',
     name: 'IISM 2024 (IISER Pune)',
     subtitle: 'Inter-IISER Sports Meet',
-    description: 'IISc Shuttlers represented the institute at the Inter-IISER Sports Meet 2024 hosted by IISER Pune. Results are pending archive entry.',
+    description: 'IISc Shuttlers competed at IISM 2024 hosted by IISER Pune, winning Gold in Men\'s and Women\'s categories and finishing 4th in Mixed Doubles.',
     highlights: [
-      'Strong representation from IISc.',
-      'Check the gallery for match photos.'
-    ],
-  },
-  {
-    id: 'bpl-2024',
-    slug: 'bpl-2024',
-    status: 'completed',
-    type: 'open',
-    startDate: '2024',
-    name: 'BPL 2024',
-    subtitle: 'Badminton Premier League',
-    description: 'The premier franchise-based badminton league at IISc. Historical records are currently being compiled.',
-    highlights: [
-      'Franchise-based team tournament.',
-      'Check the gallery for action shots.'
+      'Gold medal — Men\'s category.',
+      'Gold medal — Women\'s category.',
+      '4th place — Mixed Doubles.',
     ],
   },
 ];

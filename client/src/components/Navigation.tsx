@@ -6,30 +6,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { useTheme } from '@/contexts/ThemeContext';
 import { useNavigationAuth } from '@/hooks/useNavigationAuth';
 
-const navGroups = [
-  {
-    label: 'About',
-    links: [
-      { href: '/about', label: 'About Us' },
-      { href: '/facilities', label: 'Facilities' },
-    ],
-  },
-  {
-    label: 'Events',
-    links: [
-      { href: '/events', label: 'All Events' },
-      { href: '/invicta', label: 'INVICTA' },
-      { href: '/winners', label: 'Winners Wall' },
-    ],
-  },
-  {
-    label: 'Community',
-    links: [
-      { href: '/players', label: 'Players' },
-      { href: '/announcements', label: 'Announcements' },
-      { href: '/gallery', label: 'Gallery' },
-    ],
-  },
+const TOP_LEVEL_LINKS = [
+  { href: '/events', label: 'Events' },
+  { href: '/players', label: 'Players' },
+  { href: '/winners', label: 'Winners Wall' },
+  { href: '/announcements', label: 'Announcements' },
+  { href: '/gallery', label: 'Gallery' },
 ];
 
 export default function Navigation() {
@@ -67,7 +49,7 @@ export default function Navigation() {
   };
 
   return (
-    <nav className={`sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b-[3px] border-emerald-500 transition-all duration-300 ${scrolled ? 'shadow-xl' : 'shadow-sm'}`}>
+    <nav className={`sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b-[3px] border-emerald-500 transition-all duration-300 ${scrolled && !isOpen ? 'shadow-xl' : 'shadow-sm'}`}>
       <div className={`container mx-auto px-4 transition-all duration-300 ${scrolled ? 'py-2' : 'py-3'}`}>
         <div className="flex justify-between items-center">
 
@@ -85,64 +67,50 @@ export default function Navigation() {
             </div>
           </Link>
 
-          {/* Desktop Navigation — large screens only */}
-          <div className="hidden lg:flex gap-1 items-center">
-            {/* Standalone: Home */}
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex gap-2 items-center">
+            {/* Home Link */}
             <Link href="/">
               <Button
                 variant="ghost"
-                className={`transition-colors ${
+                className={`transition-colors font-bold rounded-xl ${
                   isActive('/')
-                    ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950 font-semibold'
-                    : 'text-blue-900 dark:text-slate-200 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950'
+                    ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950'
+                    : 'text-slate-700 dark:text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/50'
                 }`}
               >
                 Home
               </Button>
             </Link>
 
-            {/* Grouped dropdowns */}
-            {navGroups.map((group) => (
-              <DropdownMenu key={group.label}>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className={`transition-colors flex items-center gap-1 ${
-                      group.links.some(l => isActive(l.href))
-                        ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950 font-semibold'
-                        : 'text-blue-900 dark:text-slate-200 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950'
-                    }`}
-                  >
-                    {group.label}
-                    <ChevronDown className="w-3.5 h-3.5 opacity-60" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-44 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl">
-                  {group.links.map(link => (
-                    <Link key={link.href} href={link.href}>
-                      <DropdownMenuItem className={`cursor-pointer font-medium focus:bg-slate-50 dark:focus:bg-slate-800 ${isActive(link.href) ? 'text-emerald-600' : ''}`}>
-                        {link.label}
-                      </DropdownMenuItem>
-                    </Link>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+            {/* Top-Level Links */}
+            {TOP_LEVEL_LINKS.map((link) => (
+              <Link key={link.href} href={link.href}>
+                <Button
+                  variant="ghost"
+                  className={`transition-colors font-bold rounded-xl ${
+                    isActive(link.href)
+                      ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950'
+                      : 'text-slate-700 dark:text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/50'
+                  }`}
+                >
+                  {link.label}
+                </Button>
+              </Link>
             ))}
 
-            {/* Standalone: Contact */}
-            <Link href="/contact">
-              <Button
-                variant="ghost"
-                className={`transition-colors ${
-                  isActive('/contact')
-                    ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950 font-semibold'
-                    : 'text-blue-900 dark:text-slate-200 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950'
-                }`}
-              >
-                Contact
+            {/* Direct link for Upcoming Tournament */}
+            <Link href="/invicta">
+              <Button variant="outline" className="border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 font-bold px-4 py-2 rounded-xl h-10 flex items-center gap-2 transition-all ml-2 shadow-sm">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                INVICTA 2026
               </Button>
             </Link>
-            <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1" />
+
+            <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-2" />
             {authLoading ? (
               <div className="w-24 h-9 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />
             ) : isLoggedIn ? (
@@ -215,49 +183,24 @@ export default function Navigation() {
                 </Button>
               </Link>
             )}
-            <DarkModeToggle />
-          </div>
-
-          {/* Mobile + Tablet: Dark toggle + Hamburger */}
-          <div className="lg:hidden flex items-center gap-1">
-            <DarkModeToggle />
-            <button
-              className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors flex-shrink-0"
-              onClick={() => setIsOpen(!isOpen)}
-              aria-label="Toggle menu"
-            >
-              {isOpen ? (
-                <X className="w-6 h-6 text-blue-900 dark:text-white" />
-              ) : (
-                <Menu className="w-6 h-6 text-blue-900 dark:text-white" />
-              )}
-            </button>
           </div>
         </div>
 
         {/* Mobile Dropdown */}
         {isOpen && (
-          <div className="lg:hidden mt-4 pb-4 border-t border-gray-200 dark:border-slate-700 pt-4 animate-in fade-in slide-in-from-top-2">
-            <div className="flex flex-col gap-1">
-              {/* Flat list of all links for mobile */}
-              {[
-                { href: '/', label: 'Home' },
-                ...navGroups.flatMap(g => g.links),
-                { href: '/contact', label: 'Contact' },
-              ].map((link) => (
+          <div className="lg:hidden absolute top-full left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-xl max-h-[85vh] overflow-y-auto">
+            <div className="container mx-auto px-4 py-4 flex flex-col gap-2">
+              <Link href="/">
+                <Button variant="ghost" className={`w-full justify-start text-lg py-6 ${isActive('/') ? 'text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-900/30' : ''}`}>Home</Button>
+              </Link>
+              {TOP_LEVEL_LINKS.map((link) => (
                 <Link key={link.href} href={link.href}>
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start transition-colors ${
-                      isActive(link.href)
-                        ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950 font-semibold'
-                        : 'text-blue-900 dark:text-slate-200 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950'
-                    }`}
-                  >
+                  <Button variant="ghost" className={`w-full justify-start text-lg py-6 ${isActive(link.href) ? 'text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-900/30' : 'text-slate-600 dark:text-slate-400'}`}>
                     {link.label}
                   </Button>
                 </Link>
               ))}
+              
               <div className="pt-1 border-t border-slate-100 dark:border-slate-800">
                 {authLoading ? (
                   <div className="h-10 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />

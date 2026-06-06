@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Sword, Trophy, Loader2, Users, User, Plus, Minus, Clock, Lock } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { isAdminEmail } from "@/lib/admin";
+import { toast } from "sonner";
 
 interface Player {
   id: string;
@@ -176,7 +177,7 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
         }
       }
 
-      alert(matchCategory === "friendly" 
+      toast.success(matchCategory === "friendly" 
         ? "Match submitted! Waiting for opponent to confirm." 
         : "Tournament match logged! Waiting for opponent to confirm.");
       onSuccess();

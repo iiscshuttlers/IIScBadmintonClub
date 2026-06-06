@@ -109,7 +109,7 @@ Used for club notices such as:
 - court maintenance
 - registrations open
 - tournament dates
-- WhatsApp updates
+- Instagram updates
 
 ### How to Edit
 Open the JSON file and edit entries.

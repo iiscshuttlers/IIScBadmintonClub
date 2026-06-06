@@ -4,7 +4,6 @@ import { Mail, MapPin, ExternalLink } from 'lucide-react';
 export default function Footer() {
   const quickLinks = [
     { href: '/', label: 'Home' },
-    { href: '/about', label: 'About' },
     { href: '/facilities', label: 'Facilities' },
     { href: '/events', label: 'Events' },
     { href: '/winners', label: 'Winners Wall' },

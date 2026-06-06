@@ -263,7 +263,7 @@
 .marquee-anim {
   display: flex;
   width: max-content;
-  animation: marquee 25s linear infinite;
+  animation: marquee 90s linear infinite;
 }
 
 @keyframes marquee {

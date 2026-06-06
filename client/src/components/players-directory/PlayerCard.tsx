@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Share2, Pencil, Trash2, Sword } from "lucide-react";
+import { toast } from "sonner";
 
 export interface Player {
   id: string;
@@ -66,7 +67,7 @@ export function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, o
     if (navigator.share) {
       navigator.share({ title: player.full_name, url }).catch(() => {});
     } else {
-      navigator.clipboard.writeText(url).then(() => alert("Profile link copied!")).catch(() => {});
+      navigator.clipboard.writeText(url).then(() => toast.success("Profile link copied!")).catch(() => {});
     }
   };
 

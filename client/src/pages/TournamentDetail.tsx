@@ -1,6 +1,7 @@
 import { Link, useRoute } from 'wouter';
 import { ArrowLeft, Medal, Trophy, GitBranch, Calendar, CheckCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { getArchivedTournament } from '@/data/tournamentArchive';
 import { motion } from 'framer-motion';
 
@@ -80,13 +81,22 @@ export default function TournamentDetail() {
 
       <section className="container mx-auto px-4 py-12 max-w-6xl space-y-8">
 
-        {/* Back link */}
-        <Link href="/events">
-          <span className="inline-flex items-center gap-2 text-sm font-bold text-emerald-600 dark:text-emerald-400 hover:gap-3 transition-all duration-200">
-            <ArrowLeft className="w-4 h-4" />
-            Back to Events
-          </span>
-        </Link>
+        {/* Breadcrumbs */}
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/">Home</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/events">Events</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{tournament.name}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
 
         <div className="grid lg:grid-cols-[1.5fr_0.7fr] gap-8 items-start">
 

@@ -53,7 +53,6 @@ function UpdateDialog({ info, onDismiss }: { info: AppUpdateInfo; onDismiss: () 
 
 // Eagerly loaded (small, always needed)
 import Home from './pages/Home';
-import About from './pages/About';
 import Facilities from './pages/Facilities';
 import Events from './pages/Events';
 import Contact from './pages/Contact';
@@ -152,7 +151,6 @@ function AppRoutes() {
         <Suspense fallback={<PageSkeleton />}>
           <Switch>
             <Route path="/" component={Home} />
-            <Route path="/about" component={About} />
             <Route path="/facilities" component={Facilities} />
 
             <Route path="/admin" component={SiteAdmin} />

@@ -1,6 +1,6 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { fetchSiteData } from "@/lib/siteData";
-import { AnimatePresence, motion } from "framer-motion";
+import { Link } from "wouter";
 
 type Holiday = { date: string; name: string };
 type Event = {
@@ -9,115 +9,129 @@ type Event = {
   link: string;
   registrationDeadline?: string;
 };
+type Announcement = {
+  title: string;
+  date?: string;
+  startDate?: string;
+  endDate?: string;
+  category: string;
+  priority?: string;
+};
 
-type Message = {
+type BannerMessage = {
   text: string;
-  level: 'closed' | 'warning' | 'info';
+  colorClass: string;
 };
 
-const LEVEL_STYLES: Record<Message['level'], string> = {
-  closed:  'bg-red-600 dark:bg-red-700 text-white',
-  warning: 'bg-amber-500 dark:bg-amber-600 text-white',
-  info:    'bg-blue-600 dark:bg-blue-700 text-white',
-};
+function getActiveAnnouncements(announcements: Announcement[]): string[] {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return announcements
+    .filter((item) => {
+      if (item.startDate && item.endDate) {
+        const start = new Date(item.startDate);
+        const end = new Date(item.endDate);
+        if (today >= start && today <= end) return true;
+      }
+      if (item.date) {
+        const date = new Date(item.date);
+        const diff = (today.getTime() - date.getTime()) / (1000 * 3600 * 24);
+        // Show announcements from the last 30 days or future ones up to 14 days
+        return diff >= -14 && diff <= 30;
+      }
+      return false;
+    })
+    .filter((item) => item.category === 'tournament' || item.priority === 'high')
+    .map((item) => `🏸 ${item.title}`);
+}
 
 export default function StatusBanner() {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [index, setIndex] = useState(0);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const todayDate = new Date();
-  const today = todayDate.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
-  const tomorrowDate = new Date(todayDate);
-  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
-  const tomorrow = tomorrowDate.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+  const [messages, setMessages] = useState<BannerMessage[]>([]);
 
   useEffect(() => {
     Promise.all([
-      fetchSiteData<Holiday[]>("holidays", "holidays.json"),
-      fetchSiteData<Event[]>("events", "events.json"),
-    ]).then(([holidays, events]) => {
-      const msgs: Message[] = [];
+      fetchSiteData<Holiday[]>("holidays", "holidays.json").catch(() => []),
+      fetchSiteData<Event[]>("events", "events.json").catch(() => []),
+      fetchSiteData<{ recent: Announcement[] }>("announcements", "announcements.json").catch(() => ({ recent: [] }))
+    ]).then(([holidaysData, eventsData, announcementsData]) => {
+      
+      const holidays = Array.isArray(holidaysData) ? holidaysData : [];
+      const events = Array.isArray(eventsData) ? eventsData : [];
+      const announcements = Array.isArray(announcementsData?.recent) ? announcementsData.recent : [];
 
+      const todayDate = new Date();
+      const today = todayDate.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+      const tomorrowDate = new Date(todayDate);
+      tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+      const tomorrow = tomorrowDate.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+
+      const msgs: BannerMessage[] = [];
+
+      // 1. Holidays
       const todayHoliday = holidays.find((h: Holiday) => h.date === today);
       const tomorrowHoliday = holidays.find((h: Holiday) => h.date === tomorrow);
 
       if (todayHoliday) {
-        msgs.push({ text: `🔴 Courts closed today — ${todayHoliday.name}`, level: 'closed' });
-      }
-      if (tomorrowHoliday) {
-        msgs.push({ text: `⚠️ Courts closed tomorrow — ${tomorrowHoliday.name}`, level: 'warning' });
+        msgs.push({ text: `🔴 Courts closed today — ${todayHoliday.name}`, colorClass: "text-red-300 font-bold drop-shadow-md" });
+      } else if (tomorrowHoliday) {
+        msgs.push({ text: `⚠️ Courts closed tomorrow — ${tomorrowHoliday.name}`, colorClass: "text-amber-300 font-bold drop-shadow-md" });
       }
 
       holidays.forEach((h: Holiday) => {
+        if (!h.date) return;
         if (h.date !== today && h.date !== tomorrow) {
           const diff = (new Date(h.date).getTime() - new Date(today).getTime()) / (1000 * 3600 * 24);
-          if (diff > 1 && diff <= 3) {
+          if (diff === 2) {
             const readable = new Date(h.date).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
-            msgs.push({ text: `📅 Courts closed on ${readable} — ${h.name}`, level: 'warning' });
+            msgs.push({ text: `📅 Courts closed on ${readable} — ${h.name}`, colorClass: "text-white" });
           }
         }
       });
 
+      // 2. Events
       events.forEach((e: Event) => {
+        if (!e.date) return;
         const diff = (new Date(e.date).getTime() - new Date(today).getTime()) / (1000 * 3600 * 24);
         if (diff >= 0 && diff <= 7) {
-          msgs.push({ text: `🎉 Upcoming: ${e.title}`, level: 'info' });
+          msgs.push({ text: `🎉 Upcoming: ${e.title}`, colorClass: "text-white" });
         }
         if (e.registrationDeadline === today) {
-          msgs.push({ text: `⚡ Last day to register — ${e.title}`, level: 'warning' });
+          msgs.push({ text: `⚡ Last day to register — ${e.title}`, colorClass: "text-white" });
         }
       });
 
-      setMessages(msgs);
-      setIndex(0);
+      // 3. Announcements
+      const liveAnnouncements = getActiveAnnouncements(announcements);
+      liveAnnouncements.forEach(a => msgs.push({ text: a, colorClass: "text-white" }));
+
+      if (msgs.length > 0) {
+        setMessages(msgs);
+      } else {
+        setMessages([{ text: '🏸 Welcome to IISc Badminton Club — Check Announcements for latest updates', colorClass: "text-white" }]);
+      }
+
     }).catch(err => console.warn("StatusBanner data fetch failed:", err));
   }, []);
 
-  useEffect(() => {
-    if (messages.length <= 1) return;
-    timerRef.current = setInterval(() => {
-      setIndex(prev => (prev + 1) % messages.length);
-    }, 4500);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [messages]);
-
   if (!messages.length) return null;
 
-  const current = messages[index];
-  const bgClass = LEVEL_STYLES[current.level];
-
   return (
-    <div
-      className={`relative overflow-hidden py-2.5 text-center text-sm font-semibold transition-colors duration-500 ${bgClass}`}
-      role="status"
-      aria-live="polite"
-      aria-atomic="true"
-    >
-      {/* Subtle animated bar at bottom */}
-      <div className="absolute bottom-0 left-0 h-0.5 w-full bg-white/20" />
-      <div
-        className="absolute bottom-0 left-0 h-0.5 bg-white/40 transition-all duration-[4500ms] ease-linear"
-        style={{ width: messages.length > 1 ? '100%' : '0%', transitionProperty: messages.length > 1 ? 'width' : 'none' }}
-      />
-
-      <AnimatePresence mode="wait">
-        <motion.span
-          key={index}
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.25 }}
-          className="inline-block"
-        >
-          {current.text}
-          {messages.length > 1 && (
-            <span className="ml-2 text-white/50 text-xs" aria-hidden="true">
-              {index + 1}/{messages.length}
+    <div className="relative bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-2.5 overflow-hidden flex items-center z-20 shadow-md">
+      <Link href="/announcements" className="flex-1 overflow-hidden min-w-0">
+        <div className="marquee-anim flex gap-8 font-semibold tracking-wide text-sm md:text-base whitespace-nowrap hover:opacity-90 transition-opacity cursor-pointer">
+          {Array(2).fill(null).map((_, blockIdx) => (
+            <span key={blockIdx} className="whitespace-nowrap flex items-center gap-8">
+              {Array(10).fill(messages).flat().map((msg, idx) => (
+                <span key={`${blockIdx}-${idx}`} className="flex items-center gap-8">
+                  <span className={msg.colorClass}>{msg.text}</span>
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-white/40 flex-shrink-0" />
+                </span>
+              ))}
             </span>
-          )}
-        </motion.span>
-      </AnimatePresence>
+          ))}
+        </div>
+      </Link>
     </div>
   );
 }

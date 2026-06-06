@@ -1,4 +1,5 @@
 import { Link } from 'wouter';
+import { motion, type Variants } from 'framer-motion';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Calendar, Trophy, Radio, Medal, ArrowRight, Clock, Info } from 'lucide-react';
@@ -6,8 +7,47 @@ import { getTournaments } from '@/lib/tournaments';
 import { ARCHIVED_TOURNAMENTS, ArchivedTournament, TournamentStatus } from '@/data/tournamentArchive';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useAutoRefresh } from '@/hooks/useAutoRefresh';
-import RunningFlyer from '@/components/RunningFlyer';
 import { toast } from 'sonner';
+import ScheduleCalendar from './ScheduleCalendar';
+import Invicta from './Invicta';
+
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 28 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
+};
+
+const stagger: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.1 } },
+};
+
+const UPCOMING_MILESTONE = {
+  year: 'Jun 2026',
+  title: 'INVICTA 2026',
+  desc: 'IISc\'s flagship open badminton tournament — MS, WS, MD, WD & XD categories. Running 1st–21st June at Gymkhana Courts.',
+  icon: '🔜',
+  color: 'border-emerald-400',
+  upcoming: true,
+};
+
+const MILESTONES = [
+  UPCOMING_MILESTONE,
+  ...[...ARCHIVED_TOURNAMENTS]
+    .sort((a, b) => b.startDate.localeCompare(a.startDate))
+    .slice(0, 5)
+    .map((t, i) => {
+      const icons = ['🏆', '🥇', '🏅', '🎓', '⭐'];
+      const colors = ['border-amber-400', 'border-emerald-500', 'border-blue-500', 'border-purple-500', 'border-orange-400'];
+      return {
+        year: t.startDate,
+        title: t.name,
+        desc: t.description,
+        icon: icons[i] ?? '🏸',
+        color: colors[i] ?? 'border-slate-400',
+        upcoming: false,
+      };
+    }),
+];
 
 type LiveTournament = {
   id: string;
@@ -249,7 +289,6 @@ export default function Events() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      <RunningFlyer />
       <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-emerald-950 text-white py-24 relative overflow-hidden">
         <div className="absolute inset-0 hero-pattern" />
         <div className="container mx-auto px-4 text-center relative z-10">
@@ -269,7 +308,77 @@ export default function Events() {
         </div>
       </section>
 
+      {/* ── 1. Match Calendar ───────────────────────────────────────────── */}
+      <ScheduleCalendar />
+
+      {/* ── 2. Upcoming Featured: INVICTA 2026 ────────────────────────── */}
+      <Invicta />
+
+      {/* ── Tournament History ───────────────────────────────────────────── */}
+      <section className="py-20 bg-white dark:bg-slate-900">
+        <div className="container mx-auto px-4">
+          <motion.div
+            className="text-center mb-14"
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+          >
+            <div className="flex items-center justify-center gap-3 mb-3">
+              <div className="w-2 h-8 bg-gradient-to-b from-purple-500 to-indigo-600 rounded-full" />
+              <h2 className="text-3xl font-black text-blue-900 dark:text-white" style={{ fontFamily: 'Playfair Display, serif' }}>
+                Tournament History
+              </h2>
+            </div>
+            <p className="text-gray-500 dark:text-slate-400">Key moments from recent years</p>
+          </motion.div>
+
+          <div className="max-w-3xl mx-auto">
+            <div className="relative">
+              <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-emerald-500 via-blue-500 to-purple-500 opacity-30" />
+              <div className="space-y-8">
+                {MILESTONES.map((m, i) => (
+                  <motion.div
+                    key={i}
+                    variants={fadeUp}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, margin: '-40px' }}
+                    className="flex gap-5 relative"
+                  >
+                    <div className={`flex-shrink-0 w-12 h-12 rounded-2xl ${m.upcoming ? 'bg-emerald-50 dark:bg-emerald-950/30' : 'bg-white dark:bg-slate-800'} border-2 ${m.color} flex items-center justify-center text-xl shadow-sm z-10`}>
+                      {m.icon}
+                    </div>
+                    <div className={`flex-1 rounded-2xl p-5 hover:shadow-md transition-shadow ${m.upcoming ? 'bg-emerald-50 dark:bg-emerald-950/20 border-2 border-emerald-300 dark:border-emerald-800' : 'bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700'}`}>
+                      <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                        <span className="text-xs font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest">{m.year}</span>
+                        {m.upcoming && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-black uppercase tracking-wider">
+                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                            Upcoming
+                          </span>
+                        )}
+                      </div>
+                      <h3 className={`font-black text-base mb-1 ${m.upcoming ? 'text-emerald-800 dark:text-emerald-300' : 'text-blue-900 dark:text-white'}`}>{m.title}</h3>
+                      <p className="text-gray-600 dark:text-slate-400 text-sm leading-relaxed">{m.desc}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 3. All Tournaments (Live, Upcoming, Completed) ──────────────── */}
       <section className="py-16 container mx-auto px-4 space-y-16">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-2 h-8 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full" />
+          <h2 className="text-3xl font-black text-blue-900 dark:text-white">
+            All Tournaments
+          </h2>
+        </div>
+
         {loading && (
           <div className="grid md:grid-cols-2 gap-8">
             {Array.from({ length: 4 }).map((_, i) => <EventSkeleton key={i} />)}

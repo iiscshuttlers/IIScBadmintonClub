@@ -28,7 +28,7 @@ const faqs = [
   },
   {
     question: 'How do I register for tournaments?',
-    answer: 'Registrations are announced via the WhatsApp group and on this website under Announcements. Join the WhatsApp group via the notice board at the badminton hall.',
+    answer: 'Registrations are announced on this website under Announcements. You can also follow our Instagram page for updates.',
     color: 'border-amber-500',
   },
 ];

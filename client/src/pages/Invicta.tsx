@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Calendar, MapPin, Users, UserCheck, FileText, Upload, X, Loader2, Download, AlertCircle, Clock } from 'lucide-react';
+import { Trophy, Calendar, MapPin, Users, UserCheck, FileText, Upload, X, Loader2, Download, AlertCircle, Clock, ArrowRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { isAdminEmail } from '../lib/admin';
 import { useAuth } from '../contexts/AuthContext';
+import InvictaRegistrationForm from '@/components/InvictaRegistrationForm';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -17,6 +18,7 @@ export default function Invicta() {
   const [loadingFiles, setLoadingFiles] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const mountedRef = useRef(true);
 
   useEffect(() => {
@@ -86,47 +88,14 @@ export default function Invicta() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-
-      {/* Hero */}
-      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-emerald-950 text-white py-24 relative overflow-hidden">
-        <div className="absolute inset-0 hero-pattern" />
-        {/* Decorative glow */}
-        <div className="absolute top-1/4 right-1/4 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/4 w-64 h-64 bg-amber-500/8 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex p-5 rounded-full bg-white/10 border border-white/20 mb-6"
-          >
-            <Trophy className="w-14 h-14 text-amber-400" />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.15 }}
-          >
-            <div className="inline-flex items-center gap-2 bg-amber-400/20 border border-amber-400/30 text-amber-300 px-4 py-2 rounded-full text-sm font-bold mb-5">
-              🏸 Open Tournament
-            </div>
-            <h1
-              className="text-5xl md:text-7xl font-black mb-4 tracking-tight"
-              style={{ fontFamily: 'Playfair Display, serif' }}
-            >
-              INVICTA 2026
-            </h1>
-            <p className="text-emerald-200 text-xl md:text-2xl font-medium max-w-2xl mx-auto">
-              The Ultimate IISc Badminton Showdown
-            </p>
-          </motion.div>
+    <section className="font-sans pb-16 pt-8">
+      <div className="container mx-auto px-4 max-w-5xl space-y-8">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-2 h-8 bg-gradient-to-b from-amber-500 to-orange-600 rounded-full" />
+          <h2 className="text-3xl font-black text-blue-900 dark:text-white">
+            Upcoming: INVICTA 2026
+          </h2>
         </div>
-      </section>
-
-      <div className="container mx-auto px-4 max-w-5xl py-12 space-y-8">
 
         {/* Info cards */}
         <motion.div
@@ -153,27 +122,31 @@ export default function Invicta() {
           ))}
         </motion.div>
 
-        {/* Registrations closed banner */}
-        <motion.div
-          custom={4}
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          className="bg-gradient-to-r from-slate-800 to-slate-900 dark:from-slate-900 dark:to-slate-950 rounded-3xl p-8 text-white text-center relative overflow-hidden border border-slate-700"
-        >
-          <div className="absolute inset-0 hero-pattern opacity-40" />
-          <div className="relative z-10">
-            <div className="inline-flex items-center gap-2 bg-red-500/20 border border-red-500/30 text-red-300 px-4 py-2 rounded-full text-sm font-bold mb-4">
-              <Clock className="w-4 h-4" />
-              Registration Closed
+        {/* Registration CTA / Form */}
+        <motion.div custom={4} variants={fadeUp} initial="hidden" animate="visible">
+          <div className="bg-gradient-to-r from-slate-800 to-slate-900 dark:from-slate-900 dark:to-slate-950 rounded-3xl p-8 text-white text-center relative overflow-hidden border border-slate-700/50">
+              <div className="absolute inset-0 hero-pattern opacity-20" />
+              <div className="relative z-10">
+                <div className="inline-flex items-center gap-2 bg-rose-500/20 border border-rose-500/30 text-rose-300 px-4 py-2 rounded-full text-sm font-bold mb-4">
+                  <Clock className="w-4 h-4" />
+                  Registrations Closed
+                </div>
+                <h2 className="text-2xl md:text-3xl font-black mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>
+                  Registrations are now closed
+                </h2>
+                <p className="text-slate-300 max-w-2xl mx-auto mb-6">
+                  The registration window for INVICTA 2026 has ended. Check back for fixtures and updates below.
+                </p>
+                <a
+                  href="https://forms.cloud.microsoft/r/c82F9mgTv5"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-8 py-4 bg-slate-600 hover:bg-slate-500 text-white rounded-xl font-black transition shadow-xl opacity-70 cursor-not-allowed pointer-events-none"
+                >
+                  Registration Form (Closed) <ArrowRight className="w-5 h-5" />
+                </a>
+              </div>
             </div>
-            <h2 className="text-2xl md:text-3xl font-black mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>
-              Registrations are now closed
-            </h2>
-            <p className="text-slate-400 max-w-2xl mx-auto">
-              The registration deadline (26 May 2026) has passed. Stay tuned for fixtures and match updates below.
-            </p>
-          </div>
         </motion.div>
 
         {/* Notices & Announcements */}
@@ -272,6 +245,6 @@ export default function Invicta() {
           More details regarding fixtures, rules, and schedules will be updated here.
         </p>
       </div>
-    </div>
+    </section>
   );
 }

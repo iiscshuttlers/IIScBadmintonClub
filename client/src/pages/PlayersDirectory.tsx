@@ -13,6 +13,7 @@ import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import LogMatchModal from "@/components/LogMatchModal";
 import { isAdminEmail } from "@/lib/admin";
 import { PlayerCard, type Player, parseWinPct } from "@/components/players-directory/PlayerCard";
+import { LeaderboardSection } from "./Leaderboard";
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -72,10 +73,11 @@ export default function PlayersDirectory() {
   const [loading, setLoading]             = useState(true);
   const [fetchError, setFetchError]       = useState(false);
   const [searchQuery, setSearchQuery]     = useState("");
-  const [levelFilter, setLevelFilter]     = useState("All");
-  const [styleFilter, setStyleFilter]     = useState("All");
+  const [levelFilter, setLevelFilter]         = useState("All");
+  const [departmentFilter, setDepartmentFilter] = useState("All");
   const [showFilters, setShowFilters]     = useState(false);
-  const [sortBy, setSortBy]               = useState<"elo" | "winpct" | "name">("name");
+  const [sortBy, setSortBy]               = useState<"elo" | "winpct" | "name" | "department" | "level">("name");
+  const [activeTab, setActiveTab]         = useState<"directory" | "leaderboard">("directory");
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -275,6 +277,8 @@ export default function PlayersDirectory() {
 
   /* Filter + sort logic */
   const otherPlayers = players.filter((p) => p.user_id !== session?.user?.id);
+  const allDepartments = Array.from(new Set(players.map(p => p.department).filter(Boolean))).sort();
+
   const filteredPlayers = otherPlayers
     .filter((player) => {
       const q = searchQuery.toLowerCase();
@@ -283,15 +287,15 @@ export default function PlayersDirectory() {
         (player.nickname && player.nickname.toLowerCase().includes(q)) ||
         player.department.toLowerCase().includes(q);
       const matchesLevel = levelFilter === "All" || player.playing_level === levelFilter;
-      const matchesStyle =
-        styleFilter === "All" ||
-        player.playing_style?.toLowerCase().includes(styleFilter.toLowerCase());
-      return matchesSearch && matchesLevel && matchesStyle;
+      const matchesDept = departmentFilter === "All" || player.department === departmentFilter;
+      return matchesSearch && matchesLevel && matchesDept;
     })
     .sort((a, b) => {
       if (sortBy === "elo")    return (b.elo_rating ?? 0) - (a.elo_rating ?? 0);
-      if (sortBy === "name")   return a.full_name.localeCompare(b.full_name);
       if (sortBy === "winpct") return (parseWinPct(b.win_loss_record) ?? 0) - (parseWinPct(a.win_loss_record) ?? 0);
+      if (sortBy === "department") return (a.department || "").localeCompare(b.department || "");
+      if (sortBy === "level") return (a.playing_level || "").localeCompare(b.playing_level || "");
+      if (sortBy === "name")   return a.full_name.localeCompare(b.full_name);
       return 0;
     });
 
@@ -520,6 +524,32 @@ export default function PlayersDirectory() {
               </span>
             )}
           </div>
+          
+          {/* View Toggle */}
+          <div className="mt-10 flex justify-center relative z-10">
+            <div className="flex bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20">
+              <button
+                onClick={() => setActiveTab('directory')}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
+                  activeTab === 'directory'
+                    ? 'bg-white text-emerald-700 shadow-md scale-100'
+                    : 'text-white/80 hover:text-white hover:bg-white/10 scale-95'
+                }`}
+              >
+                <Users className="w-4 h-4" /> Directory
+              </button>
+              <button
+                onClick={() => setActiveTab('leaderboard')}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
+                  activeTab === 'leaderboard'
+                    ? 'bg-white text-emerald-700 shadow-md scale-100'
+                    : 'text-white/80 hover:text-white hover:bg-white/10 scale-95'
+                }`}
+              >
+                <Trophy className="w-4 h-4" /> Leaderboard
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -529,8 +559,10 @@ export default function PlayersDirectory() {
         {/* Auth banner */}
         {renderAuthBanner()}
 
-        {/* Search + Filters */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 mb-10 space-y-5">
+        {activeTab === 'directory' ? (
+          <>
+            {/* Search + Filters */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 mb-10 space-y-5">
           <div className="flex flex-col md:flex-row gap-4 items-center">
             <div className="relative w-full md:flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -557,12 +589,14 @@ export default function PlayersDirectory() {
                 <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as "elo" | "winpct" | "name")}
+                  onChange={(e) => setSortBy(e.target.value as any)}
                   className="pl-9 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500 appearance-none cursor-pointer"
                 >
                   <option value="elo">By ELO</option>
                   <option value="winpct">By Win %</option>
                   <option value="name">By Name</option>
+                  <option value="department">By Department</option>
+                  <option value="level">By Level</option>
                 </select>
               </div>
 
@@ -576,7 +610,7 @@ export default function PlayersDirectory() {
               >
                 <SlidersHorizontal className="w-4 h-4" />
                 Filters
-                {(levelFilter !== "All" || styleFilter !== "All") && (
+                {(levelFilter !== "All" || departmentFilter !== "All") && (
                   <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
                 )}
               </button>
@@ -609,22 +643,22 @@ export default function PlayersDirectory() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Playing Style</label>
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Department</label>
                     <select
-                      value={styleFilter}
-                      onChange={(e) => setStyleFilter(e.target.value)}
+                      value={departmentFilter}
+                      onChange={(e) => setDepartmentFilter(e.target.value)}
                       className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500 font-semibold"
                     >
-                      <option value="All">All Styles</option>
-                      <option value="Aggressive">Aggressive</option>
-                      <option value="Defensive">Defensive</option>
-                      <option value="All-round">All-round / Balanced</option>
+                      <option value="All">All Departments</option>
+                      {allDepartments.map(dept => (
+                        <option key={dept} value={dept}>{dept}</option>
+                      ))}
                     </select>
                   </div>
-                  {(levelFilter !== "All" || styleFilter !== "All") && (
+                  {(levelFilter !== "All" || departmentFilter !== "All") && (
                     <div className="sm:col-span-2 flex justify-end">
                       <button
-                        onClick={() => { setLevelFilter("All"); setStyleFilter("All"); }}
+                        onClick={() => { setLevelFilter("All"); setDepartmentFilter("All"); }}
                         className="text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition flex items-center gap-1"
                       >
                         <X className="w-3.5 h-3.5" /> Clear filters
@@ -637,7 +671,7 @@ export default function PlayersDirectory() {
           </AnimatePresence>
 
           {/* Result count */}
-          {(searchQuery || levelFilter !== "All" || styleFilter !== "All") && (
+          {(searchQuery || levelFilter !== "All" || departmentFilter !== "All") && (
             <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
               Showing <span className="text-emerald-600 dark:text-emerald-400">{filteredPlayers.length}</span> of {otherPlayers.length} players
             </p>
@@ -666,7 +700,7 @@ export default function PlayersDirectory() {
           </div>
         ) : filteredPlayers.length > 0 ? (
           <>
-            {(searchQuery || levelFilter !== "All" || styleFilter !== "All") ? null : (
+            {(searchQuery || levelFilter !== "All" || departmentFilter !== "All") ? null : (
               <h2 className="text-xs uppercase tracking-widest font-black text-slate-400 dark:text-slate-500 mb-4 flex items-center gap-2">
                 <Users className="w-4 h-4" /> All Members
               </h2>
@@ -699,11 +733,17 @@ export default function PlayersDirectory() {
               Try adjusting your search or filters.
             </p>
             <button
-              onClick={() => { setSearchQuery(""); setLevelFilter("All"); setStyleFilter("All"); }}
+              onClick={() => { setSearchQuery(""); setLevelFilter("All"); setDepartmentFilter("All"); }}
               className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-bold transition text-xs"
             >
               Reset Filters
             </button>
+          </div>
+        )}
+          </>
+        ) : (
+          <div className="mt-8">
+            <LeaderboardSection players={players as any} />
           </div>
         )}
 

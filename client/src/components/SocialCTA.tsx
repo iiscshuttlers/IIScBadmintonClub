@@ -46,31 +46,13 @@ export function SocialCTA({ variant = 'card', instagramHandle = '@badminton.iisc
       <div className="absolute inset-0 hero-pattern" />
       <div className="relative z-10">
         <h2 className="text-2xl font-black mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>
-          Stay Informed
+          Follow Our Journey
         </h2>
         <p className="text-gray-300 text-sm mb-6 max-w-lg">
-          Tournament updates, court notices, and club news — don't miss a thing.
+          Catch the latest match highlights, event photos, and community moments on our social channels.
         </p>
 
-        <div className="grid sm:grid-cols-2 gap-4 mb-6">
-          <div className="bg-white/10 border border-white/20 rounded-2xl p-5 space-y-1.5">
-            <p className="font-bold text-white text-sm">📱 WhatsApp</p>
-            <p className="text-gray-300 text-xs leading-relaxed">
-              Visit the badminton hall notice board to join the official WhatsApp group.
-            </p>
-          </div>
-          <div className="bg-white/10 border border-white/20 rounded-2xl p-5 space-y-1.5">
-            <p className="font-bold text-white text-sm">📸 Instagram</p>
-            <a
-              href={instagramUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-emerald-300 font-bold hover:text-emerald-200 transition-colors text-xs"
-            >
-              {instagramHandle} →
-            </a>
-          </div>
-        </div>
+
 
         <div className="flex flex-wrap gap-3">
           <a

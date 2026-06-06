@@ -1,22 +1,101 @@
 import { useState, useEffect, useCallback } from "react";
-import { Trash2, Plus, Loader2, UserCheck, UserX, Activity, LogOut, Minus, PlusCircle, Trophy, Search, RefreshCw } from "lucide-react";
+import { Trash2, Plus, Loader2, UserCheck, UserX, Activity, Search, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
-import { db, auth } from "@/lib/firebase";
-import { doc, updateDoc, onSnapshot } from "firebase/firestore";
-import { signInAnonymously, onAuthStateChanged, signOut, User as FirebaseUser } from "firebase/auth";
-import { advanceWinners } from "@/lib/tournamentProgression";
 
 /* -- Shared Types -------------------------------------------------- */
 export type Holiday = { date: string; name: string };
 export type Announcement = { title: string; date?: string; startDate?: string; endDate?: string; category: string; priority?: string; location?: string; contact?: string; content: string; };
-export type EventItem = { date: string; title: string; link: string; registrationDeadline?: string };
+export type EventItem = { date: string; endDate?: string; title: string; link: string; registrationDeadline?: string };
 export type VideoItem = { id: string; title: string; videoId: string; category: string };
 export type Player = { id: string; full_name: string; email?: string; department?: string; is_approved: boolean; created_at: string; stats?: any; iisc_email?: string; contact_number?: string; sr_number?: string; };
+export type SiteConfig = {
+  stats: { members: string; tournaments: string; courts: string; trophies: string; };
+  about: { history: string; mission: string; };
+};
 
 const inputCls = "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500 transition";
 const labelCls = "block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5";
 const cardCls  = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm";
+
+/* ================================================================ */
+/*  File Uploader Helper                                             */
+/* ================================================================ */
+export function FileUploader({ onUpload }: { onUpload: (url: string) => void }) {
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+      const { error } = await supabase.storage.from('invicta_notices').upload(fileName, file);
+      if (error) throw error;
+      const { data } = supabase.storage.from('invicta_notices').getPublicUrl(fileName);
+      onUpload(data.publicUrl);
+      toast.success("File uploaded successfully");
+    } catch (err: any) {
+      toast.error(`Upload failed: ${err.message}`);
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  return (
+    <div className="relative inline-block">
+      <input type="file" onChange={handleUpload} disabled={uploading} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" title="Upload File" />
+      <button type="button" disabled={uploading} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 text-[10px] font-bold transition">
+        {uploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>}
+        {uploading ? "Uploading..." : "Upload File"}
+      </button>
+    </div>
+  );
+}
+
+/* ================================================================ */
+/*  Config Editor (Landing Pages & Stats)                            */
+/* ================================================================ */
+export function ConfigEditor({ data, onChange }: { data: SiteConfig | null; onChange: (d: SiteConfig) => void }) {
+  const d = data || {
+    stats: { members: "350+", tournaments: "20+", courts: "3", trophies: "10+" },
+    about: { history: "", mission: "To foster excellence in badminton through competitive play and community engagement at IISc." }
+  };
+  
+  const updateStats = (field: keyof SiteConfig["stats"], val: string) => onChange({ ...d, stats: { ...d.stats, [field]: val } });
+  const updateAbout = (field: keyof SiteConfig["about"], val: string) => onChange({ ...d, about: { ...d.about, [field]: val } });
+
+  return (
+    <div className="space-y-6">
+      {/* Stats */}
+      <div className={cardCls}>
+        <h3 className="text-lg font-black text-slate-800 dark:text-white mb-4 flex items-center gap-2"><Activity className="w-5 h-5 text-emerald-500" /> Global Stats (Home & About)</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div><label className={labelCls}>Active Members</label><input value={d.stats.members} onChange={e => updateStats("members", e.target.value)} className={inputCls} placeholder="e.g. 350+" /></div>
+          <div><label className={labelCls}>Tournaments</label><input value={d.stats.tournaments} onChange={e => updateStats("tournaments", e.target.value)} className={inputCls} placeholder="e.g. 20+" /></div>
+          <div><label className={labelCls}>Indoor Courts</label><input value={d.stats.courts} onChange={e => updateStats("courts", e.target.value)} className={inputCls} placeholder="e.g. 3" /></div>
+          <div><label className={labelCls}>IISM Trophies</label><input value={d.stats.trophies} onChange={e => updateStats("trophies", e.target.value)} className={inputCls} placeholder="e.g. 10+" /></div>
+        </div>
+      </div>
+
+      {/* About Page */}
+      <div className={cardCls}>
+        <h3 className="text-lg font-black text-slate-800 dark:text-white mb-4 flex items-center gap-2"><UserCheck className="w-5 h-5 text-blue-500" /> About Page Content</h3>
+        <div className="space-y-4">
+          <div>
+            <label className={labelCls}>Our Mission</label>
+            <textarea rows={3} value={d.about.mission} onChange={e => updateAbout("mission", e.target.value)} className={`${inputCls} resize-y`} />
+          </div>
+          <div>
+            <label className={labelCls}>Our History</label>
+            <textarea rows={5} value={d.about.history} onChange={e => updateAbout("history", e.target.value)} className={`${inputCls} resize-y`} placeholder="Write the club's history here. It will appear on the About page." />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 
 /* ================================================================ */
@@ -75,7 +154,7 @@ export function AnnouncementEditor({ data, onChange }: { data: Announcement[]; o
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><label className={labelCls}>Title</label><input value={a.title} onChange={e => update(i, "title", e.target.value)} className={inputCls} placeholder="Announcement title" /></div>
-            <div><label className={labelCls}>Date</label><input type="date" value={a.date || ""} onChange={e => update(i, "date", e.target.value)} className={inputCls} /></div>
+            <div><label className={labelCls}>Publish Date</label><input type="date" value={a.date || ""} onChange={e => update(i, "date", e.target.value)} className={inputCls} /></div>
             <div>
               <label className={labelCls}>Category</label>
               <select value={a.category} onChange={e => update(i, "category", e.target.value)} className={inputCls}>
@@ -89,10 +168,15 @@ export function AnnouncementEditor({ data, onChange }: { data: Announcement[]; o
               </select>
             </div>
             <div><label className={labelCls}>Location</label><input value={a.location || ""} onChange={e => update(i, "location", e.target.value)} className={inputCls} placeholder="Optional" /></div>
-            <div><label className={labelCls}>Start Date</label><input type="date" value={a.startDate || ""} onChange={e => update(i, "startDate", e.target.value)} className={inputCls} /></div>
+            <div><label className={labelCls}>Event Start Date</label><input type="date" value={a.startDate || ""} onChange={e => update(i, "startDate", e.target.value)} className={inputCls} /></div>
+            <div className="sm:col-span-2"><label className={labelCls}>Event End Date</label><input type="date" value={a.endDate || ""} onChange={e => update(i, "endDate", e.target.value)} className={inputCls} /></div>
           </div>
-          <div><label className={labelCls}>Content (HTML)</label>
-            <textarea rows={3} value={a.content} onChange={e => update(i, "content", e.target.value)} className={`${inputCls} resize-y`} placeholder="Supports HTML: <strong>, <br>, <a> tags..." />
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Content</label>
+              <FileUploader onUpload={(url) => update(i, "content", a.content + `\n\n[Download Attachment](${url})`)} />
+            </div>
+            <textarea rows={4} value={a.content} onChange={e => update(i, "content", e.target.value)} className={`${inputCls} resize-y`} placeholder="Write normally! New lines are automatic. You can use markdown: **bold**, *italic*, [Link Text](https://link.com)" />
           </div>
         </div>
       ))}
@@ -112,11 +196,18 @@ export function EventEditor({ data, onChange }: { data: EventItem[]; onChange: (
   return (
     <div className="space-y-3">
       {data.map((e, i) => (
-        <div key={i} className={`${cardCls} grid grid-cols-1 sm:grid-cols-2 gap-3`}>
+        <div key={i} className={`${cardCls} grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3`}>
           <div><label className={labelCls}>Title</label><input value={e.title} onChange={ev => update(i, "title", ev.target.value)} className={inputCls} /></div>
-          <div><label className={labelCls}>Date</label><input type="date" value={e.date} onChange={ev => update(i, "date", ev.target.value)} className={inputCls} /></div>
-          <div><label className={labelCls}>Link</label><input value={e.link} onChange={ev => update(i, "link", ev.target.value)} className={inputCls} placeholder="/events/..." /></div>
-          <div className="flex items-end gap-2">
+          <div><label className={labelCls}>Start Date</label><input type="date" value={e.date} onChange={ev => update(i, "date", ev.target.value)} className={inputCls} /></div>
+          <div><label className={labelCls}>End Date</label><input type="date" value={e.endDate || ""} onChange={ev => update(i, "endDate", ev.target.value)} className={inputCls} placeholder="Optional" /></div>
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Link</label>
+              <FileUploader onUpload={(url) => update(i, "link", url)} />
+            </div>
+            <input value={e.link} onChange={ev => update(i, "link", ev.target.value)} className={inputCls} placeholder="/events/..." />
+          </div>
+          <div className="flex items-end gap-2 lg:col-span-2">
             <div className="flex-1"><label className={labelCls}>Reg. Deadline</label><input type="date" value={e.registrationDeadline || ""} onChange={ev => update(i, "registrationDeadline", ev.target.value)} className={inputCls} /></div>
             <button onClick={() => remove(i)} className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition mb-0.5"><Trash2 className="w-4 h-4" /></button>
           </div>
@@ -192,16 +283,18 @@ export function PlayersManager() {
 
   const approve = async (id: string) => {
     setActionId(id);
-    const { error } = await supabase.from("players").update({ is_approved: true }).eq("id", id);
+    const { data, error } = await supabase.from("players").update({ is_approved: true }).eq("id", id).select();
     if (error) { toast("Approve failed: " + error.message, { icon: "❌" }); }
+    else if (!data || data.length === 0) { toast("Permission Denied", { icon: "❌", description: "Database RLS policy blocked the update." }); }
     else { toast("Player approved!", { icon: "✅" }); setPlayers(p => p.map(pl => pl.id === id ? { ...pl, is_approved: true } : pl)); }
     setActionId(null);
   };
 
   const revoke = async (id: string) => {
     setActionId(id);
-    const { error } = await supabase.from("players").update({ is_approved: false }).eq("id", id);
+    const { data, error } = await supabase.from("players").update({ is_approved: false }).eq("id", id).select();
     if (error) { toast("Revoke failed: " + error.message, { icon: "❌" }); }
+    else if (!data || data.length === 0) { toast("Permission Denied", { icon: "❌", description: "Database RLS policy blocked the update." }); }
     else { toast("Approval revoked.", { icon: "⚠️" }); setPlayers(p => p.map(pl => pl.id === id ? { ...pl, is_approved: false } : pl)); }
     setActionId(null);
   };
@@ -209,8 +302,9 @@ export function PlayersManager() {
   const remove = async (id: string, name: string) => {
     if (!confirm(`Delete player "${name}"? This cannot be undone.`)) return;
     setActionId(id);
-    const { error } = await supabase.from("players").delete().eq("id", id);
+    const { data, error } = await supabase.from("players").delete().eq("id", id).select();
     if (error) { toast("Delete failed: " + error.message, { icon: "❌" }); }
+    else if (!data || data.length === 0) { toast("Permission Denied", { icon: "❌", description: "Database RLS policy blocked the deletion." }); }
     else { toast("Player deleted.", { icon: "🗑️" }); setPlayers(p => p.filter(pl => pl.id !== id)); }
     setActionId(null);
   };
@@ -321,196 +415,141 @@ export function PlayersManager() {
 }
 
 /* ================================================================ */
-/*  Umpire Mode (Firebase-based live scoring)                        */
+/*  Umpire Mode — re-exported from dedicated module                  */
 /* ================================================================ */
-export function UmpireMode() {
-  const [fbUser, setFbUser]         = useState<FirebaseUser | null>(null);
-  const [data, setData]             = useState<any>(null);
-  const [selectedFormat, setFormat] = useState("MS");
-  const [selectedMatchId, setMatchId] = useState("");
-  const [status, setStatus]         = useState("in-progress");
-  const [winner, setWinner]         = useState("");
-  const [scores, setScores]         = useState<{ p1: number; p2: number }[]>([{ p1: 0, p2: 0 }]);
-  const [activeSet, setActiveSet]   = useState(0);
+export { UmpireMode } from "./UmpireMode";
 
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async user => {
-      if (user) {
-        setFbUser(user);
-      } else {
-        try { await signInAnonymously(auth); } catch (err) { console.warn("Firebase anon sign-in failed:", err); }
-      }
-    });
-    return () => unsub();
+/* ================================================================ */
+/*  Registrations Manager                                            */
+/* ================================================================ */
+export function RegistrationsManager() {
+  const [registrations, setRegistrations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<"pending" | "approved" | "rejected" | "all">("pending");
+  const [actionId, setActionId] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("tournament_registrations")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (!error && data) setRegistrations(data);
+    setLoading(false);
   }, []);
 
-  useEffect(() => {
-    if (!fbUser) return;
-    const unsub = onSnapshot(doc(db, "live_data", "tournament"), snap => {
-      if (snap.exists()) setData(snap.data());
-    });
-    return () => unsub();
-  }, [fbUser]);
+  useEffect(() => { load(); }, [load]);
 
-  useEffect(() => {
-    if (!data || !selectedMatchId) { setScores([{ p1: 0, p2: 0 }]); setActiveSet(0); return; }
-    const match = data.matches[selectedFormat]?.find((m: any) => m.Match_ID === selectedMatchId);
-    if (match?.Score_1) {
-      try {
-        const parsed = match.Score_1.split(",").map((s: string) => {
-          const [p1, p2] = s.split("-").map((x: string) => parseInt(x.trim()) || 0);
-          return { p1, p2 };
-        });
-        setScores(parsed.length > 0 ? parsed : [{ p1: 0, p2: 0 }]);
-        setActiveSet(parsed.length - 1);
-      } catch { setScores([{ p1: 0, p2: 0 }]); setActiveSet(0); }
-    } else {
-      setScores([{ p1: 0, p2: 0 }]); setActiveSet(0);
+  const updateStatus = async (id: string, status: "approved" | "rejected") => {
+    setActionId(id);
+    const { error } = await supabase.from("tournament_registrations").update({ status }).eq("id", id);
+    if (error) { toast(`Failed to ${status}: ` + error.message, { icon: "❌" }); }
+    else { 
+      toast(`Registration ${status}.`, { icon: status === 'approved' ? "✅" : "⚠️" }); 
+      setRegistrations(prev => prev.map(r => r.id === id ? { ...r, status } : r));
     }
-    setStatus(match?.Status || "in-progress");
-    setWinner(match?.Winner || "");
-  }, [selectedMatchId, data, selectedFormat]);
-
-  const updateScore = (player: "p1" | "p2", delta: number) => {
-    const next = [...scores];
-    next[activeSet] = { ...next[activeSet], [player]: Math.max(0, next[activeSet][player] + delta) };
-    setScores(next);
+    setActionId(null);
   };
 
-  const pushUpdate = async () => {
-    if (!data || !selectedMatchId) return;
-    const updatedMatches = [...data.matches[selectedFormat]];
-    const idx = updatedMatches.findIndex((m: any) => m.Match_ID === selectedMatchId);
-    if (idx === -1) return;
-    if (status === "completed" && !winner) { toast("Select a winner before saving!", { icon: "⚠️" }); return; }
-    const scoreStr = scores.map(s => `${s.p1}-${s.p2}`).filter((s, i) => s !== "0-0" || scores.length === 1).join(", ");
-    updatedMatches[idx] = { ...updatedMatches[idx], Score_1: scoreStr, Status: status, Winner: status === "completed" ? winner : "" };
-    await updateDoc(doc(db, "live_data", "tournament"), { [`matches.${selectedFormat}`]: updatedMatches, lastUpdated: new Date().toISOString() });
-    if (status === "completed" && winner) {
-      try { await advanceWinners(selectedFormat, selectedMatchId); toast("Score saved & winner advanced!", { icon: "✅" }); }
-      catch { toast("Score saved (auto-advance failed)", { icon: "⚠️" }); }
-      setWinner(""); setMatchId("");
-    } else {
-      toast("Live score pushed!", { icon: "📡" });
-    }
-  };
+  const filtered = registrations.filter(r => filter === "all" || r.status === filter);
 
-  if (!fbUser) return (
+  if (loading) return (
     <div className="flex items-center justify-center py-16">
-      <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 font-bold animate-pulse">
-        <Loader2 className="w-5 h-5 animate-spin" /> Connecting to live data...
-      </div>
+      <div className="w-8 h-8 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin" />
     </div>
   );
-
-  if (!data) return (
-    <div className="flex items-center justify-center py-16">
-      <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 font-bold animate-pulse">
-        <Loader2 className="w-5 h-5 animate-spin" /> Loading live data...
-      </div>
-    </div>
-  );
-
-  const currentMatch = data.matches[selectedFormat]?.find((m: any) => m.Match_ID === selectedMatchId);
-  const p1Name = currentMatch?.Player_1 || currentMatch?.Players_1 || "Player 1";
-  const p2Name = currentMatch?.Player_2 || currentMatch?.Players_2 || "Player 2";
 
   return (
-    <div className="max-w-md mx-auto space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 text-sm font-bold">
-          <Activity className="w-4 h-4 animate-pulse" /> Live as {fbUser.email}
-        </div>
-        <button onClick={() => signOut(auth)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition border border-slate-200 dark:border-slate-700">
-          <LogOut className="w-3.5 h-3.5" /> Sign Out
+    <div className="space-y-4">
+      {/* Stats bar */}
+      <div className="grid grid-cols-4 gap-3">
+        {[
+          { label: "Total", value: registrations.length, color: "bg-blue-50 text-blue-700" },
+          { label: "Pending", value: registrations.filter(r => r.status === 'pending').length, color: "bg-amber-50 text-amber-700" },
+          { label: "Approved", value: registrations.filter(r => r.status === 'approved').length, color: "bg-emerald-50 text-emerald-700" },
+          { label: "Rejected", value: registrations.filter(r => r.status === 'rejected').length, color: "bg-rose-50 text-rose-700" },
+        ].map(s => (
+          <div key={s.label} className={`rounded-2xl p-4 text-center ${s.color}`}>
+            <div className="text-2xl font-black">{s.value}</div>
+            <div className="text-xs font-bold uppercase tracking-wider mt-0.5">{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Filters */}
+      <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+        {(["pending", "approved", "rejected", "all"] as const).map(f => (
+          <button key={f} onClick={() => setFilter(f)}
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition whitespace-nowrap ${filter === f ? "bg-slate-800 text-white" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"}`}>
+            {f.charAt(0).toUpperCase() + f.slice(1)}
+          </button>
+        ))}
+        <button onClick={load} className="ml-auto px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50">
+          <RefreshCw className="w-4 h-4 text-slate-500" />
         </button>
       </div>
 
-      {/* Format selector */}
-      <div className="flex flex-wrap gap-2">
-        {data.formats.map((f: string) => (
-          <button key={f} onClick={() => { setFormat(f); setMatchId(""); }}
-            className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition ${selectedFormat === f ? "bg-emerald-600 text-white shadow-md" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"}`}>
-            {f}
-          </button>
-        ))}
+      {/* List */}
+      <div className="space-y-3">
+        {filtered.length === 0 && (
+          <div className="text-center py-10 text-slate-400 font-medium border-2 border-dashed border-slate-200 rounded-2xl">No registrations found.</div>
+        )}
+        {filtered.map(r => {
+          const busy = actionId === r.id;
+          return (
+            <div key={r.id} className={`${cardCls} flex flex-col md:flex-row gap-4 items-start md:items-center`}>
+              <div className="flex-1 space-y-1 w-full">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-bold text-slate-900 dark:text-white">{r.full_name}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-bold uppercase ${r.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : r.status === 'rejected' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}`}>
+                    {r.status}
+                  </span>
+                </div>
+                <div className="text-sm text-slate-600 dark:text-slate-400">
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">Events:</span> {r.categories.join(', ')}
+                </div>
+                {r.partner_names && Object.keys(r.partner_names).length > 0 && (
+                  <div className="text-sm text-slate-600 dark:text-slate-400">
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">Partners:</span>{' '}
+                    {Object.entries(r.partner_names).map(([cat, name]) => `${cat}: ${name}`).join(' | ')}
+                  </div>
+                )}
+                <div className="text-xs text-slate-500 font-mono mt-1">UPI: {r.transaction_id}</div>
+              </div>
+              
+              <div className="flex items-center gap-2 w-full md:w-auto shrink-0 border-t border-slate-100 dark:border-slate-800 md:border-none pt-3 md:pt-0 mt-2 md:mt-0">
+                <a 
+                  href={supabase.storage.from('invicta_receipts').getPublicUrl(r.receipt_path).data.publicUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="px-3 py-2 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 text-xs font-bold"
+                >
+                  View Receipt
+                </a>
+                
+                {r.status === 'pending' && (
+                  <>
+                    <button onClick={() => updateStatus(r.id, "approved")} disabled={busy}
+                      className="flex-1 md:flex-none px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition disabled:opacity-50">
+                      Approve
+                    </button>
+                    <button onClick={() => updateStatus(r.id, "rejected")} disabled={busy}
+                      className="flex-1 md:flex-none px-3 py-2 rounded-xl bg-rose-100 text-rose-700 hover:bg-rose-200 text-xs font-bold transition disabled:opacity-50">
+                      Reject
+                    </button>
+                  </>
+                )}
+                {r.status === 'rejected' && (
+                  <button onClick={() => updateStatus(r.id, "pending")} disabled={busy}
+                    className="flex-1 md:flex-none px-3 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs font-bold transition disabled:opacity-50">
+                    Re-evaluate
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
-
-      {/* Match selector */}
-      <select value={selectedMatchId} onChange={e => setMatchId(e.target.value)} className={inputCls}>
-        <option value="">— Choose a match to umpire —</option>
-        {data.matches[selectedFormat].map((m: any) => (
-          <option key={m.Match_ID} value={m.Match_ID}>
-            {m.Match_ID}: {m.Player_1 || m.Players_1} vs {m.Player_2 || m.Players_2}
-          </option>
-        ))}
-      </select>
-
-      {selectedMatchId && (
-        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          {/* Set tabs */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            {scores.map((_, idx) => (
-              <button key={idx} onClick={() => setActiveSet(idx)}
-                className={`px-4 py-2 rounded-full font-bold text-sm whitespace-nowrap transition-all ${activeSet === idx ? "bg-blue-600 text-white shadow-md scale-105" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"}`}>
-                Set {idx + 1}
-              </button>
-            ))}
-            {scores.length < 5 && (
-              <button onClick={() => { setScores([...scores, { p1: 0, p2: 0 }]); setActiveSet(scores.length); }}
-                className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 ml-auto">
-                <PlusCircle className="w-5 h-5" />
-              </button>
-            )}
-          </div>
-
-          {/* Scoreboard */}
-          <div className="grid grid-cols-2 gap-4">
-            {([["p1", p1Name], ["p2", p2Name]] as const).map(([player, name]) => (
-              <div key={player} className="space-y-2">
-                <div className="text-center font-bold text-slate-700 dark:text-slate-200 h-10 line-clamp-2 leading-tight text-sm">{name}</div>
-                <button onClick={() => updateScore(player, 1)}
-                  className="w-full aspect-square bg-emerald-50 dark:bg-emerald-950/20 border-2 border-emerald-500 rounded-2xl flex flex-col items-center justify-center text-emerald-700 dark:text-emerald-400 active:bg-emerald-500 active:text-white transition shadow-sm">
-                  <Plus className="w-8 h-8 opacity-50 mb-1" />
-                  <span className="text-6xl font-black">{scores[activeSet][player]}</span>
-                </button>
-                <button onClick={() => updateScore(player, -1)}
-                  className="w-full py-3 bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-500 font-bold flex justify-center active:bg-slate-300 dark:active:bg-slate-700">
-                  <Minus className="w-5 h-5" />
-                </button>
-              </div>
-            ))}
-          </div>
-
-          {/* Status + winner */}
-          <div className="space-y-3">
-            <select value={status} onChange={e => setStatus(e.target.value)} className={inputCls}>
-              <option value="in-progress">🟢 Match is LIVE</option>
-              <option value="completed">🏁 Match Completed</option>
-              <option value="scheduled">📅 Scheduled (Not Started)</option>
-            </select>
-            {status === "completed" && (
-              <div className="p-4 bg-amber-50 dark:bg-amber-950/20 border-2 border-amber-200 dark:border-amber-800 rounded-xl animate-in fade-in duration-300">
-                <label className="flex items-center gap-2 text-xs font-black text-amber-800 dark:text-amber-400 uppercase mb-2">
-                  <Trophy className="w-4 h-4" /> Select Winner
-                </label>
-                <select value={winner} onChange={e => setWinner(e.target.value)} className={inputCls}>
-                  <option value="">Who won?</option>
-                  <option value={p1Name}>{p1Name}</option>
-                  <option value={p2Name}>{p2Name}</option>
-                </select>
-              </div>
-            )}
-          </div>
-
-          <button onClick={pushUpdate}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-5 rounded-2xl font-black text-lg shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2">
-            <Activity className="animate-pulse" /> PUSH TO LIVE
-          </button>
-        </div>
-      )}
     </div>
   );
 }
-
-

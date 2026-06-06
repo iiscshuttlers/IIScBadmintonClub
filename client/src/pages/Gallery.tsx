@@ -113,12 +113,12 @@ export default function Gallery() {
   ];
 
   const subfolders =
-    selectedCategory === 'all'
+    selectedCategory === 'all' && categories.length > 2
       ? []
       : Array.from(
         new Set(
           galleryItems
-            .filter((item) => item.category === selectedCategory && item.subfolder !== '')
+            .filter((item) => (selectedCategory === 'all' || item.category === selectedCategory) && item.subfolder !== '')
             .map((item) => item.subfolder)
         )
       );
@@ -164,26 +164,28 @@ export default function Gallery() {
       <section className="py-16 bg-white dark:bg-slate-950">
         <div className="container mx-auto px-4">
           {/* Main Category Filter */}
-          <div className="flex flex-wrap gap-3 justify-center mb-8">
-            {categories.map((cat) => {
-              const count = cat.id === 'all' ? galleryItems.length : galleryItems.filter(i => i.category === cat.id).length;
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => { setSelectedCategory(cat.id); setSelectedSubfolder('all'); }}
-                  className={`px-6 py-2 rounded-full font-bold transition-all duration-300 flex items-center gap-2 ${selectedCategory === cat.id
-                    ? 'bg-emerald-500 text-white shadow-lg scale-105'
-                    : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  {cat.label}
-                  <span className={`text-xs font-black px-1.5 py-0.5 rounded-full ${selectedCategory === cat.id ? 'bg-white/25' : 'bg-gray-200 dark:bg-slate-700 text-gray-500 dark:text-slate-400'}`}>
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          {categories.length > 2 && (
+            <div className="flex flex-wrap gap-3 justify-center mb-8">
+              {categories.map((cat) => {
+                const count = cat.id === 'all' ? galleryItems.length : galleryItems.filter(i => i.category === cat.id).length;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => { setSelectedCategory(cat.id); setSelectedSubfolder('all'); }}
+                    className={`px-6 py-2 rounded-full font-bold transition-all duration-300 flex items-center gap-2 ${selectedCategory === cat.id
+                      ? 'bg-emerald-500 text-white shadow-lg scale-105'
+                      : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    {cat.label}
+                    <span className={`text-xs font-black px-1.5 py-0.5 rounded-full ${selectedCategory === cat.id ? 'bg-white/25' : 'bg-gray-200 dark:bg-slate-700 text-gray-500 dark:text-slate-400'}`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           {/* Sub-folder Filter */}
           {subfolders.length > 0 && (
@@ -228,16 +230,15 @@ export default function Gallery() {
                 />
 
                 {/* Hover overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-                  <h3 className="text-white font-bold text-sm leading-tight line-clamp-2">
+                <div className="absolute inset-0 bg-black/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center p-4 text-center">
+                  <h3 className="text-white font-black text-xl tracking-wide drop-shadow-md">
                     {item.title}
                   </h3>
                   {item.subfolder && (
-                    <p className="text-white/70 text-xs mt-0.5 italic">{formatText(item.subfolder)}</p>
+                    <p className="text-emerald-300 font-bold text-sm mt-1 uppercase tracking-widest drop-shadow">
+                      {formatText(item.subfolder)}
+                    </p>
                   )}
-                  <Badge className="mt-2 bg-emerald-500/80 text-white border-none text-xs w-fit">
-                    {formatText(item.category)}
-                  </Badge>
                 </div>
               </div>
             ))}
@@ -328,18 +329,18 @@ export default function Gallery() {
             {selectedIndex + 1} / {filteredItems.length}
           </div>
           <button
-            className="absolute top-4 right-4 text-white hover:text-emerald-400 transition-colors p-2"
+            className="absolute top-4 right-2 md:right-4 text-white hover:text-emerald-400 transition-colors p-2 z-50"
             onClick={() => { setSelectedIndex(null); setLightboxSrc(null); }}
             aria-label="Close"
           >
             <X className="w-8 h-8" />
           </button>
           <button
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-white hover:text-emerald-400 transition-colors p-2"
+            className="absolute left-1 md:left-3 top-1/2 -translate-y-1/2 text-white hover:text-emerald-400 transition-colors p-2 z-50"
             onClick={(e) => { e.stopPropagation(); navigate(-1); }}
             aria-label="Previous"
           >
-            <ChevronLeft className="w-10 h-10" />
+            <ChevronLeft className="w-8 h-8 md:w-10 md:h-10" />
           </button>
 
           {lightboxSrc ? (
@@ -347,31 +348,31 @@ export default function Gallery() {
               key={selectedIndex}
               src={lightboxSrc}
               alt={filteredItems[selectedIndex]?.title || ''}
-              className="max-h-[85vh] max-w-[80vw] rounded-lg shadow-2xl object-contain animate-in zoom-in-95 duration-200"
+              className="max-h-[85vh] max-w-[95vw] md:max-w-[85vw] rounded-lg shadow-2xl object-contain animate-in zoom-in-95 duration-200 relative z-40"
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
-            <div className="w-64 h-64 rounded-xl bg-gray-800 animate-pulse" />
+            <div className="w-64 h-64 rounded-xl bg-gray-800 animate-pulse relative z-40" />
           )}
 
           <button
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-white hover:text-emerald-400 transition-colors p-2"
+            className="absolute right-1 md:right-3 top-1/2 -translate-y-1/2 text-white hover:text-emerald-400 transition-colors p-2 z-50"
             onClick={(e) => { e.stopPropagation(); navigate(1); }}
             aria-label="Next"
           >
-            <ChevronRight className="w-10 h-10" />
+            <ChevronRight className="w-8 h-8 md:w-10 md:h-10" />
           </button>
 
-          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 text-center pointer-events-none">
+          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 text-center pointer-events-none w-full px-4 z-50">
             {selectedIndex !== null && (
               <>
-                <p className="text-white text-sm font-semibold">{filteredItems[selectedIndex]?.title}</p>
+                <p className="text-white text-lg md:text-xl font-bold tracking-wide drop-shadow-lg leading-tight">{filteredItems[selectedIndex]?.title}</p>
                 {filteredItems[selectedIndex]?.subfolder && (
-                  <p className="text-white/50 text-xs mt-0.5">
+                  <p className="text-emerald-300 font-medium text-xs md:text-sm mt-1 uppercase tracking-widest drop-shadow">
                     {formatText(filteredItems[selectedIndex].subfolder)}
                   </p>
                 )}
-                <p className="text-white/30 text-xs mt-2 hidden sm:block">
+                <p className="text-white/30 text-[10px] md:text-xs mt-2 hidden sm:block">
                   ← → to navigate &nbsp;·&nbsp; Esc to close
                 </p>
               </>

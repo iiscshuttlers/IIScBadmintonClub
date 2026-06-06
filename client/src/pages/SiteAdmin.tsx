@@ -17,7 +17,8 @@ import {
   signInAnonymously, onAuthStateChanged, signOut, User as FirebaseUser,
 } from "firebase/auth";
 import { advanceWinners } from "@/lib/tournamentProgression";
-import { HolidayEditor, AnnouncementEditor, EventEditor, VideoEditor, PlayersManager, UmpireMode } from "@/components/admin/AdminEditors";
+import { HolidayEditor, AnnouncementEditor, EventEditor, VideoEditor, PlayersManager, UmpireMode, ConfigEditor, RegistrationsManager, type SiteConfig } from "@/components/admin/AdminEditors";
+import { Paintbrush, ClipboardList } from "lucide-react";
 
 /* ── Types ──────────────────────────────────────────────────────── */
 type Holiday = { date: string; name: string };
@@ -33,9 +34,10 @@ type Player = {
   contact_number?: string; sr_number?: string;
 };
 
-type TabId = "holidays" | "announcements" | "events" | "videos" | "players" | "umpire";
+type TabId = "config" | "holidays" | "announcements" | "events" | "videos" | "players" | "umpire" | "registrations";
 
 const TABS: { id: TabId; label: string; icon: any }[] = [
+  { id: "config",        label: "Landing Pages",  icon: Paintbrush },
   { id: "holidays",      label: "Holidays",      icon: Calendar },
   { id: "announcements", label: "Announcements",  icon: Megaphone },
   { id: "events",        label: "Events",         icon: CalendarDays },
@@ -74,11 +76,21 @@ export default function SiteAdmin() {
   const [saving, setSaving]       = useState(false);
   const [loading, setLoading]     = useState(false);
   const [dirty, setDirty]         = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const originals = useRef({
+    holidays: [] as Holiday[],
+    announcements: [] as Announcement[],
+    events: [] as EventItem[],
+    videos: [] as VideoItem[],
+    config: null as SiteConfig | null,
+  });
 
   const [holidays,      setHolidaysRaw]      = useState<Holiday[]>([]);
   const [announcements, setAnnouncementsRaw] = useState<Announcement[]>([]);
   const [events,        setEventsRaw]        = useState<EventItem[]>([]);
   const [videos,        setVideosRaw]        = useState<VideoItem[]>([]);
+  const [config,        setConfigRaw]        = useState<SiteConfig | null>(null);
 
   // Auth gate
   useEffect(() => {
@@ -93,16 +105,18 @@ export default function SiteAdmin() {
   const loadAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [h, a, e, v] = await Promise.all([
+      const [h, a, e, v, c] = await Promise.all([
         loadKey<Holiday[]>("holidays"),
         loadKey<{ recent: Announcement[] }>("announcements"),
         loadKey<EventItem[]>("events"),
         loadKey<VideoItem[]>("videos"),
+        loadKey<SiteConfig>("site_config"),
       ]);
-      if (h) setHolidaysRaw(h);
-      if (a?.recent) setAnnouncementsRaw(a.recent);
-      if (e) setEventsRaw(e);
-      if (v) setVideosRaw(v);
+      if (h) { setHolidaysRaw(h); originals.current.holidays = JSON.parse(JSON.stringify(h)); }
+      if (a?.recent) { setAnnouncementsRaw(a.recent); originals.current.announcements = JSON.parse(JSON.stringify(a.recent)); }
+      if (e) { setEventsRaw(e); originals.current.events = JSON.parse(JSON.stringify(e)); }
+      if (v) { setVideosRaw(v); originals.current.videos = JSON.parse(JSON.stringify(v)); }
+      if (c) { setConfigRaw(c); originals.current.config = JSON.parse(JSON.stringify(c)); }
       setDirty(false);
     } catch (err) {
       toast("Failed to load data", { icon: "❌" });
@@ -118,17 +132,61 @@ export default function SiteAdmin() {
   const setA = (d: Announcement[]) => { setAnnouncementsRaw(d); setDirty(true); };
   const setE = (d: EventItem[])    => { setEventsRaw(d);        setDirty(true); };
   const setV = (d: VideoItem[])    => { setVideosRaw(d);        setDirty(true); };
+  const setC = (d: SiteConfig)     => { setConfigRaw(d);        setDirty(true); };
 
-  const handleSave = async () => {
+  const handleUndo = () => {
+    switch (activeTab) {
+      case "config":        setConfigRaw(JSON.parse(JSON.stringify(originals.current.config))); break;
+      case "holidays":      setHolidaysRaw(JSON.parse(JSON.stringify(originals.current.holidays))); break;
+      case "announcements": setAnnouncementsRaw(JSON.parse(JSON.stringify(originals.current.announcements))); break;
+      case "events":        setEventsRaw(JSON.parse(JSON.stringify(originals.current.events))); break;
+      case "videos":        setVideosRaw(JSON.parse(JSON.stringify(originals.current.videos))); break;
+    }
+    setDirty(false);
+    toast("Changes discarded", { icon: "↩️" });
+  };
+
+  const getDiffView = () => {
+    let oldObj, newObj;
+    switch (activeTab) {
+      case "config":        oldObj = originals.current.config; newObj = config; break;
+      case "holidays":      oldObj = originals.current.holidays; newObj = holidays; break;
+      case "announcements": oldObj = originals.current.announcements; newObj = announcements; break;
+      case "events":        oldObj = originals.current.events; newObj = events; break;
+      case "videos":        oldObj = originals.current.videos; newObj = videos; break;
+    }
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 text-xs font-mono">
+        <div className="flex flex-col">
+          <div className="bg-rose-100 dark:bg-rose-900/40 text-rose-800 dark:text-rose-300 font-bold px-3 py-2 rounded-t-lg border-b border-rose-200 dark:border-rose-800/50">Current Live Version</div>
+          <div className="bg-rose-50/50 dark:bg-rose-950/20 p-4 rounded-b-lg text-slate-700 dark:text-slate-300 whitespace-pre overflow-x-auto border border-rose-100 dark:border-rose-900/30 border-t-0 h-[400px] overflow-y-auto shadow-inner">
+            {JSON.stringify(oldObj, null, 2)}
+          </div>
+        </div>
+        <div className="flex flex-col">
+          <div className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 font-bold px-3 py-2 rounded-t-lg border-b border-emerald-200 dark:border-emerald-800/50">Your New Changes</div>
+          <div className="bg-emerald-50/50 dark:bg-emerald-950/20 p-4 rounded-b-lg text-slate-700 dark:text-slate-300 whitespace-pre overflow-x-auto border border-emerald-100 dark:border-emerald-900/30 border-t-0 h-[400px] overflow-y-auto shadow-inner">
+            {JSON.stringify(newObj, null, 2)}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const handleSave = () => setShowConfirm(true);
+
+  const confirmSave = async () => {
     setSaving(true);
     try {
       switch (activeTab) {
-        case "holidays":      await saveKey("holidays", holidays.filter(h => h.date && h.name)); break;
-        case "announcements": await saveKey("announcements", { recent: announcements.filter(a => a.title) }); break;
-        case "events":        await saveKey("events", events.filter(e => e.title && e.date)); break;
-        case "videos":        await saveKey("videos", videos.filter(v => v.title && v.videoId)); break;
+        case "config":        if (config) { await saveKey("site_config", config); originals.current.config = JSON.parse(JSON.stringify(config)); } break;
+        case "holidays":      await saveKey("holidays", holidays.filter(h => h.date && h.name)); originals.current.holidays = JSON.parse(JSON.stringify(holidays)); break;
+        case "announcements": await saveKey("announcements", { recent: announcements.filter(a => a.title) }); originals.current.announcements = JSON.parse(JSON.stringify(announcements)); break;
+        case "events":        await saveKey("events", events.filter(e => e.title && e.date)); originals.current.events = JSON.parse(JSON.stringify(events)); break;
+        case "videos":        await saveKey("videos", videos.filter(v => v.title && v.videoId)); originals.current.videos = JSON.parse(JSON.stringify(videos)); break;
       }
       setDirty(false);
+      setShowConfirm(false);
       toast("Saved!", { icon: "✅", description: `${activeTab} updated — live instantly.` });
     } catch (err: any) {
       toast("Save failed", { icon: "❌", description: err?.message });
@@ -157,8 +215,9 @@ export default function SiteAdmin() {
     </div>
   );
 
-  const contentTabs: TabId[] = ["holidays", "announcements", "events", "videos"];
-  const counts: Record<TabId, number | null> = {
+  const contentTabs: TabId[] = ["config", "holidays", "announcements", "events", "videos"];
+  const counts: Record<Exclude<TabId, "registrations">, number | null> = {
+    config: null,
     holidays: holidays.length,
     announcements: announcements.length,
     events: events.length,
@@ -191,33 +250,36 @@ export default function SiteAdmin() {
 
       <div className="container mx-auto px-4 py-8 max-w-5xl">
         {/* Tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-none">
-          {TABS.map(tab => {
-            const Icon = tab.icon;
-            const active = activeTab === tab.id;
-            const count = counts[tab.id];
-            return (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-bold whitespace-nowrap transition-all ${
-                  active
-                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/25"
-                    : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-emerald-300"
-                }`}>
-                <Icon className="w-4 h-4" />
-                {tab.label}
-                {count !== null && (
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${active ? "bg-white/20" : "bg-slate-100 dark:bg-slate-800"}`}>
-                    {count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+        <div className="w-full pb-4 mb-4">
+          <div className="flex flex-wrap items-center p-1.5 bg-slate-200/70 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-inner gap-1">
+            {TABS.map(tab => {
+              const Icon = tab.icon;
+              const active = activeTab === tab.id;
+              const count = counts[tab.id];
+              return (
+                <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                  className={`group flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-300 ${
+                    active
+                      ? "bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-700/50"
+                  }`}>
+                  {Icon && <Icon className={`w-4 h-4 transition-colors ${active ? "text-emerald-500" : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300"}`} />}
+                  {tab.label}
+                  {count !== null && (
+                    <span className={`text-[11px] px-2 py-0.5 rounded-full font-black tracking-wide ${active ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400" : "bg-slate-300/60 dark:bg-slate-700 text-slate-500 dark:text-slate-400"}`}>
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Editor */}
         <AnimatePresence mode="wait">
           <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.15 }}>
+            {activeTab === "config"        && <ConfigEditor       data={config}        onChange={setC} />}
             {activeTab === "holidays"      && <HolidayEditor      data={holidays}      onChange={setH} />}
             {activeTab === "announcements" && <AnnouncementEditor data={announcements} onChange={setA} />}
             {activeTab === "events"        && <EventEditor        data={events}        onChange={setE} />}
@@ -232,15 +294,46 @@ export default function SiteAdmin() {
           {dirty && contentTabs.includes(activeTab) && (
             <motion.div
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
-              className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-6 py-3 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-2xl border border-slate-700 dark:border-slate-300">
+              className="sticky bottom-6 mt-8 mx-auto w-max z-50 flex items-center gap-3 px-6 py-3 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-2xl border border-slate-700 dark:border-slate-300">
               <AlertTriangle className="w-4 h-4 text-amber-400 dark:text-amber-600" />
               <span className="text-sm font-bold">Unsaved changes</span>
+              <button onClick={handleUndo} disabled={saving}
+                className="px-4 py-2 rounded-xl text-slate-400 hover:text-white dark:text-slate-500 dark:hover:text-slate-900 text-sm font-bold transition disabled:opacity-50">
+                Undo
+              </button>
               <button onClick={handleSave} disabled={saving}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition disabled:opacity-50">
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition disabled:opacity-50 shadow-md">
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                {saving ? "Saving..." : "Save Now"}
+                {saving ? "Saving..." : "Save Changes"}
               </button>
             </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Confirm Save Modal */}
+        <AnimatePresence>
+          {showConfirm && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white dark:bg-slate-900 w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2 capitalize">
+                    <Save className="w-5 h-5 text-emerald-500" /> Review Changes: {activeTab}
+                  </h2>
+                  <button onClick={() => setShowConfirm(false)} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition"><XCircle className="w-6 h-6" /></button>
+                </div>
+                <div className="p-5 overflow-y-auto">
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">Please double check your changes before confirming. The left side is what is currently live, and the right side is what will be saved.</p>
+                  {getDiffView()}
+                </div>
+                <div className="p-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex justify-end gap-3">
+                  <button onClick={() => setShowConfirm(false)} className="px-5 py-2.5 rounded-xl font-bold text-slate-600 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-800 transition">Keep Editing</button>
+                  <button onClick={confirmSave} disabled={saving} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-500/20 transition disabled:opacity-50">
+                    {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                    {saving ? "Saving..." : "Confirm & Save"}
+                  </button>
+                </div>
+              </motion.div>
+            </div>
           )}
         </AnimatePresence>
       </div>

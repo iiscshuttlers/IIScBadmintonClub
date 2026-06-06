@@ -9,7 +9,53 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { ARCHIVED_TOURNAMENTS } from "@/data/tournamentArchive";
 
+const PREDEFINED_DEPARTMENTS = [
+  "OTHER - Other",
+  "ADMIN - Administration",
+  "UG - Undergraduate Programme",
+  "AE - Aerospace Engineering",
+  "AI - Artificial Intelligence",
+  "AAP - Astronomy and Astrophysics Programme",
+  "BC - Biochemistry",
+  "BE - Bioengineering",
+  "CAOS - Centre for Atmospheric and Oceanic Sciences",
+  "CBR - Centre for Brain Research",
+  "CCT - Centre for Cryogenic Technology",
+  "CDS - Computational and Data Sciences",
+  "CEaS - Centre for Earth Sciences",
+  "CeNSE - Centre for Nano Science and Engineering",
+  "CES - Centre for Ecological Sciences",
+  "CHEP - Centre for High Energy Physics",
+  "CiSTUP - Centre for Infrastructure, Sustainable Transportation and Urban Planning",
+  "CNS - Centre for Neuroscience",
+  "CPDM - Centre for Product Design and Manufacturing",
+  "CPS - Cyber Physical Systems",
+  "CSP - Centre for Society and Policy",
+  "CST - Centre for Sustainable Technologies",
+  "CE - Civil Engineering",
+  "CH - Chemical Engineering",
+  "CSA - Computer Science and Automation",
+  "DBG - Developmental Biology and Genetics",
+  "DESE - Department of Electronic Systems Engineering",
+  "ECE - Electrical Communication Engineering",
+  "EE - Electrical Engineering",
+  "IAP - Instrumentation and Applied Physics",
+  "ICER - Interdisciplinary Centre for Energy Research",
+  "ICWaR - Interdisciplinary Centre for Water Research",
+  "IPC - Inorganic and Physical Chemistry",
+  "MA - Mathematics",
+  "MCB - Microbiology and Cell Biology",
+  "MBU - Molecular Biophysics Unit",
+  "ME - Mechanical Engineering",
+  "MGMT - Management Studies",
+  "MRC - Materials Research Centre",
+  "MTE - Materials Engineering",
+  "OC - Organic Chemistry",
+  "PH - Physics",
+  "SSCU - Solid State and Structural Chemistry Unit"
+];
 const PASSWORD_UPDATE_TIMEOUT_MS = 12_000;
 
 async function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number, message: string): Promise<T> {
@@ -48,6 +94,7 @@ export default function ProfileSetup() {
   const [iiscEmail, setIiscEmail] = useState("");
   const [contactNumber, setContactNumber] = useState("");
   const [department, setDepartment] = useState("");
+  const [customDepartment, setCustomDepartment] = useState("");
   const [joinedYear, setJoinedYear] = useState("");
   const [nationality, setNationality] = useState("");
   const [homeState, setHomeState] = useState("");
@@ -85,13 +132,7 @@ export default function ProfileSetup() {
 
   // Admin-defined Tournaments list & Achievements builder
   const OFFICIAL_TOURNAMENTS = [
-    "Gandhi Cup 2025",
-    "Farewell Badminton Tournament 2026",
-    "SPECTRUM 2026",
-    "Open Tournament 2025",
-    "Open Tournament 2024 (Gandhi Cup)",
-    "INViCTA 2026",
-    "BPL 2026",
+    ...ARCHIVED_TOURNAMENTS.map(t => t.name),
     "Other (Type Custom below)"
   ];
 
@@ -140,8 +181,8 @@ export default function ProfileSetup() {
 
   const addOfficialAchievement = () => {
     const tournamentName = selTournament === "Other (Type Custom below)" ? customTournamentText.trim() : selTournament;
-    if (!tournamentName) {
-      alert("Please type a custom tournament name!");
+    if (selTournament === "Other (Type Custom below)" && customTournamentText.trim() === "") {
+      toast.error("Please type a custom tournament name!");
       return;
     }
     const text = `${selCategory} ${selResult} - ${tournamentName}`;
@@ -243,7 +284,13 @@ export default function ProfileSetup() {
           setNickname(profile.nickname || "");
           setIiscEmail(profile.iisc_email || "");
           setContactNumber(profile.contact_number || "");
-          setDepartment(profile.department || "");
+          if (profile.department && !PREDEFINED_DEPARTMENTS.includes(profile.department) && profile.department !== "OTHER - Other") {
+            setDepartment("OTHER - Other");
+            setCustomDepartment(profile.department);
+          } else {
+            setDepartment(profile.department || "");
+            setCustomDepartment("");
+          }
           setJoinedYear(profile.joined_year?.toString() || "");
           setPlayingLevel(profile.playing_level || "Intermediate");
           setPlayingStyle(profile.playing_style || "");
@@ -330,7 +377,7 @@ export default function ProfileSetup() {
     if (!file) return;
 
     if (file.size > 512 * 1024) {
-      alert("Image too large. Please choose a file under 512 KB.");
+      toast.error("Image too large", { description: "Please choose a file under 512 KB." });
       e.target.value = "";
       return;
     }
@@ -349,15 +396,13 @@ export default function ProfileSetup() {
       if (error) throw error;
 
       // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-
-      setAvatarUrl(publicUrl);
-      alert("Avatar uploaded successfully!");
+      const { data: publicUrlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
+      setAvatarUrl(publicUrlData.publicUrl);
+      toast.success("Avatar uploaded successfully!");
     } catch (err: any) {
-      console.error("Upload error:", err);
-      alert("Failed to upload to Supabase avatars bucket. Please ensure the bucket exists and public policies are active! Falling back to URL input.");
+      console.error("Avatar upload failed:", err);
+      toast.error("Upload failed", { description: "Ensure the bucket exists and public policies are active! Falling back to URL input." });
+      setAvatarUrl("");
     } finally {
       setLoading(false);
     }
@@ -391,7 +436,7 @@ export default function ProfileSetup() {
       nickname: nickname || null,
       iisc_email: iiscEmail || null,
       contact_number: contactNumber || null,
-      department: department,
+      department: department === "OTHER - Other" ? customDepartment : department,
       joined_year: joinedYear ? parseInt(joinedYear) : null,
       playing_level: playingLevel,
       playing_style: playingStyle,
@@ -452,7 +497,7 @@ export default function ProfileSetup() {
 
         if (error) {
           if (error.code === '23505') {
-            alert("A profile with this email or name already exists!");
+            toast.error("Duplicate profile", { description: "A profile with this email or name already exists!" });
           } else {
             throw error;
           }
@@ -463,7 +508,7 @@ export default function ProfileSetup() {
       }
     } catch (err: any) {
       console.error("Error saving profile:", err);
-      alert("Failed to save profile. " + err.message);
+      toast.error("Failed to save profile", { description: err.message });
     } finally {
       setLoading(false);
     }
@@ -657,14 +702,30 @@ export default function ProfileSetup() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Department *</label>
-                        <input
+                        <select
                           required
-                          type="text"
                           value={department}
                           onChange={(e) => setDepartment(e.target.value)}
                           className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
-                          placeholder="e.g. Aerospace Engineering"
-                        />
+                        >
+                          <option value="" disabled>Select your department</option>
+                          {PREDEFINED_DEPARTMENTS.map((dept) => (
+                            <option key={dept} value={dept}>{dept}</option>
+                          ))}
+                        </select>
+                        {department === "OTHER - Other" && (
+                          <div className="mt-3">
+                            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Please specify *</label>
+                            <input
+                              required
+                              type="text"
+                              value={customDepartment}
+                              onChange={(e) => setCustomDepartment(e.target.value)}
+                              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                              placeholder="Type your department"
+                            />
+                          </div>
+                        )}
                       </div>
 
                       <div>

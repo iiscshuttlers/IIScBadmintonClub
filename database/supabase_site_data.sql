@@ -87,7 +87,7 @@ INSERT INTO site_data (key, value) VALUES
       "category": "event",
       "priority": "high",
       "location": "IISc Badminton Hall",
-      "content": "The Farewell Badminton Tournament has concluded and the results are now archived.<br><br>🏆 MS: Jalaj (RBCCPS)<br>🏆 MD: Kaling Danggen (CES) & Raja Janmejay (AE)<br>🏆 WS: Radhika Dutt (CES)<br>🏆 XD: Radhika Dutt (CES) & Kaling Danggen (CES)"
+      "content": "The Farewell Badminton Tournament has concluded and the official results are now available.<br><br>🏆 MS: Jalaj (RBCCPS)<br>🏆 MD: Kaling Danggen (CES) & Raja Janmejay (AE)<br>🏆 WS: Radhika Dutt (CES)<br>🏆 XD: Radhika Dutt (CES) & Kaling Danggen (CES)"
     },
     {
       "title": "Court Booked for RBCCPS Intra-department Tournament",
@@ -115,13 +115,6 @@ INSERT INTO site_data (key, value) VALUES
       "priority": "medium",
       "location": "All Courts",
       "content": "All courts will remain closed from <strong>3 April 2026 (9 AM)</strong> to <strong>4 April 2026 (12 PM)</strong> for maintenance."
-    },
-    {
-      "title": "Join WhatsApp Group",
-      "date": "2026-04-06",
-      "category": "general",
-      "priority": "low",
-      "content": "Visit the badminton hall notice board to join the official updates group and stay informed about matches, bookings, and events."
     }
   ]
 }'::jsonb)
