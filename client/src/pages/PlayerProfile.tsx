@@ -181,7 +181,7 @@ export default function PlayerProfile() {
   const [, setLocation] = useLocation();
   const [player, setPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
-  const { session: authSession, user: currentUser, profile: ownPlayerProfile, isAdmin } = useAuth();
+  const { session: authSession, user: currentUser, profile: ownPlayerProfile, isAdmin, isMainAdmin, userRoles, updateRole } = useAuth();
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
   const [isAvatarOpen, setIsAvatarOpen] = useState(false);
@@ -405,16 +405,18 @@ export default function PlayerProfile() {
       ]);
       if (playerRes.data) setPlayer(formatPlayerData(playerRes.data));
       if (matchesRes.data) setLiveMatches(visibleMatchesForViewer(matchesRes.data, ownPlayerProfile?.id));
+      if (ownPlayerProfile?.id) fetchPendingMatches(ownPlayerProfile.id);
     } catch { /* silent */ }
-  }, [id, ownPlayerProfile?.id]);
+  }, [id, ownPlayerProfile?.id, fetchPendingMatches]);
 
   // H2H record vs logged-in user
   useEffect(() => {
     if (!ownPlayerProfile || !id || ownPlayerProfile.id === id || liveMatches.length === 0) return;
     const h2h = liveMatches.filter(
       (m) =>
-        (m.player1_id === ownPlayerProfile.id && m.player2_id === id) ||
-        (m.player1_id === id && m.player2_id === ownPlayerProfile.id)
+        m.status === 'confirmed' &&
+        ((m.player1_id === ownPlayerProfile.id && m.player2_id === id) ||
+        (m.player1_id === id && m.player2_id === ownPlayerProfile.id))
     );
     if (h2h.length === 0) return;
     const wins   = h2h.filter((m) => m.winner_id === ownPlayerProfile.id).length;
@@ -565,10 +567,10 @@ export default function PlayerProfile() {
     setLocation('/join');
   };
 
-  // Split name for hero typography
   const nameParts = player.fullName.trim().split(/\s+/);
   const heroFirstName = nameParts[0];
   const heroLastName = nameParts.slice(1).join(' ');
+  const targetUserRole = userRoles.find(r => r.id === player.id)?.role;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#070d1a] selection:bg-emerald-500/30 font-sans">
@@ -614,11 +616,23 @@ export default function PlayerProfile() {
 
           <div className="flex items-center gap-2">
             {isAdmin && player && currentUser?.id !== player.userId && (
-              <button onClick={handleAdminDelete}
-                className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 transition-all"
-                title="Admin: Delete player">
-                <Trash2 className="w-4 h-4" />
-              </button>
+              <>
+                <select
+                  value={targetUserRole || ""}
+                  onChange={(e) => updateRole(player.id, e.target.value || null)}
+                  className="bg-white/5 border border-white/10 text-white/70 text-xs font-semibold rounded-xl px-2 py-2 outline-none hover:bg-white/10 transition"
+                  title="Assign Role"
+                >
+                  <option value="" className="text-slate-800 font-medium">Regular Player</option>
+                  <option value="umpire" className="text-slate-800 font-medium">Umpire</option>
+                  {isMainAdmin && <option value="admin" className="text-slate-800 font-medium">Admin</option>}
+                </select>
+                <button onClick={handleAdminDelete}
+                  className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 transition-all"
+                  title="Admin: Delete player">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </>
             )}
 
             {currentUser && player && currentUser.id === player.userId && (
@@ -672,6 +686,11 @@ export default function PlayerProfile() {
                 <span className="px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-black tracking-[0.15em] uppercase">
                   {player.playingLevel}
                 </span>
+                {targetUserRole && (
+                  <span className="px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[11px] font-black tracking-[0.15em] uppercase">
+                    {targetUserRole}
+                  </span>
+                )}
                 {eloRank && (
                   <span className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[11px] font-black tracking-[0.1em]">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse inline-block" />
@@ -1093,6 +1112,8 @@ export default function PlayerProfile() {
               liveMatches={liveMatches}
               ownPlayerProfile={ownPlayerProfile}
               handleWithdrawMatch={handleWithdrawMatch}
+              handleConfirmMatch={handleConfirmMatch}
+              handleRejectMatch={handleRejectMatch}
             />
 
             {/* Equipment Arsenal */}
@@ -1278,17 +1299,17 @@ export default function PlayerProfile() {
                 className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-rose-400 to-pink-500" />
                 <h2 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-                  <Swords className="w-3.5 h-3.5 text-rose-500" /> Head to Head vs You
+                  <Swords className="w-3.5 h-3.5 text-rose-500" /> You vs {player.fullName.split(' ')[0]}
                 </h2>
                 <div className="flex items-center justify-center gap-8">
                   <div className="text-center">
                     <div className="text-5xl font-black text-emerald-500 tabular-nums">{h2hRecord.wins}</div>
-                    <div className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400 mt-1.5">Your Wins</div>
+                    <div className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400 mt-1.5">You</div>
                   </div>
                   <div className="text-2xl font-black text-slate-200 dark:text-slate-700">VS</div>
                   <div className="text-center">
                     <div className="text-5xl font-black text-rose-500 tabular-nums">{h2hRecord.losses}</div>
-                    <div className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400 mt-1.5">Their Wins</div>
+                    <div className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400 mt-1.5">{player.fullName.split(' ')[0]}</div>
                   </div>
                 </div>
                 <p className="text-center text-[10px] text-slate-400 mt-4">

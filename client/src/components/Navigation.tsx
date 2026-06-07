@@ -27,6 +27,7 @@ export default function Navigation() {
     signOut,
     switchAccount,
     userName,
+    pendingActionCount,
   } = useNavigationAuth();
 
   useEffect(() => {
@@ -117,14 +118,24 @@ export default function Navigation() {
             ) : isLoggedIn ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-3">
+                  <Button className="relative flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-3">
                     <UserCircle className="w-4 h-4" /> Hi, {userName}
+                    {pendingActionCount > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow ring-2 ring-white dark:ring-slate-900">
+                        {pendingActionCount}
+                      </span>
+                    )}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl">
                   <Link href={myPlayerId ? `/player/${myPlayerId}` : "/profile/setup"}>
-                    <DropdownMenuItem className="cursor-pointer font-medium focus:bg-slate-50 dark:focus:bg-slate-800">
-                      <User className="mr-2 h-4 w-4" /> My Profile
+                    <DropdownMenuItem className="cursor-pointer font-medium focus:bg-slate-50 dark:focus:bg-slate-800 flex justify-between items-center">
+                      <div className="flex items-center"><User className="mr-2 h-4 w-4" /> My Profile</div>
+                      {pendingActionCount > 0 && (
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/30 text-xs font-bold text-rose-600 dark:text-rose-400">
+                          {pendingActionCount}
+                        </span>
+                      )}
                     </DropdownMenuItem>
                   </Link>
                   <Link href={myPlayerId ? `/player/${myPlayerId}/edit` : "/profile/setup"}>
@@ -206,11 +217,11 @@ export default function Navigation() {
           <div className="lg:hidden absolute top-full left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-xl max-h-[85vh] overflow-y-auto">
             <div className="container mx-auto px-4 py-4 flex flex-col gap-2">
               <Link href="/">
-                <Button variant="ghost" className={`w-full justify-start text-lg py-6 ${isActive('/') ? 'text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-900/30' : ''}`}>Home</Button>
+                <Button variant="ghost" className={`w-full justify-start text-lg py-6 ${isActive('/') ? 'text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-900/30' : ''}`} onClick={() => setIsOpen(false)}>Home</Button>
               </Link>
               {TOP_LEVEL_LINKS.map((link) => (
                 <Link key={link.href} href={link.href}>
-                  <Button variant="ghost" className={`w-full justify-start text-lg py-6 ${isActive(link.href) ? 'text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-900/30' : 'text-slate-600 dark:text-slate-400'}`}>
+                  <Button variant="ghost" className={`w-full justify-start text-lg py-6 ${isActive(link.href) ? 'text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-900/30' : 'text-slate-600 dark:text-slate-400'}`} onClick={() => setIsOpen(false)}>
                     {link.label}
                   </Button>
                 </Link>
@@ -222,22 +233,55 @@ export default function Navigation() {
                 ) : isLoggedIn ? (
                   <div className="flex flex-col gap-1 mt-2 border-t border-slate-100 dark:border-slate-800 pt-2">
                     <Link href={myPlayerId ? `/player/${myPlayerId}` : "/profile/setup"}>
-                      <Button variant="ghost" className="w-full justify-start text-emerald-600 dark:text-emerald-400 font-medium hover:bg-emerald-50 dark:hover:bg-emerald-950/50">
-                        <User className="mr-2 h-4 w-4" /> My Profile
+                      <Button variant="ghost" className="w-full justify-between text-emerald-600 dark:text-emerald-400 font-medium hover:bg-emerald-50 dark:hover:bg-emerald-950/50" onClick={() => setIsOpen(false)}>
+                        <div className="flex items-center"><User className="mr-2 h-4 w-4" /> My Profile</div>
+                        {pendingActionCount > 0 && (
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow">
+                            {pendingActionCount}
+                          </span>
+                        )}
                       </Button>
                     </Link>
                     <Link href={myPlayerId ? `/player/${myPlayerId}/edit` : "/profile/setup"}>
-                      <Button variant="ghost" className="w-full justify-start text-emerald-600 dark:text-emerald-400 font-medium hover:bg-emerald-50 dark:hover:bg-emerald-950/50">
+                      <Button variant="ghost" className="w-full justify-start text-emerald-600 dark:text-emerald-400 font-medium hover:bg-emerald-50 dark:hover:bg-emerald-950/50" onClick={() => setIsOpen(false)}>
                         <Settings className="mr-2 h-4 w-4" /> Edit Profile & Password
                       </Button>
                     </Link>
                     {isAdmin && (
                       <Link href="/admin">
-                        <Button variant="ghost" className="w-full justify-start text-purple-600 font-medium hover:bg-purple-50 dark:hover:bg-purple-950/50">
+                        <Button variant="ghost" className="w-full justify-start text-purple-600 font-medium hover:bg-purple-50 dark:hover:bg-purple-950/50" onClick={() => setIsOpen(false)}>
                           <Settings className="mr-2 h-4 w-4" /> Site Admin
                         </Button>
                       </Link>
                     )}
+                    
+                    {savedAccounts.length > 0 && (
+                      <div className="pt-2 mt-2 border-t border-slate-100 dark:border-slate-800">
+                        <div className="px-4 py-1 text-[10px] font-black text-slate-400 uppercase tracking-wider">Switch Account</div>
+                        {savedAccounts.map(acc => (
+                          <Button
+                            key={acc.id}
+                            variant="ghost"
+                            className="w-full justify-start flex-col items-start h-auto py-2 hover:bg-slate-50 dark:hover:bg-slate-800"
+                            onClick={async () => {
+                               setIsOpen(false);
+                               await switchAccount(acc);
+                            }}
+                          >
+                            <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{acc.name}</span>
+                            <span className="text-[10px] text-slate-500">{acc.email}</span>
+                          </Button>
+                        ))}
+                      </div>
+                    )}
+                    
+                    <div className="pt-2 mt-2 border-t border-slate-100 dark:border-slate-800">
+                      <Link href="/join?add_account=true">
+                        <Button variant="ghost" className="w-full justify-start text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-50 dark:hover:bg-slate-800" onClick={() => setIsOpen(false)}>
+                          <UserPlus className="mr-2 h-4 w-4" /> Add Account
+                        </Button>
+                      </Link>
+                    </div>
                     <Button
                       variant="ghost"
                       className="w-full justify-start text-rose-600 dark:text-rose-400 font-medium hover:bg-rose-50 dark:hover:bg-rose-950/50"

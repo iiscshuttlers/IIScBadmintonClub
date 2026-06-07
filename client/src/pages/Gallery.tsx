@@ -55,6 +55,29 @@ export default function Gallery() {
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [videos, setVideos] = useState<any[]>([]);
 
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    if (isLeftSwipe) navigate(1);
+    if (isRightSwipe) navigate(-1);
+  };
+
   // ── Keyboard navigation for lightbox ───────────────────────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -324,6 +347,9 @@ export default function Gallery() {
         <div
           className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center backdrop-blur-sm"
           onClick={() => { setSelectedIndex(null); setLightboxSrc(null); }}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
         >
           <div className="absolute top-5 left-1/2 -translate-x-1/2 text-white/60 text-sm font-medium select-none">
             {selectedIndex + 1} / {filteredItems.length}

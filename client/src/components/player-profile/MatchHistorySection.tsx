@@ -27,9 +27,11 @@ interface MatchHistorySectionProps {
   liveMatches: any[];
   ownPlayerProfile: any;
   handleWithdrawMatch: (matchId: string) => Promise<void>;
+  handleConfirmMatch?: (matchId: string) => Promise<void>;
+  handleRejectMatch?: (matchId: string) => Promise<void>;
 }
 
-export function MatchHistorySection({ id, liveMatches, ownPlayerProfile, handleWithdrawMatch }: MatchHistorySectionProps) {
+export function MatchHistorySection({ id, liveMatches, ownPlayerProfile, handleWithdrawMatch, handleConfirmMatch, handleRejectMatch }: MatchHistorySectionProps) {
   const [, setLocation] = useLocation();
   const [isMatchHistoryOpen, setIsMatchHistoryOpen] = useState(false);
   const [matchHistoryFilter, setMatchHistoryFilter] = useState<"all" | "friendly" | "tournament">("all");
@@ -116,8 +118,8 @@ export function MatchHistorySection({ id, liveMatches, ownPlayerProfile, handleW
                     {pendingMatchesList.map((m, idx) => {
                       const isP1 = m.player1_id === id;
                       const opponent = isP1 ? m.player2 : m.player1;
-                      const canWithdraw = (ownPlayerProfile && m.submitted_by === ownPlayerProfile.id) ||
-                        isMatchParticipant(m, ownPlayerProfile?.id);
+                      const isSubmitter = ownPlayerProfile && m.submitted_by === ownPlayerProfile.id;
+                      const isOpponent = isMatchParticipant(m, ownPlayerProfile?.id) && !isSubmitter;
 
                       return (
                         <div key={`pen-${m.id || idx}`} className="flex flex-col sm:flex-row sm:items-center gap-3 text-sm bg-white/50 dark:bg-slate-900/50 p-3 rounded-xl border border-amber-200/50 dark:border-amber-700/30">
@@ -131,14 +133,32 @@ export function MatchHistorySection({ id, liveMatches, ownPlayerProfile, handleW
                             </div>
                             <div className="text-[10px] text-slate-400 shrink-0">{new Date(m.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</div>
                           </div>
-                          {canWithdraw && (
-                            <button
-                              onClick={() => handleWithdrawMatch(m.id)}
-                              className="text-xs font-bold px-3 py-1.5 rounded-lg bg-rose-100 hover:bg-rose-200 dark:bg-rose-900/30 dark:hover:bg-rose-800/40 text-rose-700 dark:text-rose-400 transition-colors w-full sm:w-auto mt-2 sm:mt-0 border border-rose-200 dark:border-rose-800/50"
-                            >
-                              Withdraw Match
-                            </button>
-                          )}
+                          <div className="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                            {isSubmitter && (
+                              <button
+                                onClick={() => handleWithdrawMatch(m.id)}
+                                className="flex-1 sm:flex-none text-xs font-bold px-3 py-1.5 rounded-lg bg-rose-100 hover:bg-rose-200 dark:bg-rose-900/30 dark:hover:bg-rose-800/40 text-rose-700 dark:text-rose-400 transition-colors border border-rose-200 dark:border-rose-800/50"
+                              >
+                                Withdraw Match
+                              </button>
+                            )}
+                            {isOpponent && handleConfirmMatch && handleRejectMatch && (
+                              <>
+                                <button
+                                  onClick={() => handleConfirmMatch(m.id)}
+                                  className="flex-1 sm:flex-none text-xs font-bold px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white transition-colors"
+                                >
+                                  Confirm
+                                </button>
+                                <button
+                                  onClick={() => handleRejectMatch(m.id)}
+                                  className="flex-1 sm:flex-none text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 transition-colors"
+                                >
+                                  Reject
+                                </button>
+                              </>
+                            )}
+                          </div>
                         </div>
                       );
                     })}

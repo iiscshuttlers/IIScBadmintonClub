@@ -24,19 +24,23 @@ interface Holiday {
 }
 
 const HOLIDAY_COLORS = [
-  { bg: 'bg-rose-50 dark:bg-rose-900/20', border: 'border-rose-200 dark:border-rose-800', text: 'text-rose-500', textDark: 'text-rose-600 dark:text-rose-400', badge: 'bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400', solid: 'bg-rose-500' },
-  { bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-purple-200 dark:border-purple-800', text: 'text-purple-500', textDark: 'text-purple-600 dark:text-purple-400', badge: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400', solid: 'bg-purple-500' },
-  { bg: 'bg-amber-50 dark:bg-amber-900/20', border: 'border-amber-200 dark:border-amber-800', text: 'text-amber-500', textDark: 'text-amber-600 dark:text-amber-400', badge: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400', solid: 'bg-amber-500' },
-  { bg: 'bg-cyan-50 dark:bg-cyan-900/20', border: 'border-cyan-200 dark:border-cyan-800', text: 'text-cyan-500', textDark: 'text-cyan-600 dark:text-cyan-400', badge: 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400', solid: 'bg-cyan-500' },
-  { bg: 'bg-fuchsia-50 dark:bg-fuchsia-900/20', border: 'border-fuchsia-200 dark:border-fuchsia-800', text: 'text-fuchsia-500', textDark: 'text-fuchsia-600 dark:text-fuchsia-400', badge: 'bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-600 dark:text-fuchsia-400', solid: 'bg-fuchsia-500' },
+  { bg: 'bg-rose-50 dark:bg-rose-900/20', border: 'border-rose-200 dark:border-rose-800', text: 'text-rose-500', textDark: 'text-rose-600 dark:text-rose-400', badge: 'bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400', solid: 'bg-rose-500', hex: '#f43f5e', hexBg: 'rgba(244, 63, 94, 0.1)' },
+  { bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-purple-200 dark:border-purple-800', text: 'text-purple-500', textDark: 'text-purple-600 dark:text-purple-400', badge: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400', solid: 'bg-purple-500', hex: '#a855f7', hexBg: 'rgba(168, 85, 247, 0.1)' },
+  { bg: 'bg-amber-50 dark:bg-amber-900/20', border: 'border-amber-200 dark:border-amber-800', text: 'text-amber-500', textDark: 'text-amber-600 dark:text-amber-400', badge: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400', solid: 'bg-amber-500', hex: '#f59e0b', hexBg: 'rgba(245, 158, 11, 0.1)' },
+  { bg: 'bg-cyan-50 dark:bg-cyan-900/20', border: 'border-cyan-200 dark:border-cyan-800', text: 'text-cyan-500', textDark: 'text-cyan-600 dark:text-cyan-400', badge: 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400', solid: 'bg-cyan-500', hex: '#06b6d4', hexBg: 'rgba(6, 182, 212, 0.1)' },
+  { bg: 'bg-fuchsia-50 dark:bg-fuchsia-900/20', border: 'border-fuchsia-200 dark:border-fuchsia-800', text: 'text-fuchsia-500', textDark: 'text-fuchsia-600 dark:text-fuchsia-400', badge: 'bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-600 dark:text-fuchsia-400', solid: 'bg-fuchsia-500', hex: '#d946ef', hexBg: 'rgba(217, 70, 239, 0.1)' },
 ];
 
-function getHolidayColor(title: string) {
+function getHolidayColorIndex(title: string) {
   let hash = 0;
   for (let i = 0; i < title.length; i++) {
     hash = title.charCodeAt(i) + ((hash << 5) - hash);
   }
-  return HOLIDAY_COLORS[Math.abs(hash) % HOLIDAY_COLORS.length];
+  return Math.abs(hash) % HOLIDAY_COLORS.length;
+}
+
+function getHolidayColor(title: string) {
+  return HOLIDAY_COLORS[getHolidayColorIndex(title)];
 }
 
 export default function ScheduleCalendar() {
@@ -132,7 +136,11 @@ export default function ScheduleCalendar() {
                 modifiers={{
                   hasEventStart: eventStartDates,
                   hasEventOngoing: eventOngoingDates,
-                  hasHoliday: events.filter(e => e.type === 'holiday').map(e => new Date(e.date)),
+                  hasHoliday_0: events.filter(e => e.type === 'holiday' && getHolidayColorIndex(e.title) === 0).map(e => new Date(e.date)),
+                  hasHoliday_1: events.filter(e => e.type === 'holiday' && getHolidayColorIndex(e.title) === 1).map(e => new Date(e.date)),
+                  hasHoliday_2: events.filter(e => e.type === 'holiday' && getHolidayColorIndex(e.title) === 2).map(e => new Date(e.date)),
+                  hasHoliday_3: events.filter(e => e.type === 'holiday' && getHolidayColorIndex(e.title) === 3).map(e => new Date(e.date)),
+                  hasHoliday_4: events.filter(e => e.type === 'holiday' && getHolidayColorIndex(e.title) === 4).map(e => new Date(e.date)),
                   hasDeadline: deadlineDates
                 }}
                 components={{
@@ -177,7 +185,11 @@ export default function ScheduleCalendar() {
                 modifiersStyles={{
                   hasEventStart: { fontWeight: '900', color: '#0ea5e9', backgroundColor: 'rgba(14, 165, 233, 0.15)' },
                   hasEventOngoing: { fontWeight: '900', color: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)' },
-                  hasHoliday: { fontWeight: '900', color: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)' },
+                  hasHoliday_0: { fontWeight: '900', color: HOLIDAY_COLORS[0].hex, backgroundColor: HOLIDAY_COLORS[0].hexBg },
+                  hasHoliday_1: { fontWeight: '900', color: HOLIDAY_COLORS[1].hex, backgroundColor: HOLIDAY_COLORS[1].hexBg },
+                  hasHoliday_2: { fontWeight: '900', color: HOLIDAY_COLORS[2].hex, backgroundColor: HOLIDAY_COLORS[2].hexBg },
+                  hasHoliday_3: { fontWeight: '900', color: HOLIDAY_COLORS[3].hex, backgroundColor: HOLIDAY_COLORS[3].hexBg },
+                  hasHoliday_4: { fontWeight: '900', color: HOLIDAY_COLORS[4].hex, backgroundColor: HOLIDAY_COLORS[4].hexBg },
                   hasDeadline: { fontWeight: '900', color: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.2)' }
                 }}
               />

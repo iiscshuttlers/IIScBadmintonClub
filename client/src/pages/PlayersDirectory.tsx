@@ -66,6 +66,7 @@ export default function PlayersDirectory() {
   const [ownProfile, setOwnProfile]       = useState<Player | null>(null);
   const [isAdmin, setIsAdmin]             = useState(false);
   const [isLogMatchOpen, setIsLogMatchOpen] = useState(false);
+  const [selectedOpponentId, setSelectedOpponentId] = useState<string | null>(null);
   const [pendingMatches, setPendingMatches] = useState<any[]>([]);
 
   /* Directory state */
@@ -272,7 +273,10 @@ export default function PlayersDirectory() {
   // Auto-refresh player list every 60s (silently, scroll preserved)
   const silentRefresh = useCallback(async () => {
     await fetchPlayers({ silent: true });
-  }, [fetchPlayers]);
+    if (ownProfile?.id) {
+      fetchPendingMatches(ownProfile.id);
+    }
+  }, [fetchPlayers, ownProfile?.id, fetchPendingMatches]);
   useAutoRefresh(silentRefresh, 60_000, !loading);
 
   /* Filter + sort logic */
@@ -719,6 +723,10 @@ export default function PlayersDirectory() {
                       isAdmin={isAdmin}
                       onDelete={handleAdminDelete}
                       onEdit={handleAdminEdit}
+                      onLogMatch={ownProfile ? () => {
+                        setSelectedOpponentId(player.id);
+                        setIsLogMatchOpen(true);
+                      } : undefined}
                     />
                   </Link>
                 </motion.div>
@@ -753,10 +761,14 @@ export default function PlayersDirectory() {
       {ownProfile && (
         <LogMatchModal 
           isOpen={isLogMatchOpen} 
-          onClose={() => setIsLogMatchOpen(false)} 
+          onClose={() => {
+            setIsLogMatchOpen(false);
+            setSelectedOpponentId(null);
+          }} 
           currentUser={ownProfile as any}
           otherPlayers={otherPlayers as any}
           onSuccess={fetchPlayers}
+          defaultOpponentId={selectedOpponentId || undefined}
         />
       )}
     </div>

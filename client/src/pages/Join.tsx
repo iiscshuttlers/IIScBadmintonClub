@@ -80,6 +80,9 @@ export default function Join() {
         throw new Error("Sign in failed — no session returned. Please try again.");
       }
       sessionStorage.removeItem("guest_mode");
+      if (new URLSearchParams(window.location.search).get("add_account") === "true") {
+        setLocation("/");
+      }
       // Success! We do not set loading to false. The AuthContext will catch the session, load profile, and redirect.
     } catch (err: any) {
       const msg: string = err?.message ?? "An unexpected error occurred.";
@@ -131,6 +134,8 @@ export default function Join() {
         setInfoMsg("Verification link sent! Please check your email (and spam folder) to confirm, then sign in.");
         setMode("signin");
         setLoading(false);
+      } else if (new URLSearchParams(window.location.search).get("add_account") === "true") {
+        setLocation("/");
       }
       // If we have a session, we do not clear loading. AuthContext will redirect.
     } catch (err: any) {
@@ -165,7 +170,11 @@ export default function Join() {
     try {
       const { data, error } = await supabase.auth.verifyOtp({ email, token: otp, type: "email" });
       if (error) throw error;
-      if (!data.session) setLoading(false);
+      if (!data.session) {
+        setLoading(false);
+      } else if (new URLSearchParams(window.location.search).get("add_account") === "true") {
+        setLocation("/");
+      }
     } catch (err: any) {
       setErrorMsg("Invalid or expired code. Please try again.");
       setLoading(false);

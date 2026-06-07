@@ -41,7 +41,11 @@ export interface AuthContextType {
   user: Session["user"] | null;
   profile: PlayerProfile | null;
   isAdmin: boolean;
+  isMainAdmin: boolean;
+  isUmpire: boolean;
   isInitializing: boolean; // True while resolving session OR fetching profile
+  userRoles: { id: string, role: string }[];
+  updateRole: (playerId: string, role: string | null) => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -96,8 +100,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const [userRoles, setUserRoles] = useState<{ id: string, role: string }[]>([]);
+
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const { data } = await supabase.from('site_data').select('value').eq('key', 'roles').maybeSingle();
+        if (data?.value && Array.isArray(data.value)) {
+          setUserRoles(data.value);
+        }
+      } catch (err) { console.warn("Failed to fetch roles", err); }
+    };
+    fetchRoles();
+  }, [session]);
+
   const isInitializing = sessionLoading || (!!session && profileLoading);
-  const isAdmin = session?.user?.email ? isAdminEmail(session.user.email) : false;
+  
+  const isMainAdmin = session?.user?.email ? isAdminEmail(session.user.email) : false;
+  const assignedRole = profile ? userRoles.find(r => r.id === profile.id)?.role : null;
+  const isAdmin = isMainAdmin || assignedRole === 'admin';
+  const isUmpire = isAdmin || assignedRole === 'umpire';
+
+  const updateRole = async (playerId: string, role: string | null) => {
+    let newRoles = [...userRoles];
+    if (role === null) {
+      newRoles = newRoles.filter(r => r.id !== playerId);
+    } else {
+      const idx = newRoles.findIndex(r => r.id === playerId);
+      if (idx > -1) {
+        newRoles[idx].role = role;
+      } else {
+        newRoles.push({ id: playerId, role });
+      }
+    }
+    await supabase.from('site_data').update({ value: newRoles }).eq('key', 'roles');
+    setUserRoles(newRoles);
+  };
 
   return (
     <AuthContext.Provider
@@ -106,7 +144,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user: session?.user ?? null,
         profile,
         isAdmin,
+        isMainAdmin,
+        isUmpire,
         isInitializing,
+        userRoles,
+        updateRole,
         signOut,
         refreshProfile,
       }}

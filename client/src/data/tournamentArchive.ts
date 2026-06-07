@@ -156,34 +156,74 @@ export function getArchivedTournament(slug: string): ArchivedTournament | undefi
  * Compute a leaderboard of individual winners across all tournaments.
  * Returns entries sorted by win count descending.
  */
+export type PlayerWinDetail = {
+  category: string;
+  tournament: string;
+  medal: 'Gold' | 'Silver' | 'Bronze';
+};
+
 export type PlayerWinEntry = {
   name: string;
-  wins: number;
+  wins: number; // For total medal count or gold count
   categories: string[];
   tournaments: string[];
+  details: PlayerWinDetail[];
 };
 
 export function computeWinnerLeaderboard(): PlayerWinEntry[] {
   const map = new Map<string, PlayerWinEntry>();
 
+  const normalizeName = (n: string) => {
+    let clean = n.replace(/\(.*?\)/g, '').trim();
+    if (clean === 'Radhika') return 'Radhika Dutt';
+    if (clean === 'Kaling') return 'Kaling Danggen';
+    if (clean === 'Raja') return 'Raja Janmejay';
+    if (clean === 'Shaili') return 'Shailli';
+    if (clean === 'Abhisek') return 'Abhishek';
+    return clean;
+  };
+
+  const processNames = (namesRaw: string | undefined, medal: 'Gold' | 'Silver' | 'Bronze', tName: string, category: string) => {
+    if (!namesRaw) return;
+    const names = namesRaw.split(/[&/]/).map(n => normalizeName(n)).filter(Boolean);
+    for (const name of names) {
+      if (!name || name.length < 2) continue;
+      const existing = map.get(name);
+      if (existing) {
+        existing.wins += 1;
+        if (!existing.categories.includes(category)) existing.categories.push(category);
+        if (!existing.tournaments.includes(tName)) existing.tournaments.push(tName);
+        existing.details.push({ category, tournament: tName, medal });
+      } else {
+        map.set(name, { 
+          name, 
+          wins: 1, 
+          categories: [category], 
+          tournaments: [tName],
+          details: [{ category, tournament: tName, medal }]
+        });
+      }
+    }
+  };
+
   for (const t of ARCHIVED_TOURNAMENTS) {
     if (!t.winners) continue;
     for (const w of t.winners) {
-      // Handle pairs like "A & B" — count each individual
-      const names = w.winner.split(/[&/]/).map(n => n.replace(/\(.*?\)/g, '').trim()).filter(Boolean);
-      for (const name of names) {
-        if (!name || name.length < 2) continue;
-        const existing = map.get(name);
-        if (existing) {
-          existing.wins += 1;
-          if (!existing.categories.includes(w.category)) existing.categories.push(w.category);
-          if (!existing.tournaments.includes(t.name)) existing.tournaments.push(t.name);
-        } else {
-          map.set(name, { name, wins: 1, categories: [w.category], tournaments: [t.name] });
+      processNames(w.winner, 'Gold', t.name, w.category);
+      processNames(w.runnerUp, 'Silver', t.name, w.category);
+      if (w.bronze) {
+        for (const b of w.bronze) {
+          processNames(b, 'Bronze', t.name, w.category);
         }
       }
     }
   }
 
-  return [...map.values()].sort((a, b) => b.wins - a.wins);
+  // Sort by Gold count primarily, then total medals
+  return [...map.values()].sort((a, b) => {
+    const aGolds = a.details.filter(d => d.medal === 'Gold').length;
+    const bGolds = b.details.filter(d => d.medal === 'Gold').length;
+    if (aGolds !== bGolds) return bGolds - aGolds;
+    return b.wins - a.wins;
+  });
 }

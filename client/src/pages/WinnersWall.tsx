@@ -101,9 +101,29 @@ export default function WinnersWall() {
                     <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 font-black flex items-center justify-center shrink-0">
                       #{idx + 1}
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 py-0.5">
                       <div className="font-bold text-slate-900 dark:text-white truncate">{player.name}</div>
-                      <div className="text-xs text-slate-500 truncate">{player.tournaments[0]}</div>
+                      <div className="flex flex-col mt-1 space-y-0.5">
+                        {player.details.map((d, i) => {
+                          const lower = d.category.toLowerCase();
+                          let shortCat = d.category;
+                          if (lower.includes('mixed')) shortCat = 'XD';
+                          else if (lower.includes("women's singles") || lower.includes("womens singles")) shortCat = 'WS';
+                          else if (lower.includes("women's doubles") || lower.includes("womens doubles")) shortCat = 'WD';
+                          else if (lower.includes("men's singles") || lower.includes("mens singles")) shortCat = 'MS';
+                          else if (lower.includes("men's doubles") || lower.includes("mens doubles")) shortCat = 'MD';
+
+                          const medalEmoji = d.medal === 'Gold' ? '🥇' : d.medal === 'Silver' ? '🥈' : '🥉';
+                          
+                          return (
+                            <div key={i} className="text-[11px] leading-tight flex items-start gap-1.5 min-w-0">
+                              <span className="shrink-0" title={d.medal}>{medalEmoji}</span>
+                              <span className="font-bold text-emerald-600 dark:text-emerald-400 shrink-0 w-5">{shortCat}</span>
+                              <span className="text-slate-500">{d.tournament}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                     <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 font-bold shrink-0">
                       <Award className="w-4 h-4" />

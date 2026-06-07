@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { isAdminEmail } from "@/lib/admin";
+import { useAuth } from "@/contexts/AuthContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { toast } from "sonner";
 import { db, auth } from "@/lib/firebase";
@@ -72,7 +73,11 @@ export default function SiteAdmin() {
   const [, setLocation] = useLocation();
 
   const [authState, setAuthState] = useState<"loading" | "denied" | "ok">("loading");
-  const [activeTab, setActiveTab] = useState<TabId>("holidays");
+  const { session, isInitializing, isAdmin, isMainAdmin, isUmpire } = useAuth();
+
+  const [activeTab, setActiveTab] = useState<TabId>(() => {
+    return isAdmin ? "holidays" : "umpire";
+  });
   const [saving, setSaving]       = useState(false);
   const [loading, setLoading]     = useState(false);
   const [dirty, setDirty]         = useState(false);
@@ -94,12 +99,18 @@ export default function SiteAdmin() {
 
   // Auth gate
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) { setAuthState("denied"); return; }
-      const { data } = await supabase.auth.getUser();
-      setAuthState(data?.user && isAdminEmail(data.user.email) ? "ok" : "denied");
-    });
-  }, []);
+    if (isInitializing) {
+      setAuthState("loading");
+    } else if (session) {
+      if (activeTab === "umpire") {
+        setAuthState(isUmpire ? "ok" : "denied");
+      } else {
+        setAuthState(isAdmin ? "ok" : "denied");
+      }
+    } else {
+      setAuthState("denied");
+    }
+  }, [session, isInitializing, isAdmin, isUmpire, activeTab]);
 
   // Load content data
   const loadAll = useCallback(async () => {
@@ -252,7 +263,7 @@ export default function SiteAdmin() {
         {/* Tabs */}
         <div className="w-full pb-4 mb-4">
           <div className="flex flex-wrap items-center p-1.5 bg-slate-200/70 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-inner gap-1">
-            {TABS.map(tab => {
+            {TABS.filter(tab => isAdmin || tab.id === "umpire").map(tab => {
               const Icon = tab.icon;
               const active = activeTab === tab.id;
               const count = counts[tab.id];

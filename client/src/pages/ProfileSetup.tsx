@@ -144,6 +144,8 @@ export default function ProfileSetup() {
   const [achMedal, setAchMedal] = useState("Gold");
   const [achCustomMedal, setAchCustomMedal] = useState("");
   const [achTournament, setAchTournament] = useState("");
+  const [achCategory, setAchCategory] = useState("Men's");
+  const [achEventType, setAchEventType] = useState("Singles");
 
   const [careerHighlights, setCareerHighlights] = useState<{year: string; title: string; description: string}[]>([]);
 
@@ -1178,14 +1180,14 @@ export default function ProfileSetup() {
                           <button
                             type="button"
                             onClick={() => {
-                              if (tourName.trim() && tourYear.trim()) {
+                              if (tourName.trim() && tourYear.trim() && /^\d{4}$/.test(tourYear.trim())) {
                                 const val = `${tourName.trim()} ${tourYear.trim()}`;
                                 setTournamentsRaw(tournamentsRaw.trim() ? tournamentsRaw.trim() + ", " + val : val);
                                 setTourName("");
                                 setTourYear("");
                               }
                             }}
-                            disabled={!tourName.trim() || !tourYear.trim()}
+                            disabled={!tourName.trim() || !tourYear.trim() || !/^\d{4}$/.test(tourYear.trim())}
                             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition shrink-0"
                           >Add</button>
                         </div>
@@ -1220,7 +1222,24 @@ export default function ProfileSetup() {
                               ))}
                           </div>
                         )}
-                        <div className="flex flex-col sm:flex-row gap-2">
+                        <div className="flex flex-wrap gap-2 w-full items-center">
+                          <select
+                            value={achCategory}
+                            onChange={(e) => setAchCategory(e.target.value)}
+                            className="w-full sm:w-auto shrink-0 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500"
+                          >
+                            <option value="Men's">Men's</option>
+                            <option value="Women's">Women's</option>
+                            <option value="Mixed">Mixed</option>
+                          </select>
+                          <select
+                            value={achEventType}
+                            onChange={(e) => setAchEventType(e.target.value)}
+                            className="w-full sm:w-auto shrink-0 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500"
+                          >
+                            <option value="Singles">Singles</option>
+                            <option value="Doubles">Doubles</option>
+                          </select>
                           <div className="flex gap-2 sm:w-1/3 shrink-0">
                             <select
                               value={achMedal}
@@ -1257,7 +1276,7 @@ export default function ProfileSetup() {
                             onClick={() => {
                               const medalStr = achMedal === "Other" ? achCustomMedal.trim() : (achMedal === "Gold" ? "Winner" : achMedal === "Silver" ? "Runner-up" : "Semi-Finalist");
                               if (medalStr && achTournament.trim()) {
-                                const val = `${medalStr} - ${achTournament.trim()}`;
+                                const val = `${achCategory} ${achEventType} ${medalStr} - ${achTournament.trim()}`;
                                 setAchievementsRaw(achievementsRaw.trim() ? achievementsRaw.trim() + ", " + val : val);
                                 setAchCustomMedal("");
                                 setAchTournament("");

@@ -27,6 +27,7 @@ function writeSavedAccounts(accounts: SavedAccount[]) {
 export function useNavigationAuth() {
   const { session, profile, isAdmin, isInitializing, signOut: globalSignOut } = useAuth();
   const [savedAccounts, setSavedAccounts] = useState<SavedAccount[]>([]);
+  const [pendingActionCount, setPendingActionCount] = useState(0);
 
   useEffect(() => {
     const accounts = readSavedAccounts();
@@ -51,6 +52,34 @@ export function useNavigationAuth() {
       setSavedAccounts(accounts);
     }
   }, [session, profile]);
+
+  useEffect(() => {
+    if (!profile?.id) {
+      setPendingActionCount(0);
+      return;
+    }
+
+    const fetchPending = async () => {
+      try {
+        const { count } = await supabase
+          .from("matches")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "pending")
+          .neq("submitted_by", profile.id)
+          .or(`player1_id.eq.${profile.id},player2_id.eq.${profile.id},team1_partner_id.eq.${profile.id},team2_partner_id.eq.${profile.id}`);
+        
+        if (count != null) {
+          setPendingActionCount(count);
+        }
+      } catch {
+        // silent
+      }
+    };
+
+    fetchPending();
+    const interval = setInterval(fetchPending, 60000);
+    return () => clearInterval(interval);
+  }, [profile?.id]);
 
   const signOut = async () => {
     if (session?.user?.id) {
@@ -79,5 +108,6 @@ export function useNavigationAuth() {
     signOut,
     switchAccount,
     userName: session ? userName : "",
+    pendingActionCount,
   };
 }

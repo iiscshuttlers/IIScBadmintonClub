@@ -55,9 +55,10 @@ interface PlayerCardProps {
   isAdmin?: boolean;
   onDelete?: (id: string) => void;
   onEdit?: (id: string) => void;
+  onLogMatch?: (id: string) => void;
 }
 
-export function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, onEdit }: PlayerCardProps) {
+export function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, onEdit, onLogMatch }: PlayerCardProps) {
   const winPct = parseWinPct(player.win_loss_record);
 
   const handleShare = (e: React.MouseEvent) => {
@@ -94,6 +95,17 @@ export function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, o
       >
         <Share2 className="w-3.5 h-3.5" />
       </button>
+
+      {/* Log Match button */}
+      {onLogMatch && !isOwn && (
+        <button
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onLogMatch(player.id); }}
+          className="absolute top-12 right-3 z-20 w-7 h-7 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 shadow transition opacity-0 group-hover:opacity-100"
+          title="Log Match against player"
+        >
+          <Sword className="w-3.5 h-3.5" />
+        </button>
+      )}
 
       {/* Admin Actions */}
       {isAdmin && !isOwn && (
