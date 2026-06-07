@@ -11,6 +11,16 @@ const fadeUp = {
   visible: (i: number) => ({ opacity: 1, y: 0, transition: { duration: 0.45, delay: i * 0.08, ease: 'easeOut' as const } }),
 };
 
+const INVICTA_CONFIG = {
+  dates: '1st – 21st June',
+  venue: 'Gymkhana Courts',
+  categories: 'MS · WS · MD · WD · XD',
+  eligibility: 'All IISc Members',
+  registrationClosed: true,
+  description: 'The registration window for INVICTA 2026 has ended. Check back for fixtures and updates below.',
+  formUrl: 'https://forms.cloud.microsoft/r/c82F9mgTv5'
+};
+
 export default function Invicta() {
   const { session } = useAuth();
   const isAdmin = isAdminEmail(session?.user?.email);
@@ -81,10 +91,10 @@ export default function Invicta() {
   };
 
   const infoCards = [
-    { icon: Calendar,  label: 'Dates',        value: '1st – 21st June',   color: 'bg-emerald-500' },
-    { icon: MapPin,    label: 'Venue',         value: 'Gymkhana Courts',    color: 'bg-blue-600' },
-    { icon: Users,     label: 'Categories',    value: 'MS · WS · MD · WD · XD', color: 'bg-purple-600' },
-    { icon: UserCheck, label: 'Eligibility',   value: 'All IISc Members',   color: 'bg-orange-500' },
+    { icon: Calendar,  label: 'Dates',        value: INVICTA_CONFIG.dates,       color: 'bg-emerald-500' },
+    { icon: MapPin,    label: 'Venue',         value: INVICTA_CONFIG.venue,        color: 'bg-blue-600' },
+    { icon: Users,     label: 'Categories',    value: INVICTA_CONFIG.categories,   color: 'bg-purple-600' },
+    { icon: UserCheck, label: 'Eligibility',   value: INVICTA_CONFIG.eligibility,  color: 'bg-orange-500' },
   ];
 
   return (
@@ -127,24 +137,49 @@ export default function Invicta() {
           <div className="bg-gradient-to-r from-slate-800 to-slate-900 dark:from-slate-900 dark:to-slate-950 rounded-3xl p-8 text-white text-center relative overflow-hidden border border-slate-700/50">
               <div className="absolute inset-0 hero-pattern opacity-20" />
               <div className="relative z-10">
-                <div className="inline-flex items-center gap-2 bg-rose-500/20 border border-rose-500/30 text-rose-300 px-4 py-2 rounded-full text-sm font-bold mb-4">
-                  <Clock className="w-4 h-4" />
-                  Registrations Closed
-                </div>
-                <h2 className="text-2xl md:text-3xl font-black mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>
-                  Registrations are now closed
-                </h2>
-                <p className="text-slate-300 max-w-2xl mx-auto mb-6">
-                  The registration window for INVICTA 2026 has ended. Check back for fixtures and updates below.
-                </p>
-                <a
-                  href="https://forms.cloud.microsoft/r/c82F9mgTv5"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-8 py-4 bg-slate-600 hover:bg-slate-500 text-white rounded-xl font-black transition shadow-xl opacity-70 cursor-not-allowed pointer-events-none"
-                >
-                  Registration Form (Closed) <ArrowRight className="w-5 h-5" />
-                </a>
+                {INVICTA_CONFIG.registrationClosed ? (
+                  <>
+                    <div className="inline-flex items-center gap-2 bg-rose-500/20 border border-rose-500/30 text-rose-300 px-4 py-2 rounded-full text-sm font-bold mb-4">
+                      <Clock className="w-4 h-4" />
+                      Registrations Closed
+                    </div>
+                    <h2 className="text-2xl md:text-3xl font-black mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>
+                      Registrations are now closed
+                    </h2>
+                    <p className="text-slate-300 max-w-2xl mx-auto mb-6">
+                      {INVICTA_CONFIG.description}
+                    </p>
+                    <a
+                      href={INVICTA_CONFIG.formUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-8 py-4 bg-slate-600 hover:bg-slate-500 text-white rounded-xl font-black transition shadow-xl opacity-70 cursor-not-allowed pointer-events-none"
+                    >
+                      Registration Form (Closed) <ArrowRight className="w-5 h-5" />
+                    </a>
+                  </>
+                ) : (
+                  <>
+                    <div className="inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 px-4 py-2 rounded-full text-sm font-bold mb-4">
+                      <Clock className="w-4 h-4" />
+                      Registrations Open
+                    </div>
+                    <h2 className="text-2xl md:text-3xl font-black mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>
+                      Register for INVICTA
+                    </h2>
+                    <p className="text-slate-300 max-w-2xl mx-auto mb-6">
+                      {INVICTA_CONFIG.description}
+                    </p>
+                    <a
+                      href={INVICTA_CONFIG.formUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black transition shadow-xl"
+                    >
+                      Register Now <ArrowRight className="w-5 h-5" />
+                    </a>
+                  </>
+                )}
               </div>
             </div>
         </motion.div>

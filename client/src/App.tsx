@@ -10,6 +10,8 @@ import StatusBanner from "@/components/StatusBanner";
 import ErrorBoundary from './components/ErrorBoundary';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
+import { PwaInstallPrompt } from './components/pwa/PwaInstallPrompt';
+import { PwaUpdatePrompt } from './components/pwa/PwaUpdatePrompt';
 import Navigation from './components/Navigation';
 import Footer from './components/Footer';
 import { useAppUpdate, type AppUpdateInfo } from './hooks/useAppUpdate';
@@ -194,6 +196,7 @@ function App() {
               <ScrollToTop />
               <ScrollProgress />
               <div className="flex flex-col min-h-screen">
+                <PwaInstallPrompt />
                 <Navigation />
                 <StatusBanner />
                 <main className="flex-1">
@@ -204,6 +207,7 @@ function App() {
               <BackToTop />
             </Router>
             <Toaster />
+            <PwaUpdatePrompt />
             {updateInfo && <UpdateDialog info={updateInfo} onDismiss={dismissUpdate} />}
           </TooltipProvider>
         </AuthProvider>

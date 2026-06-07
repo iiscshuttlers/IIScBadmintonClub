@@ -440,7 +440,7 @@ export function RegistrationsManager() {
 
   useEffect(() => { load(); }, [load]);
 
-  const updateStatus = async (id: string, status: "approved" | "rejected") => {
+  const updateStatus = async (id: string, status: "approved" | "rejected" | "pending") => {
     setActionId(id);
     const { error } = await supabase.from("tournament_registrations").update({ status }).eq("id", id);
     if (error) { toast(`Failed to ${status}: ` + error.message, { icon: "❌" }); }

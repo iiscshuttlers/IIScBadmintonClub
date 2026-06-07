@@ -25,7 +25,8 @@
       "Bash(git commit *)",
       "PowerShell(& \"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" release view v1.1-build2 --repo iiscshuttlers/iiscshuttlers)",
       "PowerShell(& \"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" release upload v1.1-build2 \"E:\\\\Github\\\\iiscshuttlers\\\\android\\\\app\\\\build\\\\outputs\\\\apk\\\\release\\\\app-release.apk#IIScShuttlers.apk\" --repo iiscshuttlers/iiscshuttlers --clobber)",
-      "PowerShell(& \"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" release view v1.1-build2 --repo iiscshuttlers/iiscshuttlers --json assets --jq '.assets[].name')"
+      "PowerShell(& \"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" release view v1.1-build2 --repo iiscshuttlers/iiscshuttlers --json assets --jq '.assets[].name')",
+      "Bash(node -e ' *)"
     ]
   }
 }

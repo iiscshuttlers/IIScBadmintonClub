@@ -10,7 +10,7 @@ import DOMPurify from 'dompurify';
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
 function sanitize(html: string) {
   const clean = DOMPurify.sanitize(parseMarkdown(html || ''));
-  const cleanStr = typeof clean === 'string' ? clean : clean.toString();
+  const cleanStr = clean as string;
   if (!BASE) return cleanStr;
   // Prepend base URL to internal absolute links that don't already have it
   return cleanStr.replace(/href="(\/[^"/][^"]*)"/g, (_, path) =>

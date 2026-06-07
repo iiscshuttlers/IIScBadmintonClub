@@ -1,5 +1,5 @@
 import { Link, useRoute } from 'wouter';
-import { ArrowLeft, Medal, Trophy, GitBranch, Calendar, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Medal, Trophy, Calendar, CheckCircle, Image as ImageIcon, Users } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { getArchivedTournament } from '@/data/tournamentArchive';
@@ -241,12 +241,53 @@ export default function TournamentDetail() {
                   </div>
                 </div>
 
-                <Link href="/winners">
-                  <button className="w-full mt-2 flex items-center justify-center gap-2 bg-blue-900 hover:bg-blue-800 dark:bg-blue-800 dark:hover:bg-blue-700 text-white font-bold px-4 py-3 rounded-xl text-sm transition-all hover:-translate-y-0.5">
-                    <Trophy className="w-4 h-4" />
-                    All Winners
-                  </button>
-                </Link>
+                {/* Stats */}
+                <div className="space-y-3 text-sm mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+                  {tournament.winners && (
+                    <>
+                      <div className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-700">
+                        <span className="text-gray-500 dark:text-slate-400 font-medium">Categories</span>
+                        <span className="font-bold text-blue-900 dark:text-white flex items-center gap-1.5">
+                          <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                          {tournament.winners.length}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-700">
+                        <span className="text-gray-500 dark:text-slate-400 font-medium">Medalists</span>
+                        <span className="font-bold text-blue-900 dark:text-white flex items-center gap-1.5">
+                          <Users className="w-3.5 h-3.5 text-emerald-500" />
+                          {tournament.winners.reduce((sum, w) => sum + 1 + (w.runnerUp ? 1 : 0) + (w.bronze ? w.bronze.length : 0), 0)}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                  {tournament.podium && (
+                    <div className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-700">
+                      <span className="text-gray-500 dark:text-slate-400 font-medium">Teams Placed</span>
+                      <span className="font-bold text-blue-900 dark:text-white flex items-center gap-1.5">
+                        <Users className="w-3.5 h-3.5 text-emerald-500" />
+                        {tournament.podium.length}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+                  {tournament.galleryFolder && (
+                    <Link href={`/gallery?filter=${encodeURIComponent(tournament.galleryFolder)}`}>
+                      <button className="w-full flex items-center justify-center gap-2 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/40 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-400 font-bold px-4 py-3 rounded-xl text-sm transition-all hover:-translate-y-0.5">
+                        <ImageIcon className="w-4 h-4" />
+                        View Gallery
+                      </button>
+                    </Link>
+                  )}
+                  <Link href="/winners">
+                    <button className="w-full flex items-center justify-center gap-2 bg-blue-900 hover:bg-blue-800 dark:bg-blue-800 dark:hover:bg-blue-700 text-white font-bold px-4 py-3 rounded-xl text-sm transition-all hover:-translate-y-0.5">
+                      <Trophy className="w-4 h-4" />
+                      All Winners
+                    </button>
+                  </Link>
+                </div>
               </CardContent>
             </Card>
           </motion.div>

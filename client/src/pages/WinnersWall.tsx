@@ -1,8 +1,9 @@
+import { useState, useMemo } from 'react';
 import { Link } from 'wouter';
-import { ArrowRight, Medal, Trophy } from 'lucide-react';
-import { ARCHIVED_TOURNAMENTS } from '@/data/tournamentArchive';
+import { ArrowRight, Medal, Trophy, Users, Image as ImageIcon, Award, BarChart3 } from 'lucide-react';
+import { ARCHIVED_TOURNAMENTS, computeWinnerLeaderboard } from '@/data/tournamentArchive';
 import { usePageMeta } from '@/hooks/usePageMeta';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const cardVariant = {
   hidden: { opacity: 0, y: 28 },
@@ -14,9 +15,21 @@ const cardVariant = {
 
 export default function WinnersWall() {
   usePageMeta({ title: 'Winners Wall', description: 'Champions and podium finishers from all IISc Badminton Club tournaments and events.' });
+  const [filter, setFilter] = useState<'all' | 'open' | 'team'>('all');
+
   const tournamentsWithResults = ARCHIVED_TOURNAMENTS.filter(
     (event) => event.winners || event.podium
   );
+  
+  const filteredTournaments = tournamentsWithResults.filter(
+    t => filter === 'all' || t.type === filter
+  );
+
+  const leaderboard = useMemo(() => computeWinnerLeaderboard().slice(0, 10), []);
+
+  const totalCategories = useMemo(() => 
+    tournamentsWithResults.reduce((sum, t) => sum + (t.winners?.length || 0), 0),
+  []);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -41,131 +54,232 @@ export default function WinnersWall() {
         </div>
       </section>
 
-      <section className="container mx-auto px-4 py-16 space-y-8">
-        {tournamentsWithResults.length === 0 ? (
+      <section className="container mx-auto px-4 py-12 space-y-12">
+        {/* Aggregate Stats & Leaderboard Grid */}
+        <div className="grid lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          {/* Stats Bar */}
+          <div className="lg:col-span-1 space-y-6">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
+                <Trophy className="w-7 h-7 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <div className="text-3xl font-black text-blue-950 dark:text-white">{tournamentsWithResults.length}</div>
+                <div className="text-sm font-bold text-slate-500 uppercase tracking-wider">Archived Events</div>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center shrink-0">
+                <Medal className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div>
+                <div className="text-3xl font-black text-blue-950 dark:text-white">{totalCategories}</div>
+                <div className="text-sm font-bold text-slate-500 uppercase tracking-wider">Title Categories</div>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center shrink-0">
+                <Users className="w-7 h-7 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div>
+                <div className="text-3xl font-black text-blue-950 dark:text-white">{leaderboard.length}</div>
+                <div className="text-sm font-bold text-slate-500 uppercase tracking-wider">Total Champions</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Top Leaderboard */}
+          <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+              <BarChart3 className="w-6 h-6 text-emerald-500" />
+              <h2 className="text-xl font-black text-blue-950 dark:text-white">Hall of Fame</h2>
+            </div>
+            <div className="p-6">
+              <div className="grid sm:grid-cols-2 gap-4">
+                {leaderboard.slice(0, 8).map((player, idx) => (
+                  <div key={player.name} className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
+                    <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 font-black flex items-center justify-center shrink-0">
+                      #{idx + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-slate-900 dark:text-white truncate">{player.name}</div>
+                      <div className="text-xs text-slate-500 truncate">{player.tournaments[0]}</div>
+                    </div>
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 font-bold shrink-0">
+                      <Award className="w-4 h-4" />
+                      {player.wins}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="flex justify-center max-w-6xl mx-auto">
+          <div className="bg-white dark:bg-slate-900 p-1.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex gap-1">
+            <button
+              onClick={() => setFilter('all')}
+              className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${filter === 'all' ? 'bg-blue-900 text-white shadow-md' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+            >
+              All Events
+            </button>
+            <button
+              onClick={() => setFilter('open')}
+              className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${filter === 'open' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+            >
+              Open Tournaments
+            </button>
+            <button
+              onClick={() => setFilter('team')}
+              className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${filter === 'team' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+            >
+              Team Events
+            </button>
+          </div>
+        </div>
+
+        {filteredTournaments.length === 0 ? (
           <div className="text-center py-20 text-gray-400 dark:text-slate-500">
             <Trophy className="w-12 h-12 mx-auto mb-4 opacity-30" />
-            <p className="text-lg font-semibold">No results archived yet.</p>
+            <p className="text-lg font-semibold">No results match this filter.</p>
           </div>
         ) : (
-          tournamentsWithResults.map((event, idx) => (
-            <motion.div
-              key={event.id}
-              custom={idx}
-              variants={cardVariant}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: '-60px' }}
-              className="rounded-3xl shadow-md border border-emerald-100 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden"
-            >
-              {/* Top accent */}
-              <div className={`h-1.5 bg-gradient-to-r ${
-                event.type === 'open' ? 'from-emerald-500 to-teal-600' :
-                event.type === 'team' ? 'from-blue-500 to-indigo-600' :
-                'from-purple-500 to-pink-600'
-              }`} />
+          <div className="max-w-6xl mx-auto space-y-8">
+            <AnimatePresence mode="popLayout">
+              {filteredTournaments.map((event, idx) => (
+                <motion.div
+                  key={event.id}
+                  layout
+                  custom={idx}
+                  variants={cardVariant}
+                  initial="hidden"
+                  animate="visible"
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  viewport={{ once: true, margin: '-60px' }}
+                  className="rounded-3xl shadow-md border border-emerald-100 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden"
+                >
+                  {/* Top accent */}
+                  <div className={`h-1.5 bg-gradient-to-r ${
+                    event.type === 'open' ? 'from-emerald-500 to-teal-600' :
+                    event.type === 'team' ? 'from-blue-500 to-indigo-600' :
+                    'from-purple-500 to-pink-600'
+                  }`} />
 
-              <div className="p-8 sm:p-10 space-y-6">
-                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
-                        event.type === 'open' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400' :
-                        event.type === 'team' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400' :
-                        'bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400'
-                      }`}>
-                        {event.type === 'open' ? 'Open Tournament' : event.type === 'team' ? 'Team Event' : 'Special Event'}
-                      </span>
-                      <span className="text-sm font-bold text-emerald-700 dark:text-emerald-500">{event.startDate}</span>
-                    </div>
-                    <h2 className="text-2xl sm:text-3xl font-black text-blue-900 dark:text-white">
-                      {event.name}
-                    </h2>
-                    <p className="text-gray-600 dark:text-slate-400 mt-2 max-w-3xl text-sm leading-relaxed">
-                      {event.description}
-                    </p>
-                  </div>
-
-                  <Link href={`/events/${event.slug}`}>
-                    <span className="inline-flex items-center gap-2 font-bold text-emerald-600 dark:text-emerald-400 hover:gap-3 transition-all duration-200 shrink-0 text-sm">
-                      Full results
-                      <ArrowRight className="w-4 h-4" />
-                    </span>
-                  </Link>
-                </div>
-
-                {/* Winners */}
-                {event.winners && (
-                  <div className="space-y-7">
-                    {Object.entries(
-                      event.winners.reduce((acc, curr) => {
-                        const [group, ...rest] = curr.category.includes(':') ? curr.category.split(':') : ['Overall', curr.category];
-                        const catName = rest.length > 0 ? rest.join(':').trim() : curr.category;
-                        if (!acc[group]) acc[group] = [];
-                        acc[group].push({ ...curr, category: catName });
-                        return acc;
-                      }, {} as Record<string, typeof event.winners>)
-                    ).map(([group, results]) => (
-                      <div key={group} className="space-y-3">
-                        {group !== 'Overall' && (
-                          <div className="flex items-center gap-3">
-                            <div className="w-1.5 h-5 bg-gradient-to-b from-amber-400 to-orange-500 rounded-full" />
-                            <h3 className="text-base font-black text-blue-900 dark:text-white">{group}</h3>
-                          </div>
-                        )}
-                        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">
-                          {results!.map((result) => (
-                            <div
-                              key={result.category}
-                              className="rounded-2xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/15 p-4 hover:shadow-sm transition-shadow"
-                            >
-                              <div className="flex items-center gap-2 text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-2">
-                                <Medal className="w-3.5 h-3.5" />
-                                {result.category}
-                              </div>
-                              <p className="font-bold text-blue-950 dark:text-white text-sm">
-                                🥇 {result.winner}
-                              </p>
-                              {result.runnerUp && (
-                                <p className="mt-1 text-xs font-semibold text-slate-600 dark:text-slate-400">
-                                  🥈 {result.runnerUp}
-                                </p>
-                              )}
-                            </div>
-                          ))}
+                  <div className="p-8 sm:p-10 space-y-6">
+                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                            event.type === 'open' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400' :
+                            event.type === 'team' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400' :
+                            'bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400'
+                          }`}>
+                            {event.type === 'open' ? 'Open Tournament' : event.type === 'team' ? 'Team Event' : 'Special Event'}
+                          </span>
+                          <span className="text-sm font-bold text-emerald-700 dark:text-emerald-500">{event.startDate}</span>
                         </div>
+                        <h2 className="text-2xl sm:text-3xl font-black text-blue-900 dark:text-white">
+                          {event.name}
+                        </h2>
+                        <p className="text-gray-600 dark:text-slate-400 mt-2 max-w-3xl text-sm leading-relaxed">
+                          {event.description}
+                        </p>
                       </div>
-                    ))}
-                  </div>
-                )}
 
-                {/* Podium */}
-                {event.podium && (
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                    {event.podium.map((team, index) => {
-                      const rankConfig = [
-                        { label: '🥇 Gold',   border: 'border-amber-300 dark:border-amber-700/60', bg: 'bg-amber-50 dark:bg-amber-950/20', text: 'text-amber-700 dark:text-amber-400' },
-                        { label: '🥈 Silver', border: 'border-slate-300 dark:border-slate-600',    bg: 'bg-slate-50 dark:bg-slate-800',     text: 'text-slate-600 dark:text-slate-300' },
-                        { label: '🥉 Bronze', border: 'border-orange-300 dark:border-orange-700/60', bg: 'bg-orange-50 dark:bg-orange-950/20', text: 'text-orange-700 dark:text-orange-400' },
-                      ];
-                      const rank = rankConfig[index] ?? { label: `#${index + 1}`, border: 'border-blue-200 dark:border-blue-800', bg: 'bg-blue-50 dark:bg-blue-950/20', text: 'text-blue-700 dark:text-blue-400' };
-                      return (
-                        <div
-                          key={team}
-                          className={`rounded-2xl border ${rank.border} ${rank.bg} p-4`}
-                        >
-                          <p className={`text-xs font-black uppercase tracking-wider ${rank.text}`}>
-                            {rank.label}
-                          </p>
-                          <p className="mt-2 font-bold text-blue-950 dark:text-white text-sm">{team}</p>
-                        </div>
-                      );
-                    })}
+                      <div className="flex flex-wrap items-center gap-3 shrink-0">
+                        {event.galleryFolder && (
+                          <Link href={`/gallery?filter=${encodeURIComponent(event.galleryFolder)}`}>
+                            <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold text-sm transition-colors">
+                              <ImageIcon className="w-4 h-4" />
+                              Photos
+                            </button>
+                          </Link>
+                        )}
+                        <Link href={`/events/${event.slug}`}>
+                          <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/40 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-400 font-bold text-sm transition-colors">
+                            Results Details
+                            <ArrowRight className="w-4 h-4" />
+                          </button>
+                        </Link>
+                      </div>
+                    </div>
+
+                    {/* Winners */}
+                    {event.winners && (
+                      <div className="space-y-7 pt-4 border-t border-slate-100 dark:border-slate-700">
+                        {Object.entries(
+                          event.winners.reduce((acc, curr) => {
+                            const [group, ...rest] = curr.category.includes(':') ? curr.category.split(':') : ['Overall', curr.category];
+                            const catName = rest.length > 0 ? rest.join(':').trim() : curr.category;
+                            if (!acc[group]) acc[group] = [];
+                            acc[group].push({ ...curr, category: catName });
+                            return acc;
+                          }, {} as Record<string, typeof event.winners>)
+                        ).map(([group, results]) => (
+                          <div key={group} className="space-y-3">
+                            {group !== 'Overall' && (
+                              <div className="flex items-center gap-3">
+                                <div className="w-1.5 h-5 bg-gradient-to-b from-amber-400 to-orange-500 rounded-full" />
+                                <h3 className="text-base font-black text-blue-900 dark:text-white">{group}</h3>
+                              </div>
+                            )}
+                            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">
+                              {results!.map((result) => (
+                                <div
+                                  key={result.category}
+                                  className="rounded-2xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/15 p-4 hover:shadow-sm transition-shadow"
+                                >
+                                  <div className="flex items-center gap-2 text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-2">
+                                    <Medal className="w-3.5 h-3.5" />
+                                    {result.category}
+                                  </div>
+                                  <p className="font-bold text-blue-950 dark:text-white text-sm">
+                                    🥇 {result.winner}
+                                  </p>
+                                  {result.runnerUp && (
+                                    <p className="mt-1 text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                      🥈 {result.runnerUp}
+                                    </p>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Podium */}
+                    {event.podium && (
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+                        {event.podium.map((team, index) => {
+                          const rankConfig = [
+                            { label: '🥇 Gold',   border: 'border-amber-300 dark:border-amber-700/60', bg: 'bg-amber-50 dark:bg-amber-950/20', text: 'text-amber-700 dark:text-amber-400' },
+                            { label: '🥈 Silver', border: 'border-slate-300 dark:border-slate-600',    bg: 'bg-slate-50 dark:bg-slate-800',     text: 'text-slate-600 dark:text-slate-300' },
+                            { label: '🥉 Bronze', border: 'border-orange-300 dark:border-orange-700/60', bg: 'bg-orange-50 dark:bg-orange-950/20', text: 'text-orange-700 dark:text-orange-400' },
+                          ];
+                          const rank = rankConfig[index] ?? { label: `#${index + 1}`, border: 'border-blue-200 dark:border-blue-800', bg: 'bg-blue-50 dark:bg-blue-950/20', text: 'text-blue-700 dark:text-blue-400' };
+                          return (
+                            <div
+                              key={team}
+                              className={`rounded-2xl border ${rank.border} ${rank.bg} p-4`}
+                            >
+                              <p className={`text-xs font-black uppercase tracking-wider ${rank.text}`}>
+                                {rank.label}
+                              </p>
+                              <p className="mt-2 font-bold text-blue-950 dark:text-white text-sm">{team}</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </motion.div>
-          ))
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
         )}
       </section>
     </div>

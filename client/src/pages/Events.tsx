@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Calendar, Trophy, Radio, Medal, ArrowRight, Clock, Info } from 'lucide-react';
 import { getTournaments } from '@/lib/tournaments';
-import { ARCHIVED_TOURNAMENTS, ArchivedTournament, TournamentStatus } from '@/data/tournamentArchive';
+import { ARCHIVED_TOURNAMENTS, ArchivedTournament, type TournamentStatus } from '@/data/tournamentArchive';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 import { toast } from 'sonner';
@@ -148,7 +148,8 @@ export default function Events() {
   const loadEvents = useCallback(async () => {
     try {
       const data = await getTournaments();
-      setEvents(data);
+      // Cast status to TournamentStatus since Firebase data is untyped
+      setEvents(data.map((e: any) => ({ ...e, status: e.status as TournamentStatus })));
     } catch (err) {
       console.error(err);
     } finally {

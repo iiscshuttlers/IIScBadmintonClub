@@ -4,12 +4,22 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   UserCircle, Trophy, Save, Sparkles, Activity,
   Swords, BookOpen, Quote, LogOut, Video, Image, Play, Upload, ArrowLeft, Lock
-} from "lucide-react";
+, Star} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { ARCHIVED_TOURNAMENTS } from "@/data/tournamentArchive";
+
+function getPasswordStrength(pwd: string) {
+  let score = 0;
+  if (!pwd) return 0;
+  if (pwd.length >= 8) score += 1;
+  if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) score += 1;
+  if (/[0-9]/.test(pwd)) score += 1;
+  if (/[^A-Za-z0-9]/.test(pwd)) score += 1;
+  return score;
+}
 
 const PREDEFINED_DEPARTMENTS = [
   "OTHER - Other",
@@ -129,36 +139,15 @@ export default function ProfileSetup() {
   const [quote, setQuote] = useState("");
   const [achievementsRaw, setAchievementsRaw] = useState("");
   const [tournamentsRaw, setTournamentsRaw] = useState("");
+  const [tourName, setTourName] = useState("");
+  const [tourYear, setTourYear] = useState("");
+  const [achMedal, setAchMedal] = useState("Gold");
+  const [achCustomMedal, setAchCustomMedal] = useState("");
+  const [achTournament, setAchTournament] = useState("");
+
+  const [careerHighlights, setCareerHighlights] = useState<{year: string; title: string; description: string}[]>([]);
 
   // Admin-defined Tournaments list & Achievements builder
-  const OFFICIAL_TOURNAMENTS = [
-    ...ARCHIVED_TOURNAMENTS.map(t => t.name),
-    "Other (Type Custom below)"
-  ];
-
-  const EVENT_CATEGORIES = [
-    "Men's Singles",
-    "Men's Doubles",
-    "Women's Singles",
-    "Women's Doubles",
-    "Mixed Doubles",
-    "Team Gold",
-    "Team Silver",
-    "Team Bronze"
-  ];
-
-  const PLACEMENT_RESULTS = [
-    "Winner",
-    "Runner-up",
-    "Semifinalist",
-    "Bronze Medalist"
-  ];
-
-  const [selTournament, setSelTournament] = useState(OFFICIAL_TOURNAMENTS[0]);
-  const [customTournamentText, setCustomTournamentText] = useState("");
-  const [selCategory, setSelCategory] = useState(EVENT_CATEGORIES[0]);
-  const [selResult, setSelResult] = useState(PLACEMENT_RESULTS[0]);
-
   function getYouTubeId(url: string): string | null {
     const m = url.match(/(?:youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]{11})/);
     return m ? m[1] : null;
@@ -178,26 +167,6 @@ export default function ProfileSetup() {
     const ytId = getYouTubeId(url);
     setVideoPreviewIds((prev) => { const n = [...prev]; n[idx] = ytId; return n; });
   }
-
-  const addOfficialAchievement = () => {
-    const tournamentName = selTournament === "Other (Type Custom below)" ? customTournamentText.trim() : selTournament;
-    if (selTournament === "Other (Type Custom below)" && customTournamentText.trim() === "") {
-      toast.error("Please type a custom tournament name!");
-      return;
-    }
-    const text = `${selCategory} ${selResult} - ${tournamentName}`;
-    const current = achievementsRaw.trim();
-    if (current) {
-      setAchievementsRaw(current + ", " + text);
-    } else {
-      setAchievementsRaw(text);
-    }
-
-    const tourCurrent = tournamentsRaw.split(",").map(s => s.trim()).filter(Boolean);
-    if (!tourCurrent.includes(tournamentName)) {
-      setTournamentsRaw(tournamentsRaw.trim() ? tournamentsRaw.trim() + ", " + tournamentName : tournamentName);
-    }
-  };
 
   // Section 5: Media Gallery (Images & YouTube Videos)
   const [mediaImages, setMediaImages] = useState<{ url: string; caption: string; }[]>([]);
@@ -301,6 +270,7 @@ export default function ProfileSetup() {
           setAvatarUrl(profile.avatar_url || "");
 
           setOriginalStats(profile.stats || {});
+          setCareerHighlights(profile.career_highlights || []);
 
           if (profile.stats?.media) {
             const imgs = profile.stats.media.filter((m: any) => m.type === "image");
@@ -467,6 +437,7 @@ export default function ProfileSetup() {
       instagram: instagram || null,
       achievements: achievementsRaw ? achievementsRaw.split(",").map(s => s.trim()).filter(Boolean) : [],
       tournament_history: tournamentsRaw ? tournamentsRaw.split(",").map(s => s.trim()).filter(Boolean) : [],
+      career_highlights: careerHighlights.filter(h => h.year && h.title),
     };
 
     const timeoutMs = 60000;
@@ -802,6 +773,23 @@ export default function ProfileSetup() {
                             className="w-full px-4 py-3 pl-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
                             placeholder="Enter new password (min 6 chars)"
                           />
+                          {newPassword && (
+                            <div className="mt-2 w-full px-1">
+                              <div className="flex gap-1">
+                                {[1, 2, 3, 4].map((level) => {
+                                  const strength = getPasswordStrength(newPassword);
+                                  let color = 'bg-slate-200 dark:bg-slate-700';
+                                  if (level <= strength) {
+                                    if (strength <= 1) color = 'bg-rose-500';
+                                    else if (strength === 2) color = 'bg-orange-500';
+                                    else if (strength === 3) color = 'bg-amber-500';
+                                    else color = 'bg-emerald-500';
+                                  }
+                                  return <div key={level} className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${color}`} />
+                                })}
+                              </div>
+                            </div>
+                          )}
                         </div>
                         <button
                           type="button"
@@ -1144,137 +1132,6 @@ export default function ProfileSetup() {
                       />
                     </div>
 
-                    {/* Quick Achievement Builder */}
-                    <div className="p-5 bg-gradient-to-br from-emerald-50 to-teal-50/30 dark:from-slate-900 dark:to-slate-800/40 rounded-2xl border border-emerald-100 dark:border-slate-800 space-y-4">
-                      <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                        <Trophy className="w-5 h-5 text-emerald-500 animate-bounce" />
-                        Quick Achievement Builder (Official Tournaments)
-                      </h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Admin-selected tournaments. Choose your tournament, category, and result, then click "Add to List" to automatically format and append it below!
-                      </p>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div>
-                          <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Tournament</label>
-                          <select
-                            value={selTournament}
-                            onChange={(e) => setSelTournament(e.target.value)}
-                            className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500"
-                          >
-                            {OFFICIAL_TOURNAMENTS.map((t, idx) => (
-                              <option key={idx} value={t}>{t}</option>
-                            ))}
-                          </select>
-
-                          {selTournament === "Other (Type Custom below)" && (
-                            <input
-                              type="text"
-                              required
-                              value={customTournamentText}
-                              onChange={(e) => setCustomTournamentText(e.target.value)}
-                              className="mt-2 w-full px-3 py-2 rounded-xl border border-slate-250 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500"
-                              placeholder="Type custom tournament name"
-                            />
-                          )}
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Event Category</label>
-                          <select
-                            value={selCategory}
-                            onChange={(e) => setSelCategory(e.target.value)}
-                            className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500"
-                          >
-                            {EVENT_CATEGORIES.map((c, idx) => (
-                              <option key={idx} value={c}>{c}</option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Result / Placement</label>
-                          <select
-                            value={selResult}
-                            onChange={(e) => setSelResult(e.target.value)}
-                            className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500"
-                          >
-                            {PLACEMENT_RESULTS.map((r, idx) => (
-                              <option key={idx} value={r}>{r}</option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="flex justify-end">
-                        <button
-                          type="button"
-                          onClick={addOfficialAchievement}
-                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/25 transition flex items-center gap-1.5"
-                        >
-                          <Trophy className="w-3.5 h-3.5" />
-                          Add to Achievements
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Achievements tag chips */}
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Top Achievements</label>
-                      <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 space-y-3">
-                        {achievementsRaw.split(",").map(s => s.trim()).filter(Boolean).length > 0 && (
-                          <div className="flex flex-wrap gap-2">
-                            {[...achievementsRaw.split(",").map(s => s.trim()).filter(Boolean)]
-                              .sort((a, b) => {
-                                const ya = parseInt(a.match(/\d{4}/)?.[0] ?? "0");
-                                const yb = parseInt(b.match(/\d{4}/)?.[0] ?? "0");
-                                return yb - ya;
-                              })
-                              .map((ach, idx) => (
-                                <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs font-bold">
-                                  🏆 {ach}
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const updated = achievementsRaw.split(",").map(s => s.trim()).filter(Boolean).filter(item => item !== ach);
-                                      setAchievementsRaw(updated.join(", "));
-                                    }}
-                                    className="ml-0.5 text-emerald-500 hover:text-rose-500 transition font-black text-sm leading-none"
-                                  >×</button>
-                                </span>
-                              ))}
-                          </div>
-                        )}
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            id="achInput"
-                            placeholder="e.g. Men's Doubles Winner - Farewell 2026"
-                            className="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500"
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ',') {
-                                e.preventDefault();
-                                const val = (e.target as HTMLInputElement).value.trim();
-                                if (val) {
-                                  setAchievementsRaw(achievementsRaw.trim() ? achievementsRaw.trim() + ", " + val : val);
-                                  (e.target as HTMLInputElement).value = '';
-                                }
-                              }
-                            }}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const inp = document.getElementById('achInput') as HTMLInputElement;
-                              const val = inp?.value.trim();
-                              if (val) { setAchievementsRaw(achievementsRaw.trim() ? achievementsRaw.trim() + ", " + val : val); inp.value = ''; }
-                            }}
-                            className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shrink-0"
-                          >Add</button>
-                        </div>
-                        <p className="text-[10px] text-slate-400 dark:text-slate-500">Press Enter or comma to add · Click × to remove · Or use the builder above</p>
-                      </div>
-                    </div>
 
                     {/* Tournaments tag chips */}
                     <div>
@@ -1303,35 +1160,198 @@ export default function ProfileSetup() {
                               ))}
                           </div>
                         )}
-                        <div className="flex gap-2">
+                        <div className="flex flex-col sm:flex-row gap-2">
                           <input
                             type="text"
-                            id="tourInput"
-                            placeholder="e.g. Farewell 2026"
-                            className="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500"
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ',') {
-                                e.preventDefault();
-                                const val = (e.target as HTMLInputElement).value.trim();
-                                if (val) {
-                                  setTournamentsRaw(tournamentsRaw.trim() ? tournamentsRaw.trim() + ", " + val : val);
-                                  (e.target as HTMLInputElement).value = '';
-                                }
-                              }
-                            }}
+                            value={tourName}
+                            onChange={(e) => setTourName(e.target.value)}
+                            placeholder="Tournament Name (e.g. Farewell Tournament)"
+                            className="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                          <input
+                            type="number"
+                            value={tourYear}
+                            onChange={(e) => setTourYear(e.target.value)}
+                            placeholder="Year (e.g. 2025)"
+                            className="w-full sm:w-32 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-blue-500"
                           />
                           <button
                             type="button"
                             onClick={() => {
-                              const inp = document.getElementById('tourInput') as HTMLInputElement;
-                              const val = inp?.value.trim();
-                              if (val) { setTournamentsRaw(tournamentsRaw.trim() ? tournamentsRaw.trim() + ", " + val : val); inp.value = ''; }
+                              if (tourName.trim() && tourYear.trim()) {
+                                const val = `${tourName.trim()} ${tourYear.trim()}`;
+                                setTournamentsRaw(tournamentsRaw.trim() ? tournamentsRaw.trim() + ", " + val : val);
+                                setTourName("");
+                                setTourYear("");
+                              }
                             }}
-                            className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shrink-0"
+                            disabled={!tourName.trim() || !tourYear.trim()}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition shrink-0"
                           >Add</button>
                         </div>
-                        <p className="text-[10px] text-slate-400 dark:text-slate-500">Press Enter or comma to add · Click × to remove</p>
                       </div>
+                    </div>
+
+
+                    {/* Achievements tag chips */}
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Top Achievements</label>
+                      <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 space-y-3">
+                        {achievementsRaw.split(",").map(s => s.trim()).filter(Boolean).length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {[...achievementsRaw.split(",").map(s => s.trim()).filter(Boolean)]
+                              .sort((a, b) => {
+                                const ya = parseInt(a.match(/\d{4}/)?.[0] ?? "0");
+                                const yb = parseInt(b.match(/\d{4}/)?.[0] ?? "0");
+                                return yb - ya;
+                              })
+                              .map((ach, idx) => (
+                                <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs font-bold">
+                                  🏆 {ach}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const updated = achievementsRaw.split(",").map(s => s.trim()).filter(Boolean).filter(item => item !== ach);
+                                      setAchievementsRaw(updated.join(", "));
+                                    }}
+                                    className="ml-0.5 text-emerald-500 hover:text-rose-500 transition font-black text-sm leading-none"
+                                  >×</button>
+                                </span>
+                              ))}
+                          </div>
+                        )}
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <div className="flex gap-2 sm:w-1/3 shrink-0">
+                            <select
+                              value={achMedal}
+                              onChange={(e) => setAchMedal(e.target.value)}
+                              className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500"
+                            >
+                              <option value="Gold">🥇 Gold / Winner</option>
+                              <option value="Silver">🥈 Silver / Runner-up</option>
+                              <option value="Bronze">🥉 Bronze / Semi-Finalist</option>
+                              <option value="Other">Other</option>
+                            </select>
+                          </div>
+                          {achMedal === "Other" && (
+                            <input
+                              type="text"
+                              value={achCustomMedal}
+                              onChange={(e) => setAchCustomMedal(e.target.value)}
+                              placeholder="e.g. Quarter-Finalist"
+                              className="w-full sm:w-32 shrink-0 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500"
+                            />
+                          )}
+                          <select
+                            value={achTournament}
+                            onChange={(e) => setAchTournament(e.target.value)}
+                            className="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500"
+                          >
+                            <option value="">-- Select Tournament Played --</option>
+                            {tournamentsRaw.split(",").map(s => s.trim()).filter(Boolean).map((t, idx) => (
+                              <option key={idx} value={t}>{t}</option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const medalStr = achMedal === "Other" ? achCustomMedal.trim() : (achMedal === "Gold" ? "Winner" : achMedal === "Silver" ? "Runner-up" : "Semi-Finalist");
+                              if (medalStr && achTournament.trim()) {
+                                const val = `${medalStr} - ${achTournament.trim()}`;
+                                setAchievementsRaw(achievementsRaw.trim() ? achievementsRaw.trim() + ", " + val : val);
+                                setAchCustomMedal("");
+                                setAchTournament("");
+                              }
+                            }}
+                            disabled={!(achMedal === "Other" ? achCustomMedal.trim() : true) || !achTournament.trim()}
+                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition shrink-0"
+                          >Add</button>
+                        </div>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500">First add Tournaments below, then select them here.</p>
+                      </div>
+                    </div>
+
+                    {/* Career Highlights Builder */}
+                    <div className="pt-6 mt-6 border-t border-slate-200 dark:border-slate-800">
+                      <div className="flex justify-between items-center mb-3">
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                          <Star className="w-5 h-5 text-amber-500" />
+                          Career Highlights
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setCareerHighlights([...careerHighlights, { year: "", title: "", description: "" }])}
+                          className="text-xs font-bold text-amber-600 hover:text-amber-700 dark:text-amber-400 flex items-center gap-1 bg-amber-50 dark:bg-amber-950/20 px-3 py-1.5 rounded-lg border border-amber-100 dark:border-amber-900/30 transition shadow-sm"
+                        >
+                          + Add Highlight
+                        </button>
+                      </div>
+                      
+                      {careerHighlights.length === 0 ? (
+                        <div className="text-center p-6 bg-slate-50 dark:bg-slate-800/50 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl">
+                          <p className="text-slate-500 dark:text-slate-400 text-sm">Add custom narrative milestones (e.g. "Joined IISc Team") to show on your profile timeline.</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {careerHighlights.map((hl, idx) => (
+                            <div key={idx} className="relative bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm pr-12">
+                              <button
+                                type="button"
+                                onClick={() => setCareerHighlights(careerHighlights.filter((_, i) => i !== idx))}
+                                className="absolute top-4 right-4 text-rose-500 hover:text-rose-600 dark:text-rose-400 font-black p-1 hover:bg-rose-100 dark:hover:bg-rose-900/30 rounded-lg transition"
+                                title="Remove highlight"
+                              >
+                                ×
+                              </button>
+                              
+                              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                                <div className="sm:col-span-1">
+                                  <label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Year</label>
+                                  <input
+                                    type="text"
+                                    value={hl.year}
+                                    placeholder="e.g. 2023"
+                                    onChange={(e) => {
+                                      const arr = [...careerHighlights];
+                                      arr[idx].year = e.target.value;
+                                      setCareerHighlights(arr);
+                                    }}
+                                    className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-500"
+                                  />
+                                </div>
+                                <div className="sm:col-span-3">
+                                  <label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Title</label>
+                                  <input
+                                    type="text"
+                                    value={hl.title}
+                                    placeholder="e.g. Inter-University Quarter-Finalist"
+                                    onChange={(e) => {
+                                      const arr = [...careerHighlights];
+                                      arr[idx].title = e.target.value;
+                                      setCareerHighlights(arr);
+                                    }}
+                                    className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-500"
+                                  />
+                                </div>
+                                <div className="sm:col-span-4">
+                                  <label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Description (Optional)</label>
+                                  <textarea
+                                    value={hl.description}
+                                    rows={2}
+                                    placeholder="Briefly describe this milestone..."
+                                    onChange={(e) => {
+                                      const arr = [...careerHighlights];
+                                      arr[idx].description = e.target.value;
+                                      setCareerHighlights(arr);
+                                    }}
+                                    className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 )}
