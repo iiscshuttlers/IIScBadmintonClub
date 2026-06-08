@@ -1119,6 +1119,18 @@ export default function PlayerProfile() {
             )}
 
             {/* Match History */}
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xl font-bold"></h3>
+              {ownPlayerProfile && (
+                <button
+                  onClick={() => window.dispatchEvent(new Event('openLogMatchModal'))}
+                  className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-2 px-4 rounded-xl shadow-md text-sm flex items-center gap-2 transition-transform active:scale-95"
+                >
+                  <Swords className="w-4 h-4" />
+                  Log a Match
+                </button>
+              )}
+            </div>
             <MatchHistorySection
               id={id}
               liveMatches={liveMatches}

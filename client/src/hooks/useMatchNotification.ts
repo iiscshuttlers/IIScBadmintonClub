@@ -41,19 +41,18 @@ export function useMatchNotification() {
 
           if (!isInvolved) return;
 
-          // Don't alert for matches the user themselves submitted
-          if (match.submitted_by === profile.id) return;
-
+          // Removed early return so submitter also gets visual feedback
           // Deduplicate
           if (shownRef.current.has(match.id)) return;
           shownRef.current.add(match.id);
 
           // Determine who the opponent is (the submitter)
           const challengerId = match.submitted_by;
+          const isSubmitter = match.submitted_by === profile.id;
 
           // Fetch opponent name for the notification
           let opponentName = 'Someone';
-          if (challengerId) {
+          if (challengerId && !isSubmitter) {
             const { data } = await supabase
               .from('players')
               .select('full_name')
@@ -65,18 +64,24 @@ export function useMatchNotification() {
           // Play smash sound (in-app)
           playSmashSound();
 
-          // Fire browser notification (works even if tab is in background)
-          const alertName = opponentName || 'Someone';
-          showWebNotification(
-            '🏸 New Match Challenge!',
-            `${alertName} just logged a match against you. Open the app to confirm.`,
-            () => {
-              window.location.href = `${import.meta.env.BASE_URL || '/'}player/${profile.id}`;
-            }
-          );
+          // Fire browser notification ONLY for the receiver(s)
+          if (!isSubmitter) {
+            const alertName = opponentName || 'Someone';
+            showWebNotification(
+              '🏸 New Match Challenge!',
+              `${alertName} just logged a match against you. Open the app to confirm.`,
+              () => {
+                window.location.href = `${import.meta.env.BASE_URL || '/'}player/${profile.id}`;
+              }
+            );
+          }
 
-          // Show in-app overlay notification
-          setNotification({ id: match.id, opponentName });
+          // Show in-app overlay notification (for everyone involved)
+          // For submitter, we just say "Match Logged!" instead of "Opponent logged"
+          setNotification({ 
+            id: match.id, 
+            opponentName: isSubmitter ? 'Success! Match logged' : opponentName 
+          });
 
           // Auto-dismiss after 2 seconds
           setTimeout(() => {
