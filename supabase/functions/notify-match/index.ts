@@ -55,6 +55,7 @@ serve(async (req) => {
     );
 
     const payload = await req.json();
+    console.log('[notify-match] Received payload:', JSON.stringify(payload).slice(0, 500));
 
     // 1. Validate payload comes from our webhook
     if (payload.type !== 'INSERT' || payload.table !== 'matches') {
@@ -65,11 +66,13 @@ serve(async (req) => {
     
     // We only notify if it's a pending match (a challenge)
     if (matchRecord.status !== 'pending') {
+      console.log('[notify-match] Not a pending match, skipping');
       return new Response(JSON.stringify({ message: "Not a pending match, skipped" }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const player1Id = matchRecord.player1_id;
     const player2Id = matchRecord.player2_id;
+    console.log(`[notify-match] Challenge: ${player1Id} -> ${player2Id}`);
 
     // 2. Fetch Player 1's Name (the Challenger)
     const { data: challenger, error: challengerError } = await supabaseClient
@@ -79,8 +82,12 @@ serve(async (req) => {
       .single();
 
     if (challengerError || !challenger) {
-      throw new Error("Could not find challenger info");
+      console.error('[notify-match] Could not find challenger:', challengerError);
+      // Don't crash — just use a fallback name
+      // throw new Error("Could not find challenger info");
     }
+
+    const challengerName = challenger?.full_name || 'Someone';
 
     // 3. Fetch Player 2's Push Tokens (the Challenged)
     const { data: tokens, error: tokensError } = await supabaseClient
@@ -88,24 +95,60 @@ serve(async (req) => {
       .select('token')
       .eq('user_id', player2Id);
 
-    if (tokensError || !tokens || tokens.length === 0) {
-      return new Response(JSON.stringify({ message: "No push tokens found for user" }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    console.log(`[notify-match] Found ${tokens?.length ?? 0} push tokens for ${player2Id}`);
+
+    if (tokensError) {
+      console.error('[notify-match] Error fetching tokens:', tokensError);
     }
+
+    if (!tokens || tokens.length === 0) {
+      return new Response(JSON.stringify({ message: `No push tokens found for user ${player2Id}` }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // 4. Also check for doubles partners
+    const partnerIds = [
+      matchRecord.team1_partner_id,
+      matchRecord.team2_partner_id,
+    ].filter(Boolean);
+
+    // Collect all tokens for all notified players
+    let allTokensToSend = [...tokens];
+    for (const partnerId of partnerIds) {
+      if (partnerId && partnerId !== player1Id) {
+        const { data: partnerTokens } = await supabaseClient
+          .from('push_tokens')
+          .select('token')
+          .eq('user_id', partnerId);
+        if (partnerTokens) allTokensToSend.push(...partnerTokens);
+      }
+    }
+
+    // Deduplicate tokens
+    const uniqueTokens = [...new Map(allTokensToSend.map(t => [t.token, t])).values()];
 
     const fcmAccessToken = await getFirebaseAccessToken();
     const serviceAccountStr = Deno.env.get('FIREBASE_SERVICE_ACCOUNT')!;
     const projectId = JSON.parse(serviceAccountStr).project_id;
 
     const notificationTitle = "🏸 New Match Challenge!";
-    const notificationBody = `${challenger.full_name} has just logged a match against you. Open the app to confirm.`;
+    const notificationBody = `${challengerName} has just logged a match against you. Open the app to confirm.`;
 
-    const sendPromises = tokens.map(async (t) => {
+    console.log(`[notify-match] Sending ${uniqueTokens.length} FCM notifications`);
+
+    const results = await Promise.allSettled(uniqueTokens.map(async (t) => {
       const fcmPayload = {
         message: {
           token: t.token,
           notification: {
             title: notificationTitle,
             body: notificationBody,
+          },
+          android: {
+            priority: "high",
+            notification: {
+              sound: "default",
+              channelId: "match_alerts",
+            }
           },
           data: {
             matchId: matchRecord.id,
@@ -123,19 +166,34 @@ serve(async (req) => {
         body: JSON.stringify(fcmPayload),
       });
 
+      const resBody = await res.text();
+
       if (!res.ok) {
-        console.error(`FCM error for token ${t.token}:`, await res.text());
+        console.error(`[notify-match] FCM error for token ${t.token.slice(0, 20)}...:`, resBody);
+
+        // If token is invalid/expired, remove it from the DB
+        if (res.status === 404 || res.status === 400) {
+          console.log(`[notify-match] Removing stale token ${t.token.slice(0, 20)}...`);
+          await supabaseClient.from('push_tokens').delete().eq('token', t.token);
+        }
+
+        throw new Error(`FCM ${res.status}: ${resBody}`);
       }
-    });
 
-    await Promise.all(sendPromises);
+      return resBody;
+    }));
 
-    return new Response(JSON.stringify({ message: `Sent ${tokens.length} notifications` }), {
+    const succeeded = results.filter(r => r.status === 'fulfilled').length;
+    const failed = results.filter(r => r.status === 'rejected').length;
+
+    console.log(`[notify-match] Done. Sent: ${succeeded}, Failed: ${failed}`);
+
+    return new Response(JSON.stringify({ message: `Sent ${succeeded}/${uniqueTokens.length} notifications` }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
   } catch (err) {
-    console.error("Error sending push notification:", err);
+    console.error("[notify-match] Error:", err);
     return new Response(JSON.stringify({ error: err.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
