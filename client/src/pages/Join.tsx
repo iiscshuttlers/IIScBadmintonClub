@@ -137,7 +137,7 @@ export default function Join() {
       if (error) throw error;
 
       if (!data.session) {
-        setInfoMsg("Verification link sent! Please check your email (and spam folder) to confirm, then sign in.");
+        setInfoMsg("Verification link sent! Check Junk/Spam for IISc emails. If it never arrives, please try signing up with a personal Gmail account.");
         setMode("signin");
         setLoading(false);
       } else if (new URLSearchParams(window.location.search).get("add_account") === "true") {
@@ -168,7 +168,7 @@ export default function Join() {
       });
       if (error) throw error;
       setMode("otp-verify");
-      setInfoMsg(`Login code sent to ${email}`);
+      setInfoMsg(`Login code sent! Check Junk/Spam for IISc emails. If it never arrives, please try a personal Gmail account.`);
     } catch (err: any) {
       const msg: string = err?.message ?? "";
       setErrorMsg(msg.includes("not found") ? "No account found with this email. Please sign up first." : (msg || "An error occurred. Please try again."));
