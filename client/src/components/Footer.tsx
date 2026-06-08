@@ -1,7 +1,21 @@
 import { Link } from 'wouter';
 import { Mail, MapPin, ExternalLink } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 export default function Footer() {
+  const [apkUrl, setApkUrl] = useState("https://github.com/iiscshuttlers/iiscshuttlers/releases/latest");
+
+  useEffect(() => {
+    fetch('/data/app-version.json?v=' + Date.now())
+      .then(r => r.json())
+      .then(data => {
+        if (data && data.downloadUrl) {
+          setApkUrl(data.downloadUrl);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const quickLinks = [
     { href: '/', label: 'Home' },
     { href: '/facilities', label: 'Facilities' },
@@ -94,7 +108,7 @@ export default function Footer() {
           <div>
             <h4 className="font-bold text-sm text-emerald-400 uppercase tracking-widest mb-5">Get the App</h4>
             <a
-              href="https://github.com/iiscshuttlers/iiscshuttlers/releases/latest/download/app-release.apk"
+              href={apkUrl}
               className="group flex items-center gap-3 bg-white/5 border border-white/10 hover:bg-emerald-500/10 hover:border-emerald-500/30 rounded-xl p-4 transition-all duration-300 mb-6"
               title="Download Android App"
             >
