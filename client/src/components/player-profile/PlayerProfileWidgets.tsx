@@ -135,6 +135,21 @@ export const Badges = ({ matches, playerId }: { matches: any[]; playerId: string
     const ironman = Object.values(counts).some((count: any) => count >= 5);
     if (ironman) earned.push({ id: 'ironman', name: 'Ironman', desc: 'Played 5+ matches in one day', icon: '🦾', color: 'from-rose-400 to-red-600' });
 
+    // Clean Sweep: Opponent scored less than 5 points in a win
+    const cleanSweep = matches.some(m => {
+      if (m.winner_id !== playerId) return false;
+      const scorePattern = /(\d+)-(\d+)/;
+      const matchScore = m.match_score?.match(scorePattern);
+      if (matchScore) {
+        const p1Score = parseInt(matchScore[1]);
+        const p2Score = parseInt(matchScore[2]);
+        const loserScore = Math.min(p1Score, p2Score);
+        return loserScore < 5;
+      }
+      return false;
+    });
+    if (cleanSweep) earned.push({ id: 'clean_sweep', name: 'Clean Sweep', desc: 'Won a match keeping opponent under 5 points', icon: '🧹', color: 'from-teal-400 to-emerald-600' });
+
     // Streaker: current or historical streak >= 5 (simplification: if they won 5 of last 5)
     let streak = 0;
     let maxStreak = 0;
@@ -366,3 +381,55 @@ export function LoadingScreen() {
     </div>
   );
 }
+
+export const HeadToHeadWidget = ({ currentUser, targetPlayer, matches }: { currentUser: any, targetPlayer: any, matches: any[] }) => {
+  if (!currentUser || !targetPlayer || currentUser.id === targetPlayer.id) return null;
+  
+  const h2hMatches = matches.filter(m => 
+    (m.player1_id === currentUser.id && m.player2_id === targetPlayer.id) ||
+    (m.player2_id === currentUser.id && m.player1_id === targetPlayer.id)
+  );
+  
+  if (h2hMatches.length === 0) return null;
+
+  let wins = 0;
+  let losses = 0;
+  h2hMatches.forEach(m => {
+    if (m.match_winner_id === currentUser.id) wins++;
+    else if (m.match_winner_id === targetPlayer.id) losses++;
+  });
+
+  const winPct = Math.round((wins / (wins + losses)) * 100) || 0;
+
+  return (
+    <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-5 shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 mt-6 md:mt-8">
+      <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-6 flex items-center gap-2">
+        ?? HEAD-TO-HEAD
+      </h3>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <div className="text-center">
+            <div className="text-xs font-bold text-slate-400 mb-1">YOU</div>
+            <div className="text-3xl font-black text-emerald-500">{wins}</div>
+          </div>
+          <div className="text-xl font-black text-slate-300 dark:text-slate-600">-</div>
+          <div className="text-center">
+            <div className="text-xs font-bold text-slate-400 mb-1">THEM</div>
+            <div className="text-3xl font-black text-rose-500">{losses}</div>
+          </div>
+        </div>
+        <div className="flex-1 w-full max-w-xs">
+          <div className="flex justify-between text-xs font-bold mb-2">
+            <span className="text-emerald-500">{winPct}% Win Rate</span>
+            <span className="text-slate-400">{h2hMatches.length} Matches</span>
+          </div>
+          <div className="h-3 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden flex">
+            <div className="h-full bg-emerald-500" style={{ width: \${winPct}%\ }} />
+            <div className="h-full bg-rose-500" style={{ width: \${100 - winPct}%\ }} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+

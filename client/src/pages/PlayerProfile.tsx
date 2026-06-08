@@ -17,7 +17,7 @@ import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { isAdminEmail } from "@/lib/admin";
 import { MatchHistorySection } from "@/components/player-profile/MatchHistorySection";
 import { EquipmentArsenalSection, CareerHighlightsSection } from "@/components/player-profile/PlayerProfileSections";
-import { LoadingScreen, FormPill, CircularProgress, KPI, CategoryBar, Badges, ActivityHeatmap, PlayerRadarChart, EloHistoryChart } from "@/components/player-profile/PlayerProfileWidgets";
+import { LoadingScreen, FormPill, CircularProgress, KPI, CategoryBar, Badges, ActivityHeatmap, PlayerRadarChart, EloHistoryChart, HeadToHeadWidget } from "@/components/player-profile/PlayerProfileWidgets";
 import { Capacitor } from "@capacitor/core";
 import { Share } from "@capacitor/share";
 import { toast } from "sonner";
@@ -1682,3 +1682,4 @@ export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: b
     </div>
   );
 }
+

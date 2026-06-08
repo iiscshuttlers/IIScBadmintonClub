@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Share2, Pencil, Trash2, Sword, BellRing, BellOff } from "lucide-react";
 import { toast } from "sonner";
@@ -88,14 +89,25 @@ export function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, o
   };
 
   return (
-    <Card
-      className={`h-full rounded-[2rem] overflow-hidden cursor-pointer border bg-white dark:bg-slate-900
-        hover:shadow-2xl hover:shadow-slate-200/50 dark:hover:shadow-none hover:-translate-y-1.5
-        transition-all duration-300 flex flex-col justify-between group relative
-        ${isOwn
-          ? "border-emerald-400 dark:border-emerald-600 ring-2 ring-emerald-400/30"
-          : "border-slate-100 dark:border-slate-800"}`}
+    <motion.div
+      drag="x"
+      dragConstraints={{ left: 0, right: 0 }}
+      dragElastic={0.2}
+      onDragEnd={(e, { offset }) => {
+        if (offset.x > 80 && !isOwn) {
+          document.getElementById(`ping-btn-${player.id}`)?.click();
+        }
+      }}
+      className="h-full"
     >
+      <Card
+        className={`h-full rounded-[2rem] overflow-hidden cursor-pointer border bg-white dark:bg-slate-900
+          hover:shadow-2xl hover:shadow-slate-200/50 dark:hover:shadow-none hover:-translate-y-1.5
+          transition-all duration-300 flex flex-col justify-between group relative
+          ${isOwn
+            ? "border-emerald-400 dark:border-emerald-600 ring-2 ring-emerald-400/30"
+            : "border-slate-100 dark:border-slate-800"}`}
+      >
       {isOwn && (
         <span className="absolute top-3 left-3 z-10 px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-black uppercase tracking-widest shadow">
           You
@@ -125,6 +137,7 @@ export function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, o
       {/* Ping Button */}
       {!isOwn && (
         <button
+          id={`ping-btn-${player.id}`}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -278,5 +291,6 @@ export function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, o
         )}
       </CardContent>
     </Card>
+    </motion.div>
   );
 }
