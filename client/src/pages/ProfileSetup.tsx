@@ -639,15 +639,25 @@ export default function ProfileSetup() {
                       </h3>
 
                       <div className="flex flex-col sm:flex-row items-center gap-6">
-                        <div className="w-20 h-20 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden shrink-0 border border-slate-300 dark:border-slate-700">
+                        <label className="relative w-20 h-20 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden shrink-0 border border-slate-300 dark:border-slate-700 cursor-pointer group shadow-sm hover:shadow-md transition-shadow">
                           {avatarUrl ? (
-                            <img src={avatarUrl} alt="Avatar Preview" className="w-full h-full object-cover" />
+                            <img src={avatarUrl} alt="Avatar Preview" className="w-full h-full object-cover transition-opacity group-hover:opacity-50" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-slate-400 dark:text-slate-600 text-3xl font-bold uppercase">
+                            <div className="w-full h-full flex items-center justify-center text-slate-400 dark:text-slate-600 text-3xl font-bold uppercase transition-opacity group-hover:opacity-50">
                               {fullName ? fullName.charAt(0) : "U"}
                             </div>
                           )}
-                        </div>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 text-white">
+                            <Upload className="w-5 h-5 mb-0.5" />
+                            <span className="text-[10px] font-bold">Upload</span>
+                          </div>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleAvatarUpload}
+                            className="hidden"
+                          />
+                        </label>
 
                         <div className="flex-1 w-full space-y-3">
                           <div>
