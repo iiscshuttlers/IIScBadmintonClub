@@ -166,118 +166,6 @@ export const Badges = ({ matches, playerId }: { matches: any[]; playerId: string
   );
 };
 
-export const PlayerRadarChart = ({ playerId }: { playerId: string }) => {
-  const [stats, setStats] = useState<any[]>([]);
-
-  useEffect(() => {
-    // Generate deterministic stats based on playerId string length and characters
-    const seed = playerId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const getStat = (base: number, offset: number) => Math.min(100, Math.max(40, base + (seed % offset)));
-
-    setStats([
-      { subject: 'Power', A: getStat(60, 30), fullMark: 100 },
-      { subject: 'Speed', A: getStat(70, 25), fullMark: 100 },
-      { subject: 'Defense', A: getStat(65, 35), fullMark: 100 },
-      { subject: 'Net Play', A: getStat(55, 40), fullMark: 100 },
-      { subject: 'Stamina', A: getStat(75, 20), fullMark: 100 },
-    ]);
-  }, [playerId]);
-
-  if (stats.length === 0) return null;
-
-  return (
-    <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-5 sm:p-6 shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 mt-6 md:mt-8">
-      <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-6 text-center">Attributes Radar</h3>
-      <div className="h-[250px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <RadarChart cx="50%" cy="50%" outerRadius="70%" data={stats}>
-            <PolarGrid stroke="#334155" opacity={0.3} />
-            <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 'bold' }} />
-            <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-            <Radar name="Attributes" dataKey="A" stroke="#10b981" fill="#10b981" fillOpacity={0.4} strokeWidth={2} />
-            <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', background: 'var(--tw-colors-slate-900)', color: '#fff' }} itemStyle={{ color: '#10b981', fontWeight: 'bold' }} />
-          </RadarChart>
-        </ResponsiveContainer>
-      </div>
-      
-      {(() => {
-        if (!stats.length) return null;
-        const highest = [...stats].sort((a, b) => b.A - a.A)[0];
-        const titles: Record<string, { label: string, color: string, desc: string }> = {
-          Power: { label: "Smash King", color: "from-rose-500 to-orange-500", desc: "Devastating offensive pressure." },
-          Speed: { label: "The Flash", color: "from-yellow-400 to-orange-500", desc: "Incredible court coverage." },
-          Defense: { label: "The Wall", color: "from-blue-500 to-cyan-500", desc: "Impenetrable defense." },
-          NetPlay: { label: "Net Assassin", color: "from-violet-500 to-purple-500", desc: "Deadly precision at the net." },
-          Stamina: { label: "Iron Lungs", color: "from-emerald-500 to-teal-500", desc: "Outlasts every opponent." }
-        };
-        const t = titles[highest.subject] || titles.Power;
-        
-        return (
-          <div className="mt-4 flex flex-col items-center text-center">
-            <div className={`px-4 py-1.5 rounded-full bg-gradient-to-r ${t.color} text-white text-xs font-black uppercase tracking-widest shadow-lg mb-2`}>
-              {t.label}
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t.desc}</p>
-          </div>
-        );
-      })()}
-    </div>
-  );
-};
-
-export const EloHistoryChart = ({ playerId, currentElo }: { playerId: string, currentElo: number }) => {
-  const [history, setHistory] = useState<any[]>([]);
-
-  useEffect(() => {
-    // Deterministically generate a realistic ELO trajectory ending at their current ELO
-    const seed = playerId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    let baseElo = currentElo - 150 + (seed % 50); // Start lower
-    const data = [];
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    
-    for (let i = 0; i < 6; i++) {
-      data.push({
-        month: months[(new Date().getMonth() - 5 + i + 12) % 12],
-        elo: Math.round(baseElo)
-      });
-      // Fluctuate and climb
-      baseElo += (currentElo - baseElo) / (6 - i) + ((seed + i * 13) % 40 - 15);
-    }
-    
-    // Ensure the final point matches exactly their current ELO
-    data[5].elo = currentElo;
-    
-    setHistory(data);
-  }, [playerId, currentElo]);
-
-  return (
-    <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-5 sm:p-6 shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 mt-6">
-      <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-6 text-center">Historical ELO Trajectory</h3>
-      <div className="h-[250px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={history} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-            <defs>
-              <linearGradient id="colorElo" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
-            <XAxis dataKey="month" tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 'bold' }} axisLine={false} tickLine={false} />
-            <YAxis domain={['dataMin - 50', 'dataMax + 50']} tick={{ fill: '#94a3b8', fontSize: 12 }} axisLine={false} tickLine={false} />
-            <Tooltip 
-              contentStyle={{ borderRadius: '12px', border: 'none', background: 'var(--tw-colors-slate-900)', color: '#fff', fontWeight: 'bold' }} 
-              itemStyle={{ color: '#10b981' }} 
-              cursor={{ stroke: '#94a3b8', strokeWidth: 1, strokeDasharray: '5 5' }}
-            />
-            <Area type="monotone" dataKey="elo" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorElo)" />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
-  );
-};
-
 export const ActivityHeatmap = ({ matches }: { matches: any[] }) => {
   const [heatmapData, setHeatmapData] = useState<{ date: string; count: number }[]>([]);
 
@@ -417,4 +305,5 @@ export const HeadToHeadWidget = ({ currentUser, targetPlayer, matches }: { curre
     </div>
   );
 };
+
 

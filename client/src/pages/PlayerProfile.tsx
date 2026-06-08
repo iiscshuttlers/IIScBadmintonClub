@@ -17,7 +17,7 @@ import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { isAdminEmail } from "@/lib/admin";
 import { MatchHistorySection } from "@/components/player-profile/MatchHistorySection";
 import { EquipmentArsenalSection, CareerHighlightsSection } from "@/components/player-profile/PlayerProfileSections";
-import { LoadingScreen, FormPill, CircularProgress, KPI, CategoryBar, Badges, ActivityHeatmap, PlayerRadarChart, EloHistoryChart } from "@/components/player-profile/PlayerProfileWidgets";
+import { LoadingScreen, FormPill, CircularProgress, KPI, CategoryBar, Badges, ActivityHeatmap } from "@/components/player-profile/PlayerProfileWidgets";
 import { HeadToHeadWidget } from "@/components/player-profile/HeadToHeadWidget";
 import { Capacitor } from "@capacitor/core";
 import { Share } from "@capacitor/share";
@@ -1474,10 +1474,6 @@ export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: b
                       <Badges matches={liveMatches.filter(m => m.status === "confirmed")} playerId={id!} />
                     <ActivityHeatmap matches={liveMatches.filter(m => m.status === "confirmed")} />
                   </div>
-                  <div>
-                    <PlayerRadarChart playerId={id!} />
-                    <EloHistoryChart playerId={id!} currentElo={player.elo_rating || 1200} />
-                  </div>
                 </div>
                 
                 <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-5 sm:p-6 shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 mt-6 md:mt-8">
@@ -1692,6 +1688,7 @@ export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: b
     </div>
   );
 }
+
 
 
 
