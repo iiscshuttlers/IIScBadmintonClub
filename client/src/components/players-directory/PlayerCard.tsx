@@ -178,10 +178,7 @@ export function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, o
 
         {/* Player Status Indicator */}
         {(() => {
-          // Deterministically generate a status for demo purposes based on ID
-          const seed = player.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-          const statusTypes = [null, 'looking', 'playing', 'resting', null, null];
-          const status = player.status || statusTypes[seed % statusTypes.length];
+            const status = player.status;
           if (!status) return null;
           
           const statusConfig = {
@@ -282,3 +279,4 @@ export function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, o
     </Card>
   );
 }
+
