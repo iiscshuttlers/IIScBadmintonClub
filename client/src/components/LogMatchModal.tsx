@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Sword, Trophy, Loader2, Users, User, Plus, Minus, Clock, Lock } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -32,17 +32,73 @@ function PlayerSelect({ value, onChange, players, placeholder }: {
   value: string; onChange: (v: string) => void;
   players: Player[]; placeholder?: string;
 }) {
+  const [search, setSearch] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (value) {
+      const p = players.find(p => p.id === value);
+      if (p) setSearch(p.full_name);
+    } else {
+      setSearch("");
+    }
+  }, [value, players]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+        if (value) {
+          const p = players.find(p => p.id === value);
+          if (p) setSearch(p.full_name);
+        } else {
+          setSearch("");
+        }
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [value, players]);
+
+  const filtered = players.filter(p => p.full_name.toLowerCase().includes(search.toLowerCase()));
+
   return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-1.5 outline-none focus:ring-2 focus:ring-emerald-500"
-    >
-      <option value="">{placeholder ?? "Select..."}</option>
-      {players.map(p => (
-        <option key={p.id} value={p.id}>{p.full_name}</option>
-      ))}
-    </select>
+    <div className="relative w-full" ref={wrapperRef}>
+      <input
+        type="text"
+        placeholder={placeholder ?? "Search player..."}
+        value={search}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setIsOpen(true);
+          onChange(""); // Clear selection while searching
+        }}
+        onFocus={() => setIsOpen(true)}
+        className="w-full text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-1.5 outline-none focus:ring-2 focus:ring-emerald-500"
+      />
+      {isOpen && (
+        <div className="absolute z-[60] w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl max-h-48 overflow-y-auto">
+          {filtered.length === 0 ? (
+            <div className="p-2 text-xs text-slate-500 text-center">No players found</div>
+          ) : (
+            filtered.map(p => (
+              <div
+                key={p.id}
+                onClick={() => {
+                  onChange(p.id);
+                  setSearch(p.full_name);
+                  setIsOpen(false);
+                }}
+                className="p-2 text-xs font-bold hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer text-slate-700 dark:text-slate-200"
+              >
+                {p.full_name}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 

@@ -18,7 +18,7 @@ import {
   signInAnonymously, onAuthStateChanged, signOut, User as FirebaseUser,
 } from "firebase/auth";
 import { advanceWinners } from "@/lib/tournamentProgression";
-import { HolidayEditor, AnnouncementEditor, EventEditor, VideoEditor, PlayersManager, UmpireMode, ConfigEditor, RegistrationsManager, type SiteConfig } from "@/components/admin/AdminEditors";
+import { HolidayEditor, AnnouncementEditor, EventEditor, VideoEditor, PlayersManager, UmpireMode, ConfigEditor, RegistrationsManager, MatchesManager, type SiteConfig } from "@/components/admin/AdminEditors";
 import { Paintbrush, ClipboardList } from "lucide-react";
 
 /* ── Types ──────────────────────────────────────────────────────── */
@@ -35,7 +35,7 @@ type Player = {
   contact_number?: string; sr_number?: string;
 };
 
-type TabId = "config" | "holidays" | "announcements" | "events" | "videos" | "players" | "umpire" | "registrations";
+type TabId = "config" | "holidays" | "announcements" | "events" | "videos" | "players" | "umpire" | "registrations" | "matches";
 
 const TABS: { id: TabId; label: string; icon: any }[] = [
   { id: "config",        label: "Landing Pages",  icon: Paintbrush },
@@ -44,6 +44,7 @@ const TABS: { id: TabId; label: string; icon: any }[] = [
   { id: "events",        label: "Events",         icon: CalendarDays },
   { id: "videos",        label: "Videos",         icon: Video },
   { id: "players",       label: "Players",        icon: Users },
+  { id: "matches",       label: "Matches",        icon: Trophy },
   { id: "umpire",        label: "Umpire",         icon: Activity },
 ];
 
@@ -296,6 +297,7 @@ export default function SiteAdmin() {
             {activeTab === "events"        && <EventEditor        data={events}        onChange={setE} />}
             {activeTab === "videos"        && <VideoEditor        data={videos}        onChange={setV} />}
             {activeTab === "players"       && <PlayersManager />}
+            {activeTab === "matches"       && <MatchesManager />}
             {activeTab === "umpire"        && <UmpireMode />}
           </motion.div>
         </AnimatePresence>

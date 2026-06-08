@@ -14,7 +14,7 @@ import { PwaInstallPrompt } from './components/pwa/PwaInstallPrompt';
 import { PwaUpdatePrompt } from './components/pwa/PwaUpdatePrompt';
 import Navigation from './components/Navigation';
 import Footer from './components/Footer';
-import LogMatchFab from './components/LogMatchFab';
+import MobileBottomNav from './components/MobileBottomNav';
 import { useAppUpdate, type AppUpdateInfo } from './hooks/useAppUpdate';
 import { useInactivityLogout } from './hooks/useInactivityLogout';
 import { useNativeBackButton } from './hooks/useNativeBackButton';
@@ -202,13 +202,13 @@ function App() {
                 <PwaInstallPrompt />
                 <Navigation />
                 <StatusBanner />
-                <main className="flex-1">
+                <main className="flex-1 pb-20 lg:pb-0">
                   <AppRoutes />
                 </main>
                 <Footer />
               </div>
               <BackToTop />
-              <LogMatchFab />
+              <MobileBottomNav />
             </Router>
             <Toaster />
             <PwaUpdatePrompt />

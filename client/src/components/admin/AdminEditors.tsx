@@ -628,3 +628,102 @@ export function RegistrationsManager() {
     </div>
   );
 }
+
+export function MatchesManager() {
+  const [matches, setMatches] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [actionId, setActionId] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    // Fetch all matches, fallback to 2 queries if relation doesn't match
+    const { data, error } = await supabase
+      .from("matches")
+      .select(`
+        *,
+        submitter:players!matches_submitter_id_fkey(full_name),
+        opponent:players!matches_opponent_id_fkey(full_name)
+      `)
+      .order("created_at", { ascending: false })
+      .limit(100);
+
+    if (error) {
+       console.warn("Join failed, fetching flat matches", error);
+       const { data: flatMatches } = await supabase.from("matches").select("*").order("created_at", { ascending: false }).limit(100);
+       const { data: players } = await supabase.from("players").select("id, full_name");
+       const pMap = Object.fromEntries((players || []).map(p => [p.id, p.full_name]));
+       if (flatMatches) {
+         setMatches(flatMatches.map(m => ({
+           ...m,
+           submitter: { full_name: pMap[m.submitter_id] || "Unknown" },
+           opponent: { full_name: pMap[m.opponent_id] || "Unknown" }
+         })));
+       }
+    } else if (data) {
+       setMatches(data);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const deleteMatch = async (id: string) => {
+    if (!confirm("Are you sure you want to permanently delete this match?")) return;
+    setActionId(id);
+    const { error } = await supabase.from("matches").delete().eq("id", id);
+    if (error) toast.error("Failed to delete: " + error.message);
+    else {
+      toast.success("Match deleted");
+      setMatches(prev => prev.filter(m => m.id !== id));
+    }
+    setActionId(null);
+  };
+
+  const revokeMatch = async (id: string) => {
+    if (!confirm("Are you sure you want to revoke this match? It will be marked as 'rejected'.")) return;
+    setActionId(id);
+    const { error } = await supabase.from("matches").update({ status: "rejected" }).eq("id", id);
+    if (error) toast.error("Failed to revoke: " + error.message);
+    else {
+      toast.success("Match revoked");
+      setMatches(prev => prev.map(m => m.id === id ? { ...m, status: "rejected" } : m));
+    }
+    setActionId(null);
+  };
+
+  if (loading) return <div className="flex justify-center py-10"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="font-black text-slate-800 dark:text-white">Recent Matches (Last 100)</h3>
+        <button onClick={load} className="p-2 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800"><RefreshCw className="w-4 h-4 text-slate-500" /></button>
+      </div>
+      <div className="space-y-3">
+        {matches.map(m => {
+          const busy = actionId === m.id;
+          return (
+            <div key={m.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-bold text-slate-900 dark:text-white">
+                    {m.submitter?.full_name || m.submitter_id} <span className="text-slate-400 font-normal mx-1">vs</span> {m.opponent?.full_name || m.opponent_id}
+                  </span>
+                  <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${m.status === 'confirmed' ? 'bg-emerald-100 text-emerald-700' : m.status === 'rejected' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}`}>
+                    {m.status}
+                  </span>
+                </div>
+                <div className="text-sm text-slate-600 dark:text-slate-400 font-mono">{m.match_score}</div>
+                <div className="text-xs text-slate-400 mt-1">{new Date(m.created_at).toLocaleString()}</div>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => revokeMatch(m.id)} disabled={busy} className="px-3 py-1.5 text-xs font-bold bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg disabled:opacity-50 transition">Revoke</button>
+                <button onClick={() => deleteMatch(m.id)} disabled={busy} className="px-3 py-1.5 text-xs font-bold bg-rose-100 hover:bg-rose-200 text-rose-700 rounded-lg flex items-center gap-1 disabled:opacity-50 transition"><Trash2 className="w-3 h-3"/> Delete</button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
