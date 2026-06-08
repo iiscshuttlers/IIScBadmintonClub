@@ -166,7 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAdmin = isMainAdmin || assignedRole === 'admin';
   const isUmpire = isAdmin || assignedRole === 'umpire';
 
-  usePushNotifications(profile?.id);
+  usePushNotifications(profile?.user_id, profile?.id);
 
   const updateRole = async (playerId: string, role: string | null) => {
     let newRoles = [...userRoles];

@@ -29,9 +29,10 @@ interface MatchHistorySectionProps {
   handleWithdrawMatch: (matchId: string) => Promise<void>;
   handleConfirmMatch?: (matchId: string) => Promise<void>;
   handleRejectMatch?: (matchId: string) => Promise<void>;
+  handleResendRequest?: (match: any) => Promise<void>;
 }
 
-export function MatchHistorySection({ id, liveMatches, ownPlayerProfile, handleWithdrawMatch, handleConfirmMatch, handleRejectMatch }: MatchHistorySectionProps) {
+export function MatchHistorySection({ id, liveMatches, ownPlayerProfile, handleWithdrawMatch, handleConfirmMatch, handleRejectMatch, handleResendRequest }: MatchHistorySectionProps) {
   const [, setLocation] = useLocation();
   const [isMatchHistoryOpen, setIsMatchHistoryOpen] = useState(false);
   const [matchHistoryFilter, setMatchHistoryFilter] = useState<"all" | "friendly" | "tournament">("all");
@@ -129,18 +130,28 @@ export function MatchHistorySection({ id, liveMatches, ownPlayerProfile, handleW
                               <span className="text-slate-600 dark:text-slate-300">vs </span>
                               <span className="font-bold text-slate-800 dark:text-slate-200">{opponent?.full_name ?? "Unknown"}</span>
                               <span className="text-slate-400 mx-1">·</span>
-                              <span className="font-mono text-xs font-bold text-slate-600 dark:text-slate-400">{m.score}</span>
+                              <span className="font-mono text-xs font-bold text-slate-600 dark:text-slate-400">{m.match_score || m.score}</span>
                             </div>
                             <div className="text-[10px] text-slate-400 shrink-0">{new Date(m.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</div>
                           </div>
                           <div className="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
                             {isSubmitter && (
-                              <button
-                                onClick={() => handleWithdrawMatch(m.id)}
-                                className="flex-1 sm:flex-none text-xs font-bold px-3 py-1.5 rounded-lg bg-rose-100 hover:bg-rose-200 dark:bg-rose-900/30 dark:hover:bg-rose-800/40 text-rose-700 dark:text-rose-400 transition-colors border border-rose-200 dark:border-rose-800/50"
-                              >
-                                Withdraw Match
-                              </button>
+                              <>
+                                <button
+                                  onClick={() => handleWithdrawMatch(m.id)}
+                                  className="flex-1 sm:flex-none text-xs font-bold px-3 py-1.5 rounded-lg bg-rose-100 hover:bg-rose-200 dark:bg-rose-900/30 dark:hover:bg-rose-800/40 text-rose-700 dark:text-rose-400 transition-colors border border-rose-200 dark:border-rose-800/50"
+                                >
+                                  Withdraw Match
+                                </button>
+                                {handleResendRequest && (
+                                  <button
+                                    onClick={() => handleResendRequest(m)}
+                                    className="flex-1 sm:flex-none text-xs font-bold px-3 py-1.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:hover:bg-emerald-800/40 text-emerald-700 dark:text-emerald-400 transition-colors border border-emerald-200 dark:border-emerald-800/50"
+                                  >
+                                    Resend Request
+                                  </button>
+                                )}
+                              </>
                             )}
                             {isOpponent && handleConfirmMatch && handleRejectMatch && (
                               <>
@@ -227,7 +238,7 @@ export function MatchHistorySection({ id, liveMatches, ownPlayerProfile, handleW
                         {/* Score */}
                         <div className="col-span-3">
                           <div className="font-mono text-sm font-black text-slate-700 dark:text-slate-200 tracking-tight">
-                            {m.score?.replace(/\s*\[.*\]/, "") || "—"}
+                            {(m.match_score || m.score)?.replace(/\s*\[.*\]/, "") || "—"}
                           </div>
                         </div>
 

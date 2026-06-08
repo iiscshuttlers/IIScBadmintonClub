@@ -43,8 +43,8 @@ export default function MatchAlert() {
                 rotate: [0, 10, -10, 0],
               }}
               transition={{
-                duration: 0.6,
-                repeat: 5,
+                duration: 0.5,
+                repeat: 4,
                 ease: 'easeInOut',
               }}
               className="text-8xl drop-shadow-[0_0_30px_rgba(16,185,129,0.6)]"

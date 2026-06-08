@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase';
  * Registers for push notifications on native (Android/iOS via FCM)
  * AND requests Web Notification permission for PWA/browser users.
  */
-export function usePushNotifications(userId: string | undefined) {
+export function usePushNotifications(userId: string | undefined, playerSlug: string | undefined) {
   // ─── Native Push (Android/iOS via Capacitor) ───
   useEffect(() => {
     if (!Capacitor.isNativePlatform() || !userId) return;
@@ -54,8 +54,10 @@ export function usePushNotifications(userId: string | undefined) {
 
       await PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
         console.log('Push action performed: ' + JSON.stringify(notification));
-        // Navigate to pending matches
-        window.location.href = `${import.meta.env.BASE_URL}player/${userId}`;
+        // Navigate to pending matches using the player slug (not the UUID)
+        if (playerSlug) {
+          window.location.href = `${import.meta.env.BASE_URL || '/'}player/${playerSlug}`;
+        }
       });
       isRegistered = true;
     };

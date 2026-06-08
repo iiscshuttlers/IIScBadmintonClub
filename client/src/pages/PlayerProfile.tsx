@@ -281,9 +281,21 @@ export default function PlayerProfile() {
     try {
       const { error } = await supabase.rpc("reject_friendly_match", { match_uuid: matchId, rejecter_id: ownPlayerProfile?.id });
       if (error) throw error;
-      toast.info("Match Rejected.");
+      toast.success("Match Rejected", { description: "The match request has been dismissed." });
       if (ownPlayerProfile) fetchPendingMatches(ownPlayerProfile.id);
     } catch (e: any) { toast.error("Error rejecting match", { description: e.message }); }
+  };
+
+  const handleResendRequest = async (match: any) => {
+    try {
+      const { error } = await supabase.functions.invoke('notify-match', {
+        body: { type: 'INSERT', table: 'matches', record: match }
+      });
+      if (error) throw error;
+      toast.success("Request resent to opponent(s)");
+    } catch (e: any) {
+      toast.error("Failed to resend request", { description: e.message });
+    }
   };
 
   const handleWithdrawMatch = async (matchId: string) => {
@@ -1114,6 +1126,7 @@ export default function PlayerProfile() {
               handleWithdrawMatch={handleWithdrawMatch}
               handleConfirmMatch={handleConfirmMatch}
               handleRejectMatch={handleRejectMatch}
+              handleResendRequest={handleResendRequest}
             />
 
             {/* Equipment Arsenal */}

@@ -48,11 +48,17 @@ export function useMatchNotification() {
           if (shownRef.current.has(match.id)) return;
           shownRef.current.add(match.id);
 
-          // Try to get the other player's name
-          const otherId = match.player1_id === profile.id ? match.player2_id : match.player1_id;
-          let opponentName: string | undefined;
-          if (otherId) {
-            const { data } = await supabase.from('players').select('full_name').eq('id', otherId).single();
+          // Determine who the opponent is (the submitter)
+          const challengerId = match.submitted_by;
+
+          // Fetch opponent name for the notification
+          let opponentName = 'Someone';
+          if (challengerId) {
+            const { data } = await supabase
+              .from('players')
+              .select('full_name')
+              .eq('id', challengerId)
+              .single();
             if (data) opponentName = data.full_name;
           }
 
@@ -72,10 +78,10 @@ export function useMatchNotification() {
           // Show in-app overlay notification
           setNotification({ id: match.id, opponentName });
 
-          // Auto-dismiss after 4 seconds
+          // Auto-dismiss after 2 seconds
           setTimeout(() => {
             setNotification(null);
-          }, 4000);
+          }, 2000);
         }
       )
       .subscribe();

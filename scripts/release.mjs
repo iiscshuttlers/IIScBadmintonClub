@@ -87,11 +87,12 @@ ok(`${oldName} (${oldCode})  →  ${newName} (${newCode})`);
 /* ── 2. Update app-version.json ─────────────────────────────────── */
 log('Updating app-version.json…');
 const changelog = process.argv[2] || `Version ${newName}`;
+const finalApkName = `IIScShuttlers_v${newName}.apk`;
 const versionJsonPath = resolve(root, 'client/public/data/app-version.json');
 writeFileSync(versionJsonPath, JSON.stringify({
   versionCode: newCode,
   versionName: newName,
-  downloadUrl: `https://github.com/${REPO}/releases/latest/download/app-release.apk`,
+  downloadUrl: `https://github.com/${REPO}/releases/latest/download/${finalApkName}`,
   changelog,
 }, null, 2) + '\n');
 ok('app-version.json updated');
@@ -125,12 +126,20 @@ try {
 log(`Creating GitHub Release v${newName} (build ${newCode})…`);
 const tag = `v${newName}-build${newCode}`;
 
+// Rename APK to IIScShuttlers_v{version}.apk
+const releaseApkPath = resolve(dirname(APK_SRC), finalApkName);
+try {
+  run(`copy "${APK_SRC}" "${releaseApkPath}"`, { shell: true });
+} catch (e) {
+  fail('Failed to rename APK for release');
+}
+
 // Delete tag/release if it somehow already exists
 try { execSync(`gh release delete ${tag} --repo ${REPO} --yes`, { stdio: 'pipe' }); } catch {}
 try { execSync(`gh api repos/${REPO}/git/refs/tags/${tag} -X DELETE`, { stdio: 'pipe' }); } catch {}
 
 run(
-  `gh release create ${tag} "${APK_SRC}" ` +
+  `gh release create ${tag} "${releaseApkPath}" ` +
   `--repo ${REPO} ` +
   `--title "v${newName}" ` +
   `--notes "${changelog.replace(/"/g, "'")}" ` +
