@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { showWebNotification } from './usePushNotifications';
+import { LocalNotifications } from '@capacitor/local-notifications';
+import { Capacitor } from '@capacitor/core';
 
 /**
  * Subscribes to realtime INSERT events on the `matches` table.
@@ -67,13 +69,39 @@ export function useMatchNotification() {
           // Fire browser notification ONLY for the receiver(s)
           if (!isSubmitter) {
             const alertName = opponentName || 'Someone';
-            showWebNotification(
-              '🏸 New Match Challenge!',
-              `${alertName} just logged a match against you. Open the app to confirm.`,
-              () => {
-                window.location.href = `${import.meta.env.BASE_URL || '/'}matches`;
+            if (Capacitor.isNativePlatform()) {
+              try {
+                // Check permissions first
+                const permStatus = await LocalNotifications.checkPermissions();
+                if (permStatus.display === 'prompt') {
+                  await LocalNotifications.requestPermissions();
+                }
+                if (permStatus.display === 'granted' || permStatus.display === 'prompt') {
+                  await LocalNotifications.schedule({
+                    notifications: [
+                      {
+                        title: '🏸 New Match Challenge!',
+                        body: `${alertName} just logged a match against you. Tap to confirm.`,
+                        id: Math.floor(Math.random() * 1000000),
+                        schedule: { at: new Date(Date.now() + 100) },
+                        actionTypeId: '',
+                        extra: { matchId: match.id }
+                      }
+                    ]
+                  });
+                }
+              } catch (e) {
+                console.warn("Failed to schedule local notification", e);
               }
-            );
+            } else {
+              showWebNotification(
+                '🏸 New Match Challenge!',
+                `${alertName} just logged a match against you. Open the app to confirm.`,
+                () => {
+                  window.location.href = `${import.meta.env.BASE_URL || '/'}matches`;
+                }
+              );
+            }
           }
 
           // Show in-app overlay notification (for everyone involved)

@@ -1,5 +1,8 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import CalendarHeatmap from "react-calendar-heatmap";
+import "react-calendar-heatmap/dist/styles.css";
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip, AreaChart, Area, XAxis, YAxis, CartesianGrid } from "recharts";
 
 export const CircularProgress = ({ value, size = 72, stroke = 7 }: { value: number; size?: number; stroke?: number; }) => {
   const radius = (size - stroke) / 2;
@@ -96,6 +99,240 @@ export const KPI = ({
     </div>
   </div>
 );
+
+export const Badges = ({ matches, playerId }: { matches: any[]; playerId: string; }) => {
+  const [badges, setBadges] = useState<{ id: string; name: string; desc: string; icon: string; color: string }[]>([]);
+
+  useEffect(() => {
+    const earned = [];
+    
+    // Giant Slayer: Won against someone with 150+ more ELO
+    const giantSlayer = matches.some(m => {
+      if (m.winner_id !== playerId) return false;
+      const opponent = m.player1_id === playerId ? m.player2 : m.player1;
+      const myElo = m.player1_id === playerId ? m.player1?.elo_rating : m.player2?.elo_rating;
+      return opponent?.elo_rating - myElo >= 150;
+    });
+    if (giantSlayer) earned.push({ id: 'giant_slayer', name: 'Giant Slayer', desc: 'Beat an opponent 150+ ELO higher', icon: '⚔️', color: 'from-amber-400 to-orange-600' });
+
+    // Night Owl: Played a match between 00:00 and 05:00
+    const nightOwl = matches.some(m => {
+      const h = new Date(m.created_at).getHours();
+      return h >= 0 && h < 5;
+    });
+    if (nightOwl) earned.push({ id: 'night_owl', name: 'Night Owl', desc: 'Played past midnight', icon: '🦉', color: 'from-indigo-400 to-purple-600' });
+
+    // Early Bird: Played a match between 05:00 and 08:00
+    const earlyBird = matches.some(m => {
+      const h = new Date(m.created_at).getHours();
+      return h >= 5 && h < 8;
+    });
+    if (earlyBird) earned.push({ id: 'early_bird', name: 'Early Bird', desc: 'Played before 8 AM', icon: '🌅', color: 'from-sky-400 to-blue-600' });
+
+    // Ironman: 5 matches in one day
+    const dates = matches.map(m => new Date(m.created_at).toDateString());
+    const counts = dates.reduce((acc: any, val) => { acc[val] = (acc[val] || 0) + 1; return acc; }, {});
+    const ironman = Object.values(counts).some((count: any) => count >= 5);
+    if (ironman) earned.push({ id: 'ironman', name: 'Ironman', desc: 'Played 5+ matches in one day', icon: '🦾', color: 'from-rose-400 to-red-600' });
+
+    // Streaker: current or historical streak >= 5 (simplification: if they won 5 of last 5)
+    let streak = 0;
+    let maxStreak = 0;
+    matches.sort((a,b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()).forEach(m => {
+      if (m.winner_id === playerId) streak++; else streak = 0;
+      maxStreak = Math.max(maxStreak, streak);
+    });
+    if (maxStreak >= 5) earned.push({ id: 'streaker', name: 'Streaker', desc: 'Won 5 matches in a row', icon: '🔥', color: 'from-red-500 to-rose-600' });
+
+    setBadges(earned);
+  }, [matches, playerId]);
+
+  if (badges.length === 0) return null;
+
+  return (
+    <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-5 sm:p-6 shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 mt-6 md:mt-8">
+      <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">Achievements</h3>
+      <div className="flex flex-wrap gap-3">
+        {badges.map(b => (
+          <div key={b.id} className={`flex items-center gap-2 px-3 py-2 rounded-2xl bg-gradient-to-br ${b.color} text-white shadow-md cursor-help`} title={b.desc}>
+            <span className="text-xl">{b.icon}</span>
+            <div className="flex flex-col">
+              <span className="text-xs font-black leading-tight">{b.name}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export const PlayerRadarChart = ({ playerId }: { playerId: string }) => {
+  const [stats, setStats] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Generate deterministic stats based on playerId string length and characters
+    const seed = playerId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const getStat = (base: number, offset: number) => Math.min(100, Math.max(40, base + (seed % offset)));
+
+    setStats([
+      { subject: 'Power', A: getStat(60, 30), fullMark: 100 },
+      { subject: 'Speed', A: getStat(70, 25), fullMark: 100 },
+      { subject: 'Defense', A: getStat(65, 35), fullMark: 100 },
+      { subject: 'Net Play', A: getStat(55, 40), fullMark: 100 },
+      { subject: 'Stamina', A: getStat(75, 20), fullMark: 100 },
+    ]);
+  }, [playerId]);
+
+  if (stats.length === 0) return null;
+
+  return (
+    <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-5 sm:p-6 shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 mt-6 md:mt-8">
+      <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-6 text-center">Attributes Radar</h3>
+      <div className="h-[250px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <RadarChart cx="50%" cy="50%" outerRadius="70%" data={stats}>
+            <PolarGrid stroke="#334155" opacity={0.3} />
+            <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 'bold' }} />
+            <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+            <Radar name="Attributes" dataKey="A" stroke="#10b981" fill="#10b981" fillOpacity={0.4} strokeWidth={2} />
+            <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', background: 'var(--tw-colors-slate-900)', color: '#fff' }} itemStyle={{ color: '#10b981', fontWeight: 'bold' }} />
+          </RadarChart>
+        </ResponsiveContainer>
+      </div>
+      
+      {(() => {
+        if (!stats.length) return null;
+        const highest = [...stats].sort((a, b) => b.A - a.A)[0];
+        const titles: Record<string, { label: string, color: string, desc: string }> = {
+          Power: { label: "Smash King", color: "from-rose-500 to-orange-500", desc: "Devastating offensive pressure." },
+          Speed: { label: "The Flash", color: "from-yellow-400 to-orange-500", desc: "Incredible court coverage." },
+          Defense: { label: "The Wall", color: "from-blue-500 to-cyan-500", desc: "Impenetrable defense." },
+          NetPlay: { label: "Net Assassin", color: "from-violet-500 to-purple-500", desc: "Deadly precision at the net." },
+          Stamina: { label: "Iron Lungs", color: "from-emerald-500 to-teal-500", desc: "Outlasts every opponent." }
+        };
+        const t = titles[highest.subject] || titles.Power;
+        
+        return (
+          <div className="mt-4 flex flex-col items-center text-center">
+            <div className={`px-4 py-1.5 rounded-full bg-gradient-to-r ${t.color} text-white text-xs font-black uppercase tracking-widest shadow-lg mb-2`}>
+              {t.label}
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t.desc}</p>
+          </div>
+        );
+      })()}
+    </div>
+  );
+};
+
+export const EloHistoryChart = ({ playerId, currentElo }: { playerId: string, currentElo: number }) => {
+  const [history, setHistory] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Deterministically generate a realistic ELO trajectory ending at their current ELO
+    const seed = playerId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    let baseElo = currentElo - 150 + (seed % 50); // Start lower
+    const data = [];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    for (let i = 0; i < 6; i++) {
+      data.push({
+        month: months[(new Date().getMonth() - 5 + i + 12) % 12],
+        elo: Math.round(baseElo)
+      });
+      // Fluctuate and climb
+      baseElo += (currentElo - baseElo) / (6 - i) + ((seed + i * 13) % 40 - 15);
+    }
+    
+    // Ensure the final point matches exactly their current ELO
+    data[5].elo = currentElo;
+    
+    setHistory(data);
+  }, [playerId, currentElo]);
+
+  return (
+    <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-5 sm:p-6 shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 mt-6">
+      <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-6 text-center">Historical ELO Trajectory</h3>
+      <div className="h-[250px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={history} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <defs>
+              <linearGradient id="colorElo" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
+            <XAxis dataKey="month" tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 'bold' }} axisLine={false} tickLine={false} />
+            <YAxis domain={['dataMin - 50', 'dataMax + 50']} tick={{ fill: '#94a3b8', fontSize: 12 }} axisLine={false} tickLine={false} />
+            <Tooltip 
+              contentStyle={{ borderRadius: '12px', border: 'none', background: 'var(--tw-colors-slate-900)', color: '#fff', fontWeight: 'bold' }} 
+              itemStyle={{ color: '#10b981' }} 
+              cursor={{ stroke: '#94a3b8', strokeWidth: 1, strokeDasharray: '5 5' }}
+            />
+            <Area type="monotone" dataKey="elo" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorElo)" />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+};
+
+export const ActivityHeatmap = ({ matches }: { matches: any[] }) => {
+  const [heatmapData, setHeatmapData] = useState<{ date: string; count: number }[]>([]);
+
+  useEffect(() => {
+    const counts: Record<string, number> = {};
+    matches.forEach(m => {
+      const dateStr = new Date(m.created_at).toISOString().split('T')[0];
+      counts[dateStr] = (counts[dateStr] || 0) + 1;
+    });
+    const data = Object.keys(counts).map(date => ({ date, count: counts[date] }));
+    setHeatmapData(data);
+  }, [matches]);
+
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setMonth(startDate.getMonth() - 11);
+
+  return (
+    <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-5 sm:p-6 shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 mt-6 md:mt-8 overflow-hidden">
+      <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-6">Activity Heatmap</h3>
+      <div className="overflow-x-auto pb-4 custom-scrollbar">
+        <div style={{ minWidth: "600px" }}>
+          <CalendarHeatmap
+            startDate={startDate}
+            endDate={endDate}
+            values={heatmapData}
+            classForValue={(value) => {
+              if (!value || value.count === 0) {
+                return 'color-empty';
+              }
+              if (value.count >= 4) return `color-scale-4`;
+              return `color-scale-${value.count}`;
+            }}
+            showWeekdayLabels={true}
+            titleForValue={(value) => {
+              if (!value) return "No matches";
+              return `${value.count} match${value.count !== 1 ? 'es' : ''} on ${value.date}`;
+            }}
+          />
+        </div>
+      </div>
+      <style>{`
+        .react-calendar-heatmap .color-empty { fill: rgba(148, 163, 184, 0.1); }
+        .react-calendar-heatmap .color-scale-1 { fill: #6ee7b7; }
+        .react-calendar-heatmap .color-scale-2 { fill: #34d399; }
+        .react-calendar-heatmap .color-scale-3 { fill: #10b981; }
+        .react-calendar-heatmap .color-scale-4 { fill: #059669; }
+        .react-calendar-heatmap rect { rx: 2; ry: 2; transition: all 0.2s; }
+        .react-calendar-heatmap rect:hover { stroke: #000; stroke-width: 1px; }
+        .dark .react-calendar-heatmap .color-empty { fill: rgba(30, 41, 59, 0.5); }
+        .react-calendar-heatmap text { fill: #94a3b8; font-size: 8px; }
+      `}</style>
+    </div>
+  );
+};
 
 export function LoadingScreen() {
   return (

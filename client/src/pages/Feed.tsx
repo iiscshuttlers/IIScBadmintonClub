@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { Link } from "wouter";
 import { supabase } from "@/lib/supabase";
 import { motion } from "framer-motion";
-import { Activity, Trophy, Swords, Sparkles, TrendingUp, BarChart3, Clock } from "lucide-react";
+import { Activity, Trophy, Swords, Sparkles, TrendingUp, BarChart3, Clock, Share2, Video } from "lucide-react";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
@@ -16,6 +16,8 @@ export default function Feed() {
   const { session, profile: ownProfile } = useAuth();
   const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [limitCount, setLimitCount] = useState(30);
 
   const fetchFeed = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -31,7 +33,7 @@ export default function Feed() {
         `)
         .eq("status", "confirmed")
         .order("created_at", { ascending: false })
-        .limit(30);
+        .limit(limitCount);
       
       if (!error && data) {
         setMatches(data);
@@ -41,7 +43,7 @@ export default function Feed() {
     } finally {
       if (!silent) setLoading(false);
     }
-  }, []);
+  }, [limitCount]);
 
   useEffect(() => {
     fetchFeed();
@@ -64,6 +66,61 @@ export default function Feed() {
       afternoon: (afternoon / total) * 100,
       evening: (evening / total) * 100,
       isPeak: Math.max(morning, afternoon, evening)
+    };
+  }, [matches]);
+
+  const matchOfTheDayId = useMemo(() => {
+    if (!matches || matches.length === 0) return null;
+    const recentMatches = matches.filter(m => new Date(m.created_at).getTime() > Date.now() - 48 * 60 * 60 * 1000);
+    if (recentMatches.length === 0) return matches[0].id;
+    return recentMatches.reduce((best, m) => {
+      const combinedElo = (m.player1?.elo_rating || 0) + (m.player2?.elo_rating || 0);
+      const bestElo = (best.player1?.elo_rating || 0) + (best.player2?.elo_rating || 0);
+      return combinedElo > bestElo ? m : best;
+    }, recentMatches[0]).id;
+  }, [matches]);
+
+  const weeklyRecap = useMemo(() => {
+    if (!matches || matches.length === 0) return null;
+    const lastWeekMatches = matches.filter(m => new Date(m.created_at).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000);
+    if (lastWeekMatches.length === 0) return null;
+
+    let biggestUpset = null;
+    let maxUpsetDiff = 0;
+    const playerActivity: Record<string, { name: string, matches: number, eloClimb: number }> = {};
+
+    lastWeekMatches.forEach(m => {
+      // Activity & ELO Climb
+      const addPlayer = (pid: string, name: string, eloChange: number) => {
+        if (!playerActivity[pid]) playerActivity[pid] = { name, matches: 0, eloClimb: 0 };
+        playerActivity[pid].matches++;
+        if (eloChange && !isNaN(eloChange)) playerActivity[pid].eloClimb += eloChange;
+      };
+      
+      if (m.player1) addPlayer(m.player1.id, m.player1.full_name, m.p1_elo_change || 0);
+      if (m.player2) addPlayer(m.player2.id, m.player2.full_name, m.p2_elo_change || 0);
+      
+      // Upset
+      const isP1Winner = m.winner_id === m.player1?.id;
+      if (m.p1_elo_change !== undefined && m.p2_elo_change !== undefined && m.player1 && m.player2) {
+        const eloDiff = m.player1.elo_rating - m.player2.elo_rating;
+        if ((isP1Winner && eloDiff < -50) || (!isP1Winner && eloDiff > 50)) {
+          const diff = Math.abs(eloDiff);
+          if (diff > maxUpsetDiff) {
+            maxUpsetDiff = diff;
+            biggestUpset = m;
+          }
+        }
+      }
+    });
+
+    const mostActive = Object.values(playerActivity).sort((a, b) => b.matches - a.matches)[0];
+    const highestClimber = Object.values(playerActivity).sort((a, b) => b.eloClimb - a.eloClimb)[0];
+
+    return {
+      biggestUpset,
+      mostActive,
+      highestClimber
     };
   }, [matches]);
 
@@ -120,6 +177,41 @@ export default function Feed() {
           </div>
         )}
 
+        {!loading && weeklyRecap && (
+          <div className="mb-6 bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 shadow-xl border border-slate-700 relative overflow-hidden text-white">
+            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-amber-500/20 blur-3xl rounded-full pointer-events-none" />
+            <h3 className="text-sm font-black uppercase tracking-widest text-amber-400 mb-6 flex items-center gap-2">
+              <Trophy className="w-5 h-5" /> Weekly Club Recap
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {weeklyRecap.mostActive && (
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Most Active Player</span>
+                  <div className="text-base font-bold text-white line-clamp-1">{weeklyRecap.mostActive.name}</div>
+                  <div className="text-sm font-black text-emerald-400">{weeklyRecap.mostActive.matches} Matches Played</div>
+                </div>
+              )}
+              {weeklyRecap.highestClimber && weeklyRecap.highestClimber.eloClimb > 0 && (
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Highest Climber</span>
+                  <div className="text-base font-bold text-white line-clamp-1">{weeklyRecap.highestClimber.name}</div>
+                  <div className="text-sm font-black text-amber-400">+{weeklyRecap.highestClimber.eloClimb} ELO Gained</div>
+                </div>
+              )}
+              {weeklyRecap.biggestUpset && (
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Biggest Upset</span>
+                  <div className="text-base font-bold text-white line-clamp-1">
+                    {weeklyRecap.biggestUpset.winner_id === weeklyRecap.biggestUpset.player1?.id ? weeklyRecap.biggestUpset.player1?.full_name : weeklyRecap.biggestUpset.player2?.full_name}
+                  </div>
+                  <div className="text-sm font-black text-rose-400">Won as the underdog</div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {loading ? (
           renderSkeleton()
         ) : matches.length > 0 ? (
@@ -135,10 +227,21 @@ export default function Feed() {
               if (match.p1_elo_change !== undefined && match.p2_elo_change !== undefined) {
                 // If the player who had lower ELO won
                 const eloDiff = p1.elo_rating - p2.elo_rating;
-                if ((isP1Winner && eloDiff < -50) || (!isP1Winner && eloDiff > 50)) {
+                if ((isP1Winner && eloDiff < -150) || (!isP1Winner && eloDiff > 150)) {
                   upsetDiff = Math.abs(eloDiff);
                 }
               }
+
+              // Parse video URL
+              let displayScore = match.score;
+              let highlightUrl = null;
+              if (displayScore.includes(" | ")) {
+                const parts = displayScore.split(" | ");
+                displayScore = parts[0];
+                highlightUrl = parts[1];
+              }
+              
+              const isMatchOfTheDay = match.id === matchOfTheDayId;
 
               return (
                 <motion.div
@@ -146,12 +249,19 @@ export default function Feed() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
                   key={match.id}
-                  className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow"
+                  className={`bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm relative overflow-hidden group transition-shadow ${isMatchOfTheDay ? 'border-2 border-amber-400 shadow-amber-500/20 shadow-xl' : 'border border-slate-100 dark:border-slate-800 hover:shadow-md'}`}
                 >
+                  {/* Match of the Day Badge */}
+                  {isMatchOfTheDay && (
+                    <div className="absolute top-0 left-0 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black uppercase tracking-wider px-4 py-1.5 rounded-br-xl shadow-md z-10 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5" /> Match of the Day
+                    </div>
+                  )}
+
                   {/* Upset Badge */}
                   {upsetDiff > 0 && (
-                    <div className="absolute top-0 right-0 bg-rose-500 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-bl-xl shadow-sm z-10 flex items-center gap-1">
-                      <TrendingUp className="w-3 h-3" /> UPSET
+                    <div className="absolute top-0 right-0 bg-gradient-to-r from-rose-500 to-red-600 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-bl-xl shadow-md z-10 flex items-center gap-1.5">
+                      <TrendingUp className="w-3.5 h-3.5 animate-bounce" /> MASSIVE UPSET
                     </div>
                   )}
 
@@ -189,12 +299,18 @@ export default function Feed() {
 
                     {/* Score */}
                     <div className="shrink-0 flex flex-col items-center">
-                      <div className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight bg-slate-100 dark:bg-slate-800 px-4 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner">
-                        {match.score}
+                      <div className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight bg-slate-100 dark:bg-slate-800 px-4 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner text-center">
+                        {displayScore}
                       </div>
                       <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2">
                         {new Date(match.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                       </div>
+                      {highlightUrl && (
+                        <a href={highlightUrl} target="_blank" rel="noopener noreferrer" 
+                          className="mt-2 text-[10px] font-bold bg-rose-50 dark:bg-rose-900/30 text-rose-500 px-2 py-1 rounded-full border border-rose-200 dark:border-rose-800 flex items-center gap-1 hover:scale-105 transition">
+                          <Video className="w-3 h-3" /> Highlights
+                        </a>
+                      )}
                     </div>
 
                     {/* Player 2 (and Partner 2) */}
@@ -250,14 +366,51 @@ export default function Feed() {
                       <Sparkles className="w-4 h-4" /> 
                       Kudos <span className="kudos-count text-slate-400 font-medium ml-1">{(match.id.charCodeAt(0) % 5) + (localStorage.getItem(`liked_${match.id}`) ? 1 : 0)}</span>
                     </button>
+                    
+                    <button 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        const text = `🔥 Match Result: ${p1.full_name} vs ${p2.full_name} (${displayScore})! Check it out on IISc Shuttlers.`;
+                        if (navigator.share) {
+                          navigator.share({
+                            title: 'IISc Shuttlers Match',
+                            text: text,
+                            url: window.location.origin + '/feed'
+                          }).catch(() => {});
+                        } else {
+                          window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text + ' ' + window.location.origin + '/feed')}`, '_blank');
+                        }
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 ml-2"
+                    >
+                      <Share2 className="w-4 h-4" /> Share
+                    </button>
                   </div>
 
                 </motion.div>
               );
             })}
+            
+            {matches.length >= limitCount && (
+              <div className="flex justify-center mt-6 pt-4 pb-8">
+                <button 
+                  onClick={() => setLimitCount(prev => prev + 30)}
+                  className="px-6 py-2.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full font-bold text-sm transition shadow-sm hover:shadow-md"
+                >
+                  Load More Matches
+                </button>
+              </div>
+            )}
+            
           </div>
         ) : (
-          <div className="text-center py-20 text-slate-500 font-medium">No matches played recently.</div>
+          <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm mt-8">
+            <div className="w-24 h-24 mx-auto bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+              <Trophy className="w-10 h-10 text-slate-300 dark:text-slate-600" />
+            </div>
+            <h3 className="text-xl font-black text-slate-800 dark:text-slate-200 mb-2">No matches yet</h3>
+            <p className="text-slate-500 font-medium max-w-sm mx-auto">It's quiet on the courts. Be the first to log a match today and get the action started!</p>
+          </div>
         )}
       </div>
     </div>

@@ -412,9 +412,9 @@ export default function ProfileSetup() {
         throw new Error('Image could not be compressed below 500KB. Please try a different image.');
       }
 
-      // Give it a WebP extension since we compressed it as webp
-      const fileName = `${session.user.id}-${Date.now()}.webp`;
-      const filePath = `avatars/${fileName}`;
+      // Use just the user ID to ensure we overwrite the previous avatar
+      const fileName = `${session.user.id}.webp`;
+      const filePath = fileName;
 
       // Upload the compressed Blob to Supabase
       const { error } = await supabase.storage
@@ -425,7 +425,8 @@ export default function ProfileSetup() {
 
       // Get public URL
       const { data: publicUrlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
-      setAvatarUrl(publicUrlData.publicUrl);
+      // Add cache buster so the UI immediately updates
+      setAvatarUrl(`${publicUrlData.publicUrl}?t=${Date.now()}`);
       toast.success("Avatar uploaded and compressed successfully!");
     } catch (err: any) {
       console.error("Avatar upload failed:", err);

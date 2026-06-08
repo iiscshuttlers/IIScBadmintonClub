@@ -276,6 +276,101 @@ export default function Invicta() {
           </div>
         </motion.div>
 
+        {/* Visual Bracket Demo */}
+        <motion.div
+          custom={6}
+          variants={fadeUp}
+          initial="hidden"
+          animate="visible"
+          className="bg-white dark:bg-slate-800 rounded-3xl shadow-md border border-slate-100 dark:border-slate-700 overflow-hidden"
+        >
+          <div className="p-7 md:p-9">
+            <h3 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2 mb-8">
+              <Trophy className="w-5 h-5 text-emerald-500" />
+              Tournament Bracket (Preview)
+            </h3>
+            
+            <div className="overflow-x-auto pb-8">
+              <div className="flex gap-8 min-w-max">
+                
+                {/* Quarter Finals */}
+                <div className="flex flex-col gap-8 justify-center">
+                  <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Quarter Finals</div>
+                  
+                  {/* Match 1 */}
+                  <div className="flex flex-col">
+                    <div className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-3 w-48 flex justify-between items-center z-10 relative">
+                      <span className="font-bold text-sm">Player 1</span>
+                      <span className="text-xs font-black text-slate-400">21</span>
+                    </div>
+                    <div className="h-4 border-r-2 border-slate-200 dark:border-slate-700 w-full relative -top-1 -z-10" />
+                    <div className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-3 w-48 flex justify-between items-center z-10 relative">
+                      <span className="font-bold text-sm">Player 2</span>
+                      <span className="text-xs font-black text-slate-400">18</span>
+                    </div>
+                  </div>
+
+                  {/* Match 2 */}
+                  <div className="flex flex-col mt-4">
+                    <div className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-3 w-48 flex justify-between items-center z-10 relative">
+                      <span className="font-bold text-sm">Player 3</span>
+                      <span className="text-xs font-black text-slate-400">15</span>
+                    </div>
+                    <div className="h-4 border-r-2 border-slate-200 dark:border-slate-700 w-full relative -top-1 -z-10" />
+                    <div className="bg-slate-100 dark:bg-slate-900 border border-emerald-500 dark:border-emerald-600 rounded-lg p-3 w-48 flex justify-between items-center z-10 relative shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                      <span className="font-bold text-sm">Player 4</span>
+                      <span className="text-xs font-black text-emerald-500">21</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Semi Finals */}
+                <div className="flex flex-col gap-8 justify-center mt-6">
+                  <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Semi Finals</div>
+                  
+                  {/* Match 3 */}
+                  <div className="flex flex-col relative h-[180px] justify-center">
+                    {/* Connecting line from QF 1 */}
+                    <div className="absolute -left-8 top-1/4 w-8 border-b-2 border-slate-200 dark:border-slate-700" />
+                    {/* Connecting line from QF 2 */}
+                    <div className="absolute -left-8 bottom-1/4 w-8 border-b-2 border-slate-200 dark:border-slate-700" />
+                    
+                    <div className="bg-slate-100 dark:bg-slate-900 border border-emerald-500 dark:border-emerald-600 rounded-lg p-3 w-48 flex justify-between items-center z-10 relative shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                      <span className="font-bold text-sm">Player 1</span>
+                      <span className="text-xs font-black text-emerald-500">21</span>
+                    </div>
+                    <div className="h-4 border-r-2 border-slate-200 dark:border-slate-700 w-full relative -top-1 -z-10" />
+                    <div className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-3 w-48 flex justify-between items-center z-10 relative">
+                      <span className="font-bold text-sm">Player 4</span>
+                      <span className="text-xs font-black text-slate-400">19</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Finals */}
+                <div className="flex flex-col gap-8 justify-center mt-6">
+                  <div className="text-xs font-black uppercase tracking-widest text-amber-500 mb-2">Finals</div>
+                  
+                  {/* Match 4 */}
+                  <div className="flex flex-col relative h-[180px] justify-center">
+                    <div className="absolute -left-8 top-1/2 w-8 border-b-2 border-slate-200 dark:border-slate-700" />
+                    
+                    <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg p-3 w-48 flex justify-between items-center z-10 relative shadow-xl shadow-amber-500/30 text-white">
+                      <span className="font-bold text-sm flex items-center gap-2"><Trophy className="w-4 h-4" /> Player 1</span>
+                      <span className="text-xs font-black">21</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <p className="text-center text-slate-500 dark:text-slate-400 text-xs mt-4">
+              This is a live preview. The actual bracket will be generated when registration closes.
+            </p>
+          </div>
+        </motion.div>
+
         <p className="text-center text-slate-500 dark:text-slate-400 text-sm pb-4">
           More details regarding fixtures, rules, and schedules will be updated here.
         </p>

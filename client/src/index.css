@@ -123,6 +123,86 @@
   --sidebar-ring: #10b981;
 }
 
+:root[data-accent="violet"], .dark[data-accent="violet"] {
+  --color-emerald-50: var(--color-violet-50);
+  --color-emerald-100: var(--color-violet-100);
+  --color-emerald-200: var(--color-violet-200);
+  --color-emerald-300: var(--color-violet-300);
+  --color-emerald-400: var(--color-violet-400);
+  --color-emerald-500: var(--color-violet-500);
+  --color-emerald-600: var(--color-violet-600);
+  --color-emerald-700: var(--color-violet-700);
+  --color-emerald-800: var(--color-violet-800);
+  --color-emerald-900: var(--color-violet-900);
+  --color-emerald-950: var(--color-violet-950);
+}
+
+:root[data-accent="rose"], .dark[data-accent="rose"] {
+  --color-emerald-50: var(--color-rose-50);
+  --color-emerald-100: var(--color-rose-100);
+  --color-emerald-200: var(--color-rose-200);
+  --color-emerald-300: var(--color-rose-300);
+  --color-emerald-400: var(--color-rose-400);
+  --color-emerald-500: var(--color-rose-500);
+  --color-emerald-600: var(--color-rose-600);
+  --color-emerald-700: var(--color-rose-700);
+  --color-emerald-800: var(--color-rose-800);
+  --color-emerald-900: var(--color-rose-900);
+  --color-emerald-950: var(--color-rose-950);
+}
+
+:root[data-accent="amber"], .dark[data-accent="amber"] {
+  --color-emerald-50: var(--color-amber-50);
+  --color-emerald-100: var(--color-amber-100);
+  --color-emerald-200: var(--color-amber-200);
+  --color-emerald-300: var(--color-amber-300);
+  --color-emerald-400: var(--color-amber-400);
+  --color-emerald-500: var(--color-amber-500);
+  --color-emerald-600: var(--color-amber-600);
+  --color-emerald-700: var(--color-amber-700);
+  --color-emerald-800: var(--color-amber-800);
+  --color-emerald-900: var(--color-amber-900);
+  --color-emerald-950: var(--color-amber-950);
+}
+
+:root[data-accent="blue"], .dark[data-accent="blue"] {
+  --color-emerald-50: var(--color-blue-50);
+  --color-emerald-100: var(--color-blue-100);
+  --color-emerald-200: var(--color-blue-200);
+  --color-emerald-300: var(--color-blue-300);
+  --color-emerald-400: var(--color-blue-400);
+  --color-emerald-500: var(--color-blue-500);
+  --color-emerald-600: var(--color-blue-600);
+  --color-emerald-700: var(--color-blue-700);
+  --color-emerald-800: var(--color-blue-800);
+  --color-emerald-900: var(--color-blue-900);
+  --color-emerald-950: var(--color-blue-950);
+}
+
+:root[data-accent="cyberpunk"], .dark[data-accent="cyberpunk"] {
+  --color-emerald-50: #052e26;
+  --color-emerald-100: #044b3c;
+  --color-emerald-200: #036b55;
+  --color-emerald-300: #00a67d;
+  --color-emerald-400: #00ffcc;
+  --color-emerald-500: #00ffcc;
+  --color-emerald-600: #ff00ff;
+  --color-emerald-700: #cc00cc;
+  --color-emerald-800: #880088;
+  --color-emerald-900: #550055;
+  --color-emerald-950: #330033;
+}
+
+.dark[data-accent="cyberpunk"] {
+  --color-slate-900: #000000;
+  --color-slate-950: #000000;
+  --color-slate-800: #0a0a0a;
+  --color-slate-700: #1a1a1a;
+  --color-slate-100: #1a1a1a;
+  --color-slate-50: #000000;
+  color-scheme: dark;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

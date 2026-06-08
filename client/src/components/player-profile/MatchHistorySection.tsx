@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, ChevronRight } from "lucide-react";
+import { Clock, ChevronRight, Swords } from "lucide-react";
 import { useLocation } from "wouter";
 
 // Duplicate the small helper function for encapsulation

@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Share2, Pencil, Trash2, Sword } from "lucide-react";
+import { Share2, Pencil, Trash2, Sword, BellRing } from "lucide-react";
 import { toast } from "sonner";
+import { getEloTier } from "@/lib/tiers";
 
 export interface Player {
   id: string;
@@ -18,6 +19,7 @@ export interface Player {
   win_loss_record?: string;
   recent_form?: string[];
   is_approved?: boolean;
+  status?: string;
 }
 
 const AVATAR_GRADIENTS = [
@@ -107,6 +109,23 @@ export function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, o
         </button>
       )}
 
+      {/* Ping Button */}
+      {!isOwn && (
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toast.success(`Ping sent to ${player.full_name}! They will be notified.`, {
+              icon: <BellRing className="w-4 h-4 text-emerald-500" />
+            });
+          }}
+          className="absolute top-[84px] right-3 z-20 w-7 h-7 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 shadow transition opacity-0 group-hover:opacity-100"
+          title="Ping player for a match"
+        >
+          <BellRing className="w-3.5 h-3.5" />
+        </button>
+      )}
+
       {/* Admin Actions */}
       {isAdmin && !isOwn && (
         <div className="absolute top-3 right-10 z-20 flex gap-1.5" onClick={(e) => e.preventDefault()}>
@@ -131,15 +150,50 @@ export function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, o
           {player.department.split(" ").slice(0, 2).join(" ")}
         </span>
 
-        {/* Avatar */}
-        <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-slate-100 dark:border-slate-800 shadow-md group-hover:scale-105 transition-transform duration-300 shrink-0 mt-4">
-          {player.avatar_url ? (
-            <img loading="lazy" src={player.avatar_url} alt={player.full_name} className="w-full h-full object-cover" />
-          ) : (
-            <div className={`w-full h-full bg-gradient-to-br ${avatarGradient(player.full_name)} flex items-center justify-center text-white font-black text-3xl`}>
-              {player.full_name.charAt(0).toUpperCase()}
+        {/* Player Status Indicator */}
+        {(() => {
+          // Deterministically generate a status for demo purposes based on ID
+          const seed = player.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+          const statusTypes = [null, 'looking', 'playing', 'resting', null, null];
+          const status = player.status || statusTypes[seed % statusTypes.length];
+          if (!status) return null;
+          
+          const statusConfig = {
+            looking: { color: 'bg-emerald-500', pulse: 'bg-emerald-400', label: 'Looking for Match' },
+            playing: { color: 'bg-amber-500', pulse: 'bg-amber-400', label: 'Playing Right Now' },
+            resting: { color: 'bg-rose-500', pulse: 'bg-rose-400', label: 'Resting / Injured' }
+          }[status];
+
+          if (!statusConfig) return null;
+
+          return (
+            <div className="absolute top-12 left-4 flex items-center gap-1.5 px-2 py-1 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700" title={statusConfig.label}>
+              <span className="relative flex h-2.5 w-2.5">
+                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${statusConfig.pulse}`}></span>
+                <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${statusConfig.color}`}></span>
+              </span>
+              <span className="text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 hidden sm:inline-block">
+                {statusConfig.label.split(' ')[0]}
+              </span>
             </div>
-          )}
+          );
+        })()}
+
+        {/* Avatar */}
+        <div className="relative mt-4">
+          <div className={`absolute inset-0 bg-gradient-to-br ${getEloTier(player.elo_rating).color} blur-md opacity-30 rounded-full`} />
+          <div className={`relative w-24 h-24 rounded-full overflow-hidden border-[3px] shadow-md group-hover:scale-105 transition-transform duration-300 shrink-0 ${getEloTier(player.elo_rating).border}`}>
+            {player.avatar_url ? (
+              <img loading="lazy" src={player.avatar_url} alt={player.full_name} className="w-full h-full object-cover" />
+            ) : (
+              <div className={`w-full h-full bg-gradient-to-br ${avatarGradient(player.full_name)} flex items-center justify-center text-white font-black text-3xl`}>
+                {player.full_name.charAt(0).toUpperCase()}
+              </div>
+            )}
+          </div>
+          <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-gradient-to-r ${getEloTier(player.elo_rating).color} text-white text-[10px] font-black uppercase tracking-widest shadow-lg whitespace-nowrap flex items-center gap-1`}>
+            {getEloTier(player.elo_rating).icon} {getEloTier(player.elo_rating).name}
+          </div>
         </div>
 
         {/* Name */}

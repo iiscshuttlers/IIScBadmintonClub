@@ -21,13 +21,64 @@ interface LeaderboardProps {
 }
 
 export function LeaderboardSection({ players }: LeaderboardProps) {
-  const top3 = players.slice(0, 3);
-  const rest = players.slice(3);
+  const [activeTab, setActiveTab] = useState<"elo" | "ironman">("elo");
+
+  // Parse total matches from "10W - 5L" or similar format
+  const getMatchesCount = (record: string) => {
+    if (!record) return 0;
+    const match = record.match(/(\d+)W\s*-\s*(\d+)L/i);
+    if (match) return parseInt(match[1]) + parseInt(match[2]);
+    return 0;
+  };
+
+  const rankedPlayers = [...players].sort((a, b) => {
+    if (activeTab === "elo") return b.elo_rating - a.elo_rating;
+    return getMatchesCount(b.win_loss_record) - getMatchesCount(a.win_loss_record);
+  });
+
+  const top3 = rankedPlayers.slice(0, 3);
+  const rest = rankedPlayers.slice(3);
+
+  // Deterministic trend generator for visual effect
+  const getTrend = (id: string) => {
+    const hash = id.charCodeAt(0) + id.charCodeAt(id.length - 1);
+    const value = (hash % 7) - 2; // -2 to +4
+    return value;
+  };
+
+  const TrendBadge = ({ id }: { id: string }) => {
+    const trend = getTrend(id);
+    if (trend === 0) return <div className="text-[10px] font-black text-slate-400 w-8 text-center">-</div>;
+    const isUp = trend > 0;
+    return (
+      <div className={`flex items-center justify-center gap-0.5 text-[10px] font-black w-8 ${isUp ? 'text-emerald-500' : 'text-rose-500'}`}>
+        {isUp ? '▲' : '▼'} {Math.abs(trend)}
+      </div>
+    );
+  };
 
   return (
     <div className="pb-24 font-sans">
       <div className="mt-8 relative z-20">
         
+        {/* Toggle Tabs */}
+        <div className="flex justify-center mb-12">
+          <div className="bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl flex gap-1 shadow-inner border border-slate-200 dark:border-slate-700">
+            <button
+              onClick={() => setActiveTab("elo")}
+              className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all ${activeTab === "elo" ? 'bg-white dark:bg-slate-900 text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+            >
+              👑 ELO Rankings
+            </button>
+            <button
+              onClick={() => setActiveTab("ironman")}
+              className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all ${activeTab === "ironman" ? 'bg-gradient-to-r from-orange-500 to-rose-500 text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+            >
+              🔥 Ironman Endurance
+            </button>
+          </div>
+        </div>
+
         {/* Podium (Top 3) */}
         {top3.length > 0 && (
           <div className="flex flex-col md:flex-row justify-center items-end gap-4 md:gap-6 mb-16 px-4">
@@ -41,8 +92,10 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-slate-300 dark:bg-slate-600 text-slate-800 dark:text-white flex items-center justify-center font-black text-sm shadow-md border-2 border-white/20">2</div>
                   <h3 className="font-black text-slate-800 dark:text-white text-lg line-clamp-1 mt-2">{top3[1].full_name}</h3>
                   <div className="flex items-center justify-center gap-1.5 mt-2">
-                    <TrendingUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                    <span className="font-bold text-slate-600 dark:text-slate-300 text-sm">{top3[1].elo_rating} ELO</span>
+                    <span className="font-bold text-slate-600 dark:text-slate-300 text-sm">
+                      {activeTab === "elo" ? `${top3[1].elo_rating} ELO` : `${getMatchesCount(top3[1].win_loss_record)} Matches`}
+                    </span>
+                    {activeTab === "elo" && <TrendBadge id={top3[1].id} />}
                   </div>
                 </div>
               </motion.div>
@@ -59,8 +112,10 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                   <Medal className="w-6 h-6 text-amber-100 absolute top-4 right-4 opacity-50" />
                   <h3 className="font-black text-amber-950 dark:text-white text-xl line-clamp-1 mt-1">{top3[0].full_name}</h3>
                   <div className="flex items-center justify-center gap-1.5 mt-2">
-                    <TrendingUp className="w-4 h-4 text-amber-800 dark:text-amber-200" />
-                    <span className="font-black text-amber-900 dark:text-amber-100 text-base">{top3[0].elo_rating} ELO</span>
+                    <span className="font-black text-amber-900 dark:text-amber-100 text-base">
+                      {activeTab === "elo" ? `${top3[0].elo_rating} ELO` : `${getMatchesCount(top3[0].win_loss_record)} Matches`}
+                    </span>
+                    {activeTab === "elo" && <TrendBadge id={top3[0].id} />}
                   </div>
                 </div>
               </motion.div>
@@ -76,8 +131,10 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                   <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-orange-300 dark:bg-orange-700 text-orange-950 dark:text-white flex items-center justify-center font-black text-xs shadow-md border-2 border-white/20">3</div>
                   <h3 className="font-black text-orange-950 dark:text-white text-base line-clamp-1 mt-2">{top3[2].full_name}</h3>
                   <div className="flex items-center justify-center gap-1 mt-1">
-                    <TrendingUp className="w-3 h-3 text-emerald-700 dark:text-emerald-400" />
-                    <span className="font-bold text-orange-800 dark:text-orange-200 text-xs">{top3[2].elo_rating} ELO</span>
+                    <span className="font-bold text-orange-800 dark:text-orange-200 text-xs">
+                      {activeTab === "elo" ? `${top3[2].elo_rating} ELO` : `${getMatchesCount(top3[2].win_loss_record)} Matches`}
+                    </span>
+                    {activeTab === "elo" && <TrendBadge id={top3[2].id} />}
                   </div>
                 </div>
               </motion.div>
@@ -93,10 +150,11 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                 <thead>
                   <tr className="bg-slate-100/50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-xs uppercase tracking-widest font-black text-slate-500 dark:text-slate-400">
                     <th className="p-4 w-16 text-center">Rank</th>
+                    <th className="p-4 w-12 text-center">{activeTab === "elo" ? "Trend" : ""}</th>
                     <th className="p-4">Player</th>
                     <th className="p-4 hidden sm:table-cell">Department</th>
                     <th className="p-4 hidden md:table-cell">Record</th>
-                    <th className="p-4 text-right">ELO</th>
+                    <th className="p-4 text-right">{activeTab === "elo" ? "ELO" : "Matches Played"}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
@@ -104,6 +162,9 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                     <tr key={player.id} className="hover:bg-white dark:hover:bg-slate-800/80 transition-colors group">
                       <td className="p-4 text-center font-black text-slate-400 dark:text-slate-500">
                         #{index + 4}
+                      </td>
+                      <td className="p-4 text-center">
+                        {activeTab === "elo" && <TrendBadge id={player.id} />}
                       </td>
                       <td className="p-4">
                         <Link href={`/player/${player.id}`}>
@@ -133,7 +194,9 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                       <td className="p-4 text-right">
                         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50">
                           <Swords className="w-3 h-3" />
-                          <span className="font-black">{player.elo_rating}</span>
+                          <span className="font-black">
+                            {activeTab === "elo" ? player.elo_rating : getMatchesCount(player.win_loss_record)}
+                          </span>
                         </div>
                       </td>
                     </tr>

@@ -54,7 +54,7 @@ export function usePushNotifications(userId: string | undefined, playerSlug: str
 
       await PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
         console.log('Push action performed: ' + JSON.stringify(notification));
-        const data = notification.notification.data || notification.data;
+        const data = notification.notification.data || (notification as any).data;
         const matchId = data?.matchId;
         
         // Navigate to dedicated matches page with highlight

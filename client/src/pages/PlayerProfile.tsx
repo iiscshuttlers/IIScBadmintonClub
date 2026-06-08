@@ -17,8 +17,10 @@ import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { isAdminEmail } from "@/lib/admin";
 import { MatchHistorySection } from "@/components/player-profile/MatchHistorySection";
 import { EquipmentArsenalSection, CareerHighlightsSection } from "@/components/player-profile/PlayerProfileSections";
-import { LoadingScreen, FormPill, CircularProgress, KPI, CategoryBar } from "@/components/player-profile/PlayerProfileWidgets";
+import { LoadingScreen, FormPill, CircularProgress, KPI, CategoryBar, Badges, ActivityHeatmap, PlayerRadarChart, EloHistoryChart } from "@/components/player-profile/PlayerProfileWidgets";
 import { toast } from "sonner";
+import { getEloTier } from "@/lib/tiers";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -570,11 +572,33 @@ export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: b
     };
 
     return {
+      all: computeStats(confirmed),
       friendly: computeStats(friendly),
       tournament: computeStats(tournament),
-      all: computeStats(confirmed),
     };
   }, [liveMatches, id]);
+
+  // Generate ELO progression data for the chart
+  const eloHistoryData = useMemo(() => {
+    if (!id || liveMatches.length === 0 || !player?.elo_rating) return [];
+    const confirmed = liveMatches.filter(m => m.status === "confirmed").sort((a,b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    let currentElo = player.elo_rating;
+    
+    // Reverse calculate the past ELOs
+    const history = [];
+    history.push({ name: "Current", elo: currentElo });
+
+    for (let i = confirmed.length - 1; i >= 0; i--) {
+      const match = confirmed[i];
+      if (match.player1_id === id && match.p1_elo_change) {
+        currentElo -= match.p1_elo_change;
+      } else if (match.player2_id === id && match.p2_elo_change) {
+        currentElo -= match.p2_elo_change;
+      }
+      history.push({ name: new Date(match.created_at).toLocaleDateString(undefined, {month: 'short', day: 'numeric'}), elo: currentElo });
+    }
+    return history.reverse();
+  }, [liveMatches, id, player?.elo_rating]);
 
   if (loading) {
     return <LoadingScreen />;
@@ -800,7 +824,12 @@ export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: b
                 {eloRank && (
                   <span className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[11px] font-black tracking-[0.1em]">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse inline-block" />
-                    ELO #{eloRank}
+                    Rank #{eloRank}
+                  </span>
+                )}
+                {player.elo_rating != null && (
+                  <span className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gradient-to-r ${getEloTier(player.elo_rating).color} text-white text-[11px] font-black tracking-[0.1em] uppercase shadow-lg`}>
+                    {getEloTier(player.elo_rating).icon} {getEloTier(player.elo_rating).name} ({player.elo_rating})
                   </span>
                 )}
                 {player.isApproved === false && (
@@ -1415,6 +1444,50 @@ export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: b
                 </div>
               )}
             </motion.section>
+
+            {/* Badges and ELO History Section */}
+            {eloHistoryData.length > 1 && (
+              <motion.section variants={itemVariants} className="mt-6 md:mt-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="space-y-6">
+                    <Badges matches={liveMatches.filter(m => m.status === "confirmed")} playerId={id!} />
+                    <ActivityHeatmap matches={liveMatches.filter(m => m.status === "confirmed")} />
+                  </div>
+                  <div>
+                    <PlayerRadarChart playerId={id!} />
+                    <EloHistoryChart playerId={id!} currentElo={player.elo_rating || 1200} />
+                  </div>
+                </div>
+                
+                <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-5 sm:p-6 shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 mt-6 md:mt-8">
+                  <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-6 flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-emerald-500" /> ELO Progression
+                  </h3>
+                  <div className="h-64 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={eloHistoryData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="colorElo" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8' }} dy={10} minTickGap={30} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8' }} domain={['auto', 'auto']} />
+                        <Tooltip 
+                          contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)', background: 'var(--tw-colors-slate-900)' }}
+                          itemStyle={{ color: '#10b981', fontWeight: 'bold' }}
+                          labelStyle={{ color: '#94a3b8', fontSize: '12px', marginBottom: '4px' }}
+                        />
+                        <Line type="monotone" dataKey="elo" stroke="#10b981" strokeWidth={4} dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </motion.section>
+            )}
+
 
             {/* Frequent Partners */}
             {player.frequentPartners && player.frequentPartners.length > 0 && (

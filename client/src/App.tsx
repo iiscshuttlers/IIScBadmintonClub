@@ -20,6 +20,7 @@ import { useAppUpdate, type AppUpdateInfo } from './hooks/useAppUpdate';
 import { useInactivityLogout } from './hooks/useInactivityLogout';
 import { useNativeBackButton } from './hooks/useNativeBackButton';
 import { usePullToRefresh } from './hooks/usePullToRefresh';
+import { useOfflineSync } from './hooks/useOfflineSync';
 
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { FileOpener } from '@capacitor-community/file-opener';
@@ -113,6 +114,7 @@ const ProfileSetup     = lazy(() => import('./pages/ProfileSetup'));
 const PlayersDirectory = lazy(() => import('./pages/PlayersDirectory'));
 const Invicta          = lazy(() => import('./pages/Invicta'));
 const LiveScore        = lazy(() => import('./pages/LiveScore'));
+const H2H              = lazy(() => import('./pages/H2H'));
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -212,6 +214,7 @@ function AppRoutes() {
             <Route path="/join" component={Join} />
             <Route path="/profile/setup" component={ProfileSetup} />
             <Route path="/players" component={PlayersDirectory} />
+            <Route path="/h2h" component={H2H} />
             <Route path="/player/:id/edit" component={ProfileSetup} />
             <Route path="/player/:id" component={PlayerProfile} />
             <Route path="/matches">
@@ -232,6 +235,7 @@ function App() {
   useInactivityLogout();
   useNativeBackButton();
   usePullToRefresh();
+  useOfflineSync();
 
   return (
     <ErrorBoundary>

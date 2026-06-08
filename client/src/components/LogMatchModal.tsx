@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sword, Trophy, Loader2, Users, User, Plus, Minus, Clock, Lock } from "lucide-react";
+import { X, Sword, Trophy, Loader2, Users, User, Plus, Minus, Clock, Lock, Video } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { isAdminEmail } from "@/lib/admin";
 import { toast } from "sonner";
@@ -128,6 +128,15 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
   const [myTeamWon, setMyTeamWon] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [videoUrl, setVideoUrl] = useState("");
+  const [recentOpponentIds, setRecentOpponentIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("recent_opponents") || "[]");
+      if (Array.isArray(stored)) setRecentOpponentIds(stored.slice(0, 3));
+    } catch(e) {}
+  }, []);
 
   const isAdmin = isAdminEmail(userEmail);
   const now = new Date();
@@ -144,7 +153,16 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
   const updateSet = (idx: number, field: "p1" | "p2", val: string) => {
     // Allow only digits 0-30
     const num = val.replace(/\D/g, "").slice(0, 2);
-    setSets(sets.map((s, i) => i === idx ? { ...s, [field]: num } : s));
+    setSets(sets.map((s, i) => {
+      if (i === idx) {
+        const next = { ...s, [field]: num };
+        // Auto-fill opposite side with 0 if length is > 0 and opposite is empty
+        if (num.length >= 2 && field === "p1" && !s.p2) next.p2 = "0";
+        if (num.length >= 2 && field === "p2" && !s.p1) next.p1 = "0";
+        return next;
+      }
+      return s;
+    }));
   };
 
   // Format sets into readable score string: "21-18, 19-21, 21-15"
@@ -179,7 +197,6 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
       const winnerId = myTeamWon ? currentUser.id : opponentId;
       const scoreStr = formatScore();
 
-      // Build descriptive score for doubles
       let finalScore = scoreStr;
       if (matchType === "doubles") {
         const partnerName = otherPlayers.find(p => p.id === partnerId)?.full_name ?? "";
@@ -194,6 +211,16 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
         finalScore = `${scoreStr} [${category}: ${currentUser.full_name}+${partnerName} vs ${opp1Name}+${opp2Name}]`;
       }
 
+      if (videoUrl.trim()) {
+        finalScore += ` | ${videoUrl.trim()}`;
+      }
+
+      // Save to recent opponents
+      try {
+        const newRecents = Array.from(new Set([opponentId, ...recentOpponentIds])).slice(0, 3);
+        localStorage.setItem("recent_opponents", JSON.stringify(newRecents));
+      } catch(e) {}
+
       const matchPayload = {
         submitter_id: currentUser.id,
         opponent_id: opponentId,
@@ -201,7 +228,21 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
         match_score: finalScore,
         submitter_partner_id: matchType === "doubles" ? partnerId : null,
         opponent_partner_id: matchType === "doubles" ? opponentPartnerId : null,
+        match_category: matchCategory // Save category to handle later if offline
       };
+
+      if (!navigator.onLine) {
+        // OFFLINE QUEUE LOGIC
+        const existingQueue = JSON.parse(localStorage.getItem("offline_matches") || "[]");
+        existingQueue.push({ ...matchPayload, timestamp: Date.now() });
+        localStorage.setItem("offline_matches", JSON.stringify(existingQueue));
+        
+        toast.success("You are offline. Match saved to Gym Mode queue and will auto-sync when internet is restored!", { duration: 5000 });
+        onSuccess();
+        onClose();
+        setLoading(false);
+        return;
+      }
 
       let { error: rpcError } = await supabase.rpc("submit_friendly_match", matchPayload);
       if (rpcError && matchType === "singles") {
@@ -231,6 +272,10 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
         if (latestMatch) {
           await supabase.from("matches").update({ is_friendly: false, round: "Tournament" }).eq("id", latestMatch.id);
         }
+      }
+
+      if (myTeamWon) {
+        toast.success("🎉 Incredible victory!");
       }
 
       toast.success(matchCategory === "friendly" 
@@ -332,6 +377,21 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
                     <PlayerAvatar player={opponent} />
                   </div>
                   <PlayerSelect value={opponentId} onChange={setOpponentId} players={otherPlayers} />
+                  
+                  {recentOpponentIds.length > 0 && !opponentId && (
+                    <div className="flex gap-2 mt-3 justify-center">
+                      {recentOpponentIds.map(id => {
+                        const op = otherPlayers.find(p => p.id === id);
+                        if (!op) return null;
+                        return (
+                          <button key={id} type="button" onClick={() => setOpponentId(id)} className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm hover:scale-110 transition">
+                            <img src={op.avatar_url || ''} className="w-full h-full object-cover" />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                  
                   <span className="text-[10px] uppercase font-bold text-slate-400 mt-1">Opponent</span>
                 </div>
               </div>
@@ -449,6 +509,20 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
                   {matchType === "doubles" ? "They Won" : "Opponent Won"}
                 </button>
               </div>
+            </div>
+
+            {/* Video Highlight Link */}
+            <div>
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                Match Highlight (Optional)
+              </label>
+              <input
+                type="url"
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder="YouTube or Video Link"
+                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
+              />
             </div>
 
             {error && (
