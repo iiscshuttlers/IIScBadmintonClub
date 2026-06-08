@@ -54,9 +54,9 @@ export function usePushNotifications(userId: string | undefined, playerSlug: str
 
       await PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
         console.log('Push action performed: ' + JSON.stringify(notification));
-        // Navigate to pending matches using the player slug (not the UUID)
+        // Navigate to dedicated matches page
         if (playerSlug) {
-          window.location.href = `${import.meta.env.BASE_URL || '/'}player/${playerSlug}`;
+          window.location.href = `${import.meta.env.BASE_URL || '/'}matches`;
         }
       });
       isRegistered = true;

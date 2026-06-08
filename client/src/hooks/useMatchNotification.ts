@@ -71,7 +71,7 @@ export function useMatchNotification() {
               '🏸 New Match Challenge!',
               `${alertName} just logged a match against you. Open the app to confirm.`,
               () => {
-                window.location.href = `${import.meta.env.BASE_URL || '/'}player/${profile.id}`;
+                window.location.href = `${import.meta.env.BASE_URL || '/'}matches`;
               }
             );
           }
