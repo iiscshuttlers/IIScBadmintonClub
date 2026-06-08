@@ -490,7 +490,7 @@ export default function PlayersDirectory() {
             <div className="flex-1">
               <div className="text-lg font-black mb-1">Are you a member? Build your player card!</div>
               <div className="text-slate-300 text-sm font-medium">
-                Sign in with your <span className="font-bold text-white">@iisc.ac.in</span> email to create and manage your profile.
+                Sign in with your <span className="font-black text-emerald-400">preferred personal Gmail account</span> to create and manage your profile.
               </div>
             </div>
             <button

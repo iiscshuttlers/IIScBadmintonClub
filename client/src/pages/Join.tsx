@@ -31,7 +31,7 @@ export default function Join() {
   const [confirm, setConfirm] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [otp, setOtp] = useState("");
-  const [infoMsg, setInfoMsg] = useState("");
+  const [infoMsg, setInfoMsg] = useState<React.ReactNode>("");
   const [errorMsg, setErrorMsg] = useState("");
 
   // Read inactivity logout reason set by App.tsx
@@ -137,7 +137,11 @@ export default function Join() {
       if (error) throw error;
 
       if (!data.session) {
-        setInfoMsg("Verification link sent! Check Junk/Spam for IISc emails. If it never arrives, please try signing up with a personal Gmail account.");
+        setInfoMsg(
+          <>
+            Verification link sent! Check <strong className="text-emerald-800 dark:text-emerald-300 font-black">Junk/Spam</strong> for IISc emails. If it never arrives, please try signing up with a <strong className="text-emerald-800 dark:text-emerald-300 font-black">personal Gmail account</strong>.
+          </>
+        );
         setMode("signin");
         setLoading(false);
       } else if (new URLSearchParams(window.location.search).get("add_account") === "true") {
@@ -168,7 +172,11 @@ export default function Join() {
       });
       if (error) throw error;
       setMode("otp-verify");
-      setInfoMsg(`Login code sent! Check Junk/Spam for IISc emails. If it never arrives, please try a personal Gmail account.`);
+      setInfoMsg(
+        <>
+          Login code sent! Check <strong className="text-emerald-800 dark:text-emerald-300 font-black">Junk/Spam</strong> for IISc emails. If it never arrives, please try a <strong className="text-emerald-800 dark:text-emerald-300 font-black">personal Gmail account</strong>.
+        </>
+      );
     } catch (err: any) {
       const msg: string = err?.message ?? "";
       setErrorMsg(msg.includes("not found") ? "No account found with this email. Please sign up first." : (msg || "An error occurred. Please try again."));

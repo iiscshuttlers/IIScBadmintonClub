@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Share2, Pencil, Trash2, Sword, BellRing } from "lucide-react";
+import { Share2, Pencil, Trash2, Sword, BellRing, BellOff } from "lucide-react";
 import { toast } from "sonner";
 import { getEloTier } from "@/lib/tiers";
 
@@ -61,6 +62,7 @@ interface PlayerCardProps {
 }
 
 export function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, onEdit, onLogMatch }: PlayerCardProps) {
+  const [isPinged, setIsPinged] = useState(false);
   const winPct = parseWinPct(player.win_loss_record);
 
   const handleShare = (e: React.MouseEvent) => {
@@ -115,14 +117,26 @@ export function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, o
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            toast.success(`Ping sent to ${player.full_name}! They will be notified.`, {
-              icon: <BellRing className="w-4 h-4 text-emerald-500" />
-            });
+            if (isPinged) {
+              setIsPinged(false);
+              toast.success(`Ping to ${player.full_name} cancelled.`, {
+                icon: <BellOff className="w-4 h-4 text-slate-500" />
+              });
+            } else {
+              setIsPinged(true);
+              toast.success(`Ping sent to ${player.full_name}! They will be notified.`, {
+                icon: <BellRing className="w-4 h-4 text-emerald-500" />
+              });
+            }
           }}
-          className="absolute top-[84px] right-3 z-20 w-7 h-7 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 shadow transition opacity-0 group-hover:opacity-100"
-          title="Ping player for a match"
+          className={`absolute top-[84px] right-3 z-20 w-7 h-7 flex items-center justify-center rounded-full shadow transition ${
+            isPinged 
+              ? "bg-amber-100 dark:bg-amber-900/40 text-amber-600 opacity-100 hover:bg-amber-200 dark:hover:bg-amber-900/60" 
+              : "bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30 opacity-0 group-hover:opacity-100"
+          }`}
+          title={isPinged ? "Cancel Ping" : "Ping player for a match"}
         >
-          <BellRing className="w-3.5 h-3.5" />
+          {isPinged ? <BellOff className="w-3.5 h-3.5" /> : <BellRing className="w-3.5 h-3.5" />}
         </button>
       )}
 
