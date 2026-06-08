@@ -3,6 +3,8 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { isAdminEmail } from "@/lib/admin";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { toast } from "sonner";
 
 export interface PlayerProfile {
   id: string;
@@ -114,12 +116,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchRoles();
   }, [session]);
 
+  // Realtime listener for new pending matches against the current user
+  useEffect(() => {
+    if (!profile?.id) return;
+
+    const channel = supabase.channel('realtime_matches')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'matches',
+          filter: `player2_id=eq.${profile.id}`
+        },
+        async (payload) => {
+          if (payload.new.status === 'pending') {
+            try {
+              // Fetch the opponent's name for a better notification
+              const { data } = await supabase.from('players').select('full_name').eq('id', payload.new.player1_id).single();
+              const challengerName = data?.full_name || 'Someone';
+              toast.info(`🏸 New Match Request`, {
+                description: `${challengerName} just logged a match against you!`,
+                action: {
+                  label: "View",
+                  onClick: () => window.location.href = `${import.meta.env.BASE_URL}player/${profile.id}`
+                },
+                duration: 10000
+              });
+            } catch (err) {
+              // Fallback
+              toast.info("🏸 New Match Request", {
+                description: "Someone just logged a match against you!"
+              });
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [profile?.id]);
+
   const isInitializing = sessionLoading || (!!session && profileLoading);
   
   const isMainAdmin = session?.user?.email ? isAdminEmail(session.user.email) : false;
   const assignedRole = profile ? userRoles.find(r => r.id === profile.id)?.role : null;
   const isAdmin = isMainAdmin || assignedRole === 'admin';
   const isUmpire = isAdmin || assignedRole === 'umpire';
+
+  usePushNotifications(profile?.id);
 
   const updateRole = async (playerId: string, role: string | null) => {
     let newRoles = [...userRoles];

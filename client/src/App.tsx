@@ -14,9 +14,11 @@ import { PwaInstallPrompt } from './components/pwa/PwaInstallPrompt';
 import { PwaUpdatePrompt } from './components/pwa/PwaUpdatePrompt';
 import Navigation from './components/Navigation';
 import Footer from './components/Footer';
+import LogMatchFab from './components/LogMatchFab';
 import { useAppUpdate, type AppUpdateInfo } from './hooks/useAppUpdate';
 import { useInactivityLogout } from './hooks/useInactivityLogout';
 import { useNativeBackButton } from './hooks/useNativeBackButton';
+import { usePullToRefresh } from './hooks/usePullToRefresh';
 
 function UpdateDialog({ info, onDismiss }: { info: AppUpdateInfo; onDismiss: () => void }) {
   return (
@@ -184,8 +186,9 @@ function AppRoutes() {
 
 function App() {
   const { updateInfo, dismissUpdate } = useAppUpdate();
-  useNativeBackButton();
   useInactivityLogout();
+  useNativeBackButton();
+  usePullToRefresh();
 
   return (
     <ErrorBoundary>
@@ -205,6 +208,7 @@ function App() {
                 <Footer />
               </div>
               <BackToTop />
+              <LogMatchFab />
             </Router>
             <Toaster />
             <PwaUpdatePrompt />

@@ -185,6 +185,16 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'wouter', 'framer-motion'],
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-select', '@radix-ui/react-tabs', 'lucide-react'],
+          supabase: ['@supabase/supabase-js'],
+          firebase: ['firebase/app', 'firebase/messaging']
+        }
+      }
+    }
   },
 
   server: {

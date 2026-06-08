@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "258810088674",
+    "project_id": "iisc-badminton-hub",
+    "storage_bucket": "iisc-badminton-hub.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:258810088674:android:aa997dd3c68f9b6f69a2bb",
+        "android_client_info": {
+          "package_name": "com.iiscshuttlers.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "258810088674-1iptc0co4gb02m4090do108eo1t8kpig.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDyU7OMMfahv9Oi9UnU3XcI8tUeVxLppF0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "258810088674-1iptc0co4gb02m4090do108eo1t8kpig.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

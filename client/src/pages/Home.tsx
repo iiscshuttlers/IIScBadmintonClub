@@ -8,7 +8,7 @@ import { useState, useEffect, useRef } from 'react';
 import { CountUpNumber } from '@/components/CountUpNumber';
 import { ARCHIVED_TOURNAMENTS } from '@/data/tournamentArchive';
 import { fetchSiteData } from '@/lib/siteData';
-
+import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
 // ── Animation variants ────────────────────────────────────────────────────────
 const fadeUp: Variants = {
@@ -523,20 +523,25 @@ export default function Home() {
           onClick={() => setSelectedImage(null)}
         >
           <button
-            className="absolute top-6 right-6 text-white/70 hover:text-white bg-black/50 hover:bg-black/80 rounded-full p-2 transition-all"
+            className="absolute top-6 right-6 z-[60] text-white/70 hover:text-white bg-black/50 hover:bg-black/80 rounded-full p-2 transition-all"
             onClick={(e) => { e.stopPropagation(); setSelectedImage(null); }}
           >
             <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-          <img
-            loading="lazy"
-            src={selectedImage}
-            alt="Leadership"
-            className="max-w-[90vw] max-h-[90vh] rounded-xl object-contain shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          />
+          <div className="w-full h-full flex items-center justify-center overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <TransformWrapper initialScale={1} minScale={0.5} maxScale={4} centerOnInit>
+              <TransformComponent wrapperStyle={{ width: '100%', height: '100%' }} contentStyle={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <img
+                  loading="lazy"
+                  src={selectedImage}
+                  alt="Leadership"
+                  className="max-w-[90vw] max-h-[90vh] rounded-xl object-contain shadow-2xl"
+                />
+              </TransformComponent>
+            </TransformWrapper>
+          </div>
         </div>
       )}
 
@@ -547,20 +552,25 @@ export default function Home() {
           onClick={() => setIsImageOpen(false)}
         >
           <button
-            className="absolute top-6 right-6 text-white/70 hover:text-white bg-black/50 hover:bg-black/80 rounded-full p-2 transition-all"
+            className="absolute top-6 right-6 z-[60] text-white/70 hover:text-white bg-black/50 hover:bg-black/80 rounded-full p-2 transition-all"
             onClick={(e) => { e.stopPropagation(); setIsImageOpen(false); }}
           >
             <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-          <img
-            loading="lazy"
-            src={iiscTeam}
-            alt="IISc Badminton Team Full"
-            className="max-w-full max-h-full rounded-xl object-contain shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          />
+          <div className="w-full h-full flex items-center justify-center overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <TransformWrapper initialScale={1} minScale={0.5} maxScale={4} centerOnInit>
+              <TransformComponent wrapperStyle={{ width: '100%', height: '100%' }} contentStyle={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <img
+                  loading="lazy"
+                  src={iiscTeam}
+                  alt="IISc Badminton Team Full"
+                  className="max-w-full max-h-full rounded-xl object-contain shadow-2xl"
+                />
+              </TransformComponent>
+            </TransformWrapper>
+          </div>
         </div>
       )}
     </div>

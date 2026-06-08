@@ -262,21 +262,35 @@ export function VideoEditor({ data, onChange }: { data: VideoItem[]; onChange: (
 /* ================================================================ */
 /*  Players Manager                                                  */
 /* ================================================================ */
+type AuthUser = { id: string; email: string; created_at: string; last_sign_in_at: string; };
+
 export function PlayersManager() {
   const [players, setPlayers]     = useState<Player[]>([]);
+  const [authUsers, setAuthUsers] = useState<AuthUser[]>([]);
   const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState("");
-  const [filter, setFilter]       = useState<"all" | "pending" | "approved">("all");
+  const [filter, setFilter]       = useState<"profile" | "no-profile" | "pending" | "approved">("profile");
   const [actionId, setActionId]   = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("players")
-      .select("id, full_name, email, department, is_approved, created_at, stats, iisc_email, contact_number, sr_number")
-      .order("created_at", { ascending: false });
-    if (!error && data) setPlayers(data as Player[]);
-    setLoading(false);
+    try {
+      const [playersRes, funcRes] = await Promise.all([
+        supabase
+          .from("players")
+          .select("id, full_name, email, department, is_approved, created_at, stats, iisc_email, contact_number, sr_number")
+          .order("created_at", { ascending: false }),
+        supabase.functions.invoke("admin-users", { method: "GET" })
+      ]);
+      
+      if (!playersRes.error && playersRes.data) setPlayers(playersRes.data as Player[]);
+      if (!funcRes.error && funcRes.data?.users) setAuthUsers(funcRes.data.users as AuthUser[]);
+    } catch (err) {
+      console.error("Failed to load accounts:", err);
+      toast.error("Failed to load full account list. Is the admin-users edge function deployed?");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -299,23 +313,54 @@ export function PlayersManager() {
     setActionId(null);
   };
 
-  const remove = async (id: string, name: string) => {
-    if (!confirm(`Delete player "${name}"? This cannot be undone.`)) return;
+  const removeProfile = async (id: string, name: string) => {
+    if (!confirm(`Delete profile for "${name}"? This deletes their player card but NOT their login account.`)) return;
     setActionId(id);
     const { data, error } = await supabase.from("players").delete().eq("id", id).select();
     if (error) { toast("Delete failed: " + error.message, { icon: "❌" }); }
     else if (!data || data.length === 0) { toast("Permission Denied", { icon: "❌", description: "Database RLS policy blocked the deletion." }); }
-    else { toast("Player deleted.", { icon: "🗑️" }); setPlayers(p => p.filter(pl => pl.id !== id)); }
+    else { toast("Profile deleted.", { icon: "🗑️" }); setPlayers(p => p.filter(pl => pl.id !== id)); }
     setActionId(null);
   };
 
-  const filtered = players.filter(p => {
-    const matchesSearch = !search ||
-      p.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-      p.email?.toLowerCase().includes(search.toLowerCase()) ||
-      p.department?.toLowerCase().includes(search.toLowerCase());
-    const matchesFilter = filter === "all" || (filter === "approved" ? p.is_approved : !p.is_approved);
-    return matchesSearch && matchesFilter;
+  const removeAccount = async (id: string, email: string) => {
+    if (!confirm(`Permanently delete account "${email}"? This will wipe their login and their profile if it exists. Cannot be undone!`)) return;
+    setActionId(id);
+    const { error } = await supabase.functions.invoke("admin-users", { method: "DELETE", body: { userId: id } });
+    if (error) { 
+      toast("Delete failed: " + error.message, { icon: "❌" }); 
+    } else { 
+      toast("Account permanently deleted.", { icon: "🗑️" }); 
+      setAuthUsers(u => u.filter(user => user.id !== id));
+      setPlayers(p => p.filter(pl => pl.id !== id));
+    }
+    setActionId(null);
+  };
+
+  const noProfileUsers = authUsers.filter(u => !players.some(p => p.id === u.id));
+
+  // Determine which list to show based on filter
+  let displayList: any[] = [];
+  if (filter === "no-profile") {
+    displayList = noProfileUsers;
+  } else {
+    displayList = players;
+  }
+
+  const filtered = displayList.filter(item => {
+    const s = search.toLowerCase();
+    if (filter === "no-profile") {
+      const u = item as AuthUser;
+      return !s || u.email?.toLowerCase().includes(s);
+    } else {
+      const p = item as Player;
+      const matchesSearch = !s ||
+        p.full_name?.toLowerCase().includes(s) ||
+        p.email?.toLowerCase().includes(s) ||
+        p.department?.toLowerCase().includes(s);
+      const matchesFilter = filter === "profile" || (filter === "approved" ? p.is_approved : !p.is_approved);
+      return matchesSearch && matchesFilter;
+    }
   });
 
   const pending = players.filter(p => !p.is_approved).length;
@@ -329,11 +374,12 @@ export function PlayersManager() {
   return (
     <div className="space-y-4">
       {/* Stats bar */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-4 gap-3">
         {[
-          { label: "Total", value: players.length, color: "bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800" },
-          { label: "Approved", value: players.filter(p => p.is_approved).length, color: "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800" },
-          { label: "Pending", value: pending, color: `${pending > 0 ? "bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800" : "bg-slate-50 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700"}` },
+          { label: "Total Acc", value: authUsers.length, color: "bg-blue-50 text-blue-700" },
+          { label: "Profiles", value: players.length, color: "bg-emerald-50 text-emerald-700" },
+          { label: "No Profile", value: noProfileUsers.length, color: "bg-amber-50 text-amber-700" },
+          { label: "Pending", value: pending, color: `${pending > 0 ? "bg-rose-50 text-rose-700" : "bg-slate-50 text-slate-500"}` },
         ].map(s => (
           <div key={s.label} className={`rounded-2xl border p-4 text-center ${s.color}`}>
             <div className="text-2xl font-black">{s.value}</div>
@@ -349,11 +395,11 @@ export function PlayersManager() {
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name, email, department..."
             className={`${inputCls} pl-10`} />
         </div>
-        <div className="flex gap-2">
-          {(["all", "pending", "approved"] as const).map(f => (
+        <div className="flex gap-2 flex-wrap">
+          {(["profile", "no-profile", "pending", "approved"] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)}
-              className={`px-4 py-2.5 rounded-xl text-sm font-bold transition ${filter === f ? "bg-emerald-600 text-white" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-emerald-300"}`}>
-              {f.charAt(0).toUpperCase() + f.slice(1)}
+              className={`px-3 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${filter === f ? "bg-emerald-600 text-white" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-emerald-300"}`}>
+              {f === 'profile' ? 'Profile Created' : f === 'no-profile' ? 'No Profile (Acc Only)' : f.charAt(0).toUpperCase() + f.slice(1)}
             </button>
           ))}
           <button onClick={load} className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
@@ -367,7 +413,31 @@ export function PlayersManager() {
         {filtered.length === 0 && (
           <div className="text-center py-10 text-slate-400 dark:text-slate-500 text-sm font-medium">No players found.</div>
         )}
-        {filtered.map(p => {
+        {filtered.map(item => {
+          if (filter === "no-profile") {
+            const u = item as AuthUser;
+            const busy = actionId === u.id;
+            return (
+              <div key={u.id} className={`${cardCls} flex flex-col sm:flex-row gap-3 items-start sm:items-center`}>
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-slate-900 dark:text-white">{u.email}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Account Created: {new Date(u.created_at).toLocaleDateString()}
+                  </div>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <button onClick={() => removeAccount(u.id, u.email)} disabled={busy}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-rose-500 bg-rose-50 hover:bg-rose-100 dark:hover:bg-rose-950/20 text-xs font-bold transition disabled:opacity-50">
+                    {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                    Delete Account
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
+          // Normal profile row
+          const p = item as Player;
           const elo = p.stats?.elo ?? p.stats?.eloRating ?? null;
           const busy = actionId === p.id;
           return (
@@ -387,7 +457,7 @@ export function PlayersManager() {
                   {p.contact_number && <span>· {p.contact_number}</span>}
                 </div>
               </div>
-              <div className="flex gap-2 shrink-0">
+              <div className="flex gap-2 shrink-0 flex-wrap sm:flex-nowrap">
                 {!p.is_approved ? (
                   <button onClick={() => approve(p.id)} disabled={busy}
                     className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition disabled:opacity-50">
@@ -401,9 +471,14 @@ export function PlayersManager() {
                     Revoke
                   </button>
                 )}
-                <button onClick={() => remove(p.id, p.full_name)} disabled={busy}
+                <button onClick={() => removeProfile(p.id, p.full_name)} disabled={busy}
+                  title="Delete Profile Only"
                   className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition disabled:opacity-50">
                   <Trash2 className="w-4 h-4" />
+                </button>
+                <button onClick={() => removeAccount(p.id, p.email || p.full_name)} disabled={busy}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-rose-500 bg-rose-50 hover:bg-rose-100 dark:hover:bg-rose-950/20 text-xs font-bold transition disabled:opacity-50">
+                  Delete Account
                 </button>
               </div>
             </div>

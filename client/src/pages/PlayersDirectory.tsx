@@ -79,6 +79,7 @@ export default function PlayersDirectory() {
   const [showFilters, setShowFilters]     = useState(false);
   const [sortBy, setSortBy]               = useState<"elo" | "winpct" | "name" | "department" | "level">("name");
   const [activeTab, setActiveTab]         = useState<"directory" | "leaderboard">("directory");
+  const [visibleCount, setVisibleCount]   = useState(24);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -715,7 +716,7 @@ export default function PlayersDirectory() {
               animate="show"
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
             >
-              {filteredPlayers.map((player) => (
+              {filteredPlayers.slice(0, visibleCount).map((player) => (
                 <motion.div key={player.id} variants={itemVariants} className="group h-full">
                   <Link href={`/player/${player.id}`}>
                     <PlayerCard 
@@ -732,6 +733,17 @@ export default function PlayersDirectory() {
                 </motion.div>
               ))}
             </motion.div>
+            
+            {visibleCount < filteredPlayers.length && (
+              <div className="mt-12 flex justify-center">
+                <button
+                  onClick={() => setVisibleCount(v => v + 24)}
+                  className="px-8 py-3 bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400 font-bold rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all flex items-center gap-2"
+                >
+                  Load More Players
+                </button>
+              </div>
+            )}
           </>
         ) : (
           <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-12 text-center border border-dashed border-slate-200 dark:border-slate-800">

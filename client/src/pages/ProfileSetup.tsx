@@ -348,35 +348,93 @@ export default function ProfileSetup() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 512 * 1024) {
-      toast.error("Image too large", { description: "Please choose a file under 512 KB." });
-      e.target.value = "";
-      return;
-    }
-
     setLoading(true);
+
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${session.user.id}-${Date.now()}.${fileExt}`;
+      // Create a temporary URL for the image
+      const imgUrl = URL.createObjectURL(file);
+      const img = new window.Image();
+      
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = imgUrl;
+      });
+
+      // Max dimensions for the avatar (reduce resolution to shrink file size)
+      const MAX_WIDTH = 1200;
+      const MAX_HEIGHT = 1200;
+      let width = img.width;
+      let height = img.height;
+
+      if (width > height) {
+        if (width > MAX_WIDTH) {
+          height = Math.round((height * MAX_WIDTH) / width);
+          width = MAX_WIDTH;
+        }
+      } else {
+        if (height > MAX_HEIGHT) {
+          width = Math.round((width * MAX_HEIGHT) / height);
+          height = MAX_HEIGHT;
+        }
+      }
+
+      // Draw resized image to canvas
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Could not get canvas context');
+      
+      ctx.drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(imgUrl);
+
+      // Loop to guarantee size is under 512KB, starting with high quality
+      let quality = 0.95;
+      let blob: Blob;
+      
+      while (true) {
+        blob = await new Promise<Blob>((resolve, reject) => {
+          canvas.toBlob((b) => {
+            if (b) resolve(b);
+            else reject(new Error('Canvas to Blob failed'));
+          }, 'image/webp', quality); 
+        });
+
+        if (blob.size <= 500 * 1024 || quality <= 0.6) {
+          break; // It fits perfectly, or we reached the lowest acceptable quality
+        }
+        
+        quality -= 0.1; // Reduce quality and try again
+      }
+
+      if (blob.size > 512 * 1024) {
+        throw new Error('Image could not be compressed below 500KB. Please try a different image.');
+      }
+
+      // Give it a WebP extension since we compressed it as webp
+      const fileName = `${session.user.id}-${Date.now()}.webp`;
       const filePath = `avatars/${fileName}`;
 
-      // Upload file to Supabase avatars bucket
+      // Upload the compressed Blob to Supabase
       const { error } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { cacheControl: '3600', upsert: true });
+        .upload(filePath, blob, { contentType: 'image/webp', cacheControl: '3600', upsert: true });
 
       if (error) throw error;
 
       // Get public URL
       const { data: publicUrlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
       setAvatarUrl(publicUrlData.publicUrl);
-      toast.success("Avatar uploaded successfully!");
+      toast.success("Avatar uploaded and compressed successfully!");
     } catch (err: any) {
       console.error("Avatar upload failed:", err);
-      toast.error("Upload failed", { description: "Ensure the bucket exists and public policies are active! Falling back to URL input." });
+      toast.error("Upload failed", { description: err.message || "Ensure the bucket exists and public policies are active!" });
       setAvatarUrl("");
     } finally {
       setLoading(false);
+      // Reset input so the same file can be selected again if needed
+      e.target.value = "";
     }
   };
 

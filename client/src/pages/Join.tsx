@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { ADMIN_EMAILS } from "@/lib/admin";
+import { toast } from "sonner";
 
 type Mode = "welcome" | "signin" | "signup" | "otp-email" | "otp-verify";
 
@@ -57,6 +58,7 @@ export default function Join() {
     if (profile) {
       setLocation(`/player/${profile.id}`);
     } else {
+      toast.success("Account verified successfully! Please complete your profile.", { duration: 5000 });
       setLocation("/profile/setup");
     }
   }, [isInitializing, session, profile, setLocation]);
@@ -120,7 +122,11 @@ export default function Join() {
         return;
       }
 
-      const { data, error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: { emailRedirectTo: window.location.origin + window.location.pathname } 
+      });
 
       // Fallback Supabase enumeration protection check (for auth accounts without a profile yet)
       if (data?.user && data.user.identities && data.user.identities.length === 0) {
@@ -153,7 +159,13 @@ export default function Join() {
     e.preventDefault();
     setLoading(true); setErrorMsg("");
     try {
-      const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
+      const { error } = await supabase.auth.signInWithOtp({ 
+        email, 
+        options: { 
+          shouldCreateUser: false,
+          emailRedirectTo: window.location.origin + window.location.pathname
+        } 
+      });
       if (error) throw error;
       setMode("otp-verify");
       setInfoMsg(`Login code sent to ${email}`);
