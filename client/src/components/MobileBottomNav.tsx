@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Home, Swords, User } from 'lucide-react';
+import { Home, Swords, User, Users } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useLocation } from 'wouter';
