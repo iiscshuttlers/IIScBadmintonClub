@@ -36,6 +36,8 @@ export interface PlayerProfile {
   instagram: string | null;
   achievements: string[] | null;
   tournament_history: string[] | null;
+  elo_rating?: number;
+  status?: string;
 }
 
 export interface AuthContextType {
@@ -212,3 +214,4 @@ export function useAuth() {
   }
   return context;
 }
+

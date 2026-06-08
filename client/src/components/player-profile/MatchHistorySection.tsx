@@ -297,7 +297,7 @@ export function MatchHistorySection({ id, liveMatches, ownPlayerProfile, handleW
                               const text = `🏸 Match Result: ${won ? 'Won' : 'Lost'} against ${opponent?.full_name ?? 'Unknown'} (${(m.match_score || m.score)?.replace(/\s*\[.*\]/, "") || "—"})!`;
                               
                               // Correctly format the live share URL
-                              const playerSlug = profile.slug || profile.id;
+                              const playerSlug = id;
                               const shareUrl = `${getBaseShareUrl()}/player/${playerSlug}`;
 
                               try {

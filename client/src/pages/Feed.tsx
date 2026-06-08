@@ -376,9 +376,7 @@ export default function Feed() {
 
                         // Sync with live database if logged in
                         if (session?.user?.id) {
-                          supabase.rpc('toggle_match_kudos', { p_match_id: match.id }).catch(err => {
-                            console.warn("Failed to sync kudos live:", err);
-                          });
+                          supabase.rpc('toggle_match_kudos', { p_match_id: match.id }).then(({error}) => { if (error) console.warn("Failed to sync kudos live:", error); });
                         }
                       }}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${
@@ -456,3 +454,5 @@ export default function Feed() {
     </div>
   );
 }
+
+

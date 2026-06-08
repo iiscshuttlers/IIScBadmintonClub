@@ -1463,11 +1463,11 @@ export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: b
               <motion.section variants={itemVariants} className="mt-6 md:mt-8">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-6">
-                    {session?.user?.id && player.user_id && session.user.id !== player.user_id && (
+                    {authSession?.user?.id && player.userId && authSession.user.id !== player.userId && (
                         <HeadToHeadWidget 
-                          currentUserId={session.user.id} 
-                          targetUserId={player.user_id} 
-                          targetUserName={player.fullName || player.full_name || ''} 
+                          currentUserId={authSession.user.id} 
+                          targetUserId={player.userId} 
+                          targetUserName={player.fullName || player.fullName || ''} 
                           matches={liveMatches.filter(m => m.status === "confirmed")} 
                         />
                       )}
@@ -1692,5 +1692,7 @@ export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: b
     </div>
   );
 }
+
+
 
 

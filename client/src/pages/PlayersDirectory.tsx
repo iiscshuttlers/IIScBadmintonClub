@@ -684,12 +684,12 @@ export default function PlayersDirectory() {
         </div>
 
         {/* Recommended Opponents (Matchmaking) */}
-        {!loading && profile && activeTab === 'directory' && (
+        {!loading && ownProfile && activeTab === 'directory' && (
           (function() {
             const recommended = players.filter(p => 
-              p.id !== profile.id && 
+              p.id !== ownProfile.id && 
               p.status === 'looking' && 
-              Math.abs((p.elo_rating || 1200) - (profile.elo_rating || 1200)) <= 200
+              Math.abs((p.elo_rating || 1200) - (ownProfile.elo_rating || 1200)) <= 200
             ).slice(0, 4);
             
             if (recommended.length === 0) return null;
@@ -708,13 +708,14 @@ export default function PlayersDirectory() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {recommended.map(player => (
                     <PlayerCard 
-                      key={ec- + player.id} 
+
+                      key={"rec-" + player.id}
                       player={player} 
                       isOwn={false} 
                       isAdmin={isAdmin} 
-                      onDelete={handleDeletePlayer} 
-                      onEdit={handleEditPlayer}
-                      onLogMatch={handleLogMatch}
+                      onDelete={handleAdminDelete} 
+                      onEdit={handleAdminEdit}
+                      onLogMatch={ownProfile ? () => { setSelectedOpponentId(player.id); setIsLogMatchOpen(true); } : undefined}
                     />
                   ))}
                 </div>
@@ -842,4 +843,9 @@ export default function PlayersDirectory() {
     </div>
   );
 }
+
+
+
+
+
 

@@ -409,8 +409,8 @@ export const HeadToHeadWidget = ({ currentUser, targetPlayer, matches }: { curre
             <span className="text-slate-400">{h2hMatches.length} Matches</span>
           </div>
           <div className="h-3 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden flex">
-            <div className="h-full bg-emerald-500" style={{ width: \${winPct}%\ }} />
-            <div className="h-full bg-rose-500" style={{ width: \${100 - winPct}%\ }} />
+            <div className="h-full bg-emerald-500" style={{ width: `${winPct}%` }} />
+            <div className="h-full bg-rose-500" style={{ width: `${100 - winPct}%` }} />
           </div>
         </div>
       </div>
