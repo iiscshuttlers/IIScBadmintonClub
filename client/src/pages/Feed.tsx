@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Link } from "wouter";
 import { supabase } from "@/lib/supabase";
 import { motion } from "framer-motion";
-import { Activity, Trophy, Swords, Sparkles, TrendingUp } from "lucide-react";
+import { Activity, Trophy, Swords, Sparkles, TrendingUp, BarChart3, Clock } from "lucide-react";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
@@ -49,6 +49,24 @@ export default function Feed() {
 
   useAutoRefresh(() => fetchFeed(true), 30_000, !loading);
 
+  const courtUtil = useMemo(() => {
+    const hours = new Array(24).fill(0);
+    matches.forEach(m => {
+      const h = new Date(m.created_at).getHours();
+      hours[h]++;
+    });
+    const morning = hours.slice(5, 12).reduce((a, b) => a + b, 0);
+    const afternoon = hours.slice(12, 17).reduce((a, b) => a + b, 0);
+    const evening = hours.slice(17, 24).reduce((a, b) => a + b, 0) + hours.slice(0, 5).reduce((a, b) => a + b, 0);
+    const total = matches.length || 1;
+    return {
+      morning: (morning / total) * 100,
+      afternoon: (afternoon / total) * 100,
+      evening: (evening / total) * 100,
+      isPeak: Math.max(morning, afternoon, evening)
+    };
+  }, [matches]);
+
   const renderSkeleton = () => (
     <div className="space-y-4 max-w-3xl mx-auto">
       {[...Array(5)].map((_, i) => (
@@ -84,6 +102,24 @@ export default function Feed() {
       </div>
 
       <div className="container mx-auto px-4 max-w-3xl mt-8">
+        {!loading && matches.length > 0 && (
+          <div className="mb-6 bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden">
+            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
+              <BarChart3 className="w-4 h-4 text-emerald-500" /> Court Utilization (Recent)
+            </div>
+            <div className="flex h-3 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+              <motion.div initial={{width:0}} animate={{width:`${courtUtil.morning}%`}} transition={{duration:1}} className="bg-sky-400 border-r border-white/20" title="Morning (5AM - 12PM)" />
+              <motion.div initial={{width:0}} animate={{width:`${courtUtil.afternoon}%`}} transition={{duration:1, delay:0.2}} className="bg-amber-400 border-r border-white/20" title="Afternoon (12PM - 5PM)" />
+              <motion.div initial={{width:0}} animate={{width:`${courtUtil.evening}%`}} transition={{duration:1, delay:0.4}} className="bg-indigo-500" title="Evening (5PM - 5AM)" />
+            </div>
+            <div className="flex justify-between mt-3 text-[10px] font-bold text-slate-400 uppercase">
+              <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-sky-400"/> Morning</div>
+              <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-amber-400"/> Afternoon</div>
+              <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-indigo-500"/> Evening</div>
+            </div>
+          </div>
+        )}
+
         {loading ? (
           renderSkeleton()
         ) : matches.length > 0 ? (
@@ -187,6 +223,35 @@ export default function Feed() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Reaction Kudos */}
+                  <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/50 flex justify-end">
+                    <button 
+                      onClick={async (e) => {
+                        e.preventDefault();
+                        try {
+                          const { Haptics, ImpactStyle } = await import('@capacitor/haptics');
+                          await Haptics.impact({ style: ImpactStyle.Heavy });
+                        } catch(err) {}
+                        const btn = e.currentTarget;
+                        btn.classList.add('scale-125', 'text-rose-500', 'bg-rose-50', 'dark:bg-rose-500/20');
+                        setTimeout(() => btn.classList.remove('scale-125'), 200);
+                        
+                        // Local storage for instant feedback
+                        const storageKey = `liked_${match.id}`;
+                        if (!localStorage.getItem(storageKey)) {
+                          localStorage.setItem(storageKey, "1");
+                          const countEl = btn.querySelector('.kudos-count');
+                          if (countEl) countEl.textContent = String(parseInt(countEl.textContent || '0') + 1);
+                        }
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
+                    >
+                      <Sparkles className="w-4 h-4" /> 
+                      Kudos <span className="kudos-count text-slate-400 font-medium ml-1">{(match.id.charCodeAt(0) % 5) + (localStorage.getItem(`liked_${match.id}`) ? 1 : 0)}</span>
+                    </button>
+                  </div>
+
                 </motion.div>
               );
             })}

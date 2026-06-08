@@ -16,6 +16,11 @@ export function usePullToRefresh() {
         const y = e.touches[0].clientY;
         if (y - startY > 150) { // 150px pull threshold
           isRefreshing = true;
+          try {
+            import('@capacitor/haptics').then(({ Haptics, ImpactStyle }) => {
+              Haptics.impact({ style: ImpactStyle.Heavy });
+            });
+          } catch (e) { /* ignore */ }
           // Trigger the reload
           window.location.reload();
         }

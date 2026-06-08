@@ -41,12 +41,21 @@ export function MatchHistorySection({ id, liveMatches, ownPlayerProfile, handleW
   const confirmedMatches = liveMatches.filter(m => m.status === "confirmed");
   const pendingMatchesList = liveMatches.filter(m => m.status === "pending").sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   if (confirmedMatches.length === 0 && pendingMatchesList.length === 0) return null;
-  
+
   const filteredMatches = matchHistoryFilter === "all"
     ? confirmedMatches
     : matchHistoryFilter === "friendly"
       ? confirmedMatches.filter(m => m.is_friendly !== false)
       : confirmedMatches.filter(m => m.is_friendly === false);
+
+  // Rivalry Analytics
+  const isViewingOther = ownPlayerProfile?.id && ownPlayerProfile.id !== id;
+  const h2hMatches = isViewingOther 
+    ? confirmedMatches.filter(m => isMatchParticipant(m, ownPlayerProfile.id)) 
+    : [];
+  
+  const h2hWins = h2hMatches.filter(m => m.winner_id === id).length; // Wins for the profile we're looking at
+  const h2hLosses = h2hMatches.filter(m => m.winner_id === ownPlayerProfile?.id).length;
 
   return (
     <motion.section variants={itemVariants}>
@@ -91,6 +100,32 @@ export function MatchHistorySection({ id, liveMatches, ownPlayerProfile, handleW
             className="overflow-hidden"
           >
             <div className="pt-4">
+              
+              {/* Rivalry Analytics */}
+              {isViewingOther && h2hMatches.length > 0 && (
+                <div className="mb-4 ml-2 bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-800/50 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
+                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(244,63,94,0.05),transparent)] pointer-events-none" />
+                  <div className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2 relative z-10">
+                    <Swords className="w-4 h-4 text-rose-500" /> Head-to-Head vs You
+                  </div>
+                  <div className="flex items-center justify-between relative z-10">
+                    <div className="text-center flex-1">
+                      <div className="text-3xl font-black text-rose-600 dark:text-rose-400">{h2hWins}</div>
+                      <div className="text-[10px] font-bold text-slate-400 uppercase mt-1">Their Wins</div>
+                    </div>
+                    <div className="w-px h-10 bg-slate-200 dark:bg-slate-700 mx-4" />
+                    <div className="text-center flex-1">
+                      <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400">{h2hLosses}</div>
+                      <div className="text-[10px] font-bold text-slate-400 uppercase mt-1">Your Wins</div>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex h-2 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700 relative z-10">
+                    <div style={{ width: `${(h2hWins / h2hMatches.length) * 100}%` }} className="bg-rose-500 transition-all duration-1000" />
+                    <div style={{ width: `${(h2hLosses / h2hMatches.length) * 100}%` }} className="bg-emerald-500 transition-all duration-1000" />
+                  </div>
+                </div>
+              )}
+
               {/* Filter Tabs */}
               <div className="flex gap-2 ml-2 mb-4 overflow-x-auto pb-1">
                 {(["all", "friendly", "tournament"] as const).map(tab => (
@@ -211,11 +246,10 @@ export function MatchHistorySection({ id, liveMatches, ownPlayerProfile, handleW
 
                         {/* Match Type */}
                         <div className="col-span-1">
-                          <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${
-                            isFriendly
+                          <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${isFriendly
                               ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/30"
                               : "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/30"
-                          }`}>
+                            }`}>
                             {isFriendly ? "FRD" : "TRN"}
                           </span>
                         </div>
@@ -268,4 +302,3 @@ export function MatchHistorySection({ id, liveMatches, ownPlayerProfile, handleW
     </motion.section>
   );
 }
-

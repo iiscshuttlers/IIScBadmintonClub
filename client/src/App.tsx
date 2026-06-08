@@ -112,6 +112,7 @@ const Join             = lazy(() => import('./pages/Join'));
 const ProfileSetup     = lazy(() => import('./pages/ProfileSetup'));
 const PlayersDirectory = lazy(() => import('./pages/PlayersDirectory'));
 const Invicta          = lazy(() => import('./pages/Invicta'));
+const LiveScore        = lazy(() => import('./pages/LiveScore'));
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -184,16 +185,17 @@ function AppRoutes() {
     <AnimatePresence initial={false}>
       <motion.div
         key={location}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.15 }}
+        initial={{ opacity: 0, y: 10, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -10, scale: 0.98 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
       >
         <Suspense fallback={<PageSkeleton />}>
           <Switch>
             <Route path="/" component={Home} />
             <Route path="/feed" component={Feed} />
             <Route path="/facilities" component={Facilities} />
+            <Route path="/live" component={LiveScore} />
 
             <Route path="/admin" component={SiteAdmin} />
             <Route path="/tournament/admin" component={SiteAdmin} />
