@@ -175,6 +175,9 @@ function AppRoutes() {
             <Route path="/players" component={PlayersDirectory} />
             <Route path="/player/:id/edit" component={ProfileSetup} />
             <Route path="/player/:id" component={PlayerProfile} />
+            <Route path="/matches">
+              <PlayerProfile matchesOnly={true} />
+            </Route>
 
             <Route path="/404" component={NotFound} />
             <Route component={NotFound} />

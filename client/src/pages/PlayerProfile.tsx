@@ -176,12 +176,16 @@ function getYouTubeId(url: string) {
   return (match && match[2].length === 11) ? match[2] : null;
 }
 
-export default function PlayerProfile() {
-  const { id } = useParams<{id: string}>();
+export default function PlayerProfile({ matchesOnly }: { matchesOnly?: boolean } = {}) {
+  const { id: routeId } = useParams<{id: string}>();
   const [, setLocation] = useLocation();
+  const { session: authSession, user: currentUser, profile: ownPlayerProfile, isAdmin, isMainAdmin, userRoles, updateRole } = useAuth();
+  
+  // If we're in matchesOnly mode and no routeId is provided, use the logged-in user's profile ID
+  const id = routeId || (matchesOnly ? ownPlayerProfile?.id : undefined);
+
   const [player, setPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
-  const { session: authSession, user: currentUser, profile: ownPlayerProfile, isAdmin, isMainAdmin, userRoles, updateRole } = useAuth();
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
   const [isAvatarOpen, setIsAvatarOpen] = useState(false);
@@ -583,6 +587,41 @@ export default function PlayerProfile() {
   const heroFirstName = nameParts[0];
   const heroLastName = nameParts.slice(1).join(' ');
   const targetUserRole = userRoles.find(r => r.id === player.id)?.role;
+
+  if (matchesOnly) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-[#070d1a] selection:bg-emerald-500/30 font-sans pb-24 pt-4 lg:pt-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <div className="flex items-center justify-between mb-6 mt-2">
+            <div>
+              <h1 className="text-3xl font-black text-slate-900 dark:text-white">Matches</h1>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Your recent activity</p>
+            </div>
+            {ownPlayerProfile && (
+              <button
+                onClick={() => window.dispatchEvent(new Event('openLogMatchModal'))}
+                className="bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2 transition-all active:scale-95 px-5 py-3 rounded-2xl font-bold"
+              >
+                <Swords className="w-5 h-5" />
+                <span className="hidden sm:inline">Log a Match</span>
+                <span className="sm:hidden">Log</span>
+              </button>
+            )}
+          </div>
+          <MatchHistorySection
+            id={id}
+            liveMatches={liveMatches}
+            ownPlayerProfile={ownPlayerProfile}
+            handleWithdrawMatch={handleWithdrawMatch}
+            handleConfirmMatch={handleConfirmMatch}
+            handleRejectMatch={handleRejectMatch}
+            handleResendRequest={handleResendRequest}
+            defaultOpen={true}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#070d1a] selection:bg-emerald-500/30 font-sans">

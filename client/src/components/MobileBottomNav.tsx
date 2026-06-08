@@ -52,12 +52,11 @@ export default function MobileBottomNav() {
           <div className="relative -top-5">
             <button
               onClick={() => {
-                if (location.startsWith(`/player/${profile.id}`)) {
+                if (location.startsWith('/matches')) {
                   // already here, just scroll to matches if needed or open log match
                   window.dispatchEvent(new Event('openLogMatchModal'));
                 } else {
-                  setLocation(`/player/${profile.id}`);
-                  // Note: scrolling handled on profile page
+                  setLocation('/matches');
                 }
               }}
               className="w-14 h-14 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-all"

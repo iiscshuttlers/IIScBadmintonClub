@@ -30,11 +30,12 @@ interface MatchHistorySectionProps {
   handleConfirmMatch?: (matchId: string) => Promise<void>;
   handleRejectMatch?: (matchId: string) => Promise<void>;
   handleResendRequest?: (match: any) => Promise<void>;
+  defaultOpen?: boolean;
 }
 
-export function MatchHistorySection({ id, liveMatches, ownPlayerProfile, handleWithdrawMatch, handleConfirmMatch, handleRejectMatch, handleResendRequest }: MatchHistorySectionProps) {
+export function MatchHistorySection({ id, liveMatches, ownPlayerProfile, handleWithdrawMatch, handleConfirmMatch, handleRejectMatch, handleResendRequest, defaultOpen = false }: MatchHistorySectionProps) {
   const [, setLocation] = useLocation();
-  const [isMatchHistoryOpen, setIsMatchHistoryOpen] = useState(false);
+  const [isMatchHistoryOpen, setIsMatchHistoryOpen] = useState(defaultOpen);
   const [matchHistoryFilter, setMatchHistoryFilter] = useState<"all" | "friendly" | "tournament">("all");
 
   const confirmedMatches = liveMatches.filter(m => m.status === "confirmed");
