@@ -146,6 +146,37 @@ export default function Gallery() {
         )
       );
 
+  // Read URL params to auto-select album
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const filter = params.get('filter');
+    if (filter) {
+      const decoded = decodeURIComponent(filter);
+      const isCategory = galleryItems.some(i => i.category === decoded);
+      if (isCategory) {
+        setSelectedCategory(decoded);
+        setSelectedSubfolder('all');
+      } else {
+        const match = galleryItems.find(i => i.subfolder === decoded);
+        if (match) {
+          setSelectedCategory(match.category);
+          // Small delay so state batching doesn't miss the subfolder selection
+          setTimeout(() => setSelectedSubfolder(decoded), 0);
+        }
+      }
+    }
+  }, []);
+
+  const updateUrlFilter = (filterValue: string, isSubfolder: boolean) => {
+    const url = new URL(window.location.href);
+    if (filterValue === 'all' && !isSubfolder) {
+      url.searchParams.delete('filter');
+    } else {
+      url.searchParams.set('filter', filterValue);
+    }
+    window.history.pushState({}, '', url.toString());
+  };
+
   const filteredItems = galleryItems.filter((item) => {
     const categoryMatch = selectedCategory === 'all' || item.category === selectedCategory;
     const subfolderMatch = selectedSubfolder === 'all' || item.subfolder === selectedSubfolder;
@@ -194,7 +225,11 @@ export default function Gallery() {
                 return (
                   <button
                     key={cat.id}
-                    onClick={() => { setSelectedCategory(cat.id); setSelectedSubfolder('all'); }}
+                    onClick={() => { 
+                      setSelectedCategory(cat.id); 
+                      setSelectedSubfolder('all'); 
+                      updateUrlFilter(cat.id, false);
+                    }}
                     className={`px-6 py-2 rounded-full font-bold transition-all duration-300 flex items-center gap-2 ${selectedCategory === cat.id
                       ? 'bg-emerald-500 text-white shadow-lg scale-105'
                       : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700'
@@ -214,7 +249,10 @@ export default function Gallery() {
           {subfolders.length > 0 && (
             <div className="flex flex-wrap gap-3 justify-center mb-12 animate-in fade-in slide-in-from-top-4">
               <button
-                onClick={() => setSelectedSubfolder('all')}
+                onClick={() => {
+                  setSelectedSubfolder('all');
+                  updateUrlFilter(selectedCategory, false);
+                }}
                 className={`px-5 py-1.5 rounded-full text-sm font-semibold transition ${selectedSubfolder === 'all' ? 'bg-blue-900 dark:bg-blue-700 text-white' : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-700'
                   }`}
               >
@@ -223,7 +261,10 @@ export default function Gallery() {
               {subfolders.map((sub) => (
                 <button
                   key={sub}
-                  onClick={() => setSelectedSubfolder(sub)}
+                  onClick={() => {
+                    setSelectedSubfolder(sub);
+                    updateUrlFilter(sub, true);
+                  }}
                   className={`px-5 py-1.5 rounded-full text-sm font-semibold transition ${selectedSubfolder === sub ? 'bg-blue-900 dark:bg-blue-700 text-white' : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-700'
                     }`}
                 >

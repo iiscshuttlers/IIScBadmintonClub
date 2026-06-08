@@ -3,13 +3,14 @@ import { useLocation, useParams } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   UserCircle, Trophy, Save, Sparkles, Activity,
-  Swords, BookOpen, Quote, LogOut, Video, Image, Play, Upload, ArrowLeft, Lock
-, Star} from "lucide-react";
+  Swords, BookOpen, Quote, LogOut, Video, Image, Play, Upload, ArrowLeft, Lock, Star, ArrowRight
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { ARCHIVED_TOURNAMENTS } from "@/data/tournamentArchive";
+import { optimizeImage } from "@/lib/imageUtils";
 
 function getPasswordStrength(pwd: string) {
   let score = 0;
@@ -101,6 +102,7 @@ export default function ProfileSetup() {
   // Section 1: Basic Info
   const [fullName, setFullName] = useState("");
   const [nickname, setNickname] = useState("");
+  const [status, setStatus] = useState("looking");
   const [iiscEmail, setIiscEmail] = useState("");
   const [contactNumber, setContactNumber] = useState("");
   const [department, setDepartment] = useState("");
@@ -253,6 +255,7 @@ export default function ProfileSetup() {
           setPlayerSlug(profile.id);
           setFullName(profile.full_name || "");
           setNickname(profile.nickname || "");
+          setStatus(profile.status || "looking");
           setIiscEmail(profile.iisc_email || "");
           setContactNumber(profile.contact_number || "");
           if (profile.department && !PREDEFINED_DEPARTMENTS.includes(profile.department) && profile.department !== "OTHER - Other") {
@@ -351,75 +354,27 @@ export default function ProfileSetup() {
     setLoading(true);
 
     try {
-      // Create a temporary URL for the image
-      const imgUrl = URL.createObjectURL(file);
-      const img = new window.Image();
-      
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = imgUrl;
-      });
+      toast.loading("Optimizing image...");
+      const optimizedFile = await optimizeImage(file, 1200, 0.85);
 
-      // Max dimensions for the avatar (reduce resolution to shrink file size)
-      const MAX_WIDTH = 1200;
-      const MAX_HEIGHT = 1200;
-      let width = img.width;
-      let height = img.height;
-
-      if (width > height) {
-        if (width > MAX_WIDTH) {
-          height = Math.round((height * MAX_WIDTH) / width);
-          width = MAX_WIDTH;
-        }
-      } else {
-        if (height > MAX_HEIGHT) {
-          width = Math.round((width * MAX_HEIGHT) / height);
-          height = MAX_HEIGHT;
-        }
-      }
-
-      // Draw resized image to canvas
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error('Could not get canvas context');
-      
-      ctx.drawImage(img, 0, 0, width, height);
-      URL.revokeObjectURL(imgUrl);
-
-      // Loop to guarantee size is under 512KB, starting with high quality
-      let quality = 0.95;
-      let blob: Blob;
-      
-      while (true) {
-        blob = await new Promise<Blob>((resolve, reject) => {
-          canvas.toBlob((b) => {
-            if (b) resolve(b);
-            else reject(new Error('Canvas to Blob failed'));
-          }, 'image/webp', quality); 
-        });
-
-        if (blob.size <= 500 * 1024 || quality <= 0.6) {
-          break; // It fits perfectly, or we reached the lowest acceptable quality
-        }
-        
-        quality -= 0.1; // Reduce quality and try again
-      }
-
-      if (blob.size > 512 * 1024) {
-        throw new Error('Image could not be compressed below 500KB. Please try a different image.');
+      if (optimizedFile.size > 1024 * 1024) { // 1MB fallback cap
+        toast.dismiss();
+        throw new Error('Image could not be compressed enough. Please try a different image.');
       }
 
       // Use just the user ID to ensure we overwrite the previous avatar
       const fileName = `${session.user.id}.webp`;
       const filePath = fileName;
 
+      toast.dismiss();
+      toast.loading("Uploading avatar...");
+
       // Upload the compressed Blob to Supabase
       const { error } = await supabase.storage
         .from('avatars')
-        .upload(filePath, blob, { contentType: 'image/webp', cacheControl: '3600', upsert: true });
+        .upload(filePath, optimizedFile, { contentType: 'image/webp', cacheControl: '3600', upsert: true });
+
+      toast.dismiss();
 
       if (error) throw error;
 
@@ -465,6 +420,7 @@ export default function ProfileSetup() {
     const payload = {
       full_name: fullName,
       nickname: nickname || null,
+      status: status,
       iisc_email: iiscEmail || null,
       contact_number: contactNumber || null,
       department: department === "OTHER - Other" ? customDepartment : department,
@@ -561,6 +517,12 @@ export default function ProfileSetup() {
     { id: "highlights", label: "Highlights", icon: Trophy },
     { id: "media", label: "Media Showcase", icon: Video },
   ];
+
+  const tabOrder = tabs.map(t => t.id);
+  const currentIndex = tabOrder.indexOf(activeTab);
+  const isLastTab = currentIndex === tabOrder.length - 1;
+  const nextTabId = isLastTab ? null : tabOrder[currentIndex + 1];
+  const nextTabObj = tabs.find(t => t.id === nextTabId);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
@@ -1626,23 +1588,37 @@ export default function ProfileSetup() {
               </AnimatePresence>
 
               <div className="pt-5 sm:pt-6 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full min-h-[52px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-3.5 rounded-xl shadow-lg shadow-emerald-500/25 transition-all text-base sm:text-lg flex items-center justify-center gap-2 disabled:opacity-70"
-                >
-                  {loading ? (
-                    <>
-                      <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-5 h-5" />
-                      Save & Launch Profile
-                    </>
-                  )}
-                </Button>
+                {isLastTab ? (
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full min-h-[52px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-3.5 rounded-xl shadow-lg shadow-emerald-500/25 transition-all text-base sm:text-lg flex items-center justify-center gap-2 disabled:opacity-70"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-5 h-5" />
+                        Save & Launch Profile
+                      </>
+                    )}
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setActiveTab(nextTabId as any);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="w-full min-h-[52px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-3.5 rounded-xl shadow-lg shadow-emerald-500/25 transition-all text-base sm:text-lg flex items-center justify-center gap-2"
+                  >
+                    Save & Next: {nextTabObj?.label} <ArrowRight className="w-5 h-5" />
+                  </Button>
+                )}
 
                 <button
                   type="button"

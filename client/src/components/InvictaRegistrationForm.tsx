@@ -4,6 +4,7 @@ import { Upload, FileText, CheckCircle, Loader2, AlertCircle, X, ArrowRight } fr
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigationAuth } from '@/hooks/useNavigationAuth';
+import { optimizeImage } from '@/lib/imageUtils';
 
 const CATEGORIES = [
   { id: 'MS', label: "Men's Singles", price: 150 },
@@ -49,12 +50,14 @@ export default function InvictaRegistrationForm({ onClose }: { onClose?: () => v
     setError(null);
 
     try {
+      // Optimize receipt image (converts HEIC -> JPEG -> WebP)
+      const optimizedFile = await optimizeImage(receiptFile, 1200, 0.85);
+
       // 1. Upload receipt
-      const ext = receiptFile.name.split('.').pop();
-      const fileName = `${session.user.id}_${Date.now()}.${ext}`;
+      const fileName = `${session.user.id}_${Date.now()}.webp`;
       const { error: uploadError } = await supabase.storage
         .from('invicta_receipts')
-        .upload(fileName, receiptFile);
+        .upload(fileName, optimizedFile, { contentType: 'image/webp' });
         
       if (uploadError) throw new Error("Receipt upload failed: " + uploadError.message);
 

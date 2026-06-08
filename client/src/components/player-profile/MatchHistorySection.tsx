@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, ChevronRight, Swords } from "lucide-react";
+import { Clock, ChevronRight, Swords, Share2 } from "lucide-react";
 import { useLocation } from "wouter";
 
 // Duplicate the small helper function for encapsulation
@@ -277,14 +277,32 @@ export function MatchHistorySection({ id, liveMatches, ownPlayerProfile, handleW
                           </div>
                         </div>
 
-                        {/* Date & Time */}
-                        <div className="col-span-3 text-right">
-                          <div className="text-xs font-bold text-slate-600 dark:text-slate-300">
-                            {matchDate.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                        {/* Date & Time & Share */}
+                        <div className="col-span-3 flex items-center justify-end gap-3 text-right">
+                          <div>
+                            <div className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                              {matchDate.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                            </div>
+                            <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                              {matchDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}
+                            </div>
                           </div>
-                          <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-                            {matchDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}
-                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const text = `🏸 Match Result: ${won ? 'Won' : 'Lost'} against ${opponent?.full_name ?? 'Unknown'} (${(m.match_score || m.score)?.replace(/\s*\[.*\]/, "") || "—"})!`;
+                              if (navigator.share) {
+                                navigator.share({ title: 'IISc Shuttlers Match Result', text, url: window.location.href });
+                              } else {
+                                navigator.clipboard.writeText(`${text}\n${window.location.href}`);
+                                alert("Match result copied to clipboard!");
+                              }
+                            }}
+                            className="p-1.5 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/20 rounded-lg transition-colors"
+                            title="Share Match Result"
+                          >
+                            <Share2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
                     );
