@@ -225,7 +225,23 @@ export default function PlayerProfile({ matchesOnly }: { matchesOnly?: boolean }
       racketDetails: data.racket_details || [],
       tournamentHistory: data.tournament_history || [],
       achievements: data.achievements || [],
-      winLossRecord: data.win_loss_record || `${data.stats?.wins || 0}W - ${data.stats?.losses || 0}L`,
+      winLossRecord: (() => {
+        let wins = 0, losses = 0;
+        if (data.win_loss_record) {
+          try {
+            const parsed = typeof data.win_loss_record === 'string' ? JSON.parse(data.win_loss_record) : data.win_loss_record;
+            wins = parsed?.wins || 0;
+            losses = parsed?.losses || 0;
+          } catch {
+            // fallback if it's already a string like "10W - 5L"
+            return data.win_loss_record;
+          }
+        } else if (data.stats) {
+          wins = data.stats.wins || 0;
+          losses = data.stats.losses || 0;
+        }
+        return `${wins}W - ${losses}L`;
+      })(),
       nationality: data.nationality,
       homeState: data.home_state,
       height: data.height,

@@ -21,7 +21,44 @@ import { useInactivityLogout } from './hooks/useInactivityLogout';
 import { useNativeBackButton } from './hooks/useNativeBackButton';
 import { usePullToRefresh } from './hooks/usePullToRefresh';
 
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { FileOpener } from '@capacitor-community/file-opener';
+import { useState } from 'react';
+
 function UpdateDialog({ info, onDismiss }: { info: AppUpdateInfo; onDismiss: () => void }) {
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownloadAndInstall = async () => {
+    if (!Capacitor.isNativePlatform()) {
+      window.open(info.downloadUrl, '_blank');
+      return;
+    }
+    
+    try {
+      setDownloading(true);
+      const fileName = `IIScShuttlers_${info.versionName}.apk`;
+      
+      const downloadResult = await Filesystem.downloadFile({
+        url: info.downloadUrl,
+        path: fileName,
+        directory: Directory.Cache
+      });
+      
+      if (downloadResult.path) {
+        await FileOpener.open({
+          filePath: downloadResult.path,
+          contentType: 'application/vnd.android.package-archive'
+        });
+      }
+    } catch (error) {
+      console.error('Download failed', error);
+      // Fallback if filesystem plugin fails
+      window.open(info.downloadUrl, '_system');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-sm w-full p-7 space-y-5">
@@ -36,14 +73,13 @@ function UpdateDialog({ info, onDismiss }: { info: AppUpdateInfo; onDismiss: () 
           </p>
         )}
         <div className="flex flex-col gap-2">
-          <a
-            href={info.downloadUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-center transition-colors"
+          <button
+            onClick={handleDownloadAndInstall}
+            disabled={downloading}
+            className={`w-full ${downloading ? 'bg-emerald-800' : 'bg-emerald-600 hover:bg-emerald-700'} text-white font-bold py-3 rounded-xl text-center transition-colors`}
           >
-            Download Update
-          </a>
+            {downloading ? 'Downloading...' : 'Download Update'}
+          </button>
           <button
             onClick={onDismiss}
             className="w-full text-slate-500 dark:text-slate-400 font-medium py-2 text-sm hover:text-slate-700 transition-colors"
