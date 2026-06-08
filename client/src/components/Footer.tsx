@@ -6,7 +6,7 @@ export default function Footer() {
   const [apkUrl, setApkUrl] = useState("https://github.com/iiscshuttlers/iiscshuttlers/releases/latest");
 
   useEffect(() => {
-    fetch('/data/app-version.json?v=' + Date.now())
+    fetch(`${import.meta.env.BASE_URL}data/app-version.json?v=${Date.now()}`)
       .then(r => r.json())
       .then(data => {
         if (data && data.downloadUrl) {
