@@ -8,6 +8,7 @@ import { useNavigationAuth } from '@/hooks/useNavigationAuth';
 
 const TOP_LEVEL_LINKS = [
   { href: '/events', label: 'Events' },
+  { href: '/feed', label: 'Feed' },
   { href: '/players', label: 'Players' },
   { href: '/winners', label: 'Winners Wall' },
   { href: '/announcements', label: 'Announcements' },

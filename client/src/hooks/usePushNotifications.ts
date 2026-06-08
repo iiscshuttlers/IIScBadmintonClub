@@ -54,9 +54,12 @@ export function usePushNotifications(userId: string | undefined, playerSlug: str
 
       await PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
         console.log('Push action performed: ' + JSON.stringify(notification));
-        // Navigate to dedicated matches page
+        const data = notification.notification.data || notification.data;
+        const matchId = data?.matchId;
+        
+        // Navigate to dedicated matches page with highlight
         if (playerSlug) {
-          window.location.href = `${import.meta.env.BASE_URL || '/'}matches`;
+          window.location.href = `${import.meta.env.BASE_URL || '/'}matches${matchId ? `?highlight=${matchId}` : ''}`;
         }
       });
       isRegistered = true;

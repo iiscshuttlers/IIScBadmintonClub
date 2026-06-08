@@ -98,31 +98,34 @@ export const KPI = ({
 );
 
 export function LoadingScreen() {
-  const [showRetry, setShowRetry] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setShowRetry(true), 8000);
-    return () => clearTimeout(t);
-  }, []);
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 py-20 px-4">
-      <div className="relative w-16 h-16">
-        <div className="absolute inset-0 rounded-full border-4 border-emerald-500/20" />
-        <div className="absolute inset-0 rounded-full border-4 border-t-emerald-500 animate-spin" />
-      </div>
-      <p className="mt-4 text-sm font-semibold text-slate-500 dark:text-slate-400 animate-pulse">
-        Loading Player Profile...
-      </p>
-      {showRetry && (
-        <div className="mt-6 text-center">
-          <p className="text-sm text-slate-400 dark:text-slate-500 mb-3">Taking too long?</p>
-          <button
-            onClick={() => { localStorage.clear(); sessionStorage.clear(); window.location.reload(); }}
-            className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition-colors shadow-lg shadow-emerald-500/25"
-          >
-            Clear Cache & Retry
-          </button>
+    <div className="min-h-screen bg-slate-50 dark:bg-[#070d1a] selection:bg-emerald-500/30 font-sans">
+      <div className="relative overflow-hidden bg-slate-950" style={{ minHeight: '88vh' }}>
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-10 pt-20 pb-28">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center min-h-[60vh]">
+            <div className="flex flex-col justify-center space-y-6">
+              <div className="h-6 w-32 bg-slate-800 rounded-full animate-pulse" />
+              <div className="space-y-4">
+                <div className="h-20 sm:h-24 w-3/4 bg-slate-800 rounded-2xl animate-pulse" />
+                <div className="h-20 sm:h-24 w-2/3 bg-slate-800 rounded-2xl animate-pulse" />
+              </div>
+              <div className="flex gap-2">
+                <div className="h-8 w-24 bg-slate-800 rounded-lg animate-pulse" />
+                <div className="h-8 w-32 bg-slate-800 rounded-lg animate-pulse" />
+                <div className="h-8 w-20 bg-slate-800 rounded-lg animate-pulse" />
+              </div>
+              <div className="flex items-stretch gap-2 mt-4">
+                <div className="h-24 w-24 bg-slate-800 rounded-2xl animate-pulse" />
+                <div className="h-24 w-24 bg-slate-800 rounded-2xl animate-pulse" />
+                <div className="h-24 w-24 bg-slate-800 rounded-2xl animate-pulse" />
+              </div>
+            </div>
+            <div className="flex justify-center lg:justify-end items-center">
+              <div className="w-[280px] h-[380px] sm:w-[360px] sm:h-[480px] bg-slate-800 rounded-[4rem] animate-pulse" />
+            </div>
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

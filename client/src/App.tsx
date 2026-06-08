@@ -97,6 +97,7 @@ import Facilities from './pages/Facilities';
 import Events from './pages/Events';
 import Contact from './pages/Contact';
 import NotFound from './pages/NotFound';
+import Feed from './pages/Feed';
 
 // Lazy loaded (large or rarely visited)
 const Announcements    = lazy(() => import('./pages/Announcements'));
@@ -191,6 +192,7 @@ function AppRoutes() {
         <Suspense fallback={<PageSkeleton />}>
           <Switch>
             <Route path="/" component={Home} />
+            <Route path="/feed" component={Feed} />
             <Route path="/facilities" component={Facilities} />
 
             <Route path="/admin" component={SiteAdmin} />

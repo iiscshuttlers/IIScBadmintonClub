@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Home, Swords, User, Users } from 'lucide-react';
+import { Home, Swords, Users, Activity, Plus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useLocation } from 'wouter';
@@ -48,30 +48,43 @@ export default function MobileBottomNav() {
             <span className="text-[10px] font-bold">Home</span>
           </button>
 
-          {/* MATCHES (Center FAB-style) */}
-          <div className="relative -top-5">
+          {/* FEED */}
+          <button 
+            onClick={() => setLocation('/feed')}
+            className={`flex flex-col items-center justify-center w-14 h-12 transition-colors ${location === '/feed' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
+          >
+            <Activity className={`w-6 h-6 mb-1 ${location === '/feed' ? 'stroke-emerald-500' : ''}`} strokeWidth={location === '/feed' ? 2.5 : 2} />
+            <span className="text-[10px] font-bold">Feed</span>
+          </button>
+
+          {/* LOG MATCH (Center FAB-style) */}
+          <div className="relative -top-5 mx-1">
             <button
               onClick={() => {
-                if (location.startsWith('/matches')) {
-                  // already here, just scroll to matches if needed or open log match
-                  window.dispatchEvent(new Event('openLogMatchModal'));
-                } else {
-                  setLocation('/matches');
-                }
+                window.dispatchEvent(new Event('openLogMatchModal'));
               }}
-              className="w-14 h-14 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-all"
+              className="w-14 h-14 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-all ring-4 ring-white dark:ring-slate-900"
             >
-              <Swords className="w-6 h-6" />
+              <Plus className="w-7 h-7" strokeWidth={3} />
             </button>
             <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
-              Matches
+              Log Match
             </span>
           </div>
+
+          {/* MATCHES */}
+          <button 
+            onClick={() => setLocation('/matches')}
+            className={`flex flex-col items-center justify-center w-14 h-12 transition-colors ${location.startsWith('/matches') ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
+          >
+            <Swords className={`w-6 h-6 mb-1 ${location.startsWith('/matches') ? 'fill-emerald-500/20' : ''}`} strokeWidth={location.startsWith('/matches') ? 2.5 : 2} />
+            <span className="text-[10px] font-bold">Matches</span>
+          </button>
 
           {/* PLAYERS DIRECTORY */}
           <button 
             onClick={() => setLocation('/players')}
-            className={`flex flex-col items-center justify-center w-16 h-12 transition-colors ${location === '/players' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
+            className={`flex flex-col items-center justify-center w-14 h-12 transition-colors ${location === '/players' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
           >
             <Users className={`w-6 h-6 mb-1 ${location === '/players' ? 'fill-emerald-500/20' : ''}`} strokeWidth={location === '/players' ? 2.5 : 2} />
             <span className="text-[10px] font-bold">Players</span>
