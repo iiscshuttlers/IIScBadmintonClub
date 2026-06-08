@@ -18,6 +18,8 @@ import { isAdminEmail } from "@/lib/admin";
 import { MatchHistorySection } from "@/components/player-profile/MatchHistorySection";
 import { EquipmentArsenalSection, CareerHighlightsSection } from "@/components/player-profile/PlayerProfileSections";
 import { LoadingScreen, FormPill, CircularProgress, KPI, CategoryBar, Badges, ActivityHeatmap, PlayerRadarChart, EloHistoryChart } from "@/components/player-profile/PlayerProfileWidgets";
+import { Capacitor } from "@capacitor/core";
+import { Share } from "@capacitor/share";
 import { toast } from "sonner";
 import { getEloTier } from "@/lib/tiers";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -623,10 +625,19 @@ export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: b
 
   const handleShare = async () => {
     const url = window.location.href;
-    if (navigator.share) {
-      try { await navigator.share({ title: player.fullName, url }); } catch { }
-    } else {
-      try { await navigator.clipboard.writeText(url); toast.success("Profile link copied!"); } catch { }
+    try {
+      if (Capacitor.isNativePlatform()) {
+        await Share.share({ title: player.fullName, url, dialogTitle: 'Share Profile' });
+      } else if (navigator.share) {
+        await navigator.share({ title: player.fullName, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("Profile link copied!");
+      }
+    } catch (err: any) {
+      if (err.message && !err.message.includes("cancel")) {
+        navigator.clipboard.writeText(url).then(() => toast.success("Profile link copied!")).catch(() => {});
+      }
     }
   };
 

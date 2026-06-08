@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 
 export function QuickSettings() {
   const { accent, setAccent } = useTheme();
-  const { profile, refreshProfile } = useAuth();
+  const { profile, session, refreshProfile } = useAuth();
   const [updating, setUpdating] = useState(false);
 
   // Fallback status if none found
@@ -28,12 +28,12 @@ export function QuickSettings() {
       const { error } = await supabase
         .from('players')
         .update({ status: newStatus })
-        .eq('id', profile.id);
+        .eq('user_id', session?.user?.id);
       if (error) throw error;
       await refreshProfile();
       toast.success("Live status updated!");
     } catch (err: any) {
-      toast.error("Failed to update status");
+      toast.error(err?.message || "Failed to update status");
     } finally {
       setUpdating(false);
     }

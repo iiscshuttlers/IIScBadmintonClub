@@ -4,6 +4,7 @@ import { Clock, ChevronRight, Swords, Share2 } from "lucide-react";
 import { useLocation } from "wouter";
 import { Share } from "@capacitor/share";
 import { Capacitor } from "@capacitor/core";
+import { toast } from "sonner";
 
 // Duplicate the small helper function for encapsulation
 function matchParticipantIds(match: any): string[] {
@@ -317,6 +318,7 @@ export function MatchHistorySection({ id, liveMatches, ownPlayerProfile, handleW
                                 // Fallback to clipboard if share gets cancelled or fails
                                 if (err.message && !err.message.includes("cancel")) {
                                    navigator.clipboard.writeText(`${text}\n${shareUrl}`);
+                                   toast.success("Match result copied to clipboard!");
                                 }
                               }
                             }}

@@ -3,6 +3,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Share2, Pencil, Trash2, Sword, BellRing, BellOff } from "lucide-react";
 import { toast } from "sonner";
 import { getEloTier } from "@/lib/tiers";
+import { Capacitor } from "@capacitor/core";
+import { Share } from "@capacitor/share";
 
 export interface Player {
   id: string;
@@ -65,14 +67,23 @@ export function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, o
   const [isPinged, setIsPinged] = useState(false);
   const winPct = parseWinPct(player.win_loss_record);
 
-  const handleShare = (e: React.MouseEvent) => {
+  const handleShare = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     const url = `${window.location.origin}/player/${player.id}`;
-    if (navigator.share) {
-      navigator.share({ title: player.full_name, url }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(url).then(() => toast.success("Profile link copied!")).catch(() => {});
+    try {
+      if (Capacitor.isNativePlatform()) {
+        await Share.share({ title: player.full_name, url, dialogTitle: 'Share Profile' });
+      } else if (navigator.share) {
+        await navigator.share({ title: player.full_name, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("Profile link copied!");
+      }
+    } catch (err: any) {
+      if (err.message && !err.message.includes("cancel")) {
+        navigator.clipboard.writeText(url).then(() => toast.success("Profile link copied!")).catch(() => {});
+      }
     }
   };
 

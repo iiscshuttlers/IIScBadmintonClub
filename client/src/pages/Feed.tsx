@@ -6,6 +6,9 @@ import { Activity, Trophy, Swords, Sparkles, TrendingUp, BarChart3, Clock, Share
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
+import { toast } from "sonner";
+import { Capacitor } from "@capacitor/core";
+import { Share } from "@capacitor/share";
 
 export default function Feed() {
   usePageMeta({
@@ -355,10 +358,15 @@ export default function Feed() {
                         
                         // Local storage for instant feedback
                         const storageKey = `liked_${match.id}`;
+                        const countEl = btn.querySelector('.kudos-count');
                         if (!localStorage.getItem(storageKey)) {
                           localStorage.setItem(storageKey, "1");
-                          const countEl = btn.querySelector('.kudos-count');
                           if (countEl) countEl.textContent = String(parseInt(countEl.textContent || '0') + 1);
+                          toast.success("Kudos given! ✨");
+                        } else {
+                          localStorage.removeItem(storageKey);
+                          if (countEl) countEl.textContent = String(parseInt(countEl.textContent || '1') - 1);
+                          toast.success("Kudos removed");
                         }
                       }}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
@@ -368,17 +376,29 @@ export default function Feed() {
                     </button>
                     
                     <button 
-                      onClick={(e) => {
+                      onClick={async (e) => {
                         e.preventDefault();
                         const text = `🔥 Match Result: ${p1.full_name} vs ${p2.full_name} (${displayScore})! Check it out on IISc Shuttlers.`;
-                        if (navigator.share) {
-                          navigator.share({
-                            title: 'IISc Shuttlers Match',
-                            text: text,
-                            url: window.location.origin + '/feed'
-                          }).catch(() => {});
-                        } else {
-                          window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text + ' ' + window.location.origin + '/feed')}`, '_blank');
+                        const shareUrl = window.location.origin + '/feed';
+                        try {
+                          if (Capacitor.isNativePlatform()) {
+                            await Share.share({
+                              title: 'IISc Shuttlers Match',
+                              text,
+                              url: shareUrl,
+                              dialogTitle: 'Share Match Result',
+                            });
+                          } else if (navigator.share) {
+                            await navigator.share({ title: 'IISc Shuttlers Match', text, url: shareUrl });
+                          } else {
+                            await navigator.clipboard.writeText(`${text}\n${shareUrl}`);
+                            toast.success("Match result copied to clipboard!");
+                          }
+                        } catch (err: any) {
+                          if (err.message && !err.message.includes("cancel")) {
+                            navigator.clipboard.writeText(`${text}\n${shareUrl}`);
+                            toast.success("Match result copied to clipboard!");
+                          }
                         }
                       }}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 ml-2"
