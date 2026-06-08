@@ -56,10 +56,10 @@ export default function Join() {
     if (new URLSearchParams(window.location.search).get("add_account") === "true") return;
 
     if (profile) {
-      setLocation(`/player/${profile.id}`);
+      setLocation("/");
     } else {
       toast.success("Account verified successfully! Please complete your profile.", { duration: 5000 });
-      setLocation("/profile/setup");
+      setLocation("/");
     }
   }, [isInitializing, session, profile, setLocation]);
 

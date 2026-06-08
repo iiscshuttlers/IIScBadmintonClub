@@ -2,6 +2,8 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, ChevronRight, Swords, Share2 } from "lucide-react";
 import { useLocation } from "wouter";
+import { Share } from "@capacitor/share";
+import { Capacitor } from "@capacitor/core";
 
 // Duplicate the small helper function for encapsulation
 function matchParticipantIds(match: any): string[] {
@@ -288,14 +290,34 @@ export function MatchHistorySection({ id, liveMatches, ownPlayerProfile, handleW
                             </div>
                           </div>
                           <button
-                            onClick={(e) => {
+                            onClick={async (e) => {
                               e.stopPropagation();
                               const text = `🏸 Match Result: ${won ? 'Won' : 'Lost'} against ${opponent?.full_name ?? 'Unknown'} (${(m.match_score || m.score)?.replace(/\s*\[.*\]/, "") || "—"})!`;
-                              if (navigator.share) {
-                                navigator.share({ title: 'IISc Shuttlers Match Result', text, url: window.location.href });
-                              } else {
-                                navigator.clipboard.writeText(`${text}\n${window.location.href}`);
-                                alert("Match result copied to clipboard!");
+                              
+                              // Correctly format the live share URL
+                              const playerSlug = profile.slug || profile.id;
+                              const shareUrl = `https://iiscshuttlers.github.io/iiscshuttlers/player/${playerSlug}`;
+
+                              try {
+                                if (Capacitor.isNativePlatform()) {
+                                  await Share.share({
+                                    title: 'IISc Shuttlers Match Result',
+                                    text,
+                                    url: shareUrl,
+                                    dialogTitle: 'Share Match Result',
+                                  });
+                                } else if (navigator.share) {
+                                  await navigator.share({ title: 'IISc Shuttlers Match Result', text, url: shareUrl });
+                                } else {
+                                  await navigator.clipboard.writeText(`${text}\n${shareUrl}`);
+                                  alert("Match result copied to clipboard!");
+                                }
+                              } catch (err: any) {
+                                console.error("Error sharing match:", err);
+                                // Fallback to clipboard if share gets cancelled or fails
+                                if (err.message && !err.message.includes("cancel")) {
+                                   navigator.clipboard.writeText(`${text}\n${shareUrl}`);
+                                }
                               }
                             }}
                             className="p-1.5 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/20 rounded-lg transition-colors"

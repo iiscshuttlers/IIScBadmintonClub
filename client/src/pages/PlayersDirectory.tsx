@@ -730,19 +730,22 @@ export default function PlayersDirectory() {
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
             >
               {filteredPlayers.slice(0, visibleCount).map((player) => (
-                <motion.div key={player.id} variants={itemVariants} className="group h-full">
-                  <Link href={`/player/${player.id}`}>
-                    <PlayerCard 
-                      player={player} 
-                      isAdmin={isAdmin}
-                      onDelete={handleAdminDelete}
-                      onEdit={handleAdminEdit}
-                      onLogMatch={ownProfile ? () => {
-                        setSelectedOpponentId(player.id);
-                        setIsLogMatchOpen(true);
-                      } : undefined}
-                    />
-                  </Link>
+                <motion.div 
+                  key={player.id} 
+                  variants={itemVariants} 
+                  className="group h-full cursor-pointer"
+                  onClick={() => setLocation(`/player/${player.id}`)}
+                >
+                  <PlayerCard 
+                    player={player} 
+                    isAdmin={isAdmin}
+                    onDelete={handleAdminDelete}
+                    onEdit={handleAdminEdit}
+                    onLogMatch={ownProfile ? () => {
+                      setSelectedOpponentId(player.id);
+                      setIsLogMatchOpen(true);
+                    } : undefined}
+                  />
                 </motion.div>
               ))}
             </motion.div>

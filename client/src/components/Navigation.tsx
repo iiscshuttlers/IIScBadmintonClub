@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from '@/components/ui/dropdown-menu';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useNavigationAuth } from '@/hooks/useNavigationAuth';
+import { QuickSettings } from '@/components/QuickSettings';
 
 const TOP_LEVEL_LINKS = [
   { href: '/events', label: 'Events' },
@@ -112,6 +113,7 @@ export default function Navigation() {
               </Button>
             </Link>
 
+            <QuickSettings />
             <DarkModeToggle />
             <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-2" />
             {authLoading ? (
@@ -152,27 +154,6 @@ export default function Navigation() {
                     </Link>
                   )}
                   
-                  <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800" />
-                  
-                  <div className="px-3 py-2">
-                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5"><Palette className="w-3.5 h-3.5" /> App Theme Color</div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {(() => {
-                        const { accent, setAccent } = useTheme();
-                        return ['emerald', 'violet', 'rose', 'amber', 'blue', 'cyberpunk'].map(color => {
-                          const bgColors: Record<string, string> = { emerald: 'bg-emerald-500', violet: 'bg-violet-500', rose: 'bg-rose-500', amber: 'bg-amber-500', blue: 'bg-blue-500', cyberpunk: 'bg-black border border-[#00ffcc] shadow-[0_0_8px_#00ffcc]' };
-                          return (
-                            <div 
-                              key={color} 
-                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setAccent?.(color as any); }}
-                              className={`w-6 h-6 rounded-full cursor-pointer transition-transform ${bgColors[color]} ${accent === color ? 'ring-2 ring-offset-2 ring-slate-800 dark:ring-white scale-110' : 'hover:scale-110 opacity-70 hover:opacity-100'}`}
-                            />
-                          );
-                        });
-                      })()}
-                    </div>
-                  </div>
-
                   <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800" />
                   
                   {savedAccounts.length > 0 && (
@@ -222,6 +203,7 @@ export default function Navigation() {
 
           {/* Mobile Navigation Toggle & Theme */}
           <div className="flex lg:hidden items-center gap-1">
+            <QuickSettings />
             <DarkModeToggle />
             <Button
               variant="ghost"
