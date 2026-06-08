@@ -82,11 +82,8 @@ export function useNavigationAuth() {
   }, [profile?.id]);
 
   const signOut = async () => {
-    if (session?.user?.id) {
-      const accounts = readSavedAccounts().filter((item) => item.id !== session.user.id);
-      writeSavedAccounts(accounts);
-      setSavedAccounts(accounts);
-    }
+    writeSavedAccounts([]);
+    setSavedAccounts([]);
     await globalSignOut();
   };
 

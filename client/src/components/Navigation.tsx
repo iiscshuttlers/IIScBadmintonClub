@@ -44,7 +44,7 @@ export default function Navigation() {
   const isActive = (href: string) =>
     href === '/' ? location === '/' : location.startsWith(href);
 
-  const handleSignOut = async (message = "Are you sure you want to sign out?") => {
+  const handleSignOut = async (message = "Are you sure you want to sign out of all accounts?") => {
     if (!confirm(message)) return;
     setIsOpen(false);
     await signOut();
