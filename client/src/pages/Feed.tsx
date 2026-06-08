@@ -345,15 +345,15 @@ export default function Feed() {
 
                   {/* Reaction Kudos */}
                   <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/50 flex justify-end">
-                    <button 
-                      onClick={async (e) => {
-                        e.preventDefault();
-                        try {
-                          const { Haptics, ImpactStyle } = await import('@capacitor/haptics');
-                          await Haptics.impact({ style: ImpactStyle.Heavy });
-                        } catch(err) {}
-                        const btn = e.currentTarget;
-                        btn.classList.add('scale-125', 'text-rose-500', 'bg-rose-50', 'dark:bg-rose-500/20');
+                      <button 
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          const btn = e.currentTarget;
+                          try {
+                            const { Haptics, ImpactStyle } = await import('@capacitor/haptics');
+                            await Haptics.impact({ style: ImpactStyle.Heavy });
+                          } catch(err) {}
+                          btn.classList.add('scale-125', 'text-rose-500', 'bg-rose-50', 'dark:bg-rose-500/20');
                         setTimeout(() => btn.classList.remove('scale-125'), 200);
                         
                         // Local storage for instant feedback
