@@ -1,0 +1,109 @@
+import { useMemo } from "react";
+import { Swords, Trophy, TrendingUp, TrendingDown } from "lucide-react";
+import { motion } from "framer-motion";
+
+interface HeadToHeadProps {
+  currentUserId: string;
+  targetUserId: string;
+  targetUserName: string;
+  matches: any[];
+}
+
+export function HeadToHeadWidget({ currentUserId, targetUserId, targetUserName, matches }: HeadToHeadProps) {
+  const stats = useMemo(() => {
+    let wins = 0;
+    let losses = 0;
+    let streak = 0;
+    let isWinStreak = true;
+
+    // Filter matches between these two specific players
+    const h2hMatches = matches.filter(m => {
+      const isP1 = m.player1_id === currentUserId || m.player2_id === currentUserId;
+      const isP2 = m.player1_id === targetUserId || m.player2_id === targetUserId;
+      // For doubles, also check partners
+      const isTeam1 = isP1 || m.team1_partner_id === currentUserId || m.team2_partner_id === currentUserId;
+      const isTeam2 = isP2 || m.team1_partner_id === targetUserId || m.team2_partner_id === targetUserId;
+      
+      return isTeam1 && isTeam2;
+    }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    h2hMatches.forEach(m => {
+      let myTeamWon = false;
+      if (m.match_winner_id === currentUserId) myTeamWon = true;
+      if (m.team1_partner_id === currentUserId && m.match_winner_id === m.player1_id) myTeamWon = true;
+      if (m.team2_partner_id === currentUserId && m.match_winner_id === m.player2_id) myTeamWon = true;
+
+      if (myTeamWon) wins++;
+      else losses++;
+    });
+
+    // Calculate Streak
+    for (let i = 0; i < h2hMatches.length; i++) {
+      const m = h2hMatches[i];
+      let myTeamWon = false;
+      if (m.match_winner_id === currentUserId) myTeamWon = true;
+      if (m.team1_partner_id === currentUserId && m.match_winner_id === m.player1_id) myTeamWon = true;
+      if (m.team2_partner_id === currentUserId && m.match_winner_id === m.player2_id) myTeamWon = true;
+
+      if (i === 0) {
+        isWinStreak = myTeamWon;
+        streak = 1;
+      } else {
+        if (myTeamWon === isWinStreak) streak++;
+        else break;
+      }
+    }
+
+    return { wins, losses, streak, isWinStreak, total: wins + losses };
+  }, [currentUserId, targetUserId, matches]);
+
+  if (stats.total === 0) return null; // No history
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/40 dark:to-purple-950/40 rounded-3xl p-5 border border-indigo-100 dark:border-indigo-800/50 shadow-sm relative overflow-hidden"
+    >
+      <div className="absolute top-0 right-0 p-4 opacity-10">
+        <Swords className="w-24 h-24 text-indigo-500" />
+      </div>
+
+      <div className="flex items-center gap-2 mb-4 relative z-10">
+        <div className="p-2 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg">
+          <Swords className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+        </div>
+        <h3 className="text-sm font-black uppercase tracking-widest text-indigo-900 dark:text-indigo-300">Head-to-Head</h3>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 relative z-10">
+        <div>
+          <div className="text-xs font-bold text-indigo-600/70 dark:text-indigo-400/70 uppercase mb-1">Win Rate</div>
+          <div className="text-3xl font-black text-indigo-700 dark:text-indigo-300 flex items-end gap-1">
+            {Math.round((stats.wins / stats.total) * 100)}%
+            <span className="text-sm font-bold text-indigo-500/50 mb-1">({stats.wins}-{stats.losses})</span>
+          </div>
+        </div>
+        <div>
+          <div className="text-xs font-bold text-indigo-600/70 dark:text-indigo-400/70 uppercase mb-1">Current Streak</div>
+          <div className="flex items-center gap-1.5 text-lg font-black">
+            {stats.isWinStreak ? (
+              <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                <TrendingUp className="w-5 h-5" /> W{stats.streak}
+              </span>
+            ) : (
+              <span className="text-rose-600 dark:text-rose-400 flex items-center gap-1">
+                <TrendingDown className="w-5 h-5" /> L{stats.streak}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 pt-4 border-t border-indigo-200/50 dark:border-indigo-800/50 flex justify-between items-center text-xs font-bold text-indigo-600/70 dark:text-indigo-400/70">
+        <span>You vs {targetUserName.split(' ')[0]}</span>
+        <span>{stats.total} Matches Played</span>
+      </div>
+    </motion.div>
+  );
+}

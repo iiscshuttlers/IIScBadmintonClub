@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { ADMIN_EMAILS } from "@/lib/admin";
 import { toast } from "sonner";
+import { getBaseShareUrl } from "@/lib/utils";
 
 type Mode = "welcome" | "signin" | "signup" | "otp-email" | "otp-verify";
 
@@ -125,7 +126,7 @@ export default function Join() {
       const { data, error } = await supabase.auth.signUp({ 
         email, 
         password,
-        options: { emailRedirectTo: window.location.origin + window.location.pathname } 
+        options: { emailRedirectTo: getBaseShareUrl() + window.location.pathname } 
       });
 
       // Fallback Supabase enumeration protection check (for auth accounts without a profile yet)
@@ -167,7 +168,7 @@ export default function Join() {
         email, 
         options: { 
           shouldCreateUser: false,
-          emailRedirectTo: window.location.origin + window.location.pathname
+          emailRedirectTo: getBaseShareUrl() + window.location.pathname
         } 
       });
       if (error) throw error;

@@ -18,6 +18,7 @@ import { isAdminEmail } from "@/lib/admin";
 import { MatchHistorySection } from "@/components/player-profile/MatchHistorySection";
 import { EquipmentArsenalSection, CareerHighlightsSection } from "@/components/player-profile/PlayerProfileSections";
 import { LoadingScreen, FormPill, CircularProgress, KPI, CategoryBar, Badges, ActivityHeatmap, PlayerRadarChart, EloHistoryChart } from "@/components/player-profile/PlayerProfileWidgets";
+import { HeadToHeadWidget } from "@/components/player-profile/HeadToHeadWidget";
 import { Capacitor } from "@capacitor/core";
 import { Share } from "@capacitor/share";
 import { toast } from "sonner";
@@ -1462,7 +1463,15 @@ export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: b
               <motion.section variants={itemVariants} className="mt-6 md:mt-8">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-6">
-                    <Badges matches={liveMatches.filter(m => m.status === "confirmed")} playerId={id!} />
+                    {session?.user?.id && player.user_id && session.user.id !== player.user_id && (
+                        <HeadToHeadWidget 
+                          currentUserId={session.user.id} 
+                          targetUserId={player.user_id} 
+                          targetUserName={player.fullName || player.full_name || ''} 
+                          matches={liveMatches.filter(m => m.status === "confirmed")} 
+                        />
+                      )}
+                      <Badges matches={liveMatches.filter(m => m.status === "confirmed")} playerId={id!} />
                     <ActivityHeatmap matches={liveMatches.filter(m => m.status === "confirmed")} />
                   </div>
                   <div>
@@ -1683,3 +1692,5 @@ export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: b
     </div>
   );
 }
+
+

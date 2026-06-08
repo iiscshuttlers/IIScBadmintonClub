@@ -683,6 +683,46 @@ export default function PlayersDirectory() {
           )}
         </div>
 
+        {/* Recommended Opponents (Matchmaking) */}
+        {!loading && profile && activeTab === 'directory' && (
+          (function() {
+            const recommended = players.filter(p => 
+              p.id !== profile.id && 
+              p.status === 'looking' && 
+              Math.abs((p.elo_rating || 1200) - (profile.elo_rating || 1200)) <= 200
+            ).slice(0, 4);
+            
+            if (recommended.length === 0) return null;
+            
+            return (
+              <div className="mb-10">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="p-2 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg">
+                    <Sword className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-slate-800 dark:text-slate-100">Recommended Matches</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Players with similar skill looking to play right now</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {recommended.map(player => (
+                    <PlayerCard 
+                      key={ec- + player.id} 
+                      player={player} 
+                      isOwn={false} 
+                      isAdmin={isAdmin} 
+                      onDelete={handleDeletePlayer} 
+                      onEdit={handleEditPlayer}
+                      onLogMatch={handleLogMatch}
+                    />
+                  ))}
+                </div>
+              </div>
+            );
+          })()
+        )}
+
         {/* Directory grid (others) */}
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -802,3 +842,4 @@ export default function PlayersDirectory() {
     </div>
   );
 }
+
