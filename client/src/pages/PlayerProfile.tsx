@@ -176,7 +176,7 @@ function getYouTubeId(url: string) {
   return (match && match[2].length === 11) ? match[2] : null;
 }
 
-export default function PlayerProfile({ matchesOnly }: { matchesOnly?: boolean } = {}) {
+export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: boolean; params?: any } = {}) {
   const { id: routeId } = useParams<{id: string}>();
   const [, setLocation] = useLocation();
   const { session: authSession, user: currentUser, profile: ownPlayerProfile, isAdmin, isMainAdmin, userRoles, updateRole } = useAuth();
@@ -460,6 +460,45 @@ export default function PlayerProfile({ matchesOnly }: { matchesOnly?: boolean }
     () => (player ? player.achievements.filter((a) => a && a.trim() !== "") : []),
     [player]
   );
+
+  const dynamicBadges = useMemo(() => {
+    if (!player) return [];
+    const _badges: { id: string; label: string; icon: string; description: string; color: string }[] = [];
+    
+    // Centurion Badge
+    let totalMatches = 0;
+    if (player.winLossRecord) {
+      const match = player.winLossRecord.match(/(\d+)W\s*-\s*(\d+)L/);
+      if (match) totalMatches = parseInt(match[1]) + parseInt(match[2]);
+    } else if (player.stats?.totalMatches) {
+      totalMatches = player.stats.totalMatches;
+    }
+    
+    if (totalMatches >= 100) {
+      _badges.push({ id: 'centurion', label: 'Centurion', icon: '💯', description: 'Played 100+ matches', color: 'bg-amber-500/15 text-amber-400 border-amber-500/30 ring-amber-500/20' });
+    } else if (totalMatches >= 50) {
+      _badges.push({ id: 'veteran', label: 'Veteran', icon: '⚔️', description: 'Played 50+ matches', color: 'bg-slate-500/15 text-slate-400 border-slate-500/30 ring-slate-500/20' });
+    }
+    
+    // Win Streak Badge
+    const streak = player.stats?.currentStreak;
+    if (streak && streak.startsWith('W')) {
+      const streakCount = parseInt(streak.replace('W', '')) || 0;
+      if (streakCount >= 5) {
+        _badges.push({ id: 'unstoppable', label: 'Unstoppable', icon: '⚡', description: '5+ Match Win Streak', color: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30 ring-indigo-500/20' });
+      } else if (streakCount >= 3) {
+        _badges.push({ id: 'on_fire', label: 'On Fire', icon: '🔥', description: '3 Match Win Streak', color: 'bg-orange-500/15 text-orange-400 border-orange-500/30 ring-orange-500/20' });
+      }
+    }
+
+    // Giant Slayer Badge
+    const hasGiantSlayer = validAchievements.some(a => a.toLowerCase().includes('giant slayer') || a.toLowerCase().includes('upset'));
+    if (hasGiantSlayer) {
+      _badges.push({ id: 'giant_slayer', label: 'Giant Slayer', icon: '🗡️', description: 'Defeated a much higher ranked opponent', color: 'bg-rose-500/15 text-rose-400 border-rose-500/30 ring-rose-500/20' });
+    }
+    
+    return _badges;
+  }, [player, validAchievements]);
 
   const profileCompleteness = useMemo(() => {
     if (!player) return 0;
@@ -823,9 +862,25 @@ export default function PlayerProfile({ matchesOnly }: { matchesOnly?: boolean }
                 )}
               </div>
 
+              {/* Dynamic Badges */}
+              {dynamicBadges.length > 0 && (
+                <div className="flex flex-wrap gap-3 mb-8">
+                  {dynamicBadges.map(badge => (
+                    <div 
+                      key={badge.id}
+                      title={badge.description}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border ring-1 ring-inset backdrop-blur-sm cursor-help transition-transform hover:scale-105 ${badge.color}`}
+                    >
+                      <span className="text-sm drop-shadow-md">{badge.icon}</span>
+                      <span className="text-xs font-black tracking-wide uppercase drop-shadow-sm">{badge.label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {/* Stats strip */}
               {splitStats && (
-                <div className="flex items-stretch mb-8 bg-white/[0.04] rounded-2xl border border-white/[0.08] p-1 w-fit max-w-full overflow-x-auto">
+                <div className="flex items-stretch mb-8 bg-white/[0.04] rounded-2xl border border-white/[0.08] p-1 w-fit max-w-full overflow-x-auto overflow-y-hidden">
                   {[
                     { value: splitStats.all.wins, label: 'Wins', color: 'text-emerald-400' },
                     { value: splitStats.all.losses, label: 'Losses', color: 'text-rose-400' },
@@ -845,6 +900,26 @@ export default function PlayerProfile({ matchesOnly }: { matchesOnly?: boolean }
                       {i < arr.length - 1 && <div className="w-px bg-white/[0.08] my-2 shrink-0" />}
                     </div>
                   ))}
+                  
+                  {/* Head to Head Widget */}
+                  {h2hRecord && (
+                    <>
+                      <div className="w-px bg-white/[0.08] my-2 shrink-0 ml-1 mr-1" />
+                      <div className="flex items-stretch shrink-0 bg-blue-500/5 rounded-xl ml-1 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 pointer-events-none" />
+                        <div className="px-5 py-3 text-center relative z-10 flex flex-col justify-center">
+                          <div className="flex items-center justify-center gap-2 mb-1.5">
+                            <span className="text-xl font-black text-blue-400">{h2hRecord.wins}</span>
+                            <span className="text-white/30 text-sm font-bold">vs</span>
+                            <span className="text-xl font-black text-indigo-400">{h2hRecord.losses}</span>
+                          </div>
+                          <div className="text-[9px] text-blue-300/70 font-black uppercase tracking-[0.18em]">
+                            You vs {heroFirstName}
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 

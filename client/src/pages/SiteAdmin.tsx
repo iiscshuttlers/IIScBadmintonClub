@@ -235,6 +235,7 @@ export default function SiteAdmin() {
     events: events.length,
     videos: videos.length,
     players: null,
+    matches: null,
     umpire: null,
   };
 

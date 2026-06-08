@@ -23,7 +23,6 @@ import { usePullToRefresh } from './hooks/usePullToRefresh';
 
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { FileOpener } from '@capacitor-community/file-opener';
-import { useState } from 'react';
 
 function UpdateDialog({ info, onDismiss }: { info: AppUpdateInfo; onDismiss: () => void }) {
   const [downloading, setDownloading] = useState(false);
