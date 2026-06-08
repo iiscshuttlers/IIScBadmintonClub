@@ -15,6 +15,7 @@ import { PwaUpdatePrompt } from './components/pwa/PwaUpdatePrompt';
 import Navigation from './components/Navigation';
 import Footer from './components/Footer';
 import MobileBottomNav from './components/MobileBottomNav';
+import MatchAlert from './components/MatchAlert';
 import { useAppUpdate, type AppUpdateInfo } from './hooks/useAppUpdate';
 import { useInactivityLogout } from './hooks/useInactivityLogout';
 import { useNativeBackButton } from './hooks/useNativeBackButton';
@@ -212,6 +213,7 @@ function App() {
             </Router>
             <Toaster />
             <PwaUpdatePrompt />
+            <MatchAlert />
             {updateInfo && <UpdateDialog info={updateInfo} onDismiss={dismissUpdate} />}
           </TooltipProvider>
         </AuthProvider>
