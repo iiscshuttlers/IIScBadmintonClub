@@ -109,6 +109,9 @@ export default function Footer() {
             <h4 className="font-bold text-sm text-emerald-400 uppercase tracking-widest mb-5">Get the App</h4>
             <a
               href={apkUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              download
               className="group flex items-center gap-3 bg-white/5 border border-white/10 hover:bg-emerald-500/10 hover:border-emerald-500/30 rounded-xl p-4 transition-all duration-300 mb-6"
               title="Download Android App"
             >
