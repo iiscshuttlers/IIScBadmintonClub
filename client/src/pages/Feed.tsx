@@ -9,6 +9,7 @@ import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 import { Share } from "@capacitor/share";
+import { getBaseShareUrl } from "@/lib/utils";
 
 export default function Feed() {
   usePageMeta({
@@ -252,16 +253,6 @@ export default function Feed() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
                   key={match.id}
-                  drag="x"
-                  dragConstraints={{ left: 0, right: 0 }}
-                  dragElastic={0.2}
-                  onDragEnd={(e, { offset }) => {
-                    if (offset.x > 80) {
-                      document.getElementById(`kudos-btn-${match.id}`)?.click();
-                    } else if (offset.x < -80) {
-                      document.getElementById(`share-btn-${match.id}`)?.click();
-                    }
-                  }}
                   className={`bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm relative overflow-hidden group transition-shadow ${isMatchOfTheDay ? 'border-2 border-amber-400 shadow-amber-500/20 shadow-xl' : 'border border-slate-100 dark:border-slate-800 hover:shadow-md'}`}
                 >
                   {/* Match of the Day Badge */}
@@ -356,7 +347,6 @@ export default function Feed() {
                   {/* Reaction Kudos */}
                   <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/50 flex justify-end">
                       <button 
-                        id={`kudos-btn-${match.id}`}
                         onClick={async (e) => {
                           e.preventDefault();
                           const btn = e.currentTarget;
@@ -406,11 +396,10 @@ export default function Feed() {
                     </button>
                     
                     <button 
-                      id={`share-btn-${match.id}`}
                       onClick={async (e) => {
                         e.preventDefault();
                         const text = `🔥 Match Result: ${p1.full_name} vs ${p2.full_name} (${displayScore})! Check it out on IISc Shuttlers.`;
-                        const shareUrl = window.location.origin + '/feed';
+                        const shareUrl = getBaseShareUrl() + '/feed';
                         try {
                           if (Capacitor.isNativePlatform()) {
                             await Share.share({

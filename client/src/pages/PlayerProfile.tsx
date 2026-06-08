@@ -17,12 +17,13 @@ import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { isAdminEmail } from "@/lib/admin";
 import { MatchHistorySection } from "@/components/player-profile/MatchHistorySection";
 import { EquipmentArsenalSection, CareerHighlightsSection } from "@/components/player-profile/PlayerProfileSections";
-import { LoadingScreen, FormPill, CircularProgress, KPI, CategoryBar, Badges, ActivityHeatmap, PlayerRadarChart, EloHistoryChart, HeadToHeadWidget } from "@/components/player-profile/PlayerProfileWidgets";
+import { LoadingScreen, FormPill, CircularProgress, KPI, CategoryBar, Badges, ActivityHeatmap, PlayerRadarChart, EloHistoryChart } from "@/components/player-profile/PlayerProfileWidgets";
 import { Capacitor } from "@capacitor/core";
 import { Share } from "@capacitor/share";
 import { toast } from "sonner";
 import { getEloTier } from "@/lib/tiers";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { getBaseShareUrl } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -624,7 +625,7 @@ export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: b
   const isWinStreak = streak?.startsWith("W");
 
   const handleShare = async () => {
-    const url = window.location.href;
+    const url = `${getBaseShareUrl()}/player/${id}`;
     try {
       if (Capacitor.isNativePlatform()) {
         await Share.share({ title: player.fullName, url, dialogTitle: 'Share Profile' });
@@ -1682,4 +1683,3 @@ export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: b
     </div>
   );
 }
-

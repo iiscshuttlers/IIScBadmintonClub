@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Share2, Pencil, Trash2, Sword, BellRing, BellOff } from "lucide-react";
 import { toast } from "sonner";
 import { getEloTier } from "@/lib/tiers";
 import { Capacitor } from "@capacitor/core";
 import { Share } from "@capacitor/share";
+import { getBaseShareUrl } from "@/lib/utils";
 
 export interface Player {
   id: string;
@@ -71,7 +71,7 @@ export function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, o
   const handleShare = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const url = `${window.location.origin}/player/${player.id}`;
+    const url = `${getBaseShareUrl()}/player/${player.id}`;
     try {
       if (Capacitor.isNativePlatform()) {
         await Share.share({ title: player.full_name, url, dialogTitle: 'Share Profile' });
@@ -89,25 +89,14 @@ export function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, o
   };
 
   return (
-    <motion.div
-      drag="x"
-      dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={0.2}
-      onDragEnd={(e, { offset }) => {
-        if (offset.x > 80 && !isOwn) {
-          document.getElementById(`ping-btn-${player.id}`)?.click();
-        }
-      }}
-      className="h-full"
+    <Card
+      className={`h-full rounded-[2rem] overflow-hidden cursor-pointer border bg-white dark:bg-slate-900
+        hover:shadow-2xl hover:shadow-slate-200/50 dark:hover:shadow-none hover:-translate-y-1.5
+        transition-all duration-300 flex flex-col justify-between group relative
+        ${isOwn
+          ? "border-emerald-400 dark:border-emerald-600 ring-2 ring-emerald-400/30"
+          : "border-slate-100 dark:border-slate-800"}`}
     >
-      <Card
-        className={`h-full rounded-[2rem] overflow-hidden cursor-pointer border bg-white dark:bg-slate-900
-          hover:shadow-2xl hover:shadow-slate-200/50 dark:hover:shadow-none hover:-translate-y-1.5
-          transition-all duration-300 flex flex-col justify-between group relative
-          ${isOwn
-            ? "border-emerald-400 dark:border-emerald-600 ring-2 ring-emerald-400/30"
-            : "border-slate-100 dark:border-slate-800"}`}
-      >
       {isOwn && (
         <span className="absolute top-3 left-3 z-10 px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-black uppercase tracking-widest shadow">
           You
@@ -137,7 +126,6 @@ export function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, o
       {/* Ping Button */}
       {!isOwn && (
         <button
-          id={`ping-btn-${player.id}`}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -197,9 +185,10 @@ export function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, o
           if (!status) return null;
           
           const statusConfig = {
-            looking: { color: 'bg-emerald-500', pulse: 'bg-emerald-400', label: 'Looking for Match' },
+            looking: { color: 'bg-emerald-500', pulse: 'bg-emerald-400', label: 'Looking to play' },
             playing: { color: 'bg-amber-500', pulse: 'bg-amber-400', label: 'Playing Right Now' },
-            resting: { color: 'bg-rose-500', pulse: 'bg-rose-400', label: 'Resting / Injured' }
+            resting: { color: 'bg-indigo-500', pulse: 'bg-indigo-400', label: 'Taking a break' },
+            injured: { color: 'bg-rose-500', pulse: 'bg-rose-400', label: 'Injured' }
           }[status];
 
           if (!statusConfig) return null;
@@ -291,6 +280,5 @@ export function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, o
         )}
       </CardContent>
     </Card>
-    </motion.div>
   );
 }

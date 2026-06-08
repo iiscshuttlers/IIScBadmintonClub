@@ -40,9 +40,10 @@ export function QuickSettings() {
   };
 
   const statusConfig = [
-    { id: 'looking', label: 'Looking for Match', color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-950' },
+    { id: 'looking', label: 'Looking to play', color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-950' },
     { id: 'playing', label: 'Playing Right Now', color: 'text-amber-500 bg-amber-50 dark:bg-amber-950' },
-    { id: 'resting', label: 'Resting / Injured', color: 'text-rose-500 bg-rose-50 dark:bg-rose-950' },
+    { id: 'resting', label: 'Taking a break', color: 'text-indigo-500 bg-indigo-50 dark:bg-indigo-950' },
+    { id: 'injured', label: 'Injured', color: 'text-rose-500 bg-rose-50 dark:bg-rose-950' },
   ];
 
   const themes = [

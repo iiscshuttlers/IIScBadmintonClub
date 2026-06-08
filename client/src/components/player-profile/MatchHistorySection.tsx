@@ -5,6 +5,7 @@ import { useLocation } from "wouter";
 import { Share } from "@capacitor/share";
 import { Capacitor } from "@capacitor/core";
 import { toast } from "sonner";
+import { getBaseShareUrl } from "@/lib/utils";
 
 // Duplicate the small helper function for encapsulation
 function matchParticipantIds(match: any): string[] {
@@ -297,7 +298,7 @@ export function MatchHistorySection({ id, liveMatches, ownPlayerProfile, handleW
                               
                               // Correctly format the live share URL
                               const playerSlug = profile.slug || profile.id;
-                              const shareUrl = `https://iiscshuttlers.github.io/iiscshuttlers/player/${playerSlug}`;
+                              const shareUrl = `${getBaseShareUrl()}/player/${playerSlug}`;
 
                               try {
                                 if (Capacitor.isNativePlatform()) {

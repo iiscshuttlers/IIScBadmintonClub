@@ -566,37 +566,6 @@ export default function PlayersDirectory() {
 
         {activeTab === 'directory' ? (
           <>
-            {ownProfile && (
-              <div className="mb-8">
-                {(() => {
-                  const recommended = players.filter(p => 
-                    p.id !== ownProfile.id && 
-                    p.status === 'looking' &&
-                    Math.abs((p.elo_rating || 1200) - (ownProfile.elo_rating || 1200)) <= 200
-                  ).slice(0, 4);
-
-                  if (recommended.length === 0) return null;
-
-                  return (
-                    <div className="bg-gradient-to-br from-indigo-900 to-blue-900 rounded-3xl p-6 shadow-xl relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-                      <div className="relative z-10">
-                        <div className="flex items-center gap-2 mb-6">
-                          <Sword className="w-5 h-5 text-emerald-400" />
-                          <h3 className="text-white font-black tracking-widest uppercase text-sm">Recommended Opponents</h3>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                          {recommended.map(player => (
-                            <PlayerCard key={player.id} player={player} />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-            )}
-
             {/* Search + Filters */}
             <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 mb-10 space-y-5">
           <div className="flex flex-col md:flex-row gap-4 items-center">

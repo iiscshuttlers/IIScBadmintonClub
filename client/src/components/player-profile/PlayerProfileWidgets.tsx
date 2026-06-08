@@ -135,21 +135,6 @@ export const Badges = ({ matches, playerId }: { matches: any[]; playerId: string
     const ironman = Object.values(counts).some((count: any) => count >= 5);
     if (ironman) earned.push({ id: 'ironman', name: 'Ironman', desc: 'Played 5+ matches in one day', icon: '🦾', color: 'from-rose-400 to-red-600' });
 
-    // Clean Sweep: Opponent scored less than 5 points in a win
-    const cleanSweep = matches.some(m => {
-      if (m.winner_id !== playerId) return false;
-      const scorePattern = /(\d+)-(\d+)/;
-      const matchScore = m.match_score?.match(scorePattern);
-      if (matchScore) {
-        const p1Score = parseInt(matchScore[1]);
-        const p2Score = parseInt(matchScore[2]);
-        const loserScore = Math.min(p1Score, p2Score);
-        return loserScore < 5;
-      }
-      return false;
-    });
-    if (cleanSweep) earned.push({ id: 'clean_sweep', name: 'Clean Sweep', desc: 'Won a match keeping opponent under 5 points', icon: '🧹', color: 'from-teal-400 to-emerald-600' });
-
     // Streaker: current or historical streak >= 5 (simplification: if they won 5 of last 5)
     let streak = 0;
     let maxStreak = 0;
@@ -424,8 +409,8 @@ export const HeadToHeadWidget = ({ currentUser, targetPlayer, matches }: { curre
             <span className="text-slate-400">{h2hMatches.length} Matches</span>
           </div>
           <div className="h-3 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden flex">
-            <div className="h-full bg-emerald-500" style={{ width: `${winPct}%` }} />
-            <div className="h-full bg-rose-500" style={{ width: `${100 - winPct}%` }} />
+            <div className="h-full bg-emerald-500" style={{ width: \${winPct}%\ }} />
+            <div className="h-full bg-rose-500" style={{ width: \${100 - winPct}%\ }} />
           </div>
         </div>
       </div>
