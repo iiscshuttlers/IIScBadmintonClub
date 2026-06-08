@@ -356,10 +356,14 @@ export default function Feed() {
                           btn.classList.add('scale-125', 'text-rose-500', 'bg-rose-50', 'dark:bg-rose-500/20');
                         setTimeout(() => btn.classList.remove('scale-125'), 200);
                         
-                        // Local storage for instant feedback
+                        // Hybrid storage: Use DB if logged in, fallback to local storage
                         const storageKey = `liked_${match.id}`;
+                        const isLikedDb = Array.isArray(match.kudos_users) && session?.user?.id && match.kudos_users.includes(session.user.id);
+                        const isLikedLocal = !!localStorage.getItem(storageKey);
+                        const isCurrentlyLiked = isLikedDb || isLikedLocal;
+                        
                         const countEl = btn.querySelector('.kudos-count');
-                        if (!localStorage.getItem(storageKey)) {
+                        if (!isCurrentlyLiked) {
                           localStorage.setItem(storageKey, "1");
                           if (countEl) countEl.textContent = String(parseInt(countEl.textContent || '0') + 1);
                           toast.success("Kudos given! ✨");
@@ -368,11 +372,26 @@ export default function Feed() {
                           if (countEl) countEl.textContent = String(parseInt(countEl.textContent || '1') - 1);
                           toast.success("Kudos removed");
                         }
+
+                        // Sync with live database if logged in
+                        if (session?.user?.id) {
+                          supabase.rpc('toggle_match_kudos', { p_match_id: match.id }).catch(err => {
+                            console.warn("Failed to sync kudos live:", err);
+                          });
+                        }
                       }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${
+                        (Array.isArray(match.kudos_users) ? match.kudos_users.includes(session?.user?.id) : localStorage.getItem(`liked_${match.id}`))
+                        ? 'text-rose-500 bg-rose-50 dark:bg-rose-500/20' 
+                        : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
                     >
                       <Sparkles className="w-4 h-4" /> 
-                      Kudos <span className="kudos-count text-slate-400 font-medium ml-1">{(match.id.charCodeAt(0) % 5) + (localStorage.getItem(`liked_${match.id}`) ? 1 : 0)}</span>
+                      Kudos <span className="kudos-count font-medium ml-1">
+                        {Array.isArray(match.kudos_users) 
+                          ? match.kudos_users.length + (localStorage.getItem(`liked_${match.id}`) && !match.kudos_users.includes(session?.user?.id) ? 1 : 0)
+                          : (match.id.charCodeAt(0) % 5) + (localStorage.getItem(`liked_${match.id}`) ? 1 : 0)}
+                      </span>
                     </button>
                     
                     <button 
