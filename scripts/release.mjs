@@ -26,7 +26,7 @@ process.env.PATH = `${process.env.PATH};C:\\Program Files\\GitHub CLI`;
 
 const JAVA_HOME = 'C:\\Program Files\\Microsoft\\jdk-21.0.11.10-hotspot';
 const APK_SRC   = resolve(root, 'android/app/build/outputs/apk/release/app-release.apk');
-const APK_COPY  = 'D:\\OneDrive - Indian Institute of Science\\Temp_apk\\IIScShuttlers.apk';
+const ONEDRIVE_DIR = 'D:\\OneDrive - Indian Institute of Science\\Temp_apk';
 const REPO      = 'iiscshuttlers/iiscshuttlers';
 
 const run = (cmd, opts = {}) =>
@@ -116,7 +116,8 @@ run('gradlew assembleRelease', {
 /* ── 6. Copy APK to OneDrive ────────────────────────────────────── */
 log('Copying APK to OneDrive…');
 try {
-  run(`copy "${APK_SRC}" "${APK_COPY}"`, { shell: true });
+  const oneDriveApkPath = resolve(ONEDRIVE_DIR, finalApkName);
+  run(`copy "${APK_SRC}" "${oneDriveApkPath}"`, { shell: true });
   ok('APK copied to OneDrive');
 } catch {
   console.warn('⚠ OneDrive copy failed (non-fatal) — continuing');

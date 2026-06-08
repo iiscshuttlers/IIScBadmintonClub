@@ -195,8 +195,8 @@ serve(async (req) => {
           android: {
             priority: "high",
             notification: {
-              sound: "default",
-              channelId: "match_alerts",
+              sound: "smash", // Refers to res/raw/smash.wav
+              channelId: "match_alerts_smash", // New channel required to apply new sound
             }
           },
           data: {
