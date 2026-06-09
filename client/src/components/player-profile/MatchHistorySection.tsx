@@ -3,9 +3,57 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Clock, ChevronRight, Swords, Share2 } from "lucide-react";
 import { useLocation } from "wouter";
 import { Share } from "@capacitor/share";
+import { Filesystem, Directory } from "@capacitor/filesystem";
 import { Capacitor } from "@capacitor/core";
 import { toast } from "sonner";
 import { getBaseShareUrl } from "@/lib/utils";
+
+const loadImg = (url: string): Promise<HTMLImageElement | null> =>
+  new Promise((resolve) => {
+    if (!url) return resolve(null);
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+
+function drawCircleAvatar(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement | null,
+  cx: number, cy: number, r: number,
+  initial: string,
+  ringColor: string
+) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.clip();
+  if (img) {
+    ctx.drawImage(img, cx - r, cy - r, r * 2, r * 2);
+  } else {
+    ctx.fillStyle = ringColor;
+    ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `bold ${r}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(initial.toUpperCase(), cx, cy);
+  }
+  ctx.restore();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.strokeStyle = ringColor;
+  ctx.lineWidth = 6;
+  ctx.stroke();
+}
+
+function truncateText(ctx: CanvasRenderingContext2D, name: string, maxW: number) {
+  if (ctx.measureText(name).width <= maxW) return name;
+  let n = name;
+  while (ctx.measureText(n + '…').width > maxW && n.length > 1) n = n.slice(0, -1);
+  return n + '…';
+}
 
 // Duplicate the small helper function for encapsulation
 function matchParticipantIds(match: any): string[] {
@@ -294,33 +342,138 @@ export function MatchHistorySection({ id, liveMatches, ownPlayerProfile, handleW
                           <button
                             onClick={async (e) => {
                               e.stopPropagation();
-                              const text = `🏸 Match Result: ${won ? 'Won' : 'Lost'} against ${opponent?.full_name ?? 'Unknown'} (${(m.match_score || m.score)?.replace(/\s*\[.*\]/, "") || "—"})!`;
-                              
-                              // Correctly format the live share URL
-                              const playerSlug = id;
-                              const shareUrl = `${getBaseShareUrl()}/player/${playerSlug}`;
+
+                              const viewedPlayer = isP1 ? m.player1 : m.player2;
+                              const displayScore = (m.match_score || m.score)?.replace(/\s*\[.*\]/, "") || "—";
+                              const shareUrl = `${getBaseShareUrl()}/player/${id}`;
+                              const winnerName = won ? (viewedPlayer?.full_name || 'Player') : (opponent?.full_name || 'Player');
+                              const loserName  = won ? (opponent?.full_name  || 'Player') : (viewedPlayer?.full_name || 'Player');
+                              const winnerAvatar = won ? viewedPlayer?.avatar_url : opponent?.avatar_url;
+                              const loserAvatar  = won ? opponent?.avatar_url  : viewedPlayer?.avatar_url;
+                              const shareText = `🏸 Match Result: ${winnerName} def. ${loserName} (${displayScore})!`;
+
+                              const fallback = async () => {
+                                try {
+                                  if (Capacitor.isNativePlatform()) {
+                                    await Share.share({ title: 'IISc Shuttlers Match', text: shareText, url: shareUrl, dialogTitle: 'Share Match Result' });
+                                  } else if (navigator.share) {
+                                    await navigator.share({ title: 'IISc Shuttlers Match', text: shareText, url: shareUrl });
+                                  } else {
+                                    await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+                                    toast.success("Match result copied!");
+                                  }
+                                } catch (err: any) {
+                                  if (err.message && !err.message.includes('cancel')) {
+                                    navigator.clipboard.writeText(`${shareText}\n${shareUrl}`).catch(() => {});
+                                    toast.success("Match result copied!");
+                                  }
+                                }
+                              };
 
                               try {
+                                const [winImg, loseImg] = await Promise.all([
+                                  loadImg(winnerAvatar || ''),
+                                  loadImg(loserAvatar || ''),
+                                ]);
+
+                                const W = 1080, H = 1080;
+                                const canvas = document.createElement('canvas');
+                                canvas.width = W; canvas.height = H;
+                                const ctx = canvas.getContext('2d');
+                                if (!ctx) { await fallback(); return; }
+
+                                // Background
+                                const bg = ctx.createLinearGradient(0, 0, W, H);
+                                bg.addColorStop(0, '#0f172a');
+                                bg.addColorStop(1, '#020617');
+                                ctx.fillStyle = bg;
+                                ctx.fillRect(0, 0, W, H);
+
+                                // Winner glow
+                                const glow = ctx.createRadialGradient(270, 380, 0, 270, 380, 320);
+                                glow.addColorStop(0, 'rgba(16,185,129,0.18)');
+                                glow.addColorStop(1, 'rgba(16,185,129,0)');
+                                ctx.fillStyle = glow;
+                                ctx.fillRect(0, 0, W, H);
+
+                                // Header
+                                ctx.fillStyle = '#10b981';
+                                ctx.font = 'bold 44px sans-serif';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'alphabetic';
+                                ctx.fillText('🏸 IISc Shuttlers', W / 2, 90);
+                                ctx.fillStyle = 'rgba(255,255,255,0.15)';
+                                ctx.fillRect(120, 108, W - 240, 3);
+                                ctx.fillStyle = '#64748b';
+                                ctx.font = 'bold 32px sans-serif';
+                                ctx.fillText('MATCH RESULT', W / 2, 168);
+
+                                // Winner (left)
+                                drawCircleAvatar(ctx, winImg, 270, 360, 170, winnerName[0], '#10b981');
+                                ctx.font = '72px sans-serif';
+                                ctx.textAlign = 'center';
+                                ctx.fillText('🏆', 270, 175);
+                                ctx.fillStyle = '#10b981';
+                                ctx.font = 'bold 32px sans-serif';
+                                ctx.fillText('WINNER', 270, 570);
+                                ctx.fillStyle = '#ffffff';
+                                ctx.font = 'bold 52px sans-serif';
+                                ctx.fillText(truncateText(ctx, winnerName, 480), 270, 636);
+
+                                // Score center
+                                const scoreY = 760;
+                                ctx.fillStyle = '#1e293b';
+                                ctx.beginPath();
+                                (ctx as any).roundRect?.(W / 2 - 200, scoreY - 64, 400, 96, 24) ||
+                                  ctx.rect(W / 2 - 200, scoreY - 64, 400, 96);
+                                ctx.fill();
+                                ctx.fillStyle = '#f59e0b';
+                                ctx.font = 'bold 72px monospace';
+                                ctx.fillText(displayScore, W / 2, scoreY);
+                                ctx.fillStyle = '#475569';
+                                ctx.font = 'bold 26px sans-serif';
+                                ctx.fillText('DEF.', W / 2, scoreY + 52);
+
+                                // Loser (right)
+                                drawCircleAvatar(ctx, loseImg, W - 270, 360, 140, loserName[0], '#475569');
+                                ctx.fillStyle = '#64748b';
+                                ctx.font = 'bold 28px sans-serif';
+                                ctx.fillText('Runner-up', W - 270, 536);
+                                ctx.fillStyle = '#94a3b8';
+                                ctx.font = 'bold 46px sans-serif';
+                                ctx.fillText(truncateText(ctx, loserName, 420), W - 270, 596);
+
+                                // Footer
+                                ctx.fillStyle = 'rgba(255,255,255,0.06)';
+                                ctx.fillRect(0, H - 100, W, 100);
+                                ctx.fillStyle = '#475569';
+                                ctx.font = 'bold 30px sans-serif';
+                                ctx.fillText('iiscshuttlers.com', W / 2, H - 36);
+
                                 if (Capacitor.isNativePlatform()) {
-                                  await Share.share({
-                                    title: 'IISc Shuttlers Match Result',
-                                    text,
-                                    url: shareUrl,
-                                    dialogTitle: 'Share Match Result',
+                                  const base64 = canvas.toDataURL('image/png').split(',')[1];
+                                  const { uri } = await Filesystem.writeFile({
+                                    path: 'match-share.png',
+                                    data: base64,
+                                    directory: Directory.Cache,
                                   });
-                                } else if (navigator.share) {
-                                  await navigator.share({ title: 'IISc Shuttlers Match Result', text, url: shareUrl });
+                                  await Share.share({ title: 'IISc Shuttlers Match', text: shareText, files: [uri], dialogTitle: 'Share Match Result' });
+                                  toast.success("Match Recap shared!");
                                 } else {
-                                  await navigator.clipboard.writeText(`${text}\n${shareUrl}`);
-                                  alert("Match result copied to clipboard!");
+                                  canvas.toBlob(async (blob) => {
+                                    if (blob) {
+                                      const file = new File([blob], 'match-recap.png', { type: 'image/png' });
+                                      if (navigator.canShare?.({ files: [file] })) {
+                                        await navigator.share({ title: 'IISc Shuttlers Match', text: shareText, url: shareUrl, files: [file] });
+                                        toast.success("Match Recap shared!");
+                                        return;
+                                      }
+                                    }
+                                    await fallback();
+                                  }, 'image/png');
                                 }
                               } catch (err: any) {
-                                console.error("Error sharing match:", err);
-                                // Fallback to clipboard if share gets cancelled or fails
-                                if (err.message && !err.message.includes("cancel")) {
-                                   navigator.clipboard.writeText(`${text}\n${shareUrl}`);
-                                   toast.success("Match result copied to clipboard!");
-                                }
+                                if (!err.message?.includes('cancel')) await fallback();
                               }
                             }}
                             className="p-1.5 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/20 rounded-lg transition-colors"

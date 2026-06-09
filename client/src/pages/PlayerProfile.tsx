@@ -110,7 +110,7 @@ interface Player {
 }
 
 const MATCH_SELECT =
-  "*, player1:players!player1_id(id, full_name), player2:players!player2_id(id, full_name)";
+  "*, player1:players!player1_id(id, full_name, avatar_url), player2:players!player2_id(id, full_name, avatar_url)";
 
 function matchParticipantIds(match: any): string[] {
   return [

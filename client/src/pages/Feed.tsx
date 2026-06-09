@@ -9,6 +9,7 @@ import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 import { Share } from "@capacitor/share";
+import { Filesystem, Directory } from "@capacitor/filesystem";
 import { getBaseShareUrl } from "@/lib/utils";
 
 export default function Feed() {
@@ -467,17 +468,28 @@ const courtUtil = useMemo(() => {
                     ctx.font = 'bold 30px sans-serif';
                     ctx.fillText('iiscshuttlers.com', W / 2, H - 36);
 
-                    canvas.toBlob(async (blob) => {
-                      if (blob) {
-                        const file = new File([blob], 'match-recap.png', { type: 'image/png' });
-                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                          await navigator.share({ title: 'IISc Shuttlers Match', text, url: shareUrl, files: [file] });
-                          toast.success("Match Recap shared!");
-                          return;
+                    if (Capacitor.isNativePlatform()) {
+                      const base64 = canvas.toDataURL('image/png').split(',')[1];
+                      const { uri } = await Filesystem.writeFile({
+                        path: 'match-share.png',
+                        data: base64,
+                        directory: Directory.Cache,
+                      });
+                      await Share.share({ title: 'IISc Shuttlers Match', text, files: [uri], dialogTitle: 'Share Match Result' });
+                      toast.success("Match Recap shared!");
+                    } else {
+                      canvas.toBlob(async (blob) => {
+                        if (blob) {
+                          const file = new File([blob], 'match-recap.png', { type: 'image/png' });
+                          if (navigator.canShare?.({ files: [file] })) {
+                            await navigator.share({ title: 'IISc Shuttlers Match', text, url: shareUrl, files: [file] });
+                            toast.success("Match Recap shared!");
+                            return;
+                          }
                         }
-                      }
-                      fallbackShare();
-                    }, 'image/png');
+                        fallbackShare();
+                      }, 'image/png');
+                    }
                   } catch (err: any) {
                     if (!err.message?.includes('cancel')) fallbackShare();
                   }
