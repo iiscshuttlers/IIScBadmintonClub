@@ -1790,9 +1790,18 @@ export default function PlayerProfile({
                     </span>
                     {splitStats.friendly.losses}L
                   </div>
-                  <div className="text-xs text-slate-400 dark:text-slate-500 font-medium mb-3">
+                  <div className="text-xs text-slate-400 dark:text-slate-500 font-medium mb-2">
                     {splitStats.friendly.total} matches ·{" "}
                     {splitStats.friendly.winPct}% win
+                  </div>
+                  {/* Animated win rate bar */}
+                  <div className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden mb-3">
+                    <motion.div
+                      className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-500"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${splitStats.friendly.winPct}%` }}
+                      transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
+                    />
                   </div>
                   {splitStats.friendly.recentForm.length > 0 && (
                     <div className="flex items-center gap-1.5">
@@ -1836,9 +1845,18 @@ export default function PlayerProfile({
                         </span>
                         {splitStats.tournament.losses}L
                       </div>
-                      <div className="text-xs text-slate-400 dark:text-slate-500 font-medium mb-3">
+                      <div className="text-xs text-slate-400 dark:text-slate-500 font-medium mb-2">
                         {splitStats.tournament.total} matches ·{" "}
                         {splitStats.tournament.winPct}% win
+                      </div>
+                      {/* Animated win rate bar */}
+                      <div className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden mb-3">
+                        <motion.div
+                          className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${splitStats.tournament.winPct}%` }}
+                          transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
+                        />
                       </div>
                       {splitStats.tournament.recentForm.length > 0 && (
                         <div className="flex items-center gap-1.5">

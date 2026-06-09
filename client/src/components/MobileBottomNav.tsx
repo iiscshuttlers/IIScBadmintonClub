@@ -56,25 +56,31 @@ export default function MobileBottomNav() {
           {/* HOME */}
           <button
             onClick={() => handleNav("/")}
-            className={`flex flex-col items-center justify-center w-16 h-12 transition-colors ${location === "/" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
+            className={`relative flex flex-col items-center justify-center w-16 h-12 transition-all duration-200 ${location === "/" ? "text-emerald-600 dark:text-emerald-400 scale-110" : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
           >
+            {location === "/" && (
+              <span className="absolute top-0.5 inset-x-1 h-full rounded-xl bg-emerald-50 dark:bg-emerald-900/25 -z-0" />
+            )}
             <Home
-              className={`w-6 h-6 mb-1 ${location === "/" ? "fill-emerald-500/20" : ""}`}
+              className={`w-6 h-6 mb-1 relative z-10 ${location === "/" ? "fill-emerald-500/20" : ""}`}
               strokeWidth={location === "/" ? 2.5 : 2}
             />
-            <span className="text-[10px] font-bold">Home</span>
+            <span className="text-[10px] font-bold relative z-10">Home</span>
           </button>
 
           {/* FEED */}
           <button
             onClick={() => handleNav("/feed")}
-            className={`flex flex-col items-center justify-center w-14 h-12 transition-colors ${location === "/feed" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
+            className={`relative flex flex-col items-center justify-center w-14 h-12 transition-all duration-200 ${location === "/feed" ? "text-emerald-600 dark:text-emerald-400 scale-110" : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
           >
+            {location === "/feed" && (
+              <span className="absolute top-0.5 inset-x-1 h-full rounded-xl bg-emerald-50 dark:bg-emerald-900/25 -z-0" />
+            )}
             <Activity
-              className={`w-6 h-6 mb-1 ${location === "/feed" ? "stroke-emerald-500" : ""}`}
+              className={`w-6 h-6 mb-1 relative z-10 ${location === "/feed" ? "stroke-emerald-500" : ""}`}
               strokeWidth={location === "/feed" ? 2.5 : 2}
             />
-            <span className="text-[10px] font-bold">Feed</span>
+            <span className="text-[10px] font-bold relative z-10">Feed</span>
           </button>
 
           {/* LOG MATCH (Center FAB-style) */}
@@ -102,25 +108,31 @@ export default function MobileBottomNav() {
           {/* MATCHES */}
           <button
             onClick={() => handleNav("/matches")}
-            className={`flex flex-col items-center justify-center w-14 h-12 transition-colors ${location.startsWith("/matches") ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
+            className={`relative flex flex-col items-center justify-center w-14 h-12 transition-all duration-200 ${location.startsWith("/matches") ? "text-emerald-600 dark:text-emerald-400 scale-110" : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
           >
+            {location.startsWith("/matches") && (
+              <span className="absolute top-0.5 inset-x-1 h-full rounded-xl bg-emerald-50 dark:bg-emerald-900/25 -z-0" />
+            )}
             <Swords
-              className={`w-6 h-6 mb-1 ${location.startsWith("/matches") ? "fill-emerald-500/20" : ""}`}
+              className={`w-6 h-6 mb-1 relative z-10 ${location.startsWith("/matches") ? "fill-emerald-500/20" : ""}`}
               strokeWidth={location.startsWith("/matches") ? 2.5 : 2}
             />
-            <span className="text-[10px] font-bold">Matches</span>
+            <span className="text-[10px] font-bold relative z-10">Matches</span>
           </button>
 
           {/* PLAYERS DIRECTORY */}
           <button
             onClick={() => handleNav("/players")}
-            className={`flex flex-col items-center justify-center w-14 h-12 transition-colors ${location === "/players" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
+            className={`relative flex flex-col items-center justify-center w-14 h-12 transition-all duration-200 ${location === "/players" ? "text-emerald-600 dark:text-emerald-400 scale-110" : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
           >
+            {location === "/players" && (
+              <span className="absolute top-0.5 inset-x-1 h-full rounded-xl bg-emerald-50 dark:bg-emerald-900/25 -z-0" />
+            )}
             <Users
-              className={`w-6 h-6 mb-1 ${location === "/players" ? "fill-emerald-500/20" : ""}`}
+              className={`w-6 h-6 mb-1 relative z-10 ${location === "/players" ? "fill-emerald-500/20" : ""}`}
               strokeWidth={location === "/players" ? 2.5 : 2}
             />
-            <span className="text-[10px] font-bold">Players</span>
+            <span className="text-[10px] font-bold relative z-10">Players</span>
           </button>
         </div>
       </div>

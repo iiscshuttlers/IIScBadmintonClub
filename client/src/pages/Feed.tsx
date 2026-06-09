@@ -756,7 +756,7 @@ export default function Feed() {
                   transition={{ delay: i * 0.05 }}
                   key={match.id}
                   id={`match-card-${match.id}`}
-                  className={`bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm relative overflow-hidden group transition-shadow ${isMatchOfTheDay ? "border-2 border-amber-400 shadow-amber-500/20 shadow-xl" : "border border-slate-100 dark:border-slate-800 hover:shadow-md"}`}
+                  className={`bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm relative overflow-hidden group transition-all duration-200 hover:-translate-y-0.5 ${isMatchOfTheDay ? "border-2 border-amber-400 shadow-amber-500/20 shadow-xl hover:shadow-amber-400/30" : "border border-slate-100 dark:border-slate-800 hover:shadow-lg dark:hover:shadow-slate-700/40"}`}
                   drag="x"
                   dragConstraints={{ left: 0, right: 0 }}
                   dragElastic={0.2}

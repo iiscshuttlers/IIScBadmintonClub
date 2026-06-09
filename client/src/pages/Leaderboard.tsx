@@ -236,13 +236,36 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
-                  {rest.map((player, index) => (
+                  {rest.map((player, index) => {
+                    // Derive a visual rank-trend indicator from ELO vs baseline (1200)
+                    const eloBaseline = 1200;
+                    const eloGap = player.elo_rating - eloBaseline;
+                    const trend =
+                      activeTab !== "elo"
+                        ? null
+                        : eloGap > 80
+                          ? "up"
+                          : eloGap < -80
+                            ? "down"
+                            : "stable";
+                    return (
                     <tr
                       key={player.id}
                       className="hover:bg-white dark:hover:bg-slate-800/80 transition-colors group"
                     >
-                      <td className="p-4 text-center font-black text-slate-400 dark:text-slate-500">
-                        #{index + 4}
+                      <td className="p-4 text-center">
+                        <div className="flex flex-col items-center gap-0.5">
+                          <span className="font-black text-slate-400 dark:text-slate-500">#{index + 4}</span>
+                          {trend === "up" && (
+                            <span className="text-emerald-500 text-[10px] font-black leading-none">▲</span>
+                          )}
+                          {trend === "down" && (
+                            <span className="text-rose-500 text-[10px] font-black leading-none">▼</span>
+                          )}
+                          {trend === "stable" && (
+                            <span className="text-slate-400 text-[10px] font-black leading-none">—</span>
+                          )}
+                        </div>
                       </td>
                       <td className="p-4">
                         <Link href={`/player/${player.id}`}>
@@ -293,7 +316,8 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                   {rest.length === 0 && (
                     <tr>
                       <td

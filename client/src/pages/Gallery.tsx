@@ -321,43 +321,57 @@ export default function Gallery() {
             </div>
           )}
 
-          {/* ── Overlay-style Image Grid with stagger ── */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {filteredItems.map((item, idx) => (
-              <div
-                key={item.id}
-                className="group relative aspect-square overflow-hidden rounded-2xl cursor-pointer shadow-sm hover:shadow-xl transition-all duration-500 opacity-0"
-                style={{
-                  animation: `fadeSlideUp 0.4s ease forwards`,
-                  animationDelay: `${Math.min(idx * 40, 800)}ms`,
-                }}
-                onClick={() => openLightbox(idx)}
-              >
-                {/* Lazy image */}
-                <LazyImage
-                  moduleLoader={item.loader}
-                  alt={item.title}
-                  className="w-full h-full"
-                />
+          {/* ── Masonry Gallery ── */}
+          <div className="columns-2 md:columns-3 lg:columns-4 gap-4">
+            {filteredItems.map((item, idx) => {
+              // Vary aspect ratio for true masonry feel
+              const aspectClass =
+                idx % 5 === 0
+                  ? "aspect-[3/4]"
+                  : idx % 5 === 3
+                    ? "aspect-[4/3]"
+                    : "aspect-square";
+              return (
+                <div
+                  key={item.id}
+                  className={`group relative ${aspectClass} overflow-hidden rounded-2xl cursor-pointer shadow-sm hover:shadow-xl transition-all duration-500 opacity-0 mb-4 break-inside-avoid`}
+                  style={{
+                    animation: `fadeSlideUp 0.4s ease forwards`,
+                    animationDelay: `${Math.min(idx * 40, 800)}ms`,
+                  }}
+                  onClick={() => openLightbox(idx)}
+                >
+                  {/* Lazy image */}
+                  <LazyImage
+                    moduleLoader={item.loader}
+                    alt={item.title}
+                    className="w-full h-full"
+                  />
 
-                {/* Hover overlay */}
-                <div className="absolute inset-0 bg-black/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center p-4 text-center">
-                  <h3 className="text-white font-black text-xl tracking-wide drop-shadow-md">
-                    {item.title}
-                  </h3>
-                  {item.subfolder && (
-                    <p className="text-emerald-300 font-bold text-sm mt-1 uppercase tracking-widest drop-shadow">
-                      {formatText(item.subfolder)}
-                    </p>
-                  )}
+                  {/* Hover overlay */}
+                  <div className="absolute inset-0 bg-black/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center p-4 text-center">
+                    <h3 className="text-white font-black text-base tracking-wide drop-shadow-md line-clamp-2">
+                      {item.title}
+                    </h3>
+                    {item.subfolder && (
+                      <p className="text-emerald-300 font-bold text-xs mt-1 uppercase tracking-widest drop-shadow">
+                        {formatText(item.subfolder)}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {filteredItems.length === 0 && (
-            <div className="text-center py-20 text-gray-400 dark:text-slate-500 text-lg italic">
-              No photos in this category yet.
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3 20.25h18A2.25 2.25 0 0023.25 18v-12A2.25 2.25 0 0021 3.75H3A2.25 2.25 0 00.75 6v12A2.25 2.25 0 003 20.25z" />
+                </svg>
+              </div>
+              <p className="text-slate-500 dark:text-slate-400 font-medium">No photos in this category yet.</p>
             </div>
           )}
         </div>

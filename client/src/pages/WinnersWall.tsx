@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import {
   ArrowRight,
@@ -24,6 +24,80 @@ const cardVariant = {
     transition: { duration: 0.5, delay: i * 0.1, ease: "easeOut" as const },
   }),
 };
+
+// ── Lightweight canvas confetti ──────────────────────────────────────────────
+function ConfettiBurst() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    // Respect reduced-motion preference
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const COLORS = ["#10b981", "#ff6b35", "#f59e0b", "#3b82f6", "#a855f7", "#f43f5e"];
+    const particles: {
+      x: number; y: number; vx: number; vy: number;
+      color: string; size: number; rotation: number; vr: number; alpha: number;
+    }[] = [];
+
+    for (let i = 0; i < 120; i++) {
+      const angle = (Math.random() * Math.PI * 2);
+      const speed = 2 + Math.random() * 6;
+      particles.push({
+        x: canvas.width / 2,
+        y: canvas.height * 0.35,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 4,
+        color: COLORS[Math.floor(Math.random() * COLORS.length)],
+        size: 5 + Math.random() * 8,
+        rotation: Math.random() * Math.PI * 2,
+        vr: (Math.random() - 0.5) * 0.2,
+        alpha: 1,
+      });
+    }
+
+    let raf: number;
+    const tick = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      let alive = false;
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.15; // gravity
+        p.rotation += p.vr;
+        p.alpha = Math.max(0, p.alpha - 0.012);
+        if (p.alpha > 0) {
+          alive = true;
+          ctx.save();
+          ctx.globalAlpha = p.alpha;
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rotation);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+          ctx.restore();
+        }
+      }
+      if (alive) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="fixed inset-0 z-50 pointer-events-none"
+      aria-hidden="true"
+    />
+  );
+}
 
 export default function WinnersWall() {
   usePageMeta({
@@ -57,6 +131,8 @@ export default function WinnersWall() {
 
   return (
     <div className="flex-1 w-full flex flex-col bg-slate-50 dark:bg-slate-950">
+      {/* Confetti burst on page load */}
+      <ConfettiBurst />
       {/* Hero */}
       <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-emerald-950 text-white py-24 relative overflow-hidden">
         <div className="absolute inset-0 hero-pattern" />
