@@ -110,7 +110,7 @@ export default function Gallery() {
 
   // ── LAZY glob (not eager) ──────────────────────────────────────────
   const imageModules = import.meta.glob(
-    '/src/assets/gallery/**/*.{png,jpg,jpeg,webp}',
+    '/src/assets/gallery/**/*.{png,webp}',
     { eager: false }
   ) as Record<string, () => Promise<{ default: string }>>;
 

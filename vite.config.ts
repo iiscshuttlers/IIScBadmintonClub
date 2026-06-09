@@ -136,10 +136,12 @@ export default defineConfig({
     vitePluginStorageProxy(),
 
     VitePWA({
-      registerType: 'prompt',
+      registerType: 'autoUpdate',
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,json,webp,woff2}'],
-        maximumFileSizeToCacheInBytes: 5000000
+        maximumFileSizeToCacheInBytes: 5000000,
+        skipWaiting: true,
+        clientsClaim: true,
       },
       manifest: {
         name: 'IISc Shuttlers',

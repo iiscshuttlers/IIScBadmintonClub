@@ -22,19 +22,28 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error) {
-    // Automatically reload on chunk load errors (happens when a new version is deployed)
-    const isChunkLoadError = 
-      error.name === "ChunkLoadError" || 
-      error.message.includes("Failed to fetch dynamically imported module");
+    // Automatically reload on chunk load errors (stale service worker after new deployment)
+    const isChunkLoadError =
+      error.name === "ChunkLoadError" ||
+      error.message.includes("Failed to fetch dynamically imported module") ||
+      error.message.includes("Importing a module script failed");
 
     if (isChunkLoadError) {
       const reloaded = sessionStorage.getItem("chunk_error_reloaded");
       if (!reloaded) {
         sessionStorage.setItem("chunk_error_reloaded", "true");
-        // Hard redirect with cache-buster — forces browser to re-fetch index.html fresh
         const url = new URL(window.location.href);
         url.searchParams.set("nocache", Date.now().toString());
         window.location.replace(url.toString());
+        return;
+      }
+      // Second ChunkLoadError in same session — unregister SW and reload cleanly
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.getRegistrations().then((regs) => {
+          regs.forEach((r) => r.unregister());
+          sessionStorage.removeItem("chunk_error_reloaded");
+          window.location.reload();
+        });
       }
     } else {
       sessionStorage.removeItem("chunk_error_reloaded");
