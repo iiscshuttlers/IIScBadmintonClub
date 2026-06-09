@@ -8,8 +8,8 @@ import {
   TrendingUp, Award, Flame, BarChart3, Share2, Trash2,
   Instagram, Mail, Users, Star, Hash, Ruler, BookOpen,
   ChevronRight, Footprints, Shirt, ArrowUpRight, Clock, LogOut,
-  CheckCircle, XCircle, Play, Image, Video
-, UserPlus, Heart} from "lucide-react";
+  CheckCircle, XCircle, Play, Image, Video,
+  UserPlus, UserCheck, UserMinus, Heart} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import LogMatchModal from "@/components/LogMatchModal";
@@ -900,34 +900,6 @@ export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: b
               </>
             )}
 
-            
-              {currentUser && player && currentUser.id !== player.userId && ownPlayerProfile && (
-                <>
-                  <button onClick={() => setIsLogMatchOpen(true)}
-                    title="Log Match"
-                    className="flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/30 transition-all text-xs font-black uppercase tracking-wider">
-                    <Swords className="w-4 h-4 shrink-0" /><span className="hidden sm:inline">Log Match</span>
-                  </button>
-                  <button onClick={handleToggleFollow}
-                    title={isFollowing ? 'Unfollow' : 'Follow'}
-                    className={`flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-black uppercase tracking-wider shadow-md transition-all ${
-                      isFollowing
-                        ? 'bg-violet-700 hover:bg-violet-800 text-white shadow-violet-500/30'
-                        : 'bg-violet-600 hover:bg-violet-700 text-white shadow-violet-500/30'
-                    }`}>
-                    <UserPlus className="w-4 h-4 shrink-0" /><span className="hidden sm:inline">{isFollowing ? 'Unfollow' : 'Follow'}</span>
-                  </button>
-                  <button onClick={handleToggleBuddy}
-                    title={isBuddy ? 'Unbuddy' : 'Buddy'}
-                    className={`flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-black uppercase tracking-wider shadow-md transition-all ${
-                      isBuddy
-                        ? 'bg-rose-700 hover:bg-rose-800 text-white shadow-rose-500/30'
-                        : 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/30'
-                    }`}>
-                    <Heart className="w-4 h-4 shrink-0" /><span className="hidden sm:inline">{isBuddy ? 'Unbuddy' : 'Buddy'}</span>
-                  </button>
-                </>
-              )}
 
 
             <button onClick={handleShare}
@@ -1107,18 +1079,56 @@ export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: b
 
               {/* CTAs */}
               <div className="flex flex-wrap items-center gap-3">
-                {currentUser && player && currentUser.id !== player.userId && ownPlayerProfile && (
-                  <button onClick={() => setIsLogMatchOpen(true)}
-                    className="group flex items-center gap-2 px-7 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black rounded-2xl transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/35 hover:-translate-y-0.5 text-sm tracking-wide">
-                    <Swords className="w-4 h-4" /> Log Match
-                  </button>
-                )}
-                {currentUser && player && currentUser.id === player.userId && (
+                {currentUser && player && currentUser.id !== player.userId && ownPlayerProfile ? (
+                  <>
+                    {/* Log Match */}
+                    <button onClick={() => setIsLogMatchOpen(true)}
+                      className="group flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black rounded-2xl transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/35 hover:-translate-y-0.5 text-sm tracking-wide">
+                      <Swords className="w-4 h-4" /> Log Match
+                    </button>
+
+                    {/* Follow / Unfollow — icon and label change on hover when following */}
+                    <button onClick={handleToggleFollow}
+                      title={isFollowing ? `Unfollow ${player.fullName}` : `Follow ${player.fullName}`}
+                      className={`group flex items-center gap-2 px-6 py-3.5 font-black rounded-2xl transition-all hover:-translate-y-0.5 text-sm tracking-wide border ${
+                        isFollowing
+                          ? 'bg-violet-500/20 border-violet-400/40 text-violet-300 hover:bg-rose-500/10 hover:border-rose-400/30 hover:text-rose-300'
+                          : 'bg-white/[0.06] border-white/[0.1] text-white/75 hover:bg-violet-500/15 hover:border-violet-400/30 hover:text-violet-200'
+                      }`}>
+                      {isFollowing ? (
+                        <>
+                          <UserCheck className="w-4 h-4 group-hover:hidden" />
+                          <UserMinus className="w-4 h-4 hidden group-hover:block" />
+                          <span className="group-hover:hidden">Following</span>
+                          <span className="hidden group-hover:block">Unfollow</span>
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="w-4 h-4" />
+                          Follow
+                        </>
+                      )}
+                    </button>
+
+                    {/* Buddy / Remove Buddy — solid vs outline heart */}
+                    <button onClick={handleToggleBuddy}
+                      title={isBuddy ? `Remove ${player.fullName} as buddy` : `Add ${player.fullName} as buddy`}
+                      className={`group flex items-center gap-2 px-6 py-3.5 font-black rounded-2xl transition-all hover:-translate-y-0.5 text-sm tracking-wide border ${
+                        isBuddy
+                          ? 'bg-rose-500/20 border-rose-400/40 text-rose-300 hover:bg-rose-500/30 hover:border-rose-400/60'
+                          : 'bg-white/[0.06] border-white/[0.1] text-white/75 hover:bg-rose-500/10 hover:border-rose-400/30 hover:text-rose-200'
+                      }`}>
+                      <Heart className={`w-4 h-4 transition-all duration-200 ${isBuddy ? 'fill-rose-400 text-rose-400' : 'fill-none text-current'}`} />
+                      {isBuddy ? 'Buddies' : 'Add Buddy'}
+                    </button>
+                  </>
+                ) : currentUser && player && currentUser.id === player.userId ? (
                   <button onClick={() => setLocation('/profile/setup')}
                     className="group flex items-center gap-2 px-7 py-3.5 bg-white/[0.07] hover:bg-white/[0.12] border border-white/[0.12] text-white font-black rounded-2xl transition-all hover:-translate-y-0.5 text-sm tracking-wide">
                     <Sparkles className="w-4 h-4 text-emerald-400 group-hover:rotate-180 transition-transform duration-500" /> Edit Profile
                   </button>
-                )}
+                ) : null}
+
                 {player.social?.instagram && (
                   <a href={`https://instagram.com/${player.social.instagram.replace('@', '')}`}
                     target="_blank" rel="noopener noreferrer"
