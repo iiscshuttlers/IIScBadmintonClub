@@ -55,7 +55,23 @@ export default function Feed() {
 
   useAutoRefresh(() => fetchFeed(true), 30_000, !loading);
 
-  const courtUtil = useMemo(() => {
+  
+  const [feedFilter, setFeedFilter] = useState<"global" | "following">("global");
+  const followingIds = useMemo(() => {
+    return Array.isArray((session?.user as any)?.following) ? (session.user as any).following : [];
+  }, [(session?.user as any)?.following]);
+
+  const displayMatches = useMemo(() => {
+    if (feedFilter === "global") return matches;
+    return matches.filter((m: any) => 
+      followingIds.includes(m.player1_id) || 
+      followingIds.includes(m.player2_id) || 
+      (m.team1_partner_id && followingIds.includes(m.team1_partner_id)) || 
+      (m.team2_partner_id && followingIds.includes(m.team2_partner_id))
+    );
+  }, [matches, feedFilter, followingIds]);
+
+const courtUtil = useMemo(() => {
     const hours = new Array(24).fill(0);
     matches.forEach(m => {
       const h = new Date(m.created_at).getHours();
@@ -163,7 +179,7 @@ export default function Feed() {
       </div>
 
       <div className="container mx-auto px-4 max-w-3xl mt-8">
-        {!loading && matches.length > 0 && (
+        {!loading && displayMatches.length > 0 && (
           <div className="mb-6 bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden">
             <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
               <BarChart3 className="w-4 h-4 text-emerald-500" /> Court Utilization (Recent)
@@ -218,9 +234,9 @@ export default function Feed() {
 
         {loading ? (
           renderSkeleton()
-        ) : matches.length > 0 ? (
+        ) : displayMatches.length > 0 ? (
           <div className="space-y-4">
-            {matches.map((match, i) => {
+            {displayMatches.map((match: any, i: number) => {
               const p1 = match.player1;
               const p2 = match.player2;
               const isP1Winner = match.winner_id === p1.id;
@@ -268,6 +284,8 @@ export default function Feed() {
                   }
                 };
 
+                
+                
                 const handleShare = async (match: any) => {
                   const p1Name = match.player1?.full_name || 'Player 1';
                   const p2Name = match.player2?.full_name || 'Player 2';
@@ -278,28 +296,98 @@ export default function Feed() {
                   if (match.score) {
                     displayScore = match.score;
                   } else if (match.match_score) {
-                    displayScore = match.match_score.map(set => `${set.p1_score}-${set.p2_score}`).join(', ');
+                    displayScore = match.match_score.map((set: any) => `${set.p1_score}-${set.p2_score}`).join(', ');
                   }
                   
                   const shareUrl = `${getBaseShareUrl()}/feed?match=${match.id}`;
                   const text = `?? Match Result: ${isP1Winner ? p1Name : p2Name} vs ${isP1Winner ? p2Name : p1Name} (${displayScore})! Check it out on IISc Shuttlers.`;
                   
                   try {
-                    if (Capacitor.isNativePlatform()) {
-                      await Share.share({ title: 'IISc Shuttlers Match', text, url: shareUrl, dialogTitle: 'Share Match Result' });
-                    } else if (navigator.share) {
-                      await navigator.share({ title: 'IISc Shuttlers Match', text, url: shareUrl });
-                    } else {
-                      await navigator.clipboard.writeText(`${text}\n${shareUrl}`);
-                      toast.success("Match result copied to clipboard!");
+                    // Generate Native Canvas Image Recap
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 1080;
+                    canvas.height = 1080;
+                    const ctx = canvas.getContext('2d');
+                    if (ctx) {
+                      // Background
+                      ctx.fillStyle = '#0f172a';
+                      ctx.fillRect(0, 0, 1080, 1080);
+                      
+                      // Gradient
+                      const grad = ctx.createLinearGradient(0, 0, 1080, 1080);
+                      grad.addColorStop(0, '#1e293b');
+                      grad.addColorStop(1, '#020617');
+                      ctx.fillStyle = grad;
+                      ctx.fillRect(0, 0, 1080, 1080);
+
+                      // Text
+                      ctx.fillStyle = '#10b981';
+                      ctx.font = 'bold 80px sans-serif';
+                      ctx.textAlign = 'center';
+                      ctx.fillText('MATCH RESULT', 540, 200);
+
+                      ctx.fillStyle = '#ffffff';
+                      ctx.font = 'bold 100px sans-serif';
+                      ctx.fillText(isP1Winner ? p1Name : p2Name, 540, 400);
+
+                      ctx.fillStyle = '#94a3b8';
+                      ctx.font = 'bold 60px sans-serif';
+                      ctx.fillText('DEF', 540, 520);
+
+                      ctx.fillStyle = '#ffffff';
+                      ctx.font = 'bold 100px sans-serif';
+                      ctx.fillText(isP1Winner ? p2Name : p1Name, 540, 660);
+
+                      // Score
+                      ctx.fillStyle = '#f59e0b';
+                      ctx.font = 'bold 120px sans-serif';
+                      ctx.fillText(displayScore, 540, 850);
+
+                      ctx.fillStyle = '#334155';
+                      ctx.font = 'bold 40px sans-serif';
+                      ctx.fillText('IISc Shuttlers', 540, 1000);
+
+                      canvas.toBlob(async (blob) => {
+                        if (blob) {
+                          const file = new File([blob], 'match-recap.png', { type: 'image/png' });
+                          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                            await navigator.share({
+                              title: 'IISc Shuttlers Match',
+                              text,
+                              url: shareUrl,
+                              files: [file]
+                            });
+                            toast.success("Match Recap shared!");
+                            return;
+                          }
+                        }
+                        fallbackShare();
+                      }, 'image/png');
+                      return;
                     }
+                    
+                    function fallbackShare() {
+                      if (Capacitor.isNativePlatform()) {
+                        Share.share({ title: 'IISc Shuttlers Match', text, url: shareUrl, dialogTitle: 'Share Match Result' });
+                      } else if (navigator.share) {
+                        navigator.share({ title: 'IISc Shuttlers Match', text, url: shareUrl });
+                      } else {
+                        navigator.clipboard.writeText(`${text}
+${shareUrl}`);
+                        toast.success("Match result copied to clipboard!");
+                      }
+                    }
+                    
                   } catch (err: any) {
                     if (err.message && !err.message.includes("cancel")) {
-                      navigator.clipboard.writeText(`${text}\n${shareUrl}`);
+                      navigator.clipboard.writeText(`${text}
+${shareUrl}`);
                       toast.success("Match result copied to clipboard!");
                     }
                   }
                 };
+
+
 
 
               return (
@@ -308,6 +396,7 @@ export default function Feed() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
                     key={match.id}
+                    id={`match-card-${match.id}`}
                     className={`bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm relative overflow-hidden group transition-shadow ${isMatchOfTheDay ? 'border-2 border-amber-400 shadow-amber-500/20 shadow-xl' : 'border border-slate-100 dark:border-slate-800 hover:shadow-md'}`}
                     drag="x"
                     dragConstraints={{ left: 0, right: 0 }}
@@ -463,7 +552,7 @@ export default function Feed() {
               );
             })}
             
-            {matches.length >= limitCount && (
+            {displayMatches.length >= limitCount && (
               <div className="flex justify-center mt-6 pt-4 pb-8">
                 <button 
                   onClick={() => setLimitCount(prev => prev + 30)}

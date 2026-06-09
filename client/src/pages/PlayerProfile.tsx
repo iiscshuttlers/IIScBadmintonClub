@@ -17,7 +17,7 @@ import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { isAdminEmail } from "@/lib/admin";
 import { MatchHistorySection } from "@/components/player-profile/MatchHistorySection";
 import { EquipmentArsenalSection, CareerHighlightsSection } from "@/components/player-profile/PlayerProfileSections";
-import { LoadingScreen, FormPill, CircularProgress, KPI, CategoryBar, Badges, ActivityHeatmap } from "@/components/player-profile/PlayerProfileWidgets";
+import { LoadingScreen, FormPill, CircularProgress, KPI, CategoryBar, Badges, ActivityHeatmap, DoublesSynergyWidget } from "@/components/player-profile/PlayerProfileWidgets";
 import { HeadToHeadWidget } from "@/components/player-profile/HeadToHeadWidget";
 import { Capacitor } from "@capacitor/core";
 import { Share } from "@capacitor/share";
@@ -1519,7 +1519,10 @@ export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: b
                           matches={liveMatches.filter(m => m.status === "confirmed")} 
                         />
                       )}
-                      <Badges matches={liveMatches.filter(m => m.status === "confirmed")} playerId={id!} />
+                      
+                        <Badges matches={liveMatches.filter(m => m.status === "confirmed")} playerId={id!} />
+                        <DoublesSynergyWidget matches={liveMatches.filter(m => m.status === "confirmed")} playerId={id!} allPlayers={allPlayers} />
+
                     <ActivityHeatmap matches={liveMatches.filter(m => m.status === "confirmed")} />
                   </div>
                 </div>

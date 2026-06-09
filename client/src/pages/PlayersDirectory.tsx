@@ -686,6 +686,11 @@ export default function PlayersDirectory() {
         {/* Recommended Opponents (Matchmaking) */}
         {!loading && ownProfile && activeTab === 'directory' && (
           (function() {
+            
+            const buddiesLooking = players.filter(p => 
+              (ownProfile as any).buddies?.includes(p.id) && p.status === 'looking'
+            );
+
             const recommended = players.filter(p => 
               p.id !== ownProfile.id && 
               p.status === 'looking' && 
