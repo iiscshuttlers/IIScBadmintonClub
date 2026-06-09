@@ -624,32 +624,8 @@ const courtUtil = useMemo(() => {
                       </span>
                     </button>
                     
-                    <button 
-                      onClick={async (e) => {
-                        e.preventDefault();
-                        const text = `🔥 Match Result: ${p1.full_name} vs ${p2.full_name} (${displayScore})! Check it out on IISc Shuttlers.`;
-                        const shareUrl = getBaseShareUrl() + '/feed';
-                        try {
-                          if (Capacitor.isNativePlatform()) {
-                            await Share.share({
-                              title: 'IISc Shuttlers Match',
-                              text,
-                              url: shareUrl,
-                              dialogTitle: 'Share Match Result',
-                            });
-                          } else if (navigator.share) {
-                            await navigator.share({ title: 'IISc Shuttlers Match', text, url: shareUrl });
-                          } else {
-                            await navigator.clipboard.writeText(`${text}\n${shareUrl}`);
-                            toast.success("Match result copied to clipboard!");
-                          }
-                        } catch (err: any) {
-                          if (err.message && !err.message.includes("cancel")) {
-                            navigator.clipboard.writeText(`${text}\n${shareUrl}`);
-                            toast.success("Match result copied to clipboard!");
-                          }
-                        }
-                      }}
+                    <button
+                      onClick={(e) => { e.preventDefault(); handleShare(match); }}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 ml-2"
                     >
                       <Share2 className="w-4 h-4" /> Share
