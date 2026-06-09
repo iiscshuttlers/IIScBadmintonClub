@@ -96,6 +96,7 @@ function UpdateDialog({ info, onDismiss }: { info: AppUpdateInfo; onDismiss: () 
 import Home from './pages/Home';
 import Facilities from './pages/Facilities';
 import Events from './pages/Events';
+import Features from './pages/Features';
 import Contact from './pages/Contact';
 import NotFound from './pages/NotFound';
 import Feed from './pages/Feed';
@@ -205,6 +206,7 @@ function AppRoutes() {
             <Route path="/events/:slug" component={TournamentDetail} />
 
             <Route path="/events" component={Events} />
+        <Route path="/features" component={Features} />
             <Route path="/invicta" component={Invicta} />
             <Route path="/winners" component={WinnersWall} />
 
