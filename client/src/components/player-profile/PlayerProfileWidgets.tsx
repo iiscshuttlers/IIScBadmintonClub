@@ -115,6 +115,22 @@ export const Badges = ({ matches, playerId }: { matches: any[]; playerId: string
     });
     if (giantSlayer) earned.push({ id: 'giant_slayer', name: 'Giant Slayer', desc: 'Beat an opponent 150+ ELO higher', icon: '⚔️', color: 'from-amber-400 to-orange-600' });
 
+      // Clean Sweep: Win where opponent score < 5
+      const cleanSweep = matches.some(m => {
+        if (m.winner_id !== playerId) return false;
+        // Parse match_score JSON to see if any set had opponent score < 5
+        if (m.match_score && Array.isArray(m.match_score)) {
+          return m.match_score.some((set: any) => {
+            const myScore = m.winner_id === m.player1_id ? set.p1_score : set.p2_score;
+            const oppScore = m.winner_id === m.player1_id ? set.p2_score : set.p1_score;
+            return myScore > oppScore && oppScore < 5;
+          });
+        }
+        return false;
+      });
+      if (cleanSweep) earned.push({ id: 'clean_sweep', name: 'Clean Sweep', desc: 'Kept an opponent under 5 points', icon: '??', color: 'from-cyan-400 to-blue-600' });
+
+
     // Night Owl: Played a match between 00:00 and 05:00
     const nightOwl = matches.some(m => {
       const h = new Date(m.created_at).getHours();
@@ -129,11 +145,27 @@ export const Badges = ({ matches, playerId }: { matches: any[]; playerId: string
     });
     if (earlyBird) earned.push({ id: 'early_bird', name: 'Early Bird', desc: 'Played before 8 AM', icon: '🌅', color: 'from-sky-400 to-blue-600' });
 
-    // Ironman: 5 matches in one day
-    const dates = matches.map(m => new Date(m.created_at).toDateString());
-    const counts = dates.reduce((acc: any, val) => { acc[val] = (acc[val] || 0) + 1; return acc; }, {});
-    const ironman = Object.values(counts).some((count: any) => count >= 5);
-    if (ironman) earned.push({ id: 'ironman', name: 'Ironman', desc: 'Played 5+ matches in one day', icon: '🦾', color: 'from-rose-400 to-red-600' });
+    
+      // Ironman: 5 consecutive days of logged matches
+      const dates = [...new Set(matches.map(m => new Date(m.created_at).toDateString()))]
+        .map(d => new Date(d).getTime())
+        .sort((a, b) => b - a);
+        
+      let maxConsecutive = 1;
+      let currentConsecutive = 1;
+      const oneDay = 24 * 60 * 60 * 1000;
+      
+      for (let i = 0; i < dates.length - 1; i++) {
+        if (dates[i] - dates[i+1] <= oneDay + 1000 * 60 * 60) {
+          currentConsecutive++;
+          if (currentConsecutive > maxConsecutive) maxConsecutive = currentConsecutive;
+        } else {
+          currentConsecutive = 1;
+        }
+      }
+      
+      if (maxConsecutive >= 5) earned.push({ id: 'ironman', name: 'Ironman', desc: '5 consecutive days of logged matches', icon: '??', color: 'from-rose-400 to-red-600' });
+
 
     // Streaker: current or historical streak >= 5 (simplification: if they won 5 of last 5)
     let streak = 0;

@@ -15,6 +15,7 @@ export function HeadToHeadWidget({ currentUserId, targetUserId, targetUserName, 
     let losses = 0;
     let streak = 0;
     let isWinStreak = true;
+    let pointDiff = 0;
 
     // Filter matches between these two specific players
     const h2hMatches = matches.filter(m => {
@@ -35,6 +36,19 @@ export function HeadToHeadWidget({ currentUserId, targetUserId, targetUserName, 
 
       if (myTeamWon) wins++;
       else losses++;
+
+      // Calculate Point Differential
+      if (m.match_score && Array.isArray(m.match_score)) {
+        const isMyTeam1 = m.player1_id === currentUserId || m.team1_partner_id === currentUserId;
+        m.match_score.forEach((set: any) => {
+          if (isMyTeam1) {
+            pointDiff += (set.p1_score || 0) - (set.p2_score || 0);
+          } else {
+            pointDiff += (set.p2_score || 0) - (set.p1_score || 0);
+          }
+        });
+      }
+
     });
 
     // Calculate Streak
@@ -54,7 +68,7 @@ export function HeadToHeadWidget({ currentUserId, targetUserId, targetUserName, 
       }
     }
 
-    return { wins, losses, streak, isWinStreak, total: wins + losses };
+    return { wins, losses, streak, isWinStreak, total: wins + losses, pointDiff };
   }, [currentUserId, targetUserId, matches]);
 
   if (stats.total === 0) return null; // No history
@@ -96,6 +110,15 @@ export function HeadToHeadWidget({ currentUserId, targetUserId, targetUserName, 
                 <TrendingDown className="w-5 h-5" /> L{stats.streak}
               </span>
             )}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 relative z-10 mt-4">
+        <div>
+          <div className="text-xs font-bold text-indigo-600/70 dark:text-indigo-400/70 uppercase mb-1">Point Differential</div>
+          <div className={`text-2xl font-black flex items-end gap-1 ${stats.pointDiff > 0 ? 'text-emerald-600 dark:text-emerald-400' : stats.pointDiff < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-600 dark:text-slate-400'}`}>
+            {stats.pointDiff > 0 ? '+' : ''}{stats.pointDiff}
           </div>
         </div>
       </div>

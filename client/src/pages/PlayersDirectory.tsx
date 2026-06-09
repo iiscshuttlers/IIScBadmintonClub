@@ -689,7 +689,7 @@ export default function PlayersDirectory() {
             const recommended = players.filter(p => 
               p.id !== ownProfile.id && 
               p.status === 'looking' && 
-              Math.abs((p.elo_rating || 1200) - (ownProfile.elo_rating || 1200)) <= 200
+              Math.abs((p.elo_rating || 1200) - (ownProfile.elo_rating || 1200)) <= 150
             ).slice(0, 4);
             
             if (recommended.length === 0) return null;
