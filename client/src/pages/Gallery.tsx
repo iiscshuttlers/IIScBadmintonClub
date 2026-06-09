@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Badge } from '@/components/ui/badge';
 import { X, Youtube, PlayCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 import { fetchSiteData } from '@/lib/siteData';
 import { SocialCTA } from '@/components/SocialCTA';
+import { VideoPlayerModal } from '@/components/VideoPlayerModal';
 
 // ─── Lazy Image Component ───────────────────────────────────────────────────
 function LazyImage({
@@ -54,7 +54,7 @@ export default function Gallery() {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [videos, setVideos] = useState<any[]>([]);
-  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
+  const [activeVideo, setActiveVideo] = useState<any | null>(null);
 
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
@@ -334,39 +334,27 @@ export default function Gallery() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {videos.map((video) => (
-              <div key={video.id} className="group bg-white dark:bg-slate-800 rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl border border-slate-100 dark:border-slate-700 transition duration-500">
+              <button
+                key={video.id}
+                className="group text-left bg-white dark:bg-slate-800 rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl border border-slate-100 dark:border-slate-700 transition duration-500"
+                onClick={() => setActiveVideo(video)}
+              >
                 <div className="relative aspect-video">
-                  {playingVideoId === video.videoId ? (
-                    <iframe
-                      src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1&rel=0`}
-                      title={video.title}
-                      className="w-full h-full"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  ) : (
-                    <button
-                      className="block w-full h-full group/video relative"
-                      onClick={() => setPlayingVideoId(video.videoId)}
-                      aria-label={`Play ${video.title}`}
-                    >
-                      <img
-                        src={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`}
-                        alt={video.title}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover/video:scale-105"
-                        onError={(e) => {
-                          if (!e.currentTarget.src.includes('mqdefault')) {
-                            e.currentTarget.src = `https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg`;
-                          }
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-black/20 group-hover/video:bg-black/10 transition-colors flex items-center justify-center">
-                        <div className="w-16 h-16 bg-red-600/90 text-white rounded-full flex items-center justify-center backdrop-blur-sm shadow-lg group-hover/video:scale-110 group-hover/video:bg-red-600 transition-all">
-                          <PlayCircle className="w-8 h-8" fill="currentColor" stroke="none" />
-                        </div>
-                      </div>
-                    </button>
-                  )}
+                  <img
+                    src={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`}
+                    alt={video.title}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    onError={(e) => {
+                      if (!e.currentTarget.src.includes('mqdefault')) {
+                        e.currentTarget.src = `https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg`;
+                      }
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                    <div className="w-16 h-16 bg-red-600/90 text-white rounded-full flex items-center justify-center backdrop-blur-sm shadow-lg group-hover:scale-110 group-hover:bg-red-600 transition-all duration-300">
+                      <PlayCircle className="w-8 h-8" fill="currentColor" stroke="none" />
+                    </div>
+                  </div>
                 </div>
                 <div className="p-7">
                   <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-xs uppercase tracking-widest mb-3">
@@ -376,8 +364,13 @@ export default function Gallery() {
                   <h3 className="text-xl font-bold text-blue-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                     {video.title}
                   </h3>
+                  {(video.chapters?.length ?? 0) > 0 && (
+                    <p className="text-gray-400 dark:text-slate-500 text-xs mt-2">
+                      {video.chapters.length} chapter{video.chapters.length !== 1 ? 's' : ''}
+                    </p>
+                  )}
                 </div>
-              </div>
+              </button>
             ))}
           </div>
 
@@ -471,6 +464,14 @@ export default function Gallery() {
             )}
           </div>
         </div>
+      )}
+
+      {/* Video player modal */}
+      {activeVideo && (
+        <VideoPlayerModal
+          video={activeVideo}
+          onClose={() => setActiveVideo(null)}
+        />
       )}
     </div>
   );

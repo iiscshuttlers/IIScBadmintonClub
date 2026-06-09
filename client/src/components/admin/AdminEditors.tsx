@@ -7,7 +7,8 @@ import { supabase } from "@/lib/supabase";
 export type Holiday = { date: string; name: string };
 export type Announcement = { title: string; date?: string; startDate?: string; endDate?: string; category: string; priority?: string; location?: string; contact?: string; content: string; };
 export type EventItem = { date: string; endDate?: string; title: string; link: string; registrationDeadline?: string };
-export type VideoItem = { id: string; title: string; videoId: string; category: string };
+export type Chapter = { time: number; title: string };
+export type VideoItem = { id: string; title: string; videoId: string; category: string; chapters?: Chapter[] };
 export type Player = { id: string; full_name: string; email?: string; department?: string; is_approved: boolean; created_at: string; stats?: any; iisc_email?: string; contact_number?: string; sr_number?: string; };
 export type SiteConfig = {
   stats: { members: string; tournaments: string; courts: string; trophies: string; };
@@ -223,8 +224,24 @@ export function EventEditor({ data, onChange }: { data: EventItem[]; onChange: (
 /* ================================================================ */
 /*  Video Editor                                                     */
 /* ================================================================ */
+// Parse "M:SS" or plain seconds string → number of seconds
+function parseTime(val: string): number {
+  const trimmed = val.trim();
+  if (trimmed.includes(":")) {
+    const [m, s] = trimmed.split(":").map(Number);
+    return (m || 0) * 60 + (s || 0);
+  }
+  return Math.max(0, parseInt(trimmed, 10) || 0);
+}
+
+function fmtTime(s: number) {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m}:${sec.toString().padStart(2, "0")}`;
+}
+
 export function VideoEditor({ data, onChange }: { data: VideoItem[]; onChange: (d: VideoItem[]) => void }) {
-  const add    = () => onChange([...data, { id: `v${Date.now()}`, title: "", videoId: "", category: "" }]);
+  const add    = () => onChange([...data, { id: `v${Date.now()}`, title: "", videoId: "", category: "", chapters: [] }]);
   const remove = (i: number) => onChange(data.filter((_, idx) => idx !== i));
   const update = (i: number, field: string, val: string) => {
     const next = [...data]; next[i] = { ...next[i], [field]: val }; onChange(next);
@@ -233,21 +250,76 @@ export function VideoEditor({ data, onChange }: { data: VideoItem[]; onChange: (
     const m = input.match(/(?:youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]{11})/);
     return m ? m[1] : input.trim();
   };
+
+  const addChapter = (i: number) => {
+    const chapters = [...(data[i].chapters ?? []), { time: 0, title: "" }];
+    const next = [...data]; next[i] = { ...next[i], chapters }; onChange(next);
+  };
+  const removeChapter = (i: number, ci: number) => {
+    const chapters = (data[i].chapters ?? []).filter((_, idx) => idx !== ci);
+    const next = [...data]; next[i] = { ...next[i], chapters }; onChange(next);
+  };
+  const updateChapter = (i: number, ci: number, field: "time" | "title", val: string) => {
+    const chapters = [...(data[i].chapters ?? [])];
+    chapters[ci] = { ...chapters[ci], [field]: field === "time" ? parseTime(val) : val };
+    chapters.sort((a, b) => a.time - b.time);
+    const next = [...data]; next[i] = { ...next[i], chapters }; onChange(next);
+  };
+
   return (
     <div className="space-y-4">
       {data.map((v, i) => (
-        <div key={i} className={`${cardCls} flex flex-col lg:flex-row gap-4`}>
-          {v.videoId && (
-            <div className="w-full lg:w-48 aspect-video rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0">
-              <img src={`https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg`} alt="" className="w-full h-full object-cover" />
+        <div key={i} className={`${cardCls} flex flex-col gap-4`}>
+          <div className="flex flex-col lg:flex-row gap-4">
+            {v.videoId && (
+              <div className="w-full lg:w-48 aspect-video rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0">
+                <img src={`https://img.youtube.com/vi/${v.videoId}/mqdefault.jpg`} alt="" className="w-full h-full object-cover" />
+              </div>
+            )}
+            <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="sm:col-span-2"><label className={labelCls}>Title</label><input value={v.title} onChange={e => update(i, "title", e.target.value)} className={inputCls} /></div>
+              <div><label className={labelCls}>YouTube URL or ID</label><input value={v.videoId} onChange={e => update(i, "videoId", parseVideoId(e.target.value))} className={inputCls} placeholder="Paste YouTube URL or video ID" /></div>
+              <div className="flex items-end gap-2">
+                <div className="flex-1"><label className={labelCls}>Category</label><input value={v.category} onChange={e => update(i, "category", e.target.value)} className={inputCls} placeholder="e.g. Farewell Matches 2026" /></div>
+                <button onClick={() => remove(i)} className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition mb-0.5"><Trash2 className="w-4 h-4" /></button>
+              </div>
             </div>
-          )}
-          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="sm:col-span-2"><label className={labelCls}>Title</label><input value={v.title} onChange={e => update(i, "title", e.target.value)} className={inputCls} /></div>
-            <div><label className={labelCls}>YouTube URL or ID</label><input value={v.videoId} onChange={e => update(i, "videoId", parseVideoId(e.target.value))} className={inputCls} placeholder="Paste YouTube URL or video ID" /></div>
-            <div className="flex items-end gap-2">
-              <div className="flex-1"><label className={labelCls}>Category</label><input value={v.category} onChange={e => update(i, "category", e.target.value)} className={inputCls} placeholder="e.g. Farewell Matches 2026" /></div>
-              <button onClick={() => remove(i)} className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition mb-0.5"><Trash2 className="w-4 h-4" /></button>
+          </div>
+
+          {/* Chapter editor */}
+          <div className="border-t border-slate-200 dark:border-slate-700 pt-3">
+            <div className="flex items-center justify-between mb-2">
+              <label className={labelCls + " mb-0"}>Chapters <span className="text-slate-400 font-normal">(optional — mark key moments)</span></label>
+              <button
+                onClick={() => addChapter(i)}
+                className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 transition font-semibold"
+              >
+                <Plus className="w-3 h-3" /> Add chapter
+              </button>
+            </div>
+            {(v.chapters ?? []).length === 0 && (
+              <p className="text-xs text-slate-400 italic">No chapters yet.</p>
+            )}
+            <div className="space-y-2">
+              {(v.chapters ?? []).map((ch, ci) => (
+                <div key={ci} className="flex items-center gap-2">
+                  <input
+                    className={inputCls + " w-20 shrink-0 font-mono text-xs"}
+                    placeholder="0:00"
+                    defaultValue={fmtTime(ch.time)}
+                    onBlur={e => updateChapter(i, ci, "time", e.target.value)}
+                  />
+                  <input
+                    className={inputCls + " flex-1 text-sm"}
+                    placeholder="Chapter title"
+                    value={ch.title}
+                    onChange={e => updateChapter(i, ci, "title", e.target.value)}
+                  />
+                  <button onClick={() => removeChapter(i, ci)} className="p-1.5 rounded-lg text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition shrink-0">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         </div>
