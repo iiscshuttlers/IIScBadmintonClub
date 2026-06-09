@@ -1,0 +1,94 @@
+import re
+
+with open("client/src/pages/PlayerProfile.tsx", "r", encoding="utf-8") as f:
+    content = f.read()
+
+# Replace handleToggleFollow
+old_follow = """    const handleToggleFollow = async () => {
+      if (!player?.userId) return;
+      const newFollowing = !isFollowing;
+      setIsFollowing(newFollowing);
+      try {
+        await supabase.rpc('toggle_follow', { p_target_id: player.userId });
+        toast.success(newFollowing ? `Followed ${player.fullName}!` : `Unfollowed ${player.fullName}.`);
+      } catch (e) {
+        console.error(e);
+        setIsFollowing(!newFollowing);
+      }
+    };"""
+
+new_follow = """    const handleToggleFollow = async () => {
+      if (!player?.userId || !currentUser?.id) return;
+      const newFollowing = !isFollowing;
+      setIsFollowing(newFollowing);
+      try {
+        const { data: myProfile } = await supabase.from('players').select('following').eq('user_id', currentUser.id).single();
+        let currentFollowing = myProfile?.following || [];
+        if (newFollowing && !currentFollowing.includes(player.userId)) {
+          currentFollowing.push(player.userId);
+        } else if (!newFollowing) {
+          currentFollowing = currentFollowing.filter((id: string) => id !== player.userId);
+        }
+        await supabase.from('players').update({ following: currentFollowing }).eq('user_id', currentUser.id);
+        toast.success(newFollowing ? `Followed ${player.fullName}!` : `Unfollowed ${player.fullName}.`);
+      } catch (e) {
+        console.error(e);
+        setIsFollowing(!newFollowing);
+        // Fallback to RPC if direct update fails
+        try {
+           await supabase.rpc('toggle_follow', { p_target_id: player.userId });
+           setIsFollowing(newFollowing);
+        } catch(err) {
+           console.error("RPC fallback failed too", err);
+        }
+      }
+    };"""
+
+content = content.replace(old_follow, new_follow)
+
+# Replace handleToggleBuddy
+old_buddy = """    const handleToggleBuddy = async () => {
+      if (!player?.userId) return;
+      const newBuddy = !isBuddy;
+      setIsBuddy(newBuddy);
+      try {
+        await supabase.rpc('toggle_buddy', { p_target_id: player.userId });
+        toast.success(newBuddy ? `Added ${player.fullName} as Buddy!` : `Removed ${player.fullName} from Buddies.`);
+      } catch (e) {
+        console.error(e);
+        setIsBuddy(!newBuddy);
+      }
+    };"""
+
+new_buddy = """    const handleToggleBuddy = async () => {
+      if (!player?.userId || !currentUser?.id) return;
+      const newBuddy = !isBuddy;
+      setIsBuddy(newBuddy);
+      try {
+        const { data: myProfile } = await supabase.from('players').select('buddies').eq('user_id', currentUser.id).single();
+        let currentBuddies = myProfile?.buddies || [];
+        if (newBuddy && !currentBuddies.includes(player.userId)) {
+          currentBuddies.push(player.userId);
+        } else if (!newBuddy) {
+          currentBuddies = currentBuddies.filter((id: string) => id !== player.userId);
+        }
+        await supabase.from('players').update({ buddies: currentBuddies }).eq('user_id', currentUser.id);
+        toast.success(newBuddy ? `Added ${player.fullName} as Buddy!` : `Removed ${player.fullName} from Buddies.`);
+      } catch (e) {
+        console.error(e);
+        setIsBuddy(!newBuddy);
+        // Fallback to RPC if direct update fails
+        try {
+           await supabase.rpc('toggle_buddy', { p_target_id: player.userId });
+           setIsBuddy(newBuddy);
+        } catch(err) {
+           console.error("RPC fallback failed too", err);
+        }
+      }
+    };"""
+
+content = content.replace(old_buddy, new_buddy)
+
+with open("client/src/pages/PlayerProfile.tsx", "w", encoding="utf-8") as f:
+    f.write(content)
+print("Social sync updated.")

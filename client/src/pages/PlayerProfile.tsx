@@ -819,7 +819,7 @@ export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: b
                 <button onClick={handleAdminDelete}
                   className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 transition-all"
                   title="Admin: Delete player">
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-5 h-5" />
                 </button>
               </>
             )}
@@ -833,7 +833,7 @@ export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: b
                 <button onClick={handleSelfDelete}
                   className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 transition-all"
                   title="Delete profile">
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-5 h-5" />
                 </button>
                 <button
                   onClick={async () => { if (confirm("Sign out?")) { await supabase.auth.signOut(); setLocation('/join'); } }}
@@ -848,16 +848,16 @@ export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: b
               {currentUser && player && currentUser.id !== player.userId && ownPlayerProfile && (
                 <>
                   <button onClick={() => setIsLogMatchOpen(true)}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:bg-blue-500/20 transition-all text-xs font-black uppercase tracking-wider">
-                    <Swords className="w-3.5 h-3.5" /><span className="hidden sm:inline">Log Match</span>
+                    className="flex items-center justify-center gap-1.5 p-2.5 sm:px-4 sm:py-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:bg-blue-500/20 transition-all text-xs font-black uppercase tracking-wider">
+                    <Swords className="w-5 h-5" /><span className="hidden sm:inline">Log Match</span>
                   </button>
                   <button onClick={handleToggleFollow}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-400 hover:bg-violet-500/20 transition-all text-xs font-black uppercase tracking-wider">
-                    <UserPlus className="w-3.5 h-3.5" /><span className="hidden sm:inline">{isFollowing ? 'Unfollow' : 'Follow'}</span>
+                    className="flex items-center justify-center gap-1.5 p-2.5 sm:px-4 sm:py-2 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-400 hover:bg-violet-500/20 transition-all text-xs font-black uppercase tracking-wider">
+                    <UserPlus className="w-5 h-5" /><span className="hidden sm:inline">{isFollowing ? 'Unfollow' : 'Follow'}</span>
                   </button>
                   <button onClick={handleToggleBuddy}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-pink-500/10 border border-pink-500/20 text-pink-400 hover:bg-pink-500/20 transition-all text-xs font-black uppercase tracking-wider">
-                    <Heart className="w-3.5 h-3.5" /><span className="hidden sm:inline">{isBuddy ? 'Unbuddy' : 'Add Buddy'}</span>
+                    className="flex items-center justify-center gap-1.5 p-2.5 sm:px-4 sm:py-2 rounded-xl bg-pink-500/10 border border-pink-500/20 text-pink-400 hover:bg-pink-500/20 transition-all text-xs font-black uppercase tracking-wider">
+                    <Heart className="w-5 h-5" /><span className="hidden sm:inline">{isBuddy ? 'Unbuddy' : 'Add Buddy'}</span>
                   </button>
                 </>
               )}
@@ -866,7 +866,7 @@ export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: b
             <button onClick={handleShare}
               className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white/30 hover:text-white/70 hover:bg-white/10 transition-all"
               title="Share">
-              <Share2 className="w-4 h-4" />
+              <Share2 className="w-5 h-5" />
             </button>
           </div>
         </nav>
