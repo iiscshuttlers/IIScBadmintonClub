@@ -4,8 +4,9 @@ import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import {
   Search, SlidersHorizontal, Users, Trophy, Sword, Sparkles,
-  UserCircle, LogIn, PlusCircle, Pencil, ChevronRight, X, Trash2, Share2, ArrowUpDown
+  UserCircle, LogIn, PlusCircle, Pencil, ChevronRight, X, Trash2, Share2, ArrowUpDown, Zap
 } from "lucide-react";
+import { toast } from "sonner";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { usePageMeta } from "@/hooks/usePageMeta";
@@ -25,7 +26,7 @@ const itemVariants: Variants = {
 };
 
 const PLAYER_SELECT =
-  "id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating, win_loss_record, recent_form";
+  "id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating, win_loss_record, recent_form, is_looking_to_play, buddies";
 const PLAYERS_CACHE_KEY = "iisc_players_directory_cache_v1";
 const REQUEST_TIMEOUT_MS = 15_000;
 const MAX_FETCH_RETRIES = 1;
@@ -284,6 +285,9 @@ export default function PlayersDirectory() {
   const otherPlayers = players.filter((p) => p.user_id !== session?.user?.id);
   const allDepartments = Array.from(new Set(players.map(p => p.department).filter(Boolean))).sort();
 
+  // IDs of own buddies for hoisting
+  const myBuddyIds = new Set<string>((ownProfile as any)?.buddies || []);
+
   const filteredPlayers = otherPlayers
     .filter((player) => {
       const q = searchQuery.toLowerCase();
@@ -296,6 +300,12 @@ export default function PlayersDirectory() {
       return matchesSearch && matchesLevel && matchesDept;
     })
     .sort((a, b) => {
+      // Hoist Looking-to-Play buddies above everyone else
+      const aIsLtpBuddy = (a as any).is_looking_to_play && myBuddyIds.has(a.id);
+      const bIsLtpBuddy = (b as any).is_looking_to_play && myBuddyIds.has(b.id);
+      if (aIsLtpBuddy && !bIsLtpBuddy) return -1;
+      if (!aIsLtpBuddy && bIsLtpBuddy) return 1;
+
       if (sortBy === "elo")    return (b.elo_rating ?? 0) - (a.elo_rating ?? 0);
       if (sortBy === "winpct") return (parseWinPct(b.win_loss_record) ?? 0) - (parseWinPct(a.win_loss_record) ?? 0);
       if (sortBy === "department") return (a.department || "").localeCompare(b.department || "");
@@ -309,6 +319,22 @@ export default function PlayersDirectory() {
       await supabase.auth.signOut();
       setSession(null);
       setOwnProfile(null);
+    }
+  };
+
+  const handleToggleLtp = async () => {
+    if (!ownProfile?.id) return;
+    const next = !(ownProfile as any).is_looking_to_play;
+    setOwnProfile((prev: any) => prev ? { ...prev, is_looking_to_play: next } : prev);
+    const { error } = await supabase
+      .from('players')
+      .update({ is_looking_to_play: next })
+      .eq('id', ownProfile.id);
+    if (error) {
+      setOwnProfile((prev: any) => prev ? { ...prev, is_looking_to_play: !next } : prev);
+      toast.error('Could not update status');
+    } else {
+      toast.success(next ? 'You are now looking to play! Buddies can see your status.' : 'Status cleared.');
     }
   };
 
@@ -422,6 +448,18 @@ export default function PlayersDirectory() {
 
             {/* Action buttons */}
             <div className="flex flex-wrap gap-3 shrink-0">
+              <button
+                onClick={handleToggleLtp}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition border shadow-sm ${
+                  (ownProfile as any).is_looking_to_play
+                    ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700 shadow-emerald-100/50'
+                    : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-300 hover:text-emerald-600'
+                }`}
+                title="Let buddies know you're available to play"
+              >
+                <Zap className="w-4 h-4" />
+                {(ownProfile as any).is_looking_to_play ? 'Looking to Play' : 'Set LTP'}
+              </button>
               <button
                 onClick={() => setLocation(`/player/${ownProfile.id}/edit`)}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-md shadow-emerald-500/25 transition"

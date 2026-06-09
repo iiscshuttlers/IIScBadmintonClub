@@ -58,8 +58,8 @@ export default function Feed() {
   
   const [feedFilter, setFeedFilter] = useState<"global" | "following">("global");
   const followingIds = useMemo(() => {
-    return Array.isArray((session?.user as any)?.following) ? (session.user as any).following : [];
-  }, [(session?.user as any)?.following]);
+    return Array.isArray(ownProfile?.following) ? ownProfile.following : [];
+  }, [ownProfile?.following]);
 
   const displayMatches = useMemo(() => {
     if (feedFilter === "global") return matches;
@@ -117,12 +117,12 @@ const courtUtil = useMemo(() => {
         if (eloChange && !isNaN(eloChange)) playerActivity[pid].eloClimb += eloChange;
       };
       
-      if (m.player1) addPlayer(m.player1.id, m.player1.full_name, m.p1_elo_change || 0);
-      if (m.player2) addPlayer(m.player2.id, m.player2.full_name, m.p2_elo_change || 0);
+      if (m.player1) addPlayer(m.player1.id, m.player1.full_name, m.elo_change_p1 || 0);
+      if (m.player2) addPlayer(m.player2.id, m.player2.full_name, m.elo_change_p2 || 0);
       
       // Upset
       const isP1Winner = m.winner_id === m.player1?.id;
-      if (m.p1_elo_change !== undefined && m.p2_elo_change !== undefined && m.player1 && m.player2) {
+      if (m.elo_change_p1 !== undefined && m.elo_change_p2 !== undefined && m.player1 && m.player2) {
         const eloDiff = m.player1.elo_rating - m.player2.elo_rating;
         if ((isP1Winner && eloDiff < -50) || (!isP1Winner && eloDiff > 50)) {
           const diff = Math.abs(eloDiff);
@@ -244,7 +244,7 @@ const courtUtil = useMemo(() => {
               
               // Determine Elo difference before match
               let upsetDiff = 0;
-              if (match.p1_elo_change !== undefined && match.p2_elo_change !== undefined) {
+              if (match.elo_change_p1 !== undefined && match.elo_change_p2 !== undefined) {
                 // If the player who had lower ELO won
                 const eloDiff = p1.elo_rating - p2.elo_rating;
                 if ((isP1Winner && eloDiff < -150) || (!isP1Winner && eloDiff > 150)) {
@@ -287,103 +287,199 @@ const courtUtil = useMemo(() => {
                 
                 
                 const handleShare = async (match: any) => {
-                  const p1Name = match.player1?.full_name || 'Player 1';
-                  const p2Name = match.player2?.full_name || 'Player 2';
+                  const p1 = match.player1;
+                  const p2 = match.player2;
+                  const p1Name = p1?.full_name || 'Player 1';
+                  const p2Name = p2?.full_name || 'Player 2';
                   const isP1Winner = match.winner_id === match.player1_id;
-                  
-                  // Score parsing
-                  let displayScore = "N/A";
-                  if (match.score) {
-                    displayScore = match.score;
-                  } else if (match.match_score) {
-                    displayScore = match.match_score.map((set: any) => `${set.p1_score}-${set.p2_score}`).join(', ');
-                  }
-                  
+                  const winnerName = isP1Winner ? p1Name : p2Name;
+                  const loserName = isP1Winner ? p2Name : p1Name;
+                  const winnerAvatar = isP1Winner ? p1?.avatar_url : p2?.avatar_url;
+                  const loserAvatar = isP1Winner ? p2?.avatar_url : p1?.avatar_url;
+                  const eloChange = isP1Winner
+                    ? (match.elo_change_p1 ? `+${match.elo_change_p1}` : '')
+                    : (match.elo_change_p2 ? `+${match.elo_change_p2}` : '');
+
+                  // Score: strip out video URL suffix if present
+                  let displayScore = match.score
+                    ? match.score.split(' | ')[0]
+                    : 'N/A';
+
                   const shareUrl = `${getBaseShareUrl()}/feed?match=${match.id}`;
-                  const text = `?? Match Result: ${isP1Winner ? p1Name : p2Name} vs ${isP1Winner ? p2Name : p1Name} (${displayScore})! Check it out on IISc Shuttlers.`;
-                  
-                  try {
-                    // Generate Native Canvas Image Recap
-                    const canvas = document.createElement('canvas');
-                    canvas.width = 1080;
-                    canvas.height = 1080;
-                    const ctx = canvas.getContext('2d');
-                    if (ctx) {
-                      // Background
-                      ctx.fillStyle = '#0f172a';
-                      ctx.fillRect(0, 0, 1080, 1080);
-                      
-                      // Gradient
-                      const grad = ctx.createLinearGradient(0, 0, 1080, 1080);
-                      grad.addColorStop(0, '#1e293b');
-                      grad.addColorStop(1, '#020617');
-                      ctx.fillStyle = grad;
-                      ctx.fillRect(0, 0, 1080, 1080);
+                  const text = `🏸 Match Result: ${winnerName} def. ${loserName} (${displayScore})! Check it out on IISc Shuttlers.`;
 
-                      // Text
-                      ctx.fillStyle = '#10b981';
-                      ctx.font = 'bold 80px sans-serif';
+                  // Helper to load an image via canvas (bypasses CORS for cross-origin avatars)
+                  const loadImg = (url: string): Promise<HTMLImageElement | null> =>
+                    new Promise((resolve) => {
+                      if (!url) return resolve(null);
+                      const img = new Image();
+                      img.crossOrigin = 'anonymous';
+                      img.onload = () => resolve(img);
+                      img.onerror = () => resolve(null);
+                      img.src = url;
+                    });
+
+                  // Draw a circle-clipped avatar at (cx, cy) with radius r
+                  const drawCircleAvatar = (
+                    ctx: CanvasRenderingContext2D,
+                    img: HTMLImageElement | null,
+                    cx: number, cy: number, r: number,
+                    initial: string,
+                    bgColor: string
+                  ) => {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                    ctx.clip();
+                    if (img) {
+                      ctx.drawImage(img, cx - r, cy - r, r * 2, r * 2);
+                    } else {
+                      ctx.fillStyle = bgColor;
+                      ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+                      ctx.fillStyle = '#ffffff';
+                      ctx.font = `bold ${r}px sans-serif`;
                       ctx.textAlign = 'center';
-                      ctx.fillText('MATCH RESULT', 540, 200);
-
-                      ctx.fillStyle = '#ffffff';
-                      ctx.font = 'bold 100px sans-serif';
-                      ctx.fillText(isP1Winner ? p1Name : p2Name, 540, 400);
-
-                      ctx.fillStyle = '#94a3b8';
-                      ctx.font = 'bold 60px sans-serif';
-                      ctx.fillText('DEF', 540, 520);
-
-                      ctx.fillStyle = '#ffffff';
-                      ctx.font = 'bold 100px sans-serif';
-                      ctx.fillText(isP1Winner ? p2Name : p1Name, 540, 660);
-
-                      // Score
-                      ctx.fillStyle = '#f59e0b';
-                      ctx.font = 'bold 120px sans-serif';
-                      ctx.fillText(displayScore, 540, 850);
-
-                      ctx.fillStyle = '#334155';
-                      ctx.font = 'bold 40px sans-serif';
-                      ctx.fillText('IISc Shuttlers', 540, 1000);
-
-                      canvas.toBlob(async (blob) => {
-                        if (blob) {
-                          const file = new File([blob], 'match-recap.png', { type: 'image/png' });
-                          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                            await navigator.share({
-                              title: 'IISc Shuttlers Match',
-                              text,
-                              url: shareUrl,
-                              files: [file]
-                            });
-                            toast.success("Match Recap shared!");
-                            return;
-                          }
-                        }
-                        fallbackShare();
-                      }, 'image/png');
-                      return;
+                      ctx.textBaseline = 'middle';
+                      ctx.fillText(initial.toUpperCase(), cx, cy);
                     }
-                    
-                    function fallbackShare() {
-                      if (Capacitor.isNativePlatform()) {
-                        Share.share({ title: 'IISc Shuttlers Match', text, url: shareUrl, dialogTitle: 'Share Match Result' });
-                      } else if (navigator.share) {
-                        navigator.share({ title: 'IISc Shuttlers Match', text, url: shareUrl });
-                      } else {
-                        navigator.clipboard.writeText(`${text}
-${shareUrl}`);
-                        toast.success("Match result copied to clipboard!");
-                      }
-                    }
-                    
-                  } catch (err: any) {
-                    if (err.message && !err.message.includes("cancel")) {
-                      navigator.clipboard.writeText(`${text}
-${shareUrl}`);
+                    ctx.restore();
+                    // Ring
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                    ctx.strokeStyle = bgColor;
+                    ctx.lineWidth = 6;
+                    ctx.stroke();
+                  };
+
+                  // Truncate long names to fit canvas
+                  const truncate = (ctx: CanvasRenderingContext2D, name: string, maxW: number) => {
+                    if (ctx.measureText(name).width <= maxW) return name;
+                    let n = name;
+                    while (ctx.measureText(n + '…').width > maxW && n.length > 1) n = n.slice(0, -1);
+                    return n + '…';
+                  };
+
+                  const fallbackShare = () => {
+                    if (Capacitor.isNativePlatform()) {
+                      Share.share({ title: 'IISc Shuttlers Match', text, url: shareUrl, dialogTitle: 'Share Match Result' });
+                    } else if (navigator.share) {
+                      navigator.share({ title: 'IISc Shuttlers Match', text, url: shareUrl });
+                    } else {
+                      navigator.clipboard.writeText(`${text}\n${shareUrl}`);
                       toast.success("Match result copied to clipboard!");
                     }
+                  };
+
+                  try {
+                    const [winImg, loseImg] = await Promise.all([
+                      loadImg(winnerAvatar),
+                      loadImg(loserAvatar),
+                    ]);
+
+                    const W = 1080, H = 1080;
+                    const canvas = document.createElement('canvas');
+                    canvas.width = W;
+                    canvas.height = H;
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) { fallbackShare(); return; }
+
+                    // ── Background ──
+                    const bg = ctx.createLinearGradient(0, 0, W, H);
+                    bg.addColorStop(0, '#0f172a');
+                    bg.addColorStop(1, '#020617');
+                    ctx.fillStyle = bg;
+                    ctx.fillRect(0, 0, W, H);
+
+                    // Subtle radial glow behind winner avatar
+                    const glow = ctx.createRadialGradient(270, 380, 0, 270, 380, 320);
+                    glow.addColorStop(0, 'rgba(16,185,129,0.18)');
+                    glow.addColorStop(1, 'rgba(16,185,129,0)');
+                    ctx.fillStyle = glow;
+                    ctx.fillRect(0, 0, W, H);
+
+                    // ── Club badge / header ──
+                    ctx.fillStyle = '#10b981';
+                    ctx.font = 'bold 44px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'alphabetic';
+                    ctx.fillText('🏸 IISc Shuttlers', W / 2, 90);
+
+                    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+                    ctx.fillRect(120, 108, W - 240, 3);
+
+                    ctx.fillStyle = '#64748b';
+                    ctx.font = 'bold 32px sans-serif';
+                    ctx.fillText('MATCH RESULT', W / 2, 168);
+
+                    // ── Winner section ──
+                    drawCircleAvatar(ctx, winImg, 270, 360, 170, winnerName[0], '#10b981');
+
+                    // Winner crown
+                    ctx.font = '72px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('🏆', 270, 175);
+
+                    ctx.fillStyle = '#10b981';
+                    ctx.font = 'bold 32px sans-serif';
+                    ctx.fillText('WINNER', 270, 570);
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 56px sans-serif';
+                    ctx.fillText(truncate(ctx, winnerName, 480), 270, 636);
+
+                    if (eloChange) {
+                      ctx.fillStyle = '#10b981';
+                      ctx.font = 'bold 36px sans-serif';
+                      ctx.fillText(`${eloChange} ELO`, 270, 690);
+                    }
+
+                    // ── Score divider ──
+                    const scoreY = 760;
+                    ctx.fillStyle = '#1e293b';
+                    ctx.beginPath();
+                    ctx.roundRect(W / 2 - 200, scoreY - 64, 400, 96, 24);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.font = 'bold 72px monospace';
+                    ctx.fillText(displayScore, W / 2, scoreY);
+
+                    ctx.fillStyle = '#475569';
+                    ctx.font = 'bold 26px sans-serif';
+                    ctx.fillText('DEF.', W / 2, scoreY + 52);
+
+                    // ── Loser section ──
+                    drawCircleAvatar(ctx, loseImg, W - 270, 360, 140, loserName[0], '#475569');
+
+                    ctx.fillStyle = '#64748b';
+                    ctx.font = 'bold 28px sans-serif';
+                    ctx.fillText('Runner-up', W - 270, 536);
+
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.font = 'bold 46px sans-serif';
+                    ctx.fillText(truncate(ctx, loserName, 420), W - 270, 596);
+
+                    // ── Footer ──
+                    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+                    ctx.fillRect(0, H - 100, W, 100);
+
+                    ctx.fillStyle = '#475569';
+                    ctx.font = 'bold 30px sans-serif';
+                    ctx.fillText('iiscshuttlers.com', W / 2, H - 36);
+
+                    canvas.toBlob(async (blob) => {
+                      if (blob) {
+                        const file = new File([blob], 'match-recap.png', { type: 'image/png' });
+                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                          await navigator.share({ title: 'IISc Shuttlers Match', text, url: shareUrl, files: [file] });
+                          toast.success("Match Recap shared!");
+                          return;
+                        }
+                      }
+                      fallbackShare();
+                    }, 'image/png');
+                  } catch (err: any) {
+                    if (!err.message?.includes('cancel')) fallbackShare();
                   }
                 };
 
@@ -447,9 +543,9 @@ ${shareUrl}`);
                           <Link href={`/player/${p1.id}`} className="hover:underline">{p1.full_name}</Link>
                           {match.partner1 && <><br/><Link href={`/player/${match.partner1.id}`} className="hover:underline">{match.partner1.full_name}</Link></>}
                         </div>
-                        {match.p1_elo_change && (
-                          <div className={`text-xs font-bold ${match.p1_elo_change > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                            {match.p1_elo_change > 0 ? '+' : ''}{match.p1_elo_change} ELO
+                        {match.elo_change_p1 && (
+                          <div className={`text-xs font-bold ${match.elo_change_p1 > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                            {match.elo_change_p1 > 0 ? '+' : ''}{match.elo_change_p1} ELO
                           </div>
                         )}
                       </div>
@@ -478,9 +574,9 @@ ${shareUrl}`);
                           <Link href={`/player/${p2.id}`} className="hover:underline">{p2.full_name}</Link>
                           {match.partner2 && <><br/><Link href={`/player/${match.partner2.id}`} className="hover:underline">{match.partner2.full_name}</Link></>}
                         </div>
-                        {match.p2_elo_change && (
-                          <div className={`text-xs font-bold ${match.p2_elo_change > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                            {match.p2_elo_change > 0 ? '+' : ''}{match.p2_elo_change} ELO
+                        {match.elo_change_p2 && (
+                          <div className={`text-xs font-bold ${match.elo_change_p2 > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                            {match.elo_change_p2 > 0 ? '+' : ''}{match.elo_change_p2} ELO
                           </div>
                         )}
                       </div>

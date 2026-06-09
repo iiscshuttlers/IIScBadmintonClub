@@ -24,6 +24,7 @@ export interface Player {
   win_loss_record?: string;
   recent_form?: string[];
   is_approved?: boolean;
+  is_looking_to_play?: boolean;
   status?: string;
 }
 
@@ -223,7 +224,7 @@ export function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, o
 
         {/* Player Status Indicator */}
         {(() => {
-            const status = player.status;
+            const status = player.is_looking_to_play ? 'looking' : player.status;
           if (!status) return null;
           
           const statusConfig = {

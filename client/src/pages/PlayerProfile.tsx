@@ -185,7 +185,7 @@ function getYouTubeId(url: string) {
 export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: boolean; params?: any } = {}) {
   const { id: routeId } = useParams<{id: string}>();
   const [, setLocation] = useLocation();
-  const { session: authSession, user: currentUser, profile: ownPlayerProfile, isAdmin, isMainAdmin, userRoles, updateRole } = useAuth();
+  const { session: authSession, user: currentUser, profile: ownPlayerProfile, isAdmin, isMainAdmin, userRoles, updateRole, refreshProfile } = useAuth();
   
   // If we're in matchesOnly mode and no routeId is provided, use the logged-in user's profile ID
   const id = routeId || (matchesOnly ? ownPlayerProfile?.id : undefined);
@@ -218,61 +218,58 @@ export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: b
   const [isBuddy, setIsBuddy] = useState(false);
 
   useEffect(() => {
-    if (ownPlayerProfile && player?.userId) {
-      setIsFollowing(ownPlayerProfile.following?.includes(player.userId) || false);
-      setIsBuddy(ownPlayerProfile.buddies?.includes(player.userId) || false);
+    if (ownPlayerProfile && player?.id) {
+      // following/buddies arrays store player slugs (player.id), not auth UUIDs
+      setIsFollowing(ownPlayerProfile.following?.includes(player.id) || false);
+      setIsBuddy(ownPlayerProfile.buddies?.includes(player.id) || false);
     }
   }, [ownPlayerProfile, player]);
 
   const handleToggleFollow = async () => {
-    if (!player?.userId || !currentUser?.id) return;
+    if (!player?.id || !currentUser?.id) return;
     const newFollowing = !isFollowing;
     setIsFollowing(newFollowing);
     try {
-      const { data: myProfile } = await supabase.from('players').select('following').eq('user_id', currentUser.id).single();
-      let currentFollowing = myProfile?.following || [];
-      if (newFollowing && !currentFollowing.includes(player.userId)) {
-        currentFollowing.push(player.userId);
-      } else if (!newFollowing) {
-        currentFollowing = currentFollowing.filter((id: string) => id !== player.userId);
-      }
-      await supabase.from('players').update({ following: currentFollowing }).eq('user_id', currentUser.id);
-      toast.success(newFollowing ? `Followed ${player.fullName}!` : `Unfollowed ${player.fullName}.`);
+      const { data: myProfile, error: fetchErr } = await supabase
+        .from('players').select('following').eq('user_id', currentUser.id).single();
+      if (fetchErr) throw fetchErr;
+      let arr: string[] = myProfile?.following || [];
+      arr = newFollowing
+        ? [...new Set([...arr, player.id])]
+        : arr.filter((s) => s !== player.id);
+      const { error: updateErr } = await supabase
+        .from('players').update({ following: arr }).eq('user_id', currentUser.id);
+      if (updateErr) throw updateErr;
+      await refreshProfile();
+      toast.success(newFollowing ? `Following ${player.fullName}!` : `Unfollowed ${player.fullName}.`);
     } catch (e) {
-      console.error(e);
+      console.error('Follow toggle failed:', e);
       setIsFollowing(!newFollowing);
-      try {
-         await supabase.rpc('toggle_follow', { p_target_id: player.userId });
-         setIsFollowing(newFollowing);
-      } catch(err) {
-         console.error("RPC fallback failed too", err);
-      }
+      toast.error('Could not update follow status. Try again.');
     }
   };
 
   const handleToggleBuddy = async () => {
-    if (!player?.userId || !currentUser?.id) return;
+    if (!player?.id || !currentUser?.id) return;
     const newBuddy = !isBuddy;
     setIsBuddy(newBuddy);
     try {
-      const { data: myProfile } = await supabase.from('players').select('buddies').eq('user_id', currentUser.id).single();
-      let currentBuddies = myProfile?.buddies || [];
-      if (newBuddy && !currentBuddies.includes(player.userId)) {
-        currentBuddies.push(player.userId);
-      } else if (!newBuddy) {
-        currentBuddies = currentBuddies.filter((id: string) => id !== player.userId);
-      }
-      await supabase.from('players').update({ buddies: currentBuddies }).eq('user_id', currentUser.id);
+      const { data: myProfile, error: fetchErr } = await supabase
+        .from('players').select('buddies').eq('user_id', currentUser.id).single();
+      if (fetchErr) throw fetchErr;
+      let arr: string[] = myProfile?.buddies || [];
+      arr = newBuddy
+        ? [...new Set([...arr, player.id])]
+        : arr.filter((s) => s !== player.id);
+      const { error: updateErr } = await supabase
+        .from('players').update({ buddies: arr }).eq('user_id', currentUser.id);
+      if (updateErr) throw updateErr;
+      await refreshProfile();
       toast.success(newBuddy ? `Added ${player.fullName} as Buddy!` : `Removed ${player.fullName} from Buddies.`);
     } catch (e) {
-      console.error(e);
+      console.error('Buddy toggle failed:', e);
       setIsBuddy(!newBuddy);
-      try {
-         await supabase.rpc('toggle_buddy', { p_target_id: player.userId });
-         setIsBuddy(newBuddy);
-      } catch(err) {
-         console.error("RPC fallback failed too", err);
-      }
+      toast.error('Could not update buddy status. Try again.');
     }
   };
 
@@ -666,10 +663,10 @@ export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: b
 
     for (let i = confirmed.length - 1; i >= 0; i--) {
       const match = confirmed[i];
-      if (match.player1_id === id && match.p1_elo_change) {
-        currentElo -= match.p1_elo_change;
-      } else if (match.player2_id === id && match.p2_elo_change) {
-        currentElo -= match.p2_elo_change;
+      if (match.player1_id === id && match.elo_change_p1) {
+        currentElo -= match.elo_change_p1;
+      } else if (match.player2_id === id && match.elo_change_p2) {
+        currentElo -= match.elo_change_p2;
       }
       history.push({ name: new Date(match.created_at).toLocaleDateString(undefined, {month: 'short', day: 'numeric'}), elo: currentElo });
     }
@@ -874,16 +871,24 @@ export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: b
               {currentUser && player && currentUser.id !== player.userId && ownPlayerProfile && (
                 <>
                   <button onClick={() => setIsLogMatchOpen(true)}
-                    className="flex items-center justify-center gap-1.5 p-2.5 sm:px-4 sm:py-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:bg-blue-500/20 transition-all text-xs font-black uppercase tracking-wider">
-                    <Swords className="w-5 h-5" /><span className="hidden sm:inline">Log Match</span>
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/30 transition-all text-xs font-black uppercase tracking-wider">
+                    <Swords className="w-4 h-4" /><span>Log Match</span>
                   </button>
                   <button onClick={handleToggleFollow}
-                    className="flex items-center justify-center gap-1.5 p-2.5 sm:px-4 sm:py-2 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-400 hover:bg-violet-500/20 transition-all text-xs font-black uppercase tracking-wider">
-                    <UserPlus className="w-5 h-5" /><span className="hidden sm:inline">{isFollowing ? 'Unfollow' : 'Follow'}</span>
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider shadow-md transition-all ${
+                      isFollowing
+                        ? 'bg-violet-700 hover:bg-violet-800 text-white shadow-violet-500/30'
+                        : 'bg-violet-600 hover:bg-violet-700 text-white shadow-violet-500/30'
+                    }`}>
+                    <UserPlus className="w-4 h-4" /><span>{isFollowing ? 'Unfollow' : 'Follow'}</span>
                   </button>
                   <button onClick={handleToggleBuddy}
-                    className="flex items-center justify-center gap-1.5 p-2.5 sm:px-4 sm:py-2 rounded-xl bg-pink-500/10 border border-pink-500/20 text-pink-400 hover:bg-pink-500/20 transition-all text-xs font-black uppercase tracking-wider">
-                    <Heart className="w-5 h-5" /><span className="hidden sm:inline">{isBuddy ? 'Unbuddy' : 'Add Buddy'}</span>
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider shadow-md transition-all ${
+                      isBuddy
+                        ? 'bg-rose-700 hover:bg-rose-800 text-white shadow-rose-500/30'
+                        : 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/30'
+                    }`}>
+                    <Heart className="w-4 h-4" /><span>{isBuddy ? 'Unbuddy' : 'Buddy'}</span>
                   </button>
                 </>
               )}

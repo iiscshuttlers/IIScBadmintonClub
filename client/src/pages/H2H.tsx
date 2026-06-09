@@ -65,6 +65,23 @@ export default function H2H() {
   const p1 = players.find(p => p.id === p1Id);
   const p2 = players.find(p => p.id === p2Id);
 
+  const rivalryMilestone = useMemo(() => {
+    if (!p1 || !p2) return null;
+    const total = p1Wins + p2Wins;
+    if (total === 0) return { text: `No matches yet between ${p1.full_name} & ${p2.full_name}. Who will draw first blood?`, color: 'text-slate-500' };
+    if (total === 1) return { text: `This rivalry is just getting started! The gauntlet has been thrown.`, color: 'text-indigo-500' };
+    if (p1Wins === p2Wins) return { text: `Dead even at ${p1Wins}-${p2Wins}! This rivalry is a toss-up — next match decides the bragging rights.`, color: 'text-amber-500' };
+    const leader = p1Wins > p2Wins ? p1 : p2;
+    const trailer = p1Wins > p2Wins ? p2 : p1;
+    const leaderWins = Math.max(p1Wins, p2Wins);
+    const trailerWins = Math.min(p1Wins, p2Wins);
+    const gap = leaderWins - trailerWins;
+    if (gap === 1) return { text: `${trailer.full_name} is 1 win away from tying the series! Can they even it up?`, color: 'text-rose-500' };
+    if (gap === 2) return { text: `${leader.full_name} leads ${leaderWins}-${trailerWins}. ${trailer.full_name} needs to win 2 straight to level the series.`, color: 'text-orange-500' };
+    if (leaderWins >= 5 && gap >= 3) return { text: `${leader.full_name} dominates this rivalry ${leaderWins}-${trailerWins}. ${trailer.full_name} is in desperate need of a comeback!`, color: 'text-rose-600' };
+    return { text: `${leader.full_name} leads ${leaderWins}-${trailerWins}. ${trailer.full_name} has some ground to make up!`, color: 'text-slate-500' };
+  }, [p1, p2, p1Wins, p2Wins]);
+
   const p1WinProb = useMemo(() => {
     if (!p1 || !p2 || p1.elo_rating === undefined || p2.elo_rating === undefined) return 50;
     return Math.round((1 / (1 + Math.pow(10, (p2.elo_rating - p1.elo_rating) / 400))) * 100);
@@ -107,6 +124,13 @@ export default function H2H() {
               </div>
               <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">{h2hMatches.length} Matches Played</div>
               
+              {/* Rivalry Milestone */}
+              {rivalryMilestone && (
+                <div className="w-full mb-3 text-center px-2">
+                  <p className={`text-xs font-bold italic leading-snug ${rivalryMilestone.color}`}>{rivalryMilestone.text}</p>
+                </div>
+              )}
+
               {/* Win Probability Predictor */}
               <div className="w-full bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/50">
                 <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 text-center mb-2 flex items-center justify-center gap-1.5">
