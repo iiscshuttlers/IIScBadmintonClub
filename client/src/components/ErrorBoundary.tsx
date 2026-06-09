@@ -9,26 +9,25 @@ interface Props {
 interface State {
   hasError: boolean;
   error: Error | null;
+  isChunkError: boolean;
 }
 
 class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, isChunkError: false };
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error) {
-    // Automatically reload on chunk load errors (stale service worker after new deployment)
-    const isChunkLoadError =
+    const isChunkError =
       error.name === "ChunkLoadError" ||
       error.message.includes("Failed to fetch dynamically imported module") ||
       error.message.includes("Importing a module script failed");
+    return { hasError: true, error, isChunkError };
+  }
 
-    if (isChunkLoadError) {
+  componentDidCatch(error: Error) {
+    if (this.state.isChunkError) {
       const reloaded = sessionStorage.getItem("chunk_error_reloaded");
       if (!reloaded) {
         sessionStorage.setItem("chunk_error_reloaded", "true");
@@ -51,6 +50,13 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   render() {
+    if (this.state.hasError && this.state.isChunkError) {
+      return (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="w-8 h-8 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin" />
+        </div>
+      );
+    }
     if (this.state.hasError) {
       return (
         <div className="flex items-center justify-center min-h-screen p-8 bg-background">
