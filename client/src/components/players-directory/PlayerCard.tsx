@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Share2, Pencil, Trash2, Sword, BellRing, BellOff } from "lucide-react";
 import { toast } from "sonner";
@@ -68,6 +69,22 @@ export function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, o
   const [isPinged, setIsPinged] = useState(false);
   const winPct = parseWinPct(player.win_loss_record);
 
+  
+  const handlePing = () => {
+    if (isOwn) return;
+    if (isPinged) {
+      setIsPinged(false);
+      toast.success(`Ping to ${player.full_name} cancelled.`, {
+        icon: <BellOff className="w-4 h-4 text-slate-500" />
+      });
+    } else {
+      setIsPinged(true);
+      toast.success(`Ping sent to ${player.full_name}! They will be notified.`, {
+        icon: <BellRing className="w-4 h-4 text-emerald-500" />
+      });
+    }
+  };
+
   const handleShare = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -89,7 +106,14 @@ export function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, o
   };
 
   return (
-    <Card
+    <motion.div 
+      drag="x" 
+      dragConstraints={{ left: 0, right: 0 }} 
+      dragElastic={0.2} 
+      onDragEnd={(e, info) => { if (info.offset.x > 80) handlePing(); }}
+      className="h-full"
+    >
+      <Card
       className={`h-full rounded-[2rem] overflow-hidden cursor-pointer border bg-white dark:bg-slate-900
         hover:shadow-2xl hover:shadow-slate-200/50 dark:hover:shadow-none hover:-translate-y-1.5
         transition-all duration-300 flex flex-col justify-between group relative
@@ -277,6 +301,7 @@ export function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, o
         )}
       </CardContent>
     </Card>
+    </motion.div>
   );
 }
 

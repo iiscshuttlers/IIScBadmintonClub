@@ -247,14 +247,79 @@ export default function Feed() {
               
               const isMatchOfTheDay = match.id === matchOfTheDayId;
 
+                const handleKudos = async (match: any) => {
+                  const storageKey = `liked_${match.id}`;
+                  const isLikedDb = Array.isArray(match.kudos_users) && session?.user?.id && match.kudos_users.includes(session.user.id);
+                  const isLikedLocal = !!localStorage.getItem(storageKey);
+                  const isCurrentlyLiked = isLikedDb || isLikedLocal;
+                  
+                  if (!isCurrentlyLiked) {
+                    localStorage.setItem(storageKey, "1");
+                    toast.success("Kudos given! ??");
+                  } else {
+                    localStorage.removeItem(storageKey);
+                    toast.success("Kudos removed");
+                  }
+
+                  // Force a tiny re-render or state update if possible, but React state matches will be updated on next poll
+                  // Sync with live database if logged in
+                  if (session?.user?.id) {
+                    supabase.rpc('toggle_match_kudos', { p_match_id: match.id }).then(({error}) => { if (error) console.warn("Failed to sync kudos live:", error); });
+                  }
+                };
+
+                const handleShare = async (match: any) => {
+                  const p1Name = match.player1?.full_name || 'Player 1';
+                  const p2Name = match.player2?.full_name || 'Player 2';
+                  const isP1Winner = match.winner_id === match.player1_id;
+                  
+                  // Score parsing
+                  let displayScore = "N/A";
+                  if (match.score) {
+                    displayScore = match.score;
+                  } else if (match.match_score) {
+                    displayScore = match.match_score.map(set => `${set.p1_score}-${set.p2_score}`).join(', ');
+                  }
+                  
+                  const shareUrl = `${getBaseShareUrl()}/feed?match=${match.id}`;
+                  const text = `?? Match Result: ${isP1Winner ? p1Name : p2Name} vs ${isP1Winner ? p2Name : p1Name} (${displayScore})! Check it out on IISc Shuttlers.`;
+                  
+                  try {
+                    if (Capacitor.isNativePlatform()) {
+                      await Share.share({ title: 'IISc Shuttlers Match', text, url: shareUrl, dialogTitle: 'Share Match Result' });
+                    } else if (navigator.share) {
+                      await navigator.share({ title: 'IISc Shuttlers Match', text, url: shareUrl });
+                    } else {
+                      await navigator.clipboard.writeText(`${text}\n${shareUrl}`);
+                      toast.success("Match result copied to clipboard!");
+                    }
+                  } catch (err: any) {
+                    if (err.message && !err.message.includes("cancel")) {
+                      navigator.clipboard.writeText(`${text}\n${shareUrl}`);
+                      toast.success("Match result copied to clipboard!");
+                    }
+                  }
+                };
+
+
               return (
                 <motion.div
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  key={match.id}
-                  className={`bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm relative overflow-hidden group transition-shadow ${isMatchOfTheDay ? 'border-2 border-amber-400 shadow-amber-500/20 shadow-xl' : 'border border-slate-100 dark:border-slate-800 hover:shadow-md'}`}
-                >
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    key={match.id}
+                    className={`bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm relative overflow-hidden group transition-shadow ${isMatchOfTheDay ? 'border-2 border-amber-400 shadow-amber-500/20 shadow-xl' : 'border border-slate-100 dark:border-slate-800 hover:shadow-md'}`}
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    dragElastic={0.2}
+                    onDragEnd={(e, info) => {
+                      if (info.offset.x > 100) {
+                        handleKudos(match);
+                      } else if (info.offset.x < -100) {
+                        handleShare(match);
+                      }
+                    }}
+                  >
                   {/* Match of the Day Badge */}
                   {isMatchOfTheDay && (
                     <div className="absolute top-0 left-0 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black uppercase tracking-wider px-4 py-1.5 rounded-br-xl shadow-md z-10 flex items-center gap-1.5">
@@ -347,38 +412,7 @@ export default function Feed() {
                   {/* Reaction Kudos */}
                   <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/50 flex justify-end">
                       <button 
-                        onClick={async (e) => {
-                          e.preventDefault();
-                          const btn = e.currentTarget;
-                          try {
-                            const { Haptics, ImpactStyle } = await import('@capacitor/haptics');
-                            await Haptics.impact({ style: ImpactStyle.Heavy });
-                          } catch(err) {}
-                          btn.classList.add('scale-125', 'text-rose-500', 'bg-rose-50', 'dark:bg-rose-500/20');
-                        setTimeout(() => btn.classList.remove('scale-125'), 200);
-                        
-                        // Hybrid storage: Use DB if logged in, fallback to local storage
-                        const storageKey = `liked_${match.id}`;
-                        const isLikedDb = Array.isArray(match.kudos_users) && session?.user?.id && match.kudos_users.includes(session.user.id);
-                        const isLikedLocal = !!localStorage.getItem(storageKey);
-                        const isCurrentlyLiked = isLikedDb || isLikedLocal;
-                        
-                        const countEl = btn.querySelector('.kudos-count');
-                        if (!isCurrentlyLiked) {
-                          localStorage.setItem(storageKey, "1");
-                          if (countEl) countEl.textContent = String(parseInt(countEl.textContent || '0') + 1);
-                          toast.success("Kudos given! ✨");
-                        } else {
-                          localStorage.removeItem(storageKey);
-                          if (countEl) countEl.textContent = String(parseInt(countEl.textContent || '1') - 1);
-                          toast.success("Kudos removed");
-                        }
-
-                        // Sync with live database if logged in
-                        if (session?.user?.id) {
-                          supabase.rpc('toggle_match_kudos', { p_match_id: match.id }).then(({error}) => { if (error) console.warn("Failed to sync kudos live:", error); });
-                        }
-                      }}
+                        onClick={() => handleKudos(match)}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${
                         (Array.isArray(match.kudos_users) ? match.kudos_users.includes(session?.user?.id) : localStorage.getItem(`liked_${match.id}`))
                         ? 'text-rose-500 bg-rose-50 dark:bg-rose-500/20' 

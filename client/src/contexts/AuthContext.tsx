@@ -38,6 +38,9 @@ export interface PlayerProfile {
   tournament_history: string[] | null;
   elo_rating?: number;
   status?: string;
+  followers?: string[];
+  following?: string[];
+  buddies?: string[];
 }
 
 export interface AuthContextType {

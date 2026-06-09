@@ -9,7 +9,7 @@ import {
   Instagram, Mail, Users, Star, Hash, Ruler, BookOpen,
   ChevronRight, Footprints, Shirt, ArrowUpRight, Clock, LogOut,
   CheckCircle, XCircle, Play, Image, Video
-} from "lucide-react";
+, UserPlus, Heart} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import LogMatchModal from "@/components/LogMatchModal";
@@ -204,6 +204,42 @@ export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: b
   const [pendingMatches, setPendingMatches] = useState<any[]>([]);
   const [matchHistoryFilter, setMatchHistoryFilter] = useState<"all" | "friendly" | "tournament">("all");
   const [isMatchHistoryOpen, setIsMatchHistoryOpen] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [isBuddy, setIsBuddy] = useState(false);
+
+  useEffect(() => {
+    if (ownPlayerProfile && player?.userId) {
+      setIsFollowing(ownPlayerProfile.following?.includes(player.userId) || false);
+      setIsBuddy(ownPlayerProfile.buddies?.includes(player.userId) || false);
+    }
+  }, [ownPlayerProfile, player]);
+
+  const handleToggleFollow = async () => {
+    if (!player?.userId) return;
+    const newFollowing = !isFollowing;
+    setIsFollowing(newFollowing);
+    try {
+      await supabase.rpc('toggle_follow', { p_target_id: player.userId });
+      toast.success(newFollowing ? `Followed ${player.fullName}!` : `Unfollowed ${player.fullName}.`);
+    } catch (e) {
+      console.error(e);
+      setIsFollowing(!newFollowing);
+    }
+  };
+
+  const handleToggleBuddy = async () => {
+    if (!player?.userId) return;
+    const newBuddy = !isBuddy;
+    setIsBuddy(newBuddy);
+    try {
+      await supabase.rpc('toggle_buddy', { p_target_id: player.userId });
+      toast.success(newBuddy ? `Added ${player.fullName} as Buddy!` : `Removed ${player.fullName} from Buddies.`);
+    } catch (e) {
+      console.error(e);
+      setIsBuddy(!newBuddy);
+    }
+  };
+
 
   /* ── Shared helper: map DB row → Player interface ──────────────── */
   function formatPlayerData(data: any): Player {
@@ -798,12 +834,24 @@ export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: b
               </>
             )}
 
-            {currentUser && player && currentUser.id !== player.userId && ownPlayerProfile && (
-              <button onClick={() => setIsLogMatchOpen(true)}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:bg-blue-500/20 transition-all text-xs font-black uppercase tracking-wider">
-                <Swords className="w-3.5 h-3.5" /><span className="hidden sm:inline">Log Match</span>
-              </button>
-            )}
+            
+              {currentUser && player && currentUser.id !== player.userId && ownPlayerProfile && (
+                <>
+                  <button onClick={() => setIsLogMatchOpen(true)}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:bg-blue-500/20 transition-all text-xs font-black uppercase tracking-wider">
+                    <Swords className="w-3.5 h-3.5" /><span className="hidden sm:inline">Log Match</span>
+                  </button>
+                  <button onClick={handleToggleFollow}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-400 hover:bg-violet-500/20 transition-all text-xs font-black uppercase tracking-wider">
+                    <UserPlus className="w-3.5 h-3.5" /><span className="hidden sm:inline">{isFollowing ? 'Unfollow' : 'Follow'}</span>
+                  </button>
+                  <button onClick={handleToggleBuddy}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-pink-500/10 border border-pink-500/20 text-pink-400 hover:bg-pink-500/20 transition-all text-xs font-black uppercase tracking-wider">
+                    <Heart className="w-3.5 h-3.5" /><span className="hidden sm:inline">{isBuddy ? 'Unbuddy' : 'Add Buddy'}</span>
+                  </button>
+                </>
+              )}
+
 
             <button onClick={handleShare}
               className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white/30 hover:text-white/70 hover:bg-white/10 transition-all"
