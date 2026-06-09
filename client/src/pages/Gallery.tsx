@@ -1,10 +1,17 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { X, Youtube, PlayCircle, ChevronLeft, ChevronRight } from 'lucide-react';
-import { usePageMeta } from '@/hooks/usePageMeta';
-import { useAutoRefresh } from '@/hooks/useAutoRefresh';
-import { fetchSiteData } from '@/lib/siteData';
-import { SocialCTA } from '@/components/SocialCTA';
-import { VideoPlayerModal } from '@/components/VideoPlayerModal';
+import { useState, useEffect, useRef, useCallback } from "react";
+import {
+  X,
+  Youtube,
+  Play,
+  PlayCircle,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { usePageMeta } from "@/hooks/usePageMeta";
+import { useAutoRefresh } from "@/hooks/useAutoRefresh";
+import { fetchSiteData } from "@/lib/siteData";
+import { SocialCTA } from "@/components/SocialCTA";
+import { VideoPlayerModal } from "@/components/VideoPlayerModal";
 
 // ─── Lazy Image Component ───────────────────────────────────────────────────
 function LazyImage({
@@ -29,7 +36,7 @@ function LazyImage({
           observer.disconnect();
         }
       },
-      { rootMargin: '300px' }
+      { rootMargin: "300px" },
     );
     if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
@@ -38,7 +45,12 @@ function LazyImage({
   return (
     <div ref={ref} className={className} onClick={onClick}>
       {src ? (
-        <img loading="lazy" src={src} alt={alt} className="w-full h-full object-cover" />
+        <img
+          loading="lazy"
+          src={src}
+          alt={alt}
+          className="w-full h-full object-cover"
+        />
       ) : (
         <div className="w-full h-full bg-gray-200 animate-pulse" />
       )}
@@ -47,10 +59,14 @@ function LazyImage({
 }
 
 export default function Gallery() {
-  usePageMeta({ title: 'Gallery', description: 'Photos and videos from IISc Badminton Club tournaments and events.' });
+  usePageMeta({
+    title: "Gallery",
+    description:
+      "Photos and videos from IISc Badminton Club tournaments and events.",
+  });
 
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedSubfolder, setSelectedSubfolder] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedSubfolder, setSelectedSubfolder] = useState("all");
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [videos, setVideos] = useState<any[]>([]);
@@ -83,12 +99,15 @@ export default function Gallery() {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (selectedIndex === null) return;
-      if (e.key === 'Escape') { setSelectedIndex(null); setLightboxSrc(null); }
-      if (e.key === 'ArrowRight') navigate(1);
-      if (e.key === 'ArrowLeft') navigate(-1);
+      if (e.key === "Escape") {
+        setSelectedIndex(null);
+        setLightboxSrc(null);
+      }
+      if (e.key === "ArrowRight") navigate(1);
+      if (e.key === "ArrowLeft") navigate(-1);
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   }, [selectedIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -99,7 +118,7 @@ export default function Gallery() {
   const loadVideos = useCallback(() => {
     fetchSiteData<any[]>("videos", "videos.json")
       .then((data) => setVideos(data))
-      .catch((err) => console.error('Error loading videos:', err));
+      .catch((err) => console.error("Error loading videos:", err));
   }, []);
 
   useEffect(() => {
@@ -110,55 +129,63 @@ export default function Gallery() {
   useAutoRefresh(loadVideos, 120_000);
 
   // ── LAZY glob (not eager) ──────────────────────────────────────────
-  const imageModules = import.meta.glob(
-    '/src/assets/gallery/**/*.{png,webp}',
-    { eager: false }
-  ) as Record<string, () => Promise<{ default: string }>>;
+  const imageModules = import.meta.glob("/src/assets/gallery/**/*.{png,webp}", {
+    eager: false,
+  }) as Record<string, () => Promise<{ default: string }>>;
 
   const formatText = (text: string) =>
-    text.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+    text.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
-  const galleryItems = Object.entries(imageModules).map(([path, loader], index) => {
-    const cleanPath = path.replace('/src/assets/gallery/', '');
-    const parts = cleanPath.split('/');
-    const category = parts[0];
-    const subfolder = parts.length > 2 ? parts[1] : '';
-    const filename = parts[parts.length - 1];
-    const title = formatText(filename.replace(/\.[^/.]+$/, ''));
-    return { id: index + 1, title, category, subfolder, loader };
-  });
+  const galleryItems = Object.entries(imageModules).map(
+    ([path, loader], index) => {
+      const cleanPath = path.replace("/src/assets/gallery/", "");
+      const parts = cleanPath.split("/");
+      const category = parts[0];
+      const subfolder = parts.length > 2 ? parts[1] : "";
+      const filename = parts[parts.length - 1];
+      const title = formatText(filename.replace(/\.[^/.]+$/, ""));
+      return { id: index + 1, title, category, subfolder, loader };
+    },
+  );
 
   const categories = [
-    { id: 'all', label: 'All' },
-    ...Array.from(new Set(galleryItems.map((item) => item.category))).map((cat) => ({
-      id: cat,
-      label: formatText(cat),
-    })),
+    { id: "all", label: "All" },
+    ...Array.from(new Set(galleryItems.map((item) => item.category))).map(
+      (cat) => ({
+        id: cat,
+        label: formatText(cat),
+      }),
+    ),
   ];
 
   const subfolders =
-    selectedCategory === 'all' && categories.length > 2
+    selectedCategory === "all" && categories.length > 2
       ? []
       : Array.from(
-        new Set(
-          galleryItems
-            .filter((item) => (selectedCategory === 'all' || item.category === selectedCategory) && item.subfolder !== '')
-            .map((item) => item.subfolder)
-        )
-      );
+          new Set(
+            galleryItems
+              .filter(
+                (item) =>
+                  (selectedCategory === "all" ||
+                    item.category === selectedCategory) &&
+                  item.subfolder !== "",
+              )
+              .map((item) => item.subfolder),
+          ),
+        );
 
   // Read URL params to auto-select album
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const filter = params.get('filter');
+    const filter = params.get("filter");
     if (filter) {
       const decoded = decodeURIComponent(filter);
-      const isCategory = galleryItems.some(i => i.category === decoded);
+      const isCategory = galleryItems.some((i) => i.category === decoded);
       if (isCategory) {
         setSelectedCategory(decoded);
-        setSelectedSubfolder('all');
+        setSelectedSubfolder("all");
       } else {
-        const match = galleryItems.find(i => i.subfolder === decoded);
+        const match = galleryItems.find((i) => i.subfolder === decoded);
         if (match) {
           setSelectedCategory(match.category);
           // Small delay so state batching doesn't miss the subfolder selection
@@ -170,17 +197,19 @@ export default function Gallery() {
 
   const updateUrlFilter = (filterValue: string, isSubfolder: boolean) => {
     const url = new URL(window.location.href);
-    if (filterValue === 'all' && !isSubfolder) {
-      url.searchParams.delete('filter');
+    if (filterValue === "all" && !isSubfolder) {
+      url.searchParams.delete("filter");
     } else {
-      url.searchParams.set('filter', filterValue);
+      url.searchParams.set("filter", filterValue);
     }
-    window.history.pushState({}, '', url.toString());
+    window.history.pushState({}, "", url.toString());
   };
 
   const filteredItems = galleryItems.filter((item) => {
-    const categoryMatch = selectedCategory === 'all' || item.category === selectedCategory;
-    const subfolderMatch = selectedSubfolder === 'all' || item.subfolder === selectedSubfolder;
+    const categoryMatch =
+      selectedCategory === "all" || item.category === selectedCategory;
+    const subfolderMatch =
+      selectedSubfolder === "all" || item.subfolder === selectedSubfolder;
     return categoryMatch && subfolderMatch;
   });
 
@@ -191,7 +220,8 @@ export default function Gallery() {
 
   const navigate = (dir: 1 | -1) => {
     if (selectedIndex === null) return;
-    const next = (selectedIndex + dir + filteredItems.length) % filteredItems.length;
+    const next =
+      (selectedIndex + dir + filteredItems.length) % filteredItems.length;
     setSelectedIndex(next);
     setLightboxSrc(null);
     filteredItems[next].loader().then((mod) => setLightboxSrc(mod.default));
@@ -206,11 +236,15 @@ export default function Gallery() {
           <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 px-4 py-2 rounded-full text-sm font-semibold mb-5">
             📸 Photos & Videos
           </div>
-          <h1 className="text-5xl md:text-6xl font-black mb-5" style={{ fontFamily: 'Playfair Display, serif' }}>
+          <h1
+            className="text-5xl md:text-6xl font-black mb-5"
+            style={{ fontFamily: "Playfair Display, serif" }}
+          >
             Gallery
           </h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
-            Relive the intensity of tournaments, the focus of practice, and the vibrant badminton community at IISc.
+            Relive the intensity of tournaments, the focus of practice, and the
+            vibrant badminton community at IISc.
           </p>
         </div>
       </section>
@@ -222,22 +256,28 @@ export default function Gallery() {
           {categories.length > 2 && (
             <div className="flex flex-wrap gap-3 justify-center mb-8">
               {categories.map((cat) => {
-                const count = cat.id === 'all' ? galleryItems.length : galleryItems.filter(i => i.category === cat.id).length;
+                const count =
+                  cat.id === "all"
+                    ? galleryItems.length
+                    : galleryItems.filter((i) => i.category === cat.id).length;
                 return (
                   <button
                     key={cat.id}
-                    onClick={() => { 
-                      setSelectedCategory(cat.id); 
-                      setSelectedSubfolder('all'); 
+                    onClick={() => {
+                      setSelectedCategory(cat.id);
+                      setSelectedSubfolder("all");
                       updateUrlFilter(cat.id, false);
                     }}
-                    className={`px-6 py-2 rounded-full font-bold transition-all duration-300 flex items-center gap-2 ${selectedCategory === cat.id
-                      ? 'bg-emerald-500 text-white shadow-lg scale-105'
-                      : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700'
+                    className={`px-6 py-2 rounded-full font-bold transition-all duration-300 flex items-center gap-2 ${
+                      selectedCategory === cat.id
+                        ? "bg-emerald-500 text-white shadow-lg scale-105"
+                        : "bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700"
                     }`}
                   >
                     {cat.label}
-                    <span className={`text-xs font-black px-1.5 py-0.5 rounded-full ${selectedCategory === cat.id ? 'bg-white/25' : 'bg-gray-200 dark:bg-slate-700 text-gray-500 dark:text-slate-400'}`}>
+                    <span
+                      className={`text-xs font-black px-1.5 py-0.5 rounded-full ${selectedCategory === cat.id ? "bg-white/25" : "bg-gray-200 dark:bg-slate-700 text-gray-500 dark:text-slate-400"}`}
+                    >
                       {count}
                     </span>
                   </button>
@@ -251,11 +291,14 @@ export default function Gallery() {
             <div className="flex flex-wrap gap-3 justify-center mb-12 animate-in fade-in slide-in-from-top-4">
               <button
                 onClick={() => {
-                  setSelectedSubfolder('all');
+                  setSelectedSubfolder("all");
                   updateUrlFilter(selectedCategory, false);
                 }}
-                className={`px-5 py-1.5 rounded-full text-sm font-semibold transition ${selectedSubfolder === 'all' ? 'bg-blue-900 dark:bg-blue-700 text-white' : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-700'
-                  }`}
+                className={`px-5 py-1.5 rounded-full text-sm font-semibold transition ${
+                  selectedSubfolder === "all"
+                    ? "bg-blue-900 dark:bg-blue-700 text-white"
+                    : "bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-700"
+                }`}
               >
                 All Albums
               </button>
@@ -266,8 +309,11 @@ export default function Gallery() {
                     setSelectedSubfolder(sub);
                     updateUrlFilter(sub, true);
                   }}
-                  className={`px-5 py-1.5 rounded-full text-sm font-semibold transition ${selectedSubfolder === sub ? 'bg-blue-900 dark:bg-blue-700 text-white' : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-700'
-                    }`}
+                  className={`px-5 py-1.5 rounded-full text-sm font-semibold transition ${
+                    selectedSubfolder === sub
+                      ? "bg-blue-900 dark:bg-blue-700 text-white"
+                      : "bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-700"
+                  }`}
                 >
                   {formatText(sub)}
                 </button>
@@ -323,12 +369,16 @@ export default function Gallery() {
           <div className="text-center mb-12">
             <div className="flex items-center justify-center gap-3 mb-3">
               <div className="w-2 h-8 bg-gradient-to-b from-red-500 to-orange-500 rounded-full" />
-              <h2 className="text-3xl font-black text-blue-900 dark:text-white" style={{ fontFamily: 'Playfair Display, serif' }}>
+              <h2
+                className="text-3xl font-black text-blue-900 dark:text-white"
+                style={{ fontFamily: "Playfair Display, serif" }}
+              >
                 Match Videos
               </h2>
             </div>
             <p className="text-gray-600 dark:text-slate-400 max-w-2xl mx-auto">
-              Championship points, finals and highlights from our YouTube channel.
+              Championship points, finals and highlights from our YouTube
+              channel.
             </p>
           </div>
 
@@ -345,28 +395,33 @@ export default function Gallery() {
                     alt={video.title}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     onError={(e) => {
-                      if (!e.currentTarget.src.includes('mqdefault')) {
+                      if (!e.currentTarget.src.includes("mqdefault")) {
                         e.currentTarget.src = `https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg`;
                       }
                     }}
                   />
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                     <div className="w-16 h-16 bg-red-600/90 text-white rounded-full flex items-center justify-center backdrop-blur-sm shadow-lg group-hover:scale-110 group-hover:bg-red-600 transition-all duration-300">
-                      <PlayCircle className="w-8 h-8" fill="currentColor" stroke="none" />
+                      <Play
+                        className="w-8 h-8 ml-1"
+                        fill="currentColor"
+                        stroke="none"
+                      />
                     </div>
                   </div>
                 </div>
                 <div className="p-7">
                   <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-xs uppercase tracking-widest mb-3">
                     <PlayCircle className="w-4 h-4" />
-                    {video.category || 'Match Highlight'}
+                    {video.category || "Match Highlight"}
                   </div>
                   <h3 className="text-xl font-bold text-blue-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                     {video.title}
                   </h3>
                   {(video.chapters?.length ?? 0) > 0 && (
                     <p className="text-gray-400 dark:text-slate-500 text-xs mt-2">
-                      {video.chapters.length} chapter{video.chapters.length !== 1 ? 's' : ''}
+                      {video.chapters.length} chapter
+                      {video.chapters.length !== 1 ? "s" : ""}
                     </p>
                   )}
                 </div>
@@ -376,7 +431,9 @@ export default function Gallery() {
 
           {videos.length === 0 && (
             <div className="text-center py-12 rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-700">
-              <p className="text-gray-400 dark:text-slate-500 italic">New videos are being processed. Stay tuned!</p>
+              <p className="text-gray-400 dark:text-slate-500 italic">
+                New videos are being processed. Stay tuned!
+              </p>
             </div>
           )}
 
@@ -405,7 +462,10 @@ export default function Gallery() {
       {selectedIndex !== null && (
         <div
           className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center backdrop-blur-sm"
-          onClick={() => { setSelectedIndex(null); setLightboxSrc(null); }}
+          onClick={() => {
+            setSelectedIndex(null);
+            setLightboxSrc(null);
+          }}
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
@@ -415,14 +475,20 @@ export default function Gallery() {
           </div>
           <button
             className="absolute top-4 right-2 md:right-4 text-white hover:text-emerald-400 transition-colors p-2 z-50"
-            onClick={() => { setSelectedIndex(null); setLightboxSrc(null); }}
+            onClick={() => {
+              setSelectedIndex(null);
+              setLightboxSrc(null);
+            }}
             aria-label="Close"
           >
             <X className="w-8 h-8" />
           </button>
           <button
             className="absolute left-1 md:left-3 top-1/2 -translate-y-1/2 text-white hover:text-emerald-400 transition-colors p-2 z-50"
-            onClick={(e) => { e.stopPropagation(); navigate(-1); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(-1);
+            }}
             aria-label="Previous"
           >
             <ChevronLeft className="w-8 h-8 md:w-10 md:h-10" />
@@ -432,7 +498,7 @@ export default function Gallery() {
             <img
               key={selectedIndex}
               src={lightboxSrc}
-              alt={filteredItems[selectedIndex]?.title || ''}
+              alt={filteredItems[selectedIndex]?.title || ""}
               className="max-h-[85vh] max-w-[95vw] md:max-w-[85vw] rounded-lg shadow-2xl object-contain animate-in zoom-in-95 duration-200 relative z-40"
               onClick={(e) => e.stopPropagation()}
             />
@@ -442,7 +508,10 @@ export default function Gallery() {
 
           <button
             className="absolute right-1 md:right-3 top-1/2 -translate-y-1/2 text-white hover:text-emerald-400 transition-colors p-2 z-50"
-            onClick={(e) => { e.stopPropagation(); navigate(1); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(1);
+            }}
             aria-label="Next"
           >
             <ChevronRight className="w-8 h-8 md:w-10 md:h-10" />
@@ -451,7 +520,9 @@ export default function Gallery() {
           <div className="absolute bottom-5 left-1/2 -translate-x-1/2 text-center pointer-events-none w-full px-4 z-50">
             {selectedIndex !== null && (
               <>
-                <p className="text-white text-lg md:text-xl font-bold tracking-wide drop-shadow-lg leading-tight">{filteredItems[selectedIndex]?.title}</p>
+                <p className="text-white text-lg md:text-xl font-bold tracking-wide drop-shadow-lg leading-tight">
+                  {filteredItems[selectedIndex]?.title}
+                </p>
                 {filteredItems[selectedIndex]?.subfolder && (
                   <p className="text-emerald-300 font-medium text-xs md:text-sm mt-1 uppercase tracking-widest drop-shadow">
                     {formatText(filteredItems[selectedIndex].subfolder)}

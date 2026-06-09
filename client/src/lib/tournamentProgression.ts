@@ -11,7 +11,7 @@
  */
 
 import { doc, updateDoc, getDoc } from "firebase/firestore";
-import { db } from '../lib/firebase';
+import { db } from "../lib/firebase";
 
 export async function advanceWinners(format: string, completedMatchId: string) {
   try {
@@ -22,8 +22,8 @@ export async function advanceWinners(format: string, completedMatchId: string) {
     const data = snap.data();
     const matches = [...data.matches[format]];
 
-    const completed = matches.find(m => m.Match_ID === completedMatchId);
-    if (!completed || completed.Status !== 'completed' || !completed.Winner) {
+    const completed = matches.find((m) => m.Match_ID === completedMatchId);
+    if (!completed || completed.Status !== "completed" || !completed.Winner) {
       console.log("Match not completed or no winner.");
       return;
     }
@@ -34,26 +34,29 @@ export async function advanceWinners(format: string, completedMatchId: string) {
     }
 
     const { matchId: nextId, position } = completed.advancesTo;
-    const nextMatch = matches.find(m => m.Match_ID === nextId);
+    const nextMatch = matches.find((m) => m.Match_ID === nextId);
     if (!nextMatch) {
       console.warn(`Next match ${nextId} not found.`);
       return;
     }
 
-    const isDoubles = ['MD', 'WD', 'XD'].includes(format);
+    const isDoubles = ["MD", "WD", "XD"].includes(format);
     const field = isDoubles
-      ? (position === 1 ? 'Players_1' : 'Players_2')
-      : (position === 1 ? 'Player_1' : 'Player_2');
+      ? position === 1
+        ? "Players_1"
+        : "Players_2"
+      : position === 1
+        ? "Player_1"
+        : "Player_2";
 
     nextMatch[field] = completed.Winner;
 
     await updateDoc(tournamentRef, {
       [`matches.${format}`]: matches,
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
     });
 
     console.log(`✅ ${completed.Winner} → ${nextId} (pos ${position})`);
-
   } catch (err) {
     console.error("advanceWinners error:", err);
     throw err;
@@ -72,21 +75,25 @@ export async function batchAdvanceAllWinners() {
     for (const format of data.formats as string[]) {
       const matches = [...data.matches[format]];
       const completed = matches
-        .filter(m => m.Status === 'completed' && m.Winner && m.advancesTo)
+        .filter((m) => m.Status === "completed" && m.Winner && m.advancesTo)
         .sort((a, b) => a.Match_ID.localeCompare(b.Match_ID));
 
       for (const match of completed) {
         const { matchId: nextId, position } = match.advancesTo;
-        const next = matches.find(m => m.Match_ID === nextId);
+        const next = matches.find((m) => m.Match_ID === nextId);
         if (!next) continue;
 
-        const isDoubles = ['MD', 'WD', 'XD'].includes(format);
+        const isDoubles = ["MD", "WD", "XD"].includes(format);
         const field = isDoubles
-          ? (position === 1 ? 'Players_1' : 'Players_2')
-          : (position === 1 ? 'Player_1' : 'Player_2');
+          ? position === 1
+            ? "Players_1"
+            : "Players_2"
+          : position === 1
+            ? "Player_1"
+            : "Player_2";
 
-        const cur = next[field] || '';
-        if (!cur || cur.startsWith('Winner of') || cur === 'TBD') {
+        const cur = next[field] || "";
+        if (!cur || cur.startsWith("Winner of") || cur === "TBD") {
           next[field] = match.Winner;
           anyUpdate = true;
           console.log(`✅ ${match.Winner} → ${nextId} pos ${position}`);
@@ -98,7 +105,7 @@ export async function batchAdvanceAllWinners() {
     if (anyUpdate) {
       await updateDoc(tournamentRef, {
         matches: data.matches,
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
       });
       console.log("Batch done.");
     } else {

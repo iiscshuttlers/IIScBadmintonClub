@@ -3,20 +3,52 @@ import { motion } from "framer-motion";
 import { useEffect, useState, useMemo } from "react";
 import CalendarHeatmap from "react-calendar-heatmap";
 import "react-calendar-heatmap/dist/styles.css";
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip, AreaChart, Area, XAxis, YAxis, CartesianGrid } from "recharts";
+import {
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ResponsiveContainer,
+  Tooltip,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from "recharts";
 
-export const CircularProgress = ({ value, size = 72, stroke = 7 }: { value: number; size?: number; stroke?: number; }) => {
+export const CircularProgress = ({
+  value,
+  size = 72,
+  stroke = 7,
+}: {
+  value: number;
+  size?: number;
+  stroke?: number;
+}) => {
   const radius = (size - stroke) / 2;
   const c = radius * 2 * Math.PI;
   const offset = c - (Math.min(100, Math.max(0, value)) / 100) * c;
   return (
     <div className="relative" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={radius} stroke="currentColor"
-          strokeWidth={stroke} fill="none" className="text-slate-200 dark:text-slate-700" />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="currentColor"
+          strokeWidth={stroke}
+          fill="none"
+          className="text-slate-200 dark:text-slate-700"
+        />
         <motion.circle
-          cx={size / 2} cy={size / 2} r={radius}
-          stroke="url(#progressGrad)" strokeWidth={stroke} fill="none"
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="url(#progressGrad)"
+          strokeWidth={stroke}
+          fill="none"
           strokeLinecap="round"
           strokeDasharray={c}
           initial={{ strokeDashoffset: c }}
@@ -31,38 +63,64 @@ export const CircularProgress = ({ value, size = 72, stroke = 7 }: { value: numb
         </defs>
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-lg font-black text-slate-900 dark:text-white">{Math.round(value)}%</span>
+        <span className="text-lg font-black text-slate-900 dark:text-white">
+          {Math.round(value)}%
+        </span>
       </div>
     </div>
   );
 };
 
-export const FormPill = ({ result, index }: { result: "W" | "L"; index: number; }) => (
+export const FormPill = ({
+  result,
+  index,
+}: {
+  result: "W" | "L";
+  index: number;
+}) => (
   <motion.div
     initial={{ opacity: 0, scale: 0.6 }}
     animate={{ opacity: 1, scale: 1 }}
     transition={{ delay: 0.4 + index * 0.07, type: "spring", stiffness: 220 }}
     className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black shadow-md
-      ${result === "W"
-        ? "bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-emerald-500/40"
-        : "bg-gradient-to-br from-rose-400 to-rose-600 text-white shadow-rose-500/40"}`}
+      ${
+        result === "W"
+          ? "bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-emerald-500/40"
+          : "bg-gradient-to-br from-rose-400 to-rose-600 text-white shadow-rose-500/40"
+      }`}
   >
     {result}
   </motion.div>
 );
 
-export const CategoryBar = ({ label, wins, losses, color }: { label: string; wins: number; losses: number; color: string; }) => {
+export const CategoryBar = ({
+  label,
+  wins,
+  losses,
+  color,
+}: {
+  label: string;
+  wins: number;
+  losses: number;
+  color: string;
+}) => {
   const total = wins + losses;
   const winPct = total ? (wins / total) * 100 : 0;
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{label}</span>
-          <span className="text-xs text-slate-500 dark:text-slate-400">({total} matches)</span>
+          <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
+            {label}
+          </span>
+          <span className="text-xs text-slate-500 dark:text-slate-400">
+            ({total} matches)
+          </span>
         </div>
         <div className="text-sm font-bold text-slate-800 dark:text-slate-100">
-          {wins}<span className="text-slate-400 font-normal">W</span> – {losses}<span className="text-slate-400 font-normal">L</span>
+          {wins}
+          <span className="text-slate-400 font-normal">W</span> – {losses}
+          <span className="text-slate-400 font-normal">L</span>
         </div>
       </div>
       <div className="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex">
@@ -84,98 +142,181 @@ export const CategoryBar = ({ label, wins, losses, color }: { label: string; win
 };
 
 export const KPI = ({
-  icon: Icon, label, value, sub, accent
-}: { icon: any; label: string; value: string | number; sub?: string; accent: string; }) => (
+  icon: Icon,
+  label,
+  value,
+  sub,
+  accent,
+}: {
+  icon: any;
+  label: string;
+  value: string | number;
+  sub?: string;
+  accent: string;
+}) => (
   <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-5 shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
-    <div className={`absolute -right-6 -top-6 w-24 h-24 rounded-full blur-2xl opacity-20 group-hover:opacity-40 transition-opacity ${accent}`} />
+    <div
+      className={`absolute -right-6 -top-6 w-24 h-24 rounded-full blur-2xl opacity-20 group-hover:opacity-40 transition-opacity ${accent}`}
+    />
     <div className="relative z-10">
       <div className="flex items-center justify-between mb-3">
-        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${accent} bg-opacity-15`}>
+        <div
+          className={`w-10 h-10 rounded-2xl flex items-center justify-center ${accent} bg-opacity-15`}
+        >
           <Icon className="w-5 h-5 text-white" />
         </div>
       </div>
-      <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">{label}</div>
-      <div className="text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none">{value}</div>
-      {sub && <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">{sub}</div>}
+      <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+        {label}
+      </div>
+      <div className="text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none">
+        {value}
+      </div>
+      {sub && (
+        <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+          {sub}
+        </div>
+      )}
     </div>
   </div>
 );
 
-export const Badges = ({ matches, playerId }: { matches: any[]; playerId: string; }) => {
-  const [badges, setBadges] = useState<{ id: string; name: string; desc: string; icon: string; color: string }[]>([]);
+export const Badges = ({
+  matches,
+  playerId,
+}: {
+  matches: any[];
+  playerId: string;
+}) => {
+  const [badges, setBadges] = useState<
+    { id: string; name: string; desc: string; icon: string; color: string }[]
+  >([]);
 
   useEffect(() => {
     const earned = [];
-    
+
     // Giant Slayer: Won against someone with 150+ more ELO
-    const giantSlayer = matches.some(m => {
+    const giantSlayer = matches.some((m) => {
       if (m.winner_id !== playerId) return false;
       const opponent = m.player1_id === playerId ? m.player2 : m.player1;
-      const myElo = m.player1_id === playerId ? m.player1?.elo_rating : m.player2?.elo_rating;
+      const myElo =
+        m.player1_id === playerId
+          ? m.player1?.elo_rating
+          : m.player2?.elo_rating;
       return opponent?.elo_rating - myElo >= 150;
     });
-    if (giantSlayer) earned.push({ id: 'giant_slayer', name: 'Giant Slayer', desc: 'Beat an opponent 150+ ELO higher', icon: '⚔️', color: 'from-amber-400 to-orange-600' });
-
-      // Clean Sweep: Win where opponent score < 5
-      const cleanSweep = matches.some(m => {
-        if (m.winner_id !== playerId) return false;
-        // Parse match_score JSON to see if any set had opponent score < 5
-        if (m.match_score && Array.isArray(m.match_score)) {
-          return m.match_score.some((set: any) => {
-            const myScore = m.winner_id === m.player1_id ? set.p1_score : set.p2_score;
-            const oppScore = m.winner_id === m.player1_id ? set.p2_score : set.p1_score;
-            return myScore > oppScore && oppScore < 5;
-          });
-        }
-        return false;
+    if (giantSlayer)
+      earned.push({
+        id: "giant_slayer",
+        name: "Giant Slayer",
+        desc: "Beat an opponent 150+ ELO higher",
+        icon: "⚔️",
+        color: "from-amber-400 to-orange-600",
       });
-      if (cleanSweep) earned.push({ id: 'clean_sweep', name: 'Clean Sweep', desc: 'Kept an opponent under 5 points', icon: '??', color: 'from-cyan-400 to-blue-600' });
 
+    // Clean Sweep: Win where opponent score < 5
+    const cleanSweep = matches.some((m) => {
+      if (m.winner_id !== playerId) return false;
+      // Parse match_score JSON to see if any set had opponent score < 5
+      if (m.match_score && Array.isArray(m.match_score)) {
+        return m.match_score.some((set: any) => {
+          const myScore =
+            m.winner_id === m.player1_id ? set.p1_score : set.p2_score;
+          const oppScore =
+            m.winner_id === m.player1_id ? set.p2_score : set.p1_score;
+          return myScore > oppScore && oppScore < 5;
+        });
+      }
+      return false;
+    });
+    if (cleanSweep)
+      earned.push({
+        id: "clean_sweep",
+        name: "Clean Sweep",
+        desc: "Kept an opponent under 5 points",
+        icon: "??",
+        color: "from-cyan-400 to-blue-600",
+      });
 
     // Night Owl: Played a match between 00:00 and 05:00
-    const nightOwl = matches.some(m => {
+    const nightOwl = matches.some((m) => {
       const h = new Date(m.created_at).getHours();
       return h >= 0 && h < 5;
     });
-    if (nightOwl) earned.push({ id: 'night_owl', name: 'Night Owl', desc: 'Played past midnight', icon: '🦉', color: 'from-indigo-400 to-purple-600' });
+    if (nightOwl)
+      earned.push({
+        id: "night_owl",
+        name: "Night Owl",
+        desc: "Played past midnight",
+        icon: "🦉",
+        color: "from-indigo-400 to-purple-600",
+      });
 
     // Early Bird: Played a match between 05:00 and 08:00
-    const earlyBird = matches.some(m => {
+    const earlyBird = matches.some((m) => {
       const h = new Date(m.created_at).getHours();
       return h >= 5 && h < 8;
     });
-    if (earlyBird) earned.push({ id: 'early_bird', name: 'Early Bird', desc: 'Played before 8 AM', icon: '🌅', color: 'from-sky-400 to-blue-600' });
+    if (earlyBird)
+      earned.push({
+        id: "early_bird",
+        name: "Early Bird",
+        desc: "Played before 8 AM",
+        icon: "🌅",
+        color: "from-sky-400 to-blue-600",
+      });
 
-    
-      // Ironman: 5 consecutive days of logged matches
-      const dates = [...new Set(matches.map(m => new Date(m.created_at).toDateString()))]
-        .map(d => new Date(d).getTime())
-        .sort((a, b) => b - a);
-        
-      let maxConsecutive = 1;
-      let currentConsecutive = 1;
-      const oneDay = 24 * 60 * 60 * 1000;
-      
-      for (let i = 0; i < dates.length - 1; i++) {
-        if (dates[i] - dates[i+1] <= oneDay + 1000 * 60 * 60) {
-          currentConsecutive++;
-          if (currentConsecutive > maxConsecutive) maxConsecutive = currentConsecutive;
-        } else {
-          currentConsecutive = 1;
-        }
+    // Ironman: 5 consecutive days of logged matches
+    const dates = [
+      ...new Set(matches.map((m) => new Date(m.created_at).toDateString())),
+    ]
+      .map((d) => new Date(d).getTime())
+      .sort((a, b) => b - a);
+
+    let maxConsecutive = 1;
+    let currentConsecutive = 1;
+    const oneDay = 24 * 60 * 60 * 1000;
+
+    for (let i = 0; i < dates.length - 1; i++) {
+      if (dates[i] - dates[i + 1] <= oneDay + 1000 * 60 * 60) {
+        currentConsecutive++;
+        if (currentConsecutive > maxConsecutive)
+          maxConsecutive = currentConsecutive;
+      } else {
+        currentConsecutive = 1;
       }
-      
-      if (maxConsecutive >= 5) earned.push({ id: 'ironman', name: 'Ironman', desc: '5 consecutive days of logged matches', icon: '??', color: 'from-rose-400 to-red-600' });
+    }
 
+    if (maxConsecutive >= 5)
+      earned.push({
+        id: "ironman",
+        name: "Ironman",
+        desc: "5 consecutive days of logged matches",
+        icon: "??",
+        color: "from-rose-400 to-red-600",
+      });
 
     // Streaker: current or historical streak >= 5 (simplification: if they won 5 of last 5)
     let streak = 0;
     let maxStreak = 0;
-    matches.sort((a,b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()).forEach(m => {
-      if (m.winner_id === playerId) streak++; else streak = 0;
-      maxStreak = Math.max(maxStreak, streak);
-    });
-    if (maxStreak >= 5) earned.push({ id: 'streaker', name: 'Streaker', desc: 'Won 5 matches in a row', icon: '🔥', color: 'from-red-500 to-rose-600' });
+    matches
+      .sort(
+        (a, b) =>
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+      )
+      .forEach((m) => {
+        if (m.winner_id === playerId) streak++;
+        else streak = 0;
+        maxStreak = Math.max(maxStreak, streak);
+      });
+    if (maxStreak >= 5)
+      earned.push({
+        id: "streaker",
+        name: "Streaker",
+        desc: "Won 5 matches in a row",
+        icon: "🔥",
+        color: "from-red-500 to-rose-600",
+      });
 
     setBadges(earned);
   }, [matches, playerId]);
@@ -184,10 +325,16 @@ export const Badges = ({ matches, playerId }: { matches: any[]; playerId: string
 
   return (
     <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-5 sm:p-6 shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 mt-6 md:mt-8">
-      <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">Achievements</h3>
+      <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
+        Achievements
+      </h3>
       <div className="flex flex-wrap gap-3">
-        {badges.map(b => (
-          <div key={b.id} className={`flex items-center gap-2 px-3 py-2 rounded-2xl bg-gradient-to-br ${b.color} text-white shadow-md cursor-help`} title={b.desc}>
+        {badges.map((b) => (
+          <div
+            key={b.id}
+            className={`flex items-center gap-2 px-3 py-2 rounded-2xl bg-gradient-to-br ${b.color} text-white shadow-md cursor-help`}
+            title={b.desc}
+          >
             <span className="text-xl">{b.icon}</span>
             <div className="flex flex-col">
               <span className="text-xs font-black leading-tight">{b.name}</span>
@@ -200,15 +347,20 @@ export const Badges = ({ matches, playerId }: { matches: any[]; playerId: string
 };
 
 export const ActivityHeatmap = ({ matches }: { matches: any[] }) => {
-  const [heatmapData, setHeatmapData] = useState<{ date: string; count: number }[]>([]);
+  const [heatmapData, setHeatmapData] = useState<
+    { date: string; count: number }[]
+  >([]);
 
   useEffect(() => {
     const counts: Record<string, number> = {};
-    matches.forEach(m => {
-      const dateStr = new Date(m.created_at).toISOString().split('T')[0];
+    matches.forEach((m) => {
+      const dateStr = new Date(m.created_at).toISOString().split("T")[0];
       counts[dateStr] = (counts[dateStr] || 0) + 1;
     });
-    const data = Object.keys(counts).map(date => ({ date, count: counts[date] }));
+    const data = Object.keys(counts).map((date) => ({
+      date,
+      count: counts[date],
+    }));
     setHeatmapData(data);
   }, [matches]);
 
@@ -218,7 +370,9 @@ export const ActivityHeatmap = ({ matches }: { matches: any[] }) => {
 
   return (
     <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-5 sm:p-6 shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 mt-6 md:mt-8 overflow-hidden">
-      <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-6">Activity Heatmap</h3>
+      <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-6">
+        Activity Heatmap
+      </h3>
       <div className="overflow-x-auto pb-4 custom-scrollbar">
         <div style={{ minWidth: "600px" }}>
           <CalendarHeatmap
@@ -227,7 +381,7 @@ export const ActivityHeatmap = ({ matches }: { matches: any[] }) => {
             values={heatmapData}
             classForValue={(value) => {
               if (!value || value.count === 0) {
-                return 'color-empty';
+                return "color-empty";
               }
               if (value.count >= 4) return `color-scale-4`;
               return `color-scale-${value.count}`;
@@ -235,7 +389,7 @@ export const ActivityHeatmap = ({ matches }: { matches: any[] }) => {
             showWeekdayLabels={true}
             titleForValue={(value) => {
               if (!value) return "No matches";
-              return `${value.count} match${value.count !== 1 ? 'es' : ''} on ${value.date}`;
+              return `${value.count} match${value.count !== 1 ? "es" : ""} on ${value.date}`;
             }}
           />
         </div>
@@ -258,7 +412,10 @@ export const ActivityHeatmap = ({ matches }: { matches: any[] }) => {
 export function LoadingScreen() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#070d1a] selection:bg-emerald-500/30 font-sans">
-      <div className="relative overflow-hidden bg-slate-950" style={{ minHeight: '88vh' }}>
+      <div
+        className="relative overflow-hidden bg-slate-950"
+        style={{ minHeight: "88vh" }}
+      >
         <div className="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-10 pt-20 pb-28">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center min-h-[60vh]">
             <div className="flex flex-col justify-center space-y-6">
@@ -288,19 +445,29 @@ export function LoadingScreen() {
   );
 }
 
-export const HeadToHeadWidget = ({ currentUser, targetPlayer, matches }: { currentUser: any, targetPlayer: any, matches: any[] }) => {
-  if (!currentUser || !targetPlayer || currentUser.id === targetPlayer.id) return null;
-  
-  const h2hMatches = matches.filter(m => 
-    (m.player1_id === currentUser.id && m.player2_id === targetPlayer.id) ||
-    (m.player2_id === currentUser.id && m.player1_id === targetPlayer.id)
+export const HeadToHeadWidget = ({
+  currentUser,
+  targetPlayer,
+  matches,
+}: {
+  currentUser: any;
+  targetPlayer: any;
+  matches: any[];
+}) => {
+  if (!currentUser || !targetPlayer || currentUser.id === targetPlayer.id)
+    return null;
+
+  const h2hMatches = matches.filter(
+    (m) =>
+      (m.player1_id === currentUser.id && m.player2_id === targetPlayer.id) ||
+      (m.player2_id === currentUser.id && m.player1_id === targetPlayer.id),
   );
-  
+
   if (h2hMatches.length === 0) return null;
 
   let wins = 0;
   let losses = 0;
-  h2hMatches.forEach(m => {
+  h2hMatches.forEach((m) => {
     if (m.match_winner_id === currentUser.id) wins++;
     else if (m.match_winner_id === targetPlayer.id) losses++;
   });
@@ -318,7 +485,9 @@ export const HeadToHeadWidget = ({ currentUser, targetPlayer, matches }: { curre
             <div className="text-xs font-bold text-slate-400 mb-1">YOU</div>
             <div className="text-3xl font-black text-emerald-500">{wins}</div>
           </div>
-          <div className="text-xl font-black text-slate-300 dark:text-slate-600">-</div>
+          <div className="text-xl font-black text-slate-300 dark:text-slate-600">
+            -
+          </div>
           <div className="text-center">
             <div className="text-xs font-bold text-slate-400 mb-1">THEM</div>
             <div className="text-3xl font-black text-rose-500">{losses}</div>
@@ -330,8 +499,14 @@ export const HeadToHeadWidget = ({ currentUser, targetPlayer, matches }: { curre
             <span className="text-slate-400">{h2hMatches.length} Matches</span>
           </div>
           <div className="h-3 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden flex">
-            <div className="h-full bg-emerald-500" style={{ width: `${winPct}%` }} />
-            <div className="h-full bg-rose-500" style={{ width: `${100 - winPct}%` }} />
+            <div
+              className="h-full bg-emerald-500"
+              style={{ width: `${winPct}%` }}
+            />
+            <div
+              className="h-full bg-rose-500"
+              style={{ width: `${100 - winPct}%` }}
+            />
           </div>
         </div>
       </div>
@@ -339,15 +514,20 @@ export const HeadToHeadWidget = ({ currentUser, targetPlayer, matches }: { curre
   );
 };
 
-
-
-
-
-export const DoublesSynergyWidget = ({ matches, playerId, allPlayers }: { matches: any[], playerId: string, allPlayers: any[] }) => {
+export const DoublesSynergyWidget = ({
+  matches,
+  playerId,
+  allPlayers,
+}: {
+  matches: any[];
+  playerId: string;
+  allPlayers: any[];
+}) => {
   const synergy = useMemo(() => {
-    const stats: Record<string, { wins: number; total: number; name: string }> = {};
+    const stats: Record<string, { wins: number; total: number; name: string }> =
+      {};
 
-    matches.forEach(m => {
+    matches.forEach((m) => {
       // Determine if I played doubles and who my partner was
       let partnerId = null;
       let myTeamWon = false;
@@ -368,7 +548,9 @@ export const DoublesSynergyWidget = ({ matches, playerId, allPlayers }: { matche
 
       if (partnerId) {
         if (!stats[partnerId]) {
-          const pName = allPlayers?.find(p => p.id === partnerId)?.full_name || "Unknown Partner";
+          const pName =
+            allPlayers?.find((p) => p.id === partnerId)?.full_name ||
+            "Unknown Partner";
           stats[partnerId] = { wins: 0, total: 0, name: pName };
         }
         stats[partnerId].total++;
@@ -376,8 +558,14 @@ export const DoublesSynergyWidget = ({ matches, playerId, allPlayers }: { matche
       }
     });
 
-    const arr = Object.entries(stats).map(([id, s]) => ({ id, ...s, winPct: s.wins / s.total }));
-    return arr.sort((a, b) => b.winPct - a.winPct || b.total - a.total).filter(x => x.total > 0);
+    const arr = Object.entries(stats).map(([id, s]) => ({
+      id,
+      ...s,
+      winPct: s.wins / s.total,
+    }));
+    return arr
+      .sort((a, b) => b.winPct - a.winPct || b.total - a.total)
+      .filter((x) => x.total >= 3);
   }, [matches, playerId, allPlayers]);
 
   if (synergy.length === 0) return null;
@@ -394,14 +582,21 @@ export const DoublesSynergyWidget = ({ matches, playerId, allPlayers }: { matche
         <div className="p-2 bg-teal-100 dark:bg-teal-900/50 rounded-lg">
           <Users className="w-5 h-5 text-teal-600 dark:text-teal-400" />
         </div>
-        <h3 className="text-sm font-black uppercase tracking-widest text-teal-900 dark:text-teal-300">Best Doubles Partner</h3>
+        <h3 className="text-sm font-black uppercase tracking-widest text-teal-900 dark:text-teal-300">
+          Best Doubles Partner
+        </h3>
       </div>
 
       <div className="relative z-10">
-        <div className="text-xl font-black text-teal-700 dark:text-teal-300 mb-1">{bestPartner.name}</div>
+        <div className="text-xl font-black text-teal-700 dark:text-teal-300 mb-1">
+          {bestPartner.name}
+        </div>
         <div className="flex items-end gap-2">
           <div className="text-3xl font-black text-teal-600 dark:text-teal-400">
-            {Math.round(bestPartner.winPct * 100)}% <span className="text-sm uppercase tracking-widest text-teal-500/70">Win Rate</span>
+            {Math.round(bestPartner.winPct * 100)}%{" "}
+            <span className="text-sm uppercase tracking-widest text-teal-500/70">
+              Win Rate
+            </span>
           </div>
         </div>
         <div className="text-xs font-bold text-teal-600/70 dark:text-teal-400/70 mt-2">

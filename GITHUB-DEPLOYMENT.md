@@ -159,6 +159,7 @@ Get your badge from: Netlify Dashboard → Site Settings → Status badges
 ### Build Failed?
 
 **Check Netlify Build Logs:**
+
 1. Go to Netlify Dashboard
 2. Click "Deploys"
 3. Click on the failed deploy
@@ -186,7 +187,7 @@ Get your badge from: Netlify Dashboard → Site Settings → Status badges
 
 - [ ] Create GitHub account
 - [ ] Upload code to GitHub
-- [ ] Create Netlify account  
+- [ ] Create Netlify account
 - [ ] Connect GitHub to Netlify
 - [ ] Deploy site
 - [ ] Customize URL (optional)

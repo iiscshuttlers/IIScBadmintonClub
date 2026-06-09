@@ -60,7 +60,9 @@ export function useSupabaseSession(): SupabaseSessionResult {
     // Failsafe: if nothing resolves within 5s, clear the loading flag.
     const failsafe = setTimeout(() => {
       if (mounted && !hasResolved.current) {
-        console.warn("[useSupabaseSession] Failsafe triggered — clearing loading state.");
+        console.warn(
+          "[useSupabaseSession] Failsafe triggered — clearing loading state.",
+        );
         hasResolved.current = true;
         setLoading(false);
       }
@@ -77,12 +79,13 @@ export function useSupabaseSession(): SupabaseSessionResult {
     };
 
     // Primary: onAuthStateChange fires INITIAL_SESSION immediately on mount.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, s) => resolve(s)
-    );
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, s) => resolve(s));
 
     // Fallback: in case the listener never fires (misconfigured client, etc.)
-    supabase.auth.getSession()
+    supabase.auth
+      .getSession()
       .then(({ data }) => resolve(data.session))
       .catch(() => resolve(null));
 

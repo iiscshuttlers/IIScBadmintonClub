@@ -1,9 +1,9 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const placeholderUrl = 'https://placeholder-url.supabase.co';
-const placeholderAnonKey = 'placeholder-anon-key';
+const placeholderUrl = "https://placeholder-url.supabase.co";
+const placeholderAnonKey = "placeholder-anon-key";
 
 export const isSupabaseConfigured =
   Boolean(supabaseUrl && supabaseAnonKey) &&
@@ -11,7 +11,9 @@ export const isSupabaseConfigured =
   supabaseAnonKey !== placeholderAnonKey;
 
 if (!isSupabaseConfigured) {
-  console.warn('Missing Supabase environment variables. Please check your .env.local file.');
+  console.warn(
+    "Missing Supabase environment variables. Please check your .env.local file.",
+  );
 }
 
 // Create a single supabase client for interacting with your database
@@ -28,7 +30,7 @@ export const supabase = createClient(
       // Auto-refresh: keep enabled but we add a startup health check.
       autoRefreshToken: true,
     },
-  }
+  },
 );
 
 /**
@@ -43,7 +45,9 @@ export const supabase = createClient(
  */
 export async function validateStoredSession(): Promise<void> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (!session) return; // No stored session — nothing to validate.
 
     // Race getUser() against a 5-second timeout.
@@ -51,25 +55,38 @@ export async function validateStoredSession(): Promise<void> {
     const result = await Promise.race([
       supabase.auth.getUser(),
       new Promise<{ data: { user: null }; error: Error }>((resolve) =>
-        setTimeout(() => resolve({
-          data: { user: null },
-          error: new Error('Session validation timed out'),
-        }), 5000)
+        setTimeout(
+          () =>
+            resolve({
+              data: { user: null },
+              error: new Error("Session validation timed out"),
+            }),
+          5000,
+        ),
       ),
     ]);
 
     if (result.error || !result.data.user) {
-      console.warn('[Auth] Stored session is invalid/expired — clearing to prevent auth limbo:', result.error?.message);
+      console.warn(
+        "[Auth] Stored session is invalid/expired — clearing to prevent auth limbo:",
+        result.error?.message,
+      );
       // Clear everything to break the deadlock
-      await supabase.auth.signOut({ scope: 'local' });
+      await supabase.auth.signOut({ scope: "local" });
       // Belt-and-suspenders: also clear the raw storage keys
       try {
-        const storageKey = `sb-${new URL(supabaseUrl || placeholderUrl).hostname.split('.')[0]}-auth-token`;
+        const storageKey = `sb-${new URL(supabaseUrl || placeholderUrl).hostname.split(".")[0]}-auth-token`;
         localStorage.removeItem(storageKey);
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
   } catch (err) {
-    console.warn('[Auth] Session validation crashed — clearing session:', err);
-    try { await supabase.auth.signOut({ scope: 'local' }); } catch { /* ignore */ }
+    console.warn("[Auth] Session validation crashed — clearing session:", err);
+    try {
+      await supabase.auth.signOut({ scope: "local" });
+    } catch {
+      /* ignore */
+    }
   }
 }

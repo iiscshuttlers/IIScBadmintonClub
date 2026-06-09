@@ -23,6 +23,12 @@
       "@assets/*": ["attached_assets/*"]
     }
   },
-  "include": ["client/src", "server", "shared", "vite.config.ts", "capacitor.config.ts"],
+  "include": [
+    "client/src",
+    "server",
+    "shared",
+    "vite.config.ts",
+    "capacitor.config.ts"
+  ],
   "references": []
 }

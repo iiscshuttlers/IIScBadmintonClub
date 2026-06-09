@@ -1,11 +1,5 @@
 {
-  "formats": [
-    "MS",
-    "WS",
-    "MD",
-    "WD",
-    "XD"
-  ],
+  "formats": ["MS", "WS", "MD", "WD", "XD"],
   "lastUpdated": "2026-05-03T14:15:18.515Z",
   "config": {
     "eventName": "Farewell Tournament 2026",

@@ -1,14 +1,22 @@
-export async function optimizeImage(file: File, maxWidth = 1024, quality = 0.8): Promise<File> {
+export async function optimizeImage(
+  file: File,
+  maxWidth = 1024,
+  quality = 0.8,
+): Promise<File> {
   let blob: Blob = file;
 
   // Handle HEIC/HEIF files if the CDN script is loaded
-  if (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif') || file.type === 'image/heic') {
-    if (typeof window !== 'undefined' && (window as any).heic2any) {
+  if (
+    file.name.toLowerCase().endsWith(".heic") ||
+    file.name.toLowerCase().endsWith(".heif") ||
+    file.type === "image/heic"
+  ) {
+    if (typeof window !== "undefined" && (window as any).heic2any) {
       try {
         const result = await (window as any).heic2any({
           blob: file,
-          toType: 'image/jpeg',
-          quality: 0.8
+          toType: "image/jpeg",
+          quality: 0.8,
         });
         blob = Array.isArray(result) ? result[0] : result;
       } catch (e) {
@@ -20,7 +28,7 @@ export async function optimizeImage(file: File, maxWidth = 1024, quality = 0.8):
   }
 
   // If it's a PDF or something that can't be drawn on canvas, skip
-  if (!blob.type.startsWith('image/')) {
+  if (!blob.type.startsWith("image/")) {
     return file;
   }
 
@@ -38,10 +46,10 @@ export async function optimizeImage(file: File, maxWidth = 1024, quality = 0.8):
         width = maxWidth;
       }
 
-      const canvas = document.createElement('canvas');
+      const canvas = document.createElement("canvas");
       canvas.width = width;
       canvas.height = height;
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext("2d");
       if (!ctx) {
         resolve(new File([blob], file.name, { type: blob.type }));
         return;
@@ -60,7 +68,7 @@ export async function optimizeImage(file: File, maxWidth = 1024, quality = 0.8):
           }
         },
         "image/webp",
-        quality
+        quality,
       );
     };
 

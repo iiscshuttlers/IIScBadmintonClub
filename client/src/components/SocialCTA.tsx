@@ -3,19 +3,23 @@
  * Used on Announcements, Gallery, and Contact pages.
  * Pass variant="compact" for the small inline layout (Gallery bottom).
  */
-import { Instagram, Youtube } from 'lucide-react';
+import { Instagram, Youtube } from "lucide-react";
 
 interface SocialCTAProps {
-  variant?: 'card' | 'compact';
+  variant?: "card" | "compact";
   /** Override the Instagram handle shown (default: @badminton.iisc) */
   instagramHandle?: string;
 }
 
-export function SocialCTA({ variant = 'card', instagramHandle = '@badminton.iisc' }: SocialCTAProps) {
-  const instagramUrl = 'https://www.instagram.com/badminton.iisc/';
-  const youtubeUrl = 'https://youtube.com/@iiscbadmintonclub?si=tr_GtVnxXZpyg4T7';
+export function SocialCTA({
+  variant = "card",
+  instagramHandle = "@badminton.iisc",
+}: SocialCTAProps) {
+  const instagramUrl = "https://www.instagram.com/badminton.iisc/";
+  const youtubeUrl =
+    "https://youtube.com/@iiscbadmintonclub?si=tr_GtVnxXZpyg4T7";
 
-  if (variant === 'compact') {
+  if (variant === "compact") {
     return (
       <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
         <a
@@ -45,14 +49,16 @@ export function SocialCTA({ variant = 'card', instagramHandle = '@badminton.iisc
     <div className="bg-gradient-to-br from-blue-900 to-emerald-900 text-white p-8 md:p-10 rounded-3xl shadow-xl relative overflow-hidden">
       <div className="absolute inset-0 hero-pattern" />
       <div className="relative z-10">
-        <h2 className="text-2xl font-black mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>
+        <h2
+          className="text-2xl font-black mb-2"
+          style={{ fontFamily: "Playfair Display, serif" }}
+        >
           Follow Our Journey
         </h2>
         <p className="text-gray-300 text-sm mb-6 max-w-lg">
-          Catch the latest match highlights, event photos, and community moments on our social channels.
+          Catch the latest match highlights, event photos, and community moments
+          on our social channels.
         </p>
-
-
 
         <div className="flex flex-wrap gap-3">
           <a

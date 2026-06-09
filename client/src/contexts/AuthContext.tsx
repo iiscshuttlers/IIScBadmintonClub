@@ -1,4 +1,10 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { isAdminEmail } from "@/lib/admin";
@@ -51,7 +57,7 @@ export interface AuthContextType {
   isMainAdmin: boolean;
   isUmpire: boolean;
   isInitializing: boolean; // True while resolving session OR fetching profile
-  userRoles: { id: string, role: string }[];
+  userRoles: { id: string; role: string }[];
   updateRole: (playerId: string, role: string | null) => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -86,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (sessionLoading) return;
-    
+
     if (session?.user?.id) {
       setProfileLoading(true);
       fetchProfile(session.user.id);
@@ -107,16 +113,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const [userRoles, setUserRoles] = useState<{ id: string, role: string }[]>([]);
+  const [userRoles, setUserRoles] = useState<{ id: string; role: string }[]>(
+    [],
+  );
 
   useEffect(() => {
     const fetchRoles = async () => {
       try {
-        const { data } = await supabase.from('site_data').select('value').eq('key', 'roles').maybeSingle();
+        const { data } = await supabase
+          .from("site_data")
+          .select("value")
+          .eq("key", "roles")
+          .maybeSingle();
         if (data?.value && Array.isArray(data.value)) {
           setUserRoles(data.value);
         }
-      } catch (err) { console.warn("Failed to fetch roles", err); }
+      } catch (err) {
+        console.warn("Failed to fetch roles", err);
+      }
     };
     fetchRoles();
   }, [session]);
@@ -125,37 +139,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!profile?.id) return;
 
-    const channel = supabase.channel('realtime_matches')
+    const channel = supabase
+      .channel("realtime_matches")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'matches',
-          filter: `player2_id=eq.${profile.id}`
+          event: "INSERT",
+          schema: "public",
+          table: "matches",
+          filter: `player2_id=eq.${profile.id}`,
         },
         async (payload) => {
-          if (payload.new.status === 'pending') {
+          if (payload.new.status === "pending") {
             try {
               // Fetch the opponent's name for a better notification
-              const { data } = await supabase.from('players').select('full_name').eq('id', payload.new.player1_id).single();
-              const challengerName = data?.full_name || 'Someone';
+              const { data } = await supabase
+                .from("players")
+                .select("full_name")
+                .eq("id", payload.new.player1_id)
+                .single();
+              const challengerName = data?.full_name || "Someone";
               toast.info(`🏸 New Match Request`, {
                 description: `${challengerName} just logged a match against you!`,
                 action: {
                   label: "View",
-                  onClick: () => window.location.href = `${import.meta.env.BASE_URL}player/${profile.id}`
+                  onClick: () =>
+                    (window.location.href = `${import.meta.env.BASE_URL}player/${profile.id}`),
                 },
-                duration: 10000
+                duration: 10000,
               });
             } catch (err) {
               // Fallback
               toast.info("🏸 New Match Request", {
-                description: "Someone just logged a match against you!"
+                description: "Someone just logged a match against you!",
               });
             }
           }
-        }
+        },
       )
       .subscribe();
 
@@ -165,27 +185,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [profile?.id]);
 
   const isInitializing = sessionLoading || (!!session && profileLoading);
-  
-  const isMainAdmin = session?.user?.email ? isAdminEmail(session.user.email) : false;
-  const assignedRole = profile ? userRoles.find(r => r.id === profile.id)?.role : null;
-  const isAdmin = isMainAdmin || assignedRole === 'admin';
-  const isUmpire = isAdmin || assignedRole === 'umpire';
+
+  const isMainAdmin = session?.user?.email
+    ? isAdminEmail(session.user.email)
+    : false;
+  const assignedRole = profile
+    ? userRoles.find((r) => r.id === profile.id)?.role
+    : null;
+  const isAdmin = isMainAdmin || assignedRole === "admin";
+  const isUmpire = isAdmin || assignedRole === "umpire";
 
   usePushNotifications(profile?.user_id, profile?.id);
 
   const updateRole = async (playerId: string, role: string | null) => {
     let newRoles = [...userRoles];
     if (role === null) {
-      newRoles = newRoles.filter(r => r.id !== playerId);
+      newRoles = newRoles.filter((r) => r.id !== playerId);
     } else {
-      const idx = newRoles.findIndex(r => r.id === playerId);
+      const idx = newRoles.findIndex((r) => r.id === playerId);
       if (idx > -1) {
         newRoles[idx].role = role;
       } else {
         newRoles.push({ id: playerId, role });
       }
     }
-    await supabase.from('site_data').update({ value: newRoles }).eq('key', 'roles');
+    await supabase
+      .from("site_data")
+      .update({ value: newRoles })
+      .eq("key", "roles");
     setUserRoles(newRoles);
   };
 
@@ -217,4 +244,3 @@ export function useAuth() {
   }
   return context;
 }
-

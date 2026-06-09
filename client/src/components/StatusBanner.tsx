@@ -42,7 +42,9 @@ function getActiveAnnouncements(announcements: Announcement[]): string[] {
       }
       return false;
     })
-    .filter((item) => item.category === 'tournament' || item.priority === 'high')
+    .filter(
+      (item) => item.category === "tournament" || item.priority === "high",
+    )
     .map((item) => `🏸 ${item.title}`);
 }
 
@@ -53,65 +55,105 @@ export default function StatusBanner() {
     Promise.all([
       fetchSiteData<Holiday[]>("holidays", "holidays.json").catch(() => []),
       fetchSiteData<Event[]>("events", "events.json").catch(() => []),
-      fetchSiteData<{ recent: Announcement[] }>("announcements", "announcements.json").catch(() => ({ recent: [] }))
-    ]).then(([holidaysData, eventsData, announcementsData]) => {
-      
-      const holidays = Array.isArray(holidaysData) ? holidaysData : [];
-      const events = Array.isArray(eventsData) ? eventsData : [];
-      const announcements = Array.isArray(announcementsData?.recent) ? announcementsData.recent : [];
+      fetchSiteData<{ recent: Announcement[] }>(
+        "announcements",
+        "announcements.json",
+      ).catch(() => ({ recent: [] })),
+    ])
+      .then(([holidaysData, eventsData, announcementsData]) => {
+        const holidays = Array.isArray(holidaysData) ? holidaysData : [];
+        const events = Array.isArray(eventsData) ? eventsData : [];
+        const announcements = Array.isArray(announcementsData?.recent)
+          ? announcementsData.recent
+          : [];
 
-      const todayDate = new Date();
-      const today = todayDate.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
-      const tomorrowDate = new Date(todayDate);
-      tomorrowDate.setDate(tomorrowDate.getDate() + 1);
-      const tomorrow = tomorrowDate.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+        const todayDate = new Date();
+        const today = todayDate.toLocaleDateString("en-CA", {
+          timeZone: "Asia/Kolkata",
+        });
+        const tomorrowDate = new Date(todayDate);
+        tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+        const tomorrow = tomorrowDate.toLocaleDateString("en-CA", {
+          timeZone: "Asia/Kolkata",
+        });
 
-      const msgs: BannerMessage[] = [];
+        const msgs: BannerMessage[] = [];
 
-      // 1. Holidays
-      const todayHoliday = holidays.find((h: Holiday) => h.date === today);
-      const tomorrowHoliday = holidays.find((h: Holiday) => h.date === tomorrow);
+        // 1. Holidays
+        const todayHoliday = holidays.find((h: Holiday) => h.date === today);
+        const tomorrowHoliday = holidays.find(
+          (h: Holiday) => h.date === tomorrow,
+        );
 
-      if (todayHoliday) {
-        msgs.push({ text: `🔴 Courts closed today — ${todayHoliday.name}`, colorClass: "text-red-300 font-bold drop-shadow-md" });
-      } else if (tomorrowHoliday) {
-        msgs.push({ text: `⚠️ Courts closed tomorrow — ${tomorrowHoliday.name}`, colorClass: "text-amber-300 font-bold drop-shadow-md" });
-      }
+        if (todayHoliday) {
+          msgs.push({
+            text: `🔴 Courts closed today — ${todayHoliday.name}`,
+            colorClass: "text-red-300 font-bold drop-shadow-md",
+          });
+        } else if (tomorrowHoliday) {
+          msgs.push({
+            text: `⚠️ Courts closed tomorrow — ${tomorrowHoliday.name}`,
+            colorClass: "text-amber-300 font-bold drop-shadow-md",
+          });
+        }
 
-      holidays.forEach((h: Holiday) => {
-        if (!h.date) return;
-        if (h.date !== today && h.date !== tomorrow) {
-          const diff = (new Date(h.date).getTime() - new Date(today).getTime()) / (1000 * 3600 * 24);
-          if (diff === 2) {
-            const readable = new Date(h.date).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
-            msgs.push({ text: `📅 Courts closed on ${readable} — ${h.name}`, colorClass: "text-white" });
+        holidays.forEach((h: Holiday) => {
+          if (!h.date) return;
+          if (h.date !== today && h.date !== tomorrow) {
+            const diff =
+              (new Date(h.date).getTime() - new Date(today).getTime()) /
+              (1000 * 3600 * 24);
+            if (diff === 2) {
+              const readable = new Date(h.date).toLocaleDateString("en-IN", {
+                day: "numeric",
+                month: "short",
+              });
+              msgs.push({
+                text: `📅 Courts closed on ${readable} — ${h.name}`,
+                colorClass: "text-white",
+              });
+            }
           }
+        });
+
+        // 2. Events
+        events.forEach((e: Event) => {
+          if (!e.date) return;
+          const diff =
+            (new Date(e.date).getTime() - new Date(today).getTime()) /
+            (1000 * 3600 * 24);
+          if (diff >= 0 && diff <= 7) {
+            msgs.push({
+              text: `🎉 Upcoming: ${e.title}`,
+              colorClass: "text-white",
+            });
+          }
+          if (e.registrationDeadline === today) {
+            msgs.push({
+              text: `⚡ Last day to register — ${e.title}`,
+              colorClass: "text-white",
+            });
+          }
+        });
+
+        // 3. Announcements
+        const liveAnnouncements = getActiveAnnouncements(announcements);
+        liveAnnouncements.forEach((a) =>
+          msgs.push({ text: a, colorClass: "text-white" }),
+        );
+
+        if (msgs.length > 0) {
+          setMessages(msgs);
+        } else {
+          setMessages([
+            {
+              text: "🏸 Welcome to IISc Badminton Club — Check Announcements for latest updates",
+              colorClass: "text-white",
+            },
+          ]);
         }
-      });
-
-      // 2. Events
-      events.forEach((e: Event) => {
-        if (!e.date) return;
-        const diff = (new Date(e.date).getTime() - new Date(today).getTime()) / (1000 * 3600 * 24);
-        if (diff >= 0 && diff <= 7) {
-          msgs.push({ text: `🎉 Upcoming: ${e.title}`, colorClass: "text-white" });
-        }
-        if (e.registrationDeadline === today) {
-          msgs.push({ text: `⚡ Last day to register — ${e.title}`, colorClass: "text-white" });
-        }
-      });
-
-      // 3. Announcements
-      const liveAnnouncements = getActiveAnnouncements(announcements);
-      liveAnnouncements.forEach(a => msgs.push({ text: a, colorClass: "text-white" }));
-
-      if (msgs.length > 0) {
-        setMessages(msgs);
-      } else {
-        setMessages([{ text: '🏸 Welcome to IISc Badminton Club — Check Announcements for latest updates', colorClass: "text-white" }]);
-      }
-
-    }).catch(err => console.warn("StatusBanner data fetch failed:", err));
+      })
+      .catch((err) => console.warn("StatusBanner data fetch failed:", err));
   }, []);
 
   if (!messages.length) return null;
@@ -120,16 +162,27 @@ export default function StatusBanner() {
     <div className="relative bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-2.5 overflow-hidden flex items-center z-20 shadow-md">
       <Link href="/announcements" className="flex-1 overflow-hidden min-w-0">
         <div className="marquee-anim flex gap-8 font-semibold tracking-wide text-sm md:text-base whitespace-nowrap hover:opacity-90 transition-opacity cursor-pointer">
-          {Array(2).fill(null).map((_, blockIdx) => (
-            <span key={blockIdx} className="whitespace-nowrap flex items-center gap-8">
-              {Array(10).fill(messages).flat().map((msg, idx) => (
-                <span key={`${blockIdx}-${idx}`} className="flex items-center gap-8">
-                  <span className={msg.colorClass}>{msg.text}</span>
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-white/40 flex-shrink-0" />
-                </span>
-              ))}
-            </span>
-          ))}
+          {Array(2)
+            .fill(null)
+            .map((_, blockIdx) => (
+              <span
+                key={blockIdx}
+                className="whitespace-nowrap flex items-center gap-8"
+              >
+                {Array(10)
+                  .fill(messages)
+                  .flat()
+                  .map((msg, idx) => (
+                    <span
+                      key={`${blockIdx}-${idx}`}
+                      className="flex items-center gap-8"
+                    >
+                      <span className={msg.colorClass}>{msg.text}</span>
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-white/40 flex-shrink-0" />
+                    </span>
+                  ))}
+              </span>
+            ))}
         </div>
       </Link>
     </div>

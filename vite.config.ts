@@ -45,7 +45,7 @@ function writeToLogFile(source: string, entries: unknown[]) {
 
   const logPath = path.join(LOG_DIR, `${source}.log`);
   const lines = entries.map(
-    (entry) => `[${new Date().toISOString()}] ${JSON.stringify(entry)}`
+    (entry) => `[${new Date().toISOString()}] ${JSON.stringify(entry)}`,
   );
 
   fs.appendFileSync(logPath, `${lines.join("\n")}\n`, "utf-8");
@@ -77,9 +77,12 @@ function vitePluginManusDebugCollector(): Plugin {
         req.on("end", () => {
           try {
             const payload = JSON.parse(body);
-            if (payload.consoleLogs) writeToLogFile("browserConsole", payload.consoleLogs);
-            if (payload.networkRequests) writeToLogFile("networkRequests", payload.networkRequests);
-            if (payload.sessionEvents) writeToLogFile("sessionReplay", payload.sessionEvents);
+            if (payload.consoleLogs)
+              writeToLogFile("browserConsole", payload.consoleLogs);
+            if (payload.networkRequests)
+              writeToLogFile("networkRequests", payload.networkRequests);
+            if (payload.sessionEvents)
+              writeToLogFile("sessionReplay", payload.sessionEvents);
 
             res.writeHead(200, { "Content-Type": "application/json" });
             res.end(JSON.stringify({ success: true }));
@@ -101,7 +104,10 @@ function vitePluginStorageProxy(): Plugin {
         const key = req.url?.replace(/^\//, "");
         if (!key) return res.end("Missing key");
 
-        const base = (process.env.BUILT_IN_FORGE_API_URL || "").replace(/\/+$/, "");
+        const base = (process.env.BUILT_IN_FORGE_API_URL || "").replace(
+          /\/+$/,
+          "",
+        );
         const apiKey = process.env.BUILT_IN_FORGE_API_KEY;
 
         if (!base || !apiKey) return res.end("Not configured");
@@ -136,40 +142,45 @@ export default defineConfig({
     vitePluginStorageProxy(),
 
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: "autoUpdate",
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,json,webp,woff2}'],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,json,webp,woff2}"],
         maximumFileSizeToCacheInBytes: 5000000,
         skipWaiting: true,
         clientsClaim: true,
       },
       manifest: {
-        name: 'IISc Shuttlers',
-        short_name: 'Shuttlers',
-        description: 'IISc Badminton Club Application',
-        theme_color: '#10b981',
-        background_color: '#ffffff',
-        display: 'standalone',
+        name: "IISc Shuttlers",
+        short_name: "Shuttlers",
+        description: "IISc Badminton Club Application",
+        theme_color: "#10b981",
+        background_color: "#ffffff",
+        display: "standalone",
         icons: [
           {
-            src: '/icon-192.png',
-            sizes: '192x192',
-            type: 'image/png'
+            src: "/icon-192.png",
+            sizes: "192x192",
+            type: "image/png",
           },
           {
-            src: '/icon-512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          }
-        ]
-      }
+            src: "/icon-512.png",
+            sizes: "512x512",
+            type: "image/png",
+          },
+        ],
+      },
     }),
   ],
 
   // 🔥 CRITICAL FIX
   // For Capacitor, we want relative base './'. For github pages we want '/iiscshuttlers/'.
   // Otherwise use '/'
-  base: process.env.CAPACITOR === "true" ? "./" : process.env.GITHUB_PAGES === "true" ? "/iiscshuttlers/" : "/",
+  base:
+    process.env.CAPACITOR === "true"
+      ? "./"
+      : process.env.GITHUB_PAGES === "true"
+        ? "/iiscshuttlers/"
+        : "/",
 
   resolve: {
     alias: {
@@ -190,13 +201,18 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'wouter', 'framer-motion'],
-          ui: ['@radix-ui/react-dialog', '@radix-ui/react-select', '@radix-ui/react-tabs', 'lucide-react'],
-          supabase: ['@supabase/supabase-js'],
-          firebase: ['firebase/app', 'firebase/messaging']
-        }
-      }
-    }
+          vendor: ["react", "react-dom", "wouter", "framer-motion"],
+          ui: [
+            "@radix-ui/react-dialog",
+            "@radix-ui/react-select",
+            "@radix-ui/react-tabs",
+            "lucide-react",
+          ],
+          supabase: ["@supabase/supabase-js"],
+          firebase: ["firebase/app", "firebase/messaging"],
+        },
+      },
+    },
   },
 
   server: {

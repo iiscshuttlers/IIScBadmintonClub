@@ -1,5 +1,5 @@
-import { AnimatePresence, motion } from 'framer-motion';
-import { useMatchNotification } from '@/hooks/useMatchNotification';
+import { AnimatePresence, motion } from "framer-motion";
+import { useMatchNotification } from "@/hooks/useMatchNotification";
 
 /**
  * Full-screen overlay that shows a blinking shuttlecock + message
@@ -32,7 +32,7 @@ export default function MatchAlert() {
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
             className="relative flex flex-col items-center gap-4 pointer-events-auto"
           >
             {/* Blinking shuttle */}
@@ -45,7 +45,7 @@ export default function MatchAlert() {
               transition={{
                 duration: 0.5,
                 repeat: 4,
-                ease: 'easeInOut',
+                ease: "easeInOut",
               }}
               className="text-8xl drop-shadow-[0_0_30px_rgba(16,185,129,0.6)]"
             >
@@ -56,7 +56,7 @@ export default function MatchAlert() {
             <motion.div
               initial={{ scale: 0.5, opacity: 0.8 }}
               animate={{ scale: 2.5, opacity: 0 }}
-              transition={{ duration: 1.5, repeat: 2, ease: 'easeOut' }}
+              transition={{ duration: 1.5, repeat: 2, ease: "easeOut" }}
               className="absolute w-32 h-32 rounded-full border-4 border-emerald-400/60"
             />
 
@@ -73,7 +73,7 @@ export default function MatchAlert() {
               <p className="text-sm text-slate-600 dark:text-slate-400">
                 {notification.opponentName
                   ? `${notification.opponentName} logged a match with you`
-                  : 'A match was just logged involving you'}
+                  : "A match was just logged involving you"}
               </p>
               <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold mt-2">
                 Check your profile to confirm 🏸

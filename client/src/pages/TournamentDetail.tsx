@@ -1,27 +1,68 @@
-import { Link, useRoute } from 'wouter';
-import { ArrowLeft, Medal, Trophy, Calendar, CheckCircle, Image as ImageIcon, Users } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { getArchivedTournament } from '@/data/tournamentArchive';
-import { motion } from 'framer-motion';
+import { Link, useRoute } from "wouter";
+import {
+  ArrowLeft,
+  Medal,
+  Trophy,
+  Calendar,
+  CheckCircle,
+  Image as ImageIcon,
+  Users,
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { getArchivedTournament } from "@/data/tournamentArchive";
+import { motion } from "framer-motion";
 
 const PODIUM_CONFIGS = [
-  { label: '🥇 Champion',    border: 'border-amber-300',  bg: 'bg-amber-50 dark:bg-amber-950/20',   text: 'text-amber-700 dark:text-amber-400',  ring: 'ring-amber-400' },
-  { label: '🥈 Runner-up',   border: 'border-slate-300',  bg: 'bg-slate-50 dark:bg-slate-800',       text: 'text-slate-600 dark:text-slate-300',  ring: 'ring-slate-400' },
-  { label: '🥉 Third Place', border: 'border-orange-300', bg: 'bg-orange-50 dark:bg-orange-950/20',  text: 'text-orange-700 dark:text-orange-400', ring: 'ring-orange-400' },
-  { label: 'Fourth Place',   border: 'border-blue-200',   bg: 'bg-blue-50 dark:bg-blue-950/20',      text: 'text-blue-700 dark:text-blue-400',     ring: '' },
+  {
+    label: "🥇 Champion",
+    border: "border-amber-300",
+    bg: "bg-amber-50 dark:bg-amber-950/20",
+    text: "text-amber-700 dark:text-amber-400",
+    ring: "ring-amber-400",
+  },
+  {
+    label: "🥈 Runner-up",
+    border: "border-slate-300",
+    bg: "bg-slate-50 dark:bg-slate-800",
+    text: "text-slate-600 dark:text-slate-300",
+    ring: "ring-slate-400",
+  },
+  {
+    label: "🥉 Third Place",
+    border: "border-orange-300",
+    bg: "bg-orange-50 dark:bg-orange-950/20",
+    text: "text-orange-700 dark:text-orange-400",
+    ring: "ring-orange-400",
+  },
+  {
+    label: "Fourth Place",
+    border: "border-blue-200",
+    bg: "bg-blue-50 dark:bg-blue-950/20",
+    text: "text-blue-700 dark:text-blue-400",
+    ring: "",
+  },
 ];
-
-
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
-  visible: (i: number) => ({ opacity: 1, y: 0, transition: { duration: 0.45, delay: i * 0.1, ease: 'easeOut' as const } }),
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.45, delay: i * 0.1, ease: "easeOut" as const },
+  }),
 };
 
 export default function TournamentDetail() {
-  const [, routeParams] = useRoute('/events/:slug');
-  const params = routeParams ?? { slug: '' };
+  const [, routeParams] = useRoute("/events/:slug");
+  const params = routeParams ?? { slug: "" };
   const slug = params.slug;
   const tournament = getArchivedTournament(slug);
 
@@ -29,8 +70,13 @@ export default function TournamentDetail() {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center px-4">
         <div className="text-center space-y-5 max-w-md">
-          <div className="text-8xl font-black text-slate-200 dark:text-slate-800 select-none">?</div>
-          <h1 className="text-3xl font-black text-blue-900 dark:text-white" style={{ fontFamily: 'Playfair Display, serif' }}>
+          <div className="text-8xl font-black text-slate-200 dark:text-slate-800 select-none">
+            ?
+          </div>
+          <h1
+            className="text-3xl font-black text-blue-900 dark:text-white"
+            style={{ fontFamily: "Playfair Display, serif" }}
+          >
             Tournament Not Found
           </h1>
           <p className="text-gray-500 dark:text-slate-400">
@@ -47,16 +93,21 @@ export default function TournamentDetail() {
     );
   }
 
-  const typeLabel = tournament.type === 'open' ? 'Open Tournament' : tournament.type === 'team' ? 'Team Event' : 'Special Event';
-  const typeColor = tournament.type === 'open'
-    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
-    : tournament.type === 'team'
-    ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400'
-    : 'bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400';
+  const typeLabel =
+    tournament.type === "open"
+      ? "Open Tournament"
+      : tournament.type === "team"
+        ? "Team Event"
+        : "Special Event";
+  const typeColor =
+    tournament.type === "open"
+      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+      : tournament.type === "team"
+        ? "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400"
+        : "bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400";
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-
       {/* Hero */}
       <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-emerald-950 text-white py-24 relative overflow-hidden">
         <div className="absolute inset-0 hero-pattern" />
@@ -67,11 +118,13 @@ export default function TournamentDetail() {
           </div>
           <h1
             className="text-4xl sm:text-5xl md:text-6xl font-black mb-4"
-            style={{ fontFamily: 'Playfair Display, serif' }}
+            style={{ fontFamily: "Playfair Display, serif" }}
           >
             {tournament.name}
           </h1>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto">{tournament.subtitle}</p>
+          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+            {tournament.subtitle}
+          </p>
           <div className="flex items-center justify-center gap-2 mt-4 text-gray-400 text-sm">
             <Calendar className="w-4 h-4" />
             {tournament.startDate}
@@ -80,7 +133,6 @@ export default function TournamentDetail() {
       </section>
 
       <section className="container mx-auto px-4 py-12 max-w-6xl space-y-8">
-
         {/* Breadcrumbs */}
         <Breadcrumb>
           <BreadcrumbList>
@@ -99,51 +151,71 @@ export default function TournamentDetail() {
         </Breadcrumb>
 
         <div className="grid lg:grid-cols-[1.5fr_0.7fr] gap-8 items-start">
-
           {/* Main results card */}
-          <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible">
+          <motion.div
+            custom={0}
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+          >
             <Card className="rounded-3xl shadow-md border border-emerald-100 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
               <div className="h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-blue-600" />
               <CardContent className="p-8 sm:p-10 space-y-8">
-
                 {/* Status + description */}
                 <div>
                   <div className="flex flex-wrap items-center gap-2 mb-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${typeColor}`}>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-bold ${typeColor}`}
+                    >
                       {typeLabel}
                     </span>
                     <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
                       ✓ Completed
                     </span>
                   </div>
-                  <h2 className="text-2xl font-black text-blue-900 dark:text-white mb-3">Results Archive</h2>
-                  <p className="text-gray-600 dark:text-slate-400 leading-relaxed">{tournament.description}</p>
+                  <h2 className="text-2xl font-black text-blue-900 dark:text-white mb-3">
+                    Results Archive
+                  </h2>
+                  <p className="text-gray-600 dark:text-slate-400 leading-relaxed">
+                    {tournament.description}
+                  </p>
                 </div>
 
                 {/* Winners grid */}
                 {tournament.winners && (
                   <div className="space-y-8">
                     {Object.entries(
-                      tournament.winners.reduce((acc, curr) => {
-                        const [group, ...rest] = curr.category.includes(':')
-                          ? curr.category.split(':')
-                          : ['Overall', curr.category];
-                        const catName = rest.length > 0 ? rest.join(':').trim() : curr.category;
-                        if (!acc[group]) acc[group] = [];
-                        acc[group].push({ ...curr, category: catName });
-                        return acc;
-                      }, {} as Record<string, typeof tournament.winners>)
+                      tournament.winners.reduce(
+                        (acc, curr) => {
+                          const [group, ...rest] = curr.category.includes(":")
+                            ? curr.category.split(":")
+                            : ["Overall", curr.category];
+                          const catName =
+                            rest.length > 0
+                              ? rest.join(":").trim()
+                              : curr.category;
+                          if (!acc[group]) acc[group] = [];
+                          acc[group].push({ ...curr, category: catName });
+                          return acc;
+                        },
+                        {} as Record<string, typeof tournament.winners>,
+                      ),
                     ).map(([group, results]) => (
                       <div key={group} className="space-y-4">
-                        {group !== 'Overall' && (
+                        {group !== "Overall" && (
                           <div className="flex items-center gap-3">
                             <div className="w-1.5 h-6 bg-gradient-to-b from-amber-400 to-orange-500 rounded-full" />
-                            <h3 className="text-lg font-black text-blue-900 dark:text-white">{group}</h3>
+                            <h3 className="text-lg font-black text-blue-900 dark:text-white">
+                              {group}
+                            </h3>
                           </div>
                         )}
                         <div className="grid md:grid-cols-2 gap-4">
                           {results!.map((result) => (
-                            <div key={result.category} className="rounded-2xl bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-900/50 p-5 shadow-sm hover:shadow-md transition-shadow">
+                            <div
+                              key={result.category}
+                              className="rounded-2xl bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-900/50 p-5 shadow-sm hover:shadow-md transition-shadow"
+                            >
                               <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-black text-xs uppercase tracking-wider mb-3">
                                 <Medal className="w-3.5 h-3.5" />
                                 {result.category}
@@ -158,7 +230,7 @@ export default function TournamentDetail() {
                               )}
                               {result.bronze && (
                                 <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-500 flex items-center gap-2">
-                                  🥉 {result.bronze.join(' / ')}
+                                  🥉 {result.bronze.join(" / ")}
                                 </p>
                               )}
                             </div>
@@ -174,15 +246,26 @@ export default function TournamentDetail() {
                   <div>
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-1.5 h-6 bg-gradient-to-b from-amber-400 to-orange-500 rounded-full" />
-                      <h3 className="text-lg font-black text-blue-900 dark:text-white">Final Standings</h3>
+                      <h3 className="text-lg font-black text-blue-900 dark:text-white">
+                        Final Standings
+                      </h3>
                     </div>
                     <div className="grid sm:grid-cols-2 gap-4">
                       {tournament.podium.map((team, index) => {
                         const cfg = PODIUM_CONFIGS[index] ?? PODIUM_CONFIGS[3];
                         return (
-                          <div key={team} className={`rounded-2xl border ${cfg.border} ${cfg.bg} px-5 py-4 hover:shadow-sm transition-shadow`}>
-                            <p className={`text-xs font-black uppercase tracking-wider ${cfg.text}`}>{cfg.label}</p>
-                            <p className="mt-2 text-lg font-bold text-blue-950 dark:text-white">{team}</p>
+                          <div
+                            key={team}
+                            className={`rounded-2xl border ${cfg.border} ${cfg.bg} px-5 py-4 hover:shadow-sm transition-shadow`}
+                          >
+                            <p
+                              className={`text-xs font-black uppercase tracking-wider ${cfg.text}`}
+                            >
+                              {cfg.label}
+                            </p>
+                            <p className="mt-2 text-lg font-bold text-blue-950 dark:text-white">
+                              {team}
+                            </p>
                           </div>
                         );
                       })}
@@ -194,25 +277,35 @@ export default function TournamentDetail() {
           </motion.div>
 
           {/* Sidebar */}
-          <motion.div custom={1} variants={fadeUp} initial="hidden" animate="visible" className="space-y-6">
-
+          <motion.div
+            custom={1}
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            className="space-y-6"
+          >
             {/* Highlights */}
             <Card className="rounded-3xl shadow-md border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
               <div className="h-1 bg-gradient-to-r from-emerald-500 to-teal-600" />
               <CardContent className="p-7">
-                <h2 className="text-lg font-black text-blue-900 dark:text-white mb-5">Event Highlights</h2>
+                <h2 className="text-lg font-black text-blue-900 dark:text-white mb-5">
+                  Event Highlights
+                </h2>
                 {tournament.highlights && tournament.highlights.length > 0 ? (
                   <div className="space-y-3">
                     {tournament.highlights.map((item, i) => (
                       <div key={i} className="flex gap-3 items-start">
                         <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
-                        <p className="text-sm text-gray-600 dark:text-slate-400 leading-relaxed">{item}</p>
+                        <p className="text-sm text-gray-600 dark:text-slate-400 leading-relaxed">
+                          {item}
+                        </p>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <p className="text-sm text-gray-500 dark:text-slate-500 leading-relaxed">
-                    Official category results are archived for club records and future reference.
+                    Official category results are archived for club records and
+                    future reference.
                   </p>
                 )}
               </CardContent>
@@ -222,18 +315,30 @@ export default function TournamentDetail() {
             <Card className="rounded-3xl shadow-md border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
               <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-600" />
               <CardContent className="p-7 space-y-4">
-                <h2 className="text-lg font-black text-blue-900 dark:text-white mb-2">Tournament Info</h2>
+                <h2 className="text-lg font-black text-blue-900 dark:text-white mb-2">
+                  Tournament Info
+                </h2>
                 <div className="space-y-3 text-sm">
                   <div className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-700">
-                    <span className="text-gray-500 dark:text-slate-400 font-medium">Year</span>
-                    <span className="font-bold text-blue-900 dark:text-white">{tournament.startDate}</span>
+                    <span className="text-gray-500 dark:text-slate-400 font-medium">
+                      Year
+                    </span>
+                    <span className="font-bold text-blue-900 dark:text-white">
+                      {tournament.startDate}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-700">
-                    <span className="text-gray-500 dark:text-slate-400 font-medium">Format</span>
-                    <span className="font-bold text-blue-900 dark:text-white">{typeLabel}</span>
+                    <span className="text-gray-500 dark:text-slate-400 font-medium">
+                      Format
+                    </span>
+                    <span className="font-bold text-blue-900 dark:text-white">
+                      {typeLabel}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between py-2">
-                    <span className="text-gray-500 dark:text-slate-400 font-medium">Status</span>
+                    <span className="text-gray-500 dark:text-slate-400 font-medium">
+                      Status
+                    </span>
                     <span className="flex items-center gap-1.5 font-bold text-emerald-600 dark:text-emerald-400">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                       Completed
@@ -246,24 +351,37 @@ export default function TournamentDetail() {
                   {tournament.winners && (
                     <>
                       <div className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-700">
-                        <span className="text-gray-500 dark:text-slate-400 font-medium">Categories</span>
+                        <span className="text-gray-500 dark:text-slate-400 font-medium">
+                          Categories
+                        </span>
                         <span className="font-bold text-blue-900 dark:text-white flex items-center gap-1.5">
                           <Trophy className="w-3.5 h-3.5 text-amber-500" />
                           {tournament.winners.length}
                         </span>
                       </div>
                       <div className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-700">
-                        <span className="text-gray-500 dark:text-slate-400 font-medium">Medalists</span>
+                        <span className="text-gray-500 dark:text-slate-400 font-medium">
+                          Medalists
+                        </span>
                         <span className="font-bold text-blue-900 dark:text-white flex items-center gap-1.5">
                           <Users className="w-3.5 h-3.5 text-emerald-500" />
-                          {tournament.winners.reduce((sum, w) => sum + 1 + (w.runnerUp ? 1 : 0) + (w.bronze ? w.bronze.length : 0), 0)}
+                          {tournament.winners.reduce(
+                            (sum, w) =>
+                              sum +
+                              1 +
+                              (w.runnerUp ? 1 : 0) +
+                              (w.bronze ? w.bronze.length : 0),
+                            0,
+                          )}
                         </span>
                       </div>
                     </>
                   )}
                   {tournament.podium && (
                     <div className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-700">
-                      <span className="text-gray-500 dark:text-slate-400 font-medium">Teams Placed</span>
+                      <span className="text-gray-500 dark:text-slate-400 font-medium">
+                        Teams Placed
+                      </span>
                       <span className="font-bold text-blue-900 dark:text-white flex items-center gap-1.5">
                         <Users className="w-3.5 h-3.5 text-emerald-500" />
                         {tournament.podium.length}
@@ -274,7 +392,9 @@ export default function TournamentDetail() {
 
                 <div className="space-y-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
                   {tournament.galleryFolder && (
-                    <Link href={`/gallery?filter=${encodeURIComponent(tournament.galleryFolder)}`}>
+                    <Link
+                      href={`/gallery?filter=${encodeURIComponent(tournament.galleryFolder)}`}
+                    >
                       <button className="w-full flex items-center justify-center gap-2 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/40 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-400 font-bold px-4 py-3 rounded-xl text-sm transition-all hover:-translate-y-0.5">
                         <ImageIcon className="w-4 h-4" />
                         View Gallery
@@ -292,9 +412,6 @@ export default function TournamentDetail() {
             </Card>
           </motion.div>
         </div>
-
-
-
       </section>
     </div>
   );

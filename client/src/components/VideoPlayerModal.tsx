@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { X, Clock } from "lucide-react";
-import { YoutubePlayer, type Chapter, type YoutubePlayerHandle } from "./YoutubePlayer";
+import {
+  YoutubePlayer,
+  type Chapter,
+  type YoutubePlayerHandle,
+} from "./YoutubePlayer";
 
 interface VideoItem {
   id: string;
@@ -29,7 +33,9 @@ export function VideoPlayerModal({ video, onClose }: Props) {
 
   // Close on Escape
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
@@ -38,18 +44,26 @@ export function VideoPlayerModal({ video, onClose }: Props) {
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
+    return () => {
+      document.body.style.overflow = prev;
+    };
   }, []);
 
-  const activeChapterIdx = chapters.length > 0
-    ? [...chapters].map((c, i) => ({ ...c, i })).reverse().find((c) => currentTime >= c.time)?.i ?? 0
-    : -1;
+  const activeChapterIdx =
+    chapters.length > 0
+      ? ([...chapters]
+          .map((c, i) => ({ ...c, i }))
+          .reverse()
+          .find((c) => currentTime >= c.time)?.i ?? 0)
+      : -1;
 
   return (
     <div
       ref={backdropRef}
       className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-sm flex items-center justify-center p-2 md:p-6"
-      onClick={(e) => { if (e.target === backdropRef.current) onClose(); }}
+      onClick={(e) => {
+        if (e.target === backdropRef.current) onClose();
+      }}
     >
       <div className="relative w-full max-w-6xl flex flex-col lg:flex-row gap-0 rounded-2xl overflow-hidden shadow-2xl bg-black">
         {/* Close button */}
@@ -112,9 +126,13 @@ export function VideoPlayerModal({ video, onClose }: Props) {
                     className={`w-full text-left px-4 py-3 flex items-start gap-3 transition-colors border-b border-white/5 last:border-0 ${isActive ? "bg-emerald-500/10" : "hover:bg-white/5"}`}
                     onClick={() => playerRef.current?.seekTo(ch.time)}
                   >
-                    <Clock className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${isActive ? "text-emerald-400" : "text-white/30"}`} />
+                    <Clock
+                      className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${isActive ? "text-emerald-400" : "text-white/30"}`}
+                    />
                     <div className="min-w-0">
-                      <p className={`text-sm font-semibold leading-snug truncate ${isActive ? "text-emerald-400" : "text-white/70"}`}>
+                      <p
+                        className={`text-sm font-semibold leading-snug truncate ${isActive ? "text-emerald-400" : "text-white/70"}`}
+                      >
                         {ch.title}
                       </p>
                       <p className="text-white/30 text-xs tabular-nums mt-0.5">

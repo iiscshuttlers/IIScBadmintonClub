@@ -9,12 +9,18 @@ const firebaseConfig = {
   projectId: "iisc-badminton-hub",
   storageBucket: "iisc-badminton-hub.firebasestorage.app",
   messagingSenderId: "258810088674",
-  appId: "1:258810088674:web:457a6da843a1712d69a2bb"
+  appId: "1:258810088674:web:457a6da843a1712d69a2bb",
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+let app, db, auth;
+try {
+  app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+  auth = getAuth(app);
+} catch (e) {
+  console.warn("Firebase blocked or failed to initialize", e);
+}
 
 // Initialize Cloud Firestore and Authentication and export them
-export const db = getFirestore(app);
-export const auth = getAuth(app);
+export { db, auth };

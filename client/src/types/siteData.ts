@@ -23,12 +23,12 @@ export interface SiteAnnouncement {
   title: string;
   content: string;
   date: string;
-  priority: 'low' | 'medium' | 'high';
+  priority: "low" | "medium" | "high";
 }
 
 export interface SiteGalleryItem {
   id: string;
   url: string;
   title: string;
-  type: 'image' | 'video';
+  type: "image" | "video";
 }

@@ -18,7 +18,7 @@ A modern, dynamic website for the Indian Institute of Science Badminton Club bui
 
 ### Prerequisites
 
-- Node.js 20+ 
+- Node.js 20+
 - pnpm 10+ (or npm/yarn)
 
 ### Installation
@@ -118,11 +118,13 @@ iiscshuttlers/
 ## 🎨 Design System
 
 ### Colors
+
 - **Primary**: Deep Navy (`#1a2a4a`)
 - **Accent**: Emerald Green (`#10b981`)
 - **Secondary**: Bright Orange (`#ff6b35`)
 
 ### Typography
+
 - **Display**: Playfair Display (headings)
 - **Body**: Inter (body text)
 
@@ -140,6 +142,7 @@ VITE_PHONE=+91 (080) 2293 2000
 ### Netlify Configuration
 
 The `netlify.toml` file handles:
+
 - Build settings
 - Redirect rules for SPA routing
 - Node version specification
@@ -175,6 +178,7 @@ MIT License - feel free to use this project for your own club website!
 ## 📞 Contact
 
 **IISc Badminton Club**
+
 - Email: badminton@iisc.ac.in
 - Phone: +91 (080) 2293 2000
 - Location: IISc Gymkhana, Bangalore - 560012

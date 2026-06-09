@@ -12,7 +12,7 @@ export async function fetchSiteData<T>(
   key: string,
   fallbackFile: string,
   /** Timeout in ms before falling back to static file */
-  timeoutMs = 8_000
+  timeoutMs = 8_000,
 ): Promise<T> {
   // Try Supabase first
   if (isSupabaseConfigured) {
@@ -26,7 +26,9 @@ export async function fetchSiteData<T>(
         .eq("key", key)
         .maybeSingle();
 
-      const { data, error } = await (query as any).abortSignal(controller.signal);
+      const { data, error } = await (query as any).abortSignal(
+        controller.signal,
+      );
 
       clearTimeout(timeoutId);
 
@@ -36,13 +38,18 @@ export async function fetchSiteData<T>(
 
       // Key doesn't exist in DB yet — fall through to static file
       if (!error) {
-        console.info(`[site_data] Key "${key}" not found in DB, using static fallback`);
+        console.info(
+          `[site_data] Key "${key}" not found in DB, using static fallback`,
+        );
       }
     } catch (err: any) {
       clearTimeout(timeoutId);
       // Don't log abort errors as warnings — they're expected on timeout
       if (!controller.signal.aborted) {
-        console.warn(`[site_data] Supabase fetch failed for "${key}":`, err?.message);
+        console.warn(
+          `[site_data] Supabase fetch failed for "${key}":`,
+          err?.message,
+        );
       }
     }
   }
@@ -50,7 +57,7 @@ export async function fetchSiteData<T>(
   // Fallback: fetch from static JSON in public/data/
   const res = await fetch(
     `${import.meta.env.BASE_URL}data/${fallbackFile}?v=${Date.now()}`,
-    { cache: "no-store" }
+    { cache: "no-store" },
   );
   return res.json() as Promise<T>;
 }

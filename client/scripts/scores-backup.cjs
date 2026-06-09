@@ -25,7 +25,10 @@ const FIXED_FIELDS = ["Status", "Winner"];
 
 async function backup() {
   const snap = await ref.get();
-  if (!snap.exists) { console.error("No tournament doc."); process.exit(1); }
+  if (!snap.exists) {
+    console.error("No tournament doc.");
+    process.exit(1);
+  }
 
   const data = snap.data();
   const scores = {};
@@ -60,7 +63,10 @@ async function restore() {
 
   const scores = JSON.parse(fs.readFileSync(BACKUP_FILE, "utf8"));
   const snap = await ref.get();
-  if (!snap.exists) { console.error("No tournament doc."); process.exit(1); }
+  if (!snap.exists) {
+    console.error("No tournament doc.");
+    process.exit(1);
+  }
 
   const data = snap.data();
   const updates = {};
@@ -69,7 +75,7 @@ async function restore() {
     const matches = data.matches[format];
     if (!matches) continue;
 
-    const updated = matches.map(m => {
+    const updated = matches.map((m) => {
       if (matchScores[m.Match_ID]) {
         return { ...m, ...matchScores[m.Match_ID] };
       }

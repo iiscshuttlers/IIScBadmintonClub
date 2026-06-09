@@ -1,6 +1,18 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sword, Trophy, Loader2, Users, User, Plus, Minus, Clock, Lock, Video } from "lucide-react";
+import {
+  X,
+  Sword,
+  Trophy,
+  Loader2,
+  Users,
+  User,
+  Plus,
+  Minus,
+  Clock,
+  Lock,
+  Video,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { isAdminEmail } from "@/lib/admin";
 import { toast } from "sonner";
@@ -23,14 +35,37 @@ interface LogMatchModalProps {
 }
 
 function PlayerAvatar({ player }: { player: Player | undefined }) {
-  if (!player) return <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-600">?</div>;
-  if (player.avatar_url) return <img loading="lazy" src={player.avatar_url} className="w-full h-full object-cover" />;
-  return <div className="w-full h-full flex items-center justify-center text-xl font-bold">{player.full_name[0]}</div>;
+  if (!player)
+    return (
+      <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-600">
+        ?
+      </div>
+    );
+  if (player.avatar_url)
+    return (
+      <img
+        loading="lazy"
+        src={player.avatar_url}
+        className="w-full h-full object-cover"
+      />
+    );
+  return (
+    <div className="w-full h-full flex items-center justify-center text-xl font-bold">
+      {player.full_name[0]}
+    </div>
+  );
 }
 
-function PlayerSelect({ value, onChange, players, placeholder }: {
-  value: string; onChange: (v: string) => void;
-  players: Player[]; placeholder?: string;
+function PlayerSelect({
+  value,
+  onChange,
+  players,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  players: Player[];
+  placeholder?: string;
 }) {
   const [search, setSearch] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -38,7 +73,7 @@ function PlayerSelect({ value, onChange, players, placeholder }: {
 
   useEffect(() => {
     if (value) {
-      const p = players.find(p => p.id === value);
+      const p = players.find((p) => p.id === value);
       if (p) setSearch(p.full_name);
     } else {
       setSearch("");
@@ -47,10 +82,13 @@ function PlayerSelect({ value, onChange, players, placeholder }: {
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
         if (value) {
-          const p = players.find(p => p.id === value);
+          const p = players.find((p) => p.id === value);
           if (p) setSearch(p.full_name);
         } else {
           setSearch("");
@@ -61,7 +99,9 @@ function PlayerSelect({ value, onChange, players, placeholder }: {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [value, players]);
 
-  const filtered = players.filter(p => p.full_name.toLowerCase().includes(search.toLowerCase()));
+  const filtered = players.filter((p) =>
+    p.full_name.toLowerCase().includes(search.toLowerCase()),
+  );
 
   return (
     <div className="relative w-full" ref={wrapperRef}>
@@ -80,9 +120,11 @@ function PlayerSelect({ value, onChange, players, placeholder }: {
       {isOpen && (
         <div className="absolute z-[60] w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl max-h-48 overflow-y-auto">
           {filtered.length === 0 ? (
-            <div className="p-2 text-xs text-slate-500 text-center">No players found</div>
+            <div className="p-2 text-xs text-slate-500 text-center">
+              No players found
+            </div>
           ) : (
-            filtered.map(p => (
+            filtered.map((p) => (
               <div
                 key={p.id}
                 onClick={() => {
@@ -104,10 +146,10 @@ function PlayerSelect({ value, onChange, players, placeholder }: {
 
 // Determine doubles category from genders
 function getDoublesCategory(players: (Player | undefined)[]): string {
-  const genders = players.filter(Boolean).map(p => p!.gender?.toLowerCase());
-  if (genders.length < 2 || genders.some(g => !g)) return "Doubles";
-  const allMale = genders.every(g => g === "male");
-  const allFemale = genders.every(g => g === "female");
+  const genders = players.filter(Boolean).map((p) => p!.gender?.toLowerCase());
+  if (genders.length < 2 || genders.some((g) => !g)) return "Doubles";
+  const allMale = genders.every((g) => g === "male");
+  const allFemale = genders.every((g) => g === "female");
   if (allMale) return "Men's Doubles";
   if (allFemale) return "Women's Doubles";
   return "Mixed Doubles";
@@ -118,9 +160,19 @@ interface SetScore {
   p2: string;
 }
 
-export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlayers, onSuccess, defaultOpponentId, userEmail }: LogMatchModalProps) {
+export default function LogMatchModal({
+  isOpen,
+  onClose,
+  currentUser,
+  otherPlayers,
+  onSuccess,
+  defaultOpponentId,
+  userEmail,
+}: LogMatchModalProps) {
   const [matchType, setMatchType] = useState<"singles" | "doubles">("singles");
-  const [matchCategory, setMatchCategory] = useState<"friendly" | "tournament">("friendly");
+  const [matchCategory, setMatchCategory] = useState<"friendly" | "tournament">(
+    "friendly",
+  );
   const [opponentId, setOpponentId] = useState(defaultOpponentId ?? "");
   const [partnerId, setPartnerId] = useState("");
   const [opponentPartnerId, setOpponentPartnerId] = useState("");
@@ -133,14 +185,19 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
 
   useEffect(() => {
     try {
-      const stored = JSON.parse(localStorage.getItem("recent_opponents") || "[]");
+      const stored = JSON.parse(
+        localStorage.getItem("recent_opponents") || "[]",
+      );
       if (Array.isArray(stored)) setRecentOpponentIds(stored.slice(0, 3));
-    } catch(e) {}
+    } catch (e) {}
   }, []);
 
   const isAdmin = isAdminEmail(userEmail);
   const now = new Date();
-  const timestamp = now.toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
+  const timestamp = now.toLocaleString("en-IN", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 
   const addSet = () => {
     if (sets.length < 3) setSets([...sets, { p1: "", p2: "" }]);
@@ -153,41 +210,61 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
   const updateSet = (idx: number, field: "p1" | "p2", val: string) => {
     // Allow only digits 0-30
     const num = val.replace(/\D/g, "").slice(0, 2);
-    setSets(sets.map((s, i) => {
-      if (i === idx) {
-        const next = { ...s, [field]: num };
-        // Auto-fill opposite side with 0 if length is > 0 and opposite is empty
-        if (num.length >= 2 && field === "p1" && !s.p2) next.p2 = "0";
-        if (num.length >= 2 && field === "p2" && !s.p1) next.p1 = "0";
-        return next;
-      }
-      return s;
-    }));
+    setSets(
+      sets.map((s, i) => {
+        if (i === idx) {
+          const next = { ...s, [field]: num };
+          // Auto-fill opposite side with 0 if length is > 0 and opposite is empty
+          if (num.length >= 2 && field === "p1" && !s.p2) next.p2 = "0";
+          if (num.length >= 2 && field === "p2" && !s.p1) next.p1 = "0";
+          return next;
+        }
+        return s;
+      }),
+    );
   };
 
   // Format sets into readable score string: "21-18, 19-21, 21-15"
   const formatScore = (): string => {
     return sets
-      .filter(s => s.p1 !== "" && s.p2 !== "")
-      .map(s => `${s.p1}-${s.p2}`)
+      .filter((s) => s.p1 !== "" && s.p2 !== "")
+      .map((s) => `${s.p1}-${s.p2}`)
       .join(", ");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!opponentId) { setError("Please select the main opponent."); return; }
-    if (matchType === "doubles" && !partnerId) { setError("Please select your doubles partner."); return; }
-    if (matchType === "doubles" && !opponentPartnerId) { setError("Please select the opponent's partner."); return; }
+    if (!opponentId) {
+      setError("Please select the main opponent.");
+      return;
+    }
+    if (matchType === "doubles" && !partnerId) {
+      setError("Please select your doubles partner.");
+      return;
+    }
+    if (matchType === "doubles" && !opponentPartnerId) {
+      setError("Please select the opponent's partner.");
+      return;
+    }
 
-    const filledSets = sets.filter(s => s.p1 !== "" && s.p2 !== "");
-    if (filledSets.length === 0) { setError("Please enter at least one set score."); return; }
+    const filledSets = sets.filter((s) => s.p1 !== "" && s.p2 !== "");
+    if (filledSets.length === 0) {
+      setError("Please enter at least one set score.");
+      return;
+    }
 
     // Validate each set has reasonable scores
     for (let i = 0; i < filledSets.length; i++) {
       const p1 = parseInt(filledSets[i].p1);
       const p2 = parseInt(filledSets[i].p2);
-      if (isNaN(p1) || isNaN(p2)) { setError(`Set ${i + 1}: Invalid score.`); return; }
-      if (p1 === p2) { setError(`Set ${i + 1}: Scores cannot be equal.`); return; }
+      if (isNaN(p1) || isNaN(p2)) {
+        setError(`Set ${i + 1}: Invalid score.`);
+        return;
+      }
+      if (p1 === p2) {
+        setError(`Set ${i + 1}: Scores cannot be equal.`);
+        return;
+      }
     }
 
     setLoading(true);
@@ -199,13 +276,22 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
 
       let finalScore = scoreStr;
       if (matchType === "doubles") {
-        const partnerName = otherPlayers.find(p => p.id === partnerId)?.full_name ?? "";
-        const opp1Name = otherPlayers.find(p => p.id === opponentId)?.full_name ?? "";
-        const opp2Name = otherPlayers.find(p => p.id === opponentPartnerId)?.full_name ?? "";
+        const partnerName =
+          otherPlayers.find((p) => p.id === partnerId)?.full_name ?? "";
+        const opp1Name =
+          otherPlayers.find((p) => p.id === opponentId)?.full_name ?? "";
+        const opp2Name =
+          otherPlayers.find((p) => p.id === opponentPartnerId)?.full_name ?? "";
 
         // Auto-detect category from genders
-        const team1 = [currentUser, otherPlayers.find(p => p.id === partnerId)];
-        const team2 = [otherPlayers.find(p => p.id === opponentId), otherPlayers.find(p => p.id === opponentPartnerId)];
+        const team1 = [
+          currentUser,
+          otherPlayers.find((p) => p.id === partnerId),
+        ];
+        const team2 = [
+          otherPlayers.find((p) => p.id === opponentId),
+          otherPlayers.find((p) => p.id === opponentPartnerId),
+        ];
         const category = getDoublesCategory([...team1, ...team2]);
 
         finalScore = `${scoreStr} [${category}: ${currentUser.full_name}+${partnerName} vs ${opp1Name}+${opp2Name}]`;
@@ -217,9 +303,11 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
 
       // Save to recent opponents
       try {
-        const newRecents = Array.from(new Set([opponentId, ...recentOpponentIds])).slice(0, 3);
+        const newRecents = Array.from(
+          new Set([opponentId, ...recentOpponentIds]),
+        ).slice(0, 3);
         localStorage.setItem("recent_opponents", JSON.stringify(newRecents));
-      } catch(e) {}
+      } catch (e) {}
 
       const matchPayload = {
         submitter_id: currentUser.id,
@@ -228,30 +316,41 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
         match_score: finalScore,
         submitter_partner_id: matchType === "doubles" ? partnerId : null,
         opponent_partner_id: matchType === "doubles" ? opponentPartnerId : null,
-        match_category: matchCategory // Save category to handle later if offline
+        match_category: matchCategory, // Save category to handle later if offline
       };
 
       if (!navigator.onLine) {
         // OFFLINE QUEUE LOGIC
-        const existingQueue = JSON.parse(localStorage.getItem("offline_matches") || "[]");
+        const existingQueue = JSON.parse(
+          localStorage.getItem("offline_matches") || "[]",
+        );
         existingQueue.push({ ...matchPayload, timestamp: Date.now() });
         localStorage.setItem("offline_matches", JSON.stringify(existingQueue));
-        
-        toast.success("You are offline. Match saved to Gym Mode queue and will auto-sync when internet is restored!", { duration: 5000 });
+
+        toast.success(
+          "You are offline. Match saved to Gym Mode queue and will auto-sync when internet is restored!",
+          { duration: 5000 },
+        );
         onSuccess();
         onClose();
         setLoading(false);
         return;
       }
 
-      let { error: rpcError } = await supabase.rpc("submit_friendly_match", matchPayload);
+      let { error: rpcError } = await supabase.rpc(
+        "submit_friendly_match",
+        matchPayload,
+      );
       if (rpcError && matchType === "singles") {
-        const { error: legacyRpcError } = await supabase.rpc("submit_friendly_match", {
-          submitter_id: currentUser.id,
-          opponent_id: opponentId,
-          match_winner_id: winnerId,
-          match_score: finalScore,
-        });
+        const { error: legacyRpcError } = await supabase.rpc(
+          "submit_friendly_match",
+          {
+            submitter_id: currentUser.id,
+            opponent_id: opponentId,
+            match_winner_id: winnerId,
+            match_score: finalScore,
+          },
+        );
         rpcError = legacyRpcError;
       }
 
@@ -270,7 +369,10 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
           .limit(1)
           .single();
         if (latestMatch) {
-          await supabase.from("matches").update({ is_friendly: false, round: "Tournament" }).eq("id", latestMatch.id);
+          await supabase
+            .from("matches")
+            .update({ is_friendly: false, round: "Tournament" })
+            .eq("id", latestMatch.id);
         }
       }
 
@@ -278,9 +380,11 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
         toast.success("🎉 Incredible victory!");
       }
 
-      toast.success(matchCategory === "friendly" 
-        ? "Match submitted! Waiting for opponent to confirm." 
-        : "Tournament match logged! Waiting for opponent to confirm.");
+      toast.success(
+        matchCategory === "friendly"
+          ? "Match submitted! Waiting for opponent to confirm."
+          : "Tournament match logged! Waiting for opponent to confirm.",
+      );
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -293,10 +397,14 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
 
   if (!isOpen) return null;
 
-  const opponent = otherPlayers.find(p => p.id === opponentId);
-  const availableAsPartner = otherPlayers.filter(p => p.id !== opponentId && p.id !== opponentPartnerId);
-  const availableAsOpponent = otherPlayers.filter(p => p.id !== partnerId);
-  const availableAsOppPartner = otherPlayers.filter(p => p.id !== opponentId && p.id !== partnerId);
+  const opponent = otherPlayers.find((p) => p.id === opponentId);
+  const availableAsPartner = otherPlayers.filter(
+    (p) => p.id !== opponentId && p.id !== opponentPartnerId,
+  );
+  const availableAsOpponent = otherPlayers.filter((p) => p.id !== partnerId);
+  const availableAsOppPartner = otherPlayers.filter(
+    (p) => p.id !== opponentId && p.id !== partnerId,
+  );
 
   return (
     <AnimatePresence>
@@ -311,51 +419,74 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
           <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
             <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
               <Sword className="w-5 h-5 text-emerald-500" />
-              Log {matchCategory === "tournament" ? "Tournament" : "Friendly"} Match
+              Log {matchCategory === "tournament"
+                ? "Tournament"
+                : "Friendly"}{" "}
+              Match
             </h2>
-            <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+            <button
+              onClick={onClose}
+              className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            >
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-6 space-y-5">
-
             {/* Timestamp */}
             <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-xl px-3 py-2 border border-slate-100 dark:border-slate-800">
-              <Clock className="w-3.5 h-3.5" /> Logging at: <span className="text-slate-700 dark:text-slate-200">{timestamp}</span>
+              <Clock className="w-3.5 h-3.5" /> Logging at:{" "}
+              <span className="text-slate-700 dark:text-slate-200">
+                {timestamp}
+              </span>
             </div>
 
             {/* Friendly / Tournament toggle */}
             <div className="grid grid-cols-2 gap-2">
-              <button type="button" onClick={() => setMatchCategory("friendly")}
+              <button
+                type="button"
+                onClick={() => setMatchCategory("friendly")}
                 className={`flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold border transition
-                  ${matchCategory === "friendly" ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 text-emerald-700 dark:text-emerald-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"}`}>
+                  ${matchCategory === "friendly" ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 text-emerald-700 dark:text-emerald-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"}`}
+              >
                 🏸 Friendly
               </button>
-              <button type="button"
-                onClick={() => { if (isAdmin) setMatchCategory("tournament"); }}
+              <button
+                type="button"
+                onClick={() => {
+                  if (isAdmin) setMatchCategory("tournament");
+                }}
                 disabled={!isAdmin}
                 className={`flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold border transition
                   ${matchCategory === "tournament" ? "bg-amber-50 dark:bg-amber-900/30 border-amber-500 text-amber-700 dark:text-amber-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"}
-                  ${!isAdmin ? "opacity-40 cursor-not-allowed" : ""}`}>
+                  ${!isAdmin ? "opacity-40 cursor-not-allowed" : ""}`}
+              >
                 🏆 Tournament {!isAdmin && <Lock className="w-3 h-3" />}
               </button>
             </div>
             {!isAdmin && matchCategory === "friendly" && (
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 -mt-3">Tournament match logging is admin-only</p>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 -mt-3">
+                Tournament match logging is admin-only
+              </p>
             )}
 
             {/* Singles / Doubles toggle */}
             <div className="grid grid-cols-2 gap-2">
-              <button type="button" onClick={() => setMatchType("singles")}
+              <button
+                type="button"
+                onClick={() => setMatchType("singles")}
                 className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold border transition
-                  ${matchType === "singles" ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 text-emerald-700 dark:text-emerald-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"}`}>
+                  ${matchType === "singles" ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 text-emerald-700 dark:text-emerald-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"}`}
+              >
                 <User className="w-4 h-4" /> Singles
               </button>
-              <button type="button" onClick={() => setMatchType("doubles")}
+              <button
+                type="button"
+                onClick={() => setMatchType("doubles")}
                 className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold border transition
-                  ${matchType === "doubles" ? "bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-700 dark:text-blue-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"}`}>
+                  ${matchType === "doubles" ? "bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-700 dark:text-blue-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"}`}
+              >
                 <Users className="w-4 h-4" /> Doubles
               </button>
             </div>
@@ -368,68 +499,121 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
                   <div className="w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-800 border-2 border-emerald-500 overflow-hidden mb-2 shadow-md shrink-0">
                     <PlayerAvatar player={currentUser} />
                   </div>
-                  <span className="text-sm font-bold text-slate-900 dark:text-white line-clamp-1">{currentUser.full_name}</span>
-                  <span className="text-[10px] uppercase font-bold text-emerald-500">You</span>
+                  <span className="text-sm font-bold text-slate-900 dark:text-white line-clamp-1">
+                    {currentUser.full_name}
+                  </span>
+                  <span className="text-[10px] uppercase font-bold text-emerald-500">
+                    You
+                  </span>
                 </div>
-                <div className="text-xl font-black italic text-slate-300 dark:text-slate-700 shrink-0">VS</div>
+                <div className="text-xl font-black italic text-slate-300 dark:text-slate-700 shrink-0">
+                  VS
+                </div>
                 <div className="flex-1 flex flex-col items-center text-center">
                   <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 overflow-hidden mb-2 shadow-md shrink-0">
                     <PlayerAvatar player={opponent} />
                   </div>
-                  <PlayerSelect value={opponentId} onChange={setOpponentId} players={otherPlayers} />
-                  
+                  <PlayerSelect
+                    value={opponentId}
+                    onChange={setOpponentId}
+                    players={otherPlayers}
+                  />
+
                   {recentOpponentIds.length > 0 && !opponentId && (
                     <div className="flex gap-2 mt-3 justify-center">
-                      {recentOpponentIds.map(id => {
-                        const op = otherPlayers.find(p => p.id === id);
+                      {recentOpponentIds.map((id) => {
+                        const op = otherPlayers.find((p) => p.id === id);
                         if (!op) return null;
                         return (
-                          <button key={id} type="button" onClick={() => setOpponentId(id)} className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm hover:scale-110 transition">
-                            <img src={op.avatar_url || ''} className="w-full h-full object-cover" />
+                          <button
+                            key={id}
+                            type="button"
+                            onClick={() => setOpponentId(id)}
+                            className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm hover:scale-110 transition"
+                          >
+                            <img
+                              src={op.avatar_url || ""}
+                              className="w-full h-full object-cover"
+                            />
                           </button>
                         );
                       })}
                     </div>
                   )}
-                  
-                  <span className="text-[10px] uppercase font-bold text-slate-400 mt-1">Opponent</span>
+
+                  <span className="text-[10px] uppercase font-bold text-slate-400 mt-1">
+                    Opponent
+                  </span>
                 </div>
               </div>
             ) : (
               /* ---- DOUBLES ---- */
               <div className="space-y-3">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider text-center">Your Team</p>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider text-center">
+                  Your Team
+                </p>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex flex-col items-center gap-1.5">
                     <div className="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-800 border-2 border-emerald-500 overflow-hidden shadow-md shrink-0">
                       <PlayerAvatar player={currentUser} />
                     </div>
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-200 line-clamp-1">{currentUser.full_name}</span>
-                    <span className="text-[10px] uppercase font-bold text-emerald-500">You</span>
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-200 line-clamp-1">
+                      {currentUser.full_name}
+                    </span>
+                    <span className="text-[10px] uppercase font-bold text-emerald-500">
+                      You
+                    </span>
                   </div>
                   <div className="flex flex-col items-center gap-1.5">
                     <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-emerald-300 overflow-hidden shadow-md shrink-0">
-                      <PlayerAvatar player={otherPlayers.find(p => p.id === partnerId)} />
+                      <PlayerAvatar
+                        player={otherPlayers.find((p) => p.id === partnerId)}
+                      />
                     </div>
-                    <PlayerSelect value={partnerId} onChange={setPartnerId} players={availableAsPartner} placeholder="Your partner" />
+                    <PlayerSelect
+                      value={partnerId}
+                      onChange={setPartnerId}
+                      players={availableAsPartner}
+                      placeholder="Your partner"
+                    />
                   </div>
                 </div>
 
-                <div className="text-center text-lg font-black italic text-slate-300 dark:text-slate-700">VS</div>
+                <div className="text-center text-lg font-black italic text-slate-300 dark:text-slate-700">
+                  VS
+                </div>
 
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider text-center">Opponent Team</p>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider text-center">
+                  Opponent Team
+                </p>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex flex-col items-center gap-1.5">
                     <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-rose-300 overflow-hidden shadow-md shrink-0">
-                      <PlayerAvatar player={otherPlayers.find(p => p.id === opponentId)} />
+                      <PlayerAvatar
+                        player={otherPlayers.find((p) => p.id === opponentId)}
+                      />
                     </div>
-                    <PlayerSelect value={opponentId} onChange={setOpponentId} players={availableAsOpponent} placeholder="Opponent 1" />
+                    <PlayerSelect
+                      value={opponentId}
+                      onChange={setOpponentId}
+                      players={availableAsOpponent}
+                      placeholder="Opponent 1"
+                    />
                   </div>
                   <div className="flex flex-col items-center gap-1.5">
                     <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-rose-300 overflow-hidden shadow-md shrink-0">
-                      <PlayerAvatar player={otherPlayers.find(p => p.id === opponentPartnerId)} />
+                      <PlayerAvatar
+                        player={otherPlayers.find(
+                          (p) => p.id === opponentPartnerId,
+                        )}
+                      />
                     </div>
-                    <PlayerSelect value={opponentPartnerId} onChange={setOpponentPartnerId} players={availableAsOppPartner} placeholder="Opponent 2" />
+                    <PlayerSelect
+                      value={opponentPartnerId}
+                      onChange={setOpponentPartnerId}
+                      players={availableAsOppPartner}
+                      placeholder="Opponent 2"
+                    />
                   </div>
                 </div>
               </div>
@@ -439,11 +623,15 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
 
             {/* Set-by-Set Score Input */}
             <div className="space-y-3">
-              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Set Scores</label>
-              
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Set Scores
+              </label>
+
               {sets.map((set, idx) => (
                 <div key={idx} className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-slate-400 dark:text-slate-500 w-12 shrink-0">Set {idx + 1}</span>
+                  <span className="text-xs font-bold text-slate-400 dark:text-slate-500 w-12 shrink-0">
+                    Set {idx + 1}
+                  </span>
                   <div className="flex-1 flex items-center gap-2">
                     <input
                       type="text"
@@ -454,7 +642,9 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
                       placeholder="0"
                       className="w-14 text-center px-2 py-2.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl text-sm font-black text-emerald-700 dark:text-emerald-400 outline-none focus:ring-2 focus:ring-emerald-500"
                     />
-                    <span className="text-lg font-black text-slate-300 dark:text-slate-600">—</span>
+                    <span className="text-lg font-black text-slate-300 dark:text-slate-600">
+                      —
+                    </span>
                     <input
                       type="text"
                       inputMode="numeric"
@@ -466,8 +656,11 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
                     />
                   </div>
                   {sets.length > 1 && (
-                    <button type="button" onClick={() => removeSet(idx)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition">
+                    <button
+                      type="button"
+                      onClick={() => removeSet(idx)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
+                    >
                       <Minus className="w-4 h-4" />
                     </button>
                   )}
@@ -475,8 +668,11 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
               ))}
 
               {sets.length < 3 && (
-                <button type="button" onClick={addSet}
-                  className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition px-2 py-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20">
+                <button
+                  type="button"
+                  onClick={addSet}
+                  className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition px-2 py-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                >
                   <Plus className="w-3.5 h-3.5" /> Add Set
                 </button>
               )}
@@ -484,7 +680,10 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
               {/* Live Score Preview */}
               {formatScore() && (
                 <div className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-xl px-3 py-2 border border-slate-100 dark:border-slate-800">
-                  Score: <span className="font-bold text-slate-700 dark:text-slate-200">{formatScore()}</span>
+                  Score:{" "}
+                  <span className="font-bold text-slate-700 dark:text-slate-200">
+                    {formatScore()}
+                  </span>
                 </div>
               )}
             </div>
@@ -495,16 +694,23 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
                 Who won?
               </label>
               <div className="grid grid-cols-2 gap-3">
-                <button type="button" onClick={() => setMyTeamWon(true)}
+                <button
+                  type="button"
+                  onClick={() => setMyTeamWon(true)}
                   className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition border
-                    ${myTeamWon ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 text-emerald-700 dark:text-emerald-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"}`}>
+                    ${myTeamWon ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 text-emerald-700 dark:text-emerald-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"}`}
+                >
                   {myTeamWon && <Trophy className="w-4 h-4" />}
                   {matchType === "doubles" ? "My Team Won" : "I Won"}
                 </button>
-                <button type="button" onClick={() => setMyTeamWon(false)} disabled={!opponentId}
+                <button
+                  type="button"
+                  onClick={() => setMyTeamWon(false)}
+                  disabled={!opponentId}
                   className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition border
                     ${!myTeamWon ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 text-emerald-700 dark:text-emerald-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"}
-                    ${!opponentId ? "opacity-50 cursor-not-allowed" : ""}`}>
+                    ${!opponentId ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
                   {!myTeamWon && <Trophy className="w-4 h-4" />}
                   {matchType === "doubles" ? "They Won" : "Opponent Won"}
                 </button>
@@ -536,7 +742,11 @@ export default function LogMatchModal({ isOpen, onClose, currentUser, otherPlaye
               disabled={loading}
               className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-sm shadow-xl shadow-emerald-500/20 transition disabled:opacity-70"
             >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sword className="w-5 h-5" />}
+              {loading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Sword className="w-5 h-5" />
+              )}
               {loading ? "Submitting..." : "Submit Match for Verification"}
             </button>
           </form>

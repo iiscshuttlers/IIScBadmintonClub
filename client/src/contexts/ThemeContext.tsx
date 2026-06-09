@@ -62,14 +62,16 @@ export function ThemeProvider({
 
   const toggleTheme = switchable
     ? () => {
-        setTheme(prev => (prev === "light" ? "dark" : "light"));
+        setTheme((prev) => (prev === "light" ? "dark" : "light"));
       }
     : undefined;
 
   const setAccent = switchable ? setAccentState : undefined;
 
   return (
-    <ThemeContext.Provider value={{ theme, accent, toggleTheme, setAccent, switchable }}>
+    <ThemeContext.Provider
+      value={{ theme, accent, toggleTheme, setAccent, switchable }}
+    >
       {children}
     </ThemeContext.Provider>
   );

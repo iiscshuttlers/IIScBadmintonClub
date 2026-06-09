@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import { Swords, Zap } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
-import { useLocation } from 'wouter';
-import LogMatchModal from './LogMatchModal';
+import { useState, useEffect } from "react";
+import { Swords, Zap } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
+import { useLocation } from "wouter";
+import LogMatchModal from "./LogMatchModal";
 
 const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
 
@@ -24,17 +24,23 @@ export default function LogMatchFab() {
   const [isRematch, setIsRematch] = useState(false);
 
   // Hide on pages that already have match-logging UI
-  const hideOnPages = ['/players', '/player/', '/profile/setup', '/join', '/admin'];
-  const shouldHide = hideOnPages.some(p => location.startsWith(p));
+  const hideOnPages = [
+    "/players",
+    "/player/",
+    "/profile/setup",
+    "/join",
+    "/admin",
+  ];
+  const shouldHide = hideOnPages.some((p) => location.startsWith(p));
 
   useEffect(() => {
     if (!profile?.id) return;
     supabase
-      .from('players')
-      .select('id, full_name, avatar_url, gender')
-      .neq('id', profile.id)
-      .is('deleted_at', null)
-      .order('full_name')
+      .from("players")
+      .select("id, full_name, avatar_url, gender")
+      .neq("id", profile.id)
+      .is("deleted_at", null)
+      .order("full_name")
       .then(({ data }) => {
         if (data) setOtherPlayers(data);
       });
@@ -45,12 +51,14 @@ export default function LogMatchFab() {
     if (!profile?.id) return;
     const since = new Date(Date.now() - TWO_HOURS_MS).toISOString();
     supabase
-      .from('matches')
-      .select('player1_id, player2_id, player1:players!player1_id(id, full_name, avatar_url), player2:players!player2_id(id, full_name, avatar_url)')
-      .eq('status', 'confirmed')
-      .gte('created_at', since)
+      .from("matches")
+      .select(
+        "player1_id, player2_id, player1:players!player1_id(id, full_name, avatar_url), player2:players!player2_id(id, full_name, avatar_url)",
+      )
+      .eq("status", "confirmed")
+      .gte("created_at", since)
       .or(`player1_id.eq.${profile.id},player2_id.eq.${profile.id}`)
-      .order('created_at', { ascending: false })
+      .order("created_at", { ascending: false })
       .limit(1)
       .then(({ data }) => {
         if (data && data.length > 0) {
@@ -79,7 +87,9 @@ export default function LogMatchFab() {
           title={`Quick Rematch vs ${recentOpponent.full_name}`}
         >
           <Zap className="w-5 h-5 shrink-0" />
-          <span className="text-xs font-black">Rematch {recentOpponent.full_name.split(' ')[0]}</span>
+          <span className="text-xs font-black">
+            Rematch {recentOpponent.full_name.split(" ")[0]}
+          </span>
         </button>
       ) : (
         <button

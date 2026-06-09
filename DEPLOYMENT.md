@@ -12,6 +12,7 @@
 Your site will get a URL like: `https://random-name-12345.netlify.app`
 
 To get a custom domain:
+
 - Go to Site Settings → Domain Management
 - Add your custom domain (free with Netlify)
 
@@ -51,6 +52,7 @@ To get a custom domain:
 ## 🌐 Alternative Platforms
 
 ### Vercel (Also Great for React)
+
 1. Go to https://vercel.com
 2. Sign up with GitHub
 3. Click "Import Project"
@@ -58,6 +60,7 @@ To get a custom domain:
 5. Deploy (automatic configuration)
 
 ### Firebase Hosting (Google Product)
+
 ```bash
 npm install -g firebase-tools
 firebase login
@@ -70,6 +73,7 @@ firebase deploy
 ## 📁 What's Included
 
 Your deployment package includes:
+
 - ✅ Updated pages (Training/Coaching sections removed)
 - ✅ Production build (`dist/public` folder)
 - ✅ Netlify configuration (`netlify.toml`)
@@ -103,6 +107,7 @@ Development server runs on: http://localhost:5173
 ## 🎨 Customization
 
 After deployment, you can:
+
 1. Update content by editing files in `client/src/pages/`
 2. Change colors in Tailwind CSS
 3. Add new pages by creating new files in pages folder

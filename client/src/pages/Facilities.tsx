@@ -1,9 +1,17 @@
-import { useEffect, useState, useCallback } from 'react';
-import { CheckCircle, Clock, MapPin, Trophy, Users, CalendarX, ExternalLink } from 'lucide-react';
-import { usePageMeta } from '@/hooks/usePageMeta';
-import { useAutoRefresh } from '@/hooks/useAutoRefresh';
-import { fetchSiteData } from '@/lib/siteData';
-import { motion } from 'framer-motion';
+import { useEffect, useState, useCallback } from "react";
+import {
+  CheckCircle,
+  Clock,
+  MapPin,
+  Trophy,
+  Users,
+  CalendarX,
+  ExternalLink,
+} from "lucide-react";
+import { usePageMeta } from "@/hooks/usePageMeta";
+import { useAutoRefresh } from "@/hooks/useAutoRefresh";
+import { fetchSiteData } from "@/lib/siteData";
+import { motion } from "framer-motion";
 
 type Holiday = {
   date: string;
@@ -15,7 +23,7 @@ const fadeUp = {
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.4, delay: i * 0.06, ease: 'easeOut' as const },
+    transition: { duration: 0.4, delay: i * 0.06, ease: "easeOut" as const },
   }),
 };
 
@@ -26,14 +34,18 @@ export default function Facilities() {
   const [nextHoliday, setNextHoliday] = useState<Holiday | null>(null);
 
   const loadHolidays = useCallback(() => {
-    fetchSiteData<Holiday[]>('holidays', 'holidays.json')
+    fetchSiteData<Holiday[]>("holidays", "holidays.json")
       .then((data) => {
-        const sortedData = [...data].sort((a, b) => a.date.localeCompare(b.date));
+        const sortedData = [...data].sort((a, b) =>
+          a.date.localeCompare(b.date),
+        );
         setHolidays(sortedData);
-        const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+        const today = new Date().toLocaleDateString("en-CA", {
+          timeZone: "Asia/Kolkata",
+        });
         setNextHoliday(sortedData.find((h: any) => h.date >= today) || null);
       })
-      .catch((err) => console.error('Error loading holidays:', err));
+      .catch((err) => console.error("Error loading holidays:", err));
   }, []);
 
   useEffect(() => {
@@ -42,15 +54,15 @@ export default function Facilities() {
   useAutoRefresh(loadHolidays, 300_000);
 
   const courtDetails = [
-    'Wooden flooring with synthetic mat overlay',
-    'Professional BWF-standard court markings',
-    'Bright LED lighting for evening sessions',
-    'Tournament-ready infrastructure',
+    "Wooden flooring with synthetic mat overlay",
+    "Professional BWF-standard court markings",
+    "Bright LED lighting for evening sessions",
+    "Tournament-ready infrastructure",
   ];
 
   const schedule = [
-    { day: 'Monday – Sunday', hours: '6:00 AM – 10:20 PM', note: 'All days' },
-    { day: 'Gymkhana Holidays', hours: 'Closed', note: 'See calendar below' },
+    { day: "Monday – Sunday", hours: "6:00 AM – 10:20 PM", note: "All days" },
+    { day: "Gymkhana Holidays", hours: "Closed", note: "See calendar below" },
   ];
 
   return (
@@ -60,7 +72,7 @@ export default function Facilities() {
           <div className="w-12 h-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full" />
           <h2
             className="text-4xl font-black text-center text-blue-900 dark:text-white"
-            style={{ fontFamily: 'Playfair Display, serif' }}
+            style={{ fontFamily: "Playfair Display, serif" }}
           >
             Our Facilities
           </h2>
@@ -91,8 +103,9 @@ export default function Facilities() {
                       </h2>
                     </div>
                     <p className="text-gray-600 dark:text-slate-400 leading-relaxed mb-6">
-                      Three professional-grade wooden courts with synthetic mat flooring and modern
-                      lighting, designed for both training and competitive play.
+                      Three professional-grade wooden courts with synthetic mat
+                      flooring and modern lighting, designed for both training
+                      and competitive play.
                     </p>
                     <ul className="space-y-3">
                       {courtDetails.map((detail, i) => (
@@ -133,13 +146,13 @@ export default function Facilities() {
                           key={idx}
                           className={`flex items-center justify-between p-4 rounded-2xl ${
                             idx === 0
-                              ? 'bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 border border-emerald-100 dark:border-emerald-900/50'
-                              : 'bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 border border-red-100 dark:border-red-900/50'
+                              ? "bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 border border-emerald-100 dark:border-emerald-900/50"
+                              : "bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 border border-red-100 dark:border-red-900/50"
                           }`}
                         >
                           <div>
                             <p
-                              className={`font-bold text-sm ${idx === 0 ? 'text-emerald-800 dark:text-emerald-300' : 'text-red-700 dark:text-red-400'}`}
+                              className={`font-bold text-sm ${idx === 0 ? "text-emerald-800 dark:text-emerald-300" : "text-red-700 dark:text-red-400"}`}
                             >
                               {slot.day}
                             </p>
@@ -148,7 +161,7 @@ export default function Facilities() {
                             </p>
                           </div>
                           <span
-                            className={`font-black text-sm tabular-nums ${idx === 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}
+                            className={`font-black text-sm tabular-nums ${idx === 0 ? "text-emerald-700 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}
                           >
                             {slot.hours}
                           </span>
@@ -156,7 +169,8 @@ export default function Facilities() {
                       ))}
                     </div>
                     <p className="text-xs text-red-500 dark:text-red-400 font-medium">
-                      ✕ Closed on all Gymkhana-declared holidays — see the calendar below.
+                      ✕ Closed on all Gymkhana-declared holidays — see the
+                      calendar below.
                     </p>
                   </div>
                 </div>
@@ -197,11 +211,15 @@ export default function Facilities() {
                       <p className="text-xs font-black text-white/60 uppercase tracking-widest">
                         Next Closure
                       </p>
-                      <p className="font-black text-white">{nextHoliday.name}</p>
+                      <p className="font-black text-white">
+                        {nextHoliday.name}
+                      </p>
                     </div>
                   </div>
                   <div className="sm:ml-auto bg-white/10 border border-white/20 px-4 py-2 rounded-xl">
-                    <p className="text-sm font-bold text-amber-300">{nextHoliday.date}</p>
+                    <p className="text-sm font-bold text-amber-300">
+                      {nextHoliday.date}
+                    </p>
                   </div>
                 </div>
               </motion.div>
@@ -211,8 +229,8 @@ export default function Facilities() {
             {holidays.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 {holidays.map((h, i) => {
-                  const today = new Date().toLocaleDateString('en-CA', {
-                    timeZone: 'Asia/Kolkata',
+                  const today = new Date().toLocaleDateString("en-CA", {
+                    timeZone: "Asia/Kolkata",
                   });
                   const isPast = h.date < today;
                   const isNext = nextHoliday?.date === h.date;
@@ -227,19 +245,19 @@ export default function Facilities() {
                       viewport={{ once: true }}
                       className={`rounded-2xl p-5 text-center border transition-shadow hover:shadow-md ${
                         isNext
-                          ? 'bg-amber-50 dark:bg-amber-950/20 border-amber-300 dark:border-amber-700 shadow-sm'
+                          ? "bg-amber-50 dark:bg-amber-950/20 border-amber-300 dark:border-amber-700 shadow-sm"
                           : isPast
-                            ? 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 opacity-60'
-                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm'
+                            ? "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 opacity-60"
+                            : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm"
                       }`}
                     >
                       <p
-                        className={`text-xs font-bold tabular-nums ${isNext ? 'text-amber-600 dark:text-amber-400' : isPast ? 'text-slate-400 dark:text-slate-500' : 'text-gray-500 dark:text-slate-400'}`}
+                        className={`text-xs font-bold tabular-nums ${isNext ? "text-amber-600 dark:text-amber-400" : isPast ? "text-slate-400 dark:text-slate-500" : "text-gray-500 dark:text-slate-400"}`}
                       >
                         {h.date}
                       </p>
                       <p
-                        className={`text-xs font-semibold mt-1.5 leading-snug ${isNext ? 'text-amber-800 dark:text-amber-300' : isPast ? 'text-slate-400 dark:text-slate-500' : 'text-blue-900 dark:text-slate-200'}`}
+                        className={`text-xs font-semibold mt-1.5 leading-snug ${isNext ? "text-amber-800 dark:text-amber-300" : isPast ? "text-slate-400 dark:text-slate-500" : "text-blue-900 dark:text-slate-200"}`}
                       >
                         {h.name}
                       </p>
@@ -303,8 +321,8 @@ export default function Facilities() {
                       India
                     </p>
                     <p className="text-gray-500 dark:text-slate-500 text-sm mb-6">
-                      Located within the IISc campus with easy access, ample parking, and excellent
-                      connectivity.
+                      Located within the IISc campus with easy access, ample
+                      parking, and excellent connectivity.
                     </p>
                     <a
                       href="https://maps.app.goo.gl/pBTtJGYEPwnu6qd78"
@@ -345,20 +363,23 @@ export default function Facilities() {
                         IISc Members
                       </h3>
                       <p className="text-gray-600 dark:text-slate-400 text-sm leading-relaxed">
-                        Students, faculty, staff, and eligible members can access the badminton
-                        facilities through Gymkhana membership.
+                        Students, faculty, staff, and eligible members can
+                        access the badminton facilities through Gymkhana
+                        membership.
                       </p>
                     </div>
 
                     <ul className="space-y-3">
                       {[
-                        'Full facility access (all 3 courts)',
-                        'Tournament participation eligibility',
-                        'Join the IISc badminton community online',
+                        "Full facility access (all 3 courts)",
+                        "Tournament participation eligibility",
+                        "Join the IISc badminton community online",
                       ].map((item, i) => (
                         <li key={i} className="flex gap-3 items-start">
                           <CheckCircle className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700 dark:text-slate-300 text-sm">{item}</span>
+                          <span className="text-gray-700 dark:text-slate-300 text-sm">
+                            {item}
+                          </span>
                         </li>
                       ))}
                     </ul>

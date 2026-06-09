@@ -1,6 +1,6 @@
-import { useRegisterSW } from 'virtual:pwa-register/react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { RefreshCw, X } from 'lucide-react'
+import { useRegisterSW } from "virtual:pwa-register/react";
+import { motion, AnimatePresence } from "framer-motion";
+import { RefreshCw, X } from "lucide-react";
 
 export function PwaUpdatePrompt() {
   const {
@@ -8,12 +8,12 @@ export function PwaUpdatePrompt() {
     updateServiceWorker,
   } = useRegisterSW({
     onRegistered(r) {
-      console.log('SW Registered:', r)
+      console.log("SW Registered:", r);
     },
     onRegisterError(error) {
-      console.error('SW registration error', error)
+      console.error("SW registration error", error);
     },
-  })
+  });
 
   return (
     <AnimatePresence>
@@ -33,9 +33,10 @@ export function PwaUpdatePrompt() {
               Update Available!
             </h3>
             <p className="text-slate-300 text-sm mb-5 leading-relaxed">
-              A new version of the app is ready. Reload to get the latest features and bug fixes.
+              A new version of the app is ready. Reload to get the latest
+              features and bug fixes.
             </p>
-            
+
             <div className="flex gap-3">
               <button
                 onClick={() => updateServiceWorker(true)}
@@ -55,5 +56,5 @@ export function PwaUpdatePrompt() {
         </motion.div>
       )}
     </AnimatePresence>
-  )
+  );
 }

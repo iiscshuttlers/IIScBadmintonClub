@@ -22,16 +22,19 @@ const now = new Date().toISOString();
 const champions = tournamentData.config.champions;
 
 async function closeFarewellTournament() {
-  await db.collection("live_data").doc("tournament").set({
-    ...tournamentData,
-    lastUpdated: now,
-    config: {
-      ...tournamentData.config,
-      status: "archived",
-      archivedAt: now,
-      champions,
-    },
-  });
+  await db
+    .collection("live_data")
+    .doc("tournament")
+    .set({
+      ...tournamentData,
+      lastUpdated: now,
+      config: {
+        ...tournamentData.config,
+        status: "archived",
+        archivedAt: now,
+        champions,
+      },
+    });
 
   const tournaments = await db.collection("tournaments").get();
   const matchingDocs = tournaments.docs.filter((doc) => {
@@ -48,12 +51,14 @@ async function closeFarewellTournament() {
         archivedAt: now,
         completedAt: now,
         champions,
-      })
-    )
+      }),
+    ),
   );
 
   console.log("Farewell tournament archived.");
-  console.log(`Updated live_data/tournament and ${matchingDocs.length} tournament record(s).`);
+  console.log(
+    `Updated live_data/tournament and ${matchingDocs.length} tournament record(s).`,
+  );
 }
 
 closeFarewellTournament()

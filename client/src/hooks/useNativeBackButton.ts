@@ -41,7 +41,11 @@ export function useNativeBackButton() {
 
     const listener = CapApp.addListener("backButton", ({ canGoBack }) => {
       const path = window.location.pathname;
-      const isHome = path === "/" || path === "" || path === "/iiscshuttlers" || path === "/iiscshuttlers/";
+      const isHome =
+        path === "/" ||
+        path === "" ||
+        path === "/iiscshuttlers" ||
+        path === "/iiscshuttlers/";
 
       if (!isHome && canGoBack) {
         window.history.back();

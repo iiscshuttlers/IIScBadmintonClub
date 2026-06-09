@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Trophy,
   CalendarClock,
@@ -7,10 +7,10 @@ import {
   Activity,
   Clock,
   CheckCircle,
-} from 'lucide-react';
-import { db } from '../lib/firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { ScheduleView } from './ScheduleView';
+} from "lucide-react";
+import { db } from "../lib/firebase";
+import { doc, onSnapshot } from "firebase/firestore";
+import { ScheduleView } from "./ScheduleView";
 
 interface TournamentData {
   formats: string[];
@@ -24,31 +24,35 @@ interface TournamentData {
 
 export default function LiveTournament() {
   // --- STATE ---
-  const [activeTab, setActiveTab] = useState<'brackets' | 'schedule'>('schedule');
-  const [activeFormat, setActiveFormat] = useState('MS');
-  const [tournamentData, setTournamentData] = useState<TournamentData | null>(null);
+  const [activeTab, setActiveTab] = useState<"brackets" | "schedule">(
+    "schedule",
+  );
+  const [activeFormat, setActiveFormat] = useState("MS");
+  const [tournamentData, setTournamentData] = useState<TournamentData | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   // --- DATA FETCHING (LIVE FIREBASE LISTENER) ---
   useEffect(() => {
     const unsubscribe = onSnapshot(
-      doc(db, 'live_data', 'tournament'),
+      doc(db, "live_data", "tournament"),
       (docSnap) => {
         if (docSnap.exists()) {
           setTournamentData(docSnap.data() as TournamentData);
           setLoading(false);
-          setError('');
+          setError("");
         } else {
-          setError('Tournament brackets are not available yet.');
+          setError("Tournament brackets are not available yet.");
           setLoading(false);
         }
       },
       (err) => {
-        console.error('Firebase listen error:', err);
-        setError('Failed to connect to live updates.');
+        console.error("Firebase listen error:", err);
+        setError("Failed to connect to live updates.");
         setLoading(false);
-      }
+      },
     );
 
     return () => unsubscribe();
@@ -58,23 +62,23 @@ export default function LiveTournament() {
   const getAllMatches = () => {
     if (!tournamentData) return [];
     return Object.entries(tournamentData.matches).flatMap(([format, matches]) =>
-      matches.map((m: any) => ({ ...m, format }))
+      matches.map((m: any) => ({ ...m, format })),
     );
   };
 
   const getLiveMatches = () => {
-    return getAllMatches().filter((m) => m.Status === 'in-progress');
+    return getAllMatches().filter((m) => m.Status === "in-progress");
   };
 
   const getRecentCompleted = () => {
     return getAllMatches()
-      .filter((m) => m.Status === 'completed')
+      .filter((m) => m.Status === "completed")
       .sort((a, b) => {
         // Fallback to insertion order if time is not available
         if (!a.Time || !b.Time) return 0;
-        const [ah, am] = a.Time.split(':').map(Number);
-        const [bh, bm] = b.Time.split(':').map(Number);
-        return (bh * 60 + bm) - (ah * 60 + am); // Descending (newest first)
+        const [ah, am] = a.Time.split(":").map(Number);
+        const [bh, bm] = b.Time.split(":").map(Number);
+        return bh * 60 + bm - (ah * 60 + am); // Descending (newest first)
       })
       .slice(0, 6); // Top 6 most recent
   };
@@ -82,12 +86,12 @@ export default function LiveTournament() {
   const currentMatches = tournamentData?.matches[activeFormat] || [];
   const rounds = currentMatches.reduce(
     (acc, match) => {
-      const roundName = match.Round || 'Unassigned';
+      const roundName = match.Round || "Unassigned";
       if (!acc[roundName]) acc[roundName] = [];
       acc[roundName].push(match);
       return acc;
     },
-    {} as { [key: string]: any[] }
+    {} as { [key: string]: any[] },
   );
 
   const liveMatches = getLiveMatches();
@@ -106,30 +110,32 @@ export default function LiveTournament() {
             {tournamentData && tournamentData.lastUpdated && (
               <p className="text-sm text-gray-500 dark:text-slate-500 mt-2 flex items-center gap-2">
                 <CalendarClock size={16} />
-                Scores updated: {new Date(tournamentData.lastUpdated).toLocaleString()}
+                Scores updated:{" "}
+                {new Date(tournamentData.lastUpdated).toLocaleString()}
               </p>
             )}
           </div>
 
           {/* View Toggle Buttons */}
           <div className="flex bg-gray-100 dark:bg-slate-800 p-1 rounded-xl w-full md:w-auto">
-
             <button
-              onClick={() => setActiveTab('brackets')}
-              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-bold transition-all ${activeTab === 'brackets'
-                  ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm'
-                  : 'text-gray-500 dark:text-slate-500 hover:text-gray-700 dark:text-slate-300'
-                }`}
+              onClick={() => setActiveTab("brackets")}
+              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-bold transition-all ${
+                activeTab === "brackets"
+                  ? "bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm"
+                  : "text-gray-500 dark:text-slate-500 hover:text-gray-700 dark:text-slate-300"
+              }`}
             >
               <LayoutList size={18} />
               Live Brackets
             </button>
             <button
-              onClick={() => setActiveTab('schedule')}
-              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-bold transition-all ${activeTab === 'schedule'
-                  ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm'
-                  : 'text-gray-500 dark:text-slate-500 hover:text-gray-700 dark:text-slate-300'
-                }`}
+              onClick={() => setActiveTab("schedule")}
+              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-bold transition-all ${
+                activeTab === "schedule"
+                  ? "bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm"
+                  : "text-gray-500 dark:text-slate-500 hover:text-gray-700 dark:text-slate-300"
+              }`}
             >
               <Clock size={18} />
               Schedule & Live Scores
@@ -138,23 +144,28 @@ export default function LiveTournament() {
         </div>
       </div>
 
-
-
       {/* --- TAB CONTENT: BRACKETS --- */}
-      {activeTab === 'brackets' && (
+      {activeTab === "brackets" && (
         <div className="animate-in fade-in duration-300">
           {loading ? (
             <div className="py-32 flex flex-col items-center justify-center space-y-4">
               <div className="w-12 h-12 rounded-full border-4 border-emerald-500/30 border-t-emerald-500 animate-spin"></div>
-              <p className="text-sm font-bold text-slate-500 uppercase tracking-widest animate-pulse">Loading Brackets</p>
+              <p className="text-sm font-bold text-slate-500 uppercase tracking-widest animate-pulse">
+                Loading Brackets
+              </p>
             </div>
           ) : error || !tournamentData ? (
             <div className="py-32 flex flex-col items-center justify-center text-center">
               <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
                 <Trophy className="w-10 h-10 text-slate-400 dark:text-slate-500" />
               </div>
-              <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-2">Data Pending</h3>
-              <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto">{error || "Live tournament data is currently not available or the event hasn't started."}</p>
+              <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-2">
+                Data Pending
+              </h3>
+              <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+                {error ||
+                  "Live tournament data is currently not available or the event hasn't started."}
+              </p>
             </div>
           ) : (
             <>
@@ -172,7 +183,8 @@ export default function LiveTournament() {
                           </h3>
                           <div className="flex items-center gap-2 bg-red-600 px-3 py-1 rounded-full text-sm">
                             <div className="w-2 h-2 bg-white dark:bg-slate-900 rounded-full animate-pulse"></div>
-                            {liveMatches.length} Match{liveMatches.length !== 1 ? 'es' : ''}
+                            {liveMatches.length} Match
+                            {liveMatches.length !== 1 ? "es" : ""}
                           </div>
                         </div>
                         <div className="p-4 space-y-3 max-h-96 overflow-y-auto">
@@ -208,17 +220,18 @@ export default function LiveTournament() {
                 {[...tournamentData.formats]
                   .sort(
                     (a, b) =>
-                      ['MS', 'WS', 'MD', 'WD', 'XD'].indexOf(a) -
-                      ['MS', 'WS', 'MD', 'WD', 'XD'].indexOf(b)
+                      ["MS", "WS", "MD", "WD", "XD"].indexOf(a) -
+                      ["MS", "WS", "MD", "WD", "XD"].indexOf(b),
                   )
                   .map((format) => (
                     <button
                       key={format}
                       onClick={() => setActiveFormat(format)}
-                      className={`px-6 py-2 rounded-full font-bold transition-all shadow-sm ${activeFormat === format
-                          ? 'bg-emerald-600 text-white'
-                          : 'bg-white dark:bg-slate-900 text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700'
-                        }`}
+                      className={`px-6 py-2 rounded-full font-bold transition-all shadow-sm ${
+                        activeFormat === format
+                          ? "bg-emerald-600 text-white"
+                          : "bg-white dark:bg-slate-900 text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700"
+                      }`}
                     >
                       {format}
                     </button>
@@ -240,68 +253,77 @@ export default function LiveTournament() {
                             {roundName}
                           </h3>
                           <div className="flex flex-col gap-6 justify-around h-full">
-                            {rounds[roundName].map((match: any, matchIdx: number) => {
-                              const isCompleted = match.Status === 'completed';
-                              const isLive = match.Status === 'in-progress';
-                              const p1Name = match.Player_1 || match.Players_1 || 'TBD';
-                              const p2Name = match.Player_2 || match.Players_2 || 'TBD';
-                              const p1Won =
-                                isCompleted &&
-                                match.Winner &&
-                                match.Winner.includes(p1Name.split('/')[0]);
-                              const p2Won =
-                                isCompleted &&
-                                match.Winner &&
-                                match.Winner.includes(p2Name.split('/')[0]);
+                            {rounds[roundName].map(
+                              (match: any, matchIdx: number) => {
+                                const isCompleted =
+                                  match.Status === "completed";
+                                const isLive = match.Status === "in-progress";
+                                const p1Name =
+                                  match.Player_1 || match.Players_1 || "TBD";
+                                const p2Name =
+                                  match.Player_2 || match.Players_2 || "TBD";
+                                const p1Won =
+                                  isCompleted &&
+                                  match.Winner &&
+                                  match.Winner.includes(p1Name.split("/")[0]);
+                                const p2Won =
+                                  isCompleted &&
+                                  match.Winner &&
+                                  match.Winner.includes(p2Name.split("/")[0]);
 
-                              return (
-                                <div
-                                  key={matchIdx}
-                                  className={`border rounded-xl overflow-hidden bg-white dark:bg-slate-900 ${isLive ? 'border-red-500 dark:border-red-900 shadow-lg shadow-red-200 ring-2 ring-red-200' : 'border-gray-200 dark:border-slate-700 shadow-sm'}`}
-                                >
+                                return (
                                   <div
-                                    className={`px-3 py-1.5 text-xs font-semibold flex justify-between items-center ${isLive ? 'bg-red-50 dark:bg-red-950/20 text-red-700' : 'bg-gray-50 dark:bg-slate-800/50 text-gray-500 dark:text-slate-500'}`}
+                                    key={matchIdx}
+                                    className={`border rounded-xl overflow-hidden bg-white dark:bg-slate-900 ${isLive ? "border-red-500 dark:border-red-900 shadow-lg shadow-red-200 ring-2 ring-red-200" : "border-gray-200 dark:border-slate-700 shadow-sm"}`}
                                   >
-                                    <span>{match.Match_ID}</span>
-                                    {isLive ? (
-                                      <span className="animate-pulse flex items-center gap-1">
-                                        <span className="w-2 h-2 rounded-full bg-red-50 dark:bg-red-950/200"></span>{' '}
-                                        LIVE
-                                      </span>
-                                    ) : (
-                                      <span>{match.Status}</span>
-                                    )}
-                                  </div>
-                                  <div
-                                    className={`p-3 flex justify-between items-center border-b ${p1Won ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-900 dark:text-emerald-300 font-bold' : 'text-gray-700 dark:text-slate-300'}`}
-                                  >
-                                    <span className="truncate pr-2">{p1Name}</span>
-                                    {p1Won && (
-                                      <Trophy
-                                        size={14}
-                                        className="text-emerald-600 flex-shrink-0"
-                                      />
-                                    )}
-                                  </div>
-                                  {match.Score_1 && (
-                                    <div className="text-center py-1 bg-gray-50 dark:bg-slate-800/50 text-xs font-mono font-bold text-gray-600 dark:text-slate-400">
-                                      {match.Score_1}
+                                    <div
+                                      className={`px-3 py-1.5 text-xs font-semibold flex justify-between items-center ${isLive ? "bg-red-50 dark:bg-red-950/20 text-red-700" : "bg-gray-50 dark:bg-slate-800/50 text-gray-500 dark:text-slate-500"}`}
+                                    >
+                                      <span>{match.Match_ID}</span>
+                                      {isLive ? (
+                                        <span className="animate-pulse flex items-center gap-1">
+                                          <span className="w-2 h-2 rounded-full bg-red-50 dark:bg-red-950/200"></span>{" "}
+                                          LIVE
+                                        </span>
+                                      ) : (
+                                        <span>{match.Status}</span>
+                                      )}
                                     </div>
-                                  )}
-                                  <div
-                                    className={`p-3 flex justify-between items-center ${p2Won ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-900 dark:text-emerald-300 font-bold' : 'text-gray-700 dark:text-slate-300'} ${match.Score_1 ? 'border-t' : ''}`}
-                                  >
-                                    <span className="truncate pr-2">{p2Name}</span>
-                                    {p2Won && (
-                                      <Trophy
-                                        size={14}
-                                        className="text-emerald-600 flex-shrink-0"
-                                      />
+                                    <div
+                                      className={`p-3 flex justify-between items-center border-b ${p1Won ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-900 dark:text-emerald-300 font-bold" : "text-gray-700 dark:text-slate-300"}`}
+                                    >
+                                      <span className="truncate pr-2">
+                                        {p1Name}
+                                      </span>
+                                      {p1Won && (
+                                        <Trophy
+                                          size={14}
+                                          className="text-emerald-600 flex-shrink-0"
+                                        />
+                                      )}
+                                    </div>
+                                    {match.Score_1 && (
+                                      <div className="text-center py-1 bg-gray-50 dark:bg-slate-800/50 text-xs font-mono font-bold text-gray-600 dark:text-slate-400">
+                                        {match.Score_1}
+                                      </div>
                                     )}
+                                    <div
+                                      className={`p-3 flex justify-between items-center ${p2Won ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-900 dark:text-emerald-300 font-bold" : "text-gray-700 dark:text-slate-300"} ${match.Score_1 ? "border-t" : ""}`}
+                                    >
+                                      <span className="truncate pr-2">
+                                        {p2Name}
+                                      </span>
+                                      {p2Won && (
+                                        <Trophy
+                                          size={14}
+                                          className="text-emerald-600 flex-shrink-0"
+                                        />
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
-                              );
-                            })}
+                                );
+                              },
+                            )}
                           </div>
                         </div>
                       ))}
@@ -313,7 +335,7 @@ export default function LiveTournament() {
           )}
         </div>
       )}
-      {activeTab === 'schedule' && (
+      {activeTab === "schedule" && (
         <div className="max-w-4xl mx-auto px-4 py-8">
           <ScheduleView tournamentData={tournamentData} />
         </div>
@@ -324,9 +346,11 @@ export default function LiveTournament() {
 
 // --- LIVE MATCH CARD COMPONENT ---
 function LiveMatchCard({ match }: { match: any }) {
-  const p1Name = match.Player_1 || match.Players_1 || 'TBD';
-  const p2Name = match.Player_2 || match.Players_2 || 'TBD';
-  const scores = match.Score_1 ? match.Score_1.split(',').map((s: string) => s.trim()) : [];
+  const p1Name = match.Player_1 || match.Players_1 || "TBD";
+  const p2Name = match.Player_2 || match.Players_2 || "TBD";
+  const scores = match.Score_1
+    ? match.Score_1.split(",").map((s: string) => s.trim())
+    : [];
 
   return (
     <div className="border-2 border-red-200 dark:border-red-900/50 rounded-xl overflow-hidden bg-red-50/50 dark:bg-red-950/20 hover:shadow-md transition-shadow">
@@ -341,10 +365,14 @@ function LiveMatchCard({ match }: { match: any }) {
       </div>
       <div className="p-3 space-y-2">
         <div className="flex justify-between items-center">
-          <span className="font-semibold text-gray-800 dark:text-slate-100">{p1Name}</span>
+          <span className="font-semibold text-gray-800 dark:text-slate-100">
+            {p1Name}
+          </span>
           <div className="flex gap-1">
             {scores.map((scoreSet, idx) => {
-              const [s1] = scoreSet.split('-').map((s) => parseInt(s.trim()) || 0);
+              const [s1] = scoreSet
+                .split("-")
+                .map((s) => parseInt(s.trim()) || 0);
               return (
                 <div
                   key={idx}
@@ -357,10 +385,14 @@ function LiveMatchCard({ match }: { match: any }) {
           </div>
         </div>
         <div className="flex justify-between items-center">
-          <span className="font-semibold text-gray-800 dark:text-slate-100">{p2Name}</span>
+          <span className="font-semibold text-gray-800 dark:text-slate-100">
+            {p2Name}
+          </span>
           <div className="flex gap-1">
             {scores.map((scoreSet, idx) => {
-              const [, s2] = scoreSet.split('-').map((s) => parseInt(s.trim()) || 0);
+              const [, s2] = scoreSet
+                .split("-")
+                .map((s) => parseInt(s.trim()) || 0);
               return (
                 <div
                   key={idx}
@@ -379,10 +411,10 @@ function LiveMatchCard({ match }: { match: any }) {
 
 // --- COMPLETED MATCH CARD COMPONENT ---
 function CompletedMatchCard({ match }: { match: any }) {
-  const p1Name = match.Player_1 || match.Players_1 || 'TBD';
-  const p2Name = match.Player_2 || match.Players_2 || 'TBD';
-  const p1Won = match.Winner && match.Winner.includes(p1Name.split('/')[0]);
-  const p2Won = match.Winner && match.Winner.includes(p2Name.split('/')[0]);
+  const p1Name = match.Player_1 || match.Players_1 || "TBD";
+  const p2Name = match.Player_2 || match.Players_2 || "TBD";
+  const p1Won = match.Winner && match.Winner.includes(p1Name.split("/")[0]);
+  const p2Won = match.Winner && match.Winner.includes(p2Name.split("/")[0]);
 
   return (
     <div className="border border-gray-200 dark:border-slate-700 rounded-xl overflow-hidden hover:shadow-md transition-shadow bg-white dark:bg-slate-900">
@@ -394,7 +426,7 @@ function CompletedMatchCard({ match }: { match: any }) {
       </div>
       <div className="p-3 space-y-1">
         <div
-          className={`flex justify-between items-center ${p1Won ? 'font-bold text-emerald-700 dark:text-emerald-400' : 'text-gray-600 dark:text-slate-400'}`}
+          className={`flex justify-between items-center ${p1Won ? "font-bold text-emerald-700 dark:text-emerald-400" : "text-gray-600 dark:text-slate-400"}`}
         >
           <span className="flex items-center gap-1">
             {p1Won && <Trophy size={14} className="text-yellow-500" />}
@@ -407,7 +439,7 @@ function CompletedMatchCard({ match }: { match: any }) {
           </div>
         )}
         <div
-          className={`flex justify-between items-center ${p2Won ? 'font-bold text-emerald-700 dark:text-emerald-400' : 'text-gray-600 dark:text-slate-400'}`}
+          className={`flex justify-between items-center ${p2Won ? "font-bold text-emerald-700 dark:text-emerald-400" : "text-gray-600 dark:text-slate-400"}`}
         >
           <span className="flex items-center gap-1">
             {p2Won && <Trophy size={14} className="text-yellow-500" />}

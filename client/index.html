@@ -1,93 +1,112 @@
 <!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IISc Badminton Club</title>
+    <meta
+      name="description"
+      content="IISc Badminton Club — Promoting excellence in badminton through competitive play, training, and community at the Indian Institute of Science, Bangalore."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="IISc Badminton Club" />
+    <meta property="og:title" content="IISc Badminton Club" />
+    <meta
+      property="og:description"
+      content="Promoting excellence in badminton through competitive play, training, and community at IISc, Bangalore."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="IISc Badminton Club" />
+    <meta
+      name="twitter:description"
+      content="Promoting excellence in badminton at IISc, Bangalore."
+    />
+    <meta name="theme-color" content="#1e3a5f" />
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>IISc Badminton Club</title>
-  <meta name="description" content="IISc Badminton Club — Promoting excellence in badminton through competitive play, training, and community at the Indian Institute of Science, Bangalore." />
-  <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="IISc Badminton Club" />
-  <meta property="og:title" content="IISc Badminton Club" />
-  <meta property="og:description" content="Promoting excellence in badminton through competitive play, training, and community at IISc, Bangalore." />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="IISc Badminton Club" />
-  <meta name="twitter:description" content="Promoting excellence in badminton at IISc, Bangalore." />
-  <meta name="theme-color" content="#1e3a5f" />
-
-  <!-- ✅ SPA Redirect Restore (REQUIRED) -->
-  <script>
-    (function () {
-      const redirect = sessionStorage.getItem('redirect');
-      if (redirect) {
-        sessionStorage.removeItem('redirect');
-        window.history.replaceState(null, null, redirect);
-      }
-    })();
-
-    // ✅ FORCE 0 CACHE & HARD REFRESH: Obliterate Service Workers and Cache Storage
-    (async function clearAllCaches() {
-      let needsReload = false;
-
-      // 1. Unregister all service workers
-      if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        for (const registration of registrations) {
-          await registration.unregister();
-          needsReload = true;
+    <!-- ✅ SPA Redirect Restore (REQUIRED) -->
+    <script>
+      (function () {
+        const redirect = sessionStorage.getItem("redirect");
+        if (redirect) {
+          sessionStorage.removeItem("redirect");
+          window.history.replaceState(null, null, redirect);
         }
-      }
+      })();
 
-      // 2. Clear all cache storage (this is where VitePWA keeps old assets)
-      if ('caches' in window) {
-        const cacheNames = await caches.keys();
-        for (const name of cacheNames) {
-          await caches.delete(name);
-          needsReload = true;
+      // ✅ FORCE 0 CACHE & HARD REFRESH: Obliterate Service Workers and Cache Storage
+      (async function clearAllCaches() {
+        let needsReload = false;
+
+        // 1. Unregister all service workers
+        if ("serviceWorker" in navigator) {
+          const registrations =
+            await navigator.serviceWorker.getRegistrations();
+          for (const registration of registrations) {
+            await registration.unregister();
+            needsReload = true;
+          }
         }
+
+        // 2. Clear all cache storage (this is where VitePWA keeps old assets)
+        if ("caches" in window) {
+          const cacheNames = await caches.keys();
+          for (const name of cacheNames) {
+            await caches.delete(name);
+            needsReload = true;
+          }
+        }
+
+        // 3. Force a hard reload if we cleared anything, using a cache-busting param
+        if (needsReload && !window.location.search.includes("nocache=")) {
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.set("nocache", Date.now().toString());
+          window.location.replace(newUrl.toString());
+        }
+      })();
+    </script>
+
+    <!-- ✅ NO CACHE HEADERS -->
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --font-display: "Playfair Display", serif;
+        --font-body: "Inter", sans-serif;
       }
+    </style>
 
-      // 3. Force a hard reload if we cleared anything, using a cache-busting param
-      if (needsReload && !window.location.search.includes('nocache=')) {
-        const newUrl = new URL(window.location.href);
-        newUrl.searchParams.set('nocache', Date.now().toString());
-        window.location.replace(newUrl.toString());
+    <!-- Google Analytics -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-KSBCCL5B6T"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
       }
-    })();
-  </script>
-
-  <!-- ✅ NO CACHE HEADERS -->
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
-
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet" />
-
-  <style>
-    :root {
-      --font-display: 'Playfair Display', serif;
-      --font-body: 'Inter', sans-serif;
-    }
-  </style>
-
-  <!-- Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-KSBCCL5B6T"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-KSBCCL5B6T');
-  </script>
+      gtag("js", new Date());
+      gtag("config", "G-KSBCCL5B6T");
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/heic2any@0.1.1/dist/heic2any.min.js"></script>
-</head>
+  </head>
 
-<body>
-  <div id="root"></div>
-  <script type="module" src="/src/main.tsx"></script>
-</body>
-
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>

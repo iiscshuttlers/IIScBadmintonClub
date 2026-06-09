@@ -1,7 +1,7 @@
-const fs = require('fs');
+const fs = require("fs");
 
-const targetFilePath = 'client/src/pages/PlayerProfile.tsx';
-let content = fs.readFileSync(targetFilePath, 'utf8');
+const targetFilePath = "client/src/pages/PlayerProfile.tsx";
+let content = fs.readFileSync(targetFilePath, "utf8");
 
 const brokenBlockStart = `              {validAchievements.length > 0 && (
                 <div className="space-y-6">
@@ -56,15 +56,17 @@ const newBlock = `              {validAchievements.length > 0 && (
                 </div>
               )}`;
 
-const startIndex = content.indexOf('              {validAchievements.length > 0 && (\r\n                <div className="space-y-6">\r\n                  <div>\r\n                    <h3 className="text-xs uppercase tracking-widest font-black text-slate-400 dark:text-slate-500 mb-6 flex items-center gap-2">\r\n                      <Medal className="w-4 h-4 text-emerald-500" /> Achievements Timeline\r\n                    </h3>');
+const startIndex = content.indexOf(
+  '              {validAchievements.length > 0 && (\r\n                <div className="space-y-6">\r\n                  <div>\r\n                    <h3 className="text-xs uppercase tracking-widest font-black text-slate-400 dark:text-slate-500 mb-6 flex items-center gap-2">\r\n                      <Medal className="w-4 h-4 text-emerald-500" /> Achievements Timeline\r\n                    </h3>',
+);
 
 if (startIndex !== -1) {
-  const endIndex = content.indexOf('              )}', startIndex) + 16;
+  const endIndex = content.indexOf("              )}", startIndex) + 16;
   const before = content.slice(0, startIndex);
   const after = content.slice(endIndex);
-  
+
   fs.writeFileSync(targetFilePath, before + newBlock + after);
-  console.log('Successfully replaced achievements block.');
+  console.log("Successfully replaced achievements block.");
 } else {
-  console.error('Could not find start index.');
+  console.error("Could not find start index.");
 }

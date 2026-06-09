@@ -2,7 +2,7 @@
  * Shared count-up animation component.
  * Used on Home (stats section) and About (By the Numbers section).
  */
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from "react";
 
 interface CountUpNumberProps {
   target: number;
@@ -11,7 +11,11 @@ interface CountUpNumberProps {
   className?: string;
 }
 
-export function CountUpNumber({ target, suffix = '', className = '' }: CountUpNumberProps) {
+export function CountUpNumber({
+  target,
+  suffix = "",
+  className = "",
+}: CountUpNumberProps) {
   const [count, setCount] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
   const animated = useRef(false);
@@ -34,7 +38,7 @@ export function CountUpNumber({ target, suffix = '', className = '' }: CountUpNu
           requestAnimationFrame(tick);
         }
       },
-      { threshold: 0.3 }
+      { threshold: 0.3 },
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -42,7 +46,8 @@ export function CountUpNumber({ target, suffix = '', className = '' }: CountUpNu
 
   return (
     <div ref={ref} className={`tabular-nums ${className}`}>
-      {count}{suffix}
+      {count}
+      {suffix}
     </div>
   );
 }

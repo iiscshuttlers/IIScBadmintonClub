@@ -12,7 +12,7 @@ const path = require("path");
 const serviceAccount = require(path.join(__dirname, "serviceAccountKey.json"));
 
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+  credential: admin.credential.cert(serviceAccount),
 });
 
 const db = admin.firestore();
@@ -25,19 +25,19 @@ const db = admin.firestore();
 // =====================================================================
 const PROGRESSIONS = {
   MS: {
-    MS1: { matchId: 'MS2', position: 2 },
-    MS2: { matchId: 'MS3', position: 2 },
+    MS1: { matchId: "MS2", position: 2 },
+    MS2: { matchId: "MS3", position: 2 },
   },
   WS: {
     // WS1 is final — no progression
   },
   XD: {
-    XD1: { matchId: 'XD3', position: 2 },
-    XD2: { matchId: 'XD4', position: 1 },
-    XD3: { matchId: 'XD4', position: 2 },
+    XD1: { matchId: "XD3", position: 2 },
+    XD2: { matchId: "XD4", position: 1 },
+    XD3: { matchId: "XD4", position: 2 },
   },
   MD: {
-    MD1: { matchId: 'MD3', position: 2 },
+    MD1: { matchId: "MD3", position: 2 },
     // Pool matches: winners determined manually by standings
   },
 };
@@ -58,7 +58,7 @@ async function patchProgression() {
     const matches = data.matches[format];
     if (!matches) continue;
 
-    const updated = matches.map(m => {
+    const updated = matches.map((m) => {
       if (progressions[m.Match_ID]) {
         return { ...m, advancesTo: progressions[m.Match_ID] };
       }
@@ -70,14 +70,14 @@ async function patchProgression() {
 
   await ref.update({
     ...updates,
-    lastUpdated: new Date().toISOString()
+    lastUpdated: new Date().toISOString(),
   });
 
   console.log("✅ Progression fields patched. Scores/status untouched.");
   process.exit(0);
 }
 
-patchProgression().catch(err => {
+patchProgression().catch((err) => {
   console.error("Error:", err);
   process.exit(1);
 });

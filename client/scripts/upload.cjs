@@ -9,15 +9,13 @@ const dataPath = path.join(__dirname, "tournament-data.json");
 const serviceAccount = require(serviceAccountPath);
 
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+  credential: admin.credential.cert(serviceAccount),
 });
 
 const db = admin.firestore();
 
 // Read JSON safely
-const data = JSON.parse(
-  fs.readFileSync(dataPath, "utf8")
-);
+const data = JSON.parse(fs.readFileSync(dataPath, "utf8"));
 
 async function upload() {
   try {

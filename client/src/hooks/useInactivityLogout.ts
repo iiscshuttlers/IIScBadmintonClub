@@ -1,7 +1,13 @@
 import { useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
-const ACTIVITY_EVENTS = ["mousemove", "keypress", "click", "scroll", "touchstart"] as const;
+const ACTIVITY_EVENTS = [
+  "mousemove",
+  "keypress",
+  "click",
+  "scroll",
+  "touchstart",
+] as const;
 const INACTIVITY_LIMIT_MS = 30 * 60 * 1000;
 
 export function useInactivityLogout() {
@@ -11,7 +17,9 @@ export function useInactivityLogout() {
     const resetTimer = () => {
       if (timeoutId) clearTimeout(timeoutId);
       timeoutId = setTimeout(async () => {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         if (!session) return;
 
         await supabase.auth.signOut();
@@ -20,12 +28,16 @@ export function useInactivityLogout() {
       }, INACTIVITY_LIMIT_MS);
     };
 
-    ACTIVITY_EVENTS.forEach((name) => window.addEventListener(name, resetTimer, { passive: true }));
+    ACTIVITY_EVENTS.forEach((name) =>
+      window.addEventListener(name, resetTimer, { passive: true }),
+    );
     resetTimer();
 
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
-      ACTIVITY_EVENTS.forEach((name) => window.removeEventListener(name, resetTimer));
+      ACTIVITY_EVENTS.forEach((name) =>
+        window.removeEventListener(name, resetTimer),
+      );
     };
   }, []);
 }

@@ -18,7 +18,9 @@ export function useAppUpdate() {
       try {
         const [info, res] = await Promise.all([
           CapApp.getInfo(),
-          fetch(`${import.meta.env.BASE_URL}data/app-version.json?v=${Date.now()}`),
+          fetch(
+            `${import.meta.env.BASE_URL}data/app-version.json?v=${Date.now()}`,
+          ),
         ]);
         const latest = await res.json();
 

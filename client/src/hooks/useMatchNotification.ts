@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/AuthContext';
-import { showWebNotification } from './usePushNotifications';
-import { LocalNotifications } from '@capacitor/local-notifications';
-import { Capacitor } from '@capacitor/core';
+import { useEffect, useRef, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
+import { showWebNotification } from "./usePushNotifications";
+import { LocalNotifications } from "@capacitor/local-notifications";
+import { Capacitor } from "@capacitor/core";
 
 /**
  * Subscribes to realtime INSERT events on the `matches` table.
@@ -22,13 +22,13 @@ export function useMatchNotification() {
     if (!profile?.id) return;
 
     const channel = supabase
-      .channel('match-alert-overlay')
+      .channel("match-alert-overlay")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'matches',
+          event: "INSERT",
+          schema: "public",
+          table: "matches",
         },
         async (payload) => {
           const match = payload.new as any;
@@ -53,12 +53,12 @@ export function useMatchNotification() {
           const isSubmitter = match.submitted_by === profile.id;
 
           // Fetch opponent name for the notification
-          let opponentName = 'Someone';
+          let opponentName = "Someone";
           if (challengerId && !isSubmitter) {
             const { data } = await supabase
-              .from('players')
-              .select('full_name')
-              .eq('id', challengerId)
+              .from("players")
+              .select("full_name")
+              .eq("id", challengerId)
               .single();
             if (data) opponentName = data.full_name;
           }
@@ -68,26 +68,29 @@ export function useMatchNotification() {
 
           // Fire browser notification ONLY for the receiver(s)
           if (!isSubmitter) {
-            const alertName = opponentName || 'Someone';
+            const alertName = opponentName || "Someone";
             if (Capacitor.isNativePlatform()) {
               try {
                 // Check permissions first
                 const permStatus = await LocalNotifications.checkPermissions();
-                if (permStatus.display === 'prompt') {
+                if (permStatus.display === "prompt") {
                   await LocalNotifications.requestPermissions();
                 }
-                if (permStatus.display === 'granted' || permStatus.display === 'prompt') {
+                if (
+                  permStatus.display === "granted" ||
+                  permStatus.display === "prompt"
+                ) {
                   await LocalNotifications.schedule({
                     notifications: [
                       {
-                        title: '🏸 New Match Challenge!',
+                        title: "🏸 New Match Challenge!",
                         body: `${alertName} just logged a match against you. Tap to confirm.`,
                         id: Math.floor(Math.random() * 1000000),
                         schedule: { at: new Date(Date.now() + 100) },
-                        actionTypeId: '',
-                        extra: { matchId: match.id }
-                      }
-                    ]
+                        actionTypeId: "",
+                        extra: { matchId: match.id },
+                      },
+                    ],
                   });
                 }
               } catch (e) {
@@ -95,27 +98,27 @@ export function useMatchNotification() {
               }
             } else {
               showWebNotification(
-                '🏸 New Match Challenge!',
+                "🏸 New Match Challenge!",
                 `${alertName} just logged a match against you. Open the app to confirm.`,
                 () => {
-                  window.location.href = `${import.meta.env.BASE_URL || '/'}matches`;
-                }
+                  window.location.href = `${import.meta.env.BASE_URL || "/"}matches`;
+                },
               );
             }
           }
 
           // Show in-app overlay notification (for everyone involved)
           // For submitter, we just say "Match Logged!" instead of "Opponent logged"
-          setNotification({ 
-            id: match.id, 
-            opponentName: isSubmitter ? 'Success! Match logged' : opponentName 
+          setNotification({
+            id: match.id,
+            opponentName: isSubmitter ? "Success! Match logged" : opponentName,
           });
 
           // Auto-dismiss after 2 seconds
           setTimeout(() => {
             setNotification(null);
           }, 2000);
-        }
+        },
       )
       .subscribe();
 
@@ -133,7 +136,9 @@ export function useMatchNotification() {
  */
 function playSmashSound() {
   try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const ctx = new (
+      window.AudioContext || (window as any).webkitAudioContext
+    )();
 
     // Impact hit — short noise burst
     const bufferLen = ctx.sampleRate * 0.15; // 150ms
@@ -150,13 +155,13 @@ function playSmashSound() {
 
     // Bandpass filter to shape the "thwack"
     const bandpass = ctx.createBiquadFilter();
-    bandpass.type = 'bandpass';
+    bandpass.type = "bandpass";
     bandpass.frequency.value = 800;
     bandpass.Q.value = 1.5;
 
     // High shelf for brightness
     const highShelf = ctx.createBiquadFilter();
-    highShelf.type = 'highshelf';
+    highShelf.type = "highshelf";
     highShelf.frequency.value = 2000;
     highShelf.gain.value = 6;
 
@@ -174,7 +179,7 @@ function playSmashSound() {
 
     // Add a sharp "ping" overtone for the shuttle cork hit
     const osc = ctx.createOscillator();
-    osc.type = 'sine';
+    osc.type = "sine";
     osc.frequency.setValueAtTime(1200, ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.08);
 
@@ -190,6 +195,6 @@ function playSmashSound() {
     // Clean up context after sound finishes
     setTimeout(() => ctx.close(), 500);
   } catch (e) {
-    console.warn('Could not play smash sound:', e);
+    console.warn("Could not play smash sound:", e);
   }
 }

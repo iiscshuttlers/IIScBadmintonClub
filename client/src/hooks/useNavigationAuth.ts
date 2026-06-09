@@ -25,20 +25,33 @@ function writeSavedAccounts(accounts: SavedAccount[]) {
 }
 
 export function useNavigationAuth() {
-  const { session, profile, isAdmin, isInitializing, signOut: globalSignOut } = useAuth();
+  const {
+    session,
+    profile,
+    isAdmin,
+    isInitializing,
+    signOut: globalSignOut,
+  } = useAuth();
   const [savedAccounts, setSavedAccounts] = useState<SavedAccount[]>([]);
   const [pendingActionCount, setPendingActionCount] = useState(0);
 
   useEffect(() => {
     const accounts = readSavedAccounts();
-    
+
     if (session?.user) {
       // Save current account
       const quickName = session.user.email?.split("@")[0] ?? "Player";
       const name = profile?.full_name?.split(" ")[0] ?? quickName;
-      
-      const account = { id: session.user.id, email: session.user.email, name, session };
-      const existingIndex = accounts.findIndex((item) => item.id === session.user.id);
+
+      const account = {
+        id: session.user.id,
+        email: session.user.email,
+        name,
+        session,
+      };
+      const existingIndex = accounts.findIndex(
+        (item) => item.id === session.user.id,
+      );
 
       if (existingIndex >= 0) {
         accounts[existingIndex] = account;
@@ -66,8 +79,10 @@ export function useNavigationAuth() {
           .select("*", { count: "exact", head: true })
           .eq("status", "pending")
           .neq("submitted_by", profile.id)
-          .or(`player1_id.eq.${profile.id},player2_id.eq.${profile.id},team1_partner_id.eq.${profile.id},team2_partner_id.eq.${profile.id}`);
-        
+          .or(
+            `player1_id.eq.${profile.id},player2_id.eq.${profile.id},team1_partner_id.eq.${profile.id},team2_partner_id.eq.${profile.id}`,
+          );
+
         if (count != null) {
           setPendingActionCount(count);
         }
@@ -92,9 +107,10 @@ export function useNavigationAuth() {
     window.location.reload();
   };
 
-  const userName = profile?.full_name?.split(" ")[0] 
-    ?? session?.user?.email?.split("@")[0] 
-    ?? "Player";
+  const userName =
+    profile?.full_name?.split(" ")[0] ??
+    session?.user?.email?.split("@")[0] ??
+    "Player";
 
   return {
     authLoading: isInitializing,
