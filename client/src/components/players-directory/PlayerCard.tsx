@@ -66,6 +66,13 @@ interface PlayerCardProps {
 }
 
 export function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, onEdit, onLogMatch }: PlayerCardProps) {
+  // Calibration Phase
+  const totalMatches = (() => {
+    if (!player.win_loss_record) return 0;
+    const [w, l] = player.win_loss_record.split('-').map(Number);
+    return (w || 0) + (l || 0);
+  })();
+  const isUnranked = totalMatches < 5;
   const [isPinged, setIsPinged] = useState(false);
   const winPct = parseWinPct(player.win_loss_record);
 

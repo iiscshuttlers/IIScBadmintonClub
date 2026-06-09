@@ -190,7 +190,17 @@ export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: b
   // If we're in matchesOnly mode and no routeId is provided, use the logged-in user's profile ID
   const id = routeId || (matchesOnly ? ownPlayerProfile?.id : undefined);
 
+  
   const [player, setPlayer] = useState<Player | null>(null);
+
+  // Calibration Phase Logic
+  const totalPlayedGames = useMemo(() => {
+    if (!(player as any)?.win_loss_record) return 0;
+    const [w, l] = (player as any).win_loss_record.split('-').map(Number);
+    return (w || 0) + (l || 0);
+  }, [(player as any)?.win_loss_record]);
+  const isUnranked = totalPlayedGames < 5;
+
   const [loading, setLoading] = useState(true);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
@@ -890,7 +900,7 @@ export default function PlayerProfile({ matchesOnly, params }: { matchesOnly?: b
                 )}
                 {player.elo_rating != null && (
                   <span className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gradient-to-r ${getEloTier(player.elo_rating).color} text-white text-[11px] font-black tracking-[0.1em] uppercase shadow-lg`}>
-                    {getEloTier(player.elo_rating).icon} {getEloTier(player.elo_rating).name} ({player.elo_rating})
+                    {getEloTier(player.elo_rating).icon} {getEloTier(player.elo_rating).name} ({isUnranked ? 'Unranked' : player.elo_rating})
                   </span>
                 )}
                 {player.isApproved === false && (
