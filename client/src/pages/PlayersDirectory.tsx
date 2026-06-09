@@ -507,7 +507,7 @@ export default function PlayersDirectory() {
 
   /* ── Render ─────────────────────────────────────────────────────── */
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="flex-1 w-full flex flex-col bg-slate-50 dark:bg-slate-950">
 
       {/* Hero header */}
       <section className="bg-gradient-to-r from-blue-900 via-indigo-950 to-emerald-900 text-white py-20 relative overflow-hidden">

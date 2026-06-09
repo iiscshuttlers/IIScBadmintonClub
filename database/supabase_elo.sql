@@ -171,6 +171,30 @@ BEGIN
     elo_change_p2 = change_p2 
   WHERE id = match_uuid;
 
+  -- Recalculate win_loss_record for player 1
+  WITH p1_stats AS (
+    SELECT 
+      COUNT(*) FILTER (WHERE winner_id = m_record.player1_id) as wins,
+      COUNT(*) FILTER (WHERE winner_id != m_record.player1_id) as losses
+    FROM matches 
+    WHERE status = 'confirmed' AND (player1_id = m_record.player1_id OR player2_id = m_record.player1_id OR team1_partner_id = m_record.player1_id OR team2_partner_id = m_record.player1_id)
+  )
+  UPDATE players 
+  SET win_loss_record = (SELECT wins FROM p1_stats) || 'W - ' || (SELECT losses FROM p1_stats) || 'L'
+  WHERE id = m_record.player1_id;
+
+  -- Recalculate win_loss_record for player 2
+  WITH p2_stats AS (
+    SELECT 
+      COUNT(*) FILTER (WHERE winner_id = m_record.player2_id) as wins,
+      COUNT(*) FILTER (WHERE winner_id != m_record.player2_id) as losses
+    FROM matches 
+    WHERE status = 'confirmed' AND (player1_id = m_record.player2_id OR player2_id = m_record.player2_id OR team1_partner_id = m_record.player2_id OR team2_partner_id = m_record.player2_id)
+  )
+  UPDATE players 
+  SET win_loss_record = (SELECT wins FROM p2_stats) || 'W - ' || (SELECT losses FROM p2_stats) || 'L'
+  WHERE id = m_record.player2_id;
+
   RETURN jsonb_build_object(
     'p1_elo_change', change_p1,
     'p2_elo_change', change_p2

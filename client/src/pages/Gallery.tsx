@@ -335,13 +335,29 @@ export default function Gallery() {
             {videos.map((video) => (
               <div key={video.id} className="group bg-white dark:bg-slate-800 rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl border border-slate-100 dark:border-slate-700 transition duration-500">
                 <div className="relative aspect-video">
-                  <iframe
-                    className="w-full h-full"
-                    src={`https://www.youtube.com/embed/${video.videoId}`}
-                    title={video.title}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
+                  <a 
+                    href={`https://www.youtube.com/watch?v=${video.videoId}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="block w-full h-full group/video relative"
+                  >
+                    <img 
+                      src={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`} 
+                      alt={video.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover/video:scale-105"
+                      onError={(e) => {
+                        // Fallback to mqdefault if hqdefault is not available
+                        if (!e.currentTarget.src.includes('mqdefault')) {
+                          e.currentTarget.src = `https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg`;
+                        }
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-black/20 group-hover/video:bg-black/10 transition-colors flex items-center justify-center">
+                      <div className="w-16 h-16 bg-red-600/90 text-white rounded-full flex items-center justify-center backdrop-blur-sm shadow-lg group-hover/video:scale-110 group-hover/video:bg-red-600 transition-all">
+                        <PlayCircle className="w-8 h-8" fill="currentColor" stroke="none" />
+                      </div>
+                    </div>
+                  </a>
                 </div>
                 <div className="p-7">
                   <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-xs uppercase tracking-widest mb-3">

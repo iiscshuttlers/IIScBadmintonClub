@@ -41,9 +41,23 @@ function avatarGradient(name: string) {
   return AVATAR_GRADIENTS[sum % AVATAR_GRADIENTS.length];
 }
 
-export function parseWinPct(record?: string): number | null {
+export function formatWinLossRecord(record?: string | any): string {
+  if (!record) return "0W - 0L";
+  try {
+    const parsed = typeof record === "string" ? JSON.parse(record) : record;
+    if (parsed && typeof parsed.wins === "number" && typeof parsed.losses === "number") {
+      return `${parsed.wins}W - ${parsed.losses}L`;
+    }
+  } catch {
+    // Not JSON, continue to fallback
+  }
+  return String(record);
+}
+
+export function parseWinPct(record?: string | any): number | null {
   if (!record) return null;
-  const m = record.match(/(\d+)\s*W\s*-\s*(\d+)\s*L/i);
+  const formatted = formatWinLossRecord(record);
+  const m = formatted.match(/(\d+)\s*W\s*-\s*(\d+)\s*L/i);
   if (!m) return null;
   const w = +m[1], l = +m[2];
   return w + l ? Math.round((w / (w + l)) * 100) : null;
@@ -280,7 +294,7 @@ export function PlayerCard({ player, isOwn = false, isAdmin = false, onDelete, o
           <div className="flex flex-col items-center gap-1.5 w-full">
             {winPct !== null && (
               <span className="text-xs font-black text-slate-600 dark:text-slate-300">
-                {winPct}% win rate · <span className="text-slate-400 font-semibold">{player.win_loss_record}</span>
+                {winPct}% win rate · <span className="text-slate-400 font-semibold">{formatWinLossRecord(player.win_loss_record)}</span>
               </span>
             )}
             {player.recent_form && player.recent_form.length > 0 && (

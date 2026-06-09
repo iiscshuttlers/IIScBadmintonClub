@@ -32,7 +32,7 @@ export default function WinnersWall() {
   []);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="flex-1 w-full flex flex-col bg-slate-50 dark:bg-slate-950">
 
       {/* Hero */}
       <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-emerald-950 text-white py-24 relative overflow-hidden">

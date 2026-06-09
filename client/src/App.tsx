@@ -127,7 +127,7 @@ function ScrollToTop() {
 
 function PageSkeleton() {
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="flex-1 w-full flex items-center justify-center min-h-[50vh]">
       <div className="w-8 h-8 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin" />
     </div>
   );
@@ -183,15 +183,15 @@ function AppRoutes() {
   const [location] = useLocation();
 
   return (
-    // initial={false} → first render starts in animate state (no invisible flash)
-    // No mode="wait" → enter/exit overlap, avoids timing glitches
-    <AnimatePresence initial={false}>
+    // mode="wait" prevents the exiting page from overlapping with the entering page, which causes layout shifts
+    <AnimatePresence mode="wait" initial={false}>
       <motion.div
         key={location}
         initial={{ opacity: 0, y: 10, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -10, scale: 0.98 }}
         transition={{ duration: 0.2, ease: "easeOut" }}
+        className="flex-1 flex flex-col w-full h-full"
       >
         <Suspense fallback={<PageSkeleton />}>
           <Switch>
@@ -251,7 +251,7 @@ function App() {
                 <PwaInstallPrompt />
                 <Navigation />
                 <StatusBanner />
-                <main className="flex-1 pb-20 lg:pb-0">
+                <main className="flex-1 flex flex-col pb-20 lg:pb-0">
                   <AppRoutes />
                 </main>
                 <Footer />

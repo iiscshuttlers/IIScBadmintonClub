@@ -24,11 +24,34 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
   const [activeTab, setActiveTab] = useState<"elo" | "ironman">("elo");
 
   // Parse total matches from "10W - 5L" or similar format
-  const getMatchesCount = (record: string) => {
+  const getMatchesCount = (record: string | any) => {
     if (!record) return 0;
-    const match = record.match(/(\d+)W\s*-\s*(\d+)L/i);
+    const formatted = typeof record === "string" && record.includes("W") ? record : (
+      (() => {
+        try {
+          const parsed = typeof record === "string" ? JSON.parse(record) : record;
+          if (parsed && typeof parsed.wins === "number" && typeof parsed.losses === "number") {
+            return `${parsed.wins}W - ${parsed.losses}L`;
+          }
+        } catch {}
+        return String(record);
+      })()
+    );
+
+    const match = formatted.match(/(\d+)\s*W\s*-\s*(\d+)\s*L/i);
     if (match) return parseInt(match[1]) + parseInt(match[2]);
     return 0;
+  };
+  
+  const displayRecord = (record: string | any) => {
+    if (!record) return "No data";
+    try {
+      const parsed = typeof record === "string" ? JSON.parse(record) : record;
+      if (parsed && typeof parsed.wins === "number" && typeof parsed.losses === "number") {
+        return `${parsed.wins}W - ${parsed.losses}L`;
+      }
+    } catch {}
+    return String(record);
   };
 
   const rankedPlayers = [...players].sort((a, b) => {
@@ -39,23 +62,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
   const top3 = rankedPlayers.slice(0, 3);
   const rest = rankedPlayers.slice(3);
 
-  // Deterministic trend generator for visual effect
-  const getTrend = (id: string) => {
-    const hash = id.charCodeAt(0) + id.charCodeAt(id.length - 1);
-    const value = (hash % 7) - 2; // -2 to +4
-    return value;
-  };
 
-  const TrendBadge = ({ id }: { id: string }) => {
-    const trend = getTrend(id);
-    if (trend === 0) return <div className="text-[10px] font-black text-slate-400 w-8 text-center">-</div>;
-    const isUp = trend > 0;
-    return (
-      <div className={`flex items-center justify-center gap-0.5 text-[10px] font-black w-8 ${isUp ? 'text-emerald-500' : 'text-rose-500'}`}>
-        {isUp ? '▲' : '▼'} {Math.abs(trend)}
-      </div>
-    );
-  };
 
   return (
     <div className="pb-24 font-sans">
@@ -95,7 +102,6 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                     <span className="font-bold text-slate-600 dark:text-slate-300 text-sm">
                       {activeTab === "elo" ? `${top3[1].elo_rating} ELO` : `${getMatchesCount(top3[1].win_loss_record)} Matches`}
                     </span>
-                    {activeTab === "elo" && <TrendBadge id={top3[1].id} />}
                   </div>
                 </div>
               </motion.div>
@@ -115,7 +121,6 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                     <span className="font-black text-amber-900 dark:text-amber-100 text-base">
                       {activeTab === "elo" ? `${top3[0].elo_rating} ELO` : `${getMatchesCount(top3[0].win_loss_record)} Matches`}
                     </span>
-                    {activeTab === "elo" && <TrendBadge id={top3[0].id} />}
                   </div>
                 </div>
               </motion.div>
@@ -134,7 +139,6 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                     <span className="font-bold text-orange-800 dark:text-orange-200 text-xs">
                       {activeTab === "elo" ? `${top3[2].elo_rating} ELO` : `${getMatchesCount(top3[2].win_loss_record)} Matches`}
                     </span>
-                    {activeTab === "elo" && <TrendBadge id={top3[2].id} />}
                   </div>
                 </div>
               </motion.div>
@@ -150,7 +154,6 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                 <thead>
                   <tr className="bg-slate-100/50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-xs uppercase tracking-widest font-black text-slate-500 dark:text-slate-400">
                     <th className="p-4 w-16 text-center">Rank</th>
-                    <th className="p-4 w-12 text-center">{activeTab === "elo" ? "Trend" : ""}</th>
                     <th className="p-4">Player</th>
                     <th className="p-4 hidden sm:table-cell">Department</th>
                     <th className="p-4 hidden md:table-cell">Record</th>
@@ -162,9 +165,6 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                     <tr key={player.id} className="hover:bg-white dark:hover:bg-slate-800/80 transition-colors group">
                       <td className="p-4 text-center font-black text-slate-400 dark:text-slate-500">
                         #{index + 4}
-                      </td>
-                      <td className="p-4 text-center">
-                        {activeTab === "elo" && <TrendBadge id={player.id} />}
                       </td>
                       <td className="p-4">
                         <Link href={`/player/${player.id}`}>
@@ -185,7 +185,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                       <td className="p-4 hidden md:table-cell">
                         {player.win_loss_record ? (
                           <span className="px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded text-xs font-bold font-mono">
-                            {player.win_loss_record}
+                            {displayRecord(player.win_loss_record)}
                           </span>
                         ) : (
                           <span className="text-slate-300 dark:text-slate-600 text-xs font-bold italic">No data</span>
