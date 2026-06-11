@@ -1,6 +1,6 @@
 {
-  "versionCode": 95,
-  "versionName": "1.94",
-  "downloadUrl": "https://github.com/iiscshuttlers/iiscshuttlers/releases/latest/download/IIScShuttlers_v1.94.apk",
-  "changelog": "- chore: release v1.93 (build 94)\n- chore: release v1.92 (build 93)"
+  "versionCode": 96,
+  "versionName": "1.95",
+  "downloadUrl": "https://github.com/iiscshuttlers/iiscshuttlers/releases/latest/download/IIScShuttlers_v1.95.apk",
+  "changelog": "- Release v1.93: UI overhaul & live brackets\n- chore: release v1.94 (build 95)"
 }
