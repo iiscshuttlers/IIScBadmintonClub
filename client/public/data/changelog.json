@@ -1,5 +1,18 @@
 [
   {
+    "versionCode": 93,
+    "versionName": "1.92",
+    "date": "2026-06-11T12:30:00.000Z",
+    "changes": [
+      "- Unified Events Megahub with tiered navigation",
+      "- Nested Match Schedule, Live Broadcast, and Brackets in INVICTA 2026 hub",
+      "- Modernized Gallery with tournament-specific tags and Albums sorting",
+      "- Added Global + Log Match button on Desktop Navigation",
+      "- Removed orphaned routes for simplified architecture",
+      "- chore: release v1.92 (build 93)"
+    ]
+  },
+  {
     "versionCode": 92,
     "versionName": "1.91",
     "date": "2026-06-11T12:15:12.579Z",
