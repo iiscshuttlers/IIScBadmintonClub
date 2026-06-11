@@ -97,10 +97,25 @@ if (alreadyBumped) {
 }
 ok(`${oldName} (${oldCode})  →  ${newName} (${newCode})`);
 
-/* ── 2. Update app-version.json ─────────────────────────────────── */
-log("Updating app-version.json…");
-const changelog = process.argv[2] || `Version ${newName}`;
+/* ── 2. Update app-version.json and Changelog ────────────────────────── */
+log("Updating version history and changelog…");
+
+// Auto-generate changelog from git commits since last tag
+let autoChangelog = "";
+try {
+  const tags = execSync("git tag --sort=-creatordate").toString().trim().split('\n');
+  if (tags.length > 0 && tags[0]) {
+    autoChangelog = execSync(`git log ${tags[0]}..HEAD --pretty=format:"- %s"`).toString().trim();
+  }
+} catch (e) {}
+
+if (!autoChangelog) {
+  try { autoChangelog = execSync(`git log -n 5 --pretty=format:"- %s"`).toString().trim(); } catch (e) {}
+}
+
+const changelog = process.argv[2] || autoChangelog || `Version ${newName} released`;
 const finalApkName = `IIScShuttlers_v${newName}.apk`;
+
 const versionJsonPath = resolve(root, "client/public/data/app-version.json");
 writeFileSync(
   versionJsonPath,
@@ -115,7 +130,26 @@ writeFileSync(
     2,
   ) + "\n",
 );
-ok("app-version.json updated");
+
+// Update Persistent Changelog Array
+const changelogFile = resolve(root, "client/public/data/changelog.json");
+let changelogData = [];
+if (existsSync(changelogFile)) {
+  try { changelogData = JSON.parse(readFileSync(changelogFile, "utf8")); } catch(e) {}
+}
+
+// Avoid duplicates if retrying a failed build
+if (!changelogData.find(c => c.versionCode === newCode)) {
+  changelogData.unshift({
+    versionCode: newCode,
+    versionName: newName,
+    date: new Date().toISOString(),
+    changes: changelog.split('\n').filter(Boolean)
+  });
+  writeFileSync(changelogFile, JSON.stringify(changelogData, null, 2) + "\n");
+}
+
+ok("app-version.json and changelog.json updated");
 
 /* ── 3. Vite build ──────────────────────────────────────────────── */
 log("Building web app (vite build)…");
@@ -176,7 +210,7 @@ ok(`GitHub Release v${newName} published`);
 
 /* ── 8. Commit + push ───────────────────────────────────────────── */
 log("Committing version bump and pushing…");
-run(`git add android/app/build.gradle client/public/data/app-version.json`, {
+run(`git add android/app/build.gradle client/public/data/app-version.json client/public/data/changelog.json`, {
   cwd: root,
 });
 run(`git commit -m "chore: release v${newName} (build ${newCode})"`, {

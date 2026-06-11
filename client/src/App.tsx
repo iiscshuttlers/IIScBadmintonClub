@@ -21,6 +21,7 @@ import { useInactivityLogout } from "./hooks/useInactivityLogout";
 import { useNativeBackButton } from "./hooks/useNativeBackButton";
 import { usePullToRefresh } from "./hooks/usePullToRefresh";
 import { useOfflineSync } from "./hooks/useOfflineSync";
+import { useBroadcastNotification } from "./hooks/useBroadcastNotification";
 
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { FileOpener } from "@capacitor-community/file-opener";
@@ -303,6 +304,7 @@ function App() {
   useNativeBackButton();
   usePullToRefresh();
   useOfflineSync();
+  useBroadcastNotification();
 
   return (
     <ErrorBoundary>

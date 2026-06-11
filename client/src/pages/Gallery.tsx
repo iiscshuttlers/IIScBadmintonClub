@@ -426,9 +426,21 @@ export default function Gallery() {
                   </div>
                 </div>
                 <div className="p-7">
-                  <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-xs uppercase tracking-widest mb-3">
-                    <PlayCircle className="w-4 h-4" />
-                    {video.category || "Match Highlight"}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-xs uppercase tracking-widest">
+                      <PlayCircle className="w-4 h-4" />
+                      {video.category || "Match Highlight"}
+                    </div>
+                    <a
+                      href={`https://youtube.com/watch?v=${video.videoId}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex items-center gap-1.5 text-gray-500 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400 transition-colors bg-gray-100 hover:bg-red-50 dark:bg-slate-800/50 dark:hover:bg-red-900/20 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                    >
+                      <Youtube className="w-3.5 h-3.5" />
+                      <span>YouTube</span>
+                    </a>
                   </div>
                   <h3 className="text-xl font-bold text-blue-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                     {video.title}

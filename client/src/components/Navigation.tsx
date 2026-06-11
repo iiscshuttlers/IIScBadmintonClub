@@ -33,6 +33,7 @@ const TOP_LEVEL_LINKS = [
   { href: "/feed", label: "Feed" },
   { href: "/players", label: "Players" },
   { href: "/winners", label: "Winners" },
+  { href: "/h2h", label: "H2H" },
   { href: "/announcements", label: "Announcements" },
   { href: "/gallery", label: "Gallery" },
 ];

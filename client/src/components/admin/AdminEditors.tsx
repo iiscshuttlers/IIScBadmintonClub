@@ -39,6 +39,7 @@ export type VideoItem = {
   videoId: string;
   category: string;
   chapters?: Chapter[];
+  scoreLogs?: any[];
 };
 export type Player = {
   id: string;
@@ -639,6 +640,16 @@ export function VideoEditor({
 
   return (
     <div className="space-y-4">
+      {/* Admin Guide */}
+      <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 rounded-2xl p-5 text-sm text-emerald-800 dark:text-emerald-300">
+        <h4 className="font-black flex items-center gap-2 mb-3 text-emerald-900 dark:text-emerald-400"><Activity className="w-5 h-5" /> Live Scoreboard & Scoring Mode Guide</h4>
+        <ul className="list-disc list-inside space-y-2 opacity-90 marker:text-emerald-500">
+          <li><strong>Auto-Extracting Names:</strong> Name your video title with exactly this format: <code className="bg-black/10 dark:bg-black/30 px-1.5 py-0.5 rounded font-bold">Player A and Player B vs Player C and Player D || Match Title</code> to automatically populate the BWF player names on the live scoreboard.</li>
+          <li><strong>Scoring a Match:</strong> Open any video in the front-end Gallery. Click the "Score Mode" toggle in the top right of the title bar. Click the player buttons as you watch to record timestamps.</li>
+          <li><strong>Importing Scores:</strong> When finished, click the red "Copy JSON Data" button in the player. Come back here, find the video, and click the <strong>"Paste from Clipboard"</strong> button below to instantly attach the live scoreboard!</li>
+        </ul>
+      </div>
+
       {data.map((v, i) => (
         <div key={i} className={`${cardCls} flex flex-col gap-4`}>
           <div className="flex flex-col lg:flex-row gap-4">
@@ -735,6 +746,35 @@ export function VideoEditor({
                   </button>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Score Logs Importer */}
+          <div className="border-t border-slate-200 dark:border-slate-700 pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 dark:bg-slate-800/50 -mx-5 -mb-5 p-5 rounded-b-2xl">
+            <div>
+               <label className={labelCls + " mb-0"}>Live Scoreboard Data</label>
+               <p className="text-[11px] font-bold text-slate-500 mt-0.5">{(v.scoreLogs ?? []).length} timestamps recorded.</p>
+            </div>
+            <div className="flex gap-2">
+               <button onClick={async () => {
+                  try {
+                    const text = await navigator.clipboard.readText();
+                    const parsed = JSON.parse(text);
+                    if (Array.isArray(parsed)) {
+                       update(i, "scoreLogs", parsed as any);
+                       toast.success("Live score data successfully imported!");
+                    } else {
+                       toast.error("Clipboard does not contain valid score data array.");
+                    }
+                  } catch(e) { toast.error("No valid JSON found in clipboard"); }
+               }} className="text-xs font-bold px-4 py-2 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/60 transition shadow-sm">
+                 Paste from Clipboard
+               </button>
+               {v.scoreLogs && v.scoreLogs.length > 0 && (
+                 <button onClick={() => update(i, "scoreLogs", undefined as any)} className="text-xs font-bold px-3 py-2 rounded-xl bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 hover:bg-rose-200 transition">
+                   Clear
+                 </button>
+               )}
             </div>
           </div>
         </div>
@@ -1509,6 +1549,72 @@ export function MatchesManager() {
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+/* ================================================================ */
+/*  Changelog Viewer                                                 */
+/* ================================================================ */
+export function ChangelogViewer() {
+  const [changelog, setChangelog] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`${import.meta.env.BASE_URL}data/changelog.json?v=${Date.now()}`)
+      .then(r => r.json())
+      .then(data => {
+         if (Array.isArray(data)) setChangelog(data);
+         setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center p-10">
+        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+      </div>
+    );
+  }
+
+  if (changelog.length === 0) {
+    return (
+      <div className="p-10 text-center text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
+        No release history available yet. Run the release script to generate the first entry.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 max-w-4xl mx-auto">
+      <div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-300 dark:before:via-slate-700 before:to-transparent">
+        {changelog.map((release, idx) => (
+          <div key={idx} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+            <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-slate-50 dark:border-slate-950 bg-emerald-500 text-white shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow">
+              <Activity className="w-4 h-4" />
+            </div>
+            
+            <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                <h4 className="font-black text-lg text-emerald-600 dark:text-emerald-400">Version {release.versionName}</h4>
+                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg">Build {release.versionCode}</span>
+              </div>
+              <time className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
+                {new Date(release.date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              </time>
+              <ul className="space-y-2">
+                {release.changes.map((change: string, i: number) => (
+                  <li key={i} className="text-sm text-slate-600 dark:text-slate-300 flex items-start gap-2">
+                    <span className="text-emerald-500 mt-1 flex-shrink-0">•</span>
+                    <span>{change.replace(/^- /, '')}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

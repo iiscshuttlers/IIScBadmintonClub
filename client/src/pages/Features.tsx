@@ -8,9 +8,11 @@ import {
   Smartphone,
   BarChart3,
   BookOpen,
+  PlayCircle,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { InfoModal } from "@/components/InfoModal";
+import { useEffect, useState } from "react";
 
 export default function Features() {
   usePageMeta({
@@ -105,6 +107,56 @@ export default function Features() {
       ],
     },
     {
+      category: "Video Analysis Tools",
+      icon: <PlayCircle className="w-8 h-8 text-indigo-500" />,
+      color: "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-900/50",
+      items: [
+        {
+          title: "Telestrator Draw Mode",
+          desc: "Hold two fingers to pause and draw lines directly on the video for coaching and analysis.",
+        },
+        {
+          title: "Pinch & Pan",
+          desc: "Pinch with two fingers to zoom in on tight line calls or footwork, then drag to pan.",
+        },
+        {
+          title: "Precision Scrubbing",
+          desc: "Swipe horizontally anywhere to smoothly scrub through the timeline frame-by-frame.",
+        },
+        {
+          title: "A-B Loop Repeat",
+          desc: "Double tap with two fingers to instantly set a 10-second repeating loop for studying specific rallies.",
+        },
+      ],
+    },
+    {
+      category: "Match Playback Controls",
+      icon: <PlayCircle className="w-8 h-8 text-sky-500" />,
+      color: "bg-sky-50 dark:bg-sky-900/20 border-sky-100 dark:border-sky-900/50",
+      items: [
+        {
+          title: "Speed Dial",
+          desc: "Rotate two fingers on the video to smoothly adjust playback speed from 0.25x to 2x.",
+        },
+        {
+          title: "Chapter Skipping",
+          desc: "Tap the extreme left or right edge of the video to jump to the next match chapter.",
+        },
+        {
+          title: "Instant Timestamp Share",
+          desc: "Swipe diagonally to automatically copy the current timestamp link.",
+        },
+        {
+          title: "Swipe to Close",
+          desc: "A quick, long swipe straight down dismisses the player instantly.",
+        },
+        {
+          title: "Boss Mode",
+          desc: "Swipe down with three fingers to instantly drop brightness and mute the audio.",
+        },
+      ],
+    },
+    {
       category: "Mobile Native (PWA)",
       icon: <Smartphone className="w-8 h-8 text-purple-500" />,
       color: "bg-purple-50 dark:bg-purple-900/20 border-purple-100 dark:border-purple-900/50",
@@ -166,14 +218,14 @@ export default function Features() {
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="columns-1 lg:columns-2 gap-6">
         {features.map((section, idx) => (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
             key={section.category}
-            className={`p-6 md:p-8 rounded-3xl border shadow-sm ${section.color}`}
+            className={`p-6 md:p-8 rounded-3xl border shadow-sm break-inside-avoid mb-6 inline-block w-full ${section.color}`}
           >
             <div className="flex items-center gap-4 mb-8">
               <div className="p-3 bg-white dark:bg-slate-900 rounded-2xl shadow-sm">

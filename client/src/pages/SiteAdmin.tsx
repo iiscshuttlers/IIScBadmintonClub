@@ -26,6 +26,7 @@ import {
   Search,
   UserCheck,
   UserX,
+  FileCode2
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { isAdminEmail } from "@/lib/admin";
@@ -51,6 +52,7 @@ import {
   ConfigEditor,
   RegistrationsManager,
   MatchesManager,
+  ChangelogViewer,
   type SiteConfig,
 } from "@/components/admin/AdminEditors";
 import { Paintbrush, ClipboardList } from "lucide-react";
@@ -102,7 +104,8 @@ type TabId =
   | "players"
   | "umpire"
   | "registrations"
-  | "matches";
+  | "matches"
+  | "changelog";
 
 const TABS: { id: TabId; label: string; icon: any }[] = [
   { id: "config", label: "Landing Pages", icon: Paintbrush },
@@ -113,6 +116,7 @@ const TABS: { id: TabId; label: string; icon: any }[] = [
   { id: "players", label: "Players", icon: Users },
   { id: "matches", label: "Matches", icon: Trophy },
   { id: "umpire", label: "Umpire", icon: Activity },
+  { id: "changelog", label: "System Logs", icon: FileCode2 },
 ];
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
@@ -433,6 +437,7 @@ export default function SiteAdmin() {
     players: null,
     matches: null,
     umpire: null,
+    changelog: null,
   };
 
   return (
@@ -532,6 +537,7 @@ export default function SiteAdmin() {
             {activeTab === "players" && <PlayersManager />}
             {activeTab === "matches" && <MatchesManager />}
             {activeTab === "umpire" && <UmpireMode />}
+            {activeTab === "changelog" && <ChangelogViewer />}
           </motion.div>
         </AnimatePresence>
 

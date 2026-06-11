@@ -4,6 +4,7 @@ import {
   YoutubePlayer,
   type Chapter,
   type YoutubePlayerHandle,
+  type ScoreLog,
 } from "./YoutubePlayer";
 
 interface VideoItem {
@@ -12,6 +13,7 @@ interface VideoItem {
   videoId: string;
   category?: string;
   chapters?: Chapter[];
+  scoreLogs?: ScoreLog[];
 }
 
 interface Props {
@@ -27,6 +29,10 @@ function fmt(s: number) {
 
 export function VideoPlayerModal({ video, onClose }: Props) {
   const [currentTime, setCurrentTime] = useState(0);
+  const [scoreLogs, setScoreLogs] = useState<ScoreLog[]>(video.scoreLogs || []);
+  const [enableScoringMode, setEnableScoringMode] = useState(false);
+  const [teamA, setTeamA] = useState<string[]>(["Team A"]);
+  const [teamB, setTeamB] = useState<string[]>(["Team B"]);
   const backdropRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YoutubePlayerHandle>(null);
   const chapters = video.chapters ?? [];
@@ -39,6 +45,23 @@ export function VideoPlayerModal({ video, onClose }: Props) {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
+
+  // Parse names from title (e.g. "Radhika and Kaling vs Tanisha and Aneesh")
+  useEffect(() => {
+    try {
+       const matchStr = video.title.split("||")[0].trim();
+       if (matchStr.includes(" vs ")) {
+          const teams = matchStr.split(" vs ");
+          if (teams.length === 2) {
+             const parseTeam = (str: string) => str.split(" and ").map(s => s.trim()).filter(Boolean);
+             const a = parseTeam(teams[0]);
+             const b = parseTeam(teams[1]);
+             if (a.length > 0) setTeamA(a);
+             if (b.length > 0) setTeamB(b);
+          }
+       }
+    } catch (e) {}
+  }, [video.title]);
 
   // Lock body scroll
   useEffect(() => {
@@ -78,15 +101,23 @@ export function VideoPlayerModal({ video, onClose }: Props) {
         {/* Player */}
         <div className="flex-1 min-w-0">
           {/* Title bar */}
-          <div className="px-4 py-3 bg-gray-950 border-b border-white/5">
-            {video.category && (
-              <p className="text-emerald-400 text-xs font-bold uppercase tracking-widest mb-0.5">
-                {video.category}
-              </p>
-            )}
-            <h2 className="text-white font-bold text-sm md:text-base leading-tight pr-8">
-              {video.title}
-            </h2>
+          <div className="px-4 py-3 bg-gray-950 border-b border-white/5 flex justify-between items-center">
+            <div>
+              {video.category && (
+                <p className="text-emerald-400 text-xs font-bold uppercase tracking-widest mb-0.5">
+                  {video.category}
+                </p>
+              )}
+              <h2 className="text-white font-bold text-sm md:text-base leading-tight pr-8">
+                {video.title}
+              </h2>
+            </div>
+            <button 
+              onClick={() => setEnableScoringMode(v => !v)}
+              className={`text-xs font-bold px-3 py-1.5 rounded-full transition-colors shrink-0 ${enableScoringMode ? 'bg-rose-500 text-white shadow-[0_0_15px_rgba(244,63,94,0.5)]' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}
+            >
+              {enableScoringMode ? 'Exit Scoring' : 'Score Mode'}
+            </button>
           </div>
 
           {/* Aspect-ratio box */}
@@ -95,8 +126,14 @@ export function VideoPlayerModal({ video, onClose }: Props) {
               ref={playerRef}
               videoId={video.videoId}
               chapters={chapters}
+              onCloseRequest={onClose}
               className="w-full h-full"
               onTimeUpdate={setCurrentTime}
+              scoreLogs={scoreLogs}
+              onScoreLogsChange={setScoreLogs}
+              enableScoringMode={enableScoringMode}
+              teamA={teamA}
+              teamB={teamB}
             />
           </div>
 
