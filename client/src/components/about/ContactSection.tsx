@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+
 import { Mail, MapPin, Phone, ExternalLink, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";

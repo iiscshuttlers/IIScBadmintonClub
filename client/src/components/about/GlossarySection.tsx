@@ -12,8 +12,6 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { InfoModal } from "@/components/InfoModal";
-import { useEffect, useState } from "react";
-
 export function GlossarySection() {
 
   const features = [

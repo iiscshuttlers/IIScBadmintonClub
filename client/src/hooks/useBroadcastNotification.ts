@@ -10,6 +10,11 @@ export function useBroadcastNotification() {
   const lastAnnouncementRef = useRef<string | null>(null);
   const knownMatchesRef = useRef<Set<string>>(new Set());
   const { profile } = useAuth();
+  
+  const profileRef = useRef(profile);
+  useEffect(() => {
+    profileRef.current = profile;
+  }, [profile]);
 
   useEffect(() => {
     const channel = supabase
@@ -90,11 +95,12 @@ export function useBroadcastNotification() {
 
                   // For friendly, check if buddy/follower
                   if (match.isFriendly) {
-                    if (!profile) return;
+                    const currentProfile = profileRef.current;
+                    if (!currentProfile) return;
                     const participants = [match.t1?.p1Id, match.t1?.p2Id, match.t2?.p1Id, match.t2?.p2Id].filter(Boolean);
-                    if (participants.includes(profile.id)) return; // Don't notify self
-                    const buddies = profile.buddies || [];
-                    const following = profile.following || [];
+                    if (participants.includes(currentProfile.id)) return; // Don't notify self
+                    const buddies = currentProfile.buddies || [];
+                    const following = currentProfile.following || [];
                     const isConnected = participants.some(pid => buddies.includes(pid) || following.includes(pid));
                     if (!isConnected) return;
                   }
@@ -120,6 +126,33 @@ export function useBroadcastNotification() {
               });
             } catch (e) {
               console.error("Failed to parse live matches for notifications", e);
+            }
+          } else if (row.key === "latest_buddy_acceptance") {
+            try {
+              const data = row.value;
+              const currentProfile = profileRef.current;
+              if (data && currentProfile && data.senderId === currentProfile.id) {
+                const title = "🤝 Buddy Request Accepted!";
+                const body = `${data.accepterName} accepted your buddy request!`;
+                
+                if (Capacitor.isNativePlatform()) {
+                  LocalNotifications.schedule({
+                    notifications: [{
+                      title,
+                      body,
+                      id: Math.floor(Math.random() * 1000000),
+                      schedule: { at: new Date(Date.now() + 100) },
+                      extra: { type: "buddy_acceptance" }
+                    }]
+                  }).catch(console.warn);
+                } else {
+                  showWebNotification(title, body, () => {
+                    window.location.href = `${import.meta.env.BASE_URL || "/"}player/${data.accepterId}`;
+                  });
+                }
+              }
+            } catch (e) {
+              console.error("Failed to parse buddy notification", e);
             }
           }
         },

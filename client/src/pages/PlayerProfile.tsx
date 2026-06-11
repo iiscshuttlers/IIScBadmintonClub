@@ -185,6 +185,8 @@ interface Player {
   userId?: string;
   elo_rating?: number;
   isApproved?: boolean;
+  buddies?: string[];
+  buddyRequests?: string[];
 }
 
 const MATCH_SELECT =
@@ -326,6 +328,8 @@ export default function PlayerProfile({
   const [activeTab, setActiveTab] = useState<"OVERVIEW" | "RANKING" | "STATS" | "MATCHES">("OVERVIEW");
   const [isFollowing, setIsFollowing] = useState(false);
   const [isBuddy, setIsBuddy] = useState(false);
+  const [hasSentRequest, setHasSentRequest] = useState(false);
+  const [hasReceivedRequest, setHasReceivedRequest] = useState(false);
   const [introPhase, setIntroPhase] = useState(0);
   const profileLoadRetried = useRef(false);
 
@@ -334,6 +338,8 @@ export default function PlayerProfile({
       // following/buddies arrays store player slugs (player.id), not auth UUIDs
       setIsFollowing(ownPlayerProfile.following?.includes(player.id) || false);
       setIsBuddy(ownPlayerProfile.buddies?.includes(player.id) || false);
+      setHasSentRequest(player.buddyRequests?.includes(ownPlayerProfile.id) || false);
+      setHasReceivedRequest(ownPlayerProfile.buddy_requests?.includes(player.id) || false);
     }
   }, [ownPlayerProfile, player]);
 
@@ -384,36 +390,73 @@ export default function PlayerProfile({
     }
   };
 
-  const handleToggleBuddy = async () => {
-    if (!player?.id || !currentUser?.id) return;
-    const newBuddy = !isBuddy;
-    setIsBuddy(newBuddy);
+  const handleBuddyAction = async (action: 'send' | 'cancel' | 'accept' | 'remove') => {
+    if (!player?.id || !ownPlayerProfile?.id) return;
+    
     try {
-      const { data: myProfile, error: fetchErr } = await supabase
-        .from("players")
-        .select("buddies")
-        .eq("user_id", currentUser.id)
-        .single();
-      if (fetchErr) throw fetchErr;
-      let arr: string[] = myProfile?.buddies || [];
-      arr = newBuddy
-        ? [...new Set([...arr, player.id])]
-        : arr.filter((s) => s !== player.id);
-      const { error: updateErr } = await supabase
-        .from("players")
-        .update({ buddies: arr })
-        .eq("user_id", currentUser.id);
-      if (updateErr) throw updateErr;
+      if (action === 'send') {
+        setHasSentRequest(true);
+        const { error } = await supabase.rpc('toggle_buddy_request', {
+          target_player_id: player.id,
+          sender_player_id: ownPlayerProfile.id,
+          is_sending: true
+        });
+        if (error) throw error;
+        toast.success(`Buddy request sent to ${player.fullName}!`);
+      } 
+      else if (action === 'cancel') {
+        setHasSentRequest(false);
+        const { error } = await supabase.rpc('toggle_buddy_request', {
+          target_player_id: player.id,
+          sender_player_id: ownPlayerProfile.id,
+          is_sending: false
+        });
+        if (error) throw error;
+        toast.success(`Buddy request cancelled.`);
+      }
+      else if (action === 'accept') {
+        setIsBuddy(true);
+        setHasReceivedRequest(false);
+        const { error } = await supabase.rpc('accept_buddy_request', {
+          accepter_player_id: ownPlayerProfile.id,
+          sender_player_id: player.id
+        });
+        if (error) throw error;
+        toast.success(`You and ${player.fullName} are now buddies!`);
+        
+        // Trigger push notification to the sender
+        await supabase.from("site_data").upsert({
+          key: "latest_buddy_acceptance",
+          value: {
+            accepterId: ownPlayerProfile.id,
+            accepterName: ownPlayerProfile.full_name,
+            senderId: player.id,
+            timestamp: Date.now()
+          }
+        }, { onConflict: "key" });
+      }
+      else if (action === 'remove') {
+        setIsBuddy(false);
+        // Fallback to array removal for removing a buddy since we don't have a 2-way remove RPC
+        const { data: myProfile, error: fetchErr } = await supabase
+          .from("players")
+          .select("buddies")
+          .eq("id", ownPlayerProfile.id)
+          .single();
+        if (fetchErr) throw fetchErr;
+        const arr = (myProfile.buddies || []).filter((s: string) => s !== player.id);
+        const { error: updateErr } = await supabase
+          .from("players")
+          .update({ buddies: arr })
+          .eq("id", ownPlayerProfile.id);
+        if (updateErr) throw updateErr;
+        toast.success(`Removed ${player.fullName} from Buddies.`);
+      }
       await refreshProfile();
-      toast.success(
-        newBuddy
-          ? `Added ${player.fullName} as Buddy!`
-          : `Removed ${player.fullName} from Buddies.`,
-      );
     } catch (e) {
-      console.error("Buddy toggle failed:", e);
-      setIsBuddy(!newBuddy);
-      toast.error("Could not update buddy status. Try again.");
+      console.error("Buddy action failed:", e);
+      toast.error("Could not complete action. Try again.");
+      await refreshProfile();
     }
   };
 
@@ -495,6 +538,9 @@ export default function PlayerProfile({
           : undefined,
       userId: data.user_id,
       isApproved: data.is_approved,
+      buddies: data.buddies || [],
+      buddyRequests: data.buddy_requests || [],
+      elo_rating: data.elo_rating,
     };
   }
 
@@ -1104,9 +1150,8 @@ export default function PlayerProfile({
 
   const nameParts = player.fullName.trim().split(/\s+/);
   // Last word is the giant display word; everything before it is the smaller label.
-  // Single-name players: heroRestName is empty, heroLastWord shows large.
   const heroLastWord = nameParts[nameParts.length - 1];
-  const heroRestName = nameParts.slice(0, -1).join(" ");
+  const heroRestName = nameParts.length > 1 ? nameParts.slice(0, -1).join(" ") : nameParts[0];
   const targetUserRole = userRoles.find((r) => r.id === player.id)?.role;
 
   if (matchesOnly) {
@@ -1257,14 +1302,14 @@ export default function PlayerProfile({
                <div className="flex flex-col">
                  {heroRestName && (
                    <span
-                     className="text-xl md:text-3xl font-bold uppercase tracking-[0.2em] text-slate-700 dark:text-white/90"
-                     style={theme === "dark" ? { textShadow: "0 2px 12px rgba(0,0,0,0.95), 0 1px 4px rgba(0,0,0,0.8)" } : undefined}
+                     className="text-xl md:text-3xl font-bold uppercase tracking-[0.2em] text-white/95 dark:text-slate-900"
+                     style={theme === "light" ? { textShadow: "0 2px 12px rgba(0,0,0,0.7), 0 1px 4px rgba(0,0,0,0.5)" } : undefined}
                    >{heroRestName}</span>
                  )}
                  <div className="flex items-center flex-wrap gap-4">
                    <h1
-                     className="text-5xl md:text-8xl font-black uppercase tracking-tighter leading-none text-slate-900 dark:text-white"
-                     style={theme === "dark" ? { textShadow: "0 4px 24px rgba(0,0,0,0.98), 0 2px 8px rgba(0,0,0,0.7), 0 0 50px rgba(0,0,0,0.4)" } : undefined}
+                     className="text-5xl md:text-8xl font-black uppercase tracking-tighter leading-none text-white dark:text-slate-900"
+                     style={theme === "light" ? { textShadow: "0 4px 24px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4)" } : undefined}
                    >{heroLastWord}</h1>
                    {player.social?.instagram && (
                      <a
@@ -1289,11 +1334,7 @@ export default function PlayerProfile({
                  <span className="px-3 py-1.5 rounded-lg bg-white/80 dark:bg-black/40 backdrop-blur-md border border-slate-200/80 dark:border-white/25 text-slate-800 dark:text-white text-sm font-bold uppercase shadow-sm">
                    {player.playingLevel}
                  </span>
-                 {player.gender && (authSession?.user?.id === player.userId || isAdmin) && (
-                   <span className="px-3 py-1.5 rounded-lg bg-white/80 dark:bg-black/40 backdrop-blur-md border border-slate-200/80 dark:border-white/25 text-slate-800 dark:text-white text-sm font-bold uppercase shadow-sm" title="Only you and admins can see this">
-                     {player.gender}
-                   </span>
-                 )}
+
                  {player.dominantHand && (
                    <span className="px-3 py-1.5 rounded-lg bg-white/80 dark:bg-black/40 backdrop-blur-md border border-slate-200/80 dark:border-white/25 text-slate-800 dark:text-white text-sm font-bold uppercase shadow-sm flex items-center gap-1.5">
                      <User className="w-4 h-4 text-violet-400" /> {player.dominantHand.split("-")[0]} Hand
@@ -1330,18 +1371,40 @@ export default function PlayerProfile({
                          </>
                        )}
                      </button>
-                     {/* Buddy */}
-                     <button
-                       onClick={handleToggleBuddy}
-                       className={`flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider ${
-                         isBuddy
-                           ? "bg-rose-600 text-white hover:bg-rose-700"
-                           : "bg-black/40 backdrop-blur-md border border-white/25 text-white hover:bg-rose-600/70"
-                       }`}
-                     >
-                       <Heart className={`w-4 h-4 ${isBuddy ? "fill-white text-white" : ""}`} />
-                       {isBuddy ? "Buddy" : "Add Buddy"}
-                     </button>
+                     {/* Buddy Logic */}
+                     {isBuddy ? (
+                       <button
+                         onClick={() => handleBuddyAction('remove')}
+                         className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-rose-600 text-white hover:bg-rose-700"
+                       >
+                         <Heart className="w-4 h-4 fill-white text-white" />
+                         Buddy
+                       </button>
+                     ) : hasReceivedRequest ? (
+                       <button
+                         onClick={() => handleBuddyAction('accept')}
+                         className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-emerald-600 text-white hover:bg-emerald-700"
+                       >
+                         <Heart className="w-4 h-4" />
+                         Accept Request
+                       </button>
+                     ) : hasSentRequest ? (
+                       <button
+                         onClick={() => handleBuddyAction('cancel')}
+                         className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-slate-600 text-white hover:bg-slate-700"
+                       >
+                         <Heart className="w-4 h-4" />
+                         Request Sent
+                       </button>
+                     ) : (
+                       <button
+                         onClick={() => handleBuddyAction('send')}
+                         className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-black/40 backdrop-blur-md border border-white/25 text-white hover:bg-rose-600/70"
+                       >
+                         <Heart className="w-4 h-4" />
+                         Add Buddy
+                       </button>
+                     )}
                    </>
                  )}
                </div>

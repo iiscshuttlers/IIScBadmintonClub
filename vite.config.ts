@@ -200,10 +200,10 @@ export default defineConfig({
 
   root: path.resolve(import.meta.dirname, "client"),
 
-  // 🔥 FIXED OUTPUT (THIS WAS YOUR BUG)
   build: {
     outDir: path.resolve(import.meta.dirname, "dist"),
     emptyOutDir: true,
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks: {

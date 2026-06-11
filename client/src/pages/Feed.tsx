@@ -139,12 +139,12 @@ export default function Feed() {
   const [kudosState, setKudosState] = useState<Record<string, boolean>>({});
 
   const followingIds = useMemo(() => {
-    return Array.isArray((ownProfile as any)?.following) ? (ownProfile as any).following : [];
-  }, [(ownProfile as any)?.following]);
+    return Array.isArray(ownProfile?.following) ? ownProfile.following : [];
+  }, [ownProfile?.following]);
 
   const buddyIds = useMemo(() => {
-    return Array.isArray((ownProfile as any)?.buddies) ? (ownProfile as any).buddies : [];
-  }, [(ownProfile as any)?.buddies]);
+    return Array.isArray(ownProfile?.buddies) ? ownProfile.buddies : [];
+  }, [ownProfile?.buddies]);
 
   const displayMatches = useMemo(() => {
     if (feedFilter === "global") return matches;

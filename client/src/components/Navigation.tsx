@@ -398,6 +398,31 @@ export default function Navigation() {
               ))}
 
               <div className="pt-2 border-t border-slate-100 dark:border-slate-800 mt-1">
+
+                {/* ── Light / Dark toggle — always visible ── */}
+                <div className="mb-3 flex bg-slate-100 dark:bg-slate-900 rounded-2xl p-1.5 gap-1.5 border border-slate-200/60 dark:border-slate-800">
+                  <button
+                    onClick={() => { if (theme === "dark") toggleTheme(); }}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                      theme === "light"
+                        ? "bg-white shadow-sm text-amber-600 border border-amber-200/60"
+                        : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                    }`}
+                  >
+                    <Sun className="w-4 h-4" /> Light
+                  </button>
+                  <button
+                    onClick={() => { if (theme === "light") toggleTheme(); }}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                      theme === "dark"
+                        ? "bg-slate-800 shadow-sm text-indigo-300 border border-indigo-800/60"
+                        : "text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    <Moon className="w-4 h-4" /> Dark
+                  </button>
+                </div>
+
                 {authLoading ? (
                   <div className="h-10 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
                 ) : isLoggedIn ? (

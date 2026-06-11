@@ -11,7 +11,25 @@ export interface Player {
   gender?: string;
 }
 
-function CourtVisual({ serverTeam, t1Name, t2Name, isDoubles }: { serverTeam: 1 | 2; t1Name: string; t2Name: string; isDoubles: boolean }) {
+function CourtVisual({ 
+  serverTeam, 
+  serverPlayerIndex = 0,
+  t1Name, 
+  t2Name, 
+  t1P2Name,
+  t2P2Name,
+  isDoubles,
+  onSwitchServer
+}: { 
+  serverTeam: 1 | 2; 
+  serverPlayerIndex?: 0 | 1;
+  t1Name: string; 
+  t2Name: string; 
+  t1P2Name?: string;
+  t2P2Name?: string;
+  isDoubles: boolean;
+  onSwitchServer?: () => void;
+}) {
   return (
     <div className="relative w-52 h-32 select-none" title="Court view — server highlighted">
       <svg viewBox="0 0 208 128" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -32,26 +50,56 @@ function CourtVisual({ serverTeam, t1Name, t2Name, isDoubles }: { serverTeam: 1 
         {/* Team 2 side highlight */}
         {serverTeam === 2 && <rect x="105" y="5" width="98" height="118" rx="1" fill="#10b981" fillOpacity="0.12" />}
         {/* Shuttlecock at server's end */}
-        {serverTeam === 1 && <circle cx="52" cy="64" r="6" fill="#10b981" opacity="0.9" />}
-        {serverTeam === 2 && <circle cx="156" cy="64" r="6" fill="#10b981" opacity="0.9" />}
+        {serverTeam === 1 && <circle cx="52" cy={serverPlayerIndex === 0 ? "34" : "94"} r="6" fill="#10b981" opacity="0.9" />}
+        {serverTeam === 2 && <circle cx="156" cy={serverPlayerIndex === 0 ? "34" : "94"} r="6" fill="#10b981" opacity="0.9" />}
         {/* Serve direction arrow */}
-        {serverTeam === 1 && <path d="M60 64 L88 64" stroke="#10b981" strokeWidth="2" markerEnd="url(#arrowR)" />}
-        {serverTeam === 2 && <path d="M148 64 L120 64" stroke="#10b981" strokeWidth="2" markerEnd="url(#arrowL)" />}
+        {serverTeam === 1 && <path d={`M60 ${serverPlayerIndex === 0 ? '34' : '94'} L88 ${serverPlayerIndex === 0 ? '94' : '34'}`} stroke="#10b981" strokeWidth="2" markerEnd="url(#arrowR)" />}
+        {serverTeam === 2 && <path d={`M148 ${serverPlayerIndex === 0 ? '34' : '94'} L120 ${serverPlayerIndex === 0 ? '94' : '34'}`} stroke="#10b981" strokeWidth="2" markerEnd="url(#arrowL)" />}
         <defs>
-          <marker id="arrowR" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
-            <path d="M0,0 L6,3 L0,6 Z" fill="#10b981" />
+          <marker id="arrowR" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+            <path d="M0,2 L8,5 L0,8 Z" fill="#10b981" />
           </marker>
-          <marker id="arrowL" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto-start-reverse">
-            <path d="M6,0 L0,3 L6,6 Z" fill="#10b981" />
+          <marker id="arrowL" markerWidth="10" markerHeight="10" refX="2" refY="5" orient="auto">
+            <path d="M10,2 L2,5 L10,8 Z" fill="#10b981" />
           </marker>
         </defs>
       </svg>
       {/* Player name labels */}
-      <div className="absolute inset-0 flex items-end justify-between px-3 pb-1 pointer-events-none">
-        <span className={`text-[9px] font-black uppercase truncate max-w-[44%] ${serverTeam === 1 ? "text-emerald-400" : "text-slate-500"}`}>{t1Name || "T1"}</span>
-        <span className={`text-[9px] font-black uppercase truncate max-w-[44%] text-right ${serverTeam === 2 ? "text-emerald-400" : "text-slate-500"}`}>{t2Name || "T2"}</span>
+      <div className="absolute inset-0 flex items-stretch justify-between px-3 py-1.5 pointer-events-none">
+        <div className="flex flex-col justify-around h-full w-[44%]">
+          <span 
+            onClick={serverTeam === 1 && isDoubles ? onSwitchServer : undefined}
+            className={`text-[9px] font-black uppercase truncate ${serverTeam === 1 && serverPlayerIndex === 0 ? "text-emerald-400" : "text-slate-500"} ${serverTeam === 1 && isDoubles ? "pointer-events-auto cursor-pointer" : ""}`}
+          >
+            {t1Name || "T1 P1"}
+          </span>
+          {isDoubles && (
+            <span 
+              onClick={serverTeam === 1 ? onSwitchServer : undefined}
+              className={`text-[9px] font-black uppercase truncate ${serverTeam === 1 && serverPlayerIndex === 1 ? "text-emerald-400" : "text-slate-500"} ${serverTeam === 1 ? "pointer-events-auto cursor-pointer" : ""}`}
+            >
+              {t1P2Name || "T1 P2"}
+            </span>
+          )}
+        </div>
+        <div className="flex flex-col justify-around h-full w-[44%] text-right items-end">
+          <span 
+            onClick={serverTeam === 2 && isDoubles ? onSwitchServer : undefined}
+            className={`text-[9px] font-black uppercase truncate ${serverTeam === 2 && serverPlayerIndex === 0 ? "text-emerald-400" : "text-slate-500"} ${serverTeam === 2 && isDoubles ? "pointer-events-auto cursor-pointer" : ""}`}
+          >
+            {t2Name || "T2 P1"}
+          </span>
+          {isDoubles && (
+            <span 
+              onClick={serverTeam === 2 ? onSwitchServer : undefined}
+              className={`text-[9px] font-black uppercase truncate ${serverTeam === 2 && serverPlayerIndex === 1 ? "text-emerald-400" : "text-slate-500"} ${serverTeam === 2 ? "pointer-events-auto cursor-pointer" : ""}`}
+            >
+              {t2P2Name || "T2 P2"}
+            </span>
+          )}
+        </div>
       </div>
-      <div className="absolute top-1 left-1/2 -translate-x-1/2 text-[8px] text-slate-600 font-bold uppercase tracking-widest">NET</div>
+      <div className="absolute top-1 left-1/2 -translate-x-1/2 text-[8px] text-slate-600 font-bold uppercase tracking-widest pointer-events-none">NET</div>
     </div>
   );
 }
@@ -156,6 +204,9 @@ export type BwfMatchState = {
   t1: { p1Id: string; p1Name: string; p2Id?: string; p2Name?: string; score: number; games: number };
   t2: { p1Id: string; p1Name: string; p2Id?: string; p2Name?: string; score: number; games: number };
   serverTeam: 1 | 2;
+  serverPlayerIndex: 0 | 1;
+  t1LastServedBy: 0 | 1;
+  t2LastServedBy: 0 | 1;
   status: "setup" | "playing" | "finished";
   winner?: 1 | 2;
   setsHistory: string[];
@@ -190,6 +241,9 @@ export function UmpireEngine({
     t1: { p1Id: "", p1Name: "", score: 0, games: 0 },
     t2: { p1Id: "", p1Name: "", score: 0, games: 0 },
     serverTeam: 1,
+    serverPlayerIndex: 0,
+    t1LastServedBy: 1,
+    t2LastServedBy: 0,
     status: "setup",
     setsHistory: [],
   });
@@ -284,6 +338,18 @@ export function UmpireEngine({
       return;
     }
 
+    if (match.isFriendly && !isAdmin) {
+      const { data: umpireProfile } = await supabase.from("players").select("buddies").eq("user_id", userId).maybeSingle();
+      const buddies = umpireProfile?.buddies || [];
+      const playersInMatch = [match.t1.p1Id, match.t1.p2Id, match.t2.p1Id, match.t2.p2Id].filter(Boolean);
+      
+      const isBuddyWithSomeone = playersInMatch.some(id => buddies.includes(id));
+      if (!isBuddyWithSomeone) {
+        toast.error("You must be a buddy with at least one player to umpire a friendly match.");
+        return;
+      }
+    }
+
     const cat = deduceCategory();
 
     await updateMatch({
@@ -298,16 +364,31 @@ export function UmpireEngine({
   const addPoint = (team: 1 | 2) => {
     if (match.status !== "playing") return;
 
-    let { t1, t2, serverTeam, setsHistory, pointsToWin, goldenPoint, bestOfSets } = match;
+    let { t1, t2, serverTeam, serverPlayerIndex, t1LastServedBy, t2LastServedBy, setsHistory, pointsToWin, goldenPoint, bestOfSets } = match;
     let newT1 = { ...t1 };
     let newT2 = { ...t2 };
 
+    const isT1Doubles = !!newT1.p2Id;
+    const isT2Doubles = !!newT2.p2Id;
+
     if (team === 1) {
       newT1.score++;
-      serverTeam = 1;
+      if (serverTeam === 1) {
+        t1LastServedBy = serverPlayerIndex;
+      } else {
+        serverTeam = 1;
+        serverPlayerIndex = isT1Doubles ? (t1LastServedBy === 0 ? 1 : 0) : 0;
+        t1LastServedBy = serverPlayerIndex;
+      }
     } else {
       newT2.score++;
-      serverTeam = 2;
+      if (serverTeam === 2) {
+        t2LastServedBy = serverPlayerIndex;
+      } else {
+        serverTeam = 2;
+        serverPlayerIndex = isT2Doubles ? (t2LastServedBy === 0 ? 1 : 0) : 0;
+        t2LastServedBy = serverPlayerIndex;
+      }
     }
 
     let t1WonGame = false;
@@ -345,6 +426,9 @@ export function UmpireEngine({
       t1: newT1,
       t2: newT2,
       serverTeam,
+      serverPlayerIndex,
+      t1LastServedBy,
+      t2LastServedBy,
       setsHistory,
       status: nextStatus,
       winner: nextWinner,
@@ -638,7 +722,18 @@ export function UmpireEngine({
         )}
         {/* ── Court Visual ── */}
         <div className="flex justify-center mb-6" style={breakSecondsLeft !== null ? { opacity: 0.3 } : {}}>
-          <CourtVisual serverTeam={match.serverTeam} t1Name={match.t1.p1Name} t2Name={match.t2.p1Name} isDoubles={!!match.t1.p2Id} />
+          <CourtVisual 
+            serverTeam={match.serverTeam} 
+            serverPlayerIndex={match.serverPlayerIndex}
+            t1Name={match.t1.p1Name} 
+            t2Name={match.t2.p1Name} 
+            t1P2Name={match.t1.p2Name}
+            t2P2Name={match.t2.p2Name}
+            isDoubles={!!match.t1.p2Id} 
+            onSwitchServer={() => {
+              updateMatch({ serverPlayerIndex: match.serverPlayerIndex === 0 ? 1 : 0 });
+            }}
+          />
         </div>
 
         <div className="grid md:grid-cols-[1fr_auto_1fr] gap-6 items-center" style={breakSecondsLeft !== null ? { opacity: 0.3, pointerEvents: "none" } : {}}>

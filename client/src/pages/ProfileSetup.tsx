@@ -901,7 +901,7 @@ export default function ProfileSetup() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                          Gender *
+                          Gender * <span className="text-xs font-normal text-slate-400 ml-1">(Hidden from profile, used only for match logic)</span>
                         </label>
                         <select
                           required

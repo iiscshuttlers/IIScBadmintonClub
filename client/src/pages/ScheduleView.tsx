@@ -24,7 +24,7 @@ const FORMAT_COLORS: Record<
   MS: {
     bg: "bg-blue-50 dark:bg-blue-900/30",
     text: "text-blue-700 dark:text-blue-400",
-    border: "border-blue-100 dark:border-blue-900/50 dark:border-blue-900/50",
+    border: "border-blue-100 dark:border-blue-900/50",
     dot: "bg-blue-500",
   },
   WS: {
@@ -35,9 +35,8 @@ const FORMAT_COLORS: Record<
   },
   MD: {
     bg: "bg-emerald-50 dark:bg-emerald-900/30",
-    text: "text-emerald-700",
-    border:
-      "border-emerald-100 dark:border-emerald-900/50 dark:border-emerald-900/50",
+    text: "text-emerald-700 dark:text-emerald-400",
+    border: "border-emerald-100 dark:border-emerald-900/50",
     dot: "bg-emerald-500",
   },
   WD: {
@@ -58,9 +57,9 @@ const POOL_COLORS: Record<string, string> = {
   Finals:
     "from-amber-50 to-yellow-50 dark:from-amber-950/30 dark:to-yellow-950/30 border-amber-200 dark:border-amber-900/50",
   "League A":
-    "from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-100 dark:border-blue-900/50 dark:border-blue-900/50",
+    "from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-100 dark:border-blue-900/50",
   "League B":
-    "from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 border-emerald-100 dark:border-emerald-900/50 dark:border-emerald-900/50",
+    "from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 border-emerald-100 dark:border-emerald-900/50",
   League:
     "from-slate-50 dark:from-slate-900 to-gray-50 border-slate-200 dark:border-slate-700",
   KO: "from-rose-50 to-red-50 dark:from-rose-950/30 dark:to-red-950/30 border-rose-100 dark:border-rose-900/50",
@@ -140,7 +139,7 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
           <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             Match Schedule
           </h2>
-          <p className="text-slate-500 dark:text-slate-400 dark:text-slate-500 text-sm sm:text-base mt-1 flex items-center gap-2">
+          <p className="text-slate-500 dark:text-slate-400 text-sm sm:text-base mt-1 flex items-center gap-2">
             <Calendar size={14} className="sm:w-4 sm:h-4" />
             Tournament Timeline & Live Updates
           </p>
@@ -154,7 +153,7 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
               className={`px-3 sm:px-4 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap ${
                 activeFormat === "ALL"
                   ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm ring-1 ring-slate-200"
-                  : "text-slate-500 dark:text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:text-slate-200 dark:text-slate-700 hover:bg-white dark:bg-slate-900/50"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 hover:bg-white dark:hover:text-white dark:bg-slate-800/50"
               }`}
             >
               All Events
@@ -167,7 +166,7 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
                   className={`px-3 sm:px-4 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap ${
                     activeFormat === code
                       ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm ring-1 ring-slate-200"
-                      : "text-slate-500 dark:text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:text-slate-200 dark:text-slate-700 hover:bg-white dark:bg-slate-900/50"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-700 hover:bg-white dark:hover:text-white dark:bg-slate-800/50"
                   }`}
                 >
                   {code}
@@ -219,8 +218,8 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
 
                   const formatStyle = FORMAT_COLORS[m.format] || {
                     bg: "bg-slate-50 dark:bg-slate-800",
-                    text: "text-slate-600 dark:text-slate-300 dark:text-slate-600",
-                    border: "border-slate-100 dark:border-slate-800",
+                    text: "text-slate-600 dark:text-slate-300",
+                    border: "border-slate-100 dark:border-slate-700",
                     dot: "bg-slate-400",
                   };
                   const poolGradient =
@@ -283,7 +282,7 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
                               DONE
                             </span>
                           ) : (
-                            <span className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 dark:text-slate-500 text-[8px] sm:text-[10px] font-black">
+                            <span className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[8px] sm:text-[10px] font-black">
                               <Clock size={8} className="sm:w-2.5 sm:h-2.5" />{" "}
                               UPCOMING
                             </span>
@@ -311,7 +310,7 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
                               {p1List.map((player, pIdx) => (
                                 <p
                                   key={pIdx}
-                                  className={`text-sm sm:text-base font-bold leading-tight ${p1Won ? "text-slate-900 dark:text-white" : "text-slate-700 dark:text-slate-200 dark:text-slate-700"}`}
+                                  className={`text-sm sm:text-base font-bold leading-tight ${p1Won ? "text-slate-900 dark:text-white" : "text-slate-700 dark:text-slate-300"}`}
                                 >
                                   {player}
                                 </p>
@@ -365,7 +364,7 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
                               {p2List.map((player, pIdx) => (
                                 <p
                                   key={pIdx}
-                                  className={`text-sm sm:text-base font-bold leading-tight ${p2Won ? "text-slate-900 dark:text-white" : "text-slate-700 dark:text-slate-200 dark:text-slate-700"}`}
+                                  className={`text-sm sm:text-base font-bold leading-tight ${p2Won ? "text-slate-900 dark:text-white" : "text-slate-700 dark:text-slate-300"}`}
                                 >
                                   {player}
                                 </p>

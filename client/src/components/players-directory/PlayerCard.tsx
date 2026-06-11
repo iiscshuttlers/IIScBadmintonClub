@@ -88,9 +88,11 @@ interface PlayerCardProps {
   onDelete?: (id: string) => void;
   onEdit?: (id: string) => void;
   onLogMatch?: (id: string) => void;
-  onToggleBuddy?: (id: string) => void;
+  onBuddyAction?: (id: string, action: 'send'|'cancel'|'accept'|'remove') => void;
   onToggleFollow?: (id: string) => void;
   isBuddy?: boolean;
+  hasSentRequest?: boolean;
+  hasReceivedRequest?: boolean;
   isFollowing?: boolean;
   currentUserName?: string;
 }
@@ -102,9 +104,11 @@ export function PlayerCard({
   onDelete,
   onEdit,
   onLogMatch,
-  onToggleBuddy,
+  onBuddyAction,
   onToggleFollow,
   isBuddy = false,
+  hasSentRequest = false,
+  hasReceivedRequest = false,
   isFollowing = false,
   currentUserName,
 }: PlayerCardProps) {
@@ -268,26 +272,33 @@ export function PlayerCard({
              )}
            </div>
 
-           <div className="flex items-center gap-1">
-             {/* User Actions */}
-             {onToggleBuddy && !isOwn && (
-               <button
-                 onClick={(e) => {
-                   e.stopPropagation();
-                   onToggleBuddy(player.id);
-                 }}
-                 className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
-                   isBuddy
-                     ? "text-rose-500 hover:text-rose-600 bg-rose-50 dark:bg-rose-950/30"
-                     : "text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30"
-                 }`}
-                 title={isBuddy ? "Remove from Buddies" : "Add to Buddies"}
-               >
-                 <svg className="w-4 h-4" fill={isBuddy ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={isBuddy ? "0" : "2"}>
-                   <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                 </svg>
-               </button>
-             )}
+             <div className="flex items-center gap-1">
+               {/* User Actions */}
+               {onBuddyAction && !isOwn && (
+                 <button
+                   onClick={(e) => {
+                     e.stopPropagation();
+                     if (isBuddy) onBuddyAction(player.id, 'remove');
+                     else if (hasReceivedRequest) onBuddyAction(player.id, 'accept');
+                     else if (hasSentRequest) onBuddyAction(player.id, 'cancel');
+                     else onBuddyAction(player.id, 'send');
+                   }}
+                   className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
+                     isBuddy
+                       ? "text-rose-500 hover:text-rose-600 bg-rose-50 dark:bg-rose-950/30"
+                       : hasReceivedRequest
+                       ? "text-emerald-500 hover:text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30"
+                       : hasSentRequest
+                       ? "text-slate-500 hover:text-slate-600 bg-slate-100 dark:bg-slate-800"
+                       : "text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                   }`}
+                   title={isBuddy ? "Buddy" : hasReceivedRequest ? "Accept Request" : hasSentRequest ? "Cancel Request" : "Add Buddy"}
+                 >
+                   <svg className="w-4 h-4" fill={isBuddy ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={isBuddy ? "0" : "2"}>
+                     <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                   </svg>
+                 </button>
+               )}
              {onToggleFollow && !isOwn && (
                <button
                  onClick={(e) => {

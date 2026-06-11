@@ -112,7 +112,21 @@ function dateFilterHasMatches(tData: any, date: string) {
     ([format, matches]: [string, any]) =>
       (matches as any[]).map((m) => ({ ...m, format })),
   );
-  return allM.some(m => m.Date === date);
+  return allM.some(m => {
+    if (!m.Date) return false;
+    // Support YYYY-MM-DD, DD/MM/YYYY, etc. by parsing the date string
+    try {
+      // If it's already YYYY-MM-DD and matches exactly
+      if (m.Date === date) return true;
+      // Otherwise try parsing it
+      const d = new Date(m.Date);
+      if (isNaN(d.getTime())) return false;
+      const normalized = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      return normalized === date;
+    } catch {
+      return false;
+    }
+  });
 }
 
 export default function ScheduleCalendar() {

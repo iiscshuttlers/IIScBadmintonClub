@@ -34,11 +34,16 @@ function MatchBroadcastCard({ match }: { match: BwfMatchState }) {
         <div className="grid md:grid-cols-[1fr_auto_1fr] gap-6 items-center">
           <div className={`p-6 rounded-3xl border-2 transition-all ${match.serverTeam === 1 ? "bg-emerald-900/20 border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.15)]" : "bg-slate-800/50 border-slate-700/50"}`}>
             <div className="text-center mb-6">
-              <h3 className="text-xl font-bold truncate">{match.t1.p1Name}</h3>
-              {match.t1.p2Name && <h3 className="text-xl font-bold truncate">{match.t1.p2Name}</h3>}
-              <div className="text-emerald-400 font-black text-sm mt-2 flex items-center justify-center gap-1 min-h-[20px]">
-                {match.serverTeam === 1 && <><div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Serving</>}
-              </div>
+              <h3 className="text-xl font-bold truncate flex items-center justify-center gap-2">
+                {match.serverTeam === 1 && match.serverPlayerIndex === 0 && <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />}
+                {match.t1.p1Name}
+              </h3>
+              {match.t1.p2Name && (
+                <h3 className="text-xl font-bold truncate flex items-center justify-center gap-2">
+                  {match.serverTeam === 1 && match.serverPlayerIndex === 1 && <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />}
+                  {match.t1.p2Name}
+                </h3>
+              )}
             </div>
             
             <div className="flex justify-center mb-6">
@@ -58,11 +63,16 @@ function MatchBroadcastCard({ match }: { match: BwfMatchState }) {
 
           <div className={`p-6 rounded-3xl border-2 transition-all ${match.serverTeam === 2 ? "bg-emerald-900/20 border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.15)]" : "bg-slate-800/50 border-slate-700/50"}`}>
             <div className="text-center mb-6">
-              <h3 className="text-xl font-bold truncate">{match.t2.p1Name}</h3>
-              {match.t2.p2Name && <h3 className="text-xl font-bold truncate">{match.t2.p2Name}</h3>}
-              <div className="text-emerald-400 font-black text-sm mt-2 flex items-center justify-center gap-1 min-h-[20px]">
-                {match.serverTeam === 2 && <><div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Serving</>}
-              </div>
+              <h3 className="text-xl font-bold truncate flex items-center justify-center gap-2">
+                {match.serverTeam === 2 && match.serverPlayerIndex === 0 && <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />}
+                {match.t2.p1Name}
+              </h3>
+              {match.t2.p2Name && (
+                <h3 className="text-xl font-bold truncate flex items-center justify-center gap-2">
+                  {match.serverTeam === 2 && match.serverPlayerIndex === 1 && <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />}
+                  {match.t2.p2Name}
+                </h3>
+              )}
             </div>
             
             <div className="flex justify-center mb-6">

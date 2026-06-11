@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { usePageMeta } from "@/hooks/usePageMeta";
 
 export default function ChangePassword() {
-  usePageMeta("Change Password");
+  usePageMeta({ title: "Change Password" });
   const [, setLocation] = useLocation();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");

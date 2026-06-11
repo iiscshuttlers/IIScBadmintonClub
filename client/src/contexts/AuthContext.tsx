@@ -47,6 +47,7 @@ export interface PlayerProfile {
   followers?: string[];
   following?: string[];
   buddies?: string[];
+  buddy_requests?: string[];
 }
 
 export interface AuthContextType {
