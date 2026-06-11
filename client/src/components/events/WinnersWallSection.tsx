@@ -13,7 +13,7 @@ import {
   ARCHIVED_TOURNAMENTS,
   computeWinnerLeaderboard,
 } from "@/data/tournamentArchive";
-import { usePageMeta } from "@/hooks/usePageMeta";
+
 import { motion, AnimatePresence } from "framer-motion";
 
 const cardVariant = {
@@ -99,12 +99,7 @@ function ConfettiBurst() {
   );
 }
 
-export default function WinnersWall() {
-  usePageMeta({
-    title: "Winners Wall",
-    description:
-      "Champions and podium finishers from all IISc Badminton Club tournaments and events.",
-  });
+export function WinnersWallSection() {
   const [filter, setFilter] = useState<"all" | "open" | "team">("all");
 
   const tournamentsWithResults = ARCHIVED_TOURNAMENTS.filter(
@@ -130,30 +125,7 @@ export default function WinnersWall() {
   );
 
   return (
-    <div className="flex-1 w-full flex flex-col bg-slate-50 dark:bg-slate-950">
-      {/* Confetti burst on page load */}
-      <ConfettiBurst />
-      {/* Hero */}
-      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-emerald-950 text-white py-24 relative overflow-hidden">
-        <div className="absolute inset-0 hero-pattern" />
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-400/20 border border-amber-400/30 text-amber-300 text-sm font-bold mb-5">
-            <Trophy className="w-4 h-4" />
-            Club Records
-          </div>
-          <h1
-            className="text-4xl sm:text-5xl md:text-6xl font-black mb-5"
-            style={{ fontFamily: "Playfair Display, serif" }}
-          >
-            Winners Wall
-          </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Champions, podiums and archived results from IISc Badminton Club
-            events.
-          </p>
-        </div>
-      </section>
-
+    <div className="flex-1 w-full flex flex-col">
       <section className="container mx-auto px-4 py-12 space-y-12">
         {/* Aggregate Stats & Leaderboard Grid */}
         <div className="grid lg:grid-cols-3 gap-6 max-w-6xl mx-auto">

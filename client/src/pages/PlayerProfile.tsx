@@ -316,6 +316,7 @@ export default function PlayerProfile({
   const [isMatchHistoryOpen, setIsMatchHistoryOpen] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isBuddy, setIsBuddy] = useState(false);
+  const [introPhase, setIntroPhase] = useState(0);
   const profileLoadRetried = useRef(false);
 
   useEffect(() => {
@@ -325,6 +326,20 @@ export default function PlayerProfile({
       setIsBuddy(ownPlayerProfile.buddies?.includes(player.id) || false);
     }
   }, [ownPlayerProfile, player]);
+
+  // Sports broadcast intro sequence — plays every time a profile is opened
+  useEffect(() => {
+    if (!player) return;
+    setIntroPhase(0);
+    const timers = [
+      setTimeout(() => setIntroPhase(1), 150),   // spotlight + left section slides in
+      setTimeout(() => setIntroPhase(2), 340),   // photo slams up
+      setTimeout(() => setIntroPhase(3), 720),   // first name letters
+      setTimeout(() => setIntroPhase(4), 960),   // last name letters + nickname
+      setTimeout(() => setIntroPhase(5), 1320),  // stats strip + form + CTAs
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, [player?.id]);
 
   const handleToggleFollow = async () => {
     if (!player?.id || !currentUser?.id) return;
@@ -512,8 +527,16 @@ export default function PlayerProfile({
         confirmer_id: ownPlayerProfile?.id,
       });
       if (error) throw error;
+      let myEloChange = data.p1_elo_change;
+      const targetMatch = pendingMatches.find(m => m.id === matchId);
+      if (targetMatch) {
+        if (targetMatch.player2_id === ownPlayerProfile?.id) myEloChange = data.p2_elo_change;
+        if (targetMatch.team1_partner_id === ownPlayerProfile?.id) myEloChange = data.p3_elo_change;
+        if (targetMatch.team2_partner_id === ownPlayerProfile?.id) myEloChange = data.p4_elo_change;
+      }
+
       toast.success("Match Confirmed!", {
-        description: `Elo Ratings Updated. Your Elo Change: ${data.p1_elo_change || data.p2_elo_change}`,
+        description: `Elo Ratings Updated. Your Elo Change: ${myEloChange || 0}`,
       });
       if (ownPlayerProfile) fetchPendingMatches(ownPlayerProfile.id);
     } catch (e: any) {
@@ -955,6 +978,10 @@ export default function PlayerProfile({
         currentElo -= match.elo_change_p1;
       } else if (match.player2_id === id && match.elo_change_p2) {
         currentElo -= match.elo_change_p2;
+      } else if (match.team1_partner_id === id && match.elo_change_p3) {
+        currentElo -= match.elo_change_p3;
+      } else if (match.team2_partner_id === id && match.elo_change_p4) {
+        currentElo -= match.elo_change_p4;
       }
       history.push({
         name: new Date(match.created_at).toLocaleDateString(undefined, {
@@ -979,7 +1006,7 @@ export default function PlayerProfile({
           animate={{ scale: 1, opacity: 1 }}
           className="text-center"
         >
-          <h1 className="text-4xl font-extrabold text-slate-800 dark:text-slate-100 mb-4 tracking-tight">
+          <h1 className="text-4xl font-extrabold text-white/90 mb-4 tracking-tight">
             Player Not Found
           </h1>
           <p className="text-slate-500 mb-8 text-lg">
@@ -1074,10 +1101,10 @@ export default function PlayerProfile({
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between mb-6 mt-2">
             <div>
-              <h1 className="text-3xl font-black text-slate-900 dark:text-white">
+              <h1 className="text-3xl font-black text-white">
                 Matches
               </h1>
-              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+              <p className="text-white/45 text-sm mt-1">
                 Your recent activity
               </p>
             </div>
@@ -1110,7 +1137,7 @@ export default function PlayerProfile({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#070d1a] selection:bg-emerald-500/30 font-sans">
+    <div className="min-h-screen bg-[#08061a] selection:bg-emerald-500/30 font-sans">
       {/* ═══════════════════════════════════════════════════════════ */}
       {/* CINEMATIC HERO                                             */}
       {/* ═══════════════════════════════════════════════════════════ */}
@@ -1133,7 +1160,7 @@ export default function PlayerProfile({
         <motion.div
           animate={{ scale: [1, 1.25, 1], opacity: [0.18, 0.35, 0.18] }}
           transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/4 left-[30%] w-[700px] h-[700px] bg-emerald-500/[0.12] rounded-full blur-[180px] pointer-events-none"
+          className="absolute top-1/4 left-[30%] w-[700px] h-[700px] bg-violet-600/[0.14] rounded-full blur-[180px] pointer-events-none"
         />
         <motion.div
           animate={{ scale: [1, 1.15, 1], opacity: [0.12, 0.25, 0.12] }}
@@ -1153,8 +1180,25 @@ export default function PlayerProfile({
             ease: "easeInOut",
             delay: 5,
           }}
-          className="absolute top-[5%] right-[10%] w-[400px] h-[400px] bg-violet-500/[0.06] rounded-full blur-[120px] pointer-events-none"
+          className="absolute top-[5%] right-[10%] w-[400px] h-[400px] bg-fuchsia-500/[0.08] rounded-full blur-[120px] pointer-events-none"
         />
+
+        {/* Stadium spotlight cone — drops on intro phase 1 */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none z-[1]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: introPhase >= 1 ? 1 : 0 }}
+          transition={{ duration: 0.55, ease: "easeOut" }}
+        >
+          <div
+            className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[700px]"
+            style={{ background: "radial-gradient(ellipse 55% 48% at 50% -8%, rgba(167,139,250,0.18) 0%, rgba(139,92,246,0.06) 45%, transparent 70%)" }}
+          />
+          <div
+            className="absolute top-0 left-1/2 -translate-x-1/2 w-[420px] h-[520px]"
+            style={{ background: "radial-gradient(ellipse 32% 58% at 50% -6%, rgba(255,255,255,0.065) 0%, transparent 62%)" }}
+          />
+        </motion.div>
 
         {/* ── Navigation ── */}
         <nav className="relative z-20 flex items-center justify-between px-6 lg:px-10 pt-5 pb-3">
@@ -1206,7 +1250,7 @@ export default function PlayerProfile({
               <>
                 <button
                   onClick={() => setLocation("/profile/setup")}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 transition-all text-xs font-black uppercase tracking-wider"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-400 hover:bg-violet-500/20 transition-all text-xs font-black uppercase tracking-wider"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Edit Profile</span>
@@ -1248,14 +1292,14 @@ export default function PlayerProfile({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center min-h-[60vh]">
             {/* LEFT: Identity */}
             <motion.div
-              initial={{ opacity: 0, x: -24 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
+              initial={{ opacity: 0, x: -32 }}
+              animate={introPhase >= 1 ? { opacity: 1, x: 0 } : { opacity: 0, x: -32 }}
+              transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
               className="flex flex-col justify-center"
             >
               {/* Status badges */}
               <div className="flex flex-wrap items-center gap-2.5 mb-7">
-                <span className="px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-black tracking-[0.15em] uppercase">
+                <span className="px-4 py-1.5 rounded-full bg-violet-500/12 border border-violet-500/25 text-violet-300 text-[11px] font-black tracking-[0.15em] uppercase">
                   {player.playingLevel}
                 </span>
                 {targetUserRole && (
@@ -1285,57 +1329,84 @@ export default function PlayerProfile({
                 )}
               </div>
 
-              {/* Name — massive split typography */}
-              <div className="mb-8 select-none">
+              {/* Name — cinematic letter reveal */}
+              <div className="mb-8 select-none" style={{ perspective: "800px" }}>
                 <div
                   className="font-black leading-[0.88] tracking-tight text-white"
                   style={{ fontSize: "clamp(3.2rem, 10vw, 6rem)" }}
+                  aria-label={heroFirstName}
                 >
-                  {heroFirstName}
+                  {heroFirstName.split("").map((char, i) => (
+                    <motion.span
+                      key={i}
+                      className="inline-block"
+                      initial={{ opacity: 0, y: 44, rotateX: -75 }}
+                      animate={introPhase >= 3 ? { opacity: 1, y: 0, rotateX: 0 } : {}}
+                      transition={{ delay: i * 0.048, duration: 0.32, type: "spring", stiffness: 210, damping: 22 }}
+                    >
+                      {char === " " ? " " : char}
+                    </motion.span>
+                  ))}
                 </div>
                 {heroLastName && (
                   <div
                     className="font-black leading-[0.88] tracking-tight"
                     style={{
                       fontSize: "clamp(3.2rem, 10vw, 6rem)",
-                      WebkitTextStroke: "2px rgba(16,185,129,0.55)",
+                      WebkitTextStroke: "2px rgba(167,139,250,0.65)",
                       color: "transparent",
                     }}
+                    aria-label={heroLastName}
                   >
-                    {heroLastName}
+                    {heroLastName.split("").map((char, i) => (
+                      <motion.span
+                        key={i}
+                        className="inline-block"
+                        initial={{ opacity: 0, y: 44, rotateX: -75 }}
+                        animate={introPhase >= 4 ? { opacity: 1, y: 0, rotateX: 0 } : {}}
+                        transition={{ delay: i * 0.042, duration: 0.3, type: "spring", stiffness: 195, damping: 20 }}
+                      >
+                        {char === " " ? " " : char}
+                      </motion.span>
+                    ))}
                   </div>
                 )}
                 {player.nickname && (
-                  <p className="mt-4 text-lg sm:text-xl text-emerald-400/70 italic font-serif tracking-wide">
+                  <motion.p
+                    initial={{ opacity: 0, x: -14 }}
+                    animate={introPhase >= 4 ? { opacity: 1, x: 0 } : {}}
+                    transition={{ delay: 0.38, duration: 0.5, ease: "easeOut" }}
+                    className="mt-4 text-lg sm:text-xl text-fuchsia-400/70 italic font-serif tracking-wide"
+                  >
                     "{player.nickname}"
-                  </p>
+                  </motion.p>
                 )}
               </div>
 
               {/* Meta tags */}
               <div className="flex flex-wrap gap-2 mb-8">
-                <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white/45 text-xs font-medium">
+                <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/8 text-white/45 text-xs font-medium">
                   <MapPin className="w-3.5 h-3.5 text-rose-400 shrink-0" />
                   {player.department}
                 </span>
-                <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white/45 text-xs font-medium">
+                <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/8 text-white/45 text-xs font-medium">
                   <Calendar className="w-3.5 h-3.5 text-blue-400 shrink-0" />
                   Class of {player.joinedYear}
                 </span>
                 {player.dominantHand && (
-                  <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white/45 text-xs font-medium">
+                  <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/8 text-white/45 text-xs font-medium">
                     <User className="w-3.5 h-3.5 text-violet-400 shrink-0" />
                     {player.dominantHand} Handed
                   </span>
                 )}
                 {player.height && (
-                  <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white/45 text-xs font-medium">
+                  <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/8 text-white/45 text-xs font-medium">
                     <Ruler className="w-3.5 h-3.5 text-teal-400 shrink-0" />
                     {player.height}
                   </span>
                 )}
                 {player.nationality && (
-                  <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.05] border border-white/[0.08] text-white/45 text-xs font-medium">
+                  <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/8 text-white/45 text-xs font-medium">
                     <Hash className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
                     {player.nationality}
                     {player.homeState ? ` · ${player.homeState}` : ""}
@@ -1365,7 +1436,12 @@ export default function PlayerProfile({
 
               {/* Stats strip */}
               {splitStats && (
-                <div className="flex items-stretch mb-8 bg-white/[0.04] rounded-2xl border border-white/[0.08] p-1 w-fit max-w-full overflow-x-auto overflow-y-hidden">
+                <motion.div
+                  initial={{ opacity: 0, y: 18 }}
+                  animate={introPhase >= 5 ? { opacity: 1, y: 0 } : {}}
+                  transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                  className="flex items-stretch mb-8 bg-white/4 rounded-2xl border border-white/8 p-1 w-fit max-w-full overflow-x-auto overflow-y-hidden"
+                >
                   {[
                     {
                       value: splitStats.all.wins,
@@ -1416,7 +1492,7 @@ export default function PlayerProfile({
                         </div>
                       </div>
                       {i < arr.length - 1 && (
-                        <div className="w-px bg-white/[0.08] my-2 shrink-0" />
+                        <div className="w-px bg-white/8 my-2 shrink-0" />
                       )}
                     </div>
                   ))}
@@ -1424,7 +1500,7 @@ export default function PlayerProfile({
                   {/* Head to Head Widget */}
                   {h2hRecord && (
                     <>
-                      <div className="w-px bg-white/[0.08] my-2 shrink-0 ml-1 mr-1" />
+                      <div className="w-px bg-white/8 my-2 shrink-0 ml-1 mr-1" />
                       <div className="flex items-stretch shrink-0 bg-blue-500/5 rounded-xl ml-1 relative overflow-hidden">
                         <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 pointer-events-none" />
                         <div className="px-5 py-3 text-center relative z-10 flex flex-col justify-center">
@@ -1446,7 +1522,7 @@ export default function PlayerProfile({
                       </div>
                     </>
                   )}
-                </div>
+                </motion.div>
               )}
 
               {/* Recent form */}
@@ -1497,7 +1573,7 @@ export default function PlayerProfile({
                       className={`group flex items-center gap-2 px-6 py-3.5 font-black rounded-2xl transition-all hover:-translate-y-0.5 text-sm tracking-wide border ${
                         isFollowing
                           ? "bg-violet-500/20 border-violet-400/40 text-violet-300 hover:bg-rose-500/10 hover:border-rose-400/30 hover:text-rose-300"
-                          : "bg-white/[0.06] border-white/[0.1] text-white/75 hover:bg-violet-500/15 hover:border-violet-400/30 hover:text-violet-200"
+                          : "bg-white/6 border-white/[0.1] text-white/75 hover:bg-violet-500/15 hover:border-violet-400/30 hover:text-violet-200"
                       }`}
                     >
                       {isFollowing ? (
@@ -1528,7 +1604,7 @@ export default function PlayerProfile({
                       className={`group flex items-center gap-2 px-6 py-3.5 font-black rounded-2xl transition-all hover:-translate-y-0.5 text-sm tracking-wide border ${
                         isBuddy
                           ? "bg-rose-500/20 border-rose-400/40 text-rose-300 hover:bg-rose-500/30 hover:border-rose-400/60"
-                          : "bg-white/[0.06] border-white/[0.1] text-white/75 hover:bg-rose-500/10 hover:border-rose-400/30 hover:text-rose-200"
+                          : "bg-white/6 border-white/[0.1] text-white/75 hover:bg-rose-500/10 hover:border-rose-400/30 hover:text-rose-200"
                       }`}
                     >
                       <Heart
@@ -1542,9 +1618,9 @@ export default function PlayerProfile({
                   currentUser.id === player.userId ? (
                   <button
                     onClick={() => setLocation("/profile/setup")}
-                    className="group flex items-center gap-2 px-7 py-3.5 bg-white/[0.07] hover:bg-white/[0.12] border border-white/[0.12] text-white font-black rounded-2xl transition-all hover:-translate-y-0.5 text-sm tracking-wide"
+                    className="group flex items-center gap-2 px-7 py-3.5 bg-white/7 hover:bg-white/12 border border-white/[0.12] text-white font-black rounded-2xl transition-all hover:-translate-y-0.5 text-sm tracking-wide"
                   >
-                    <Sparkles className="w-4 h-4 text-emerald-400 group-hover:rotate-180 transition-transform duration-500" />{" "}
+                    <Sparkles className="w-4 h-4 text-violet-400 group-hover:rotate-180 transition-transform duration-500" />{" "}
                     Edit Profile
                   </button>
                 ) : null}
@@ -1565,13 +1641,9 @@ export default function PlayerProfile({
 
             {/* RIGHT: Photo */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.94 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{
-                duration: 0.95,
-                ease: [0.22, 1, 0.36, 1],
-                delay: 0.12,
-              }}
+              initial={{ opacity: 0, scale: 0.72, y: 60 }}
+              animate={introPhase >= 2 ? { opacity: 1, scale: 1, y: 0 } : {}}
+              transition={{ type: "spring", stiffness: 90, damping: 14, mass: 1.3 }}
               className="flex justify-center lg:justify-end items-center"
             >
               <div className="relative">
@@ -1581,7 +1653,7 @@ export default function PlayerProfile({
                 {/* Photo card */}
                 <div
                   onClick={() => setIsAvatarOpen(true)}
-                  className="relative w-60 sm:w-72 lg:w-[22rem] rounded-[2.5rem] overflow-hidden border border-white/[0.08] shadow-[0_50px_130px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.04)] cursor-zoom-in group"
+                  className="relative w-60 sm:w-72 lg:w-[22rem] rounded-[2.5rem] overflow-hidden border border-white/8 shadow-[0_50px_130px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.04)] cursor-zoom-in group"
                 >
                   <img
                     src={player.avatar}
@@ -1599,7 +1671,7 @@ export default function PlayerProfile({
                         <span>Profile</span>
                         <span>{profileCompleteness}%</span>
                       </div>
-                      <div className="h-[2px] bg-white/[0.08] rounded-full overflow-hidden">
+                      <div className="h-[2px] bg-white/8 rounded-full overflow-hidden">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${profileCompleteness}%` }}
@@ -1631,7 +1703,7 @@ export default function PlayerProfile({
 
                 {/* ELO badge */}
                 {eloRank && (
-                  <div className="absolute -top-4 -left-4 px-3.5 py-2 rounded-xl bg-slate-900/95 border border-white/[0.08] backdrop-blur-sm shadow-xl hidden md:flex items-center gap-2">
+                  <div className="absolute -top-4 -left-4 px-3.5 py-2 rounded-xl bg-slate-900/95 border border-white/8 backdrop-blur-sm shadow-xl hidden md:flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
                     <span className="text-xs font-black text-white/70">
                       ELO Rank{" "}
@@ -1642,7 +1714,7 @@ export default function PlayerProfile({
 
                 {/* Quote floating badge */}
                 {player.quote && (
-                  <div className="absolute -top-2 -left-8 max-w-[190px] bg-slate-900/95 border border-white/[0.07] rounded-2xl px-4 py-3.5 shadow-2xl hidden xl:block backdrop-blur-sm">
+                  <div className="absolute -top-2 -left-8 max-w-[190px] bg-slate-900/95 border border-white/7 rounded-2xl px-4 py-3.5 shadow-2xl hidden xl:block backdrop-blur-sm">
                     <Quote className="w-3 h-3 text-emerald-400 mb-1.5" />
                     <p className="text-white/55 text-[11px] font-medium italic leading-relaxed line-clamp-3">
                       "{player.quote}"
@@ -1655,7 +1727,7 @@ export default function PlayerProfile({
         </div>
 
         {/* Hero → content transition */}
-        <div className="absolute bottom-0 left-0 right-0 h-36 bg-gradient-to-t from-slate-50 dark:from-[#070d1a] to-transparent z-20 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 h-36 bg-gradient-to-t from-[#08061a] to-transparent z-20 pointer-events-none" />
       </div>
 
       {/* ═══════════════════════════════════════════════════════════ */}
@@ -1674,10 +1746,10 @@ export default function PlayerProfile({
           pendingMatches.length > 0 && (
             <motion.div
               variants={itemVariants}
-              className="bg-amber-500/[0.07] dark:bg-amber-500/[0.06] border border-amber-500/20 rounded-2xl p-5 relative overflow-hidden"
+              className="bg-amber-500/8 border border-amber-500/20 rounded-2xl p-5 relative overflow-hidden"
             >
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-amber-500/0 via-amber-500/50 to-amber-500/0" />
-              <h3 className="text-amber-700 dark:text-amber-400 font-black mb-4 flex items-center gap-2 text-sm">
+              <h3 className="text-amber-400 font-black mb-4 flex items-center gap-2 text-sm">
                 <Swords className="w-4 h-4" /> Pending Match Verifications (
                 {pendingMatches.length})
               </h3>
@@ -1685,22 +1757,22 @@ export default function PlayerProfile({
                 {pendingMatches.map((m) => (
                   <div
                     key={m.id}
-                    className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white/60 dark:bg-black/30 p-4 rounded-xl border border-amber-500/[0.12]"
+                    className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-black/25 p-4 rounded-xl border border-amber-500/20"
                   >
-                    <div className="text-sm font-semibold text-slate-700 dark:text-slate-300 text-center sm:text-left">
+                    <div className="text-sm font-semibold text-white/80 text-center sm:text-left">
                       <span className="font-bold">{m.player1?.full_name}</span>
-                      <span className="text-amber-600 dark:text-amber-500 font-black italic mx-2">
+                      <span className="text-amber-400 font-black italic mx-2">
                         VS
                       </span>
                       <span className="font-bold">{m.player2?.full_name}</span>
                       <div className="text-xs text-slate-500 mt-1">
                         Score:{" "}
-                        <span className="font-bold text-slate-800 dark:text-white">
+                        <span className="font-bold text-white">
                           {m.score}
                         </span>
                         <span className="mx-2 opacity-40">•</span>
                         Winner:{" "}
-                        <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                        <span className="font-bold text-emerald-400">
                           {m.winner_id === m.player1_id
                             ? m.player1?.full_name
                             : m.player2?.full_name}
@@ -1716,7 +1788,7 @@ export default function PlayerProfile({
                       </button>
                       <button
                         onClick={() => handleRejectMatch(m.id)}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-5 py-2.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-black rounded-xl transition-all"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-5 py-2.5 bg-white/7 hover:bg-white/12 text-white/60 text-xs font-black rounded-xl transition-all border border-white/8"
                       >
                         <XCircle className="w-3.5 h-3.5" /> Reject
                       </button>
@@ -1732,12 +1804,12 @@ export default function PlayerProfile({
           <motion.div variants={itemVariants}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Overall */}
-              <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
+              <div className="bg-white/5 rounded-2xl p-6 border border-white/8 relative overflow-hidden group hover:shadow-md transition-shadow">
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400" />
                 <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-emerald-500/[0.05] rounded-full blur-2xl" />
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
+                    <span className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
                       Overall
                     </span>
                     <CircularProgress
@@ -1746,23 +1818,23 @@ export default function PlayerProfile({
                       stroke={4}
                     />
                   </div>
-                  <div className="text-3xl font-black text-slate-900 dark:text-white tabular-nums mb-1">
+                  <div className="text-3xl font-black text-white tabular-nums mb-1">
                     <span className="text-emerald-500">
                       {splitStats.all.wins}W
                     </span>
-                    <span className="text-slate-300 dark:text-slate-600 mx-1.5 font-light">
+                    <span className="text-white/20 mx-1.5 font-light">
                       ·
                     </span>
                     <span className="text-rose-500">
                       {splitStats.all.losses}L
                     </span>
                   </div>
-                  <div className="text-xs text-slate-400 dark:text-slate-500 font-medium">
+                  <div className="text-xs text-white/35 font-medium">
                     {splitStats.all.total} matches total
                   </div>
                   {streak && (
                     <div
-                      className={`mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black ${isWinStreak ? "bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400" : "bg-rose-100 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400"}`}
+                      className={`mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black ${isWinStreak ? "bg-emerald-500/15 text-emerald-400" : "bg-rose-500/15 text-rose-400"}`}
                     >
                       <Flame className="w-3 h-3" /> {streak} streak
                     </div>
@@ -1771,31 +1843,31 @@ export default function PlayerProfile({
               </div>
 
               {/* Friendly */}
-              <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
+              <div className="bg-white/5 rounded-2xl p-6 border border-white/8 relative overflow-hidden group hover:shadow-md transition-shadow">
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-300 to-emerald-500" />
                 <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-emerald-500/[0.04] rounded-full blur-2xl" />
                 <div className="relative z-10">
                   <div className="flex items-center gap-2.5 mb-4">
-                    <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-base shrink-0">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-500/[0.12] flex items-center justify-center text-base shrink-0">
                       🏸
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-600 dark:text-emerald-400">
+                    <span className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-400">
                       Friendly
                     </span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 dark:text-white tabular-nums mb-1">
+                  <div className="text-3xl font-black text-white tabular-nums mb-1">
                     {splitStats.friendly.wins}W
-                    <span className="text-slate-300 dark:text-slate-600 font-light mx-1">
+                    <span className="text-white/20 font-light mx-1">
                       –
                     </span>
                     {splitStats.friendly.losses}L
                   </div>
-                  <div className="text-xs text-slate-400 dark:text-slate-500 font-medium mb-2">
+                  <div className="text-xs text-white/35 font-medium mb-2">
                     {splitStats.friendly.total} matches ·{" "}
                     {splitStats.friendly.winPct}% win
                   </div>
                   {/* Animated win rate bar */}
-                  <div className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden mb-3">
+                  <div className="h-1.5 rounded-full bg-white/8 overflow-hidden mb-3">
                     <motion.div
                       className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-500"
                       initial={{ width: 0 }}
@@ -1805,7 +1877,7 @@ export default function PlayerProfile({
                   </div>
                   {splitStats.friendly.recentForm.length > 0 && (
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[8px] uppercase tracking-[0.15em] font-black text-slate-400 dark:text-slate-500 mr-0.5">
+                      <span className="text-[8px] uppercase tracking-[0.15em] font-black text-white/35 mr-0.5">
                         Form
                       </span>
                       {splitStats.friendly.recentForm.map((r, i) => (
@@ -1815,7 +1887,7 @@ export default function PlayerProfile({
                   )}
                   {splitStats.friendly.streak && (
                     <div
-                      className={`mt-2 inline-flex px-2 py-0.5 rounded-lg text-[10px] font-black ${splitStats.friendly.streak.startsWith("W") ? "bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400" : "bg-rose-100 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400"}`}
+                      className={`mt-2 inline-flex px-2 py-0.5 rounded-lg text-[10px] font-black ${splitStats.friendly.streak.startsWith("W") ? "bg-emerald-500/15 text-emerald-400" : "bg-rose-500/15 text-rose-400"}`}
                     >
                       {splitStats.friendly.streak}
                     </div>
@@ -1824,33 +1896,33 @@ export default function PlayerProfile({
               </div>
 
               {/* Tournament */}
-              <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
+              <div className="bg-white/5 rounded-2xl p-6 border border-white/8 relative overflow-hidden group hover:shadow-md transition-shadow">
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-300 to-orange-500" />
                 <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-amber-500/[0.04] rounded-full blur-2xl" />
                 <div className="relative z-10">
                   <div className="flex items-center gap-2.5 mb-4">
-                    <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-base shrink-0">
+                    <div className="w-8 h-8 rounded-xl bg-amber-500/[0.12] flex items-center justify-center text-base shrink-0">
                       🏆
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-600 dark:text-amber-400">
+                    <span className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-400">
                       Tournament
                     </span>
                   </div>
                   {splitStats.tournament.total > 0 ? (
                     <>
-                      <div className="text-3xl font-black text-slate-900 dark:text-white tabular-nums mb-1">
+                      <div className="text-3xl font-black text-white tabular-nums mb-1">
                         {splitStats.tournament.wins}W
-                        <span className="text-slate-300 dark:text-slate-600 font-light mx-1">
+                        <span className="text-white/20 font-light mx-1">
                           –
                         </span>
                         {splitStats.tournament.losses}L
                       </div>
-                      <div className="text-xs text-slate-400 dark:text-slate-500 font-medium mb-2">
+                      <div className="text-xs text-white/35 font-medium mb-2">
                         {splitStats.tournament.total} matches ·{" "}
                         {splitStats.tournament.winPct}% win
                       </div>
                       {/* Animated win rate bar */}
-                      <div className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden mb-3">
+                      <div className="h-1.5 rounded-full bg-white/8 overflow-hidden mb-3">
                         <motion.div
                           className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500"
                           initial={{ width: 0 }}
@@ -1860,7 +1932,7 @@ export default function PlayerProfile({
                       </div>
                       {splitStats.tournament.recentForm.length > 0 && (
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[8px] uppercase tracking-[0.15em] font-black text-slate-400 dark:text-slate-500 mr-0.5">
+                          <span className="text-[8px] uppercase tracking-[0.15em] font-black text-white/35 mr-0.5">
                             Form
                           </span>
                           {splitStats.tournament.recentForm.map((r, i) => (
@@ -1870,14 +1942,14 @@ export default function PlayerProfile({
                       )}
                       {splitStats.tournament.streak && (
                         <div
-                          className={`mt-2 inline-flex px-2 py-0.5 rounded-lg text-[10px] font-black ${splitStats.tournament.streak.startsWith("W") ? "bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400" : "bg-rose-100 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400"}`}
+                          className={`mt-2 inline-flex px-2 py-0.5 rounded-lg text-[10px] font-black ${splitStats.tournament.streak.startsWith("W") ? "bg-emerald-500/15 text-emerald-400" : "bg-rose-500/15 text-rose-400"}`}
                         >
                           {splitStats.tournament.streak}
                         </div>
                       )}
                     </>
                   ) : (
-                    <div className="text-sm text-slate-400 dark:text-slate-500 italic">
+                    <div className="text-sm text-white/35 italic">
                       No tournament matches yet
                     </div>
                   )}
@@ -1894,11 +1966,11 @@ export default function PlayerProfile({
             {/* Player Attributes */}
             <motion.section variants={itemVariants}>
               <div className="flex items-center gap-3 mb-5">
-                <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
-                <span className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500 shrink-0">
+                <div className="h-px flex-1 bg-white/8" />
+                <span className="text-[10px] font-black uppercase tracking-[0.22em] text-white/35 shrink-0">
                   Player Attributes
                 </span>
-                <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+                <div className="h-px flex-1 bg-white/8" />
               </div>
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 {(
@@ -1908,7 +1980,7 @@ export default function PlayerProfile({
                       label: "Playing Style",
                       value: player.playingStyle,
                       accent: "from-amber-400 to-orange-500",
-                      iconBg: "bg-amber-50 dark:bg-amber-950/30",
+                      iconBg: "bg-amber-500/[0.12]",
                       iconColor: "text-amber-500",
                     },
                     {
@@ -1916,7 +1988,7 @@ export default function PlayerProfile({
                       label: "Signature Shot",
                       value: player.favoriteShot,
                       accent: "from-rose-400 to-pink-500",
-                      iconBg: "bg-rose-50 dark:bg-rose-950/20",
+                      iconBg: "bg-rose-500/[0.12]",
                       iconColor: "text-rose-500",
                     },
                     {
@@ -1924,7 +1996,7 @@ export default function PlayerProfile({
                       label: "Dominant Hand",
                       value: player.dominantHand,
                       accent: "from-blue-400 to-cyan-500",
-                      iconBg: "bg-blue-50 dark:bg-blue-950/20",
+                      iconBg: "bg-blue-500/[0.12]",
                       iconColor: "text-blue-500",
                     },
                     {
@@ -1932,14 +2004,14 @@ export default function PlayerProfile({
                       label: "Badminton Idol",
                       value: player.favoriteIdol,
                       accent: "from-violet-400 to-purple-500",
-                      iconBg: "bg-violet-50 dark:bg-violet-950/20",
+                      iconBg: "bg-violet-500/[0.12]",
                       iconColor: "text-violet-500",
                     },
                   ] as const
                 ).map((attr) => (
                   <div
                     key={attr.label}
-                    className="relative overflow-hidden bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-6 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 group"
+                    className="relative overflow-hidden bg-white/5 rounded-2xl p-5 sm:p-6 border border-white/8 hover:border-white/14 hover:bg-white/8 hover:-translate-y-0.5 transition-all duration-300 group"
                   >
                     <div
                       className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${attr.accent}`}
@@ -1949,10 +2021,10 @@ export default function PlayerProfile({
                     >
                       <attr.Icon className={`w-4 h-4 ${attr.iconColor}`} />
                     </div>
-                    <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-1.5 uppercase tracking-wider">
+                    <div className="text-[10px] font-bold text-white/35 mb-1.5 uppercase tracking-wider">
                       {attr.label}
                     </div>
-                    <div className="text-sm sm:text-base font-black text-slate-800 dark:text-slate-100 leading-snug">
+                    <div className="text-sm sm:text-base font-black text-white/90 leading-snug">
                       {attr.value}
                     </div>
                   </div>
@@ -1964,13 +2036,13 @@ export default function PlayerProfile({
             {player.stats?.categoryStats && (
               <motion.section variants={itemVariants}>
                 <div className="flex items-center gap-3 mb-5">
-                  <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
-                  <span className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500 shrink-0">
+                  <div className="h-px flex-1 bg-white/8" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.22em] text-white/35 shrink-0">
                     Performance Breakdown
                   </span>
-                  <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+                  <div className="h-px flex-1 bg-white/8" />
                 </div>
-                <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm space-y-5 relative overflow-hidden">
+                <div className="bg-white/5 rounded-2xl p-6 border border-white/8 space-y-5 relative overflow-hidden">
                   <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-400 via-blue-400 to-violet-400" />
                   {player.stats.categoryStats.singles && (
                     <CategoryBar
@@ -2001,17 +2073,19 @@ export default function PlayerProfile({
             )}
 
             {/* Match History */}
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xl font-bold"></h3>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-px flex-1 bg-white/8" />
+              <span className="text-[10px] font-black uppercase tracking-[0.22em] text-white/35 shrink-0 flex items-center gap-2">
+                <Swords className="w-3.5 h-3.5 text-emerald-500" /> Match History
+              </span>
+              <div className="h-px flex-1 bg-white/8" />
               {ownPlayerProfile && (
                 <button
-                  onClick={() =>
-                    window.dispatchEvent(new Event("openLogMatchModal"))
-                  }
-                  className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-2 px-4 rounded-xl shadow-md text-sm flex items-center gap-2 transition-transform active:scale-95"
+                  onClick={() => window.dispatchEvent(new Event("openLogMatchModal"))}
+                  className="shrink-0 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/25 hover:border-emerald-500/40 text-emerald-400 font-bold py-2 px-4 rounded-xl text-xs flex items-center gap-1.5 transition-all active:scale-95"
                 >
-                  <Swords className="w-4 h-4" />
-                  Log a Match
+                  <Swords className="w-3.5 h-3.5" />
+                  Log Match
                 </button>
               )}
             </div>
@@ -2053,45 +2127,45 @@ export default function PlayerProfile({
             {player.bio && (
               <motion.section
                 variants={itemVariants}
-                className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden"
+                className="bg-white/5 rounded-2xl p-6 border border-white/8 relative overflow-hidden"
               >
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-400 to-cyan-500" />
-                <h2 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                <h2 className="text-[10px] font-black text-white/35 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
                   <BookOpen className="w-3.5 h-3.5 text-blue-400" /> About
                 </h2>
-                <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                <p className="text-sm leading-relaxed text-white/65">
                   {player.bio}
                 </p>
                 {(player.coach ||
                   player.yearsPlaying != null ||
                   player.highestRanking != null) && (
-                  <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
+                  <div className="mt-4 pt-4 border-t border-white/8 space-y-2.5">
                     {player.coach && (
                       <div className="flex justify-between items-center text-sm">
-                        <span className="text-slate-400 dark:text-slate-500 font-medium">
+                        <span className="text-white/35 font-medium">
                           Coach
                         </span>
-                        <span className="font-bold text-slate-800 dark:text-slate-100">
+                        <span className="font-bold text-white/90">
                           {player.coach}
                         </span>
                       </div>
                     )}
                     {player.yearsPlaying != null && (
                       <div className="flex justify-between items-center text-sm">
-                        <span className="text-slate-400 dark:text-slate-500 font-medium">
+                        <span className="text-white/35 font-medium">
                           Years Playing
                         </span>
-                        <span className="font-bold text-slate-800 dark:text-slate-100">
+                        <span className="font-bold text-white/90">
                           {player.yearsPlaying} yrs
                         </span>
                       </div>
                     )}
                     {player.highestRanking != null && (
                       <div className="flex justify-between items-center text-sm">
-                        <span className="text-slate-400 dark:text-slate-500 font-medium">
+                        <span className="text-white/35 font-medium">
                           Career-High Rank
                         </span>
-                        <span className="font-bold text-slate-800 dark:text-slate-100">
+                        <span className="font-bold text-white/90">
                           #{player.highestRanking}
                         </span>
                       </div>
@@ -2104,15 +2178,15 @@ export default function PlayerProfile({
             {/* Career Record + Achievements */}
             <motion.section
               variants={itemVariants}
-              className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden"
+              className="bg-white/5 rounded-2xl p-6 border border-white/8 relative overflow-hidden"
             >
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-400 to-orange-500" />
-              <h2 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-5 flex items-center gap-2">
+              <h2 className="text-[10px] font-black text-white/35 uppercase tracking-[0.2em] mb-5 flex items-center gap-2">
                 <Trophy className="w-3.5 h-3.5 text-amber-500" /> Career Record
               </h2>
 
               {/* W/L block */}
-              <div className="mb-6 p-5 bg-slate-900 dark:bg-slate-950 rounded-xl relative overflow-hidden">
+              <div className="mb-6 p-5 bg-black/40 rounded-xl relative overflow-hidden border border-white/6">
                 <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/[0.08] to-transparent" />
                 <div className="relative z-10">
                   <div className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400 mb-2">
@@ -2127,11 +2201,11 @@ export default function PlayerProfile({
               {/* Achievements */}
               {validAchievements.length > 0 && (
                 <div className="mb-5">
-                  <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-slate-400 dark:text-slate-500 mb-4 flex items-center gap-1.5">
+                  <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-white/35 mb-4 flex items-center gap-1.5">
                     <Medal className="w-3 h-3 text-emerald-500" /> Achievements
                   </h3>
                   <div className="relative ml-5 space-y-3">
-                    <div className="absolute left-0 top-2 bottom-2 w-px bg-gradient-to-b from-emerald-300 via-blue-300 to-amber-300 dark:from-emerald-700 dark:via-blue-700 dark:to-amber-700 rounded-full" />
+                    <div className="absolute left-0 top-2 bottom-2 w-px bg-gradient-to-b from-emerald-500/50 via-blue-500/50 to-amber-500/50 rounded-full" />
                     {[...validAchievements]
                       .sort((a, b) => {
                         const yearA = parseInt(
@@ -2169,12 +2243,12 @@ export default function PlayerProfile({
                               ? "🥉"
                               : "⭐";
                         const bg = isGold
-                          ? "bg-amber-50 dark:bg-amber-950/30 ring-amber-200 dark:ring-amber-900/40"
+                          ? "bg-amber-500/10 ring-amber-500/25"
                           : isSilver
-                            ? "bg-slate-50 dark:bg-slate-800 ring-slate-200 dark:ring-slate-700"
+                            ? "bg-white/8 ring-white/20"
                             : isBronze
-                              ? "bg-orange-50 dark:bg-orange-950/30 ring-orange-200 dark:ring-orange-900/40"
-                              : "bg-emerald-50 dark:bg-emerald-950/30 ring-emerald-200 dark:ring-emerald-900/40";
+                              ? "bg-orange-500/10 ring-orange-500/25"
+                              : "bg-emerald-500/10 ring-emerald-500/25";
                         return (
                           <div
                             key={idx}
@@ -2185,8 +2259,8 @@ export default function PlayerProfile({
                             >
                               <span className="text-xs">{icon}</span>
                             </div>
-                            <div className="flex-1 py-2 px-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/40 hover:bg-white dark:hover:bg-slate-800 transition-colors">
-                              <span className="text-xs font-bold text-slate-700 dark:text-slate-200 leading-snug">
+                            <div className="flex-1 py-2 px-3 rounded-xl bg-white/4 border border-white/6 hover:bg-white/8 transition-colors">
+                              <span className="text-xs font-bold text-white/80 leading-snug">
                                 {ach}
                               </span>
                             </div>
@@ -2202,15 +2276,15 @@ export default function PlayerProfile({
                 <div
                   className={
                     validAchievements.length > 0
-                      ? "pt-5 border-t border-slate-100 dark:border-slate-800"
+                      ? "pt-5 border-t border-white/8"
                       : ""
                   }
                 >
-                  <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-slate-400 dark:text-slate-500 mb-4 flex items-center gap-1.5">
+                  <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-white/35 mb-4 flex items-center gap-1.5">
                     <Calendar className="w-3 h-3 text-blue-500" /> Tournaments
                   </h3>
                   <div className="relative ml-5 space-y-2.5">
-                    <div className="absolute left-0 top-2 bottom-2 w-px bg-gradient-to-b from-blue-300 to-indigo-300 dark:from-blue-700 dark:to-indigo-700 rounded-full" />
+                    <div className="absolute left-0 top-2 bottom-2 w-px bg-gradient-to-b from-blue-500/50 to-indigo-500/50 rounded-full" />
                     {[...player.tournamentHistory]
                       .sort((a, b) => {
                         const yearA = parseInt(
@@ -2230,11 +2304,11 @@ export default function PlayerProfile({
                           key={idx}
                           className="relative flex gap-3 items-center"
                         >
-                          <div className="relative -ml-[11px] shrink-0 w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-950/30 ring-2 ring-blue-200 dark:ring-blue-900/40 flex items-center justify-center">
+                          <div className="relative -ml-[11px] shrink-0 w-6 h-6 rounded-full bg-blue-500/10 ring-2 ring-blue-500/25 flex items-center justify-center">
                             <div className="w-2 h-2 rounded-full bg-blue-500" />
                           </div>
-                          <div className="flex-1 py-1.5 px-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/40 hover:bg-white dark:hover:bg-slate-800 transition-colors">
-                            <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                          <div className="flex-1 py-1.5 px-3 rounded-xl bg-white/4 border border-white/6 hover:bg-white/8 transition-colors">
+                            <span className="text-xs font-bold text-white/80">
                               {t}
                             </span>
                           </div>
@@ -2287,8 +2361,8 @@ export default function PlayerProfile({
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-5 sm:p-6 shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 mt-6 md:mt-8">
-                  <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-6 flex items-center gap-2">
+                <div className="bg-white/5 rounded-3xl p-5 sm:p-6 border border-white/8 mt-6 md:mt-8">
+                  <h3 className="text-sm font-black uppercase tracking-widest text-white/45 mb-6 flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-emerald-500" /> ELO
                     Progression
                   </h3>
@@ -2380,10 +2454,10 @@ export default function PlayerProfile({
             {player.frequentPartners && player.frequentPartners.length > 0 && (
               <motion.section
                 variants={itemVariants}
-                className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden"
+                className="bg-white/5 rounded-2xl p-6 border border-white/8 relative overflow-hidden"
               >
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-teal-400 to-emerald-500" />
-                <h2 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                <h2 className="text-[10px] font-black text-white/35 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
                   <Users className="w-3.5 h-3.5 text-emerald-500" /> Frequent
                   Partners
                 </h2>
@@ -2392,7 +2466,7 @@ export default function PlayerProfile({
                     <button
                       key={idx}
                       onClick={() => p.id && setLocation(`/player/${p.id}`)}
-                      className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-100 dark:border-slate-700/50 transition-all group text-left"
+                      className="w-full flex items-center justify-between p-3 rounded-xl bg-white/4 hover:bg-white/8 border border-white/7 transition-all group text-left"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-white font-black text-xs shrink-0">
@@ -2403,10 +2477,10 @@ export default function PlayerProfile({
                             .slice(0, 2)}
                         </div>
                         <div className="min-w-0">
-                          <div className="font-bold text-sm text-slate-800 dark:text-slate-100 truncate">
+                          <div className="font-bold text-sm text-white/90 truncate">
                             {p.name}
                           </div>
-                          <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                          <div className="text-[10px] text-white/45">
                             {p.matchesTogether != null && (
                               <>{p.matchesTogether} matches</>
                             )}
@@ -2427,10 +2501,10 @@ export default function PlayerProfile({
             {h2hRecord && ownPlayerProfile && (
               <motion.section
                 variants={itemVariants}
-                className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden"
+                className="bg-white/5 rounded-2xl p-6 border border-white/8 relative overflow-hidden"
               >
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-rose-400 to-pink-500" />
-                <h2 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                <h2 className="text-[10px] font-black text-white/35 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
                   <Swords className="w-3.5 h-3.5 text-rose-500" /> You vs{" "}
                   {player.fullName.split(" ")[0]}
                 </h2>
@@ -2443,7 +2517,7 @@ export default function PlayerProfile({
                       You
                     </div>
                   </div>
-                  <div className="text-2xl font-black text-slate-200 dark:text-slate-700">
+                  <div className="text-2xl font-black text-white/15">
                     VS
                   </div>
                   <div className="text-center">
@@ -2468,19 +2542,19 @@ export default function PlayerProfile({
         {player.stats?.media && player.stats.media.length > 0 && (
           <motion.section
             variants={itemVariants}
-            className="mt-4 pt-8 border-t border-slate-200 dark:border-slate-800"
+            className="mt-4 pt-8 border-t border-white/8"
           >
             <div className="flex items-center gap-3 mb-6">
-              <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
-              <span className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500 shrink-0">
+              <div className="h-px flex-1 bg-white/8" />
+              <span className="text-[10px] font-black uppercase tracking-[0.22em] text-white/35 shrink-0">
                 Media Showcase
               </span>
-              <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+              <div className="h-px flex-1 bg-white/8" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {player.stats.media.some((m) => m.type === "image") && (
                 <div>
-                  <h3 className="text-sm font-black text-slate-700 dark:text-slate-300 flex items-center gap-2 mb-3">
+                  <h3 className="text-sm font-black text-white/70 flex items-center gap-2 mb-3">
                     <Image className="w-4 h-4 text-emerald-500" /> Game Photos
                   </h3>
                   <div className="grid grid-cols-2 gap-3">
@@ -2490,7 +2564,7 @@ export default function PlayerProfile({
                         <div
                           key={idx}
                           onClick={() => setLightboxImage(img.url)}
-                          className="group relative aspect-video rounded-2xl overflow-hidden cursor-pointer border border-slate-200 dark:border-slate-800 hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
+                          className="group relative aspect-video rounded-2xl overflow-hidden cursor-pointer border border-white/8 hover:-translate-y-1 hover:border-white/15 hover:shadow-lg transition-all duration-300"
                         >
                           <img
                             loading="lazy"
@@ -2510,7 +2584,7 @@ export default function PlayerProfile({
               )}
               {player.stats.media.some((m) => m.type === "video") && (
                 <div>
-                  <h3 className="text-sm font-black text-slate-700 dark:text-slate-300 flex items-center gap-2 mb-3">
+                  <h3 className="text-sm font-black text-white/70 flex items-center gap-2 mb-3">
                     <Video className="w-4 h-4 text-rose-500" /> Video Highlights
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -2525,7 +2599,7 @@ export default function PlayerProfile({
                           <div
                             key={idx}
                             onClick={() => yId && setActiveVideoId(yId)}
-                            className="group relative aspect-video rounded-2xl overflow-hidden cursor-pointer border border-slate-200 dark:border-slate-800 bg-slate-900 hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
+                            className="group relative aspect-video rounded-2xl overflow-hidden cursor-pointer border border-white/8 bg-black/30 hover:-translate-y-1 hover:border-white/15 hover:shadow-lg transition-all duration-300"
                           >
                             {thumb && (
                               <img

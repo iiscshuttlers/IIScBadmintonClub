@@ -4,14 +4,9 @@ import { motion } from "framer-motion";
 import { Trophy, Activity, Plus, Minus, Check } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { usePageMeta } from "@/hooks/usePageMeta";
 
-export default function LiveScore() {
-  usePageMeta({
-    title: "Live Match",
-    description: "Watch live badminton matches.",
-  });
-  const { profile, isAdmin } = useAuth();
+export function LiveScoreSection() {
+  const { isAdmin } = useAuth();
 
   const [liveData, setLiveData] = useState<any>({
     player1: "Player 1",
@@ -76,8 +71,8 @@ export default function LiveScore() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl bg-slate-900 rounded-[3rem] p-8 text-white relative overflow-hidden shadow-2xl">
+    <div className="w-full flex items-center justify-center p-4">
+      <div className="w-full max-w-2xl bg-slate-900 rounded-[3rem] p-8 text-white relative overflow-hidden shadow-xl border border-slate-800">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-sky-500" />
 
         <div className="flex items-center justify-between mb-8">

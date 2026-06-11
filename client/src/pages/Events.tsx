@@ -26,7 +26,8 @@ import { usePageMeta } from "@/hooks/usePageMeta";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { toast } from "sonner";
 import ScheduleCalendar from "./ScheduleCalendar";
-import Invicta from "./Invicta";
+import { InvictaSection } from "@/components/events/InvictaSection";
+import { LiveScoreSection } from "@/components/events/LiveScoreSection";
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 28 },
@@ -187,6 +188,7 @@ export default function Events() {
       "Browse live, upcoming and completed badminton tournaments at IISc.",
   });
 
+  const [activeTab, setActiveTab] = useState<"schedule" | "history" | "live_score">("schedule");
   const [events, setEvents] = useState<LiveTournament[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -381,87 +383,133 @@ export default function Events() {
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
             Live tournaments, upcoming competitions and archived results.
           </p>
-        </div>
-      </section>
 
-      {/* ── 1. Match Calendar ───────────────────────────────────────────── */}
-      <ScheduleCalendar />
-
-      {/* ── 2. Upcoming Featured: INVICTA 2026 ────────────────────────── */}
-      <Invicta />
-
-      {/* ── Tournament History ───────────────────────────────────────────── */}
-      <section className="py-20 bg-white dark:bg-slate-900">
-        <div className="container mx-auto px-4">
-          <motion.div
-            className="text-center mb-14"
-            variants={fadeUp}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-          >
-            <div className="flex items-center justify-center gap-3 mb-3">
-              <div className="w-2 h-8 bg-gradient-to-b from-purple-500 to-indigo-600 rounded-full" />
-              <h2
-                className="text-3xl font-black text-blue-900 dark:text-white"
-                style={{ fontFamily: "Playfair Display, serif" }}
+          <div className="mt-10 flex justify-center">
+            <div className="flex bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20">
+              <button
+                onClick={() => setActiveTab("schedule")}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
+                  activeTab === "schedule"
+                    ? "bg-white text-blue-900 shadow-md scale-100"
+                    : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                }`}
               >
-                Tournament History
-              </h2>
-            </div>
-            <p className="text-gray-500 dark:text-slate-400">
-              Key moments from recent years
-            </p>
-          </motion.div>
-
-          <div className="max-w-3xl mx-auto">
-            <div className="relative">
-              <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-emerald-500 via-blue-500 to-purple-500 opacity-30" />
-              <div className="space-y-8">
-                {MILESTONES.map((m, i) => (
-                  <motion.div
-                    key={i}
-                    variants={fadeUp}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-40px" }}
-                    className="flex gap-5 relative"
-                  >
-                    <div
-                      className={`flex-shrink-0 w-12 h-12 rounded-2xl ${m.upcoming ? "bg-emerald-50 dark:bg-emerald-950/30" : "bg-white dark:bg-slate-800"} border-2 ${m.color} flex items-center justify-center text-xl shadow-sm z-10`}
-                    >
-                      <m.icon className="w-5 h-5 text-slate-600 dark:text-slate-300" />
-                    </div>
-                    <div
-                      className={`flex-1 rounded-2xl p-5 hover:shadow-md transition-shadow ${m.upcoming ? "bg-emerald-50 dark:bg-emerald-950/20 border-2 border-emerald-300 dark:border-emerald-800" : "bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700"}`}
-                    >
-                      <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                        <span className="text-xs font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest">
-                          {m.year}
-                        </span>
-                        {m.upcoming && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-black uppercase tracking-wider">
-                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                            Upcoming
-                          </span>
-                        )}
-                      </div>
-                      <h3
-                        className={`font-black text-base mb-1 ${m.upcoming ? "text-emerald-800 dark:text-emerald-300" : "text-blue-900 dark:text-white"}`}
-                      >
-                        {m.title}
-                      </h3>
-                      <p className="text-gray-600 dark:text-slate-400 text-sm leading-relaxed">
-                        {m.desc}
-                      </p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+                <Calendar className="w-4 h-4" /> Schedule
+              </button>
+              <button
+                onClick={() => setActiveTab("live_score")}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
+                  activeTab === "live_score"
+                    ? "bg-rose-500 text-white shadow-md scale-100 shadow-rose-500/30"
+                    : "text-white/80 hover:text-rose-400 hover:bg-rose-500/10 scale-95"
+                }`}
+              >
+                <Radio className="w-4 h-4" /> Live Broadcast
+              </button>
+              <button
+                onClick={() => setActiveTab("history")}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
+                  activeTab === "history"
+                    ? "bg-white text-blue-900 shadow-md scale-100"
+                    : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                }`}
+              >
+                <Clock className="w-4 h-4" /> History
+              </button>
             </div>
           </div>
         </div>
       </section>
+
+      {activeTab === "history" && (
+        <section className="py-20 bg-white dark:bg-slate-900">
+          <div className="container mx-auto px-4">
+            <motion.div
+              className="text-center mb-14"
+              variants={fadeUp}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+            >
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <div className="w-2 h-8 bg-gradient-to-b from-purple-500 to-indigo-600 rounded-full" />
+                <h2
+                  className="text-3xl font-black text-blue-900 dark:text-white"
+                  style={{ fontFamily: "Playfair Display, serif" }}
+                >
+                  Tournament History
+                </h2>
+              </div>
+              <p className="text-gray-500 dark:text-slate-400">
+                Key moments from recent years
+              </p>
+            </motion.div>
+
+            <div className="max-w-3xl mx-auto">
+              <div className="relative">
+                <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-emerald-500 via-blue-500 to-purple-500 opacity-30" />
+                <div className="space-y-8">
+                  {MILESTONES.map((m, i) => (
+                    <motion.div
+                      key={i}
+                      variants={fadeUp}
+                      initial="hidden"
+                      whileInView="visible"
+                      viewport={{ once: true, margin: "-40px" }}
+                      className="flex gap-5 relative"
+                    >
+                      <div
+                        className={`flex-shrink-0 w-12 h-12 rounded-2xl ${m.upcoming ? "bg-emerald-50 dark:bg-emerald-950/30" : "bg-white dark:bg-slate-800"} border-2 ${m.color} flex items-center justify-center text-xl shadow-sm z-10`}
+                      >
+                        <m.icon className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+                      </div>
+                      <div
+                        className={`flex-1 rounded-2xl p-5 hover:shadow-md transition-shadow ${m.upcoming ? "bg-emerald-50 dark:bg-emerald-950/20 border-2 border-emerald-300 dark:border-emerald-800" : "bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700"}`}
+                      >
+                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                          <span className="text-xs font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest">
+                            {m.year}
+                          </span>
+                          {m.upcoming && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-black uppercase tracking-wider">
+                              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                              Upcoming
+                            </span>
+                          )}
+                        </div>
+                        <h3
+                          className={`font-black text-base mb-1 ${m.upcoming ? "text-emerald-800 dark:text-emerald-300" : "text-blue-900 dark:text-white"}`}
+                        >
+                          {m.title}
+                        </h3>
+                        <p className="text-gray-600 dark:text-slate-400 text-sm leading-relaxed">
+                          {m.desc}
+                        </p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {activeTab === "live_score" && (
+        <div className="py-12 bg-white dark:bg-slate-900 min-h-[60vh] flex flex-col justify-center">
+          <LiveScoreSection />
+        </div>
+      )}
+
+      {activeTab === "schedule" && (
+        <>
+          {/* ── 1. Match Calendar ───────────────────────────────────────────── */}
+      <ScheduleCalendar />
+
+      {/* ── 2. Upcoming Featured: INVICTA 2026 ────────────────────────── */}
+      <InvictaSection />
+
+
 
       {/* ── 3. All Tournaments (Live, Upcoming, Completed) ──────────────── */}
       <section className="py-16 container mx-auto px-4 space-y-16">
@@ -527,6 +575,8 @@ export default function Events() {
           </div>
         )}
       </section>
+        </>
+      )}
     </div>
   );
 }

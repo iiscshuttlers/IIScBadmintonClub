@@ -18,13 +18,11 @@ export default function Footer() {
 
   const quickLinks = [
     { href: "/", label: "Home" },
-    { href: "/features", label: "Features & Glossary" },
-    { href: "/facilities", label: "Facilities" },
     { href: "/events", label: "Events" },
-    { href: "/winners", label: "Winners Wall" },
-    { href: "/announcements", label: "Announcements" },
+    { href: "/feed", label: "Feed" },
+    { href: "/players", label: "Players" },
+    { href: "/about", label: "About" },
     { href: "/gallery", label: "Gallery" },
-    { href: "/contact", label: "Contact" },
   ];
 
   const facilities = [

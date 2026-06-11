@@ -172,20 +172,8 @@ export function AnnouncementsSection() {
   }
 
   return (
-    <div className="dark:bg-slate-950 py-16" id="announcements">
+    <div className="dark:bg-slate-950" id="announcements">
       <div className="container mx-auto px-4 max-w-6xl">
-        <div className="text-center mb-10">
-          <h2
-            className="text-4xl md:text-5xl font-black mb-4 text-slate-900 dark:text-white"
-            style={{ fontFamily: "Playfair Display, serif" }}
-          >
-            Club Announcements
-          </h2>
-          <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-            Stay up to date with the latest tournament registrations, court
-            closures, and club events.
-          </p>
-        </div>
 
         {/* Loading */}
         {loading && (

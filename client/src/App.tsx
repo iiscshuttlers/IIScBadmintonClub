@@ -105,18 +105,13 @@ function UpdateDialog({
 
 // Eagerly loaded (small, always needed)
 import Home from "./pages/Home";
-import Facilities from "./pages/Facilities";
-import Events from "./pages/Events";
-import Features from "./pages/Features";
-import Contact from "./pages/Contact";
-import NotFound from "./pages/NotFound";
 import Feed from "./pages/Feed";
-
-// Lazy loaded (large or rarely visited)
-const Announcements = lazy(() => import("./pages/Announcements"));
+import Events from "./pages/Events";
+import NotFound from "./pages/NotFound";
+const About = lazy(() => import("./pages/About"));
 const Gallery = lazy(() => import("./pages/Gallery"));
 const TournamentDetail = lazy(() => import("./pages/TournamentDetail"));
-const WinnersWall = lazy(() => import("./pages/WinnersWall"));
+
 const LiveTournament = lazy(() => import("./pages/LiveTournament"));
 // TournamentAdmin merged into SiteAdmin — /tournament/admin redirects to /admin
 const SiteAdmin = lazy(() => import("./pages/SiteAdmin"));
@@ -124,9 +119,8 @@ const PlayerProfile = lazy(() => import("./pages/PlayerProfile"));
 const Join = lazy(() => import("./pages/Join"));
 const ProfileSetup = lazy(() => import("./pages/ProfileSetup"));
 const PlayersDirectory = lazy(() => import("./pages/PlayersDirectory"));
-const Invicta = lazy(() => import("./pages/Invicta"));
-const LiveScore = lazy(() => import("./pages/LiveScore"));
-const H2H = lazy(() => import("./pages/H2H"));
+
+const HallOfFame = lazy(() => import("./pages/HallOfFame"));
 
 // Save scroll position before navigating away, restore on back-navigation
 const scrollMap = new Map<string, number>();
@@ -238,26 +232,18 @@ function AppRoutes() {
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/feed" component={Feed} />
-        <Route path="/facilities" component={Facilities} />
-        <Route path="/live" component={LiveScore} />
-
+        <Route path="/about" component={About} />
+        <Route path="/hall-of-fame" component={HallOfFame} />
+        <Route path="/gallery" component={Gallery} />
+        
         <Route path="/admin" component={SiteAdmin} />
         <Route path="/tournament/admin" component={SiteAdmin} />
         <Route path="/tournament" component={LiveTournament} />
         <Route path="/events/:slug" component={TournamentDetail} />
-
         <Route path="/events" component={Events} />
-        <Route path="/features" component={Features} />
-        <Route path="/invicta" component={Invicta} />
-        <Route path="/winners" component={WinnersWall} />
-
-        <Route path="/announcements" component={Announcements} />
-        <Route path="/gallery" component={Gallery} />
-        <Route path="/contact" component={Contact} />
         <Route path="/join" component={Join} />
         <Route path="/profile/setup" component={ProfileSetup} />
         <Route path="/players" component={PlayersDirectory} />
-        <Route path="/h2h" component={H2H} />
         <Route path="/player/:id/edit" component={ProfileSetup} />
         <Route path="/player/:id" component={PlayerProfile} />
         <Route path="/matches">

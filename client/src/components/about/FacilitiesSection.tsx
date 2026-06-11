@@ -8,7 +8,6 @@ import {
   CalendarX,
   ExternalLink,
 } from "lucide-react";
-import { usePageMeta } from "@/hooks/usePageMeta";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { fetchSiteData } from "@/lib/siteData";
 import { motion } from "framer-motion";
@@ -27,8 +26,7 @@ const fadeUp = {
   }),
 };
 
-export default function Facilities() {
-  // usePageMeta removed as this is now a section
+export function FacilitiesSection() {
 
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [nextHoliday, setNextHoliday] = useState<Holiday | null>(null);
@@ -66,19 +64,8 @@ export default function Facilities() {
   ];
 
   return (
-    <section className="py-16 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-center gap-3 mb-12">
-          <div className="w-12 h-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full" />
-          <h2
-            className="text-4xl font-black text-center text-blue-900 dark:text-white"
-            style={{ fontFamily: "Playfair Display, serif" }}
-          >
-            Our Facilities
-          </h2>
-          <div className="w-12 h-1 bg-gradient-to-l from-emerald-500 to-teal-500 rounded-full" />
-        </div>
-
+    <section className="bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 w-full">
+      <div className="w-full">
         {/* Courts + Hours */}
         <section className="py-14 bg-white dark:bg-slate-900">
           <div className="container mx-auto px-4">

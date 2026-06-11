@@ -66,6 +66,7 @@ export default function Gallery() {
       "Photos and videos from IISc Badminton Club tournaments and events.",
   });
 
+  const [activeTab, setActiveTab] = useState<"photos" | "videos">("photos");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedSubfolder, setSelectedSubfolder] = useState("all");
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -247,10 +248,34 @@ export default function Gallery() {
             Relive the intensity of tournaments, the focus of practice, and the
             vibrant badminton community at IISc.
           </p>
+          <div className="mt-8 flex justify-center">
+            <div className="flex bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 flex-wrap justify-center gap-1 sm:gap-0">
+              <button
+                onClick={() => setActiveTab("photos")}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
+                  activeTab === "photos"
+                    ? "bg-white text-blue-900 shadow-md scale-100"
+                    : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                }`}
+              >
+                <Camera className="w-4 h-4" /> Photo Albums
+              </button>
+              <button
+                onClick={() => setActiveTab("videos")}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
+                  activeTab === "videos"
+                    ? "bg-white text-blue-900 shadow-md scale-100"
+                    : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                }`}
+              >
+                <PlayCircle className="w-4 h-4" /> Match Videos
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Photo Gallery Section */}
+      {activeTab === "photos" ? (
       <section className="py-16 bg-white dark:bg-slate-950">
         <div className="container mx-auto px-4">
           {/* Main Category Filter */}
@@ -377,9 +402,8 @@ export default function Gallery() {
           )}
         </div>
       </section>
-
-      {/* Match Videos Section */}
-      <section className="py-20 bg-slate-50 dark:bg-slate-900">
+      ) : (
+      <section className="py-16 bg-white dark:bg-slate-950">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <div className="flex items-center justify-center gap-3 mb-3">
@@ -477,6 +501,7 @@ export default function Gallery() {
           </div>
         </div>
       </section>
+      )}
 
       {/* Social Media */}
       <section className="py-16 bg-white dark:bg-slate-950 border-t border-gray-100 dark:border-slate-800">

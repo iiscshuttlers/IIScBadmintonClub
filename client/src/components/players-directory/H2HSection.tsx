@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { Swords, Trophy, Activity, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 
-export default function H2H() {
+export function H2HSection() {
   const [players, setPlayers] = useState<any[]>([]);
   const [p1Id, setP1Id] = useState<string>("");
   const [p2Id, setP2Id] = useState<string>("");
@@ -106,7 +106,7 @@ export default function H2H() {
       };
     if (p1Wins === p2Wins)
       return {
-        text: `Dead even at ${p1Wins}-${p2Wins}! This rivalry is a toss-up — next match decides the bragging rights.`,
+        text: `Dead even at ${p1Wins}-${p2Wins}! This rivalry is a toss-up â€” next match decides the bragging rights.`,
         color: "text-amber-500",
       };
     const leader = p1Wins > p2Wins ? p1 : p2;
@@ -151,19 +151,14 @@ export default function H2H() {
 
   if (loading)
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex justify-center py-20">
+      <div className="flex justify-center py-20">
         <Activity className="w-8 h-8 animate-spin text-emerald-500" />
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 pt-6 px-4 md:px-8 font-sans">
+    <div className="font-sans animate-in fade-in zoom-in-95 duration-300">
       <div className="max-w-4xl mx-auto space-y-6">
-        <Link href="/">
-          <a className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition">
-            <ArrowLeft className="w-4 h-4" /> Back to Base
-          </a>
-        </Link>
         <div className="text-center">
           <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white flex items-center justify-center gap-2">
             <Swords className="w-8 h-8 text-emerald-500" /> Head-to-Head

@@ -8,6 +8,7 @@ import {
   Users,
   Trophy,
   Sword,
+  Swords,
   Sparkles,
   UserCircle,
   LogIn,
@@ -37,6 +38,7 @@ import {
   parseWinPct,
 } from "@/components/players-directory/PlayerCard";
 import { LeaderboardSection } from "./Leaderboard";
+import { H2HSection } from "@/components/players-directory/H2HSection";
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -107,7 +109,7 @@ export default function PlayersDirectory() {
   const [sortBy, setSortBy] = useState<
     "elo" | "winpct" | "name" | "department" | "level"
   >("name");
-  const [activeTab, setActiveTab] = useState<"directory" | "leaderboard" | "network">(
+  const [activeTab, setActiveTab] = useState<"directory" | "leaderboard" | "network" | "h2h">(
     "directory",
   );
   const [followers, setFollowers] = useState<any[]>([]);
@@ -454,9 +456,7 @@ export default function PlayersDirectory() {
         confirmer_id: ownProfile?.id,
       });
       if (error) throw error;
-      alert(
-        `Match Confirmed! Elo Ratings Updated.\nYour Elo Change: ${data.p1_elo_change || data.p2_elo_change}`,
-      );
+      alert("Match Confirmed! Elo Ratings Updated.");
       fetchPendingMatches(ownProfile!.id);
       fetchPlayers(); // To refresh Elo if we displayed it
     } catch (e: any) {
@@ -766,7 +766,17 @@ export default function PlayersDirectory() {
                     : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
                 }`}
               >
-                <Trophy className="w-4 h-4" /> Leaderboard
+                <Trophy className="w-4 h-4" /> Rankings
+              </button>
+              <button
+                onClick={() => setActiveTab("h2h")}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
+                  activeTab === "h2h"
+                    ? "bg-white text-rose-700 shadow-md scale-100"
+                    : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                }`}
+              >
+                <Swords className="w-4 h-4" /> H2H
               </button>
               {session && ownProfile && (
                 <button
@@ -790,7 +800,11 @@ export default function PlayersDirectory() {
         {/* Auth banner */}
         {renderAuthBanner()}
 
-        {activeTab === "network" ? (
+        {activeTab === "h2h" ? (
+          <div className="mt-8">
+            <H2HSection />
+          </div>
+        ) : activeTab === "network" ? (
           <div className="space-y-10">
             {/* Buddies section */}
             <div>

@@ -16,6 +16,7 @@ import {
   Users,
   UserCheck,
   Heart,
+  Bell,
 } from "lucide-react";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,6 +26,7 @@ import { Capacitor } from "@capacitor/core";
 import { Share } from "@capacitor/share";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { getBaseShareUrl } from "@/lib/utils";
+import { AnnouncementsSection } from "@/components/feed/AnnouncementsSection";
 
 export default function Feed() {
   usePageMeta({
@@ -34,6 +36,18 @@ export default function Feed() {
   });
 
   const { session, profile: ownProfile } = useAuth();
+  const [activeTab, setActiveTab] = useState<"matches" | "announcements">(() => {
+    return typeof window !== "undefined" && window.location.search.includes("tab=announcements")
+      ? "announcements"
+      : "matches";
+  });
+  
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.search.includes("tab=announcements")) {
+      setActiveTab("announcements");
+    }
+  }, []);
+  
   const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -176,6 +190,10 @@ export default function Feed() {
         addPlayer(m.player1.id, m.player1.full_name, m.elo_change_p1 || 0);
       if (m.player2)
         addPlayer(m.player2.id, m.player2.full_name, m.elo_change_p2 || 0);
+      if (m.partner1)
+        addPlayer(m.partner1.id, m.partner1.full_name, m.elo_change_p3 || 0);
+      if (m.partner2)
+        addPlayer(m.partner2.id, m.partner2.full_name, m.elo_change_p4 || 0);
 
       // Upset
       const isP1Winner = m.winner_id === m.player1?.id;
@@ -248,10 +266,39 @@ export default function Feed() {
           <p className="text-slate-300 font-medium">
             See what's happening on the courts in real-time.
           </p>
+
+          <div className="mt-8 flex justify-center">
+            <div className="flex bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20">
+              <button
+                onClick={() => setActiveTab("matches")}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
+                  activeTab === "matches"
+                    ? "bg-white text-emerald-900 shadow-md scale-100"
+                    : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                }`}
+              >
+                <Activity className="w-4 h-4" /> Match Activity
+              </button>
+              <button
+                onClick={() => setActiveTab("announcements")}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
+                  activeTab === "announcements"
+                    ? "bg-white text-emerald-900 shadow-md scale-100"
+                    : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                }`}
+              >
+                <Bell className="w-4 h-4" /> Announcements
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 max-w-3xl mt-8">
+        {activeTab === "announcements" ? (
+          <AnnouncementsSection />
+        ) : (
+          <>
         {!loading && displayMatches.length > 0 && (
           <div className="mb-6 bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden">
             <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
@@ -999,6 +1046,8 @@ export default function Feed() {
               get the action started!
             </p>
           </div>
+        )}
+          </>
         )}
       </div>
     </div>

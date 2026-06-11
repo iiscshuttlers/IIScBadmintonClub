@@ -32,9 +32,8 @@ const TOP_LEVEL_LINKS = [
   { href: "/events", label: "Events" },
   { href: "/feed", label: "Feed" },
   { href: "/players", label: "Players" },
-  { href: "/winners", label: "Winners" },
-  { href: "/h2h", label: "H2H" },
-  { href: "/announcements", label: "Announcements" },
+  { href: "/hall-of-fame", label: "Hall of Fame" },
+  { href: "/about", label: "About" },
   { href: "/gallery", label: "Gallery" },
 ];
 
@@ -75,7 +74,7 @@ export default function Navigation() {
   useEffect(() => {
     setIsOpen(false);
     // Mark announcements as read when user visits the page
-    if (location.startsWith("/announcements")) {
+    if (location.startsWith("/feed") && location.includes("tab=announcements")) {
       localStorage.setItem("iisc_announcements_last_seen", Date.now().toString());
       setHasUnreadAnnouncements(false);
     }
@@ -148,33 +147,13 @@ export default function Navigation() {
                   href={link.href}
                   label={link.label}
                   isActive={isActive(link.href)}
-                  badge={link.href === "/events" ? liveEventCount : link.href === "/announcements" && hasUnreadAnnouncements ? -1 : undefined}
+                  badge={link.href === "/events" ? liveEventCount : link.href === "/feed" && hasUnreadAnnouncements ? -1 : undefined}
                 />
               ))}
             </div>
 
             {/* ── Desktop Right Controls ────────────── */}
             <div className="hidden lg:flex items-center gap-2">
-              <Link href="/invicta">
-                <button className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs font-bold hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all duration-200 cursor-pointer">
-                  <span className="relative flex h-2 w-2 flex-shrink-0">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                  </span>
-                  INVICTA 2026
-                </button>
-              </Link>
-
-              <div className="w-px h-5 bg-slate-200 dark:bg-slate-700" />
-              <Link href="/features">
-                <button
-                  aria-label="Features & Glossary"
-                  title="Features & Glossary"
-                  className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
-                >
-                  <BookOpen className="w-[18px] h-[18px]" />
-                </button>
-              </Link>
               <QuickSettings />
               <DarkModeToggle />
               <div className="w-px h-5 bg-slate-200 dark:bg-slate-700" />
@@ -265,7 +244,7 @@ export default function Navigation() {
 
             {/* ── Mobile Controls ───────────────────── */}
             <div className="flex lg:hidden items-center gap-1">
-              <Link href="/features">
+              <Link href="/about?tab=glossary">
                 <button
                   aria-label="Features & Glossary"
                   className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
@@ -296,25 +275,16 @@ export default function Navigation() {
                   key={link.href}
                   href={link.href}
                   label={link.label}
-                  badge={link.href === "/events" ? liveEventCount : link.href === "/announcements" && hasUnreadAnnouncements ? -1 : undefined}
+                  badge={link.href === "/events" ? liveEventCount : link.href === "/feed" && hasUnreadAnnouncements ? -1 : undefined}
                   isActive={isActive(link.href)}
                   onClick={() => setIsOpen(false)}
                 />
               ))}
 
               <div className="pt-2 pb-1 space-y-1.5">
-                <Link href="/features" onClick={() => setIsOpen(false)}>
+                <Link href="/about?tab=glossary" onClick={() => setIsOpen(false)}>
                   <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-sm cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                     <BookOpen className="w-4 h-4 text-emerald-500" /> Features & Glossary
-                  </div>
-                </Link>
-                <Link href="/invicta" onClick={() => setIsOpen(false)}>
-                  <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 font-bold text-sm cursor-pointer">
-                    <span className="relative flex h-2 w-2 flex-shrink-0">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                    </span>
-                    INVICTA 2026 — Register Now
                   </div>
                 </Link>
               </div>

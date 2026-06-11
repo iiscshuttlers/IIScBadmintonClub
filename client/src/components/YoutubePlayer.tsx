@@ -1,4 +1,4 @@
-import {
+import React, {
   useEffect,
   useRef,
   useState,
@@ -20,6 +20,10 @@ import {
   HelpCircle,
   X,
   Sparkles,
+  Lock,
+  Unlock,
+  Settings,
+  Smartphone
 } from "lucide-react";
 
 declare global {
@@ -138,6 +142,8 @@ export const YoutubePlayer = forwardRef<YoutubePlayerHandle, Props>(
     const [currentLine, setCurrentLine] = useState<{ x: number; y: number }[]>([]);
     const [showHelp, setShowHelp] = useState(false);
     const [autoHighlightsMode, setAutoHighlightsMode] = useState(false);
+    const [isLocked, setIsLocked] = useState(false);
+    const [showClubControls, setShowClubControls] = useState(false);
 
     const STORAGE_KEY = `yt_pos_${videoId}`;
 
@@ -333,8 +339,22 @@ export const YoutubePlayer = forwardRef<YoutubePlayerHandle, Props>(
 
     const toggleFullscreen = useCallback(() => {
       if (!containerRef.current) return;
-      if (document.fullscreenElement) document.exitFullscreen();
-      else containerRef.current.requestFullscreen?.();
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+        try {
+          if (screen.orientation && (screen.orientation as any).unlock) {
+            (screen.orientation as any).unlock();
+          }
+        } catch {}
+      } else {
+        containerRef.current.requestFullscreen?.().then(() => {
+          try {
+            if (screen.orientation && (screen.orientation as any).lock) {
+              (screen.orientation as any).lock("landscape").catch(() => {});
+            }
+          } catch {}
+        });
+      }
     }, []);
 
     // ── Gestures Logic ───────────────────────────────────────────────────────────
@@ -345,6 +365,7 @@ export const YoutubePlayer = forwardRef<YoutubePlayerHandle, Props>(
     }, []);
 
     const handleTouchStart = (e: React.TouchEvent) => {
+      if (isLocked) return;
       const now = Date.now();
       preventClickRef.current = false;
 
@@ -430,7 +451,7 @@ export const YoutubePlayer = forwardRef<YoutubePlayerHandle, Props>(
     };
 
     const handleTouchMove = (e: React.TouchEvent) => {
-      if (!touchStartRef.current) return;
+      if (isLocked || !touchStartRef.current) return;
 
       if (e.touches.length === 3) {
          const dy = e.touches[0].clientY - touchStartRef.current.y;
@@ -495,14 +516,7 @@ export const YoutubePlayer = forwardRef<YoutubePlayerHandle, Props>(
           preventClickRef.current = true;
         }
 
-        const dt = Date.now() - touchStartRef.current.time;
-        if (dy > 100 && Math.abs(dx) < 40 && dt < 300) {
-           if (onCloseRequest) {
-              onCloseRequest();
-              touchStartRef.current.y = e.touches[0].clientY;
-           }
-           return;
-        }
+        // Close player gesture removed as requested
 
         if (zoomParams.scale > 1) {
            setZoomParams(prev => ({
@@ -515,51 +529,21 @@ export const YoutubePlayer = forwardRef<YoutubePlayerHandle, Props>(
            return;
         }
 
-        const isHorizontal = Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10;
+        const isHorizontal = Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40; // Increased sensitivity threshold
         if (isHorizontal) {
-           const seconds = Math.round(dx / 5);
+           const seconds = Math.round((dx < 0 ? dx + 40 : dx - 40) / 10);
            setScrubDelta(seconds);
            showHint(seconds > 0 ? `+${seconds}s ⏩` : `${seconds}s ⏪`);
            preventClickRef.current = true;
            return;
         }
 
-        if (dx < -80 && dy > 80) {
-           const link = `https://youtube.com/watch?v=${videoId}&t=${Math.floor(currentTime)}`;
-           navigator.clipboard.writeText(link).catch(() => {});
-           showHint("Timestamp Link Copied! 🔗");
-           if (navigator.share) navigator.share({ url: link }).catch(() => {});
-           touchStartRef.current.x = -9999; 
-           return;
-        }
-        
-        if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 20) {
-          const { width, height } = e.currentTarget.getBoundingClientRect();
-          const isLeft = touchStartRef.current.x < width / 2;
-          const delta = -dy / height; 
-          
-          if (isLeft) {
-            const newB = Math.max(0.2, Math.min(2, initialBrightRef.current + delta * 2));
-            setBrightness(newB);
-            showHint(`☀️ ${Math.round(newB * 100)}%`);
-          } else {
-            if (playerRef.current) {
-              try {
-                const newV = Math.max(0, Math.min(100, initialVolRef.current + delta * 100));
-                playerRef.current.setVolume(newV);
-                if (newV > 0 && muted) {
-                  playerRef.current.unMute();
-                  setMuted(false);
-                }
-                showHint(`🔊 ${Math.round(newV)}%`);
-              } catch {}
-            }
-          }
-        }
+        // Removed Diagonal Copy and Volume/Brightness edge gestures as requested
       }
     };
 
     const handleTouchEnd = () => {
+      if (isLocked) return;
       if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
       
       if (isDrawMode && currentLine.length > 0) {
@@ -582,6 +566,7 @@ export const YoutubePlayer = forwardRef<YoutubePlayerHandle, Props>(
     };
 
     const handleClick = (e: React.MouseEvent) => {
+      if (isLocked) return;
       if (preventClickRef.current) {
         preventClickRef.current = false;
         return;
@@ -632,7 +617,7 @@ export const YoutubePlayer = forwardRef<YoutubePlayerHandle, Props>(
     const currentScore = (() => {
        if (!scoreLogs || scoreLogs.length === 0) return null;
        const pastLogs = scoreLogs.filter(log => currentTime >= log.time);
-       if (pastLogs.length === 0) return { teamA: 0, teamB: 0 };
+       if (pastLogs.length === 0) return { time: 0, teamA: 0, teamB: 0 } as ScoreLog;
        return pastLogs[pastLogs.length - 1];
     })();
 
@@ -676,7 +661,7 @@ export const YoutubePlayer = forwardRef<YoutubePlayerHandle, Props>(
 
     const handleAddPoint = (team: 'A' | 'B', playerIdx?: number) => {
        if (!onScoreLogsChange) return;
-       const lastLog = scoreLogs.length > 0 ? scoreLogs[scoreLogs.length - 1] : { teamA: 0, teamB: 0 };
+       const lastLog = scoreLogs.length > 0 ? scoreLogs[scoreLogs.length - 1] : { time: 0, teamA: 0, teamB: 0 } as ScoreLog;
        const newLog = {
          time: Math.floor(currentTime),
          teamA: team === 'A' ? lastLog.teamA + 1 : lastLog.teamA,
@@ -689,7 +674,7 @@ export const YoutubePlayer = forwardRef<YoutubePlayerHandle, Props>(
 
     const handleSetServer = (serverIdx: number) => {
        if (!onScoreLogsChange) return;
-       const lastLog = scoreLogs.length > 0 ? scoreLogs[scoreLogs.length - 1] : { teamA: 0, teamB: 0 };
+       const lastLog = scoreLogs.length > 0 ? scoreLogs[scoreLogs.length - 1] : { time: 0, teamA: 0, teamB: 0 } as ScoreLog;
        const newLog = { ...lastLog, time: Math.floor(currentTime), serverIdx };
        // remove log at same time if exists
        const filtered = scoreLogs.filter(l => l.time !== newLog.time);
@@ -909,12 +894,13 @@ export const YoutubePlayer = forwardRef<YoutubePlayerHandle, Props>(
 
         {/* Gesture overlay */}
         <div
-          className="absolute inset-x-0 top-0 bottom-[25%] z-20 cursor-pointer"
+          className="absolute inset-x-0 top-0 bottom-[25%] z-20 cursor-pointer touch-none"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
           onClick={handleClick}
           onDoubleClick={(e) => {
+            if (isLocked) return;
             const { width } = e.currentTarget.getBoundingClientRect();
             if (e.clientX < width / 2) {
               skip(-10);
@@ -949,7 +935,7 @@ export const YoutubePlayer = forwardRef<YoutubePlayerHandle, Props>(
 
         {/* Controls gradient overlay */}
         <div
-          className={`absolute inset-x-0 bottom-0 z-40 transition-opacity duration-300 pointer-events-none ${showControls || !playing ? "opacity-100" : "opacity-0"}`}
+          className={`absolute inset-x-0 bottom-0 z-40 transition-opacity duration-300 pointer-events-none ${showControls || !playing ? "opacity-100" : "opacity-0"} ${isLocked ? "hidden" : ""}`}
         >
           {/* Gradient */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
@@ -1092,55 +1078,74 @@ export const YoutubePlayer = forwardRef<YoutubePlayerHandle, Props>(
 
               <div className="flex-1" />
 
-              {/* Speed picker */}
+              {/* Club Controls (Settings) */}
               <div className="relative">
                 <button
-                  onClick={() => setShowSpeed((v) => !v)}
-                  className="text-white/80 hover:text-white transition-colors px-2 py-1.5 rounded-lg hover:bg-white/10 text-xs font-bold flex items-center gap-1"
-                  aria-label="Playback speed"
+                  onClick={() => setShowClubControls((v) => !v)}
+                  className="text-white/80 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10"
+                  aria-label="Club Controls"
                 >
-                  <Gauge className="w-3.5 h-3.5" />
-                  {speed}×
+                  <Settings className="w-4 h-4" />
                 </button>
-                {showSpeed && (
-                  <div className="absolute bottom-full right-0 mb-1 bg-gray-900/95 border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50">
-                    {SPEEDS.map((s) => (
-                      <button
-                        key={s}
-                        onClick={() => setPlaybackRate(s)}
-                        className={`block w-full text-left px-5 py-1.5 text-sm hover:bg-white/10 transition-colors ${speed === s ? "text-emerald-400 font-bold" : "text-white"}`}
-                      >
-                        {s}×
-                      </button>
-                    ))}
+                {showClubControls && (
+                  <div className="absolute bottom-full right-0 mb-2 w-48 bg-gray-900/95 border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50 flex flex-col py-1">
+                    {/* Speed Toggle */}
+                    <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between">
+                      <span className="text-xs text-white/70 font-bold">Speed</span>
+                      <div className="flex gap-1">
+                        {[0.5, 1, 1.5, 2].map((s) => (
+                          <button
+                            key={s}
+                            onClick={() => { setPlaybackRate(s); setShowClubControls(false); }}
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${speed === s ? 'bg-emerald-500 text-white' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}
+                          >
+                            {s}x
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    {/* Lock Controls */}
+                    <button
+                      onClick={() => { setIsLocked(true); setShowClubControls(false); }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-white/10 flex items-center gap-2"
+                    >
+                      <Lock className="w-4 h-4" /> Lock Screen
+                    </button>
+                    {/* Rotate */}
+                    <button
+                      onClick={() => {
+                        try {
+                          if (screen.orientation && screen.orientation.unlock) {
+                            screen.orientation.unlock();
+                            showHint("Orientation Unlocked");
+                          }
+                        } catch {}
+                        setShowClubControls(false);
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-white/10 flex items-center gap-2"
+                    >
+                      <Smartphone className="w-4 h-4" /> Unlock Rotation
+                    </button>
+                    {/* Open in YouTube */}
+                    <a
+                      href={`https://www.youtube.com/watch?v=${videoId}&t=${Math.floor(currentTime)}s`}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={() => { if (playing) togglePlay(); setShowClubControls(false); }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-white/10 flex items-center gap-2"
+                    >
+                      <Youtube className="w-4 h-4 text-red-500" /> Open in YouTube
+                    </a>
+                    {/* Help */}
+                    <button
+                      onClick={() => { setShowHelp(true); if (playing) togglePlay(); setShowClubControls(false); }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-white/10 flex items-center gap-2"
+                    >
+                      <HelpCircle className="w-4 h-4 text-sky-400" /> Help / Gestures
+                    </button>
                   </div>
                 )}
               </div>
-
-              {/* Open in YouTube */}
-              <a
-                href={`https://www.youtube.com/watch?v=${videoId}&t=${Math.floor(currentTime)}s`}
-                target="_blank"
-                rel="noreferrer"
-                onClick={() => {
-                  if (playing) togglePlay();
-                }}
-                className="text-white/80 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10 flex items-center justify-center"
-                aria-label="Open in YouTube"
-                title="Open in YouTube"
-              >
-                <Youtube className="w-4 h-4" />
-              </a>
-
-              {/* Help Button */}
-              <button
-                onClick={() => { setShowHelp(true); if (playing) togglePlay(); }}
-                className="text-white/80 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10"
-                aria-label="Help / Gestures"
-                title="Help / Gestures"
-              >
-                <HelpCircle className="w-4 h-4 text-sky-400" />
-              </button>
 
               {/* Fullscreen */}
               <button
@@ -1157,6 +1162,15 @@ export const YoutubePlayer = forwardRef<YoutubePlayerHandle, Props>(
             </div>
           </div>
         </div>
+
+        {/* Lock Overlay */}
+        {isLocked && (
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 transition-opacity duration-300 opacity-100">
+             <button onClick={(e) => { e.stopPropagation(); setIsLocked(false); showHint("Screen Unlocked"); }} className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full shadow-lg text-white pointer-events-auto flex items-center justify-center border border-white/20">
+               <Unlock className="w-6 h-6" />
+             </button>
+          </div>
+        )}
       </div>
     );
   },

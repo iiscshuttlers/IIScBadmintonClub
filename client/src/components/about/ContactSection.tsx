@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Mail, MapPin, Phone, ExternalLink, ChevronDown } from "lucide-react";
-import { usePageMeta } from "@/hooks/usePageMeta";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { SocialCTA } from "@/components/SocialCTA";
@@ -79,36 +78,11 @@ function FAQItem({ faq }: { faq: (typeof faqs)[0] }) {
   );
 }
 
-export default function Contact() {
-  usePageMeta({
-    title: "Contact Us",
-    description:
-      "Get in touch with the IISc Badminton Club. Find us at the IISc Gymkhana, Bangalore.",
-  });
+export function ContactSection() {
   return (
-    <div className="min-h-screen dark:bg-slate-950">
-      {/* Hero */}
-      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-emerald-950 text-white py-20 relative overflow-hidden">
-        <div className="absolute inset-0 hero-pattern" />
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 px-4 py-2 rounded-full text-sm font-semibold mb-5">
-            <Mail className="w-4 h-4" /> Reach Us
-          </div>
-          <h1
-            className="text-5xl md:text-6xl font-black mb-4"
-            style={{ fontFamily: "Playfair Display, serif" }}
-          >
-            Get In Touch
-          </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            For memberships, tournaments, collaborations and club activities —
-            we'd love to hear from you.
-          </p>
-        </div>
-      </section>
-
+    <div className="w-full">
       {/* Contact Cards */}
-      <section className="py-16 bg-white dark:bg-slate-900">
+      <section className="py-16 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             <Card className="border-0 shadow-md bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
@@ -186,7 +160,7 @@ export default function Contact() {
       </section>
 
       {/* FAQ */}
-      <section className="py-16 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+      <section className="py-16 bg-white dark:bg-slate-950">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2
@@ -207,7 +181,7 @@ export default function Contact() {
       </section>
 
       {/* Social + CTA */}
-      <section className="py-16 bg-white dark:bg-slate-950">
+      <section className="py-16 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <SocialCTA />

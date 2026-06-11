@@ -15,9 +15,9 @@ import {
   Clock,
   ArrowRight,
 } from "lucide-react";
-import { supabase } from "../lib/supabase";
-import { isAdminEmail } from "../lib/admin";
-import { useAuth } from "../contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
+import { isAdminEmail } from "@/lib/admin";
+import { useAuth } from "@/contexts/AuthContext";
 import InvictaRegistrationForm from "@/components/InvictaRegistrationForm";
 
 const fadeUp = {
@@ -40,7 +40,7 @@ const INVICTA_CONFIG = {
   formUrl: "https://forms.cloud.microsoft/r/c82F9mgTv5",
 };
 
-export default function Invicta() {
+export function InvictaSection() {
   const { session } = useAuth();
   const isAdmin = isAdminEmail(session?.user?.email);
   const [files, setFiles] = useState<any[]>([]);

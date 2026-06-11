@@ -1,4 +1,4 @@
-import { usePageMeta } from "@/hooks/usePageMeta";
+
 import {
   ShieldCheck,
   Users,
@@ -14,11 +14,7 @@ import { motion } from "framer-motion";
 import { InfoModal } from "@/components/InfoModal";
 import { useEffect, useState } from "react";
 
-export default function Features() {
-  usePageMeta({
-    title: "Features & Glossary",
-    description: "Explore all the features of the IISc Shuttlers platform and understand the ranking terminology.",
-  });
+export function GlossarySection() {
 
   const features = [
     {
@@ -205,18 +201,8 @@ export default function Features() {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-5xl pb-24 md:pb-8">
-      <div className="text-center mb-12 mt-8">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 font-bold text-sm mb-4">
-          <BookOpen className="w-4 h-4" /> Comprehensive Guide
-        </div>
-        <h1 className="text-3xl md:text-5xl font-black text-slate-800 dark:text-slate-100 mb-4 tracking-tight" style={{ fontFamily: "Playfair Display, serif" }}>
-          Platform Features & Glossary
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto text-lg">
-          Discover everything the IISc Shuttlers platform has to offer. Click the <strong className="text-cyan-500">(?)</strong> icons to learn more about specific terms.
-        </p>
-      </div>
+    <div className="w-full bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+      <div className="container mx-auto px-4 py-8 max-w-5xl pb-24 md:pb-8">
 
       <div className="columns-1 lg:columns-2 gap-6">
         {features.map((section, idx) => (
@@ -266,6 +252,7 @@ export default function Features() {
           </motion.div>
         ))}
       </div>
+    </div>
     </div>
   );
 }

@@ -1,5 +1,6 @@
-import { motion } from "framer-motion";
-import { Target, Dna, Activity, Footprints, Shirt, Star } from "lucide-react";
+import { motion, useInView } from "framer-motion";
+import { useRef, useState, useEffect } from "react";
+import { Target, Dna, Activity, Footprints, Shirt, Star, Zap } from "lucide-react";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -17,6 +18,28 @@ interface EquipmentArsenalSectionProps {
 export function EquipmentArsenalSection({
   player,
 }: EquipmentArsenalSectionProps) {
+  const containerRef = useRef(null);
+  const isInView = useInView(containerRef, { once: true, margin: "-100px" });
+  const [isOpen, setIsOpen] = useState(false);
+  const [isReplaying, setIsReplaying] = useState(false);
+
+  useEffect(() => {
+    if (isInView) {
+      const t = setTimeout(() => setIsOpen(true), 600);
+      return () => clearTimeout(t);
+    }
+  }, [isInView]);
+
+  const handleBagClick = () => {
+    if (isReplaying) return;
+    setIsReplaying(true);
+    setIsOpen(false);
+    setTimeout(() => {
+      setIsOpen(true);
+      setIsReplaying(false);
+    }, 800);
+  };
+
   if (
     !player.racketDetails?.length &&
     !player.shoesList?.length &&
@@ -26,182 +49,286 @@ export function EquipmentArsenalSection({
     return null;
   }
 
+  // Combine items for stagger animation
+  const items: any[] = [];
+  
+  if (player.racketDetails) {
+    player.racketDetails.forEach((r: any) => {
+      items.push({ type: 'racket', data: r, isMain: r.name === player.currentRacket });
+    });
+  }
+  
+  if (player.shoesList && player.shoesList.length > 0) {
+    player.shoesList.forEach((s: any) => items.push({ type: 'shoe', data: s }));
+  } else if (player.shoes) {
+    items.push({ type: 'shoe', data: { name: player.shoes, primary: true } });
+  }
+
+  if (player.apparel) {
+    items.push({ type: 'apparel', data: { name: player.apparel } });
+  }
+
   return (
-    <motion.section variants={itemVariants}>
-      <div className="flex items-center gap-3 mb-5">
-        <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
-        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500 shrink-0">
-          Equipment Arsenal
+    <section className="py-8 relative" ref={containerRef}>
+      <div className="flex items-center gap-3 mb-16 px-4">
+        <div className="h-px flex-1 bg-linear-to-r from-transparent to-white/10" />
+        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-white/35 shrink-0 flex items-center gap-2">
+          <Zap className="w-3.5 h-3.5 text-violet-500" /> Equipment Arsenal
         </span>
-        <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+        <div className="h-px flex-1 bg-gradient-to-l from-transparent to-white/10" />
       </div>
 
-      <div className="space-y-3">
-        {player.racketDetails.map((racket: any, idx: number) => {
-          const isMain = racket.name === player.currentRacket;
-          return (
-            <div
-              key={idx}
-              className={`relative overflow-hidden rounded-2xl border transition-all duration-300 group
-                ${
-                  isMain
-                    ? "bg-white dark:bg-slate-900 border-emerald-200 dark:border-emerald-800/40 shadow-sm hover:shadow-md"
-                    : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md"
-                }`}
-            >
-              {/* Accent bar */}
-              <div
-                className={`absolute top-0 left-0 right-0 h-0.5 ${isMain ? "bg-linear-to-r from-emerald-400 to-teal-500" : "bg-linear-to-r from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600"}`}
-              />
+      {/* The Animated Kitbag */}
+      <div className="relative z-20 flex flex-col items-center mb-6 gap-3">
+        <motion.div
+           animate={isInView ? (isOpen ? "open" : "shake") : "closed"}
+           variants={{
+             closed: { scale: 1, rotate: 0 },
+             shake: {
+               rotate: [0, -3, 3, -4, 4, -2, 2, 0],
+               y: [0, -5, 0, -5, 0],
+               transition: { duration: 0.6 }
+             },
+             open: { scale: 0.9, y: 15, transition: { type: "spring", bounce: 0.6 } }
+           }}
+           onClick={handleBagClick}
+           className="relative w-72 h-36 cursor-pointer select-none"
+           title="Tap to replay"
+        >
+          {/* Bag shadow */}
+          <div className="absolute -bottom-8 left-10 right-10 h-8 bg-black/40 blur-xl rounded-full transition-all duration-500" />
+          
+          {/* Handles */}
+          <motion.div 
+            variants={{
+              closed: { y: 0, scaleY: 1 },
+              open: { y: 15, scaleY: 0.5 }
+            }}
+            className="absolute -top-10 left-1/2 -translate-x-1/2 w-28 h-20 border-[6px] border-white/10 rounded-t-[2.5rem] -z-10"
+          />
 
-              <div className="p-5 sm:p-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <div className="flex items-center gap-2.5 mb-2">
-                      <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
-                        <Target
-                          className={`w-4 h-4 ${isMain ? "text-emerald-500" : "text-slate-400"}`}
-                        />
+          {/* Bag body */}
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-black rounded-[3.5rem] border-[6px] border-slate-800 shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col items-center justify-center overflow-hidden">
+            
+            {/* Texture overlay */}
+            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.8)_1px,transparent_1px)]" style={{ backgroundSize: '8px 8px' }} />
+
+            {/* Zipper track */}
+            <div className="absolute top-12 left-6 right-6 h-2.5 bg-black/90 rounded-full overflow-hidden shadow-inner flex items-center justify-center border border-white/5">
+               {/* Zipper glow opening */}
+               <motion.div 
+                 variants={{
+                   closed: { width: "0%", opacity: 0 },
+                   open: { width: "100%", opacity: 1, transition: { duration: 0.7, ease: "easeInOut" } }
+                 }}
+                 className="h-full bg-violet-400 shadow-[0_0_20px_6px_rgba(167,139,250,0.9)]"
+               />
+               {/* Zipper pull */}
+               <motion.div 
+                 variants={{
+                   closed: { x: "-110px", opacity: 1 },
+                   open: { x: "110px", opacity: 0, transition: { duration: 0.7, ease: "easeInOut" } }
+                 }}
+                 className="absolute w-6 h-4 bg-gradient-to-b from-slate-200 to-slate-400 rounded-sm shadow-md flex items-center justify-center"
+               >
+                 <div className="w-1 h-2 bg-slate-500 rounded-full" />
+               </motion.div>
+            </div>
+            
+            {/* Brand Logo */}
+            <motion.div 
+              variants={{
+                closed: { opacity: 1, y: 0 },
+                open: { opacity: 0.2, y: 5 }
+              }}
+              className="mt-8 text-violet-400 font-black tracking-[0.4em] uppercase text-xl flex items-center gap-2 drop-shadow-[0_0_8px_rgba(139,92,246,0.6)]"
+            >
+              PRO GEAR
+            </motion.div>
+          </div>
+        </motion.div>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isOpen ? 1 : 0 }}
+          transition={{ delay: 1.2, duration: 0.4 }}
+          className="text-[10px] text-white/25 font-medium tracking-widest uppercase pointer-events-none"
+        >
+          tap bag to replay
+        </motion.p>
+      </div>
+
+      {/* Equipment Cards — arc out of the bag */}
+      <div className="relative z-10 max-w-3xl mx-auto space-y-4 px-4 -mt-12">
+        {items.map((item, idx) => {
+          // Each item arcs from a slightly different angle for a "pulled out and placed" feel
+          const arcX = idx % 2 === 0 ? -18 : 18;
+          const arcRotate = idx % 2 === 0 ? -6 : 6;
+          return (
+            <motion.div
+              key={idx}
+              custom={idx}
+              initial={{ opacity: 0, y: -80, x: arcX, scale: 0.75, rotateZ: arcRotate, rotateX: -30 }}
+              animate={isOpen ? {
+                opacity: 1, y: 0, x: 0, scale: 1, rotateZ: 0, rotateX: 0,
+                transition: {
+                  delay: 0.65 + idx * 0.18,
+                  type: "spring",
+                  stiffness: 140,
+                  damping: 16,
+                  mass: 1.1,
+                }
+              } : {}}
+              style={{ perspective: "900px", transformOrigin: "top center" }}
+              className="w-full relative z-10"
+            >
+              {item.type === 'racket' && (
+                <div className={`relative overflow-hidden rounded-2xl border backdrop-blur-xl transition-all duration-300 group ${item.isMain ? "bg-white/8 border-violet-500/40 shadow-lg shadow-violet-900/30" : "bg-white/5 border-white/8 shadow-md"}`}>
+                  {/* Racket string-grid pattern in background */}
+                  <div
+                    className="absolute inset-0 opacity-[0.06] pointer-events-none"
+                    style={{ backgroundImage: "repeating-linear-gradient(0deg, currentColor 0, currentColor 1px, transparent 1px, transparent 12px), repeating-linear-gradient(90deg, currentColor 0, currentColor 1px, transparent 1px, transparent 12px)", color: item.isMain ? "#8b5cf6" : "#94a3b8" }}
+                  />
+                  <div className={`absolute top-0 left-0 right-0 h-1 ${item.isMain ? "bg-linear-to-r from-violet-400 via-fuchsia-500 to-violet-400" : "bg-linear-to-r from-white/15 to-white/10"}`} />
+                  <div className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+                    <div className="flex items-center gap-4">
+                      {/* Racket illustration */}
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner relative overflow-hidden ${item.isMain ? "bg-violet-500/15" : "bg-white/8"}`}>
+                        <svg viewBox="0 0 40 40" className={`w-9 h-9 ${item.isMain ? "text-violet-400" : "text-slate-400"}`} fill="none">
+                          {/* Racket head */}
+                          <ellipse cx="20" cy="15" rx="10" ry="12" stroke="currentColor" strokeWidth="2" />
+                          {/* String pattern */}
+                          <line x1="20" y1="3" x2="20" y2="27" stroke="currentColor" strokeWidth="0.8" opacity="0.5" />
+                          <line x1="14" y1="5" x2="14" y2="25" stroke="currentColor" strokeWidth="0.8" opacity="0.5" />
+                          <line x1="26" y1="5" x2="26" y2="25" stroke="currentColor" strokeWidth="0.8" opacity="0.5" />
+                          <line x1="10" y1="15" x2="30" y2="15" stroke="currentColor" strokeWidth="0.8" opacity="0.5" />
+                          <line x1="10" y1="10" x2="30" y2="10" stroke="currentColor" strokeWidth="0.8" opacity="0.5" />
+                          <line x1="10" y1="20" x2="30" y2="20" stroke="currentColor" strokeWidth="0.8" opacity="0.5" />
+                          {/* Handle */}
+                          <rect x="18" y="27" width="4" height="11" rx="2" fill="currentColor" opacity="0.7" />
+                          {/* Grip tape */}
+                          <rect x="17.5" y="32" width="5" height="2" rx="1" fill="currentColor" opacity="0.4" />
+                        </svg>
+                        {item.isMain && <div className="absolute inset-0 bg-violet-400/10 rounded-2xl" />}
                       </div>
-                      <h3 className="font-black text-base text-slate-900 dark:text-white">
-                        {racket.name}
-                      </h3>
-                      {isMain && (
-                        <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 bg-emerald-500 text-white rounded-lg">
-                          Primary
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-slate-500 dark:text-slate-400 ml-10 sm:ml-0 pl-10 sm:pl-0">
-                      <span className="flex items-center gap-1.5">
-                        <Dna className="w-3.5 h-3.5 text-blue-400" />
-                        String:{" "}
-                        <span className="font-semibold text-slate-700 dark:text-slate-200 ml-0.5">
-                          {racket.string}
-                        </span>
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <Activity className="w-3.5 h-3.5 text-rose-400" />
-                        Tension:{" "}
-                        <span className="font-semibold text-slate-700 dark:text-slate-200 ml-0.5">
-                          {racket.tension}
-                        </span>
-                      </span>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-black text-lg text-white">{item.data.name}</h3>
+                          {item.isMain && (
+                            <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 bg-violet-500 text-white rounded-lg">Primary</span>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-white/45 font-medium">
+                          <span className="flex items-center gap-1.5"><Dna className="w-3.5 h-3.5 text-blue-500" /> String: <span className="font-bold text-white/80">{item.data.string}</span></span>
+                          <span className="flex items-center gap-1.5"><Activity className="w-3.5 h-3.5 text-rose-500" /> Tension: <span className="font-bold text-white/80">{item.data.tension}</span></span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              )}
+
+              {item.type === 'shoe' && (
+                <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-blue-500/20 shadow-md overflow-hidden relative">
+                  {/* Shoe tread dot pattern */}
+                  <div
+                    className="absolute inset-0 opacity-[0.07] pointer-events-none"
+                    style={{ backgroundImage: "radial-gradient(circle, #3b82f6 1px, transparent 1px)", backgroundSize: "10px 10px" }}
+                  />
+                  <div className={`absolute top-0 left-0 right-0 h-1 ${item.data.primary ? "bg-linear-to-r from-blue-400 to-cyan-500" : "bg-linear-to-r from-white/15 to-white/10"}`} />
+                  <div className="p-4 sm:p-5 flex items-center justify-between gap-3 relative z-10">
+                    <div className="flex items-center gap-4 min-w-0">
+                      {/* Shoe illustration */}
+                      <div className="w-12 h-12 rounded-xl bg-blue-500/12 flex items-center justify-center shrink-0 shadow-inner">
+                        <svg viewBox="0 0 40 28" className="w-9 h-7 text-blue-500" fill="none">
+                          {/* Sole */}
+                          <path d="M2 22 Q8 26 20 26 Q34 26 38 22 L36 18 Q28 20 20 20 Q10 20 4 17 Z" fill="currentColor" opacity="0.25" />
+                          {/* Upper */}
+                          <path d="M4 17 Q8 8 16 6 Q22 4 28 7 L36 14 Q34 18 20 18 Q10 18 4 17Z" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" />
+                          {/* Toe cap */}
+                          <path d="M4 17 Q6 10 12 8 Q8 13 8 17Z" fill="currentColor" opacity="0.3" />
+                          {/* Laces */}
+                          <line x1="14" y1="9" x2="18" y2="13" stroke="currentColor" strokeWidth="1" opacity="0.6" />
+                          <line x1="18" y1="7.5" x2="22" y2="11.5" stroke="currentColor" strokeWidth="1" opacity="0.6" />
+                          <line x1="22" y1="7" x2="26" y2="10" stroke="currentColor" strokeWidth="1" opacity="0.6" />
+                          {/* Back */}
+                          <path d="M28 7 Q34 10 36 14" stroke="currentColor" strokeWidth="1.5" opacity="0.5" />
+                        </svg>
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-[9px] uppercase tracking-[0.15em] text-blue-400 font-black mb-0.5">Footwear</div>
+                        <div className="font-bold text-base text-white/90 truncate">{item.data.name}</div>
+                      </div>
+                    </div>
+                    {item.data.primary && (
+                      <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 bg-blue-500 text-white rounded-lg shrink-0">Primary</span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {item.type === 'apparel' && (
+                <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-violet-500/20 shadow-md overflow-hidden relative">
+                  {/* Fabric weave pattern */}
+                  <div
+                    className="absolute inset-0 opacity-[0.07] pointer-events-none"
+                    style={{ backgroundImage: "repeating-linear-gradient(45deg, #8b5cf6 0, #8b5cf6 1px, transparent 1px, transparent 8px), repeating-linear-gradient(-45deg, #8b5cf6 0, #8b5cf6 1px, transparent 1px, transparent 8px)" }}
+                  />
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-violet-400 to-purple-500" />
+                  <div className="p-4 sm:p-5 flex items-center gap-4 relative z-10">
+                    {/* Apparel illustration */}
+                    <div className="w-12 h-12 rounded-xl bg-violet-500/12 flex items-center justify-center shadow-inner">
+                      <svg viewBox="0 0 40 36" className="w-8 h-8 text-violet-500" fill="none">
+                        {/* Jersey shape */}
+                        <path d="M8 4 L2 12 L8 14 L8 32 L32 32 L32 14 L38 12 L32 4 L26 8 Q20 10 14 8 Z" stroke="currentColor" strokeWidth="1.8" fill="currentColor" opacity="0.12" />
+                        {/* Collar */}
+                        <path d="M14 8 Q20 12 26 8" stroke="currentColor" strokeWidth="1.8" fill="none" />
+                        {/* Sleeve lines */}
+                        <line x1="2" y1="12" x2="8" y2="14" stroke="currentColor" strokeWidth="1.2" opacity="0.5" />
+                        <line x1="38" y1="12" x2="32" y2="14" stroke="currentColor" strokeWidth="1.2" opacity="0.5" />
+                        {/* Center stripe */}
+                        <line x1="20" y1="12" x2="20" y2="32" stroke="currentColor" strokeWidth="1" opacity="0.3" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="text-[9px] uppercase tracking-[0.15em] text-violet-400 font-black mb-0.5">Apparel</div>
+                      <div className="font-bold text-base text-white/90">{item.data.name}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </motion.div>
           );
         })}
-
-        {/* Shoes & Apparel */}
-        {((player.shoesList && player.shoesList.length > 0) ||
-          player.shoes ||
-          player.apparel) && (
-          <div className="space-y-3 mt-1">
-            {player.shoesList && player.shoesList.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {player.shoesList.map((shoe: any, idx: number) => (
-                  <div
-                    key={idx}
-                    className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden relative group"
-                  >
-                    <div
-                      className={`absolute top-0 left-0 right-0 h-0.5 ${shoe.primary ? "bg-linear-to-r from-blue-400 to-cyan-500" : "bg-linear-to-r from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600"}`}
-                    />
-                    <div className="p-4 flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center shrink-0">
-                          <Footprints className="w-4 h-4 text-blue-500" />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="text-[9px] uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 font-black mb-0.5">
-                            Footwear
-                          </div>
-                          <div className="font-bold text-sm text-slate-800 dark:text-slate-100 truncate">
-                            {shoe.name}
-                          </div>
-                        </div>
-                      </div>
-                      {shoe.primary && (
-                        <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 bg-emerald-500 text-white rounded-lg shrink-0">
-                          Primary
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : player.shoes ? (
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-blue-400 to-cyan-500" />
-                <div className="p-4 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center">
-                    <Footprints className="w-4 h-4 text-blue-500" />
-                  </div>
-                  <div>
-                    <div className="text-[9px] uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 font-black mb-0.5">
-                      Footwear
-                    </div>
-                    <div className="font-bold text-sm text-slate-800 dark:text-slate-100">
-                      {player.shoes}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-
-            {player.apparel && (
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden relative">
-                <div className="absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-violet-400 to-purple-500" />
-                <div className="p-4 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-violet-50 dark:bg-violet-950/30 flex items-center justify-center">
-                    <Shirt className="w-4 h-4 text-violet-500" />
-                  </div>
-                  <div>
-                    <div className="text-[9px] uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 font-black mb-0.5">
-                      Apparel
-                    </div>
-                    <div className="font-bold text-sm text-slate-800 dark:text-slate-100">
-                      {player.apparel}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
       </div>
-    </motion.section>
+    </section>
   );
 }
 
 const TIMELINE_COLORS = [
   {
-    ring: "ring-emerald-200 dark:ring-emerald-900/40",
-    bg: "bg-emerald-50 dark:bg-emerald-950/30",
-    icon: "text-emerald-500 dark:text-emerald-400",
+    ring: "ring-emerald-500/25",
+    bg: "bg-emerald-500/10",
+    icon: "text-emerald-400",
   },
   {
-    ring: "ring-blue-200 dark:ring-blue-900/40",
-    bg: "bg-blue-50 dark:bg-blue-950/30",
-    icon: "text-blue-500 dark:text-blue-400",
+    ring: "ring-blue-500/25",
+    bg: "bg-blue-500/12",
+    icon: "text-blue-400",
   },
   {
-    ring: "ring-purple-200 dark:ring-purple-900/40",
-    bg: "bg-purple-50 dark:bg-purple-950/30",
-    icon: "text-purple-500 dark:text-purple-400",
+    ring: "ring-purple-500/25",
+    bg: "bg-purple-500/10",
+    icon: "text-purple-400",
   },
   {
-    ring: "ring-amber-200 dark:ring-amber-900/40",
-    bg: "bg-amber-50 dark:bg-amber-950/30",
-    icon: "text-amber-500 dark:text-amber-400",
+    ring: "ring-amber-500/25",
+    bg: "bg-amber-500/10",
+    icon: "text-amber-400",
   },
   {
-    ring: "ring-rose-200 dark:ring-rose-900/40",
-    bg: "bg-rose-50 dark:bg-rose-950/30",
-    icon: "text-rose-500 dark:text-rose-400",
+    ring: "ring-rose-500/25",
+    bg: "bg-rose-500/10",
+    icon: "text-rose-400",
   },
 ];
 
@@ -213,16 +340,16 @@ export function CareerHighlightsSection({ player }: { player: any }) {
   return (
     <motion.section variants={itemVariants}>
       <div className="flex items-center gap-3 mb-5">
-        <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
-        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500 shrink-0">
+        <div className="h-px flex-1 bg-white/8" />
+        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-white/35 shrink-0">
           Career Highlights
         </span>
-        <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+        <div className="h-px flex-1 bg-white/8" />
       </div>
 
       <div className="relative ml-6">
         {/* Vertical timeline line */}
-        <div className="absolute left-0 top-3 bottom-3 w-px bg-linear-to-b from-emerald-300 via-blue-300 to-purple-300 dark:from-emerald-700 dark:via-blue-700 dark:to-purple-700 rounded-full" />
+        <div className="absolute left-0 top-3 bottom-3 w-px bg-linear-to-b from-emerald-500/50 via-blue-500/50 to-purple-500/50 rounded-full" />
 
         <div className="space-y-5">
           {[...player.careerHighlights]
@@ -244,15 +371,15 @@ export function CareerHighlightsSection({ player }: { player: any }) {
                     <Star className={`w-3.5 h-3.5 ${color.icon}`} />
                   </div>
                   {/* Card */}
-                  <div className="flex-1 bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
-                    <div className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500 mb-1">
+                  <div className="flex-1 bg-white/5 rounded-xl p-4 border border-white/8 hover:border-white/15 hover:bg-white/8 hover:-translate-y-0.5 transition-all duration-300">
+                    <div className="text-[9px] font-black uppercase tracking-[0.18em] text-white/35 mb-1">
                       {h.year}
                     </div>
-                    <div className="text-sm font-black text-slate-800 dark:text-white leading-snug">
+                    <div className="text-sm font-black text-white leading-snug">
                       {h.title}
                     </div>
                     {h.description && (
-                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
+                      <div className="text-xs text-white/45 mt-1.5 leading-relaxed">
                         {h.description}
                       </div>
                     )}

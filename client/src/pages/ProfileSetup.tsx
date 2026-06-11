@@ -134,6 +134,7 @@ export default function ProfileSetup() {
   const [height, setHeight] = useState("");
   const [instagram, setInstagram] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [gender, setGender] = useState("");
 
   // Section 2: Badminton Attributes
   const [playingLevel, setPlayingLevel] = useState("Intermediate");
@@ -143,6 +144,7 @@ export default function ProfileSetup() {
   const [yearsPlaying, setYearsPlaying] = useState("");
   const [coach, setCoach] = useState("");
   const [favoriteIdol, setFavoriteIdol] = useState("");
+  const [favoriteFormat, setFavoriteFormat] = useState("");
 
   // Section 3: Equipment Arsenal (Multiple Rackets & Shoes!)
   const [rackets, setRackets] = useState<
@@ -325,6 +327,8 @@ export default function ProfileSetup() {
           setDominantHand(profile.dominant_hand || "Right-handed");
           setFavoriteShot(profile.favorite_shot || "");
           setFavoriteIdol(profile.favorite_idol || "");
+          setGender(profile.gender || "");
+          setFavoriteFormat(profile.favorite_format || "");
           setQuote(profile.quote || "");
           setAvatarUrl(profile.avatar_url || "");
 
@@ -543,6 +547,8 @@ export default function ProfileSetup() {
       dominant_hand: dominantHand || null,
       favorite_shot: favoriteShot || null,
       favorite_idol: favoriteIdol || null,
+      gender: gender || null,
+      favorite_format: favoriteFormat || null,
       quote: quote || null,
       avatar_url:
         avatarUrl ||
@@ -893,6 +899,38 @@ export default function ProfileSetup() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                          Gender *
+                        </label>
+                        <select
+                          required
+                          value={gender}
+                          onChange={(e) => setGender(e.target.value)}
+                          className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                        >
+                          <option value="" disabled>Select gender</option>
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                          Joined Year (Class of) *
+                        </label>
+                        <input
+                          required
+                          type="number"
+                          value={joinedYear}
+                          onChange={(e) => setJoinedYear(e.target.value)}
+                          className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                          placeholder="e.g. 2022"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                           Department *
                         </label>
                         <select
@@ -927,20 +965,6 @@ export default function ProfileSetup() {
                             />
                           </div>
                         )}
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                          Joined Year (Class of) *
-                        </label>
-                        <input
-                          required
-                          type="number"
-                          value={joinedYear}
-                          onChange={(e) => setJoinedYear(e.target.value)}
-                          className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
-                          placeholder="e.g. 2022"
-                        />
                       </div>
                     </div>
 
@@ -1162,17 +1186,36 @@ export default function ProfileSetup() {
                       </div>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                        Badminton Idol
-                      </label>
-                      <input
-                        type="text"
-                        value={favoriteIdol}
-                        onChange={(e) => setFavoriteIdol(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
-                        placeholder="e.g. Lin Dan, Viktor Axelsen"
-                      />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                          Badminton Idol
+                        </label>
+                        <input
+                          type="text"
+                          value={favoriteIdol}
+                          onChange={(e) => setFavoriteIdol(e.target.value)}
+                          className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                          placeholder="e.g. Lin Dan, Viktor Axelsen"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                          Favorite Format
+                        </label>
+                        <select
+                          required
+                          value={favoriteFormat}
+                          onChange={(e) => setFavoriteFormat(e.target.value)}
+                          className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                        >
+                          <option value="" disabled>Select your favorite format</option>
+                          <option value="Singles">Singles</option>
+                          <option value="Doubles">Doubles</option>
+                          <option value="Mixed Doubles">Mixed Doubles</option>
+                        </select>
+                      </div>
                     </div>
                   </motion.div>
                 )}
