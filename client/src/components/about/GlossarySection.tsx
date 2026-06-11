@@ -37,6 +37,25 @@ export function GlossarySection() {
       ],
     },
     {
+      category: "Site Architecture & Navigation",
+      icon: <BookOpen className="w-8 h-8 text-cyan-500" />,
+      color: "bg-cyan-50 dark:bg-cyan-900/20 border-cyan-100 dark:border-cyan-900/50",
+      items: [
+        {
+          title: "Tiered Events Megahub",
+          desc: "Centralized tournament calendar, live broadcasts, and brackets all neatly nested within the unified Events directory.",
+        },
+        {
+          title: "Unified Media Gallery",
+          desc: "Seamlessly browse beautiful photo albums and match videos. Video highlights feature glowing tournament tags for easy sorting.",
+        },
+        {
+          title: "Global Quick-Actions",
+          desc: "Log new matches from anywhere on the platform with the persistent '+ Log Match' utility.",
+        },
+      ],
+    },
+    {
       category: "Player Analytics",
       icon: <BarChart3 className="w-8 h-8 text-emerald-500" />,
       color: "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-900/50",

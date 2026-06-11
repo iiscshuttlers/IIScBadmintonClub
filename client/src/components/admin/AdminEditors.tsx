@@ -38,6 +38,7 @@ export type VideoItem = {
   title: string;
   videoId: string;
   category: string;
+  tournament?: string;
   chapters?: Chapter[];
   scoreLogs?: any[];
 };
@@ -593,6 +594,7 @@ export function VideoEditor({
         title: "",
         videoId: "",
         category: "",
+        tournament: "",
         chapters: [],
       },
     ]);
@@ -682,7 +684,7 @@ export function VideoEditor({
                   placeholder="Paste YouTube URL or video ID"
                 />
               </div>
-              <div className="flex items-end gap-2">
+              <div className="flex flex-col sm:flex-row items-end gap-2">
                 <div className="flex-1">
                   <label className={labelCls}>Category</label>
                   <input
@@ -690,6 +692,15 @@ export function VideoEditor({
                     onChange={(e) => update(i, "category", e.target.value)}
                     className={inputCls}
                     placeholder="e.g. Farewell Matches 2026"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className={labelCls}>Tournament Tag</label>
+                  <input
+                    value={v.tournament || ""}
+                    onChange={(e) => update(i, "tournament", e.target.value)}
+                    className={inputCls}
+                    placeholder="e.g. Spectrum 2026"
                   />
                 </div>
                 <button

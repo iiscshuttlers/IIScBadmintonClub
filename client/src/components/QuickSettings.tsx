@@ -13,7 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
-export function QuickSettings() {
+export function QuickSettingsContent({ onClose }: { onClose?: () => void }) {
   const { accent, setAccent } = useTheme();
   const { profile, session, refreshProfile } = useAuth();
   const [updating, setUpdating] = useState(false);
@@ -36,6 +36,7 @@ export function QuickSettings() {
       toast.error(err?.message || "Failed to update status");
     } finally {
       setUpdating(false);
+      onClose?.();
     }
   };
 
@@ -75,75 +76,59 @@ export function QuickSettings() {
   ];
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-          title="Settings & Appearance"
-        >
-          <Settings className="w-5 h-5" />
-        </Button>
-      </DropdownMenuTrigger>
-
-      <DropdownMenuContent
-        align="end"
-        className="w-64 p-3 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl"
-      >
-        {/* APP THEME COLOR */}
-        <div className="mb-2">
-          <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-            <Palette className="w-3.5 h-3.5" /> App Theme Color
-          </div>
-          <div className="flex flex-wrap items-center gap-2 px-1">
-            {themes.map((color) => (
-              <div
-                key={color.id}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setAccent?.(color.id as any);
-                }}
-                className={`w-7 h-7 rounded-full cursor-pointer transition-transform ${color.bg} ${accent === color.id ? "ring-2 ring-offset-2 ring-slate-800 dark:ring-white scale-110" : "hover:scale-110 opacity-70 hover:opacity-100"}`}
-                title={`Theme: ${color.id}`}
-              />
-            ))}
-          </div>
+    <div className="px-1 py-1">
+      {/* APP THEME COLOR */}
+      <div className="mb-2">
+        <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5 px-2">
+          <Palette className="w-3.5 h-3.5" /> App Theme Color
         </div>
+        <div className="flex flex-wrap items-center gap-2 px-2">
+          {themes.map((color) => (
+            <div
+              key={color.id}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setAccent?.(color.id as any);
+              }}
+              className={`w-7 h-7 rounded-full cursor-pointer transition-transform ${color.bg} ${accent === color.id ? "ring-2 ring-offset-2 ring-slate-800 dark:ring-white scale-110" : "hover:scale-110 opacity-70 hover:opacity-100"}`}
+              title={`Theme: ${color.id}`}
+            />
+          ))}
+        </div>
+      </div>
 
-        {profile?.id && (
-          <>
-            <DropdownMenuSeparator className="my-3 bg-slate-100 dark:bg-slate-800" />
+      {profile?.id && (
+        <>
+          <div className="h-px bg-slate-200 dark:bg-slate-800 my-3 mx-2" />
 
-            {/* LIVE STATUS */}
-            <div>
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <Activity className="w-3.5 h-3.5" /> Live Status
-              </div>
-              <div className="flex flex-col gap-1.5">
-                {statusConfig.map((status) => {
-                  const isActive = currentStatus === status.id;
-                  return (
-                    <button
-                      key={status.id}
-                      disabled={updating}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        updateStatus(status.id);
-                      }}
-                      className={`w-full text-left flex items-center justify-between px-3 py-2 rounded-xl text-sm font-bold transition-colors ${isActive ? status.color + " shadow-sm border border-current/10" : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"}`}
-                    >
-                      {status.label}
-                      {isActive && <Check className="w-4 h-4" />}
-                    </button>
-                  );
-                })}
-              </div>
+          {/* LIVE STATUS */}
+          <div>
+            <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5 px-2">
+              <Activity className="w-3.5 h-3.5" /> Live Status
             </div>
-          </>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+            <div className="flex flex-col gap-1.5">
+              {statusConfig.map((status) => {
+                const isActive = currentStatus === status.id;
+                return (
+                  <button
+                    key={status.id}
+                    disabled={updating}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      updateStatus(status.id);
+                    }}
+                    className={`w-full text-left flex items-center justify-between px-3 py-2 rounded-xl text-sm font-bold transition-colors ${isActive ? status.color + " shadow-sm border border-current/10" : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"}`}
+                  >
+                    {status.label}
+                    {isActive && <Check className="w-4 h-4" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
   );
 }

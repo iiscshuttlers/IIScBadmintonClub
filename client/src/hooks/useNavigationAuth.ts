@@ -121,6 +121,8 @@ export function useNavigationAuth() {
     signOut,
     switchAccount,
     userName: session ? userName : "",
+    userEmail: session?.user?.email ?? "",
+    userAvatar: profile?.avatar_url ?? null,
     pendingActionCount,
   };
 }

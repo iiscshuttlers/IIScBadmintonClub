@@ -22,6 +22,7 @@ import { useNativeBackButton } from "./hooks/useNativeBackButton";
 import { usePullToRefresh } from "./hooks/usePullToRefresh";
 import { useOfflineSync } from "./hooks/useOfflineSync";
 import { useBroadcastNotification } from "./hooks/useBroadcastNotification";
+import { usePingsNotification } from "./hooks/usePingsNotification";
 
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { FileOpener } from "@capacitor-community/file-opener";
@@ -112,15 +113,15 @@ const About = lazy(() => import("./pages/About"));
 const Gallery = lazy(() => import("./pages/Gallery"));
 const TournamentDetail = lazy(() => import("./pages/TournamentDetail"));
 
-const LiveTournament = lazy(() => import("./pages/LiveTournament"));
+
 // TournamentAdmin merged into SiteAdmin — /tournament/admin redirects to /admin
 const SiteAdmin = lazy(() => import("./pages/SiteAdmin"));
 const PlayerProfile = lazy(() => import("./pages/PlayerProfile"));
 const Join = lazy(() => import("./pages/Join"));
 const ProfileSetup = lazy(() => import("./pages/ProfileSetup"));
 const PlayersDirectory = lazy(() => import("./pages/PlayersDirectory"));
-
 const HallOfFame = lazy(() => import("./pages/HallOfFame"));
+
 
 // Save scroll position before navigating away, restore on back-navigation
 const scrollMap = new Map<string, number>();
@@ -237,8 +238,6 @@ function AppRoutes() {
         <Route path="/gallery" component={Gallery} />
         
         <Route path="/admin" component={SiteAdmin} />
-        <Route path="/tournament/admin" component={SiteAdmin} />
-        <Route path="/tournament" component={LiveTournament} />
         <Route path="/events/:slug" component={TournamentDetail} />
         <Route path="/events" component={Events} />
         <Route path="/join" component={Join} />
@@ -246,9 +245,6 @@ function AppRoutes() {
         <Route path="/players" component={PlayersDirectory} />
         <Route path="/player/:id/edit" component={ProfileSetup} />
         <Route path="/player/:id" component={PlayerProfile} />
-        <Route path="/matches">
-          <PlayerProfile matchesOnly={true} />
-        </Route>
 
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
@@ -282,6 +278,11 @@ function OfflineBanner() {
       You're offline — some features may be unavailable
     </div>
   );
+}
+
+function GlobalAuthHooks() {
+  usePingsNotification();
+  return null;
 }
 
 function App() {
@@ -329,6 +330,7 @@ function App() {
             <Toaster />
             <PwaUpdatePrompt />
             <MatchAlert />
+            <GlobalAuthHooks />
             {updateInfo && (
               <UpdateDialog info={updateInfo} onDismiss={dismissUpdate} />
             )}

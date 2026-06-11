@@ -14,11 +14,17 @@ import {
   AlertCircle,
   Clock,
   ArrowRight,
+  Radio,
+  LayoutList,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { isAdminEmail } from "@/lib/admin";
 import { useAuth } from "@/contexts/AuthContext";
-import InvictaRegistrationForm from "@/components/InvictaRegistrationForm";
+import { db } from "@/lib/firebase";
+import { doc, onSnapshot } from "firebase/firestore";
+import { ScheduleView } from "@/pages/ScheduleView";
+import { LiveScoreSection } from "@/components/events/LiveScoreSection";
+import { LiveBracketsSection } from "@/components/events/LiveBracketsSection";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -47,8 +53,16 @@ export function InvictaSection() {
   const [loadingFiles, setLoadingFiles] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"notices" | "schedule" | "broadcast" | "brackets">("notices");
+  const [tournamentData, setTournamentData] = useState<any>(null);
   const mountedRef = useRef(true);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(doc(db, "live_data", "tournament"), (docSnap) => {
+      if (docSnap.exists()) setTournamentData(docSnap.data());
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -250,8 +264,33 @@ export function InvictaSection() {
           </div>
         </motion.div>
 
-        {/* Notices & Announcements */}
-        <motion.div
+        {/* Tab Navigation */}
+        <div className="flex bg-white/5 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-1.5 rounded-2xl overflow-x-auto scrollbar-hide mb-6 shadow-sm">
+          {[
+            { id: "notices", label: "Info & Notices", icon: FileText },
+            { id: "schedule", label: "Match Schedule", icon: Calendar },
+            { id: "broadcast", label: "Live Broadcast", icon: Radio },
+            { id: "brackets", label: "Brackets", icon: LayoutList },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all whitespace-nowrap flex-1 justify-center ${
+                activeTab === tab.id
+                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
+                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+              }`}
+            >
+              <tab.icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === "notices" && (
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Notices & Announcements */}
+            <motion.div
           custom={5}
           variants={fadeUp}
           initial="hidden"
@@ -479,11 +518,26 @@ export function InvictaSection() {
             </p>
           </div>
         </motion.div>
+        </div>
+        )}
 
-        <p className="text-center text-slate-500 dark:text-slate-400 text-sm pb-4">
-          More details regarding fixtures, rules, and schedules will be updated
-          here.
-        </p>
+        {activeTab === "schedule" && (
+          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-md border border-slate-100 dark:border-slate-700 p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-[500px]">
+             <ScheduleView tournamentData={tournamentData} />
+          </div>
+        )}
+
+        {activeTab === "broadcast" && (
+          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-md border border-slate-100 dark:border-slate-700 p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-[500px]">
+             <LiveScoreSection />
+          </div>
+        )}
+
+        {activeTab === "brackets" && (
+          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-md border border-slate-100 dark:border-slate-700 p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-[500px]">
+             <LiveBracketsSection />
+          </div>
+        )}
       </div>
     </section>
   );

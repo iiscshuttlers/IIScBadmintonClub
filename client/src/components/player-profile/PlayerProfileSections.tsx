@@ -71,11 +71,11 @@ export function EquipmentArsenalSection({
   return (
     <section className="py-8 relative" ref={containerRef}>
       <div className="flex items-center gap-3 mb-16 px-4">
-        <div className="h-px flex-1 bg-linear-to-r from-transparent to-white/10" />
-        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-white/35 shrink-0 flex items-center gap-2">
+        <div className="h-px flex-1 bg-linear-to-r from-transparent to-slate-300 dark:to-white/10" />
+        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500 dark:text-white/35 shrink-0 flex items-center gap-2">
           <Zap className="w-3.5 h-3.5 text-violet-500" /> Equipment Arsenal
         </span>
-        <div className="h-px flex-1 bg-gradient-to-l from-transparent to-white/10" />
+        <div className="h-px flex-1 bg-gradient-to-l from-transparent to-slate-300 dark:to-white/10" />
       </div>
 
       {/* The Animated Kitbag */}
@@ -104,7 +104,7 @@ export function EquipmentArsenalSection({
               closed: { y: 0, scaleY: 1 },
               open: { y: 15, scaleY: 0.5 }
             }}
-            className="absolute -top-10 left-1/2 -translate-x-1/2 w-28 h-20 border-[6px] border-white/10 rounded-t-[2.5rem] -z-10"
+            className="absolute -top-10 left-1/2 -translate-x-1/2 w-28 h-20 border-[6px] border-slate-300 dark:border-white/10 rounded-t-[2.5rem] -z-10"
           />
 
           {/* Bag body */}
@@ -114,7 +114,7 @@ export function EquipmentArsenalSection({
             <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.8)_1px,transparent_1px)]" style={{ backgroundSize: '8px 8px' }} />
 
             {/* Zipper track */}
-            <div className="absolute top-12 left-6 right-6 h-2.5 bg-black/90 rounded-full overflow-hidden shadow-inner flex items-center justify-center border border-white/5">
+            <div className="absolute top-12 left-6 right-6 h-2.5 bg-black/90 rounded-full overflow-hidden shadow-inner flex items-center justify-center border border-slate-200 dark:border-white/5">
                {/* Zipper glow opening */}
                <motion.div 
                  variants={{
@@ -151,7 +151,7 @@ export function EquipmentArsenalSection({
           initial={{ opacity: 0 }}
           animate={{ opacity: isOpen ? 1 : 0 }}
           transition={{ delay: 1.2, duration: 0.4 }}
-          className="text-[10px] text-white/25 font-medium tracking-widest uppercase pointer-events-none"
+          className="text-[10px] text-slate-400 dark:text-white/25 font-medium tracking-widest uppercase pointer-events-none"
         >
           tap bag to replay
         </motion.p>
@@ -182,17 +182,17 @@ export function EquipmentArsenalSection({
               className="w-full relative z-10"
             >
               {item.type === 'racket' && (
-                <div className={`relative overflow-hidden rounded-2xl border backdrop-blur-xl transition-all duration-300 group ${item.isMain ? "bg-white/8 border-violet-500/40 shadow-lg shadow-violet-900/30" : "bg-white/5 border-white/8 shadow-md"}`}>
+                <div className={`relative overflow-hidden rounded-2xl border backdrop-blur-xl transition-all duration-300 group ${item.isMain ? "bg-slate-50 dark:bg-white/8 shadow-sm dark:shadow-none border-violet-500/40 shadow-lg shadow-violet-900/30" : "bg-white dark:bg-white/5 shadow-sm dark:shadow-none border-slate-200 dark:border-white/8 shadow-md"}`}>
                   {/* Racket string-grid pattern in background */}
                   <div
                     className="absolute inset-0 opacity-[0.06] pointer-events-none"
                     style={{ backgroundImage: "repeating-linear-gradient(0deg, currentColor 0, currentColor 1px, transparent 1px, transparent 12px), repeating-linear-gradient(90deg, currentColor 0, currentColor 1px, transparent 1px, transparent 12px)", color: item.isMain ? "#8b5cf6" : "#94a3b8" }}
                   />
-                  <div className={`absolute top-0 left-0 right-0 h-1 ${item.isMain ? "bg-linear-to-r from-violet-400 via-fuchsia-500 to-violet-400" : "bg-linear-to-r from-white/15 to-white/10"}`} />
+                  <div className={`absolute top-0 left-0 right-0 h-1 ${item.isMain ? "bg-linear-to-r from-violet-400 via-fuchsia-500 to-violet-400" : "bg-linear-to-r from-white/15 to-slate-300 dark:to-white/10"}`} />
                   <div className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
                     <div className="flex items-center gap-4">
                       {/* Racket illustration */}
-                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner relative overflow-hidden ${item.isMain ? "bg-violet-500/15" : "bg-white/8"}`}>
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner relative overflow-hidden ${item.isMain ? "bg-violet-500/15" : "bg-slate-50 dark:bg-white/8 shadow-sm dark:shadow-none"}`}>
                         <svg viewBox="0 0 40 40" className={`w-9 h-9 ${item.isMain ? "text-violet-400" : "text-slate-400"}`} fill="none">
                           {/* Racket head */}
                           <ellipse cx="20" cy="15" rx="10" ry="12" stroke="currentColor" strokeWidth="2" />
@@ -212,14 +212,14 @@ export function EquipmentArsenalSection({
                       </div>
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-black text-lg text-white">{item.data.name}</h3>
+                          <h3 className="font-black text-lg text-slate-800 dark:text-white">{item.data.name}</h3>
                           {item.isMain && (
                             <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 bg-violet-500 text-white rounded-lg">Primary</span>
                           )}
                         </div>
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-white/45 font-medium">
-                          <span className="flex items-center gap-1.5"><Dna className="w-3.5 h-3.5 text-blue-500" /> String: <span className="font-bold text-white/80">{item.data.string}</span></span>
-                          <span className="flex items-center gap-1.5"><Activity className="w-3.5 h-3.5 text-rose-500" /> Tension: <span className="font-bold text-white/80">{item.data.tension}</span></span>
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-500 dark:text-white/45 font-medium">
+                          <span className="flex items-center gap-1.5"><Dna className="w-3.5 h-3.5 text-blue-500" /> String: <span className="font-bold text-slate-700 dark:text-white/80">{item.data.string}</span></span>
+                          <span className="flex items-center gap-1.5"><Activity className="w-3.5 h-3.5 text-rose-500" /> Tension: <span className="font-bold text-slate-700 dark:text-white/80">{item.data.tension}</span></span>
                         </div>
                       </div>
                     </div>
@@ -228,13 +228,13 @@ export function EquipmentArsenalSection({
               )}
 
               {item.type === 'shoe' && (
-                <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-blue-500/20 shadow-md overflow-hidden relative">
+                <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none backdrop-blur-xl rounded-2xl border border-blue-500/20 shadow-md overflow-hidden relative">
                   {/* Shoe tread dot pattern */}
                   <div
                     className="absolute inset-0 opacity-[0.07] pointer-events-none"
                     style={{ backgroundImage: "radial-gradient(circle, #3b82f6 1px, transparent 1px)", backgroundSize: "10px 10px" }}
                   />
-                  <div className={`absolute top-0 left-0 right-0 h-1 ${item.data.primary ? "bg-linear-to-r from-blue-400 to-cyan-500" : "bg-linear-to-r from-white/15 to-white/10"}`} />
+                  <div className={`absolute top-0 left-0 right-0 h-1 ${item.data.primary ? "bg-linear-to-r from-blue-400 to-cyan-500" : "bg-linear-to-r from-white/15 to-slate-300 dark:to-white/10"}`} />
                   <div className="p-4 sm:p-5 flex items-center justify-between gap-3 relative z-10">
                     <div className="flex items-center gap-4 min-w-0">
                       {/* Shoe illustration */}
@@ -256,7 +256,7 @@ export function EquipmentArsenalSection({
                       </div>
                       <div className="min-w-0">
                         <div className="text-[9px] uppercase tracking-[0.15em] text-blue-400 font-black mb-0.5">Footwear</div>
-                        <div className="font-bold text-base text-white/90 truncate">{item.data.name}</div>
+                        <div className="font-bold text-base text-slate-800 dark:text-white/90 truncate">{item.data.name}</div>
                       </div>
                     </div>
                     {item.data.primary && (
@@ -267,7 +267,7 @@ export function EquipmentArsenalSection({
               )}
 
               {item.type === 'apparel' && (
-                <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-violet-500/20 shadow-md overflow-hidden relative">
+                <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none backdrop-blur-xl rounded-2xl border border-violet-500/20 shadow-md overflow-hidden relative">
                   {/* Fabric weave pattern */}
                   <div
                     className="absolute inset-0 opacity-[0.07] pointer-events-none"
@@ -291,7 +291,7 @@ export function EquipmentArsenalSection({
                     </div>
                     <div>
                       <div className="text-[9px] uppercase tracking-[0.15em] text-violet-400 font-black mb-0.5">Apparel</div>
-                      <div className="font-bold text-base text-white/90">{item.data.name}</div>
+                      <div className="font-bold text-base text-slate-800 dark:text-white/90">{item.data.name}</div>
                     </div>
                   </div>
                 </div>
@@ -340,11 +340,11 @@ export function CareerHighlightsSection({ player }: { player: any }) {
   return (
     <motion.section variants={itemVariants}>
       <div className="flex items-center gap-3 mb-5">
-        <div className="h-px flex-1 bg-white/8" />
-        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-white/35 shrink-0">
+        <div className="h-px flex-1 bg-slate-50 dark:bg-white/8 shadow-sm dark:shadow-none" />
+        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500 dark:text-white/35 shrink-0">
           Career Highlights
         </span>
-        <div className="h-px flex-1 bg-white/8" />
+        <div className="h-px flex-1 bg-slate-50 dark:bg-white/8 shadow-sm dark:shadow-none" />
       </div>
 
       <div className="relative ml-6">
@@ -371,15 +371,15 @@ export function CareerHighlightsSection({ player }: { player: any }) {
                     <Star className={`w-3.5 h-3.5 ${color.icon}`} />
                   </div>
                   {/* Card */}
-                  <div className="flex-1 bg-white/5 rounded-xl p-4 border border-white/8 hover:border-white/15 hover:bg-white/8 hover:-translate-y-0.5 transition-all duration-300">
-                    <div className="text-[9px] font-black uppercase tracking-[0.18em] text-white/35 mb-1">
+                  <div className="flex-1 bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-xl p-4 border border-slate-200 dark:border-white/8 hover:border-white/15 hover:bg-slate-50 dark:bg-white/8 shadow-sm dark:shadow-none hover:-translate-y-0.5 transition-all duration-300">
+                    <div className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-500 dark:text-white/35 mb-1">
                       {h.year}
                     </div>
-                    <div className="text-sm font-black text-white leading-snug">
+                    <div className="text-sm font-black text-slate-800 dark:text-white leading-snug">
                       {h.title}
                     </div>
                     {h.description && (
-                      <div className="text-xs text-white/45 mt-1.5 leading-relaxed">
+                      <div className="text-xs text-slate-500 dark:text-white/45 mt-1.5 leading-relaxed">
                         {h.description}
                       </div>
                     )}

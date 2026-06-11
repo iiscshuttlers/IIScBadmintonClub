@@ -188,7 +188,7 @@ export default function Events() {
       "Browse live, upcoming and completed badminton tournaments at IISc.",
   });
 
-  const [activeTab, setActiveTab] = useState<"schedule" | "history" | "live_score">("schedule");
+  const [activeTab, setActiveTab] = useState<"calendar" | "invicta" | "history">("calendar");
   const [events, setEvents] = useState<LiveTournament[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -387,24 +387,24 @@ export default function Events() {
           <div className="mt-10 flex justify-center">
             <div className="flex bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20">
               <button
-                onClick={() => setActiveTab("schedule")}
+                onClick={() => setActiveTab("calendar")}
                 className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
-                  activeTab === "schedule"
+                  activeTab === "calendar"
                     ? "bg-white text-blue-900 shadow-md scale-100"
                     : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
                 }`}
               >
-                <Calendar className="w-4 h-4" /> Schedule
+                <Calendar className="w-4 h-4" /> Event Calendar
               </button>
               <button
-                onClick={() => setActiveTab("live_score")}
+                onClick={() => setActiveTab("invicta")}
                 className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
-                  activeTab === "live_score"
+                  activeTab === "invicta"
                     ? "bg-rose-500 text-white shadow-md scale-100 shadow-rose-500/30"
                     : "text-white/80 hover:text-rose-400 hover:bg-rose-500/10 scale-95"
                 }`}
               >
-                <Radio className="w-4 h-4" /> Live Broadcast
+                <Timer className="w-4 h-4" /> INVICTA 2026
               </button>
               <button
                 onClick={() => setActiveTab("history")}
@@ -495,21 +495,14 @@ export default function Events() {
         </section>
       )}
 
-      {activeTab === "live_score" && (
-        <div className="py-12 bg-white dark:bg-slate-900 min-h-[60vh] flex flex-col justify-center">
-          <LiveScoreSection />
-        </div>
+      {activeTab === "invicta" && (
+        <InvictaSection />
       )}
 
-      {activeTab === "schedule" && (
+      {activeTab === "calendar" && (
         <>
           {/* ── 1. Match Calendar ───────────────────────────────────────────── */}
       <ScheduleCalendar />
-
-      {/* ── 2. Upcoming Featured: INVICTA 2026 ────────────────────────── */}
-      <InvictaSection />
-
-
 
       {/* ── 3. All Tournaments (Live, Upcoming, Completed) ──────────────── */}
       <section className="py-16 container mx-auto px-4 space-y-16">

@@ -15,6 +15,7 @@ import {
   Zap,
   ChevronDown,
   BookOpen,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,7 +27,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useNavigationAuth } from "@/hooks/useNavigationAuth";
-import { QuickSettings } from "@/components/QuickSettings";
+import { QuickSettingsContent } from "@/components/QuickSettings";
 
 const TOP_LEVEL_LINKS = [
   { href: "/events", label: "Events" },
@@ -52,6 +53,8 @@ export default function Navigation() {
     signOut,
     switchAccount,
     userName,
+    userEmail,
+    userAvatar,
     pendingActionCount,
   } = useNavigationAuth();
 
@@ -82,13 +85,18 @@ export default function Navigation() {
 
   // Show unread dot if announcements haven't been viewed in the last 24h
   useEffect(() => {
-    const lastSeen = localStorage.getItem("iisc_announcements_last_seen");
-    if (!lastSeen) {
-      setHasUnreadAnnouncements(true);
-    } else {
-      const elapsed = Date.now() - parseInt(lastSeen, 10);
-      setHasUnreadAnnouncements(elapsed > 24 * 60 * 60 * 1000);
-    }
+    const check = () => {
+      const lastSeen = localStorage.getItem("iisc_announcements_last_seen");
+      if (!lastSeen) {
+        setHasUnreadAnnouncements(true);
+      } else {
+        const elapsed = Date.now() - parseInt(lastSeen, 10);
+        setHasUnreadAnnouncements(elapsed > 24 * 60 * 60 * 1000);
+      }
+    };
+    check();
+    window.addEventListener("announcements-read", check);
+    return () => window.removeEventListener("announcements-read", check);
   }, []);
 
   const isActive = (href: string) =>
@@ -154,51 +162,72 @@ export default function Navigation() {
 
             {/* ── Desktop Right Controls ────────────── */}
             <div className="hidden lg:flex items-center gap-2">
-              <QuickSettings />
-              <DarkModeToggle />
-              <div className="w-px h-5 bg-slate-200 dark:bg-slate-700" />
-
+              {isLoggedIn && (
+                <Button
+                  onClick={() => window.dispatchEvent(new Event('open-log-match-modal'))}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-4 rounded-full h-9 shadow-sm mr-2"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Log Match
+                </Button>
+              )}
+              {/* Icons removed from here and moved to dropdown */}
               {authLoading ? (
                 <div className="w-24 h-9 bg-slate-100 dark:bg-slate-800 rounded-full animate-pulse" />
               ) : isLoggedIn ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button className="relative flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-4 rounded-full h-9 shadow-sm shadow-emerald-200 dark:shadow-none transition-all duration-200">
-                      <UserCircle className="w-4 h-4 flex-shrink-0" />
-                      <span className="max-w-[80px] truncate">Hi, {userName}</span>
-                      <ChevronDown className="w-3 h-3 opacity-70 flex-shrink-0" />
+                    <button className="relative w-9 h-9 rounded-full border-2 border-slate-200 dark:border-slate-700 hover:border-emerald-500 dark:hover:border-emerald-500 transition-all duration-200 overflow-hidden focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-950 shrink-0 shadow-sm">
+                      {userAvatar ? (
+                        <img src={userAvatar} alt={userName} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center font-black text-sm">
+                          {userName ? userName[0].toUpperCase() : "U"}
+                        </div>
+                      )}
                       {pendingActionCount > 0 && (
-                        <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow ring-2 ring-white dark:ring-slate-950">
-                          {pendingActionCount}
+                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow ring-2 ring-white dark:ring-slate-950">
+                          {pendingActionCount > 9 ? "9+" : pendingActionCount}
                         </span>
                       )}
-                    </Button>
+                    </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     align="end"
-                    className="w-52 bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 rounded-2xl shadow-xl mt-1 p-1"
+                    className="w-72 bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 rounded-2xl shadow-xl mt-1 p-2"
                   >
-                    <Link href={myPlayerId ? `/player/${myPlayerId}` : "/profile/setup"}>
-                      <DropdownMenuItem className="cursor-pointer font-medium rounded-xl focus:bg-slate-50 dark:focus:bg-slate-800 flex justify-between items-center px-3 py-2.5">
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-slate-400" /> My Profile
-                        </div>
-                        {pendingActionCount > 0 && (
-                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/30 text-xs font-bold text-rose-600">{pendingActionCount}</span>
+                    {/* Microsoft-style user card */}
+                    <div className="flex items-start justify-between px-3 pt-2 pb-1">
+                      <div className="text-[11px] font-black uppercase tracking-widest text-slate-400">IISc Badminton Club</div>
+                      <button onClick={() => handleSignOut()} className="text-xs font-bold text-slate-500 hover:text-rose-500 transition-colors">Sign out</button>
+                    </div>
+                    <div className="flex items-center gap-4 px-3 py-3 mb-2">
+                      <div className="w-14 h-14 rounded-full overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 relative shadow-sm">
+                        {userAvatar ? (
+                          <img src={userAvatar} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center font-black text-xl">
+                            {userName ? userName[0].toUpperCase() : "U"}
+                          </div>
                         )}
-                      </DropdownMenuItem>
-                    </Link>
-                    <Link href={myPlayerId ? `/player/${myPlayerId}/edit` : "/profile/setup"}>
-                      <DropdownMenuItem className="cursor-pointer font-medium rounded-xl focus:bg-slate-50 dark:focus:bg-slate-800 gap-2 px-3 py-2.5">
-                        <Settings className="h-4 w-4 text-slate-400" /> Edit Profile
-                      </DropdownMenuItem>
-                    </Link>
+                      </div>
+                      <div className="flex flex-col overflow-hidden">
+                        <span className="font-black text-slate-900 dark:text-white truncate">{userName}</span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400 truncate mb-1">{userEmail}</span>
+                        <Link href={myPlayerId ? `/player/${myPlayerId}` : "/profile/setup"} className="text-xs font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-500 dark:hover:text-emerald-400 hover:underline w-fit">
+                          View profile
+                        </Link>
+                      </div>
+                    </div>
                     {isAdmin && (
-                      <Link href="/admin">
-                        <DropdownMenuItem className="cursor-pointer font-medium rounded-xl text-violet-600 focus:bg-violet-50 dark:focus:bg-violet-950/30 gap-2 px-3 py-2.5">
-                          <Zap className="h-4 w-4" /> Site Admin
-                        </DropdownMenuItem>
-                      </Link>
+                      <>
+                        <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800 mx-1 mb-2" />
+                        <Link href="/admin">
+                          <DropdownMenuItem className="cursor-pointer font-medium rounded-xl text-violet-600 focus:bg-violet-50 dark:focus:bg-violet-950/30 gap-2 px-3 py-2.5">
+                            <Zap className="h-4 w-4" /> Site Admin
+                          </DropdownMenuItem>
+                        </Link>
+                      </>
                     )}
                     <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800 my-1" />
                     {savedAccounts.length > 0 && (
@@ -244,16 +273,26 @@ export default function Navigation() {
 
             {/* ── Mobile Controls ───────────────────── */}
             <div className="flex lg:hidden items-center gap-1">
-              <Link href="/about?tab=glossary">
-                <button
-                  aria-label="Features & Glossary"
-                  className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
-                >
-                  <BookOpen className="w-[18px] h-[18px]" />
-                </button>
-              </Link>
-              <QuickSettings />
-              <DarkModeToggle />
+              {isLoggedIn && !authLoading && (
+                <Link href={myPlayerId ? `/player/${myPlayerId}` : "/profile/setup"}>
+                  <button 
+                    className="relative w-8 h-8 rounded-full border-2 border-slate-200 dark:border-slate-700 hover:border-emerald-500 transition-all duration-200 overflow-hidden shrink-0 shadow-sm mr-1 cursor-pointer"
+                  >
+                    {userAvatar ? (
+                      <img src={userAvatar} alt={userName} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center font-black text-xs">
+                        {userName ? userName[0].toUpperCase() : "U"}
+                      </div>
+                    )}
+                    {pendingActionCount > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-rose-500 text-[8px] font-bold text-white shadow ring-1 ring-white dark:ring-slate-950">
+                        {pendingActionCount > 9 ? "9+" : pendingActionCount}
+                      </span>
+                    )}
+                  </button>
+                </Link>
+              )}
               <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="p-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
@@ -281,30 +320,12 @@ export default function Navigation() {
                 />
               ))}
 
-              <div className="pt-2 pb-1 space-y-1.5">
-                <Link href="/about?tab=glossary" onClick={() => setIsOpen(false)}>
-                  <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-sm cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                    <BookOpen className="w-4 h-4 text-emerald-500" /> Features & Glossary
-                  </div>
-                </Link>
-              </div>
-
               <div className="pt-2 border-t border-slate-100 dark:border-slate-800 mt-1">
                 {authLoading ? (
                   <div className="h-10 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
                 ) : isLoggedIn ? (
                   <div className="space-y-0.5">
-                    <Link href={myPlayerId ? `/player/${myPlayerId}` : "/profile/setup"}>
-                      <button className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
-                        <span className="flex items-center gap-2"><User className="h-4 w-4 text-emerald-500" /> My Profile</span>
-                        {pendingActionCount > 0 && <span className="flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white">{pendingActionCount}</span>}
-                      </button>
-                    </Link>
-                    <Link href={myPlayerId ? `/player/${myPlayerId}/edit` : "/profile/setup"}>
-                      <button className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
-                        <Settings className="h-4 w-4 text-emerald-500" /> Edit Profile
-                      </button>
-                    </Link>
+
                     {isAdmin && (
                       <Link href="/admin">
                         <button className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-violet-50 dark:hover:bg-violet-950/30 text-violet-600 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
@@ -384,18 +405,40 @@ function MobileNavLink({
   );
 }
 
-function DarkModeToggle() {
+function DarkModeToggle({ insideMenu }: { insideMenu?: boolean }) {
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
 
+  if (insideMenu) {
+    return (
+      <button
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleTheme(); }}
+        className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+      >
+        <span className="flex items-center gap-2">
+          {isDark ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-indigo-500" />}
+          Dark Mode
+        </span>
+        <div className={`w-8 h-4 rounded-full transition-colors relative ${isDark ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
+          <div className={`w-3 h-3 bg-white rounded-full absolute top-0.5 transition-all ${isDark ? 'left-4.5' : 'left-0.5'}`} />
+        </div>
+      </button>
+    );
+  }
+
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="icon"
       onClick={toggleTheme}
-      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
+      className="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+      title="Toggle dark mode"
     >
-      {isDark ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
-    </button>
+      {isDark ? (
+        <Sun className="h-5 w-5" />
+      ) : (
+        <Moon className="h-5 w-5" />
+      )}
+    </Button>
   );
 }

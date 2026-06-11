@@ -81,6 +81,7 @@ type VideoItem = {
   title: string;
   videoId: string;
   category: string;
+  tournament?: string;
 };
 type Player = {
   id: string;

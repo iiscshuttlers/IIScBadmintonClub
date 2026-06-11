@@ -66,7 +66,7 @@ export default function Gallery() {
       "Photos and videos from IISc Badminton Club tournaments and events.",
   });
 
-  const [activeTab, setActiveTab] = useState<"photos" | "videos">("photos");
+  const [activeTab, setActiveTab] = useState<"albums" | "photos" | "videos">("albums");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedSubfolder, setSelectedSubfolder] = useState("all");
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -251,6 +251,16 @@ export default function Gallery() {
           <div className="mt-8 flex justify-center">
             <div className="flex bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 flex-wrap justify-center gap-1 sm:gap-0">
               <button
+                onClick={() => setActiveTab("albums")}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
+                  activeTab === "albums"
+                    ? "bg-white text-blue-900 shadow-md scale-100"
+                    : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                }`}
+              >
+                <Camera className="w-4 h-4" /> Albums
+              </button>
+              <button
                 onClick={() => setActiveTab("photos")}
                 className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
                   activeTab === "photos"
@@ -258,7 +268,7 @@ export default function Gallery() {
                     : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
                 }`}
               >
-                <Camera className="w-4 h-4" /> Photo Albums
+                <Camera className="w-4 h-4" /> All Photos
               </button>
               <button
                 onClick={() => setActiveTab("videos")}
@@ -268,18 +278,18 @@ export default function Gallery() {
                     : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
                 }`}
               >
-                <PlayCircle className="w-4 h-4" /> Match Videos
+                <PlayCircle className="w-4 h-4" /> All Videos
               </button>
             </div>
           </div>
         </div>
       </section>
 
-      {activeTab === "photos" ? (
+      {activeTab === "albums" || activeTab === "photos" ? (
       <section className="py-16 bg-white dark:bg-slate-950">
         <div className="container mx-auto px-4">
           {/* Main Category Filter */}
-          {categories.length > 2 && (
+          {(activeTab === "albums" || activeTab === "photos") && categories.length > 2 && (
             <div className="flex flex-wrap gap-3 justify-center mb-8">
               {categories.map((cat) => {
                 const count =
@@ -313,7 +323,7 @@ export default function Gallery() {
           )}
 
           {/* Sub-folder Filter */}
-          {subfolders.length > 0 && (
+          {(activeTab === "albums" || activeTab === "photos") && subfolders.length > 0 && (
             <div className="flex flex-wrap gap-3 justify-center mb-12 animate-in fade-in slide-in-from-top-4">
               <button
                 onClick={() => {
@@ -400,6 +410,50 @@ export default function Gallery() {
               <p className="text-slate-500 dark:text-slate-400 font-medium">No photos in this category yet.</p>
             </div>
           )}
+
+          {/* Videos embedded within Albums */}
+          {activeTab === "albums" && videos.filter(v => selectedCategory === "all" || (v.tournament && v.tournament.toLowerCase().includes(selectedCategory.toLowerCase().replace(/[-_]/g, ' ')))).length > 0 && (
+            <div className="mt-16 animate-in fade-in slide-in-from-bottom-4">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-2 h-8 bg-gradient-to-b from-red-500 to-orange-500 rounded-full" />
+                <h2 className="text-3xl font-black text-blue-900 dark:text-white">
+                  Match Videos
+                </h2>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {videos.filter(v => selectedCategory === "all" || (v.tournament && v.tournament.toLowerCase().includes(selectedCategory.toLowerCase().replace(/[-_]/g, ' ')))).map((video) => (
+                  <button
+                    key={video.id}
+                    className="group text-left bg-white dark:bg-slate-800 rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl border border-slate-100 dark:border-slate-700 transition duration-500"
+                    onClick={() => setActiveVideo(video)}
+                  >
+                    <div className="relative aspect-video">
+                      <img
+                        src={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`}
+                        alt={video.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      {video.tournament && (
+                        <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 text-white text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-full shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-all">
+                          {video.tournament}
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                        <div className="w-16 h-16 bg-red-600/90 text-white rounded-full flex items-center justify-center backdrop-blur-sm shadow-lg group-hover:scale-110 group-hover:bg-red-600 transition-all duration-300">
+                          <Play className="w-8 h-8 ml-1" fill="currentColor" stroke="none" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-5 sm:p-7">
+                      <h3 className="text-lg sm:text-xl font-bold text-blue-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-2">
+                        {video.title}
+                      </h3>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </section>
       ) : (
@@ -439,6 +493,11 @@ export default function Gallery() {
                       }
                     }}
                   />
+                  {video.tournament && (
+                    <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 text-white text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-full shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-all">
+                      {video.tournament}
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                     <div className="w-16 h-16 bg-red-600/90 text-white rounded-full flex items-center justify-center backdrop-blur-sm shadow-lg group-hover:scale-110 group-hover:bg-red-600 transition-all duration-300">
                       <Play

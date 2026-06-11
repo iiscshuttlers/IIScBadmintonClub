@@ -254,7 +254,7 @@ export default function Feed() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 lg:pb-8 font-sans selection:bg-emerald-500/30">
-      <div className="bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 text-white py-12 lg:py-16 relative overflow-hidden">
+      <div className="bg-gradient-to-r from-blue-900 via-indigo-950 to-emerald-900 text-white py-12 lg:py-16 relative overflow-hidden shrink-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(16,185,129,0.15),transparent)] pointer-events-none" />
         <div className="container mx-auto px-4 max-w-3xl relative z-10 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-black uppercase tracking-widest mb-4">
@@ -280,7 +280,11 @@ export default function Feed() {
                 <Activity className="w-4 h-4" /> Match Activity
               </button>
               <button
-                onClick={() => setActiveTab("announcements")}
+                onClick={() => {
+                  setActiveTab("announcements");
+                  localStorage.setItem("iisc_announcements_last_seen", Date.now().toString());
+                  window.dispatchEvent(new Event("announcements-read"));
+                }}
                 className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
                   activeTab === "announcements"
                     ? "bg-white text-emerald-900 shadow-md scale-100"

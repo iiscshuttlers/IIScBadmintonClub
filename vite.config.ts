@@ -150,6 +150,7 @@ export default defineConfig({
       registerType: "autoUpdate",
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,json,webp,woff2}"],
+        globIgnores: ["**/profile_banner*.png"],
         maximumFileSizeToCacheInBytes: 5000000,
         skipWaiting: true,
         clientsClaim: true,

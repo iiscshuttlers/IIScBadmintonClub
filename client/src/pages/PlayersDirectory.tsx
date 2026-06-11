@@ -50,7 +50,7 @@ const itemVariants: Variants = {
 };
 
 const PLAYER_SELECT =
-  "id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating, win_loss_record, recent_form, is_looking_to_play, buddies";
+  "id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating, win_loss_record, recent_form, is_looking_to_play, buddies, following";
 const PLAYERS_CACHE_KEY = "iisc_players_directory_cache_v1";
 const REQUEST_TIMEOUT_MS = 15_000;
 const MAX_FETCH_RETRIES = 1;
@@ -382,6 +382,7 @@ export default function PlayersDirectory() {
 
   // IDs of own buddies for hoisting
   const myBuddyIds = new Set<string>((ownProfile as any)?.buddies || []);
+  const followingIds = new Set<string>((ownProfile as any)?.following || []);
 
   const filteredPlayers = otherPlayers
     .filter((player) => {
@@ -422,6 +423,56 @@ export default function PlayersDirectory() {
       await supabase.auth.signOut();
       setSession(null);
       setOwnProfile(null);
+    }
+  };
+
+  const handleToggleBuddy = async (playerId: string) => {
+    if (!ownProfile?.id || !session?.user?.id) return;
+    const isBuddy = myBuddyIds.has(playerId);
+    
+    const newBuddies = new Set(myBuddyIds);
+    if (isBuddy) newBuddies.delete(playerId);
+    else newBuddies.add(playerId);
+    
+    setOwnProfile((prev: any) => prev ? { ...prev, buddies: Array.from(newBuddies) } : prev);
+    
+    try {
+      const { error } = await supabase
+        .from("players")
+        .update({ buddies: Array.from(newBuddies) })
+        .eq("user_id", session.user.id);
+      
+      if (error) throw error;
+      const player = players.find(p => p.id === playerId);
+      toast.success(!isBuddy ? `Added ${player?.full_name || 'player'} to buddies!` : `Removed from buddies.`);
+    } catch (e) {
+      setOwnProfile((prev: any) => prev ? { ...prev, buddies: Array.from(myBuddyIds) } : prev);
+      toast.error("Could not update buddy status.");
+    }
+  };
+
+  const handleToggleFollow = async (playerId: string) => {
+    if (!ownProfile?.id || !session?.user?.id) return;
+    const isFollowing = followingIds.has(playerId);
+    
+    const newFollowing = new Set(followingIds);
+    if (isFollowing) newFollowing.delete(playerId);
+    else newFollowing.add(playerId);
+    
+    setOwnProfile((prev: any) => prev ? { ...prev, following: Array.from(newFollowing) } : prev);
+    
+    try {
+      const { error } = await supabase
+        .from("players")
+        .update({ following: Array.from(newFollowing) })
+        .eq("user_id", session.user.id);
+      
+      if (error) throw error;
+      const player = players.find(p => p.id === playerId);
+      toast.success(!isFollowing ? `Following ${player?.full_name || 'player'}!` : `Unfollowed.`);
+    } catch (e) {
+      setOwnProfile((prev: any) => prev ? { ...prev, following: Array.from(followingIds) } : prev);
+      toast.error("Could not update follow status.");
     }
   };
 
@@ -606,35 +657,6 @@ export default function PlayersDirectory() {
                 </div>
               </Link>
 
-              {/* Action buttons */}
-              <div className="flex flex-wrap gap-3 shrink-0">
-                <button
-                  onClick={handleToggleLtp}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition border shadow-sm ${
-                    (ownProfile as any).is_looking_to_play
-                      ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700 shadow-emerald-100/50"
-                      : "bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-300 hover:text-emerald-600"
-                  }`}
-                  title="Let buddies know you're available to play"
-                >
-                  <Zap className="w-4 h-4" />
-                  {(ownProfile as any).is_looking_to_play
-                    ? "Looking to Play"
-                    : "Set LTP"}
-                </button>
-                <button
-                  onClick={() => setLocation(`/player/${ownProfile.id}/edit`)}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-md shadow-emerald-500/25 transition"
-                >
-                  <Pencil className="w-4 h-4" /> Edit Profile
-                </button>
-                <button
-                  onClick={handleSignOut}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-900/30 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/30 text-sm font-bold transition"
-                >
-                  Sign Out
-                </button>
-              </div>
             </div>
           </div>
         </motion.div>
@@ -721,75 +743,55 @@ export default function PlayersDirectory() {
   return (
     <div className="flex-1 w-full flex flex-col bg-slate-50 dark:bg-slate-950">
       {/* Hero header */}
-      <section className="bg-gradient-to-r from-blue-900 via-indigo-950 to-emerald-900 text-white py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(16,185,129,0.1),transparent)] pointer-events-none" />
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 text-sm font-bold mb-5 backdrop-blur-sm">
-            <Users className="w-4 h-4 text-emerald-400" />
-            Club Roster
-          </div>
-          <h1 className="text-4xl sm:text-5xl font-black mb-5 tracking-tight">
-            Player Directory
-          </h1>
-          <p className="text-lg sm:text-xl text-slate-200 max-w-3xl mx-auto font-medium leading-relaxed">
-            Discover and connect with badminton players, teammates, and
-            tournament champions across IISc departments.
-          </p>
-          <div className="mt-6 text-slate-300 text-sm font-medium">
-            {!loading && (
-              <span className="inline-flex items-center gap-2 bg-white/10 px-4 py-1.5 rounded-full backdrop-blur-sm">
-                <Users className="w-3.5 h-3.5 text-emerald-400" />
-                {players.length} member{players.length !== 1 ? "s" : ""} in the
-                directory
-              </span>
-            )}
-          </div>
-
-          {/* View Toggle */}
-          <div className="mt-10 flex justify-center relative z-10">
-            <div className="flex bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20">
-              <button
-                onClick={() => setActiveTab("directory")}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
-                  activeTab === "directory"
-                    ? "bg-white text-emerald-700 shadow-md scale-100"
-                    : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
-                }`}
-              >
-                <Users className="w-4 h-4" /> Directory
-              </button>
-              <button
-                onClick={() => setActiveTab("leaderboard")}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
-                  activeTab === "leaderboard"
-                    ? "bg-white text-emerald-700 shadow-md scale-100"
-                    : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
-                }`}
-              >
-                <Trophy className="w-4 h-4" /> Rankings
-              </button>
-              <button
-                onClick={() => setActiveTab("h2h")}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
-                  activeTab === "h2h"
-                    ? "bg-white text-rose-700 shadow-md scale-100"
-                    : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
-                }`}
-              >
-                <Swords className="w-4 h-4" /> H2H
-              </button>
-              {session && ownProfile && (
+      <section className="bg-gradient-to-r from-blue-900 via-indigo-950 to-emerald-900 text-white py-6 sm:py-8 relative overflow-hidden shrink-0">
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="flex flex-col items-center justify-center gap-6">
+            {/* View Toggle */}
+            <div className="w-full md:w-auto overflow-x-auto hide-scrollbar -mx-4 md:mx-0 px-4 md:px-0 flex justify-center">
+              <div className="inline-flex bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 whitespace-nowrap min-w-max">
                 <button
-                  onClick={() => setActiveTab("network")}
-                  className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
-                    activeTab === "network"
-                      ? "bg-white text-violet-700 shadow-md scale-100"
+                  onClick={() => setActiveTab("directory")}
+                  className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-black transition-all ${
+                    activeTab === "directory"
+                      ? "bg-white text-emerald-700 shadow-md scale-100"
                       : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
                   }`}
                 >
-                  <Heart className="w-4 h-4" /> Network
+                  <Users className="w-4 h-4" /> Directory
                 </button>
-              )}
+                <button
+                  onClick={() => setActiveTab("leaderboard")}
+                  className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-black transition-all ${
+                    activeTab === "leaderboard"
+                      ? "bg-white text-emerald-700 shadow-md scale-100"
+                      : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                  }`}
+                >
+                  <Trophy className="w-4 h-4" /> Rankings
+                </button>
+                <button
+                  onClick={() => setActiveTab("h2h")}
+                  className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-black transition-all ${
+                    activeTab === "h2h"
+                      ? "bg-white text-rose-700 shadow-md scale-100"
+                      : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                  }`}
+                >
+                  <Swords className="w-4 h-4" /> H2H
+                </button>
+                {session && ownProfile && (
+                  <button
+                    onClick={() => setActiveTab("network")}
+                    className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-black transition-all ${
+                      activeTab === "network"
+                        ? "bg-white text-violet-700 shadow-md scale-100"
+                        : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                    }`}
+                  >
+                    <Heart className="w-4 h-4" /> Network
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -914,6 +916,47 @@ export default function PlayersDirectory() {
                         </div>
                       </div>
                     )}
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Following section */}
+            <div>
+              <h2 className="text-xs uppercase tracking-widest font-black text-slate-400 dark:text-slate-500 mb-5 flex items-center gap-2">
+                <UserCheck className="w-4 h-4 text-violet-500" /> My Following ({followingIds.size})
+              </h2>
+              {followingIds.size === 0 ? (
+                <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
+                  <UserCheck className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+                  <p className="text-slate-500 font-medium text-sm">You aren't following anyone yet. Find some players!</p>
+                </div>
+              ) : (() => {
+                const followingPlayers = players.filter((p) => followingIds.has(p.id));
+                return (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {followingPlayers.map((player) => (
+                      <div
+                        key={player.id}
+                        className="bg-white dark:bg-slate-900 rounded-2xl border border-violet-200 dark:border-violet-800/50 p-4 flex items-center gap-4 cursor-pointer hover:shadow-md transition shadow-sm"
+                        onClick={() => setLocation(`/player/${player.id}`)}
+                      >
+                        <div className="relative shrink-0">
+                          {player.avatar_url ? (
+                            <img src={player.avatar_url} className="w-12 h-12 rounded-full object-cover" />
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-400 to-fuchsia-500 flex items-center justify-center text-white font-black text-lg">
+                              {player.full_name[0]}
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-black text-sm text-slate-800 dark:text-slate-100 truncate">{player.full_name}</p>
+                          <p className="text-xs text-slate-400 truncate">{player.department}</p>
+                          <p className="text-xs font-bold text-violet-600 dark:text-violet-400 mt-0.5">ELO {player.elo_rating ?? "—"}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 );
               })()}
@@ -1133,7 +1176,7 @@ export default function PlayersDirectory() {
                         </p>
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {recommended.map((player) => (
                         <PlayerCard
                           key={"rec-" + player.id}
@@ -1150,6 +1193,11 @@ export default function PlayersDirectory() {
                                 }
                               : undefined
                           }
+                          isBuddy={myBuddyIds.has(player.id)}
+                          isFollowing={followingIds.has(player.id)}
+                          onToggleBuddy={ownProfile ? handleToggleBuddy : undefined}
+                          onToggleFollow={ownProfile ? handleToggleFollow : undefined}
+                          currentUserName={ownProfile?.full_name}
                         />
                       ))}
                     </div>
@@ -1159,7 +1207,7 @@ export default function PlayersDirectory() {
 
             {/* Directory grid (others) */}
             {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[...Array(12)].map((_, i) => (
                   <div
                     key={i}
@@ -1211,7 +1259,7 @@ export default function PlayersDirectory() {
                   variants={containerVariants}
                   initial="hidden"
                   animate="show"
-                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                  className="grid grid-cols-1 md:grid-cols-2 gap-3"
                 >
                   {filteredPlayers.slice(0, visibleCount).map((player) => (
                     <motion.div
@@ -1233,6 +1281,11 @@ export default function PlayersDirectory() {
                               }
                             : undefined
                         }
+                        isBuddy={myBuddyIds.has(player.id)}
+                        isFollowing={followingIds.has(player.id)}
+                        onToggleBuddy={ownProfile ? handleToggleBuddy : undefined}
+                        onToggleFollow={ownProfile ? handleToggleFollow : undefined}
+                        currentUserName={ownProfile?.full_name}
                       />
                     </motion.div>
                   ))}
