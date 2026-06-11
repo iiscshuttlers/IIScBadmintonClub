@@ -1,0 +1,25 @@
+[
+  {
+    "versionCode": 89,
+    "versionName": "1.88",
+    "date": "2026-06-11T07:19:25.361Z",
+    "changes": [
+      "- chore: release v1.87 (build 88)"
+    ]
+  },
+  {
+    "versionCode": 88,
+    "versionName": "1.87",
+    "date": "2026-06-11T12:00:00.000Z",
+    "changes": [
+      "- Added Pinch-to-Zoom & Pan gestures for mobile video analysis",
+      "- Added Precision Horizontal Scrubbing and A-B Loop",
+      "- Added Telestrator Draw Mode for tactics visualization",
+      "- Added Gesture Cheat Sheet Help Modal",
+      "- Built Dynamic BWF-style Scoreboard Overlay",
+      "- Built Scoring Mode for easy JSON score generation",
+      "- Added Automated Name Extraction for Live Scoreboard",
+      "- Refactored Features Page to masonry layout"
+    ]
+  }
+]
