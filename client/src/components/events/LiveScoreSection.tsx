@@ -1,49 +1,116 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { motion } from "framer-motion";
-import { Trophy, Activity, Plus, Minus, Check } from "lucide-react";
+import { Trophy, Activity, Tv2, Play } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+import { UmpireEngine, type BwfMatchState } from "../umpire/UmpireEngine";
+
+function MatchBroadcastCard({ match }: { match: BwfMatchState }) {
+  if (match.status === "setup") return null;
+
+  return (
+    <div className="bg-slate-900 border border-slate-800 rounded-[2rem] p-6 sm:p-10 text-white max-w-4xl mx-auto shadow-2xl relative overflow-hidden">
+      <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-emerald-500 to-sky-500" />
+      
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <div className="flex items-center gap-2 text-emerald-400 font-black uppercase tracking-widest text-sm mb-1">
+            <Activity className="w-5 h-5 animate-pulse" /> Live Broadcast
+          </div>
+          <div className="text-slate-400 text-xs font-bold">
+            {match.isFriendly ? "Friendly Match" : `Tournament • ${match.matchNumber}`} • Best of {match.bestOfSets} ({match.pointsToWin} pts) • Umpire: {match.umpireName}
+          </div>
+        </div>
+      </div>
+
+      {match.status === "finished" ? (
+        <div className="text-center py-12">
+          <Trophy className="w-20 h-20 mx-auto text-amber-400 mb-6 drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]" />
+          <h2 className="text-3xl font-black mb-2">Match Finished!</h2>
+          <p className="text-xl text-slate-300">
+            {match.winner === 1 ? match.t1.p1Name : match.t2.p1Name} Won {match.setsHistory.join(", ")}
+          </p>
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-[1fr_auto_1fr] gap-6 items-center">
+          <div className={`p-6 rounded-3xl border-2 transition-all ${match.serverTeam === 1 ? "bg-emerald-900/20 border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.15)]" : "bg-slate-800/50 border-slate-700/50"}`}>
+            <div className="text-center mb-6">
+              <h3 className="text-xl font-bold truncate">{match.t1.p1Name}</h3>
+              {match.t1.p2Name && <h3 className="text-xl font-bold truncate">{match.t1.p2Name}</h3>}
+              <div className="text-emerald-400 font-black text-sm mt-2 flex items-center justify-center gap-1 min-h-[20px]">
+                {match.serverTeam === 1 && <><div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Serving</>}
+              </div>
+            </div>
+            
+            <div className="flex justify-center mb-6">
+              <div className="text-[8rem] leading-none font-black tracking-tighter tabular-nums drop-shadow-md">
+                {match.t1.score}
+              </div>
+            </div>
+            
+            <div className="mt-6 flex justify-center gap-2">
+              {Array.from({ length: Math.ceil(match.bestOfSets / 2) }).map((_, i) => (
+                <div key={i} className={`w-4 h-4 rounded-full ${i < match.t1.games ? "bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.5)]" : "bg-slate-700"}`} />
+              ))}
+            </div>
+          </div>
+
+          <div className="text-4xl font-black italic text-slate-700 text-center py-4">VS</div>
+
+          <div className={`p-6 rounded-3xl border-2 transition-all ${match.serverTeam === 2 ? "bg-emerald-900/20 border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.15)]" : "bg-slate-800/50 border-slate-700/50"}`}>
+            <div className="text-center mb-6">
+              <h3 className="text-xl font-bold truncate">{match.t2.p1Name}</h3>
+              {match.t2.p2Name && <h3 className="text-xl font-bold truncate">{match.t2.p2Name}</h3>}
+              <div className="text-emerald-400 font-black text-sm mt-2 flex items-center justify-center gap-1 min-h-[20px]">
+                {match.serverTeam === 2 && <><div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Serving</>}
+              </div>
+            </div>
+            
+            <div className="flex justify-center mb-6">
+              <div className="text-[8rem] leading-none font-black tracking-tighter tabular-nums drop-shadow-md">
+                {match.t2.score}
+              </div>
+            </div>
+            
+            <div className="mt-6 flex justify-center gap-2">
+              {Array.from({ length: Math.ceil(match.bestOfSets / 2) }).map((_, i) => (
+                <div key={i} className={`w-4 h-4 rounded-full ${i < match.t2.games ? "bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.5)]" : "bg-slate-700"}`} />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function LiveScoreSection() {
-  const { isAdmin } = useAuth();
-
-  const [liveData, setLiveData] = useState<any>({
-    player1: "Player 1",
-    player2: "Player 2",
-    score1: 0,
-    score2: 0,
-    games1: 0,
-    games2: 0,
-    server: 1,
-    active: false,
-  });
+  const { session, profile, isAdmin, isUmpire } = useAuth();
+  const [liveMatches, setLiveMatches] = useState<Record<string, BwfMatchState>>({});
+  const [isUmpiring, setIsUmpiring] = useState(false);
 
   useEffect(() => {
-    // Initial fetch
     supabase
       .from("site_data")
       .select("value")
-      .eq("key", "live_score")
+      .eq("key", "live_matches")
       .single()
       .then(({ data }) => {
-        if (data?.value) setLiveData(data.value);
+        if (data?.value) setLiveMatches(data.value);
       });
 
-    // Subscribe to changes
     const sub = supabase
-      .channel("live_score_channel")
+      .channel("live_matches_channel")
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
           table: "site_data",
-          filter: "key=eq.live_score",
+          filter: "key=eq.live_matches",
         },
         (payload) => {
           if (payload.new && (payload.new as any).value) {
-            setLiveData((payload.new as any).value);
+            setLiveMatches((payload.new as any).value);
           }
         },
       )
@@ -54,129 +121,66 @@ export function LiveScoreSection() {
     };
   }, []);
 
-  const updateScore = async (newScore: any) => {
-    setLiveData(newScore);
-    const { error } = await supabase
-      .from("site_data")
-      .upsert({ key: "live_score", value: newScore });
-    if (error) toast.error("Failed to sync live score.");
-  };
+  const activeMatchList = Object.values(liveMatches).filter(match => {
+    if (!match.isFriendly) return true; // Tournaments are public
+    if (isAdmin) return true;
+    if (session?.user?.id === match.id) return true; // Umpire
+    if (!profile) return false;
 
-  const handlePoint = (player: 1 | 2, change: 1 | -1) => {
-    if (!isAdmin) return;
-    const ns = { ...liveData, server: player };
-    if (player === 1) ns.score1 = Math.max(0, ns.score1 + change);
-    else ns.score2 = Math.max(0, ns.score2 + change);
-    updateScore(ns);
-  };
+    const participants = [match.t1.p1Id, match.t1.p2Id, match.t2.p1Id, match.t2.p2Id].filter(Boolean);
+    if (participants.includes(profile.id)) return true; // Player
+    
+    const buddies = profile.buddies || [];
+    const following = profile.following || [];
+    return participants.some(pid => buddies.includes(pid) || following.includes(pid));
+  });
+
+  const myLiveMatch = session?.user ? liveMatches[session.user.id] : null;
+
+  if (isUmpiring || myLiveMatch) {
+    return (
+      <UmpireEngine
+        userId={session!.user.id}
+        userEmail={session!.user.email!}
+        userName={session!.user.user_metadata?.full_name || "Guest"}
+        isTournamentUmpire={isUmpire}
+        onClose={() => setIsUmpiring(false)}
+      />
+    );
+  }
 
   return (
-    <div className="w-full flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl bg-slate-900 rounded-[3rem] p-8 text-white relative overflow-hidden shadow-xl border border-slate-800">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-sky-500" />
-
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-2 text-emerald-400 font-bold uppercase tracking-widest text-sm">
-            <Activity className="w-5 h-5 animate-pulse" /> Live Broadcasting
-          </div>
-          {isAdmin && (
-            <button
-              onClick={() =>
-                updateScore({ ...liveData, active: !liveData.active })
-              }
-              className={`px-4 py-1.5 rounded-full text-xs font-bold ${liveData.active ? "bg-rose-500" : "bg-emerald-500"}`}
-            >
-              {liveData.active ? "End Match" : "Start Match"}
-            </button>
-          )}
+    <div className="w-full max-w-5xl mx-auto p-4 space-y-8">
+      <div className="flex flex-col sm:flex-row items-center justify-between bg-slate-900 rounded-[2rem] p-6 shadow-xl border border-slate-800 gap-4 text-center sm:text-left">
+        <div>
+          <h2 className="text-xl font-black text-white flex items-center justify-center sm:justify-start gap-2">
+            <Tv2 className="w-6 h-6 text-emerald-400" /> Live Broadcasts
+          </h2>
+          <p className="text-slate-400 text-sm mt-1">Watch live matches happening right now.</p>
         </div>
-
-        {!liveData.active && !isAdmin ? (
-          <div className="text-center py-20 text-slate-400">
-            <Trophy className="w-16 h-16 mx-auto mb-4 opacity-20" />
-            <h2 className="text-2xl font-bold">No Live Match Currently</h2>
-            <p className="mt-2">Waiting for umpire to start broadcasting...</p>
-          </div>
-        ) : (
-          <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16">
-            {/* Player 1 */}
-            <div className="text-center flex-1">
-              <input
-                disabled={!isAdmin}
-                value={liveData.player1}
-                onChange={(e) =>
-                  updateScore({ ...liveData, player1: e.target.value })
-                }
-                className="bg-transparent text-center text-xl font-bold mb-4 w-full outline-none focus:border-b border-slate-700"
-              />
-              <div
-                className={`text-8xl font-black tabular-nums transition-colors ${liveData.server === 1 ? "text-emerald-400" : "text-white"}`}
-              >
-                {liveData.score1}
-              </div>
-              <div className="mt-2 text-slate-400 font-bold">
-                Games: {liveData.games1}
-              </div>
-
-              {isAdmin && (
-                <div className="flex justify-center gap-2 mt-6">
-                  <button
-                    onClick={() => handlePoint(1, -1)}
-                    className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center hover:bg-slate-700 active:scale-95"
-                  >
-                    <Minus />
-                  </button>
-                  <button
-                    onClick={() => handlePoint(1, 1)}
-                    className="w-16 h-16 rounded-full bg-emerald-500 text-slate-900 flex items-center justify-center hover:bg-emerald-400 active:scale-95"
-                  >
-                    <Plus className="w-8 h-8" />
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="text-3xl font-black text-slate-700">VS</div>
-
-            {/* Player 2 */}
-            <div className="text-center flex-1">
-              <input
-                disabled={!isAdmin}
-                value={liveData.player2}
-                onChange={(e) =>
-                  updateScore({ ...liveData, player2: e.target.value })
-                }
-                className="bg-transparent text-center text-xl font-bold mb-4 w-full outline-none focus:border-b border-slate-700"
-              />
-              <div
-                className={`text-8xl font-black tabular-nums transition-colors ${liveData.server === 2 ? "text-emerald-400" : "text-white"}`}
-              >
-                {liveData.score2}
-              </div>
-              <div className="mt-2 text-slate-400 font-bold">
-                Games: {liveData.games2}
-              </div>
-
-              {isAdmin && (
-                <div className="flex justify-center gap-2 mt-6">
-                  <button
-                    onClick={() => handlePoint(2, -1)}
-                    className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center hover:bg-slate-700 active:scale-95"
-                  >
-                    <Minus />
-                  </button>
-                  <button
-                    onClick={() => handlePoint(2, 1)}
-                    className="w-16 h-16 rounded-full bg-emerald-500 text-slate-900 flex items-center justify-center hover:bg-emerald-400 active:scale-95"
-                  >
-                    <Plus className="w-8 h-8" />
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+        {session && (
+          <button
+            onClick={() => setIsUmpiring(true)}
+            className="px-6 py-3 w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg transition-colors"
+          >
+            <Play className="w-5 h-5 fill-white" /> Start Umpiring
+          </button>
         )}
       </div>
+
+      {activeMatchList.filter(m => m.status !== "setup").length === 0 ? (
+        <div className="text-center py-20 bg-slate-900/50 rounded-3xl border border-slate-800 border-dashed">
+          <Activity className="w-16 h-16 mx-auto mb-4 opacity-20 text-slate-400" />
+          <h2 className="text-2xl font-bold text-slate-300">No Live Matches</h2>
+          <p className="mt-2 text-slate-500">Wait for someone to start broadcasting...</p>
+        </div>
+      ) : (
+        <div className="space-y-8">
+          {activeMatchList.map((m) => (
+            <MatchBroadcastCard key={m.id} match={m} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

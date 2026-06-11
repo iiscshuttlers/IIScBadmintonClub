@@ -936,26 +936,27 @@ export default function PlayersDirectory() {
                 return (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {followingPlayers.map((player) => (
-                      <div
+                      <PlayerCard
                         key={player.id}
-                        className="bg-white dark:bg-slate-900 rounded-2xl border border-violet-200 dark:border-violet-800/50 p-4 flex items-center gap-4 cursor-pointer hover:shadow-md transition shadow-sm"
-                        onClick={() => setLocation(`/player/${player.id}`)}
-                      >
-                        <div className="relative shrink-0">
-                          {player.avatar_url ? (
-                            <img src={player.avatar_url} className="w-12 h-12 rounded-full object-cover" />
-                          ) : (
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-400 to-fuchsia-500 flex items-center justify-center text-white font-black text-lg">
-                              {player.full_name[0]}
-                            </div>
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-black text-sm text-slate-800 dark:text-slate-100 truncate">{player.full_name}</p>
-                          <p className="text-xs text-slate-400 truncate">{player.department}</p>
-                          <p className="text-xs font-bold text-violet-600 dark:text-violet-400 mt-0.5">ELO {player.elo_rating ?? "—"}</p>
-                        </div>
-                      </div>
+                        player={player}
+                        isOwn={false}
+                        isAdmin={isAdmin}
+                        onDelete={handleAdminDelete}
+                        onEdit={handleAdminEdit}
+                        onLogMatch={
+                          ownProfile
+                            ? () => {
+                                setSelectedOpponentId(player.id);
+                                setIsLogMatchOpen(true);
+                              }
+                            : undefined
+                        }
+                        isBuddy={myBuddyIds.has(player.id)}
+                        isFollowing={followingIds.has(player.id)}
+                        onToggleBuddy={ownProfile ? handleToggleBuddy : undefined}
+                        onToggleFollow={ownProfile ? handleToggleFollow : undefined}
+                        currentUserName={ownProfile?.full_name}
+                      />
                     ))}
                   </div>
                 );
@@ -975,26 +976,27 @@ export default function PlayersDirectory() {
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {followers.map((player) => (
-                    <div
+                    <PlayerCard
                       key={player.id}
-                      className="bg-white dark:bg-slate-900 rounded-2xl border border-amber-200 dark:border-amber-800/50 p-4 flex items-center gap-4 cursor-pointer hover:shadow-md transition shadow-sm"
-                      onClick={() => setLocation(`/player/${player.id}`)}
-                    >
-                      <div className="shrink-0">
-                        {player.avatar_url ? (
-                          <img src={player.avatar_url} className="w-12 h-12 rounded-full object-cover" />
-                        ) : (
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-black text-lg">
-                            {player.full_name[0]}
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-black text-sm text-slate-800 dark:text-slate-100 truncate">{player.full_name}</p>
-                        <p className="text-xs text-slate-400 truncate">{player.department}</p>
-                        <p className="text-xs font-bold text-amber-600 dark:text-amber-400 mt-0.5">ELO {player.elo_rating ?? "—"}</p>
-                      </div>
-                    </div>
+                      player={player}
+                      isOwn={false}
+                      isAdmin={isAdmin}
+                      onDelete={handleAdminDelete}
+                      onEdit={handleAdminEdit}
+                      onLogMatch={
+                        ownProfile
+                          ? () => {
+                              setSelectedOpponentId(player.id);
+                              setIsLogMatchOpen(true);
+                            }
+                          : undefined
+                      }
+                      isBuddy={myBuddyIds.has(player.id)}
+                      isFollowing={followingIds.has(player.id)}
+                      onToggleBuddy={ownProfile ? handleToggleBuddy : undefined}
+                      onToggleFollow={ownProfile ? handleToggleFollow : undefined}
+                      currentUserName={ownProfile?.full_name}
+                    />
                   ))}
                 </div>
               )}

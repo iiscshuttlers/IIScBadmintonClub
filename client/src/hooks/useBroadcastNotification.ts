@@ -4,8 +4,12 @@ import { showWebNotification } from "./usePushNotifications";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import { Capacitor } from "@capacitor/core";
 
+import { useAuth } from "@/contexts/AuthContext";
+
 export function useBroadcastNotification() {
   const lastAnnouncementRef = useRef<string | null>(null);
+  const knownMatchesRef = useRef<Set<string>>(new Set());
+  const { profile } = useAuth();
 
   useEffect(() => {
     const channel = supabase
@@ -69,6 +73,53 @@ export function useBroadcastNotification() {
               }
             } catch (e) {
                console.error("Failed to parse announcement data", e);
+            }
+          } else if (row.key === "live_matches") {
+            try {
+              const liveMatches = row.value || {};
+              Object.values(liveMatches).forEach((match: any) => {
+                if (match.status === "playing" && !knownMatchesRef.current.has(match.id)) {
+                  knownMatchesRef.current.add(match.id);
+                  
+                  // Check user preferences
+                  const notifyFriendly = localStorage.getItem("iisc_notify_friendly_matches") !== "false";
+                  const notifyTourney = localStorage.getItem("iisc_notify_tournament_matches") !== "false";
+                  
+                  if (match.isFriendly && !notifyFriendly) return;
+                  if (!match.isFriendly && !notifyTourney) return;
+
+                  // For friendly, check if buddy/follower
+                  if (match.isFriendly) {
+                    if (!profile) return;
+                    const participants = [match.t1?.p1Id, match.t1?.p2Id, match.t2?.p1Id, match.t2?.p2Id].filter(Boolean);
+                    if (participants.includes(profile.id)) return; // Don't notify self
+                    const buddies = profile.buddies || [];
+                    const following = profile.following || [];
+                    const isConnected = participants.some(pid => buddies.includes(pid) || following.includes(pid));
+                    if (!isConnected) return;
+                  }
+
+                  const title = match.isFriendly ? "🏸 Live Friendly Match!" : "🏆 Live Tournament Match!";
+                  const body = `${match.t1?.p1Name} vs ${match.t2?.p1Name} is now live!`;
+
+                  if (Capacitor.isNativePlatform()) {
+                    LocalNotifications.schedule({
+                      notifications: [{
+                        title,
+                        body,
+                        id: Math.floor(Math.random() * 1000000),
+                        schedule: { at: new Date(Date.now() + 100) }
+                      }]
+                    }).catch(console.warn);
+                  } else {
+                    showWebNotification(title, body, () => {
+                      window.location.href = `${import.meta.env.BASE_URL || "/"}feed`;
+                    });
+                  }
+                }
+              });
+            } catch (e) {
+              console.error("Failed to parse live matches for notifications", e);
             }
           }
         },

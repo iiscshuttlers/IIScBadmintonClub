@@ -69,6 +69,14 @@ export function useMatchNotification() {
           // Fire browser notification ONLY for the receiver(s)
           if (!isSubmitter) {
             const alertName = opponentName || "Someone";
+            const isFriendly = !!match.is_friendly;
+            const notifTitle = isFriendly
+              ? "🏸 Friendly Match Logged!"
+              : "🏸 New Tournament Match!";
+            const notifBody = isFriendly
+              ? `${alertName} logged a friendly match against you. Tap to view.`
+              : `${alertName} logged a tournament match against you. Tap to confirm.`;
+
             if (Capacitor.isNativePlatform()) {
               try {
                 // Check permissions first
@@ -83,8 +91,8 @@ export function useMatchNotification() {
                   await LocalNotifications.schedule({
                     notifications: [
                       {
-                        title: "🏸 New Match Challenge!",
-                        body: `${alertName} just logged a match against you. Tap to confirm.`,
+                        title: notifTitle,
+                        body: notifBody,
                         id: Math.floor(Math.random() * 1000000),
                         schedule: { at: new Date(Date.now() + 100) },
                         actionTypeId: "",
@@ -97,13 +105,9 @@ export function useMatchNotification() {
                 console.warn("Failed to schedule local notification", e);
               }
             } else {
-              showWebNotification(
-                "🏸 New Match Challenge!",
-                `${alertName} just logged a match against you. Open the app to confirm.`,
-                () => {
-                  window.location.href = `${import.meta.env.BASE_URL || "/"}matches`;
-                },
-              );
+              showWebNotification(notifTitle, notifBody, () => {
+                window.location.href = `${import.meta.env.BASE_URL || "/"}matches`;
+              });
             }
           }
 

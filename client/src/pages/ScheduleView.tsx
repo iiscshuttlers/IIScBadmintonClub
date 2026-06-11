@@ -68,9 +68,10 @@ const POOL_COLORS: Record<string, string> = {
 
 interface ScheduleViewProps {
   tournamentData: any;
+  dateFilter?: string;
 }
 
-export function ScheduleView({ tournamentData }: ScheduleViewProps) {
+export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) {
   if (!tournamentData) return null;
 
   const [activeFormat, setActiveFormat] = useState<string>("ALL");
@@ -80,10 +81,14 @@ export function ScheduleView({ tournamentData }: ScheduleViewProps) {
       (matches as any[]).map((m) => ({ ...m, format })),
   );
 
-  const filtered =
+  let filtered =
     activeFormat === "ALL"
       ? allMatches
       : allMatches.filter((m) => m.format === activeFormat);
+
+  if (dateFilter) {
+    filtered = filtered.filter((m) => m.Date === dateFilter);
+  }
 
   filtered.sort((a, b) => {
     const toMins = (t: string) => {

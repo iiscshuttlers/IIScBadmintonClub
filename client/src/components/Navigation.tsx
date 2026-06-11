@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { getTournaments } from "@/lib/tournaments";
+import { fetchSiteData } from "@/lib/siteData";
 import {
   Menu,
   X,
@@ -16,6 +17,7 @@ import {
   ChevronDown,
   BookOpen,
   Plus,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,9 +35,7 @@ const TOP_LEVEL_LINKS = [
   { href: "/events", label: "Events" },
   { href: "/feed", label: "Feed" },
   { href: "/players", label: "Players" },
-  { href: "/hall-of-fame", label: "Hall of Fame" },
-  { href: "/about", label: "About" },
-  { href: "/gallery", label: "Gallery" },
+  { href: "/about", label: "Club" },
 ];
 
 export default function Navigation() {
@@ -57,6 +57,7 @@ export default function Navigation() {
     userAvatar,
     pendingActionCount,
   } = useNavigationAuth();
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -76,22 +77,34 @@ export default function Navigation() {
 
   useEffect(() => {
     setIsOpen(false);
-    // Mark announcements as read when user visits the page
-    if (location.startsWith("/feed") && location.includes("tab=announcements")) {
+    // Mark announcements as read when user visits the feed page
+    if (location.startsWith("/feed")) {
       localStorage.setItem("iisc_announcements_last_seen", Date.now().toString());
       setHasUnreadAnnouncements(false);
     }
   }, [location]);
 
-  // Show unread dot if announcements haven't been viewed in the last 24h
+  // Show unread dot if there are new announcements since last visit
   useEffect(() => {
-    const check = () => {
-      const lastSeen = localStorage.getItem("iisc_announcements_last_seen");
-      if (!lastSeen) {
-        setHasUnreadAnnouncements(true);
-      } else {
-        const elapsed = Date.now() - parseInt(lastSeen, 10);
-        setHasUnreadAnnouncements(elapsed > 24 * 60 * 60 * 1000);
+    const check = async () => {
+      const lastSeenStr = localStorage.getItem("iisc_announcements_last_seen");
+      const lastSeen = lastSeenStr ? parseInt(lastSeenStr, 10) : 0;
+      try {
+        const data = await fetchSiteData<{ recent: any[] }>("announcements", "announcements.json");
+        if (data && data.recent && data.recent.length > 0) {
+          const latestItem = data.recent.reduce((latest, current) => {
+            if (!latest.date) return current;
+            if (!current.date) return latest;
+            return new Date(current.date).getTime() > new Date(latest.date).getTime() ? current : latest;
+          });
+          
+          if (latestItem && latestItem.date) {
+            const latestTime = new Date(latestItem.date).getTime();
+            setHasUnreadAnnouncements(latestTime > lastSeen);
+          }
+        }
+      } catch (err) {
+        // Silently fail if we can't load announcements for the nav dot
       }
     };
     check();
@@ -164,13 +177,14 @@ export default function Navigation() {
             <div className="hidden lg:flex items-center gap-2">
               {isLoggedIn && (
                 <Button
-                  onClick={() => window.dispatchEvent(new Event('open-log-match-modal'))}
+                  onClick={() => window.dispatchEvent(new Event('openLogMatchModal'))}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-4 rounded-full h-9 shadow-sm mr-2"
                 >
                   <Plus className="w-4 h-4 mr-1" />
                   Log Match
                 </Button>
               )}
+
               {/* Icons removed from here and moved to dropdown */}
               {authLoading ? (
                 <div className="w-24 h-9 bg-slate-100 dark:bg-slate-800 rounded-full animate-pulse" />
@@ -194,72 +208,135 @@ export default function Navigation() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     align="end"
-                    className="w-72 bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 rounded-2xl shadow-xl mt-1 p-2"
+                    className="w-80 p-0 border-0 overflow-hidden rounded-2xl shadow-2xl shadow-slate-300/40 dark:shadow-black/60"
                   >
-                    {/* Microsoft-style user card */}
-                    <div className="flex items-start justify-between px-3 pt-2 pb-1">
-                      <div className="text-[11px] font-black uppercase tracking-widest text-slate-400">IISc Badminton Club</div>
-                      <button onClick={() => handleSignOut()} className="text-xs font-bold text-slate-500 hover:text-rose-500 transition-colors">Sign out</button>
-                    </div>
-                    <div className="flex items-center gap-4 px-3 py-3 mb-2">
-                      <div className="w-14 h-14 rounded-full overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 relative shadow-sm">
-                        {userAvatar ? (
-                          <img src={userAvatar} alt="Profile" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center font-black text-xl">
-                            {userName ? userName[0].toUpperCase() : "U"}
-                          </div>
+                    {/* ── Hero user card ── */}
+                    <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 dark:from-slate-900 dark:via-slate-800 dark:to-emerald-950 px-4 pt-3 pb-4">
+                      {/* Decorative circles */}
+                      <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full bg-white/10 pointer-events-none" />
+                      <div className="absolute -bottom-4 -left-4 w-20 h-20 rounded-full bg-white/5 pointer-events-none" />
+                      <div className="absolute top-6 right-16 w-8 h-8 rounded-full bg-white/10 pointer-events-none" />
+
+                      <div className="relative flex justify-between items-center mb-3">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-white/50">IISc Badminton Club</span>
+                        <button onClick={() => handleSignOut()} className="text-[11px] font-bold text-white/50 hover:text-white/90 transition-colors px-2 py-0.5 rounded-md hover:bg-white/10">
+                          Sign out
+                        </button>
+                      </div>
+
+                      <div className="relative flex items-center gap-3">
+                        <div className="w-14 h-14 rounded-2xl overflow-hidden shrink-0 border-2 border-white/30 shadow-lg shadow-black/20 ring-2 ring-white/10">
+                          {userAvatar ? (
+                            <img src={userAvatar} alt="Profile" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center font-black text-xl">
+                              {userName ? userName[0].toUpperCase() : "U"}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-black text-white text-base leading-tight truncate">{userName}</p>
+                          <p className="text-white/55 text-xs truncate mt-0.5">{userEmail}</p>
+                          <Link
+                            href={myPlayerId ? `/player/${myPlayerId}` : "/profile/setup"}
+                            className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-bold text-white/70 hover:text-white bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-full transition-all"
+                          >
+                            View profile →
+                          </Link>
+                        </div>
+                        {pendingActionCount > 0 && (
+                          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-black text-white shadow ring-2 ring-white/30">
+                            {pendingActionCount > 9 ? "9+" : pendingActionCount}
+                          </span>
                         )}
                       </div>
-                      <div className="flex flex-col overflow-hidden">
-                        <span className="font-black text-slate-900 dark:text-white truncate">{userName}</span>
-                        <span className="text-xs text-slate-500 dark:text-slate-400 truncate mb-1">{userEmail}</span>
-                        <Link href={myPlayerId ? `/player/${myPlayerId}` : "/profile/setup"} className="text-xs font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-500 dark:hover:text-emerald-400 hover:underline w-fit">
-                          View profile
+                    </div>
+
+                    {/* ── Settings body ── */}
+                    <div className="bg-slate-50 dark:bg-slate-950 p-2.5 space-y-2 max-h-[70vh] overflow-y-auto">
+
+                      {/* Light / Dark toggle */}
+                      <div className="bg-white dark:bg-slate-900 rounded-xl p-1 flex gap-1 shadow-sm border border-slate-100 dark:border-slate-800">
+                        <button
+                          onClick={() => { if (theme === "dark") toggleTheme(); }}
+                          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${
+                            theme === "light"
+                              ? "bg-amber-50 text-amber-700 shadow-sm border border-amber-200 dark:bg-slate-700 dark:text-amber-400 dark:border-slate-600"
+                              : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
+                          }`}
+                        >
+                          <Sun className="w-3.5 h-3.5" /> Light
+                        </button>
+                        <button
+                          onClick={() => { if (theme === "light") toggleTheme(); }}
+                          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${
+                            theme === "dark"
+                              ? "bg-indigo-950/60 text-indigo-300 shadow-sm border border-indigo-800 dark:bg-indigo-950/60"
+                              : "text-slate-400 hover:text-slate-600"
+                          }`}
+                        >
+                          <Moon className="w-3.5 h-3.5" /> Dark
+                        </button>
+                      </div>
+
+                      {/* QuickSettings: accent colors + live status + notifications */}
+                      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+                        <QuickSettingsContent />
+                      </div>
+
+                      {/* Action items */}
+                      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+                        <Link href="/profile/password">
+                          <DropdownMenuItem className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2.5 gap-2.5">
+                            <Lock className="w-4 h-4 text-slate-400" /> Change Password
+                          </DropdownMenuItem>
+                        </Link>
+                        {isAdmin && (
+                          <Link href="/admin">
+                            <DropdownMenuItem className="cursor-pointer font-semibold rounded-none text-violet-600 dark:text-violet-400 focus:bg-violet-50 dark:focus:bg-violet-950/30 gap-2.5 px-3 py-2.5 border-t border-slate-100 dark:border-slate-800">
+                              <Zap className="h-4 w-4" /> Site Admin
+                            </DropdownMenuItem>
+                          </Link>
+                        )}
+                      </div>
+
+                      {/* Switch / Add Account */}
+                      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+                        {savedAccounts.length > 0 && (
+                          <>
+                            <div className="px-3 py-2 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
+                              Switch Account
+                            </div>
+                            {savedAccounts.map((acc) => (
+                              <DropdownMenuItem
+                                key={acc.id}
+                                className="cursor-pointer font-medium rounded-none focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2.5 border-b border-slate-50 dark:border-slate-800/50 last:border-b-0"
+                                onClick={async () => { await switchAccount(acc); }}
+                              >
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{acc.name}</span>
+                                  <span className="text-[10px] text-slate-400 dark:text-slate-500">{acc.email}</span>
+                                </div>
+                              </DropdownMenuItem>
+                            ))}
+                            <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800 m-0" />
+                          </>
+                        )}
+                        <Link href="/join?add_account=true">
+                          <DropdownMenuItem className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:bg-slate-50 dark:focus:bg-slate-800 gap-2.5 px-3 py-2.5">
+                            <UserPlus className="h-4 w-4 text-slate-400" /> Add Account
+                          </DropdownMenuItem>
                         </Link>
                       </div>
+
+                      {/* Sign Out */}
+                      <button
+                        onClick={() => handleSignOut("Are you sure you want to sign out of this account?")}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/25 hover:bg-rose-100 dark:hover:bg-rose-950/50 text-rose-600 dark:text-rose-400 font-bold text-sm border border-rose-100 dark:border-rose-900/50 transition-colors"
+                      >
+                        <LogOut className="h-4 w-4" /> Sign Out
+                      </button>
                     </div>
-                    {isAdmin && (
-                      <>
-                        <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800 mx-1 mb-2" />
-                        <Link href="/admin">
-                          <DropdownMenuItem className="cursor-pointer font-medium rounded-xl text-violet-600 focus:bg-violet-50 dark:focus:bg-violet-950/30 gap-2 px-3 py-2.5">
-                            <Zap className="h-4 w-4" /> Site Admin
-                          </DropdownMenuItem>
-                        </Link>
-                      </>
-                    )}
-                    <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800 my-1" />
-                    {savedAccounts.length > 0 && (
-                      <>
-                        <div className="px-3 py-1.5 text-[10px] font-black text-slate-400 uppercase tracking-wider">Switch Account</div>
-                        {savedAccounts.map((acc) => (
-                          <DropdownMenuItem
-                            key={acc.id}
-                            className="cursor-pointer font-medium rounded-xl focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2"
-                            onClick={async () => { await switchAccount(acc); }}
-                          >
-                            <div className="flex flex-col">
-                              <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{acc.name}</span>
-                              <span className="text-[10px] text-slate-500">{acc.email}</span>
-                            </div>
-                          </DropdownMenuItem>
-                        ))}
-                        <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800 my-1" />
-                      </>
-                    )}
-                    <Link href="/join?add_account=true">
-                      <DropdownMenuItem className="cursor-pointer font-medium rounded-xl focus:bg-slate-50 dark:focus:bg-slate-800 gap-2 px-3 py-2.5">
-                        <UserPlus className="h-4 w-4 text-slate-400" /> Add Account
-                      </DropdownMenuItem>
-                    </Link>
-                    <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800 my-1" />
-                    <DropdownMenuItem
-                      className="cursor-pointer text-rose-600 dark:text-rose-400 font-medium rounded-xl focus:bg-rose-50 dark:focus:bg-rose-950/30 gap-2 px-3 py-2.5"
-                      onClick={() => handleSignOut("Are you sure you want to sign out of this account?")}
-                    >
-                      <LogOut className="h-4 w-4" /> Sign Out
-                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
@@ -325,6 +402,15 @@ export default function Navigation() {
                   <div className="h-10 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
                 ) : isLoggedIn ? (
                   <div className="space-y-0.5">
+                    <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl mb-2 overflow-hidden border border-slate-100 dark:border-slate-800">
+                      <QuickSettingsContent />
+                      <div className="h-px bg-slate-200 dark:bg-slate-800 my-1 mx-2" />
+                      <Link href="/profile/password">
+                        <button className="w-full flex items-center gap-2 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
+                          <Lock className="h-4 w-4 text-slate-400" /> Change Password
+                        </button>
+                      </Link>
+                    </div>
 
                     {isAdmin && (
                       <Link href="/admin">

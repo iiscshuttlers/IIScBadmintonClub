@@ -121,9 +121,7 @@ const Join = lazy(() => import("./pages/Join"));
 const ProfileSetup = lazy(() => import("./pages/ProfileSetup"));
 const PlayersDirectory = lazy(() => import("./pages/PlayersDirectory"));
 const HallOfFame = lazy(() => import("./pages/HallOfFame"));
-
-
-// Save scroll position before navigating away, restore on back-navigation
+const ChangePassword = lazy(() => import("./pages/ChangePassword"));// Save scroll position before navigating away, restore on back-navigation
 const scrollMap = new Map<string, number>();
 
 function ScrollToTop() {
@@ -245,6 +243,7 @@ function AppRoutes() {
         <Route path="/players" component={PlayersDirectory} />
         <Route path="/player/:id/edit" component={ProfileSetup} />
         <Route path="/player/:id" component={PlayerProfile} />
+        <Route path="/profile/password" component={ChangePassword} />
 
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
@@ -282,6 +281,7 @@ function OfflineBanner() {
 
 function GlobalAuthHooks() {
   usePingsNotification();
+  useBroadcastNotification();
   return null;
 }
 
@@ -291,7 +291,6 @@ function App() {
   useNativeBackButton();
   usePullToRefresh();
   useOfflineSync();
-  useBroadcastNotification();
 
   return (
     <ErrorBoundary>

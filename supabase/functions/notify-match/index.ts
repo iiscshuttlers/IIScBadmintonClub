@@ -239,8 +239,13 @@ serve(async (req) => {
     const serviceAccountStr = Deno.env.get("FIREBASE_SERVICE_ACCOUNT")!;
     const projectId = JSON.parse(serviceAccountStr).project_id;
 
-    const notificationTitle = "🏸 New Match Challenge!";
-    const notificationBody = `${challengerName} has just logged a match against you. Open the app to confirm.`;
+    const isFriendly = !!matchRecord.is_friendly;
+    const notificationTitle = isFriendly
+      ? "🏸 Friendly Match Logged!"
+      : "🏸 New Tournament Match!";
+    const notificationBody = isFriendly
+      ? `${challengerName} logged a friendly match against you. Open the app to view.`
+      : `${challengerName} logged a tournament match against you. Open the app to confirm.`;
 
     console.log(
       `[notify-match] Sending ${uniqueTokens.length} FCM notifications`,

@@ -190,22 +190,22 @@ export function PlayerCard({
       className="h-full"
     >
       <Card
-        className={`w-full overflow-hidden cursor-pointer border-b bg-white dark:bg-slate-900
-        hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:shadow-md hover:-translate-y-0.5
-        transition-all duration-200 flex items-center group relative p-3 rounded-2xl
+        className={`h-full w-full overflow-hidden cursor-pointer bg-white dark:bg-slate-900
+        hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:shadow-xl hover:-translate-y-1
+        transition-all duration-300 flex flex-col items-center text-center relative p-6 rounded-3xl border
         ${
           isOwn
-            ? "border-emerald-400 dark:border-emerald-600 ring-1 ring-emerald-400/30"
-            : "border-slate-100 dark:border-slate-800"
+            ? "border-emerald-400 dark:border-emerald-600 ring-2 ring-emerald-400/20 shadow-emerald-100 dark:shadow-none"
+            : "border-slate-100 dark:border-slate-800 shadow-sm"
         }`}
       >
-        {/* Left Side: Avatar & Department Badge */}
-        <div className="relative shrink-0 mr-4">
+        {/* Top: Avatar & Department Badge */}
+        <div className="relative mb-4">
           <div
-            className={`absolute inset-0 bg-gradient-to-br ${getEloTier(player.elo_rating).color} blur-sm opacity-30 rounded-full`}
+            className={`absolute inset-0 bg-gradient-to-br ${getEloTier(player.elo_rating).color} blur-md opacity-40 rounded-full scale-110`}
           />
           <div
-            className={`relative w-16 h-16 rounded-full overflow-hidden border-2 shadow-sm ${getEloTier(player.elo_rating).border}`}
+            className={`relative w-20 h-20 rounded-full overflow-hidden border-2 shadow-md ${getEloTier(player.elo_rating).border}`}
           >
             {player.avatar_url ? (
               <img
@@ -216,55 +216,57 @@ export function PlayerCard({
               />
             ) : (
               <div
-                className={`w-full h-full bg-gradient-to-br ${avatarGradient(player.full_name)} flex items-center justify-center text-white font-black text-xl`}
+                className={`w-full h-full bg-gradient-to-br ${avatarGradient(player.full_name)} flex items-center justify-center text-white font-black text-2xl`}
               >
                 {player.full_name.charAt(0).toUpperCase()}
               </div>
             )}
           </div>
           {/* Dept Badge */}
-          <div className="absolute -bottom-1 -right-1 flex items-center justify-center w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-[9px] font-black uppercase text-slate-600 dark:text-slate-300 border-2 border-white dark:border-slate-900 shadow-sm" title={player.department}>
+          <div className="absolute -bottom-1 -right-2 flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 border-2 border-white dark:border-slate-900 shadow-sm" title={player.department}>
             {player.department.substring(0, 3)}
           </div>
           
           {/* Status Dot */}
           {player.status === "playing" && (
-            <span className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-amber-500 border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" />
+            <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-amber-500 border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" />
           )}
           {(player.status === "looking" || player.is_looking_to_play) && (
-            <span className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" />
+            <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" />
           )}
         </div>
 
         {/* Center: Name & Rank */}
-        <div className="flex-1 min-w-0 flex flex-col justify-center">
-          <span className="text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-[2px] truncate font-bold">
+        <div className="flex flex-col items-center w-full mb-6">
+          <div className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] mb-0.5 w-full truncate px-2">
             {displayFirst}
-          </span>
-          <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-none uppercase truncate tracking-tight">
+          </div>
+          <div className="text-2xl font-black text-slate-900 dark:text-white leading-none uppercase tracking-tight w-full truncate px-2">
             {lastName}
-          </span>
-          <div className="mt-1.5 flex items-center gap-2">
-            <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+          </div>
+          <div className="mt-3 flex items-center justify-center gap-2 flex-wrap">
+            <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md">
               ELO {player.elo_rating ?? "—"}
             </span>
             {winPct !== null && (
-              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded">
+              <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2.5 py-1 rounded-md">
                 {winPct}% WIN
               </span>
             )}
           </div>
         </div>
 
-        {/* Right Side: Actions */}
-        <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1.5 shrink-0 ml-2">
+        {/* Bottom: Actions */}
+        <div className="mt-auto w-full flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-4">
            {/* Admin Actions */}
-           {isAdmin && !isOwn && (
-             <div className="flex flex-row sm:flex-col gap-1 mb-1 sm:mb-0 sm:mr-2 sm:border-r border-slate-100 dark:border-slate-800 pr-0 sm:pr-2">
-                <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit?.(player.id); }} className="p-1.5 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg"><Pencil className="w-3.5 h-3.5" /></button>
-                <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete?.(player.id); }} className="p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-lg"><Trash2 className="w-3.5 h-3.5" /></button>
-             </div>
-           )}
+           <div className="flex gap-1">
+             {isAdmin && !isOwn && (
+               <>
+                 <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit?.(player.id); }} className="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"><Pencil className="w-4 h-4" /></button>
+                 <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete?.(player.id); }} className="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
+               </>
+             )}
+           </div>
 
            <div className="flex items-center gap-1">
              {/* User Actions */}
@@ -274,7 +276,7 @@ export function PlayerCard({
                    e.stopPropagation();
                    onToggleBuddy(player.id);
                  }}
-                 className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
+                 className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
                    isBuddy
                      ? "text-rose-500 hover:text-rose-600 bg-rose-50 dark:bg-rose-950/30"
                      : "text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30"
@@ -292,7 +294,7 @@ export function PlayerCard({
                    e.stopPropagation();
                    onToggleFollow(player.id);
                  }}
-                 className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
+                 className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
                    isFollowing
                      ? "text-violet-500 hover:text-violet-600 bg-violet-50 dark:bg-violet-950/30"
                      : "text-slate-400 hover:text-violet-500 hover:bg-violet-50 dark:hover:bg-violet-950/30"
@@ -308,7 +310,7 @@ export function PlayerCard({
              )}
              <button
                onClick={handleShare}
-               className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
+               className="w-9 h-9 flex items-center justify-center rounded-full text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
              >
                <Share2 className="w-4 h-4" />
              </button>
@@ -316,7 +318,7 @@ export function PlayerCard({
              {!isOwn && (
                <button
                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); handlePing(); }}
-                 className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
+                 className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
                    isPinged ? "text-amber-500 bg-amber-50 dark:bg-amber-950/30" : "text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30"
                  }`}
                  title="Ping player"
@@ -328,7 +330,7 @@ export function PlayerCard({
              {onLogMatch && !isOwn && (
                <button
                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); onLogMatch(player.id); }}
-                 className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                 className="w-9 h-9 flex items-center justify-center rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
                  title="Log Match"
                >
                  <Sword className="w-4 h-4" />
@@ -339,7 +341,7 @@ export function PlayerCard({
         
         {/* 'You' badge */}
         {isOwn && (
-          <span className="absolute top-2 right-4 text-[9px] font-black uppercase text-emerald-500">
+          <span className="absolute top-4 left-4 bg-emerald-500 text-white px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest shadow-sm">
             You
           </span>
         )}

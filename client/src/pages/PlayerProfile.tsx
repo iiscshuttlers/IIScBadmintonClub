@@ -51,7 +51,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import LogMatchModal from "@/components/LogMatchModal";
+
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { isAdminEmail } from "@/lib/admin";
 import { MatchHistorySection } from "@/components/player-profile/MatchHistorySection";
@@ -153,8 +153,10 @@ interface Player {
   playingLevel: string;
   dominantHand: string;
   playingStyle: string;
+  gender?: string;
   favoriteShot: string;
   favoriteIdol: string;
+  favoriteFormat: string;
   quote?: string;
   currentRacket: string;
   racketDetails: { name: string; string: string; tension: string }[];
@@ -315,7 +317,7 @@ export default function PlayerProfile({
   const [allPlayers, setAllPlayers] = useState<
     { id: string; full_name: string; avatar_url?: string; gender?: string }[]
   >([]);
-  const [isLogMatchOpen, setIsLogMatchOpen] = useState(false);
+
   const [pendingMatches, setPendingMatches] = useState<any[]>([]);
   const [matchHistoryFilter, setMatchHistoryFilter] = useState<
     "all" | "friendly" | "tournament"
@@ -435,9 +437,11 @@ export default function PlayerProfile({
       joinedYear: data.joined_year,
       playingLevel: data.playing_level,
       dominantHand: data.dominant_hand,
+      gender: data.gender,
       playingStyle: data.playing_style,
       favoriteShot: data.favorite_shot,
       favoriteIdol: data.favorite_idol,
+      favoriteFormat: data.favorite_format,
       quote: data.quote,
       currentRacket: data.current_racket,
       racketDetails: data.racket_details || [],
@@ -1099,8 +1103,10 @@ export default function PlayerProfile({
   };
 
   const nameParts = player.fullName.trim().split(/\s+/);
-  const heroFirstName = nameParts[0];
-  const heroLastName = nameParts.slice(1).join(" ");
+  // Last word is the giant display word; everything before it is the smaller label.
+  // Single-name players: heroRestName is empty, heroLastWord shows large.
+  const heroLastWord = nameParts[nameParts.length - 1];
+  const heroRestName = nameParts.slice(0, -1).join(" ");
   const targetUserRole = userRoles.find((r) => r.id === player.id)?.role;
 
   if (matchesOnly) {
@@ -1116,18 +1122,7 @@ export default function PlayerProfile({
                 Your recent activity
               </p>
             </div>
-            {ownPlayerProfile && (
-              <button
-                onClick={() =>
-                  window.dispatchEvent(new Event("openLogMatchModal"))
-                }
-                className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-lg shadow-amber-500/30 flex items-center justify-center gap-2 transition-all active:scale-95 px-5 py-3 rounded-2xl font-bold"
-              >
-                <Swords className="w-5 h-5" />
-                <span className="hidden sm:inline">Log a Match</span>
-                <span className="sm:hidden">Log</span>
-              </button>
-            )}
+
           </div>
           <MatchHistorySection
             id={id}
@@ -1150,17 +1145,17 @@ export default function PlayerProfile({
         {/* Profile Banner — theme-aware: light banner for light mode, dark for dark */}
         <div className="absolute top-0 left-0 w-full h-[380px] md:h-[460px] overflow-hidden">
           <img
-            src="/profile_banner_light.png"
+            src="/profile_banner_dark.png"
             alt="Profile Banner"
             className="w-full h-full object-cover dark:hidden"
           />
           <img
-            src="/profile_banner_dark.png"
+            src="/profile_banner_light.png"
             alt="Profile Banner"
             className="w-full h-full object-cover hidden dark:block"
           />
-          {/* Directional scrim: darkens left side where text/avatar lives for readability */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/25 to-transparent dark:from-black/65 dark:via-black/35 dark:to-transparent" />
+          {/* Light mode: soft white veil so dark text stays readable; dark mode: strong dark scrim */}
+          <div className="absolute inset-0 bg-gradient-to-r from-white/50 via-white/20 to-transparent dark:from-black/65 dark:via-black/35 dark:to-transparent" />
           {/* Bottom fade blends banner into page background */}
           <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-slate-50 dark:from-[#060d1b] to-transparent" />
         </div>
@@ -1169,7 +1164,7 @@ export default function PlayerProfile({
         <nav className="relative z-20 flex items-center justify-between px-6 lg:px-10 pt-5 pb-3">
           <button
             onClick={() => setLocation("/players")}
-            className="group flex items-center gap-2 text-white/80 hover:text-white transition-all duration-200 text-sm font-semibold drop-shadow-md"
+            className="group flex items-center gap-2 text-slate-700 dark:text-white/80 hover:text-slate-900 dark:hover:text-white transition-all duration-200 text-sm font-semibold"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
             <span>Players</span>
@@ -1216,7 +1211,7 @@ export default function PlayerProfile({
                       setLocation("/join");
                     }
                   }}
-                  className="p-2.5 rounded-xl bg-black/20 border border-white/20 text-white hover:bg-black/40 transition-all backdrop-blur-md"
+                  className="p-2.5 rounded-xl bg-white/80 dark:bg-black/20 border border-slate-200/80 dark:border-white/20 text-slate-700 dark:text-white hover:bg-white dark:hover:bg-black/40 transition-all backdrop-blur-md shadow-sm"
                   title="Sign Out"
                 >
                   <LogOut className="w-4 h-4" />
@@ -1226,7 +1221,7 @@ export default function PlayerProfile({
 
             <button
               onClick={handleShare}
-              className="p-2.5 rounded-xl bg-black/20 border border-white/20 text-white hover:bg-black/40 transition-all backdrop-blur-md shadow-lg"
+              className="p-2.5 rounded-xl bg-white/80 dark:bg-black/20 border border-slate-200/80 dark:border-white/20 text-slate-700 dark:text-white hover:bg-white dark:hover:bg-black/40 transition-all backdrop-blur-md shadow-sm"
               title="Share"
             >
               <Share2 className="w-4 h-4" />
@@ -1239,7 +1234,7 @@ export default function PlayerProfile({
           <div className="flex flex-col md:flex-row gap-8 items-end relative">
              {/* Left: Avatar overlapping header */}
              <div className="relative mt-8 md:mt-24 shrink-0 z-20">
-               <div className="w-40 h-40 md:w-64 md:h-64 rounded-2xl border-4 border-white/35 overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.55)] bg-slate-200 dark:bg-slate-800">
+               <div className="w-40 h-40 md:w-64 md:h-64 rounded-2xl border-4 border-slate-200/70 dark:border-white/35 overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.55)] bg-slate-200 dark:bg-slate-800">
                  {player.avatar ? (
                    <img src={player.avatar} alt={player.fullName} className="w-full h-full object-cover" />
                  ) : (
@@ -1260,25 +1255,52 @@ export default function PlayerProfile({
              <div className="flex-1 pb-2 md:pb-4 text-slate-900 dark:text-white mt-4 md:mt-0">
                {/* Name */}
                <div className="flex flex-col">
-                 <span className="text-xl md:text-3xl font-bold uppercase tracking-[0.2em] text-white/90" style={{ textShadow: "0 2px 12px rgba(0,0,0,0.95), 0 1px 4px rgba(0,0,0,0.8)" }}>{heroFirstName}</span>
-                 <h1 className="text-5xl md:text-8xl font-black uppercase tracking-tighter leading-none text-white" style={{ textShadow: "0 4px 24px rgba(0,0,0,0.98), 0 2px 8px rgba(0,0,0,0.7), 0 0 50px rgba(0,0,0,0.4)" }}>{heroLastName}</h1>
+                 {heroRestName && (
+                   <span
+                     className="text-xl md:text-3xl font-bold uppercase tracking-[0.2em] text-slate-700 dark:text-white/90"
+                     style={theme === "dark" ? { textShadow: "0 2px 12px rgba(0,0,0,0.95), 0 1px 4px rgba(0,0,0,0.8)" } : undefined}
+                   >{heroRestName}</span>
+                 )}
+                 <div className="flex items-center flex-wrap gap-4">
+                   <h1
+                     className="text-5xl md:text-8xl font-black uppercase tracking-tighter leading-none text-slate-900 dark:text-white"
+                     style={theme === "dark" ? { textShadow: "0 4px 24px rgba(0,0,0,0.98), 0 2px 8px rgba(0,0,0,0.7), 0 0 50px rgba(0,0,0,0.4)" } : undefined}
+                   >{heroLastWord}</h1>
+                   {player.social?.instagram && (
+                     <a
+                       href={`https://instagram.com/${player.social.instagram.replace("@", "")}`}
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       className="flex items-center gap-1.5 px-3 py-2 mt-2 md:mt-4 bg-white/80 dark:bg-black/40 backdrop-blur-md border border-pink-300/60 dark:border-pink-500/30 text-pink-600 dark:text-pink-300 hover:bg-pink-50 dark:hover:bg-pink-600/60 font-bold rounded-2xl transition-all shadow-sm"
+                       title="Instagram"
+                     >
+                       <Instagram className="w-5 h-5 md:w-7 md:h-7" />
+                       <span className="text-xs md:text-sm tracking-widest hidden sm:inline-block">@{player.social.instagram.replace("@", "")}</span>
+                     </a>
+                   )}
+                 </div>
                </div>
                
                {/* Stats / Details Pill Row */}
                <div className="flex flex-wrap gap-2 mt-4 md:mt-6">
-                 <span className="px-3 py-1.5 rounded-lg bg-black/40 backdrop-blur-md border border-white/25 text-white text-sm font-bold uppercase flex items-center gap-1.5 shadow-sm">
+                 <span className="px-3 py-1.5 rounded-lg bg-white/80 dark:bg-black/40 backdrop-blur-md border border-slate-200/80 dark:border-white/25 text-slate-800 dark:text-white text-sm font-bold uppercase shadow-sm flex items-center gap-1.5">
                    <MapPin className="w-4 h-4 text-rose-400" /> {player.department}
                  </span>
-                 <span className="px-3 py-1.5 rounded-lg bg-black/40 backdrop-blur-md border border-white/25 text-white text-sm font-bold uppercase shadow-sm">
+                 <span className="px-3 py-1.5 rounded-lg bg-white/80 dark:bg-black/40 backdrop-blur-md border border-slate-200/80 dark:border-white/25 text-slate-800 dark:text-white text-sm font-bold uppercase shadow-sm">
                    {player.playingLevel}
                  </span>
+                 {player.gender && (authSession?.user?.id === player.userId || isAdmin) && (
+                   <span className="px-3 py-1.5 rounded-lg bg-white/80 dark:bg-black/40 backdrop-blur-md border border-slate-200/80 dark:border-white/25 text-slate-800 dark:text-white text-sm font-bold uppercase shadow-sm" title="Only you and admins can see this">
+                     {player.gender}
+                   </span>
+                 )}
                  {player.dominantHand && (
-                   <span className="px-3 py-1.5 rounded-lg bg-black/40 backdrop-blur-md border border-white/25 text-white text-sm font-bold uppercase flex items-center gap-1.5 shadow-sm">
+                   <span className="px-3 py-1.5 rounded-lg bg-white/80 dark:bg-black/40 backdrop-blur-md border border-slate-200/80 dark:border-white/25 text-slate-800 dark:text-white text-sm font-bold uppercase shadow-sm flex items-center gap-1.5">
                      <User className="w-4 h-4 text-violet-400" /> {player.dominantHand.split("-")[0]} Hand
                    </span>
                  )}
                  {player.elo_rating != null && (
-                   <span className="px-3 py-1.5 rounded-lg bg-black/40 backdrop-blur-md border border-white/25 text-white text-sm font-bold uppercase flex items-center gap-1.5 shadow-sm">
+                   <span className="px-3 py-1.5 rounded-lg bg-white/80 dark:bg-black/40 backdrop-blur-md border border-slate-200/80 dark:border-white/25 text-slate-800 dark:text-white text-sm font-bold uppercase shadow-sm flex items-center gap-1.5">
                      {getEloTier(player.elo_rating).icon} {player.elo_rating} ELO
                    </span>
                  )}
@@ -1286,15 +1308,8 @@ export default function PlayerProfile({
 
                {/* CTAs */}
                <div className="flex flex-wrap items-center gap-3 mt-6">
-                 {currentUser && player && currentUser.id !== player.userId && ownPlayerProfile ? (
+                 {currentUser && player && currentUser.id !== player.userId && ownPlayerProfile && (
                    <>
-                     {/* Log Match */}
-                     <button
-                       onClick={() => setIsLogMatchOpen(true)}
-                       className="flex items-center gap-2 px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl transition-all shadow-md shadow-amber-500/25 text-sm uppercase tracking-wider"
-                     >
-                       <Swords className="w-4 h-4" /> Log Match
-                     </button>
                      {/* Follow */}
                      <button
                        onClick={handleToggleFollow}
@@ -1328,40 +1343,6 @@ export default function PlayerProfile({
                        {isBuddy ? "Buddy" : "Add Buddy"}
                      </button>
                    </>
-                 ) : currentUser && player && currentUser.id === player.userId ? (
-                   <div className="flex flex-col gap-2 w-full sm:w-80 mt-2 bg-white dark:bg-[#0c1424] border border-slate-200 dark:border-slate-800/60 rounded-2xl p-4 shadow-sm relative overflow-hidden">
-                     {/* Gloss effect */}
-                     <div className="absolute top-0 inset-x-0 h-1/2 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
-                     
-                     <div className="flex items-center justify-between px-2 pb-3 mb-1 border-b border-slate-100 dark:border-slate-800/60 relative z-10">
-                       <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-                         {theme === "dark" ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
-                         Dark Mode
-                       </span>
-                       <button
-                         onClick={(e) => { e.preventDefault(); toggleTheme(); }}
-                         className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer ${theme === "dark" ? "bg-emerald-500" : "bg-slate-200"}`}
-                       >
-                         <div className={`absolute top-1 left-1 bg-white rounded-full w-4 h-4 transition-transform flex items-center justify-center shadow-sm ${theme === "dark" ? "translate-x-6" : "translate-x-0"}`}>
-                         </div>
-                       </button>
-                     </div>
-                     
-                     <div className="relative z-10">
-                       <QuickSettingsContent />
-                     </div>
-                   </div>
-                 ) : null}
-                 {player.social?.instagram && (
-                     <a
-                     href={`https://instagram.com/${player.social.instagram.replace("@", "")}`}
-                     target="_blank"
-                     rel="noopener noreferrer"
-                     className="flex items-center gap-2 px-5 py-2.5 bg-black/40 backdrop-blur-md border border-white/25 text-pink-300 hover:bg-pink-600/60 font-bold rounded-xl transition-all text-sm uppercase shadow-sm"
-                   >
-                     <Instagram className="w-4 h-4" />
-                     <span className="hidden sm:inline">Instagram</span>
-                   </a>
                  )}
                </div>
              </div>
@@ -1630,8 +1611,10 @@ export default function PlayerProfile({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* ── LEFT COLUMN ── */}
           <div className="lg:col-span-7 xl:col-span-8 space-y-8">
-            {/* Player Attributes */}
-            <motion.section variants={itemVariants}>
+            {activeTab === "OVERVIEW" && (
+              <>
+                {/* Player Attributes */}
+                <motion.section variants={itemVariants}>
               <div className="flex items-center gap-3 mb-5">
                 <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
                 <span className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500 dark:text-white/35 shrink-0">
@@ -1673,6 +1656,14 @@ export default function PlayerProfile({
                       accent: "from-violet-400 to-purple-500",
                       iconBg: "bg-violet-500/[0.12]",
                       iconColor: "text-violet-500",
+                    },
+                    {
+                      Icon: Activity,
+                      label: "Favorite Format",
+                      value: player.favoriteFormat,
+                      accent: "from-emerald-400 to-teal-500",
+                      iconBg: "bg-emerald-500/[0.12]",
+                      iconColor: "text-emerald-500",
                     },
                   ] as const
                 ).map((attr) => (
@@ -1746,15 +1737,7 @@ export default function PlayerProfile({
                 <Swords className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" /> Match History
               </span>
               <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
-              {ownPlayerProfile && (
-                <button
-                  onClick={() => window.dispatchEvent(new Event("openLogMatchModal"))}
-                  className="shrink-0 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 hover:border-amber-500/50 text-amber-500 dark:text-amber-400 font-bold py-2 px-4 rounded-xl text-xs flex items-center gap-1.5 transition-all active:scale-95"
-                >
-                  <Swords className="w-3.5 h-3.5" />
-                  Log Match
-                </button>
-              )}
+
             </div>
             <MatchHistorySection
               id={id}
@@ -1771,12 +1754,99 @@ export default function PlayerProfile({
 
             {/* Career Highlights */}
             <CareerHighlightsSection player={player} />
+              </>
+            )}
+            {/* ── RANKING TAB ── */}
+            {activeTab === "RANKING" && (
+              <motion.section variants={itemVariants} className="space-y-6 md:space-y-8">
+                {authSession?.user?.id && player.userId && authSession.user.id !== player.userId && (
+                  <HeadToHeadWidget
+                    currentUserId={authSession.user.id}
+                    targetUserId={player.userId}
+                    targetUserName={player.fullName || ""}
+                    matches={liveMatches.filter((m) => m.status === "confirmed")}
+                  />
+                )}
+                
+                <Badges
+                  matches={liveMatches.filter((m) => m.status === "confirmed")}
+                  playerId={id!}
+                />
+
+                {eloHistoryData.length > 1 && (
+                  <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-3xl p-5 sm:p-6 border border-slate-200 dark:border-white/8">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-white/45 mb-6 flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-amber-400" /> ELO Progression
+                    </h3>
+                    <div className="h-64 w-full" aria-label="ELO rating progression chart" role="img">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={eloHistoryData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="colorElo" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.35} />
+                              <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
+                          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#94a3b8" }} dy={10} minTickGap={30} />
+                          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#94a3b8" }} domain={["auto", "auto"]} />
+                          <Tooltip
+                            contentStyle={{
+                              borderRadius: "16px",
+                              border: "none",
+                              boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+                              background: "var(--tw-colors-slate-900)",
+                            }}
+                            itemStyle={{ color: "#f59e0b", fontWeight: "bold" }}
+                            labelStyle={{ color: "#94a3b8", fontSize: "12px", marginBottom: "4px" }}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="elo"
+                            stroke="#f59e0b"
+                            strokeWidth={4}
+                            dot={{ r: 4, fill: "#f59e0b", strokeWidth: 2, stroke: "#fff" }}
+                            activeDot={{ r: 6 }}
+                            isAnimationActive={true}
+                            animationDuration={800}
+                            animationEasing="ease-out"
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                )}
+
+                {(!authSession?.user?.id || player.userId === authSession.user.id) && eloHistoryData.length <= 1 && liveMatches.length < 5 && (
+                  <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-8 border border-slate-200 dark:border-white/8 text-center">
+                    <Trophy className="w-12 h-12 text-slate-300 dark:text-white/10 mx-auto mb-3" />
+                    <h3 className="text-sm font-bold text-slate-500 dark:text-white/40">Not Enough Data</h3>
+                    <p className="text-xs text-slate-400 dark:text-white/20 mt-1">Play more matches to unlock ranking analytics.</p>
+                  </div>
+                )}
+              </motion.section>
+            )}
+
+            {/* ── STATS TAB ── */}
+            {activeTab === "STATS" && (
+              <motion.section variants={itemVariants} className="space-y-6 md:space-y-8">
+                <DoublesSynergyWidget
+                  matches={liveMatches.filter((m) => m.status === "confirmed")}
+                  playerId={id!}
+                  allPlayers={allPlayers}
+                />
+                <ActivityHeatmap
+                  matches={liveMatches.filter((m) => m.status === "confirmed")}
+                />
+              </motion.section>
+            )}
+
           </div>
 
           {/* ── RIGHT COLUMN ── */}
           <div className="lg:col-span-5 xl:col-span-4 space-y-5">
             {/* Quote */}
-            {player.quote && (
+            {activeTab === "OVERVIEW" && player.quote && (
               <motion.div variants={itemVariants} className="relative group">
                 <div className="absolute -inset-0.5 bg-gradient-to-br from-blue-800 to-amber-500 rounded-[1.75rem] blur opacity-25 group-hover:opacity-50 transition duration-500" />
                 <div className="relative bg-gradient-to-br from-[#1a3a7a] via-[#0f2347] to-[#070d1a] rounded-[1.75rem] p-7 shadow-lg shadow-blue-950/40 overflow-hidden border border-amber-500/20">
@@ -1792,7 +1862,7 @@ export default function PlayerProfile({
             )}
 
             {/* Bio */}
-            {player.bio && (
+            {activeTab === "OVERVIEW" && player.bio && (
               <motion.section
                 variants={itemVariants}
                 className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden"
@@ -1989,83 +2059,6 @@ export default function PlayerProfile({
             </motion.section>
             )}
 
-            {/* ── RANKING TAB ── */}
-            {activeTab === "RANKING" && (
-              <motion.section variants={itemVariants} className="space-y-6 md:space-y-8">
-                {authSession?.user?.id && player.userId && authSession.user.id !== player.userId && (
-                  <HeadToHeadWidget
-                    currentUserId={authSession.user.id}
-                    targetUserId={player.userId}
-                    targetUserName={player.fullName || ""}
-                    matches={liveMatches.filter((m) => m.status === "confirmed")}
-                  />
-                )}
-                
-                <Badges
-                  matches={liveMatches.filter((m) => m.status === "confirmed")}
-                  playerId={id!}
-                />
-
-                {eloHistoryData.length > 1 && (
-                  <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-3xl p-5 sm:p-6 border border-slate-200 dark:border-white/8">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-white/45 mb-6 flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-amber-400" /> ELO Progression
-                    </h3>
-                    <div className="h-64 w-full" aria-label="ELO rating progression chart" role="img">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={eloHistoryData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                          <defs>
-                            <linearGradient id="colorElo" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.35} />
-                              <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
-                          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#94a3b8" }} dy={10} minTickGap={30} />
-                          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#94a3b8" }} domain={["auto", "auto"]} />
-                          <Tooltip
-                            contentStyle={{
-                              borderRadius: "16px",
-                              border: "none",
-                              boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
-                              background: "var(--tw-colors-slate-900)",
-                            }}
-                            itemStyle={{ color: "#f59e0b", fontWeight: "bold" }}
-                            labelStyle={{ color: "#94a3b8", fontSize: "12px", marginBottom: "4px" }}
-                          />
-                          <Line
-                            type="monotone"
-                            dataKey="elo"
-                            stroke="#f59e0b"
-                            strokeWidth={4}
-                            dot={{ r: 4, fill: "#f59e0b", strokeWidth: 2, stroke: "#fff" }}
-                            activeDot={{ r: 6 }}
-                            isAnimationActive={true}
-                            animationDuration={800}
-                            animationEasing="ease-out"
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                )}
-              </motion.section>
-            )}
-
-            {/* ── STATS TAB ── */}
-            {activeTab === "STATS" && (
-              <motion.section variants={itemVariants} className="space-y-6 md:space-y-8">
-                <DoublesSynergyWidget
-                  matches={liveMatches.filter((m) => m.status === "confirmed")}
-                  playerId={id!}
-                  allPlayers={allPlayers}
-                />
-                <ActivityHeatmap
-                  matches={liveMatches.filter((m) => m.status === "confirmed")}
-                />
-              </motion.section>
-            )}
-
             {/* Frequent Partners */}
             {activeTab === "STATS" && player.frequentPartners && player.frequentPartners.length > 0 && (
               <motion.section
@@ -2114,7 +2107,7 @@ export default function PlayerProfile({
             )}
 
             {/* H2H vs logged-in user */}
-            {h2hRecord && ownPlayerProfile && (
+            {activeTab === "RANKING" && h2hRecord && ownPlayerProfile && (
               <motion.section
                 variants={itemVariants}
                 className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden"
@@ -2314,18 +2307,7 @@ export default function PlayerProfile({
         )}
       </AnimatePresence>
 
-      {/* ─── Log Match Modal ─── */}
-      {isLogMatchOpen && ownPlayerProfile && (
-        <LogMatchModal
-          isOpen={isLogMatchOpen}
-          onClose={() => setIsLogMatchOpen(false)}
-          currentUser={ownPlayerProfile}
-          otherPlayers={allPlayers.filter((p) => p.id !== ownPlayerProfile.id)}
-          defaultOpponentId={player?.id}
-          onSuccess={() => {}}
-          userEmail={currentUser?.email}
-        />
-      )}
+
 
       {/* ─── YouTube Player Modal ─── */}
       {activeVideoId && (

@@ -13,6 +13,7 @@ import {
   ARCHIVED_TOURNAMENTS,
   computeWinnerLeaderboard,
 } from "@/data/tournamentArchive";
+import { supabase } from "@/lib/supabase";
 
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -101,6 +102,58 @@ function ConfettiBurst() {
 
 export function WinnersWallSection() {
   const [filter, setFilter] = useState<"all" | "open" | "team">("all");
+  const [playerMap, setPlayerMap] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    supabase
+      .from("players")
+      .select("id, full_name")
+      .is("deleted_at", null)
+      .then(({ data }) => {
+        if (data) {
+          const map: Record<string, string> = {};
+          data.forEach(p => {
+             const fName = p.full_name.toLowerCase();
+             map[fName] = p.id;
+             const first = fName.split(" ")[0];
+             if (!map[first]) map[first] = p.id;
+          });
+          map["radhika"] = map["radhika dutt"] || map["radhika"];
+          map["kaling"] = map["kaling danggen"] || map["kaling"];
+          map["raja"] = map["raja janmejay"] || map["raja"];
+          map["shaili"] = map["shailli"] || map["shaili"];
+          map["abhisek"] = map["abhishek"];
+          setPlayerMap(map);
+        }
+      });
+  }, []);
+
+  const renderName = (raw: string) => {
+    if (!raw) return null;
+    const parts = raw.split(/(\s*&\s*|\s*\/\s*)/);
+    return parts.map((part, i) => {
+      if (part.includes("&") || part.includes("/")) return <span key={i}>{part}</span>;
+      
+      const clean = part.replace(/\(.*?\)/g, "").trim();
+      let lookup = clean.toLowerCase();
+      if (lookup === "radhika") lookup = "radhika dutt";
+      if (lookup === "kaling") lookup = "kaling danggen";
+      if (lookup === "raja") lookup = "raja janmejay";
+      if (lookup === "shaili") lookup = "shailli";
+      if (lookup === "abhisek") lookup = "abhishek";
+      
+      let foundId = playerMap[lookup] || playerMap[clean.split(" ")[0].toLowerCase()];
+
+      if (foundId) {
+        return (
+          <Link key={i} href={`/player/${foundId}`}>
+            <span className="hover:underline cursor-pointer hover:text-emerald-500 transition-colors">{part}</span>
+          </Link>
+        );
+      }
+      return <span key={i}>{part}</span>;
+    });
+  };
 
   const tournamentsWithResults = ARCHIVED_TOURNAMENTS.filter(
     (event) => event.winners || event.podium,
@@ -192,7 +245,7 @@ export function WinnersWallSection() {
                     </div>
                     <div className="flex-1 min-w-0 py-0.5">
                       <div className="font-bold text-slate-900 dark:text-white truncate">
-                        {player.name}
+                        {renderName(player.name)}
                       </div>
                       <div className="flex flex-col mt-1 space-y-0.5">
                         {player.details.map((d, i) => {
@@ -411,11 +464,11 @@ export function WinnersWallSection() {
                                     {result.category}
                                   </div>
                                   <p className="font-bold text-blue-950 dark:text-white text-sm flex items-center gap-1">
-                                    <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" /> {result.winner}
+                                    <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" /> {renderName(result.winner)}
                                   </p>
                                   {result.runnerUp && (
                                     <p className="mt-1 text-xs font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1">
-                                      <Medal className="w-3 h-3 text-slate-400 shrink-0" /> {result.runnerUp}
+                                      <Medal className="w-3 h-3 text-slate-400 shrink-0" /> {renderName(result.runnerUp)}
                                     </p>
                                   )}
                                 </div>

@@ -63,7 +63,7 @@ export const CircularProgress = ({
         </defs>
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-lg font-black text-slate-900 dark:text-white">
+        <span className={`${size <= 48 ? "text-[10px]" : size <= 64 ? "text-sm" : "text-lg"} font-black text-slate-900 dark:text-white`}>
           {Math.round(value)}%
         </span>
       </div>

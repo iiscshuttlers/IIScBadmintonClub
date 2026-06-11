@@ -15,6 +15,7 @@ interface TournamentData {
 
 export function LiveBracketsSection() {
   const [activeFormat, setActiveFormat] = useState("MS");
+  const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
   const [tournamentData, setTournamentData] = useState<TournamentData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -49,6 +50,33 @@ export function LiveBracketsSection() {
     acc[roundName].push(match);
     return acc;
   }, {} as { [key: string]: any[] });
+
+  // Build the complete set of match IDs where selectedPlayer appears (full path)
+  const selectedPlayerPath = (() => {
+    if (!selectedPlayer) return new Set<number>();
+    const path = new Set<number>();
+    currentMatches.forEach((m, idx) => {
+      const p1 = m.Player_1 || m.Players_1 || "";
+      const p2 = m.Player_2 || m.Players_2 || "";
+      if (p1.includes(selectedPlayer) || p2.includes(selectedPlayer)) {
+        path.add(idx);
+      }
+    });
+    // Trace winners forward through subsequent rounds
+    let changed = true;
+    while (changed) {
+      changed = false;
+      currentMatches.forEach((m, idx) => {
+        if (path.has(idx)) return;
+        const winner = m.Winner || "";
+        if (selectedPlayer && winner.includes(selectedPlayer)) {
+          path.add(idx);
+          changed = true;
+        }
+      });
+    }
+    return path;
+  })();
 
   if (loading) {
     return (
@@ -102,6 +130,15 @@ export function LiveBracketsSection() {
       </div>
 
       <div className="max-w-7xl mx-auto bg-white dark:bg-slate-900 rounded-3xl shadow-lg border border-gray-100 dark:border-slate-800 overflow-hidden">
+        {selectedPlayer && (
+          <div className="px-8 pt-4 pb-0 flex items-center gap-3 text-sm flex-wrap">
+            <span className="font-black text-emerald-600 dark:text-emerald-400">{selectedPlayer}</span>
+            <span className="text-slate-500 dark:text-slate-400">— path highlighted</span>
+            <span className="flex items-center gap-1 text-xs text-slate-400"><span className="inline-block w-3 h-3 rounded ring-2 ring-emerald-500" /> Direct match</span>
+            <span className="flex items-center gap-1 text-xs text-slate-400"><span className="inline-block w-3 h-3 rounded ring-2 ring-emerald-400/60" /> Win path</span>
+            <button onClick={() => setSelectedPlayer(null)} className="ml-auto text-xs text-slate-400 hover:text-rose-500 font-bold transition-colors">✕ Clear</button>
+          </div>
+        )}
         <div className="p-8 overflow-x-auto">
           {currentMatches.length === 0 ? (
             <div className="text-center py-20 text-gray-400 dark:text-slate-500 italic">
@@ -129,14 +166,19 @@ export function LiveBracketsSection() {
                         match.Winner &&
                         match.Winner.includes(p2Name.split("/")[0]);
 
+                      // flatIndex for path lookup
+                      const flatIndex = currentMatches.indexOf(match);
+                      const isOnPath = selectedPlayerPath.has(flatIndex);
+                      const isDirectMatch = isOnPath && (p1Name.includes(selectedPlayer ?? "") || p2Name.includes(selectedPlayer ?? ""));
+
                       return (
                         <div
                           key={matchIdx}
-                          className={`border rounded-xl overflow-hidden bg-white dark:bg-slate-900 ${
+                          className={`border rounded-xl overflow-hidden bg-white dark:bg-slate-900 transition-all ${
                             isLive
                               ? "border-red-500 dark:border-red-900 shadow-lg shadow-red-200 ring-2 ring-red-200"
                               : "border-gray-200 dark:border-slate-700 shadow-sm"
-                          }`}
+                          } ${isDirectMatch ? "ring-4 ring-emerald-500 border-emerald-500 shadow-emerald-500/20 shadow-xl scale-[1.02]" : isOnPath ? "ring-2 ring-emerald-400/60 border-emerald-400/60 shadow-emerald-400/10 shadow-lg" : ""}`}
                         >
                           <div
                             className={`px-3 py-1.5 text-xs font-semibold flex justify-between items-center ${
@@ -148,7 +190,7 @@ export function LiveBracketsSection() {
                             <span>{match.Match_ID}</span>
                             {isLive ? (
                               <span className="animate-pulse flex items-center gap-1">
-                                <span className="w-2 h-2 rounded-full bg-red-50 dark:bg-red-950/200"></span>{" "}
+                                <span className="w-2 h-2 rounded-full bg-red-500 dark:bg-red-500/80"></span>{" "}
                                 LIVE
                               </span>
                             ) : (
@@ -156,7 +198,8 @@ export function LiveBracketsSection() {
                             )}
                           </div>
                           <div
-                            className={`p-3 flex justify-between items-center border-b ${
+                            onClick={() => setSelectedPlayer(selectedPlayer === p1Name ? null : p1Name)}
+                            className={`p-3 flex justify-between items-center border-b cursor-pointer transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-900/20 ${
                               p1Won
                                 ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-900 dark:text-emerald-300 font-bold"
                                 : "text-gray-700 dark:text-slate-300"
@@ -171,7 +214,8 @@ export function LiveBracketsSection() {
                             </div>
                           )}
                           <div
-                            className={`p-3 flex justify-between items-center ${
+                            onClick={() => setSelectedPlayer(selectedPlayer === p2Name ? null : p2Name)}
+                            className={`p-3 flex justify-between items-center cursor-pointer transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-900/20 ${
                               p2Won
                                 ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-900 dark:text-emerald-300 font-bold"
                                 : "text-gray-700 dark:text-slate-300"

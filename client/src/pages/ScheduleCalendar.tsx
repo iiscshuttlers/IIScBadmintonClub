@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 import { fetchSiteData } from "@/lib/siteData";
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import {
@@ -14,9 +16,11 @@ import {
   Clock,
   ArrowRight,
   ExternalLink,
+  Trophy,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
+import { ScheduleView } from "@/pages/ScheduleView";
 
 interface CalendarEvent {
   date: string;
@@ -102,20 +106,35 @@ function getHolidayColor(title: string) {
   return HOLIDAY_COLORS[getHolidayColorIndex(title)];
 }
 
+function dateFilterHasMatches(tData: any, date: string) {
+  if (!tData || !tData.matches) return false;
+  const allM = Object.entries(tData.matches).flatMap(
+    ([format, matches]: [string, any]) =>
+      (matches as any[]).map((m) => ({ ...m, format })),
+  );
+  return allM.some(m => m.Date === date);
+}
+
 export default function ScheduleCalendar() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     new Date(),
   );
   const [loading, setLoading] = useState(true);
+  const [tournamentData, setTournamentData] = useState<any>(null);
 
   useEffect(() => {
     async function loadEvents() {
       try {
-        const [eventsData, holidaysData] = await Promise.all([
+        const [eventsData, holidaysData, tourneySnap] = await Promise.all([
           fetchSiteData<CalendarEvent[]>("events", "events.json"),
           fetchSiteData<Holiday[]>("holidays", "holidays.json"),
+          getDoc(doc(db, "live_data", "tournament")),
         ]);
+
+        if (tourneySnap.exists()) {
+          setTournamentData(tourneySnap.data());
+        }
 
         const merged: CalendarEvent[] = [...(eventsData || [])];
         if (holidaysData) {
@@ -549,7 +568,9 @@ export default function ScheduleCalendar() {
                       );
                     })}
                   </div>
-                ) : (
+                ) : null}
+
+                {selectedEvents.length === 0 && (!tournamentData || !dateFilterHasMatches(tournamentData, selectedDateStr)) && (
                   <div className="flex flex-col items-center justify-center h-64 text-center">
                     <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4 text-slate-300 dark:text-slate-600">
                       <CalendarDays className="w-8 h-8" />
@@ -565,6 +586,18 @@ export default function ScheduleCalendar() {
                 )}
               </div>
             </Card>
+
+            {tournamentData && selectedDateStr && dateFilterHasMatches(tournamentData, selectedDateStr) && (
+              <Card className="rounded-3xl shadow-xl border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl mt-6 overflow-hidden">
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-5 md:p-8 border-b border-slate-100 dark:border-slate-800">
+                  <h3 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-emerald-500" />
+                    Tournament Matches
+                  </h3>
+                </div>
+                <ScheduleView tournamentData={tournamentData} dateFilter={selectedDateStr} />
+              </Card>
+            )}
           </motion.div>
         </div>
       </div>

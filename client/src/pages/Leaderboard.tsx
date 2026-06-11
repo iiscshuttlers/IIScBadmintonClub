@@ -26,6 +26,7 @@ interface PlayerRank {
   department: string;
   win_loss_record: string;
   playing_level: string;
+  gender?: string;
 }
 
 interface LeaderboardProps {
@@ -34,6 +35,7 @@ interface LeaderboardProps {
 
 export function LeaderboardSection({ players }: LeaderboardProps) {
   const [activeTab, setActiveTab] = useState<"elo" | "ironman">("elo");
+  const [categoryFilter, setCategoryFilter] = useState<"ALL" | "MS" | "WS" | "MD" | "WD" | "XD">("ALL");
 
   // Parse total matches from "10W - 5L" or similar format
   const getMatchesCount = (record: string | any) => {
@@ -76,7 +78,14 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
     return String(record);
   };
 
-  const rankedPlayers = [...players]
+  let filteredByGender = players;
+  if (categoryFilter === "MS" || categoryFilter === "MD") {
+    filteredByGender = players.filter(p => p.gender?.toUpperCase() === "MALE");
+  } else if (categoryFilter === "WS" || categoryFilter === "WD") {
+    filteredByGender = players.filter(p => p.gender?.toUpperCase() === "FEMALE");
+  } // ALL and XD show everyone since it's a unified individual pool
+
+  const rankedPlayers = [...filteredByGender]
     .filter(p => getMatchesCount(p.win_loss_record) >= 5)
     .sort((a, b) => {
       if (activeTab === "elo") return b.elo_rating - a.elo_rating;
@@ -125,6 +134,25 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                 triggerClassName={activeTab === "ironman" ? "text-orange-100 hover:text-white" : ""}
               />
             </button>
+          </div>
+        </div>
+
+        {/* Category Filters */}
+        <div className="flex justify-center mb-10 overflow-x-auto px-4 hide-scrollbar">
+          <div className="flex gap-2 bg-slate-100 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700/50">
+            {(["ALL", "MS", "WS", "MD", "WD", "XD"] as const).map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setCategoryFilter(cat)}
+                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all ${
+                  categoryFilter === cat
+                    ? "bg-emerald-500 text-white shadow-md"
+                    : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
           </div>
         </div>
 

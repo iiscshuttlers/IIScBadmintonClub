@@ -7,12 +7,18 @@ import {
   ChevronLeft,
   ChevronRight,
   Camera,
+  Tag,
+  UserPlus,
+  Search,
 } from "lucide-react";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { fetchSiteData } from "@/lib/siteData";
+import { supabase } from "@/lib/supabase";
 import { SocialCTA } from "@/components/SocialCTA";
 import { VideoPlayerModal } from "@/components/VideoPlayerModal";
+import { useAuth } from "@/contexts/AuthContext";
+import { useLocation } from "wouter";
 
 // ─── Lazy Image Component ───────────────────────────────────────────────────
 function LazyImage({
@@ -59,12 +65,17 @@ function LazyImage({
   );
 }
 
+type TagEntry = { id: string; name: string };
+
 export default function Gallery() {
   usePageMeta({
     title: "Gallery",
     description:
       "Photos and videos from IISc Badminton Club tournaments and events.",
   });
+
+  const { session } = useAuth();
+  const [, setLocation] = useLocation();
 
   const [activeTab, setActiveTab] = useState<"albums" | "photos" | "videos">("albums");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -73,6 +84,12 @@ export default function Gallery() {
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [videos, setVideos] = useState<any[]>([]);
   const [activeVideo, setActiveVideo] = useState<any | null>(null);
+
+  // ── Player tagging ──────────────────────────────────────────────────────────
+  const [galleryTags, setGalleryTags] = useState<Record<string, TagEntry[]>>({});
+  const [showTagPanel, setShowTagPanel] = useState(false);
+  const [tagSearch, setTagSearch] = useState("");
+  const [tagPlayers, setTagPlayers] = useState<Array<{ id: string; full_name: string }>>([]);
 
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
@@ -130,6 +147,42 @@ export default function Gallery() {
   // Auto-refresh every 2 min
   useAutoRefresh(loadVideos, 120_000);
 
+  // Load saved tags from site_data on mount
+  useEffect(() => {
+    fetchSiteData<Record<string, TagEntry[]>>("gallery_tags", null)
+      .then((data) => { if (data) setGalleryTags(data); })
+      .catch(() => {});
+  }, []);
+
+  // Fetch player list lazily when lightbox first opens
+  useEffect(() => {
+    if (selectedIndex !== null && tagPlayers.length === 0) {
+      supabase
+        .from("players")
+        .select("id, full_name")
+        .is("deleted_at", null)
+        .order("full_name")
+        .then(({ data }) => { if (data) setTagPlayers(data); });
+    }
+    setShowTagPanel(false);
+    setTagSearch("");
+  }, [selectedIndex]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const saveTag = async (photoPath: string, player: { id: string; full_name: string }) => {
+    const current = galleryTags[photoPath] || [];
+    if (current.some((t) => t.id === player.id)) return;
+    const updated = { ...galleryTags, [photoPath]: [...current, { id: player.id, name: player.full_name }] };
+    setGalleryTags(updated);
+    setShowTagPanel(false);
+    await supabase.from("site_data").upsert({ key: "gallery_tags", value: updated }, { onConflict: "key" });
+  };
+
+  const removeTag = async (photoPath: string, playerId: string) => {
+    const updated = { ...galleryTags, [photoPath]: (galleryTags[photoPath] || []).filter((t) => t.id !== playerId) };
+    setGalleryTags(updated);
+    await supabase.from("site_data").upsert({ key: "gallery_tags", value: updated }, { onConflict: "key" });
+  };
+
   // ── LAZY glob (not eager) ──────────────────────────────────────────
   const imageModules = import.meta.glob("/src/assets/gallery/**/*.{png,webp}", {
     eager: false,
@@ -146,7 +199,7 @@ export default function Gallery() {
       const subfolder = parts.length > 2 ? parts[1] : "";
       const filename = parts[parts.length - 1];
       const title = formatText(filename.replace(/\.[^/.]+$/, ""));
-      return { id: index + 1, title, category, subfolder, loader };
+      return { id: index + 1, title, category, subfolder, loader, path: cleanPath };
     },
   );
 
@@ -628,22 +681,100 @@ export default function Gallery() {
             <ChevronRight className="w-8 h-8 md:w-10 md:h-10" />
           </button>
 
-          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 text-center pointer-events-none w-full px-4 z-50">
-            {selectedIndex !== null && (
-              <>
-                <p className="text-white text-lg md:text-xl font-bold tracking-wide drop-shadow-lg leading-tight">
-                  {filteredItems[selectedIndex]?.title}
-                </p>
-                {filteredItems[selectedIndex]?.subfolder && (
-                  <p className="text-emerald-300 font-medium text-xs md:text-sm mt-1 uppercase tracking-widest drop-shadow">
-                    {formatText(filteredItems[selectedIndex].subfolder)}
+          <div className="absolute bottom-0 left-0 right-0 px-4 pb-4 pt-2 z-50 flex flex-col items-center gap-2">
+            {selectedIndex !== null && (() => {
+              const item = filteredItems[selectedIndex];
+              const tags = galleryTags[item?.path] || [];
+              const filteredPlayers = tagPlayers.filter((p) =>
+                p.full_name.toLowerCase().includes(tagSearch.toLowerCase())
+              );
+              return (
+                <>
+                  <p className="text-white text-base md:text-xl font-bold tracking-wide drop-shadow-lg leading-tight text-center">
+                    {item?.title}
                   </p>
-                )}
-                <p className="text-white/30 text-[10px] md:text-xs mt-2 hidden sm:block">
-                  ← → to navigate &nbsp;·&nbsp; Esc to close
-                </p>
-              </>
-            )}
+                  {item?.subfolder && (
+                    <p className="text-emerald-300 font-medium text-xs uppercase tracking-widest drop-shadow">
+                      {formatText(item.subfolder)}
+                    </p>
+                  )}
+
+                  {/* Tagged player chips */}
+                  {tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      {tags.map((tag) => (
+                        <div
+                          key={tag.id}
+                          className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 backdrop-blur-sm border border-white/20 text-white text-xs font-bold px-3 py-1 rounded-full cursor-pointer transition-colors group"
+                          onClick={(e) => { e.stopPropagation(); setLocation(`/player/${tag.id}`); }}
+                        >
+                          <Tag className="w-3 h-3 text-emerald-400" />
+                          {tag.name}
+                          {session && (
+                            <button
+                              className="ml-1 text-white/40 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                              onClick={(e) => { e.stopPropagation(); removeTag(item.path, tag.id); }}
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Tag a player button + panel */}
+                  {session && (
+                    <div className="relative">
+                      <button
+                        className="flex items-center gap-1.5 text-white/50 hover:text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 hover:bg-white/10 transition-all"
+                        onClick={(e) => { e.stopPropagation(); setShowTagPanel((v) => !v); setTagSearch(""); }}
+                      >
+                        <UserPlus className="w-3.5 h-3.5" /> Tag a player
+                      </button>
+
+                      {showTagPanel && (
+                        <div
+                          className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-64 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="p-2 border-b border-slate-700 flex items-center gap-2">
+                            <Search className="w-4 h-4 text-slate-400 shrink-0" />
+                            <input
+                              autoFocus
+                              value={tagSearch}
+                              onChange={(e) => setTagSearch(e.target.value)}
+                              placeholder="Search player…"
+                              className="flex-1 bg-transparent text-white text-sm placeholder-slate-500 outline-none"
+                            />
+                          </div>
+                          <div className="max-h-48 overflow-y-auto">
+                            {filteredPlayers.length === 0 ? (
+                              <p className="text-slate-500 text-xs text-center py-4">No players found</p>
+                            ) : (
+                              filteredPlayers.map((p) => (
+                                <button
+                                  key={p.id}
+                                  className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-emerald-600/20 transition-colors flex items-center gap-2"
+                                  onClick={() => saveTag(item.path, p)}
+                                >
+                                  <UserPlus className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                                  {p.full_name}
+                                </button>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <p className="text-white/30 text-[10px] mt-1 hidden sm:block">
+                    ← → to navigate &nbsp;·&nbsp; Esc to close
+                  </p>
+                </>
+              );
+            })()}
           </div>
         </div>
       )}

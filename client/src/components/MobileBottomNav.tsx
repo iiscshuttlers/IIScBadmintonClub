@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Home, Activity, Plus } from "lucide-react";
+import { Home, Activity, Plus, Users, CalendarDays } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { useLocation } from "wouter";
@@ -105,24 +105,34 @@ export default function MobileBottomNav() {
             </span>
           </div>
 
-          {/* MY PROFILE */}
+          {/* PLAYERS */}
           <button
-            onClick={() => handleNav(`/player/${profile?.id}`)}
-            className={`relative flex flex-col items-center justify-center w-14 h-12 transition-all duration-200 ${location.startsWith(`/player/${profile?.id}`) ? "text-emerald-600 dark:text-emerald-400 scale-110" : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
+            onClick={() => handleNav("/players")}
+            className={`relative flex flex-col items-center justify-center w-14 h-12 transition-all duration-200 ${location.startsWith("/players") ? "text-emerald-600 dark:text-emerald-400 scale-110" : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
           >
-            {location.startsWith(`/player/${profile?.id}`) && (
+            {location.startsWith("/players") && (
               <span className="absolute top-0.5 inset-x-1 h-full rounded-xl bg-emerald-50 dark:bg-emerald-900/25 -z-0" />
             )}
-            <div className={`w-6 h-6 mb-1 rounded-full overflow-hidden shrink-0 border-2 transition-colors relative z-10 ${location.startsWith(`/player/${profile?.id}`) ? "border-emerald-500 shadow-sm" : "border-transparent"}`}>
-              {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center font-black text-[10px]">
-                  {profile?.full_name ? profile.full_name[0].toUpperCase() : "U"}
-                </div>
-              )}
-            </div>
-            <span className="text-[10px] font-bold relative z-10">Profile</span>
+            <Users
+              className={`w-6 h-6 mb-1 relative z-10 ${location.startsWith("/players") ? "fill-emerald-500/20" : ""}`}
+              strokeWidth={location.startsWith("/players") ? 2.5 : 2}
+            />
+            <span className="text-[10px] font-bold relative z-10">Players</span>
+          </button>
+
+          {/* EVENTS */}
+          <button
+            onClick={() => handleNav("/events")}
+            className={`relative flex flex-col items-center justify-center w-14 h-12 transition-all duration-200 ${location.startsWith("/events") ? "text-emerald-600 dark:text-emerald-400 scale-110" : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
+          >
+            {location.startsWith("/events") && (
+              <span className="absolute top-0.5 inset-x-1 h-full rounded-xl bg-emerald-50 dark:bg-emerald-900/25 -z-0" />
+            )}
+            <CalendarDays
+              className={`w-6 h-6 mb-1 relative z-10 ${location.startsWith("/events") ? "fill-emerald-500/20" : ""}`}
+              strokeWidth={location.startsWith("/events") ? 2.5 : 2}
+            />
+            <span className="text-[10px] font-bold relative z-10">Events</span>
           </button>
         </div>
       </div>

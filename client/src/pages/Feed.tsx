@@ -27,6 +27,7 @@ import { Share } from "@capacitor/share";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { getBaseShareUrl } from "@/lib/utils";
 import { AnnouncementsSection } from "@/components/feed/AnnouncementsSection";
+import { LiveScoreSection } from "@/components/events/LiveScoreSection";
 
 export default function Feed() {
   usePageMeta({
@@ -50,8 +51,40 @@ export default function Feed() {
   
   const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [liveMatchIds, setLiveMatchIds] = useState<Set<string>>(new Set());
 
   const [limitCount, setLimitCount] = useState(30);
+
+  // Subscribe to live tournament broadcasts and track which player-pairs are live
+  useEffect(() => {
+    const fetchLive = async () => {
+      const { data } = await supabase.from("site_data").select("value").eq("key", "live_matches").single();
+      if (data?.value) {
+        const ids = new Set<string>();
+        Object.values(data.value as Record<string, any>).forEach((m: any) => {
+          if (!m.isFriendly && m.status === "playing") {
+            [m.t1?.p1Id, m.t1?.p2Id, m.t2?.p1Id, m.t2?.p2Id].filter(Boolean).forEach((id: string) => ids.add(id));
+          }
+        });
+        setLiveMatchIds(ids);
+      }
+    };
+    fetchLive();
+    const sub = supabase.channel("feed_live_matches")
+      .on("postgres_changes", { event: "*", schema: "public", table: "site_data", filter: "key=eq.live_matches" },
+        (payload) => {
+          const val = (payload.new as any)?.value || {};
+          const ids = new Set<string>();
+          Object.values(val).forEach((m: any) => {
+            if (!m.isFriendly && m.status === "playing") {
+              [m.t1?.p1Id, m.t1?.p2Id, m.t2?.p1Id, m.t2?.p2Id].filter(Boolean).forEach((id: string) => ids.add(id));
+            }
+          });
+          setLiveMatchIds(ids);
+        })
+      .subscribe();
+    return () => { supabase.removeChannel(sub); };
+  }, []);
 
   const fetchFeed = useCallback(
     async (silent = false) => {
@@ -304,7 +337,11 @@ export default function Feed() {
         ) : (
           <>
         {!loading && displayMatches.length > 0 && (
-          <div className="mb-6 bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden">
+          <>
+            <div className="-mx-4 sm:mx-0 mb-6">
+              <LiveScoreSection />
+            </div>
+            <div className="mb-6 bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden">
             <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
               <BarChart3 className="w-4 h-4 text-emerald-500" /> Court
               Utilization (Recent)
@@ -343,7 +380,8 @@ export default function Feed() {
                 <div className="w-2 h-2 rounded-full bg-indigo-500" /> Evening
               </div>
             </div>
-          </div>
+            </div>
+          </>
         )}
 
         {!loading && weeklyRecap && (
@@ -492,6 +530,10 @@ export default function Feed() {
               }
 
               const isMatchOfTheDay = match.id === matchOfTheDayId;
+              const isLiveNow = !match.is_friendly &&
+                (liveMatchIds.has(match.player1_id) || liveMatchIds.has(match.player2_id) ||
+                 (match.team1_partner_id && liveMatchIds.has(match.team1_partner_id)) ||
+                 (match.team2_partner_id && liveMatchIds.has(match.team2_partner_id)));
 
               const isKudosed = (m: any) => {
                 if (kudosState.hasOwnProperty(m.id)) return kudosState[m.id];
@@ -819,8 +861,16 @@ export default function Feed() {
                     }
                   }}
                 >
+                  {/* LIVE NOW Badge — tournament actively being scored */}
+                  {isLiveNow && (
+                    <div className="absolute top-0 left-0 bg-gradient-to-r from-red-500 to-rose-600 text-white text-[10px] font-black uppercase tracking-wider px-4 py-1.5 rounded-br-xl shadow-md z-10 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-white animate-ping inline-block" />
+                      LIVE NOW
+                    </div>
+                  )}
+
                   {/* Match of the Day Badge */}
-                  {isMatchOfTheDay && (
+                  {isMatchOfTheDay && !isLiveNow && (
                     <div className="absolute top-0 left-0 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black uppercase tracking-wider px-4 py-1.5 rounded-br-xl shadow-md z-10 flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5" /> Match of the Day
                     </div>
