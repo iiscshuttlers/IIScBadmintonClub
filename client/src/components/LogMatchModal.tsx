@@ -623,9 +623,14 @@ export default function LogMatchModal({
 
             {/* Set-by-Set Score Input */}
             <div className="space-y-3">
-              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                Set Scores
-              </label>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">
+                  Set Scores
+                </label>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                  Enter scores per set (e.g. 21–18). Add sets for best-of-3 matches.
+                </p>
+              </div>
 
               {sets.map((set, idx) => (
                 <div key={idx} className="flex items-center gap-2">

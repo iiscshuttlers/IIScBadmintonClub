@@ -204,9 +204,29 @@ export default function H2H() {
                 <span className="text-slate-300 dark:text-slate-700">-</span>{" "}
                 {p2Wins}
               </div>
-              <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">
+              <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">
                 {h2hMatches.length} Matches Played
               </div>
+              {/* H2H wins visual bar */}
+              {h2hMatches.length > 0 && (
+                <div className="w-full mb-4" aria-label={`Head to head wins: ${p1?.full_name} ${p1Wins} vs ${p2?.full_name} ${p2Wins}`}>
+                  <div className="flex h-4 rounded-full overflow-hidden w-full shadow-inner bg-slate-100 dark:bg-slate-800">
+                    <div
+                      className="h-full bg-emerald-500 transition-all duration-1000 ease-out"
+                      style={{ width: `${h2hMatches.length > 0 ? (p1Wins / h2hMatches.length) * 100 : 50}%` }}
+                    />
+                    <div
+                      className="h-full bg-indigo-500 transition-all duration-1000 ease-out"
+                      style={{ width: `${h2hMatches.length > 0 ? (p2Wins / h2hMatches.length) * 100 : 50}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-[10px] font-bold mt-1 px-0.5">
+                    <span className="text-emerald-500">{p1Wins} W</span>
+                    <span className="text-indigo-500">{p2Wins} W</span>
+                  </div>
+                </div>
+              )}
+
 
               {/* Rivalry Milestone */}
               {rivalryMilestone && (

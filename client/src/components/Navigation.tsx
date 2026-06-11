@@ -14,6 +14,7 @@ import {
   Sun,
   Zap,
   ChevronDown,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,6 +42,7 @@ export default function Navigation() {
   const [location] = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [liveEventCount, setLiveEventCount] = useState(0);
+  const [hasUnreadAnnouncements, setHasUnreadAnnouncements] = useState(false);
   const {
     authLoading,
     isAdmin,
@@ -71,7 +73,23 @@ export default function Navigation() {
 
   useEffect(() => {
     setIsOpen(false);
+    // Mark announcements as read when user visits the page
+    if (location.startsWith("/announcements")) {
+      localStorage.setItem("iisc_announcements_last_seen", Date.now().toString());
+      setHasUnreadAnnouncements(false);
+    }
   }, [location]);
+
+  // Show unread dot if announcements haven't been viewed in the last 24h
+  useEffect(() => {
+    const lastSeen = localStorage.getItem("iisc_announcements_last_seen");
+    if (!lastSeen) {
+      setHasUnreadAnnouncements(true);
+    } else {
+      const elapsed = Date.now() - parseInt(lastSeen, 10);
+      setHasUnreadAnnouncements(elapsed > 24 * 60 * 60 * 1000);
+    }
+  }, []);
 
   const isActive = (href: string) =>
     href === "/" ? location === "/" : location.startsWith(href);
@@ -129,7 +147,7 @@ export default function Navigation() {
                   href={link.href}
                   label={link.label}
                   isActive={isActive(link.href)}
-                  badge={link.href === "/events" ? liveEventCount : undefined}
+                  badge={link.href === "/events" ? liveEventCount : link.href === "/announcements" && hasUnreadAnnouncements ? -1 : undefined}
                 />
               ))}
             </div>
@@ -147,6 +165,15 @@ export default function Navigation() {
               </Link>
 
               <div className="w-px h-5 bg-slate-200 dark:bg-slate-700" />
+              <Link href="/features">
+                <button
+                  aria-label="Features & Glossary"
+                  title="Features & Glossary"
+                  className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
+                >
+                  <BookOpen className="w-[18px] h-[18px]" />
+                </button>
+              </Link>
               <QuickSettings />
               <DarkModeToggle />
               <div className="w-px h-5 bg-slate-200 dark:bg-slate-700" />
@@ -237,6 +264,14 @@ export default function Navigation() {
 
             {/* ── Mobile Controls ───────────────────── */}
             <div className="flex lg:hidden items-center gap-1">
+              <Link href="/features">
+                <button
+                  aria-label="Features & Glossary"
+                  className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
+                >
+                  <BookOpen className="w-[18px] h-[18px]" />
+                </button>
+              </Link>
               <QuickSettings />
               <DarkModeToggle />
               <button
@@ -260,13 +295,18 @@ export default function Navigation() {
                   key={link.href}
                   href={link.href}
                   label={link.label}
-                  badge={link.href === "/events" ? liveEventCount : undefined}
+                  badge={link.href === "/events" ? liveEventCount : link.href === "/announcements" && hasUnreadAnnouncements ? -1 : undefined}
                   isActive={isActive(link.href)}
                   onClick={() => setIsOpen(false)}
                 />
               ))}
 
-              <div className="pt-2 pb-1">
+              <div className="pt-2 pb-1 space-y-1.5">
+                <Link href="/features" onClick={() => setIsOpen(false)}>
+                  <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-sm cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                    <BookOpen className="w-4 h-4 text-emerald-500" /> Features & Glossary
+                  </div>
+                </Link>
                 <Link href="/invicta" onClick={() => setIsOpen(false)}>
                   <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 font-bold text-sm cursor-pointer">
                     <span className="relative flex h-2 w-2 flex-shrink-0">
@@ -340,7 +380,7 @@ function NavLink({ href, label, isActive, badge }: { href: string; label: string
         {!!badge && (
           <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-black text-white px-0.5 shadow ring-2 ring-white dark:ring-slate-950">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-50" />
-            <span className="relative">{badge}</span>
+            {badge > 0 && <span className="relative">{badge}</span>}
           </span>
         )}
       </button>
@@ -365,7 +405,7 @@ function MobileNavLink({
         {!!badge && (
           <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-xs font-black">
             <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-            {badge} LIVE
+            {badge > 0 ? `${badge} LIVE` : "NEW"}
           </span>
         )}
       </button>

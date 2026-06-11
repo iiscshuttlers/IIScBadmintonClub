@@ -18,6 +18,7 @@ export default function Footer() {
 
   const quickLinks = [
     { href: "/", label: "Home" },
+    { href: "/features", label: "Features & Glossary" },
     { href: "/facilities", label: "Facilities" },
     { href: "/events", label: "Events" },
     { href: "/winners", label: "Winners Wall" },

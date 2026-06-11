@@ -132,8 +132,13 @@ function vitePluginStorageProxy(): Plugin {
 }
 
 /* ===================== MAIN CONFIG ===================== */
+const pkgPath = path.resolve(PROJECT_ROOT, "package.json");
+const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
 
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
   plugins: [
     react(),
     tailwindcss(),
@@ -204,8 +209,6 @@ export default defineConfig({
           vendor: ["react", "react-dom", "wouter", "framer-motion"],
           ui: [
             "@radix-ui/react-dialog",
-            "@radix-ui/react-select",
-            "@radix-ui/react-tabs",
             "lucide-react",
           ],
           supabase: ["@supabase/supabase-js"],

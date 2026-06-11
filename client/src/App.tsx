@@ -1,10 +1,10 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState, useRef } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Route, Switch, Router, useLocation } from "wouter";
 import { Capacitor } from "@capacitor/core";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowUp } from "lucide-react";
+import { ArrowUp, WifiOff } from "lucide-react";
 
 import StatusBanner from "@/components/StatusBanner";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -127,11 +127,30 @@ const Invicta = lazy(() => import("./pages/Invicta"));
 const LiveScore = lazy(() => import("./pages/LiveScore"));
 const H2H = lazy(() => import("./pages/H2H"));
 
+// Save scroll position before navigating away, restore on back-navigation
+const scrollMap = new Map<string, number>();
+
 function ScrollToTop() {
   const [location] = useLocation();
+  const prevLocation = useRef<string | null>(null);
+
   useEffect(() => {
-    window.scrollTo(0, 0);
+    // Save scroll position for the previous route
+    if (prevLocation.current && prevLocation.current !== location) {
+      scrollMap.set(prevLocation.current, window.scrollY);
+    }
+
+    // Restore or reset
+    const saved = scrollMap.get(location);
+    if (saved !== undefined) {
+      requestAnimationFrame(() => window.scrollTo(0, saved));
+    } else {
+      window.scrollTo(0, 0);
+    }
+
+    prevLocation.current = location;
   }, [location]);
+
   return null;
 }
 
@@ -214,52 +233,67 @@ function AppRoutes() {
   const [location] = useLocation();
 
   return (
-    // mode="sync" lets enter/exit overlap — eliminates the blank window between route transitions
-    <AnimatePresence mode="sync" initial={false}>
-      <motion.div
-        key={location}
-        initial={{ opacity: 0.2, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -6 }}
-        transition={{ duration: 0.15, ease: "easeOut" }}
-        className="flex-1 flex flex-col w-full h-full"
-      >
-        <Suspense fallback={<PageSkeleton />}>
-          <Switch>
-            <Route path="/" component={Home} />
-            <Route path="/feed" component={Feed} />
-            <Route path="/facilities" component={Facilities} />
-            <Route path="/live" component={LiveScore} />
+    <Suspense fallback={<PageSkeleton />}>
+      <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/feed" component={Feed} />
+        <Route path="/facilities" component={Facilities} />
+        <Route path="/live" component={LiveScore} />
 
-            <Route path="/admin" component={SiteAdmin} />
-            <Route path="/tournament/admin" component={SiteAdmin} />
-            <Route path="/tournament" component={LiveTournament} />
-            <Route path="/events/:slug" component={TournamentDetail} />
+        <Route path="/admin" component={SiteAdmin} />
+        <Route path="/tournament/admin" component={SiteAdmin} />
+        <Route path="/tournament" component={LiveTournament} />
+        <Route path="/events/:slug" component={TournamentDetail} />
 
-            <Route path="/events" component={Events} />
-            <Route path="/features" component={Features} />
-            <Route path="/invicta" component={Invicta} />
-            <Route path="/winners" component={WinnersWall} />
+        <Route path="/events" component={Events} />
+        <Route path="/features" component={Features} />
+        <Route path="/invicta" component={Invicta} />
+        <Route path="/winners" component={WinnersWall} />
 
-            <Route path="/announcements" component={Announcements} />
-            <Route path="/gallery" component={Gallery} />
-            <Route path="/contact" component={Contact} />
-            <Route path="/join" component={Join} />
-            <Route path="/profile/setup" component={ProfileSetup} />
-            <Route path="/players" component={PlayersDirectory} />
-            <Route path="/h2h" component={H2H} />
-            <Route path="/player/:id/edit" component={ProfileSetup} />
-            <Route path="/player/:id" component={PlayerProfile} />
-            <Route path="/matches">
-              <PlayerProfile matchesOnly={true} />
-            </Route>
+        <Route path="/announcements" component={Announcements} />
+        <Route path="/gallery" component={Gallery} />
+        <Route path="/contact" component={Contact} />
+        <Route path="/join" component={Join} />
+        <Route path="/profile/setup" component={ProfileSetup} />
+        <Route path="/players" component={PlayersDirectory} />
+        <Route path="/h2h" component={H2H} />
+        <Route path="/player/:id/edit" component={ProfileSetup} />
+        <Route path="/player/:id" component={PlayerProfile} />
+        <Route path="/matches">
+          <PlayerProfile matchesOnly={true} />
+        </Route>
 
-            <Route path="/404" component={NotFound} />
-            <Route component={NotFound} />
-          </Switch>
-        </Suspense>
-      </motion.div>
-    </AnimatePresence>
+        <Route path="/404" component={NotFound} />
+        <Route component={NotFound} />
+      </Switch>
+    </Suspense>
+  );
+}
+
+function OfflineBanner() {
+  const [offline, setOffline] = useState(!navigator.onLine);
+
+  useEffect(() => {
+    const goOffline = () => setOffline(true);
+    const goOnline = () => setOffline(false);
+    window.addEventListener("offline", goOffline);
+    window.addEventListener("online", goOnline);
+    return () => {
+      window.removeEventListener("offline", goOffline);
+      window.removeEventListener("online", goOnline);
+    };
+  }, []);
+
+  if (!offline) return null;
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="fixed top-0 inset-x-0 z-[9998] flex items-center justify-center gap-2 bg-slate-800 text-white text-sm font-bold py-2 px-4 shadow-lg"
+    >
+      <WifiOff className="w-4 h-4 shrink-0" />
+      You're offline — some features may be unavailable
+    </div>
   );
 }
 
@@ -292,6 +326,7 @@ function App() {
                 >
                   Skip to content
                 </a>
+                <OfflineBanner />
                 <PwaInstallPrompt />
                 <Navigation />
                 <StatusBanner />

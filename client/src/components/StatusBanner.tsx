@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchSiteData } from "@/lib/siteData";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
+import { X } from "lucide-react";
 
 type Holiday = { date: string; name: string };
 type Event = {
@@ -50,6 +51,8 @@ function getActiveAnnouncements(announcements: Announcement[]): string[] {
 
 export default function StatusBanner() {
   const [messages, setMessages] = useState<BannerMessage[]>([]);
+  const [location] = useLocation();
+  const [isClosed, setIsClosed] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -156,11 +159,11 @@ export default function StatusBanner() {
       .catch((err) => console.warn("StatusBanner data fetch failed:", err));
   }, []);
 
-  if (!messages.length) return null;
+  if (location !== "/" || isClosed || !messages.length) return null;
 
   return (
     <div className="relative bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-2.5 overflow-hidden flex items-center z-20 shadow-md">
-      <Link href="/announcements" className="flex-1 overflow-hidden min-w-0">
+      <Link href="/announcements" className="flex-1 overflow-hidden min-w-0 pr-10">
         <div className="marquee-anim flex gap-8 font-semibold tracking-wide text-sm md:text-base whitespace-nowrap hover:opacity-90 transition-opacity cursor-pointer">
           {Array(2)
             .fill(null)
@@ -185,6 +188,13 @@ export default function StatusBanner() {
             ))}
         </div>
       </Link>
+      <button
+        onClick={() => setIsClosed(true)}
+        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-black/10 rounded-full transition-colors z-30"
+        aria-label="Close banner"
+      >
+        <X className="w-5 h-5 text-white/90" />
+      </button>
     </div>
   );
 }

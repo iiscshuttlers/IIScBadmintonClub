@@ -2292,7 +2292,7 @@ export default function PlayerProfile({
                     <TrendingUp className="w-4 h-4 text-emerald-500" /> ELO
                     Progression
                   </h3>
-                  <div className="h-64 w-full">
+                  <div className="h-64 w-full" aria-label="ELO rating progression chart" role="img">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart
                         data={eloHistoryData}
@@ -2365,6 +2365,9 @@ export default function PlayerProfile({
                             stroke: "#fff",
                           }}
                           activeDot={{ r: 6 }}
+                          isAnimationActive={true}
+                          animationDuration={800}
+                          animationEasing="ease-out"
                         />
                       </LineChart>
                     </ResponsiveContainer>

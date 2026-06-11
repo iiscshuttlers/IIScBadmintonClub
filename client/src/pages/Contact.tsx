@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Mail, MapPin, Phone, ExternalLink, ChevronDown } from "lucide-react";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { SocialCTA } from "@/components/SocialCTA";
 
 const faqs = [
@@ -56,13 +57,24 @@ function FAQItem({ faq }: { faq: (typeof faqs)[0] }) {
           className={`w-5 h-5 text-gray-400 flex-shrink-0 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
         />
       </button>
-      {open && (
-        <div className="px-6 pb-5">
-          <p className="text-gray-600 dark:text-slate-400 text-sm leading-relaxed">
-            {faq.answer}
-          </p>
-        </div>
-      )}
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            key="answer"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <div className="px-6 pb-5">
+              <p className="text-gray-600 dark:text-slate-400 text-sm leading-relaxed">
+                {faq.answer}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -80,7 +92,7 @@ export default function Contact() {
         <div className="absolute inset-0 hero-pattern" />
         <div className="container mx-auto px-4 text-center relative z-10">
           <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 px-4 py-2 rounded-full text-sm font-semibold mb-5">
-            ✉️ Reach Us
+            <Mail className="w-4 h-4" /> Reach Us
           </div>
           <h1
             className="text-5xl md:text-6xl font-black mb-4"

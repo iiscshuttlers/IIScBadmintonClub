@@ -8,11 +8,15 @@ import {
   ChevronRight,
   User,
   Swords,
+  Crown,
+  Flame,
+  BarChart3,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
+import { InfoModal } from "@/components/InfoModal";
 
 interface PlayerRank {
   id: string;
@@ -92,15 +96,34 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
           <div className="bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl flex gap-1 shadow-inner border border-slate-200 dark:border-slate-700">
             <button
               onClick={() => setActiveTab("elo")}
-              className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all ${activeTab === "elo" ? "bg-white dark:bg-slate-900 text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+              className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all flex items-center gap-1.5 ${activeTab === "elo" ? "bg-white dark:bg-slate-900 text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
             >
-              👑 ELO Rankings
+              <div className="flex items-center"><Crown className="w-4 h-4 mr-1.5" />ELO Rankings</div>
+              <InfoModal
+                title="HOW ELO RANKING WORKS"
+                mainIcon={<BarChart3 className="w-5 h-5" />}
+                items={[
+                  { badge: "SYS", title: "The Elo System", desc: "A method used to calculate relative skill. Beating a high-ranked player grants you significantly more points than beating a low-ranked one." },
+                  { badge: "CAL", title: "Calibration Phase", desc: "New players remain 'Unranked' for their first 5 matches to determine their true baseline." },
+                  { badge: "VOL", title: "Volatility", desc: "Your rank fluctuates wildly in your first 20 matches. It stabilizes as you play more." },
+                  { badge: "PTS", title: "Point Difference", desc: "Winning 21-5 rewards slightly more ELO than winning 21-19. Every point matters!" }
+                ]}
+              />
             </button>
             <button
               onClick={() => setActiveTab("ironman")}
-              className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all ${activeTab === "ironman" ? "bg-gradient-to-r from-orange-500 to-rose-500 text-white shadow-md" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+              className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all flex items-center gap-1.5 ${activeTab === "ironman" ? "bg-gradient-to-r from-orange-500 to-rose-500 text-white shadow-md" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
             >
-              🔥 Ironman Endurance
+              <div className="flex items-center"><Flame className="w-4 h-4 mr-1.5" />Ironman Endurance</div>
+              <InfoModal
+                title="IRONMAN ENDURANCE"
+                mainIcon={<Trophy className="w-5 h-5" />}
+                items={[
+                  { badge: "PLAY", title: "Most Active", desc: "Ranked entirely by the total number of matches you have played, regardless of wins or losses." },
+                  { badge: "IRON", title: "The Ironman Badge", desc: "Playing 50+ matches in a single month might earn you the exclusive Ironman badge!" }
+                ]}
+                triggerClassName={activeTab === "ironman" ? "text-orange-100 hover:text-white" : ""}
+              />
             </button>
           </div>
         </div>
@@ -120,6 +143,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                   {top3[1].avatar_url ? (
                     <img
                       src={top3[1].avatar_url}
+                      loading="lazy"
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -156,6 +180,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                   {top3[0].avatar_url ? (
                     <img
                       src={top3[0].avatar_url}
+                      loading="lazy"
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -193,6 +218,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                   {top3[2].avatar_url ? (
                     <img
                       src={top3[2].avatar_url}
+                      loading="lazy"
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -274,6 +300,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                               {player.avatar_url ? (
                                 <img
                                   src={player.avatar_url}
+                                  loading="lazy"
                                   className="w-full h-full object-cover"
                                 />
                               ) : (

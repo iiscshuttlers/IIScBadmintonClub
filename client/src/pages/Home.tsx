@@ -49,12 +49,14 @@ function getLatestHighlight() {
 }
 
 export default function Home() {
-  const [showWhatsNew, setShowWhatsNew] = useState(false);
+  const [config, setConfig] = useState<any>(null);
+
   useEffect(() => {
-    if (!localStorage.getItem("seenWhatsNew_v25")) {
-      const timer = setTimeout(() => setShowWhatsNew(true), 1500);
-      return () => clearTimeout(timer);
-    }
+    fetchSiteData("site_config", "site_config.json")
+      .then((data) => {
+        if (data) setConfig(data);
+      })
+      .catch(console.error);
   }, []);
 
   usePageMeta({
@@ -62,13 +64,6 @@ export default function Home() {
     description:
       "IISc Badminton Club — join a vibrant community of players, from beginners to champions, all united by passion for the sport.",
   });
-
-  const [config, setConfig] = useState<any>(null);
-  useEffect(() => {
-    fetchSiteData("site_config", "site_config.json")
-      .then((data) => { if (data) setConfig(data); })
-      .catch(console.error);
-  }, []);
 
   const [isImageOpen, setIsImageOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -93,58 +88,10 @@ export default function Home() {
 
   return (
     <>
-      {/* ── What's New Modal ─────────────────────────────────────────── */}
-      {showWhatsNew && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
-          <motion.div
-            initial={{ scale: 0.92, opacity: 0, y: 16 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-            className="bg-white dark:bg-slate-900 rounded-3xl p-7 max-w-md w-full shadow-2xl border border-slate-100 dark:border-slate-800 relative overflow-hidden"
-          >
-            {/* decorative bg */}
-            <div className="absolute -top-12 -right-12 w-44 h-44 bg-emerald-500/5 rounded-full" />
-            <div className="absolute -bottom-12 -left-12 w-44 h-44 bg-blue-500/5 rounded-full" />
-
-            <div className="flex items-center gap-4 mb-6 relative z-10">
-              <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/50 rounded-2xl flex items-center justify-center flex-shrink-0">
-                <Sparkles className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <div>
-                <h2 className="text-xl font-black text-slate-800 dark:text-slate-100">What's New!</h2>
-                <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">v2.5 Platform Update</p>
-              </div>
-            </div>
-
-            <div className="space-y-3.5 mb-7 relative z-10">
-              {[
-                { Icon: ShieldCheck, color: "emerald", title: "Overwatch Tribunal", desc: "Suspicious matches are now flagged for admin review." },
-                { Icon: Activity, color: "rose", title: "Calibration Phase", desc: "New players are 'Unranked' for their first 5 matches." },
-              ].map(({ Icon, color, title, desc }) => (
-                <div key={title} className={`flex items-start gap-3 p-3.5 rounded-2xl bg-${color}-50 dark:bg-${color}-900/20 border border-${color}-100 dark:border-${color}-900/30`}>
-                  <Icon className={`w-5 h-5 text-${color}-600 dark:text-${color}-400 mt-0.5 flex-shrink-0`} />
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">{title}</h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <button
-              onClick={() => { setShowWhatsNew(false); localStorage.setItem("seenWhatsNew_v25", "true"); }}
-              className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold text-sm transition-colors relative z-10 cursor-pointer"
-            >
-              Awesome, let's play! 🏸
-            </button>
-          </motion.div>
-        </div>
-      )}
-
       <div className="min-h-screen">
 
         {/* ── HERO ──────────────────────────────────────────────────────── */}
-        <section className="relative overflow-hidden text-white min-h-[90vh] flex items-center">
+        <section aria-label="Hero" className="relative overflow-hidden text-white min-h-[90vh] flex items-center">
           {/* Mobile photo bg */}
           <div className="lg:hidden absolute inset-0 z-0">
             <img src={iiscTeam} alt="IISc Badminton Team" className="w-full h-full object-cover object-[25%_center]" />
@@ -248,7 +195,7 @@ export default function Home() {
         </section>
 
         {/* ── QUICK PATHS ──────────────────────────────────────────────── */}
-        <section className="py-20 bg-slate-50 dark:bg-slate-900/60">
+        <section aria-label="Quick Links" className="py-20 bg-slate-50 dark:bg-slate-900/60">
           <div className="container mx-auto px-4">
             <motion.div
               className="text-center mb-12"
@@ -322,7 +269,7 @@ export default function Home() {
         </section>
 
         {/* ── STATS BANNER (dark) ───────────────────────────────────────── */}
-        <section className="py-16 bg-slate-900 dark:bg-slate-950 border-y border-slate-800">
+        <section aria-label="Club Statistics" className="py-16 bg-slate-900 dark:bg-slate-950 border-y border-slate-800">
           <div className="container mx-auto px-4">
             <motion.div
               className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-slate-700/40 rounded-2xl overflow-hidden"
@@ -352,7 +299,7 @@ export default function Home() {
         </section>
 
         {/* ── ABOUT / MISSION & VALUES ──────────────────────────────────── */}
-        <section className="py-24 bg-white dark:bg-slate-950">
+        <section aria-label="About & Mission" className="py-24 bg-white dark:bg-slate-950">
           <div className="container mx-auto px-4 max-w-6xl">
             <motion.div
               className="mb-16"
@@ -447,7 +394,7 @@ export default function Home() {
         </section>
 
         {/* ── LEADERSHIP ────────────────────────────────────────────────── */}
-        <section className="py-20 bg-slate-50 dark:bg-slate-900/50">
+        <section aria-label="Leadership Team" className="py-20 bg-slate-50 dark:bg-slate-900/50">
           <div className="container mx-auto px-4">
             <motion.div
               className="text-center mb-12"
@@ -542,87 +489,6 @@ export default function Home() {
             </div>
           </motion.section>
         )}
-
-        {/* ── TESTIMONIALS ──────────────────────────────────────────────── */}
-        <section className="py-20 bg-white dark:bg-slate-950">
-          <div className="container mx-auto px-4 max-w-5xl">
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-80px" }}
-              variants={stagger}
-              className="text-center mb-12"
-            >
-              <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400 text-xs font-bold uppercase tracking-wider mb-4">
-                <Star className="w-3.5 h-3.5" /> Member Stories
-              </motion.div>
-              <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mb-3">
-                What Our Players Say
-              </motion.h2>
-              <motion.p variants={fadeUp} className="text-slate-500 dark:text-slate-400 max-w-xl mx-auto">
-                Real stories from the IISc Badminton community.
-              </motion.p>
-            </motion.div>
-
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-60px" }}
-              variants={stagger}
-              className="grid grid-cols-1 md:grid-cols-3 gap-6"
-            >
-              {[
-                {
-                  quote: "INVICTA was the highlight of my PhD years. The atmosphere, the competition, the camaraderie — nothing else comes close.",
-                  name: "Dr. Arjun Sharma",
-                  role: "PhD, CSA Dept",
-                  initial: "A",
-                  color: "from-emerald-500 to-teal-600",
-                },
-                {
-                  quote: "I came in as a complete beginner. The club welcomed me, helped me grow, and now I compete regularly in tournaments.",
-                  name: "Priya Nair",
-                  role: "M.Tech, EE Dept",
-                  initial: "P",
-                  color: "from-orange-500 to-amber-500",
-                },
-                {
-                  quote: "The leaderboard and live scoring features on the app keep me motivated. I check my ELO after every match!",
-                  name: "Kiran Bose",
-                  role: "Research Scholar, Physics",
-                  initial: "K",
-                  color: "from-blue-500 to-violet-600",
-                },
-              ].map((t, i) => (
-                <motion.div
-                  key={t.name}
-                  variants={cardVariant}
-                  className="relative bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
-                >
-                  {/* Quote mark */}
-                  <div className="text-5xl font-black text-slate-100 dark:text-slate-800 leading-none select-none mb-2">"</div>
-                  <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed mb-5">
-                    {t.quote}
-                  </p>
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${t.color} flex items-center justify-center text-white font-black text-sm flex-shrink-0`}>
-                      {t.initial}
-                    </div>
-                    <div>
-                      <div className="font-bold text-slate-900 dark:text-white text-sm">{t.name}</div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400">{t.role}</div>
-                    </div>
-                    <div className="ml-auto flex gap-0.5">
-                      {[...Array(5)].map((_, si) => (
-                        <Star key={si} className="w-3 h-3 text-amber-400 fill-amber-400" />
-                      ))}
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-        </section>
 
         {/* ── CTA ───────────────────────────────────────────────────────── */}
         <section className="py-24 relative overflow-hidden bg-slate-900 dark:bg-slate-950">

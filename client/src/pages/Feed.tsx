@@ -799,12 +799,14 @@ export default function Feed() {
                         <Link href={`/player/${p1.id}`}>
                           <img
                             src={p1.avatar_url || ""}
+                            loading="lazy"
                             className={`w-12 h-12 rounded-full object-cover shadow-sm relative z-10 ${isP1Winner ? "ring-2 ring-emerald-500 ring-offset-2 dark:ring-offset-slate-900" : "grayscale opacity-80"}`}
                           />
                         </Link>
                         {match.partner1 && (
                           <Link href={`/player/${match.partner1.id}`}>
                             <img
+                              loading="lazy"
                               src={match.partner1.avatar_url || ""}
                               className={`w-12 h-12 rounded-full object-cover shadow-sm -ml-4 relative z-0 ${isP1Winner ? "ring-2 ring-emerald-500 ring-offset-2 dark:ring-offset-slate-900" : "grayscale opacity-80"}`}
                             />
@@ -910,6 +912,7 @@ export default function Feed() {
                       <div className="relative flex flex-row-reverse">
                         <Link href={`/player/${p2.id}`}>
                           <img
+                            loading="lazy"
                             src={p2.avatar_url || ""}
                             className={`w-12 h-12 rounded-full object-cover shadow-sm relative z-10 ${!isP1Winner ? "ring-2 ring-emerald-500 ring-offset-2 dark:ring-offset-slate-900" : "grayscale opacity-80"}`}
                           />
@@ -917,6 +920,7 @@ export default function Feed() {
                         {match.partner2 && (
                           <Link href={`/player/${match.partner2.id}`}>
                             <img
+                              loading="lazy"
                               src={match.partner2.avatar_url || ""}
                               className={`w-12 h-12 rounded-full object-cover shadow-sm -mr-4 relative z-0 ${!isP1Winner ? "ring-2 ring-emerald-500 ring-offset-2 dark:ring-offset-slate-900" : "grayscale opacity-80"}`}
                             />

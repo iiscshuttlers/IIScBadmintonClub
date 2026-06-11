@@ -10,6 +10,11 @@ import {
   ArrowRight,
   Clock,
   Info,
+  Timer,
+  Award,
+  GraduationCap,
+  Star,
+  type LucideIcon,
 } from "lucide-react";
 import { getTournaments } from "@/lib/tournaments";
 import {
@@ -37,10 +42,12 @@ const UPCOMING_MILESTONE = {
   year: "Jun 2026",
   title: "INVICTA 2026",
   desc: "IISc's flagship open badminton tournament — MS, WS, MD, WD & XD categories. Running 1st–21st June at Gymkhana Courts.",
-  icon: "🔜",
+  icon: Timer as LucideIcon,
   color: "border-emerald-400",
   upcoming: true,
 };
+
+const MILESTONE_ICONS: LucideIcon[] = [Trophy, Medal, Award, GraduationCap, Star];
 
 const MILESTONES = [
   UPCOMING_MILESTONE,
@@ -48,7 +55,6 @@ const MILESTONES = [
     .sort((a, b) => b.startDate.localeCompare(a.startDate))
     .slice(0, 5)
     .map((t, i) => {
-      const icons = ["🏆", "🥇", "🏅", "🎓", "⭐"];
       const colors = [
         "border-amber-400",
         "border-emerald-500",
@@ -60,7 +66,7 @@ const MILESTONES = [
         year: t.startDate,
         title: t.name,
         desc: t.description,
-        icon: icons[i] ?? "🏸",
+        icon: (MILESTONE_ICONS[i] ?? Trophy) as LucideIcon,
         color: colors[i] ?? "border-slate-400",
         upcoming: false,
       };
@@ -278,8 +284,8 @@ export default function Events() {
                     <Medal className="w-3.5 h-3.5" />
                     {result.category}
                   </div>
-                  <p className="mt-1 font-bold text-blue-950 dark:text-white text-sm">
-                    🥇 {result.winner}
+                  <p className="mt-1 font-bold text-blue-950 dark:text-white text-sm flex items-center gap-1.5">
+                    <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" /> {result.winner}
                   </p>
                 </div>
               ))}
@@ -295,12 +301,12 @@ export default function Events() {
                 >
                   <p className="text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
                     {index === 0
-                      ? "🥇"
+                      ? <Trophy className="w-3.5 h-3.5 inline-block text-amber-500 mr-1" />
                       : index === 1
-                        ? "🥈"
+                        ? <Medal className="w-3.5 h-3.5 inline-block text-slate-400 mr-1" />
                         : index === 2
-                          ? "🥉"
-                          : `#${index + 1}`}{" "}
+                          ? <Award className="w-3.5 h-3.5 inline-block text-orange-400 mr-1" />
+                          : `#${index + 1} `}
                     Rank {index + 1}
                   </p>
                   <p className="mt-1 font-bold text-blue-950 dark:text-white text-sm">
@@ -424,7 +430,7 @@ export default function Events() {
                     <div
                       className={`flex-shrink-0 w-12 h-12 rounded-2xl ${m.upcoming ? "bg-emerald-50 dark:bg-emerald-950/30" : "bg-white dark:bg-slate-800"} border-2 ${m.color} flex items-center justify-center text-xl shadow-sm z-10`}
                     >
-                      {m.icon}
+                      <m.icon className="w-5 h-5 text-slate-600 dark:text-slate-300" />
                     </div>
                     <div
                       className={`flex-1 rounded-2xl p-5 hover:shadow-md transition-shadow ${m.upcoming ? "bg-emerald-50 dark:bg-emerald-950/20 border-2 border-emerald-300 dark:border-emerald-800" : "bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700"}`}
