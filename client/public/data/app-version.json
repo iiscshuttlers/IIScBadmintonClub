@@ -1,6 +1,6 @@
 {
-  "versionCode": 89,
-  "versionName": "1.88",
-  "downloadUrl": "https://github.com/iiscshuttlers/iiscshuttlers/releases/latest/download/IIScShuttlers_v1.88.apk",
-  "changelog": "- chore: release v1.87 (build 88)"
+  "versionCode": 90,
+  "versionName": "1.89",
+  "downloadUrl": "https://github.com/iiscshuttlers/iiscshuttlers/releases/latest/download/IIScShuttlers_v1.89.apk",
+  "changelog": "- Add live scoring, gestures and notifications\n- chore: release v1.88 (build 89)"
 }
