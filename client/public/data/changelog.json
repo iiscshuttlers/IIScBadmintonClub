@@ -1,5 +1,14 @@
 [
   {
+    "versionCode": 99,
+    "versionName": "1.98",
+    "date": "2026-06-11T21:25:41.354Z",
+    "changes": [
+      "- Add live broadcasts, events nav, and profile UI",
+      "- chore: release v1.97 (build 98)"
+    ]
+  },
+  {
     "versionCode": 98,
     "versionName": "1.97",
     "date": "2026-06-11T20:27:58.473Z",
