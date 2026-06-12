@@ -1,5 +1,15 @@
 [
   {
+    "versionCode": 101,
+    "versionName": "1.100",
+    "date": "2026-06-12T07:19:00.350Z",
+    "changes": [
+      "- chore: release v1.99 (build 100)",
+      "- Add buddy-requests, per-player serve & UI tweaks",
+      "- chore: release v1.98 (build 99)"
+    ]
+  },
+  {
     "versionCode": 100,
     "versionName": "1.99",
     "date": "2026-06-12T07:13:34.376Z",

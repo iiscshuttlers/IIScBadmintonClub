@@ -1,6 +1,6 @@
 {
-  "versionCode": 100,
-  "versionName": "1.99",
-  "downloadUrl": "https://github.com/iiscshuttlers/iiscshuttlers/releases/latest/download/IIScShuttlers_v1.99.apk",
-  "changelog": "- Add buddy-requests, per-player serve & UI tweaks\n- chore: release v1.98 (build 99)"
+  "versionCode": 101,
+  "versionName": "1.100",
+  "downloadUrl": "https://github.com/iiscshuttlers/iiscshuttlers/releases/latest/download/IIScShuttlers_v1.100.apk",
+  "changelog": "- chore: release v1.99 (build 100)\n- Add buddy-requests, per-player serve & UI tweaks\n- chore: release v1.98 (build 99)"
 }
