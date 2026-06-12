@@ -18,6 +18,8 @@ function CourtVisual({
   t2Name, 
   t1P2Name,
   t2P2Name,
+  t1Score,
+  t2Score,
   isDoubles,
   onSwitchServer
 }: { 
@@ -27,75 +29,81 @@ function CourtVisual({
   t2Name: string; 
   t1P2Name?: string;
   t2P2Name?: string;
+  t1Score: number;
+  t2Score: number;
   isDoubles: boolean;
   onSwitchServer?: () => void;
 }) {
+  const serverScore = serverTeam === 1 ? t1Score : t2Score;
+  const isEven = serverScore % 2 === 0;
+
+  // Cy coords: For T1 (Left), Right court is Bottom(94), Left court is Top(34)
+  // For T2 (Right), Right court is Top(34), Left court is Bottom(94)
+  const t1ServerCy = isEven ? "94" : "34";
+  const t1OtherCy = isEven ? "34" : "94";
+  const t2ServerCy = isEven ? "34" : "94";
+  const t2OtherCy = isEven ? "94" : "34";
+
+  const serverCy = serverTeam === 1 ? t1ServerCy : t2ServerCy;
+
   return (
     <div className="relative w-52 h-32 select-none" title="Court view — server highlighted">
       <svg viewBox="0 0 208 128" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Court outline */}
         <rect x="4" y="4" width="200" height="120" rx="2" stroke="#334155" strokeWidth="2" fill="#0f172a" />
-        {/* Net */}
         <line x1="104" y1="4" x2="104" y2="124" stroke="#64748b" strokeWidth="2" strokeDasharray="4 3" />
-        {/* Service boxes */}
         <line x1="4" y1="64" x2="104" y2="64" stroke="#1e3a5f" strokeWidth="1" />
         <line x1="104" y1="64" x2="204" y2="64" stroke="#1e3a5f" strokeWidth="1" />
-        {/* Doubles tramlines */}
         {isDoubles && <>
           <line x1="4" y1="18" x2="204" y2="18" stroke="#1e293b" strokeWidth="1" />
           <line x1="4" y1="110" x2="204" y2="110" stroke="#1e293b" strokeWidth="1" />
         </>}
-        {/* Team 1 side highlight */}
         {serverTeam === 1 && <rect x="5" y="5" width="98" height="118" rx="1" fill="#10b981" fillOpacity="0.12" />}
-        {/* Team 2 side highlight */}
         {serverTeam === 2 && <rect x="105" y="5" width="98" height="118" rx="1" fill="#10b981" fillOpacity="0.12" />}
-        {/* Shuttlecock at server's end */}
-        {serverTeam === 1 && <circle cx="52" cy={serverPlayerIndex === 0 ? "34" : "94"} r="6" fill="#10b981" opacity="0.9" />}
-        {serverTeam === 2 && <circle cx="156" cy={serverPlayerIndex === 0 ? "34" : "94"} r="6" fill="#10b981" opacity="0.9" />}
-        {/* Serve direction arrow */}
-        {serverTeam === 1 && <path d={`M60 ${serverPlayerIndex === 0 ? '34' : '94'} L88 ${serverPlayerIndex === 0 ? '94' : '34'}`} stroke="#10b981" strokeWidth="2" markerEnd="url(#arrowR)" />}
-        {serverTeam === 2 && <path d={`M148 ${serverPlayerIndex === 0 ? '34' : '94'} L120 ${serverPlayerIndex === 0 ? '94' : '34'}`} stroke="#10b981" strokeWidth="2" markerEnd="url(#arrowL)" />}
-        <defs>
-          <marker id="arrowR" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
-            <path d="M0,2 L8,5 L0,8 Z" fill="#10b981" />
-          </marker>
-          <marker id="arrowL" markerWidth="10" markerHeight="10" refX="2" refY="5" orient="auto">
-            <path d="M10,2 L2,5 L10,8 Z" fill="#10b981" />
-          </marker>
-        </defs>
+        <circle cx={serverTeam === 1 ? "52" : "156"} cy={serverCy} r="6" fill="#10b981" opacity="0.9" />
       </svg>
-      {/* Player name labels */}
       <div className="absolute inset-0 flex items-stretch justify-between px-3 py-1.5 pointer-events-none">
-        <div className="flex flex-col justify-around h-full w-[44%]">
-          <span 
+        <div className="relative flex flex-col h-full w-[44%]">
+          <div 
+            className={`absolute w-full truncate text-[9px] font-black uppercase ${serverTeam === 1 && serverPlayerIndex === 0 ? "text-emerald-400" : (serverTeam === 2 && ((isDoubles && serverPlayerIndex === 0) || !isDoubles)) ? "text-amber-400" : "text-slate-500"} ${serverTeam === 1 && isDoubles ? "pointer-events-auto cursor-pointer" : ""}`}
+            style={{ top: serverTeam === 1 && serverPlayerIndex === 0 ? (isEven ? '65%' : '15%') : (serverTeam === 1 && isEven ? '15%' : '65%') }}
             onClick={serverTeam === 1 && isDoubles ? onSwitchServer : undefined}
-            className={`text-[9px] font-black uppercase truncate ${serverTeam === 1 && serverPlayerIndex === 0 ? "text-emerald-400" : "text-slate-500"} ${serverTeam === 1 && isDoubles ? "pointer-events-auto cursor-pointer" : ""}`}
           >
             {t1Name || "T1 P1"}
-          </span>
+            {serverTeam === 1 && serverPlayerIndex === 0 && <span className="block text-[7px] text-emerald-500 mt-0.5">SERVER</span>}
+            {serverTeam === 2 && ((isDoubles && serverPlayerIndex === 0) || !isDoubles) && <span className="block text-[7px] text-amber-500 mt-0.5">RECEIVER</span>}
+          </div>
           {isDoubles && (
-            <span 
+            <div 
+              className={`absolute w-full truncate text-[9px] font-black uppercase ${serverTeam === 1 && serverPlayerIndex === 1 ? "text-emerald-400" : (serverTeam === 2 && serverPlayerIndex === 1) ? "text-amber-400" : "text-slate-500"} ${serverTeam === 1 ? "pointer-events-auto cursor-pointer" : ""}`}
+              style={{ top: serverTeam === 1 && serverPlayerIndex === 1 ? (isEven ? '65%' : '15%') : (serverTeam === 1 && isEven ? '65%' : '15%') }}
               onClick={serverTeam === 1 ? onSwitchServer : undefined}
-              className={`text-[9px] font-black uppercase truncate ${serverTeam === 1 && serverPlayerIndex === 1 ? "text-emerald-400" : "text-slate-500"} ${serverTeam === 1 ? "pointer-events-auto cursor-pointer" : ""}`}
             >
               {t1P2Name || "T1 P2"}
-            </span>
+              {serverTeam === 1 && serverPlayerIndex === 1 && <span className="block text-[7px] text-emerald-500 mt-0.5">SERVER</span>}
+              {serverTeam === 2 && serverPlayerIndex === 1 && <span className="block text-[7px] text-amber-500 mt-0.5">RECEIVER</span>}
+            </div>
           )}
         </div>
-        <div className="flex flex-col justify-around h-full w-[44%] text-right items-end">
-          <span 
+        <div className="relative flex flex-col h-full w-[44%] text-right items-end">
+          <div 
+            className={`absolute w-full truncate text-[9px] font-black uppercase ${serverTeam === 2 && serverPlayerIndex === 0 ? "text-emerald-400" : (serverTeam === 1 && ((isDoubles && serverPlayerIndex === 0) || !isDoubles)) ? "text-amber-400" : "text-slate-500"} ${serverTeam === 2 && isDoubles ? "pointer-events-auto cursor-pointer" : ""}`}
+            style={{ top: serverTeam === 2 && serverPlayerIndex === 0 ? (isEven ? '15%' : '65%') : (serverTeam === 2 && isEven ? '65%' : '15%') }}
             onClick={serverTeam === 2 && isDoubles ? onSwitchServer : undefined}
-            className={`text-[9px] font-black uppercase truncate ${serverTeam === 2 && serverPlayerIndex === 0 ? "text-emerald-400" : "text-slate-500"} ${serverTeam === 2 && isDoubles ? "pointer-events-auto cursor-pointer" : ""}`}
           >
             {t2Name || "T2 P1"}
-          </span>
+            {serverTeam === 2 && serverPlayerIndex === 0 && <span className="block text-[7px] text-emerald-500 mt-0.5">SERVER</span>}
+            {serverTeam === 1 && ((isDoubles && serverPlayerIndex === 0) || !isDoubles) && <span className="block text-[7px] text-amber-500 mt-0.5">RECEIVER</span>}
+          </div>
           {isDoubles && (
-            <span 
+            <div 
+              className={`absolute w-full truncate text-[9px] font-black uppercase ${serverTeam === 2 && serverPlayerIndex === 1 ? "text-emerald-400" : (serverTeam === 1 && serverPlayerIndex === 1) ? "text-amber-400" : "text-slate-500"} ${serverTeam === 2 ? "pointer-events-auto cursor-pointer" : ""}`}
+              style={{ top: serverTeam === 2 && serverPlayerIndex === 1 ? (isEven ? '15%' : '65%') : (serverTeam === 2 && isEven ? '15%' : '65%') }}
               onClick={serverTeam === 2 ? onSwitchServer : undefined}
-              className={`text-[9px] font-black uppercase truncate ${serverTeam === 2 && serverPlayerIndex === 1 ? "text-emerald-400" : "text-slate-500"} ${serverTeam === 2 ? "pointer-events-auto cursor-pointer" : ""}`}
             >
               {t2P2Name || "T2 P2"}
-            </span>
+              {serverTeam === 2 && serverPlayerIndex === 1 && <span className="block text-[7px] text-emerald-500 mt-0.5">SERVER</span>}
+              {serverTeam === 1 && serverPlayerIndex === 1 && <span className="block text-[7px] text-amber-500 mt-0.5">RECEIVER</span>}
+            </div>
           )}
         </div>
       </div>
@@ -601,7 +609,39 @@ export function UmpireEngine({
               </div>
             </div>
           </div>
-
+          <div className="space-y-4 pt-4 border-t border-slate-800">
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase mb-2">First Serve</label>
+              <div className="flex gap-2 mb-2">
+                <button
+                  onClick={() => setMatch({ ...match, serverTeam: 1 })}
+                  className={`flex-1 py-2 rounded-lg font-bold text-xs border ${match.serverTeam === 1 ? "bg-emerald-500/20 border-emerald-500 text-emerald-400" : "bg-slate-800 border-slate-700 text-slate-400"}`}
+                >
+                  Team 1 Serves
+                </button>
+                <button
+                  onClick={() => setMatch({ ...match, serverTeam: 2 })}
+                  className={`flex-1 py-2 rounded-lg font-bold text-xs border ${match.serverTeam === 2 ? "bg-emerald-500/20 border-emerald-500 text-emerald-400" : "bg-slate-800 border-slate-700 text-slate-400"}`}
+                >
+                  Team 2 Serves
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setMatch({ ...match, serverPlayerIndex: 0 })}
+                  className={`flex-1 py-2 rounded-lg font-bold text-xs border ${match.serverPlayerIndex === 0 ? "bg-emerald-500/20 border-emerald-500 text-emerald-400" : "bg-slate-800 border-slate-700 text-slate-400"}`}
+                >
+                  P1 Serves First
+                </button>
+                <button
+                  onClick={() => setMatch({ ...match, serverPlayerIndex: 1 })}
+                  className={`flex-1 py-2 rounded-lg font-bold text-xs border ${match.serverPlayerIndex === 1 ? "bg-emerald-500/20 border-emerald-500 text-emerald-400" : "bg-slate-800 border-slate-700 text-slate-400"}`}
+                >
+                  P2 Serves First
+                </button>
+              </div>
+            </div>
+          </div>
           <button onClick={startMatch} className="w-full py-4 mt-6 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black uppercase tracking-widest shadow-[0_0_20px_rgba(16,185,129,0.3)] transition">
             Start Broadcasting
           </button>
@@ -729,6 +769,8 @@ export function UmpireEngine({
             t2Name={match.t2.p1Name} 
             t1P2Name={match.t1.p2Name}
             t2P2Name={match.t2.p2Name}
+            t1Score={match.t1.score}
+            t2Score={match.t2.score}
             isDoubles={!!match.t1.p2Id} 
             onSwitchServer={() => {
               updateMatch({ serverPlayerIndex: match.serverPlayerIndex === 0 ? 1 : 0 });

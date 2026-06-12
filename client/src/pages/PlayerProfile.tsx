@@ -396,32 +396,38 @@ export default function PlayerProfile({
     try {
       if (action === 'send') {
         setHasSentRequest(true);
-        const { error } = await supabase.rpc('toggle_buddy_request', {
-          target_player_id: player.id,
-          sender_player_id: ownPlayerProfile.id,
-          is_sending: true
-        });
+        const currentRequests = player.buddyRequests || (player as any).buddy_requests || [];
+        const newRequests = Array.from(new Set([...currentRequests, ownPlayerProfile.id]));
+        const { error } = await supabase.from('players').update({ buddy_requests: newRequests }).eq('id', player.id);
         if (error) throw error;
+        setPlayer({ ...player, buddyRequests: newRequests });
         toast.success(`Buddy request sent to ${player.fullName}!`);
       } 
       else if (action === 'cancel') {
         setHasSentRequest(false);
-        const { error } = await supabase.rpc('toggle_buddy_request', {
-          target_player_id: player.id,
-          sender_player_id: ownPlayerProfile.id,
-          is_sending: false
-        });
+        const currentRequests = player.buddyRequests || (player as any).buddy_requests || [];
+        const newRequests = currentRequests.filter((id: string) => id !== ownPlayerProfile.id);
+        const { error } = await supabase.from('players').update({ buddy_requests: newRequests }).eq('id', player.id);
         if (error) throw error;
+        setPlayer({ ...player, buddyRequests: newRequests });
         toast.success(`Buddy request cancelled.`);
       }
       else if (action === 'accept') {
         setIsBuddy(true);
         setHasReceivedRequest(false);
-        const { error } = await supabase.rpc('accept_buddy_request', {
-          accepter_player_id: ownPlayerProfile.id,
-          sender_player_id: player.id
-        });
-        if (error) throw error;
+
+        // Remove from my requests, add to my buddies
+        const myNewRequests = Array.from(new Set((ownPlayerProfile as any).buddy_requests || [])).filter((id) => id !== player.id);
+        const myNewBuddies = Array.from(new Set([...((ownPlayerProfile as any).buddies || []), player.id]));
+        const { error: myErr } = await supabase.from('players').update({ buddy_requests: myNewRequests, buddies: myNewBuddies }).eq('id', ownPlayerProfile.id);
+        if (myErr) throw myErr;
+
+        // Add me to their buddies
+        const theirNewBuddies = Array.from(new Set([...((player as any).buddies || []), ownPlayerProfile.id]));
+        const { error: theirErr } = await supabase.from('players').update({ buddies: theirNewBuddies }).eq('id', player.id);
+        if (theirErr) throw theirErr;
+
+        setPlayer({ ...player, buddies: theirNewBuddies });
         toast.success(`You and ${player.fullName} are now buddies!`);
         
         // Trigger push notification to the sender

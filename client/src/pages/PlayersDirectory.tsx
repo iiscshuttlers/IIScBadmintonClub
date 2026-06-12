@@ -435,28 +435,44 @@ export default function PlayersDirectory() {
     
     try {
       if (action === 'send') {
-        const { error } = await supabase.rpc('toggle_buddy_request', {
-          target_player_id: playerId,
-          sender_player_id: ownProfile.id,
-          is_sending: true
-        });
+        const currentRequests = (targetPlayer as any)?.buddy_requests || [];
+        const newRequests = Array.from(new Set([...currentRequests, ownProfile.id]));
+        const { error } = await supabase.from('players').update({ buddy_requests: newRequests }).eq('id', playerId);
         if (error) throw error;
+        setPlayers(players.map(p => p.id === playerId ? { ...p, buddy_requests: newRequests } : p));
         toast.success(`Buddy request sent!`);
       } else if (action === 'cancel') {
-        const { error } = await supabase.rpc('toggle_buddy_request', {
-          target_player_id: playerId,
-          sender_player_id: ownProfile.id,
-          is_sending: false
-        });
+        const currentRequests = (targetPlayer as any)?.buddy_requests || [];
+        const newRequests = currentRequests.filter((id: string) => id !== ownProfile.id);
+        const { error } = await supabase.from('players').update({ buddy_requests: newRequests }).eq('id', playerId);
         if (error) throw error;
+        setPlayers(players.map(p => p.id === playerId ? { ...p, buddy_requests: newRequests } : p));
         toast.success(`Buddy request cancelled.`);
       } else if (action === 'accept') {
-        const { error } = await supabase.rpc('accept_buddy_request', {
-          accepter_player_id: ownProfile.id,
-          sender_player_id: playerId
-        });
-        if (error) throw error;
+        // Remove from my requests, add to my buddies
+        const myNewRequests = Array.from(new Set((ownProfile as any).buddy_requests || [])).filter((id) => id !== playerId);
+        const myNewBuddies = Array.from(new Set([...((ownProfile as any).buddies || []), playerId]));
+        const { error: myErr } = await supabase.from('players').update({ buddy_requests: myNewRequests, buddies: myNewBuddies }).eq('id', ownProfile.id);
+        if (myErr) throw myErr;
+
+        // Add me to their buddies
+        const theirNewBuddies = Array.from(new Set([...((targetPlayer as any)?.buddies || []), ownProfile.id]));
+        const { error: theirErr } = await supabase.from('players').update({ buddies: theirNewBuddies }).eq('id', playerId);
+        if (theirErr) throw theirErr;
+
+        setPlayers(players.map(p => p.id === playerId ? { ...p, buddies: theirNewBuddies } : p));
+        setOwnProfile((prev: any) => prev ? { ...prev, buddy_requests: myNewRequests, buddies: myNewBuddies } : prev);
         toast.success(`You are now buddies!`);
+        
+        await supabase.from("site_data").upsert({
+          key: "latest_buddy_acceptance",
+          value: {
+            accepterId: ownProfile.id,
+            accepterName: ownProfile.full_name,
+            senderId: playerId,
+            timestamp: Date.now()
+          }
+        }, { onConflict: "key" });
       } else if (action === 'remove') {
         const newBuddies = new Set(myBuddyIds);
         newBuddies.delete(playerId);
@@ -472,6 +488,7 @@ export default function PlayersDirectory() {
       // Trigger a silent refresh of players to update states
       fetchPlayers({ silent: true });
     } catch (e) {
+      console.error("Buddy action failed in directory:", e);
       toast.error("Could not complete buddy action.");
     }
   };
@@ -1030,6 +1047,117 @@ export default function PlayersDirectory() {
                 </div>
               )}
             </div>
+
+            {/* Pending buddy requests (received) */}
+            {ownProfile && (() => {
+              const pendingPlayers = players.filter(p => myBuddyRequests.has(p.id));
+              return (
+                <div>
+                  <h2 className="text-xs uppercase tracking-widest font-black text-slate-400 dark:text-slate-500 mb-5 flex items-center gap-2">
+                    <Heart className="w-4 h-4 text-emerald-500" /> Pending Buddy Requests ({pendingPlayers.length})
+                  </h2>
+                  {pendingPlayers.length === 0 ? (
+                    <div className="text-center py-10 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
+                      <Heart className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                      <p className="text-slate-500 font-medium text-sm">No pending requests.</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      {pendingPlayers.map(player => (
+                        <div key={player.id} className="flex items-center gap-4 bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800/50 rounded-2xl px-4 py-3 shadow-sm">
+                          <div
+                            className="shrink-0 w-10 h-10 rounded-full overflow-hidden cursor-pointer"
+                            onClick={() => setLocation(`/player/${player.id}`)}
+                          >
+                            {player.avatar_url ? (
+                              <img src={player.avatar_url} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-black text-base">
+                                {player.full_name[0]}
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1 cursor-pointer" onClick={() => setLocation(`/player/${player.id}`)}>
+                            <p className="font-black text-sm text-slate-800 dark:text-slate-100 truncate">{player.full_name}</p>
+                            <p className="text-xs text-slate-400 truncate">{player.department} · ELO {player.elo_rating ?? "—"}</p>
+                          </div>
+                          <div className="flex gap-2 shrink-0">
+                            <button
+                              onClick={() => handleBuddyAction(player.id, 'accept')}
+                              className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl transition"
+                            >
+                              Accept
+                            </button>
+                            <button
+                              onClick={() => {
+                                const currentRequests = ((ownProfile as any).buddy_requests || []).filter((id: string) => id !== player.id);
+                                supabase.from('players').update({ buddy_requests: currentRequests }).eq('id', ownProfile.id).then(({ error }) => {
+                                  if (!error) setOwnProfile((prev: any) => prev ? { ...prev, buddy_requests: currentRequests } : prev);
+                                });
+                              }}
+                              className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-xl transition"
+                            >
+                              Decline
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Sent buddy requests */}
+            {ownProfile && (() => {
+              const sentPlayers = players.filter(p =>
+                !myBuddyIds.has(p.id) &&
+                !myBuddyRequests.has(p.id) &&
+                ((p as any).buddy_requests || []).includes(ownProfile.id)
+              );
+              return (
+                <div>
+                  <h2 className="text-xs uppercase tracking-widest font-black text-slate-400 dark:text-slate-500 mb-5 flex items-center gap-2">
+                    <Heart className="w-4 h-4 text-amber-500" /> Sent Buddy Requests ({sentPlayers.length})
+                  </h2>
+                  {sentPlayers.length === 0 ? (
+                    <div className="text-center py-10 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
+                      <Heart className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                      <p className="text-slate-500 font-medium text-sm">No sent requests pending.</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      {sentPlayers.map(player => (
+                        <div key={player.id} className="flex items-center gap-4 bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800/50 rounded-2xl px-4 py-3 shadow-sm">
+                          <div
+                            className="shrink-0 w-10 h-10 rounded-full overflow-hidden cursor-pointer"
+                            onClick={() => setLocation(`/player/${player.id}`)}
+                          >
+                            {player.avatar_url ? (
+                              <img src={player.avatar_url} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-black text-base">
+                                {player.full_name[0]}
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1 cursor-pointer" onClick={() => setLocation(`/player/${player.id}`)}>
+                            <p className="font-black text-sm text-slate-800 dark:text-slate-100 truncate">{player.full_name}</p>
+                            <p className="text-xs text-slate-400 truncate">{player.department} · ELO {player.elo_rating ?? "—"}</p>
+                          </div>
+                          <button
+                            onClick={() => handleBuddyAction(player.id, 'cancel')}
+                            className="shrink-0 px-3 py-1.5 bg-amber-50 dark:bg-amber-950/30 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-600 dark:text-amber-400 text-xs font-bold rounded-xl transition border border-amber-200 dark:border-amber-800/50"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         ) : activeTab === "directory" ? (
           <>

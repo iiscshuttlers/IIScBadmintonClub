@@ -289,7 +289,7 @@ export function PlayerCard({
                        : hasReceivedRequest
                        ? "text-emerald-500 hover:text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30"
                        : hasSentRequest
-                       ? "text-slate-500 hover:text-slate-600 bg-slate-100 dark:bg-slate-800"
+                       ? "text-amber-500 hover:text-amber-600 bg-amber-50 dark:bg-amber-950/30"
                        : "text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30"
                    }`}
                    title={isBuddy ? "Buddy" : hasReceivedRequest ? "Accept Request" : hasSentRequest ? "Cancel Request" : "Add Buddy"}
