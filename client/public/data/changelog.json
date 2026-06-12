@@ -1,5 +1,14 @@
 [
   {
+    "versionCode": 102,
+    "versionName": "1.101",
+    "date": "2026-06-12T10:44:40.005Z",
+    "changes": [
+      "- Refactor buddy flows, update umpire UI & nav",
+      "- chore: release v1.100 (build 101)"
+    ]
+  },
+  {
     "versionCode": 101,
     "versionName": "1.100",
     "date": "2026-06-12T07:19:00.350Z",
