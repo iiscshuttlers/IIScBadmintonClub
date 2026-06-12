@@ -1,5 +1,13 @@
 [
   {
+    "versionCode": 106,
+    "versionName": "1.105",
+    "date": "2026-06-12T14:34:47.593Z",
+    "changes": [
+      "- chore: release v1.104 (build 105)"
+    ]
+  },
+  {
     "versionCode": 105,
     "versionName": "1.104",
     "date": "2026-06-12T11:46:55.382Z",
