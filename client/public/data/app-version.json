@@ -1,6 +1,6 @@
 {
-  "versionCode": 102,
-  "versionName": "1.101",
-  "downloadUrl": "https://github.com/iiscshuttlers/iiscshuttlers/releases/latest/download/IIScShuttlers_v1.101.apk",
-  "changelog": "- Refactor buddy flows, update umpire UI & nav\n- chore: release v1.100 (build 101)"
+  "versionCode": 103,
+  "versionName": "1.102",
+  "downloadUrl": "https://github.com/iiscshuttlers/iiscshuttlers/releases/latest/download/IIScShuttlers_v1.102.apk",
+  "changelog": "- chore: release v1.101 (build 102)"
 }
