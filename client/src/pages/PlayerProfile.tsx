@@ -1055,13 +1055,13 @@ export default function PlayerProfile({
     for (let i = confirmed.length - 1; i >= 0; i--) {
       const match = confirmed[i];
       if (match.player1_id === id && match.elo_change_p1) {
-        currentElo -= match.elo_change_p1;
+        currentElo -= Math.trunc(match.elo_change_p1 / 3);
       } else if (match.player2_id === id && match.elo_change_p2) {
-        currentElo -= match.elo_change_p2;
+        currentElo -= Math.trunc(match.elo_change_p2 / 3);
       } else if (match.team1_partner_id === id && match.elo_change_p3) {
-        currentElo -= match.elo_change_p3;
+        currentElo -= Math.trunc(match.elo_change_p3 / 3);
       } else if (match.team2_partner_id === id && match.elo_change_p4) {
-        currentElo -= match.elo_change_p4;
+        currentElo -= Math.trunc(match.elo_change_p4 / 3);
       }
       history.push({
         name: new Date(match.created_at).toLocaleDateString(undefined, {
@@ -1362,6 +1362,10 @@ export default function PlayerProfile({
                      <User className="w-4 h-4 text-violet-400" /> {player.dominantHand.split("-")[0]} Hand
                    </span>
                  )}
+               </div>
+
+               {/* ELO Row */}
+               <div className="flex flex-wrap gap-2 mt-2">
                  {player.elo_rating != null && (
                    <span className="px-3 py-1.5 rounded-lg bg-white/80 dark:bg-black/40 backdrop-blur-md border border-slate-200/80 dark:border-white/25 text-slate-800 dark:text-white text-sm font-bold uppercase shadow-sm flex items-center gap-1.5">
                      {getEloTier(player.elo_rating).icon} {player.elo_rating} OVR
