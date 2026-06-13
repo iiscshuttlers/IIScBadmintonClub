@@ -13,16 +13,17 @@ export default function About() {
   });
 
   const [location] = useLocation();
-  const [activeTab, setActiveTab] = useState<"contact" | "facilities" | "glossary">("contact");
-
-  // Read URL query params to set active tab if linking directly
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const tab = params.get("tab");
-    if (tab === "facilities" || tab === "glossary" || tab === "contact") {
-      setActiveTab(tab);
+  const [activeTab, setActiveTab] = useState<"contact" | "facilities" | "glossary">(() => {
+    const hash = window.location.hash.replace("#", "");
+    if (["contact", "facilities", "glossary"].includes(hash)) {
+      return hash as "contact" | "facilities" | "glossary";
     }
-  }, [location]);
+    return "contact";
+  });
+
+  useEffect(() => {
+    window.history.replaceState(null, "", `#${activeTab}`);
+  }, [activeTab]);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 lg:pb-8 font-sans selection:bg-emerald-500/30">
