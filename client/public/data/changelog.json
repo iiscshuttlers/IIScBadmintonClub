@@ -1,5 +1,22 @@
 [
   {
+    "versionCode": 110,
+    "versionName": "1.110",
+    "date": "2026-06-13T12:36:39.831Z",
+    "changes": [
+      "- chore: release v1.108 (build 109)",
+      "- fix(ui): remove dead analytics imports and routes",
+      "- feat(push): implement web push notifications via firebase cloud messaging",
+      "- fix(ui): remove win_streak from player query and calculate dynamically",
+      "- fix(leaderboard): implement strict tie-breaker logic for identical ELO ratings",
+      "- feat(ui): merge analytics into leaderboard",
+      "- feat(ui): embed Analytics directly into Feed as a tab",
+      "- fix(ui): resolve Layout import error in Analytics page",
+      "- feat(ui): add Global Analytics page for insights and trends",
+      "- chore: release v1.108 (build 109)"
+    ]
+  },
+  {
     "versionCode": 109,
     "versionName": "1.108",
     "date": "2026-06-13T11:17:16.994Z",
