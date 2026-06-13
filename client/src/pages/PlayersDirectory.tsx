@@ -110,8 +110,19 @@ export default function PlayersDirectory() {
     "elo" | "winpct" | "name" | "department" | "level"
   >("name");
   const [activeTab, setActiveTab] = useState<"directory" | "leaderboard" | "network" | "h2h">(
-    "directory",
+    () => {
+      const hash = window.location.hash.replace("#", "");
+      if (["directory", "leaderboard", "network", "h2h"].includes(hash)) {
+        return hash as "directory" | "leaderboard" | "network" | "h2h";
+      }
+      return "directory";
+    }
   );
+
+  useEffect(() => {
+    // Sync active tab to URL hash without jumping/scrolling
+    window.history.replaceState(null, "", `#${activeTab}`);
+  }, [activeTab]);
   const [followers, setFollowers] = useState<any[]>([]);
   const [visibleCount, setVisibleCount] = useState(24);
 
