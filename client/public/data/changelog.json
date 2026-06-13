@@ -1,5 +1,14 @@
 [
   {
+    "versionCode": 112,
+    "versionName": "1.112",
+    "date": "2026-06-13T13:55:15.204Z",
+    "changes": [
+      "- Add QR scanner, feed match cards & sharing",
+      "- chore: release v1.111 (build 111)"
+    ]
+  },
+  {
     "versionCode": 111,
     "versionName": "1.111",
     "date": "2026-06-13T13:16:13.413Z",
