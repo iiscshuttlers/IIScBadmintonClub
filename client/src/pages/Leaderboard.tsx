@@ -147,11 +147,13 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                 title="HOW ELO RANKING WORKS"
                 mainIcon={<BarChart3 className="w-5 h-5" />}
                 items={[
-                  { badge: "SYS", title: "The Elo System", desc: "A method used to calculate relative skill. Beating a high-ranked player grants you significantly more points than beating a low-ranked one." },
-                  { badge: "CAL", title: "Calibration Phase", desc: "Players are assigned an initial baseline rating and it fluctuates heavily during their first few matches to determine their true baseline." },
-                  { badge: "VOL", title: "Volatility", desc: "Your rank fluctuates wildly in your first 20 matches. It stabilizes as you play more." },
-                  { badge: "PTS", title: "Point Difference", desc: "Winning 21-5 rewards slightly more ELO than winning 21-19. Every point matters!" }
+                  { badge: "W/L", title: "Win or Loss", desc: "The system only cares if you win or lose. Point margins (e.g., 21-5 vs 22-20) or sets played do not affect Elo changes." },
+                  { badge: "MATH", title: "Expected Outcome", desc: "If you beat a higher-ranked player, you gain more points because you were mathematically expected to lose. Beating a lower-ranked player yields fewer points." },
+                  { badge: "CAL", title: "Calibration Phase", desc: "Your rank fluctuates heavily (±20-40 points per match) during your first 10 matches to quickly find your true baseline." },
+                  { badge: "STB", title: "Stabilization", desc: "After 10 matches, your Elo changes become more stable (max ±20 points per match)." },
+                  { badge: "GLB", title: "Global vs Format", desc: "You have separate Elos for MS, MD, and XD. Your 'Global Elo' (ALL tab) blends these but moves at 1/3 speed to maintain balance." }
                 ]}
+                footer={<p className="text-[10px] sm:text-xs font-mono bg-slate-100 dark:bg-slate-800 p-2 rounded-lg text-slate-500 dark:text-slate-400 mt-2 text-center overflow-x-auto hide-scrollbar whitespace-nowrap">Expected = 1 / (1 + 10^((OpponentElo - YourElo)/400))</p>}
               />
             </button>
             <button
