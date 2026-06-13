@@ -35,7 +35,7 @@ interface LeaderboardProps {
 
 export function LeaderboardSection({ players }: LeaderboardProps) {
   const [activeTab, setActiveTab] = useState<"elo" | "ironman">("elo");
-  const [categoryFilter, setCategoryFilter] = useState<"ALL" | "MS" | "WS" | "MD" | "WD" | "XD">("ALL");
+  const [categoryFilter, setCategoryFilter] = useState<"ALL" | "MEN" | "WOMEN">("ALL");
 
   // Parse total matches from "10W - 5L" or similar format
   const getMatchesCount = (record: string | any) => {
@@ -79,11 +79,11 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
   };
 
   let filteredByGender = players;
-  if (categoryFilter === "MS" || categoryFilter === "MD") {
+  if (categoryFilter === "MEN") {
     filteredByGender = players.filter(p => p.gender?.toUpperCase() === "MALE");
-  } else if (categoryFilter === "WS" || categoryFilter === "WD") {
+  } else if (categoryFilter === "WOMEN") {
     filteredByGender = players.filter(p => p.gender?.toUpperCase() === "FEMALE");
-  } // ALL and XD show everyone since it's a unified individual pool
+  } // ALL shows everyone
 
   const rankedPlayers = [...filteredByGender]
     .sort((a, b) => {
@@ -139,7 +139,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
         {/* Category Filters */}
         <div className="flex justify-center mb-10 overflow-x-auto px-4 hide-scrollbar">
           <div className="flex gap-2 bg-slate-100 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700/50">
-            {(["ALL", "MS", "WS", "MD", "WD", "XD"] as const).map((cat) => (
+            {(["ALL", "MEN", "WOMEN"] as const).map((cat) => (
               <button
                 key={cat}
                 onClick={() => setCategoryFilter(cat)}
