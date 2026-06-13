@@ -2,6 +2,19 @@
 -- This will reset everyone to 1200 and then chronologically process every confirmed match
 -- to accurately calculate Singles, Doubles, and Mixed ELOs based ONLY on the matches played.
 
+CREATE TABLE IF NOT EXISTS elo_calculation_logs (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  match_uuid UUID,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  player_id TEXT,
+  previous_elo INTEGER,
+  new_elo INTEGER,
+  elo_change INTEGER,
+  expected_score NUMERIC,
+  actual_score NUMERIC,
+  category TEXT
+);
+
 DO $$
 DECLARE
   m_record RECORD;
