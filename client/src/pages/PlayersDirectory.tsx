@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
@@ -26,6 +26,7 @@ import {
   Star,
 } from "lucide-react";
 import { toast } from "sonner";
+import confetti from "canvas-confetti";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { usePageMeta } from "@/hooks/usePageMeta";
@@ -395,39 +396,60 @@ export default function PlayersDirectory() {
   const myBuddyIds = new Set<string>((ownProfile as any)?.buddies || []);
   const followingIds = new Set<string>((ownProfile as any)?.following || []);
 
-  const filteredPlayers = otherPlayers
-    .filter((player) => {
-      const q = debouncedSearchQuery.toLowerCase();
-      const matchesSearch =
-        player.full_name.toLowerCase().includes(q) ||
-        (player.nickname && player.nickname.toLowerCase().includes(q)) ||
-        player.department.toLowerCase().includes(q);
-      const matchesLevel =
-        levelFilter === "All" || player.playing_level === levelFilter;
-      const matchesDept =
-        departmentFilter === "All" || player.department === departmentFilter;
-      return matchesSearch && matchesLevel && matchesDept;
-    })
-    .sort((a, b) => {
-      // Hoist Looking-to-Play buddies above everyone else
-      const aIsLtpBuddy = (a as any).is_looking_to_play && myBuddyIds.has(a.id);
-      const bIsLtpBuddy = (b as any).is_looking_to_play && myBuddyIds.has(b.id);
-      if (aIsLtpBuddy && !bIsLtpBuddy) return -1;
-      if (!aIsLtpBuddy && bIsLtpBuddy) return 1;
+  // Fuzzy score: returns 0 if no match, higher = better match
+  const fuzzyScore = (text: string, query: string): number => {
+    if (!query) return 1;
+    const t = text.toLowerCase();
+    const q = query.toLowerCase();
+    if (t === q) return 100;
+    if (t.startsWith(q)) return 80;
+    if (t.includes(` ${q}`)) return 70; // word boundary
+    if (t.includes(q)) return 50;
+    // Check if all chars of query appear in order in text
+    let qi = 0;
+    for (let ti = 0; ti < t.length && qi < q.length; ti++) {
+      if (t[ti] === q[qi]) qi++;
+    }
+    return qi === q.length ? 20 : 0;
+  };
 
-      if (sortBy === "elo") return (b.elo_rating ?? 0) - (a.elo_rating ?? 0);
-      if (sortBy === "winpct")
-        return (
-          (parseWinPct(b.win_loss_record) ?? 0) -
-          (parseWinPct(a.win_loss_record) ?? 0)
-        );
-      if (sortBy === "department")
-        return (a.department || "").localeCompare(b.department || "");
-      if (sortBy === "level")
-        return (a.playing_level || "").localeCompare(b.playing_level || "");
-      if (sortBy === "name") return a.full_name.localeCompare(b.full_name);
-      return 0;
-    });
+  const filteredPlayers = useMemo(() => {
+    const q = debouncedSearchQuery.trim();
+    return otherPlayers
+      .map((player) => {
+        const matchesLevel = levelFilter === "All" || player.playing_level === levelFilter;
+        const matchesDept = departmentFilter === "All" || player.department === departmentFilter;
+        if (!matchesLevel || !matchesDept) return null;
+
+        if (!q) return { player, score: 0 };
+        const nameScore = fuzzyScore(player.full_name, q);
+        const nickScore = player.nickname ? fuzzyScore(player.nickname, q) : 0;
+        const deptScore = fuzzyScore(player.department || "", q) * 0.5;
+        const totalScore = Math.max(nameScore, nickScore, deptScore);
+        if (totalScore === 0) return null;
+        return { player, score: totalScore };
+      })
+      .filter(Boolean)
+      .sort((a, b) => {
+        // Hoist Looking-to-Play buddies above everyone else
+        const aIsLtpBuddy = (a!.player as any).is_looking_to_play && myBuddyIds.has(a!.player.id);
+        const bIsLtpBuddy = (b!.player as any).is_looking_to_play && myBuddyIds.has(b!.player.id);
+        if (aIsLtpBuddy && !bIsLtpBuddy) return -1;
+        if (!aIsLtpBuddy && bIsLtpBuddy) return 1;
+
+        // If searching, sort by fuzzy score first
+        if (q && a!.score !== b!.score) return b!.score - a!.score;
+
+        if (sortBy === "elo") return (b!.player.elo_rating ?? 0) - (a!.player.elo_rating ?? 0);
+        if (sortBy === "winpct") return (parseWinPct(b!.player.win_loss_record) ?? 0) - (parseWinPct(a!.player.win_loss_record) ?? 0);
+        if (sortBy === "department") return (a!.player.department || "").localeCompare(b!.player.department || "");
+        if (sortBy === "level") return (a!.player.playing_level || "").localeCompare(b!.player.playing_level || "");
+        if (sortBy === "name") return a!.player.full_name.localeCompare(b!.player.full_name);
+        return 0;
+      })
+      .map((item) => item!.player);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [otherPlayers, debouncedSearchQuery, levelFilter, departmentFilter, sortBy, myBuddyIds]);
 
   const handleSignOut = async () => {
     if (confirm("Sign out of your account?")) {
@@ -556,11 +578,17 @@ export default function PlayersDirectory() {
         confirmer_id: ownProfile?.id,
       });
       if (error) throw error;
-      alert("Match Confirmed! Elo Ratings Updated.");
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ["#10b981", "#3b82f6", "#f59e0b"]
+      });
+      toast.success("Match Confirmed! Elo Ratings Updated. 🎉");
       fetchPendingMatches(ownProfile!.id);
       fetchPlayers(); // To refresh Elo if we displayed it
     } catch (e: any) {
-      alert("Error confirming match: " + e.message);
+      toast.error("Error confirming match: " + e.message);
     }
   };
 
@@ -1174,7 +1202,12 @@ export default function PlayersDirectory() {
                 <div className="relative w-full md:flex-1">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <input
-                    type="text"
+                    id="player-search-input"
+                    type="search"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    autoFocus
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search by name, nickname, or department..."

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Link } from "wouter";
+import { Link, useRoute, useLocation } from "wouter";
 import { supabase } from "@/lib/supabase";
 import { motion } from "framer-motion";
 import {
@@ -27,10 +27,12 @@ import { Capacitor } from "@capacitor/core";
 import { Share } from "@capacitor/share";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { getBaseShareUrl } from "@/lib/utils";
+import { renderMatchShareCard } from "@/lib/matchShareCard";
 import { AnnouncementsSection } from "@/components/feed/AnnouncementsSection";
 import { LiveScoreSection } from "@/components/events/LiveScoreSection";
 import { UmpireTab } from "@/components/umpire/UmpireTab";
 import { MyMatchesTab } from "@/components/feed/MyMatchesTab";
+import { MatchCard } from "@/components/feed/MatchCard";
 
 export default function Feed() {
   usePageMeta({
@@ -40,17 +42,29 @@ export default function Feed() {
   });
 
   const { session, profile: ownProfile, isUmpire, isAdmin } = useAuth();
-  const [activeTab, setActiveTab] = useState<"matches" | "announcements" | "umpire" | "my_matches">(() => {
-    return typeof window !== "undefined" && window.location.search.includes("tab=announcements")
-      ? "announcements"
-      : "matches";
-  });
-  
+  const [, setLocation] = useLocation();
+  const [match, params] = useRoute("/feed/:tab");
+
+  const [activeTab, setActiveTab] = useState<"matches" | "announcements" | "umpire" | "my_matches">("matches");
+
   useEffect(() => {
-    if (typeof window !== "undefined" && window.location.search.includes("tab=announcements")) {
-      setActiveTab("announcements");
+    if (match && params?.tab) {
+      if (params.tab === "activity") setActiveTab("matches");
+      else if (params.tab === "announcements") setActiveTab("announcements");
+      else if (params.tab === "umpire") setActiveTab("umpire");
+      else if (params.tab === "my-matches") setActiveTab("my_matches");
+    } else {
+      setActiveTab("matches");
     }
-  }, []);
+  }, [match, params?.tab]);
+
+  const handleTabChange = (tabId: "matches" | "announcements" | "umpire" | "my_matches") => {
+    setActiveTab(tabId);
+    if (tabId === "matches") setLocation("/feed/activity");
+    else if (tabId === "announcements") setLocation("/feed/announcements");
+    else if (tabId === "umpire") setLocation("/feed/umpire");
+    else if (tabId === "my_matches") setLocation("/feed/my-matches");
+  };
   
   const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -306,7 +320,7 @@ export default function Feed() {
           <div className="mt-8 flex justify-center">
             <div className="flex flex-wrap justify-center gap-1 sm:gap-0 bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20">
               <button
-                onClick={() => setActiveTab("matches")}
+                onClick={() => handleTabChange("matches")}
                 className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
                   activeTab === "matches"
                     ? "bg-white text-emerald-900 shadow-md scale-100"
@@ -317,7 +331,7 @@ export default function Feed() {
               </button>
               <button
                 onClick={() => {
-                  setActiveTab("announcements");
+                  handleTabChange("announcements");
                   localStorage.setItem("iisc_announcements_last_seen", Date.now().toString());
                   window.dispatchEvent(new Event("announcements-read"));
                 }}
@@ -331,7 +345,7 @@ export default function Feed() {
               </button>
               {(isUmpire || isAdmin) && (
                 <button
-                  onClick={() => setActiveTab("umpire")}
+                  onClick={() => handleTabChange("umpire")}
                   className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
                     activeTab === "umpire"
                       ? "bg-white text-emerald-900 shadow-md scale-100"
@@ -343,7 +357,7 @@ export default function Feed() {
               )}
               {session && (
                 <button
-                  onClick={() => setActiveTab("my_matches")}
+                  onClick={() => handleTabChange("my_matches")}
                   className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
                     activeTab === "my_matches"
                       ? "bg-white text-emerald-900 shadow-md scale-100"
@@ -414,6 +428,8 @@ export default function Feed() {
             </div>
           </>
         )}
+
+
 
         {!loading && weeklyRecap && (
           <div className="mb-6 bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 shadow-xl border border-slate-700 relative overflow-hidden text-white">
@@ -711,128 +727,28 @@ export default function Feed() {
                 };
 
                 try {
-                  const [winImg, loseImg] = await Promise.all([
-                    loadImg(winnerAvatar),
-                    loadImg(loserAvatar),
-                  ]);
+                  const canvas = await renderMatchShareCard({
+                    winnerName,
+                    loserName,
+                    winnerAvatar: winnerAvatar || "",
+                    loserAvatar: loserAvatar || "",
+                    displayScore,
+                    winnerEloChange: isP1Winner
+                      ? match.elo_change_p1
+                      : match.elo_change_p2,
+                    loserEloChange: isP1Winner
+                      ? match.elo_change_p2
+                      : match.elo_change_p1,
+                    matchType:
+                      match.is_friendly !== false ? "Friendly" : "Tournament",
+                    matchDate: new Date(match.created_at),
+                    category: match.category,
+                  });
 
-                  const W = 1080,
-                    H = 1080;
-                  const canvas = document.createElement("canvas");
-                  canvas.width = W;
-                  canvas.height = H;
-                  const ctx = canvas.getContext("2d");
-                  if (!ctx) {
+                  if (!canvas) {
                     fallbackShare();
                     return;
                   }
-
-                  // ── Background ──
-                  const bg = ctx.createLinearGradient(0, 0, W, H);
-                  bg.addColorStop(0, "#0f172a");
-                  bg.addColorStop(1, "#020617");
-                  ctx.fillStyle = bg;
-                  ctx.fillRect(0, 0, W, H);
-
-                  // Subtle radial glow behind winner avatar
-                  const glow = ctx.createRadialGradient(
-                    270,
-                    380,
-                    0,
-                    270,
-                    380,
-                    320,
-                  );
-                  glow.addColorStop(0, "rgba(16,185,129,0.18)");
-                  glow.addColorStop(1, "rgba(16,185,129,0)");
-                  ctx.fillStyle = glow;
-                  ctx.fillRect(0, 0, W, H);
-
-                  // ── Club badge / header ──
-                  ctx.fillStyle = "#10b981";
-                  ctx.font = "bold 44px sans-serif";
-                  ctx.textAlign = "center";
-                  ctx.textBaseline = "alphabetic";
-                  ctx.fillText("🏸 IISc Shuttlers", W / 2, 90);
-
-                  ctx.fillStyle = "rgba(255,255,255,0.15)";
-                  ctx.fillRect(120, 108, W - 240, 3);
-
-                  ctx.fillStyle = "#64748b";
-                  ctx.font = "bold 32px sans-serif";
-                  ctx.fillText("MATCH RESULT", W / 2, 168);
-
-                  // ── Winner section ──
-                  drawCircleAvatar(
-                    ctx,
-                    winImg,
-                    270,
-                    360,
-                    170,
-                    winnerName[0],
-                    "#10b981",
-                  );
-
-                  // Winner crown
-                  ctx.font = "72px sans-serif";
-                  ctx.textAlign = "center";
-                  ctx.fillText("🏆", 270, 175);
-
-                  ctx.fillStyle = "#10b981";
-                  ctx.font = "bold 32px sans-serif";
-                  ctx.fillText("WINNER", 270, 570);
-
-                  ctx.fillStyle = "#ffffff";
-                  ctx.font = "bold 56px sans-serif";
-                  ctx.fillText(truncate(ctx, winnerName, 480), 270, 636);
-
-                  if (eloChange) {
-                    ctx.fillStyle = "#10b981";
-                    ctx.font = "bold 36px sans-serif";
-                    ctx.fillText(`${eloChange} ELO`, 270, 690);
-                  }
-
-                  // ── Score divider ──
-                  const scoreY = 760;
-                  ctx.fillStyle = "#1e293b";
-                  ctx.beginPath();
-                  ctx.roundRect(W / 2 - 200, scoreY - 64, 400, 96, 24);
-                  ctx.fill();
-
-                  ctx.fillStyle = "#f59e0b";
-                  ctx.font = "bold 72px monospace";
-                  ctx.fillText(displayScore, W / 2, scoreY);
-
-                  ctx.fillStyle = "#475569";
-                  ctx.font = "bold 26px sans-serif";
-                  ctx.fillText("DEF.", W / 2, scoreY + 52);
-
-                  // ── Loser section ──
-                  drawCircleAvatar(
-                    ctx,
-                    loseImg,
-                    W - 270,
-                    360,
-                    140,
-                    loserName[0],
-                    "#475569",
-                  );
-
-                  ctx.fillStyle = "#64748b";
-                  ctx.font = "bold 28px sans-serif";
-                  ctx.fillText("Runner-up", W - 270, 536);
-
-                  ctx.fillStyle = "#94a3b8";
-                  ctx.font = "bold 46px sans-serif";
-                  ctx.fillText(truncate(ctx, loserName, 420), W - 270, 596);
-
-                  // ── Footer ──
-                  ctx.fillStyle = "rgba(255,255,255,0.06)";
-                  ctx.fillRect(0, H - 100, W, 100);
-
-                  ctx.fillStyle = "#475569";
-                  ctx.font = "bold 30px sans-serif";
-                  ctx.fillText("iiscshuttlers.com", W / 2, H - 36);
 
                   if (Capacitor.isNativePlatform()) {
                     const base64 = canvas.toDataURL("image/png").split(",")[1];
@@ -873,240 +789,25 @@ export default function Feed() {
                 }
               };
 
-              return (
-                <motion.div
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
+                <MatchCard
                   key={match.id}
-                  id={`match-card-${match.id}`}
-                  className={`bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm relative overflow-hidden group transition-all duration-200 hover:-translate-y-0.5 ${isMatchOfTheDay ? "border-2 border-amber-400 shadow-amber-500/20 shadow-xl hover:shadow-amber-400/30" : "border border-slate-100 dark:border-slate-800 hover:shadow-lg dark:hover:shadow-slate-700/40"}`}
-                  drag="x"
-                  dragConstraints={{ left: 0, right: 0 }}
-                  dragElastic={0.2}
-                  onDragEnd={(e, info) => {
-                    if (info.offset.x > 100) {
-                      handleKudos(match);
-                    } else if (info.offset.x < -100) {
-                      handleShare(match);
-                    }
-                  }}
-                >
-                  {/* LIVE NOW Badge — tournament actively being scored */}
-                  {isLiveNow && (
-                    <div className="absolute top-0 left-0 bg-gradient-to-r from-red-500 to-rose-600 text-white text-[10px] font-black uppercase tracking-wider px-4 py-1.5 rounded-br-xl shadow-md z-10 flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-white animate-ping inline-block" />
-                      LIVE NOW
-                    </div>
-                  )}
-
-                  {/* Match of the Day Badge */}
-                  {isMatchOfTheDay && !isLiveNow && (
-                    <div className="absolute top-0 left-0 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black uppercase tracking-wider px-4 py-1.5 rounded-br-xl shadow-md z-10 flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5" /> Match of the Day
-                    </div>
-                  )}
-
-                  {/* Upset Badge */}
-                  {upsetDiff > 0 && (
-                    <div className="absolute top-0 right-0 bg-gradient-to-r from-rose-500 to-red-600 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-bl-xl shadow-md z-10 flex items-center gap-1.5">
-                      <TrendingUp className="w-3.5 h-3.5 animate-bounce" />{" "}
-                      MASSIVE UPSET
-                    </div>
-                  )}
-
-                  <div className="text-center text-xs font-bold text-slate-400 dark:text-slate-500 mb-3 flex items-center justify-center gap-1">
-                    <Swords className="w-3.5 h-3.5" />
-                    {match.round || (match.is_friendly === false ? "Tournament Match" : "Friendly Match")}
-                  </div>
-
-                  <div className="flex items-center justify-between gap-4">
-                    {/* Player 1 (and Partner 1) */}
-                    <div
-                      className={`flex-1 flex flex-col sm:flex-row items-center gap-3 p-3 rounded-2xl transition-colors ${isP1Winner ? "bg-emerald-50 dark:bg-emerald-900/10" : "hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}
-                    >
-                      <div className="relative flex">
-                        <Link href={`/player/${p1.id}`}>
-                          <img
-                            src={p1.avatar_url || ""}
-                            loading="lazy"
-                            className={`w-12 h-12 rounded-full object-cover shadow-sm relative z-10 ${isP1Winner ? "ring-2 ring-emerald-500 ring-offset-2 dark:ring-offset-slate-900" : "grayscale opacity-80"}`}
-                          />
-                        </Link>
-                        {match.partner1 && (
-                          <Link href={`/player/${match.partner1.id}`}>
-                            <img
-                              loading="lazy"
-                              src={match.partner1.avatar_url || ""}
-                              className={`w-12 h-12 rounded-full object-cover shadow-sm -ml-4 relative z-0 ${isP1Winner ? "ring-2 ring-emerald-500 ring-offset-2 dark:ring-offset-slate-900" : "grayscale opacity-80"}`}
-                            />
-                          </Link>
-                        )}
-                        {isP1Winner && (
-                          <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white rounded-full p-1 border-2 border-white dark:border-slate-900 shadow-sm z-20">
-                            <Trophy className="w-3 h-3" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="text-center sm:text-left">
-                        <div
-                          className={`font-black text-sm ${isP1Winner ? "text-emerald-700 dark:text-emerald-400" : "text-slate-700 dark:text-slate-300"}`}
-                        >
-                          <Link
-                            href={`/player/${p1.id}`}
-                            className="hover:underline"
-                          >
-                            {p1.full_name}
-                          </Link>
-                          {match.partner1 && (
-                            <>
-                              <br />
-                              <Link
-                                href={`/player/${match.partner1.id}`}
-                                className="hover:underline"
-                              >
-                                {match.partner1.full_name}
-                              </Link>
-                            </>
-                          )}
-                        </div>
-                        {match.elo_change_p1 && (
-                          <div
-                            className={`text-xs font-bold ${match.elo_change_p1 > 0 ? "text-emerald-500" : "text-rose-500"}`}
-                          >
-                            {match.elo_change_p1 > 0 ? "+" : ""}
-                            {match.elo_change_p1} ELO
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Score */}
-                    <div className="shrink-0 flex flex-col items-center">
-                      <div className="flex flex-col gap-1 items-center bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner text-center min-w-[80px]">
-                        {displayScore.split(',').map((setScore: string, idx: number, arr: string[]) => (
-                          <div key={idx} className={`font-black tracking-tight text-slate-800 dark:text-slate-100 ${arr.length > 1 ? 'text-lg leading-none' : 'text-2xl'}`}>
-                            {setScore.trim()}
-                          </div>
-                        ))}
-                      </div>
-                      <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2">
-                        {new Date(match.created_at).toLocaleDateString(
-                          undefined,
-                          { month: "short", day: "numeric" },
-                        )}
-                      </div>
-                      {highlightUrl && (
-                        <a
-                          href={highlightUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-2 text-[10px] font-bold bg-rose-50 dark:bg-rose-900/30 text-rose-500 px-2 py-1 rounded-full border border-rose-200 dark:border-rose-800 flex items-center gap-1 hover:scale-105 transition"
-                        >
-                          <Video className="w-3 h-3" /> Highlights
-                        </a>
-                      )}
-                    </div>
-
-                    {/* Player 2 (and Partner 2) */}
-                    <div
-                      className={`flex-1 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 p-3 rounded-2xl transition-colors ${!isP1Winner ? "bg-emerald-50 dark:bg-emerald-900/10" : "hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}
-                    >
-                      <div className="text-center sm:text-right">
-                        <div
-                          className={`font-black text-sm ${!isP1Winner ? "text-emerald-700 dark:text-emerald-400" : "text-slate-700 dark:text-slate-300"}`}
-                        >
-                          <Link
-                            href={`/player/${p2.id}`}
-                            className="hover:underline"
-                          >
-                            {p2.full_name}
-                          </Link>
-                          {match.partner2 && (
-                            <>
-                              <br />
-                              <Link
-                                href={`/player/${match.partner2.id}`}
-                                className="hover:underline"
-                              >
-                                {match.partner2.full_name}
-                              </Link>
-                            </>
-                          )}
-                        </div>
-                        {match.elo_change_p2 && (
-                          <div
-                            className={`text-xs font-bold ${match.elo_change_p2 > 0 ? "text-emerald-500" : "text-rose-500"}`}
-                          >
-                            {match.elo_change_p2 > 0 ? "+" : ""}
-                            {match.elo_change_p2} ELO
-                          </div>
-                        )}
-                      </div>
-                      <div className="relative flex flex-row-reverse">
-                        <Link href={`/player/${p2.id}`}>
-                          <img
-                            loading="lazy"
-                            src={p2.avatar_url || ""}
-                            className={`w-12 h-12 rounded-full object-cover shadow-sm relative z-10 ${!isP1Winner ? "ring-2 ring-emerald-500 ring-offset-2 dark:ring-offset-slate-900" : "grayscale opacity-80"}`}
-                          />
-                        </Link>
-                        {match.partner2 && (
-                          <Link href={`/player/${match.partner2.id}`}>
-                            <img
-                              loading="lazy"
-                              src={match.partner2.avatar_url || ""}
-                              className={`w-12 h-12 rounded-full object-cover shadow-sm -mr-4 relative z-0 ${!isP1Winner ? "ring-2 ring-emerald-500 ring-offset-2 dark:ring-offset-slate-900" : "grayscale opacity-80"}`}
-                            />
-                          </Link>
-                        )}
-                        {!isP1Winner && (
-                          <div className="absolute -bottom-2 -left-2 sm:-left-2 sm:right-auto bg-emerald-500 text-white rounded-full p-1 border-2 border-white dark:border-slate-900 shadow-sm z-20">
-                            <Trophy className="w-3 h-3" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Reaction Kudos */}
-                  <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/50 flex justify-end">
-                    <button
-                      onClick={() => handleKudos(match)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${
-                        isKudosed(match)
-                          ? "text-yellow-500 bg-yellow-50 dark:bg-yellow-500/20"
-                          : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-                      }`}
-                    >
-                      <Star
-                        className="w-4 h-4"
-                        fill={isKudosed(match) ? "currentColor" : "none"}
-                        stroke="currentColor"
-                      />
-                      Kudos{" "}
-                      <span className="kudos-count font-medium ml-1">
-                        {Array.isArray(match.kudos_users)
-                          ? match.kudos_users.length +
-                            (kudosState[match.id] === true && !match.kudos_users.includes(session?.user?.id) ? 1 : 0) +
-                            (kudosState[match.id] === false && match.kudos_users.includes(session?.user?.id) ? -1 : 0)
-                          : (match.id.charCodeAt(0) % 5) +
-                            (kudosState[match.id] === true ? 1 : 0)}
-                      </span>
-                    </button>
-
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleShare(match);
-                      }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 ml-2"
-                    >
-                      <Share2 className="w-4 h-4" /> Share
-                    </button>
-                  </div>
-                </motion.div>
-              );
+                  match={match}
+                  currentUser={session?.user}
+                  isLiveNow={isLiveNow}
+                  isMatchOfTheDay={isMatchOfTheDay}
+                  upsetDiff={upsetDiff}
+                  isKudosed={isKudosed(match)}
+                  kudosCount={
+                    Array.isArray(match.kudos_users)
+                      ? match.kudos_users.length +
+                        (kudosState[match.id] === true && !match.kudos_users.includes(session?.user?.id) ? 1 : 0) +
+                        (kudosState[match.id] === false && match.kudos_users.includes(session?.user?.id) ? -1 : 0)
+                      : (match.id.charCodeAt(0) % 5) + (kudosState[match.id] === true ? 1 : 0)
+                  }
+                  onKudos={() => handleKudos(match)}
+                  onShare={() => handleShare(match)}
+                  index={i}
+                />
             })}
 
             {displayMatches.length >= limitCount && (

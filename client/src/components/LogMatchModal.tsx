@@ -12,10 +12,12 @@ import {
   Clock,
   Lock,
   Video,
+  QrCode,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { isAdminEmail } from "@/lib/admin";
 import { toast } from "sonner";
+import { QRCodeScannerModal } from "./QRCodeScannerModal";
 
 interface Player {
   id: string;
@@ -181,7 +183,10 @@ export default function LogMatchModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState("");
+  const [matchNotes, setMatchNotes] = useState("");
   const [recentOpponentIds, setRecentOpponentIds] = useState<string[]>([]);
+  const [isScanOpen, setIsScanOpen] = useState(false);
+  const [scanTarget, setScanTarget] = useState<"opponent" | "partner" | "opponentPartner">("opponent");
 
   useEffect(() => {
     try {
@@ -262,7 +267,17 @@ export default function LogMatchModal({
         return;
       }
       if (p1 === p2) {
-        setError(`Set ${i + 1}: Scores cannot be equal.`);
+        setError(`Set ${i + 1}: Scores cannot be equal (a set must have a winner).`);
+        return;
+      }
+      const hi = Math.max(p1, p2);
+      const lo = Math.min(p1, p2);
+      // Badminton: must reach 21 (or 30 at deuce), and win by ≥2 unless at 29-30
+      const validWin21 = hi >= 21 && hi - lo >= 2;
+      const validDeuce = hi === 30 && lo === 29;
+      const validShortSet = hi === 15; // 3rd set short
+      if (!validWin21 && !validDeuce && !validShortSet) {
+        setError(`Set ${i + 1}: Invalid badminton score (${p1}-${p2}). Winner must reach at least 21 and lead by 2, or win 30-29.`);
         return;
       }
     }
@@ -331,6 +346,9 @@ export default function LogMatchModal({
 
       if (videoUrl.trim()) {
         finalScore += ` | ${videoUrl.trim()}`;
+      }
+      if (matchNotes.trim()) {
+        finalScore += ` [note: ${matchNotes.trim().slice(0, 120)}]`;
       }
 
       // Save to recent opponents
@@ -436,8 +454,9 @@ export default function LogMatchModal({
   );
 
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <>
+      <AnimatePresence>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -569,6 +588,17 @@ export default function LogMatchModal({
                       })}
                     </div>
                   )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setScanTarget("opponent");
+                      setIsScanOpen(true);
+                    }}
+                    className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors"
+                  >
+                    <QrCode className="w-3 h-3" /> Scan QR
+                  </button>
 
                   <span className="text-[10px] uppercase font-bold text-slate-400 mt-1">
                     Opponent
@@ -765,6 +795,24 @@ export default function LogMatchModal({
               />
             </div>
 
+            {/* Match Notes */}
+            <div>
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                Match Note (Optional)
+              </label>
+              <textarea
+                value={matchNotes}
+                onChange={(e) => setMatchNotes(e.target.value)}
+                placeholder="Epic 3-setter! Great comeback in the 3rd... (max 120 chars)"
+                maxLength={120}
+                rows={2}
+                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+              />
+              {matchNotes.length > 0 && (
+                <p className="text-[10px] text-slate-400 mt-1 text-right">{matchNotes.length}/120</p>
+              )}
+            </div>
+
             {error && (
               <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 text-sm font-bold text-center">
                 {error}
@@ -787,5 +835,16 @@ export default function LogMatchModal({
         </motion.div>
       </div>
     </AnimatePresence>
+
+      <QRCodeScannerModal
+        isOpen={isScanOpen}
+        onClose={() => setIsScanOpen(false)}
+        onScan={(id) => {
+          if (scanTarget === "opponent") setOpponentId(id);
+          else if (scanTarget === "partner") setPartnerId(id);
+          else if (scanTarget === "opponentPartner") setOpponentPartnerId(id);
+        }}
+      />
+    </>
   );
 }

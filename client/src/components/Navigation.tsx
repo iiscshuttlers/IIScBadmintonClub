@@ -27,6 +27,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Share } from "@capacitor/share";
+import { Capacitor } from "@capacitor/core";
+import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useNavigationAuth } from "@/hooks/useNavigationAuth";
 import { QuickSettingsContent } from "@/components/QuickSettings";
@@ -123,6 +126,30 @@ export default function Navigation() {
     if (!confirm(message)) return;
     setIsOpen(false);
     await signOut();
+  };
+
+  const handleInvite = async () => {
+    const inviteText = "Join me on IISc Shuttlers! The ultimate platform for badminton tracking.";
+    const inviteUrl = "https://iiscshuttlers.com/join";
+    
+    if (Capacitor.isNativePlatform()) {
+      await Share.share({
+        title: "Join IISc Shuttlers",
+        text: inviteText,
+        url: inviteUrl,
+        dialogTitle: "Invite Friends",
+      });
+    } else if (navigator.share) {
+      await navigator.share({
+        title: "Join IISc Shuttlers",
+        text: inviteText,
+        url: inviteUrl,
+      });
+    } else {
+      await navigator.clipboard.writeText(`${inviteText} ${inviteUrl}`);
+      toast.success("Invite link copied to clipboard!");
+    }
+    setIsOpen(false);
   };
 
   return (
@@ -329,6 +356,9 @@ export default function Navigation() {
                             <UserPlus className="h-4 w-4 text-slate-400" /> Add Account
                           </DropdownMenuItem>
                         </Link>
+                        <DropdownMenuItem onClick={handleInvite} className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:bg-slate-50 dark:focus:bg-slate-800 border-t border-slate-100 dark:border-slate-800 gap-2.5 px-3 py-2.5">
+                          <UserPlus className="h-4 w-4 text-emerald-500" /> Invite Friends
+                        </DropdownMenuItem>
                       </div>
 
                       {/* Sign Out */}
@@ -446,6 +476,12 @@ export default function Navigation() {
                         </button>
                       </Link>
                     )}
+                    <button
+                      className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer"
+                      onClick={handleInvite}
+                    >
+                      <UserPlus className="h-4 w-4 text-emerald-500" /> Invite Friends
+                    </button>
                     <button
                       className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-600 font-medium text-sm transition-colors cursor-pointer"
                       onClick={() => handleSignOut()}

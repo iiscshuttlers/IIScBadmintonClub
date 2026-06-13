@@ -11,6 +11,8 @@ import { isAdminEmail } from "@/lib/admin";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { toast } from "sonner";
+import { Capacitor } from "@capacitor/core";
+import { PushNotifications } from "@capacitor/push-notifications";
 
 export interface PlayerProfile {
   id: string;
@@ -136,9 +138,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchRoles();
   }, [session]);
 
-  // Realtime listener for new pending matches against the current user
+  // Global App Badge logic for pending matches
   useEffect(() => {
     if (!profile?.id) return;
+
+    const fetchPendingCount = async () => {
+      try {
+        const { count, error } = await supabase
+          .from("matches")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "pending")
+          .neq("submitted_by", profile.id)
+          .or(`player1_id.eq.${profile.id},player2_id.eq.${profile.id},team1_partner_id.eq.${profile.id},team2_partner_id.eq.${profile.id}`);
+
+        if (!error && count !== null && Capacitor.isNativePlatform()) {
+          try {
+            if (count > 0) {
+              await PushNotifications.setBadgeCount({ count });
+            } else {
+              await PushNotifications.removeAllDeliveredNotifications();
+              await PushNotifications.setBadgeCount({ count: 0 });
+            }
+          } catch (e) {
+            console.warn("Failed to set app badge", e);
+          }
+        }
+      } catch (err) {
+        // ignore
+      }
+    };
+
+    fetchPendingCount();
 
     const channel = supabase
       .channel("realtime_matches")
@@ -152,6 +182,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
         async (payload) => {
           if (payload.new.status === "pending") {
+            fetchPendingCount();
             try {
               // Fetch the opponent's name for a better notification
               const { data } = await supabase
@@ -177,7 +208,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 action: {
                   label: "View",
                   onClick: () =>
-                    (window.location.href = `${import.meta.env.BASE_URL}player/${profile.id}`),
+                    (window.location.href = `${import.meta.env.BASE_URL}feed/my-matches`),
                 },
                 duration: 10000,
               });
@@ -189,6 +220,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
           }
         },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "matches",
+        },
+        (payload) => {
+           fetchPendingCount();
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "matches",
+        },
+        (payload) => {
+           fetchPendingCount();
+        }
       )
       .subscribe();
 

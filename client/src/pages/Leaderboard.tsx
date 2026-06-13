@@ -17,6 +17,7 @@ import { usePageMeta } from "@/hooks/usePageMeta";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { InfoModal } from "@/components/InfoModal";
+import { getEloTier } from "@/lib/utils";
 
 interface PlayerRank {
   id: string;
@@ -27,6 +28,12 @@ interface PlayerRank {
   win_loss_record: string;
   playing_level: string;
   gender?: string;
+  singles_elo?: number;
+  doubles_elo?: number;
+  mixed_elo?: number;
+  singles_record?: string;
+  doubles_record?: string;
+  mixed_record?: string;
 }
 
 interface LeaderboardProps {
@@ -397,7 +404,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                     <div className="flex flex-col items-center justify-center gap-0.5 mt-2">
                       <span className="font-bold text-slate-600 dark:text-slate-300 text-sm">
                         {activeTab === "elo"
-                          ? `${getCategoryElo(top3[1])} ELO`
+                          ? `${getEloTier(getCategoryElo(top3[1])).name} • ${getCategoryElo(top3[1])} ELO`
                           : `${getMatchesCount(getCategoryRecord(top3[1]))} Matches`}
                       </span>
                       {activeTab === "elo" && (
@@ -442,7 +449,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                     <div className="flex flex-col items-center justify-center gap-0.5 mt-2">
                       <span className="font-black text-amber-900 dark:text-amber-100 text-base">
                         {activeTab === "elo"
-                          ? `${getCategoryElo(top3[0])} ELO`
+                          ? `${getEloTier(getCategoryElo(top3[0])).name} • ${getCategoryElo(top3[0])} ELO`
                           : `${getMatchesCount(getCategoryRecord(top3[0]))} Matches`}
                       </span>
                       {activeTab === "elo" && (
@@ -484,9 +491,9 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                       {top3[2].full_name}
                     </h3>
                     <div className="flex flex-col items-center justify-center gap-0.5 mt-1">
-                      <span className="font-bold text-orange-800 dark:text-orange-200 text-xs">
+                      <span className="font-bold text-amber-900 dark:text-orange-200 text-sm">
                         {activeTab === "elo"
-                          ? `${getCategoryElo(top3[2])} ELO`
+                          ? `${getEloTier(getCategoryElo(top3[2])).name} • ${getCategoryElo(top3[2])} ELO`
                           : `${getMatchesCount(getCategoryRecord(top3[2]))} Matches`}
                       </span>
                       {activeTab === "elo" && (
@@ -590,14 +597,21 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                         )}
                       </td>
                       <td className="p-4 text-right">
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50">
-                          <Swords className="w-3 h-3" />
-                          <span className="font-black">
-                            {activeTab === "elo"
-                              ? getCategoryElo(player)
-                              : getMatchesCount(getCategoryRecord(player))}
-                          </span>
-                        </div>
+                        {activeTab === "elo" ? (
+                          <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border ${getEloTier(getCategoryElo(player)).bg} ${getEloTier(getCategoryElo(player)).color} border-current/20`}>
+                            <Swords className="w-3 h-3" />
+                            <span className="font-black">
+                              {getEloTier(getCategoryElo(player)).name} • {getCategoryElo(player)}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50">
+                            <Swords className="w-3 h-3" />
+                            <span className="font-black">
+                              {getMatchesCount(getCategoryRecord(player))}
+                            </span>
+                          </div>
+                        )}
                       </td>
                     </tr>
                     );

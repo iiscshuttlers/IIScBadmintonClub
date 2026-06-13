@@ -11,10 +11,18 @@ export default function MobileBottomNav() {
   const { profile } = useAuth();
   const [location, setLocation] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [defaultOpponentId, setDefaultOpponentId] = useState<string | undefined>(undefined);
   const [otherPlayers, setOtherPlayers] = useState<any[]>([]);
 
   useEffect(() => {
-    const handleOpenLogMatch = () => setIsOpen(true);
+    const handleOpenLogMatch = (e: any) => {
+      if (e.detail?.player2_id) {
+        setDefaultOpponentId(e.detail.player2_id);
+      } else {
+        setDefaultOpponentId(undefined);
+      }
+      setIsOpen(true);
+    };
     window.addEventListener("openLogMatchModal", handleOpenLogMatch);
     return () =>
       window.removeEventListener("openLogMatchModal", handleOpenLogMatch);
@@ -52,11 +60,11 @@ export default function MobileBottomNav() {
   return (
     <>
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[60] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pt-1">
-        <div className="flex items-center justify-around px-2 pb-2">
+        <div className="flex items-center justify-around px-2 pb-4">
           {/* HOME */}
           <button
             onClick={() => handleNav("/")}
-            className={`relative flex flex-col items-center justify-center w-16 h-12 transition-all duration-200 ${location === "/" ? "text-emerald-600 dark:text-emerald-400 scale-110" : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
+            className={`relative flex flex-col items-center justify-center w-16 h-14 transition-all duration-200 ${location === "/" ? "text-emerald-600 dark:text-emerald-400 scale-110" : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
           >
             {location === "/" && (
               <span className="absolute top-0.5 inset-x-1 h-full rounded-xl bg-emerald-50 dark:bg-emerald-900/25 -z-0" />
@@ -71,7 +79,7 @@ export default function MobileBottomNav() {
           {/* FEED */}
           <button
             onClick={() => handleNav("/feed")}
-            className={`relative flex flex-col items-center justify-center w-14 h-12 transition-all duration-200 ${location === "/feed" ? "text-emerald-600 dark:text-emerald-400 scale-110" : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
+            className={`relative flex flex-col items-center justify-center w-14 h-14 transition-all duration-200 ${location === "/feed" ? "text-emerald-600 dark:text-emerald-400 scale-110" : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
           >
             {location === "/feed" && (
               <span className="absolute top-0.5 inset-x-1 h-full rounded-xl bg-emerald-50 dark:bg-emerald-900/25 -z-0" />
@@ -100,7 +108,7 @@ export default function MobileBottomNav() {
             >
               <Plus className="w-7 h-7" strokeWidth={3} />
             </button>
-            <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+            <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
               Log Match
             </span>
           </div>
@@ -108,7 +116,7 @@ export default function MobileBottomNav() {
           {/* PLAYERS */}
           <button
             onClick={() => handleNav("/players")}
-            className={`relative flex flex-col items-center justify-center w-14 h-12 transition-all duration-200 ${location.startsWith("/players") ? "text-emerald-600 dark:text-emerald-400 scale-110" : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
+            className={`relative flex flex-col items-center justify-center w-14 h-14 transition-all duration-200 ${location.startsWith("/players") ? "text-emerald-600 dark:text-emerald-400 scale-110" : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
           >
             {location.startsWith("/players") && (
               <span className="absolute top-0.5 inset-x-1 h-full rounded-xl bg-emerald-50 dark:bg-emerald-900/25 -z-0" />
@@ -123,7 +131,7 @@ export default function MobileBottomNav() {
           {/* EVENTS */}
           <button
             onClick={() => handleNav("/events")}
-            className={`relative flex flex-col items-center justify-center w-14 h-12 transition-all duration-200 ${location.startsWith("/events") ? "text-emerald-600 dark:text-emerald-400 scale-110" : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
+            className={`relative flex flex-col items-center justify-center w-14 h-14 transition-all duration-200 ${location.startsWith("/events") ? "text-emerald-600 dark:text-emerald-400 scale-110" : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
           >
             {location.startsWith("/events") && (
               <span className="absolute top-0.5 inset-x-1 h-full rounded-xl bg-emerald-50 dark:bg-emerald-900/25 -z-0" />
@@ -140,10 +148,14 @@ export default function MobileBottomNav() {
       {/* Modal */}
       <LogMatchModal
         isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
+        onClose={() => {
+          setIsOpen(false);
+          setDefaultOpponentId(undefined);
+        }}
         currentUser={profile as any}
         otherPlayers={otherPlayers}
         onSuccess={() => setIsOpen(false)}
+        defaultOpponentId={defaultOpponentId}
       />
     </>
   );

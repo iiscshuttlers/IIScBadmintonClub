@@ -51,6 +51,10 @@ export function GlossarySection() {
           title: "Global Quick-Actions",
           desc: "Log new matches from anywhere on the platform with the persistent '+ Log Match' utility.",
         },
+        {
+          title: "Match Notes",
+          desc: "Add contextual notes (e.g. 'Epic 3-setter!') when logging a match for your friends to read in the Social Feed.",
+        },
       ],
     },
     {
@@ -72,8 +76,8 @@ export function GlossarySection() {
           }
         },
         {
-          title: "Head-to-Head",
-          desc: "Deep point-differential tracking and dynamic rivalry taunts between opponents.",
+          title: "Deep H2H Analytics",
+          desc: "Compare win rate progress bars, current momentum streaks, and Tale of the Tape physical attributes side-by-side.",
         },
         {
           title: "Elo Ranking",
@@ -91,6 +95,10 @@ export function GlossarySection() {
             footer: <p className="text-[10px] sm:text-xs font-mono bg-slate-100 dark:bg-slate-800 p-2 rounded-lg text-slate-500 dark:text-slate-400 mt-2 text-center overflow-x-auto hide-scrollbar whitespace-nowrap">Expected = 1 / (1 + 10^((OpponentElo - YourElo)/400))</p>
           }
         },
+        {
+          title: "Personal Wrapped",
+          desc: "Instantly generate and share a 'Spotify Wrapped' style image card highlighting your best match stats for social media.",
+        },
       ],
     },
     {
@@ -101,6 +109,10 @@ export function GlossarySection() {
         {
           title: "Monthly Leaderboards",
           desc: "Compete for the Highest Elo and Most Active Player each month.",
+        },
+        {
+          title: "Dynamic Elo Tiers",
+          desc: "Visual progression badges (Bronze, Silver, Gold, Diamond, Grandmaster) that float next to your name based on your current Elo rating.",
         },
         {
           title: "Dynamic Badges",
@@ -185,8 +197,8 @@ export function GlossarySection() {
           desc: "Tactile vibrations when logging matches or swiping.",
         },
         {
-          title: "Share Intents",
-          desc: "Instantly generate and share 'Spotify Wrapped' style Match Recap cards.",
+          title: "App Icon Badges",
+          desc: "Native red dot badges on your phone's home screen sync automatically with your pending match confirmations.",
         },
       ],
     },
@@ -210,6 +222,10 @@ export function GlossarySection() {
         {
           title: "Admin Audit Logs",
           desc: "Transparent tracking of all administrative actions taken on the platform.",
+        },
+        {
+          title: "Strict Score Validator",
+          desc: "Ensures absolute data integrity by rejecting impossible badminton scores (must win by 2 points, max cap at 30).",
         },
         {
           title: "Verified Matches",

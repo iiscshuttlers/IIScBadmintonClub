@@ -85,7 +85,10 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { getBaseShareUrl } from "@/lib/utils";
+import QRCode from "react-qr-code";
+import confetti from "canvas-confetti";
+import { cn, getBaseShareUrl, getEloTier } from "@/lib/utils";
+import { renderWrappedShareCard } from "@/lib/wrappedShareCard";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -315,6 +318,7 @@ export default function PlayerProfile({
   const [eloRank, setEloRank] = useState<number | null>(null);
   const [liveMatches, setLiveMatches] = useState<any[]>([]);
   const [rawMatches, setRawMatches] = useState<any[]>([]);
+  const [eloLogs, setEloLogs] = useState<any[]>([]);
   const [h2hRecord, setH2hRecord] = useState<{
     wins: number;
     losses: number;
@@ -616,6 +620,13 @@ export default function PlayerProfile({
         if (targetMatch.team2_partner_id === ownPlayerProfile?.id) myEloChange = data.p4_elo_change;
       }
 
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ["#10b981", "#3b82f6", "#f59e0b"]
+      });
+
       toast.success("Match Confirmed!", {
         description: `Elo Ratings Updated. Your Elo Change: ${myEloChange || 0}`,
       });
@@ -709,7 +720,7 @@ export default function PlayerProfile({
     (async () => {
       setLoading(true);
       try {
-        const [playerRes, matchesRes, eloRes] = await Promise.all([
+        const [playerRes, matchesRes, eloRes, eloLogsRes] = await Promise.all([
           supabase.from("players").select("*").eq("id", id).maybeSingle(),
           fetchProfileMatches(id, signal),
           supabase
@@ -717,6 +728,11 @@ export default function PlayerProfile({
             .select("id, elo_rating")
             .is("deleted_at", null)
             .order("elo_rating", { ascending: false }),
+          supabase
+            .from("elo_calculation_logs")
+            .select("*")
+            .eq("player_id", id)
+            .order("created_at", { ascending: true })
         ]);
 
         if (signal.aborted) return;
@@ -729,6 +745,9 @@ export default function PlayerProfile({
         }
 
         setRawMatches(matchesRes.data || []);
+        if (eloLogsRes.data) {
+          setEloLogs(eloLogsRes.data);
+        }
 
         if (eloRes.data) {
           const rank = eloRes.data.findIndex((p: any) => p.id === id) + 1;
@@ -798,7 +817,7 @@ export default function PlayerProfile({
     const t = setTimeout(async () => {
       setLoading(true);
       try {
-        const [playerRes, matchesRes, eloRes] = await Promise.all([
+        const [playerRes, matchesRes, eloRes, eloLogsRes] = await Promise.all([
           supabase.from("players").select("*").eq("id", id).maybeSingle(),
           fetchProfileMatches(id),
           supabase
@@ -806,9 +825,15 @@ export default function PlayerProfile({
             .select("id, elo_rating")
             .is("deleted_at", null)
             .order("elo_rating", { ascending: false }),
+          supabase
+            .from("elo_calculation_logs")
+            .select("*")
+            .eq("player_id", id)
+            .order("created_at", { ascending: true })
         ]);
         if (playerRes.data) setPlayer(formatPlayerData(playerRes.data));
         if (matchesRes.data) setRawMatches(matchesRes.data);
+        if (eloLogsRes.data) setEloLogs(eloLogsRes.data);
         if (eloRes.data) {
           const rank = eloRes.data.findIndex((p: any) => p.id === id) + 1;
           setEloRank(rank > 0 ? rank : null);
@@ -1038,52 +1063,62 @@ export default function PlayerProfile({
     };
   }, [liveMatches, id]);
 
-  // Generate ELO progression data for the chart
+  // Generate ELO progression data for the chart from actual calculation logs
   const eloHistoryData = useMemo(() => {
-    if (!id || liveMatches.length === 0 || !player) return [];
-    const confirmed = liveMatches
-      .filter((m) => m.status === "confirmed")
-      .sort(
-        (a, b) =>
-          new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
-      );
-      
+    if (!id || !player) return [];
+    
     let currentElo = 1200;
     if (eloChartFilter === "ALL" && player.elo_rating) currentElo = player.elo_rating;
     if (eloChartFilter === "S" && player.singles_elo) currentElo = player.singles_elo;
     if (eloChartFilter === "D" && player.doubles_elo) currentElo = player.doubles_elo;
     if (eloChartFilter === "XD" && player.mixed_elo) currentElo = player.mixed_elo;
 
-    // Reverse calculate the past ELOs
     const history = [];
-    history.push({ name: "Current", elo: currentElo });
 
-    for (let i = confirmed.length - 1; i >= 0; i--) {
-      const match = confirmed[i];
-      
-      // Filter out matches that don't apply to the selected category
-      if (eloChartFilter === "S" && match.category !== "Singles") continue;
-      if ((eloChartFilter === "D" || eloChartFilter === "XD") && match.category !== "Doubles") continue;
+    // Filter logs based on category
+    const filteredLogs = eloLogs.filter(log => {
+      if (eloChartFilter === "S" && log.category !== "Singles") return false;
+      if ((eloChartFilter === "D" || eloChartFilter === "XD") && log.category !== "Doubles") return false;
+      // We don't have enough data in elo_calculation_logs to perfectly differentiate D vs XD historically without joining, 
+      // but for now this is much better than reverse calculating.
+      return true;
+    });
 
-      if (match.player1_id === id && match.elo_change_p1) {
-        currentElo -= eloChartFilter === "ALL" ? Math.trunc(match.elo_change_p1 / 3) : match.elo_change_p1;
-      } else if (match.player2_id === id && match.elo_change_p2) {
-        currentElo -= eloChartFilter === "ALL" ? Math.trunc(match.elo_change_p2 / 3) : match.elo_change_p2;
-      } else if (match.team1_partner_id === id && match.elo_change_p3) {
-        currentElo -= eloChartFilter === "ALL" ? Math.trunc(match.elo_change_p3 / 3) : match.elo_change_p3;
-      } else if (match.team2_partner_id === id && match.elo_change_p4) {
-        currentElo -= eloChartFilter === "ALL" ? Math.trunc(match.elo_change_p4 / 3) : match.elo_change_p4;
-      }
+    // If we have logs, we push the history forward
+    if (filteredLogs.length > 0) {
+      // Starting point (the Elo BEFORE the very first logged match in this category)
+      // We can approximate it from the first log's previous_elo
       history.push({
-        name: new Date(match.created_at).toLocaleDateString(undefined, {
-          month: "short",
-          day: "numeric",
-        }),
-        elo: currentElo,
+        name: "Start",
+        elo: eloChartFilter === "ALL" ? 1200 : filteredLogs[0].previous_elo,
       });
+
+      // Add each match point
+      let rollingAllElo = 1200;
+      filteredLogs.forEach(log => {
+        if (eloChartFilter === "ALL") {
+           rollingAllElo += Math.trunc((log.elo_change || 0) / 3);
+        }
+        history.push({
+          name: new Date(log.created_at).toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric",
+          }),
+          elo: eloChartFilter === "ALL" ? rollingAllElo : log.new_elo,
+        });
+      });
+      
+      // Ensure the final point matches current Elo to avoid weird chart drops/spikes at the end
+      if (history.length > 0) {
+        history[history.length - 1].elo = currentElo;
+      }
+    } else {
+       // Fallback if no logs exist yet
+       history.push({ name: "Current", elo: currentElo });
     }
-    return history.reverse();
-  }, [liveMatches, id, player, eloChartFilter]);
+    
+    return history;
+  }, [eloLogs, id, player, eloChartFilter]);
 
   if (loading) {
     return <LoadingScreen />;
@@ -1140,6 +1175,65 @@ export default function PlayerProfile({
           .then(() => toast.success("Profile link copied!"))
           .catch(() => {});
       }
+    }
+  };
+
+  const [generatingWrapped, setGeneratingWrapped] = useState(false);
+  const handleWrapped = async () => {
+    if (!player) return;
+    setGeneratingWrapped(true);
+    toast.info("Generating your Year in Review...", { duration: 2000 });
+    
+    try {
+      const match = player.winLossRecord?.match(/(\d+)W\s*-\s*(\d+)L/) || ["", "0", "0"];
+      const totalMatches = parseInt(match[1]) + parseInt(match[2]);
+      const winPctStr = (player.stats?.winPercentage ?? 0).toFixed(1) + "%";
+      
+      const canvas = await renderWrappedShareCard({
+        playerName: player.fullName,
+        avatarUrl: player.avatar,
+        totalMatches: player.stats?.totalMatches || totalMatches,
+        winRate: winPctStr,
+        biggestRival: "Unknown", // Can be dynamically calculated later
+        bestStreak: parseInt((player.stats?.currentStreak || "0").replace("W", "")),
+        highestElo: player.elo_rating || 1200
+      });
+
+      if (!canvas) throw new Error("Canvas rendering failed");
+
+      // Convert to blob and share
+      canvas.toBlob(async (blob) => {
+        if (!blob) throw new Error("Blob conversion failed");
+        
+        try {
+          if (navigator.share && navigator.canShare) {
+            const file = new File([blob], "wrapped.png", { type: "image/png" });
+            if (navigator.canShare({ files: [file] })) {
+              await navigator.share({
+                title: "My IISc Shuttlers Year in Review",
+                files: [file]
+              });
+              setGeneratingWrapped(false);
+              return;
+            }
+          }
+          
+          // Fallback to download
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `wrapped_${player.fullName.replace(/\s+/g, "_")}.png`;
+          a.click();
+          URL.revokeObjectURL(url);
+          toast.success("Wrapped image downloaded!");
+        } catch (e) {
+          console.error("Share error:", e);
+        }
+        setGeneratingWrapped(false);
+      });
+    } catch (err) {
+      toast.error("Failed to generate Wrapped card");
+      setGeneratingWrapped(false);
     }
   };
 
@@ -1298,6 +1392,16 @@ export default function PlayerProfile({
             )}
 
             <button
+              onClick={handleWrapped}
+              disabled={generatingWrapped}
+              className="group relative flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white font-bold text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all"
+              title="Generate Year in Review"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{generatingWrapped ? "Loading..." : "Wrapped"}</span>
+            </button>
+
+            <button
               onClick={handleShare}
               className="p-2.5 rounded-xl bg-white/80 dark:bg-black/20 border border-slate-200/80 dark:border-white/20 text-slate-700 dark:text-white hover:bg-white dark:hover:bg-black/40 transition-all backdrop-blur-md shadow-sm"
               title="Share"
@@ -1378,9 +1482,9 @@ export default function PlayerProfile({
                {/* ELO Row */}
                <div className="flex flex-wrap gap-2 mt-2">
                  {player.elo_rating != null && (
-                   <span className="px-3 py-1.5 rounded-lg bg-white/80 dark:bg-black/40 backdrop-blur-md border border-slate-200/80 dark:border-white/25 text-slate-800 dark:text-white text-sm font-bold uppercase shadow-sm flex items-center gap-1.5">
-                     {getEloTier(player.elo_rating).icon} {player.elo_rating} OVR
-                   </span>
+                    <span className={`px-3 py-1.5 rounded-lg backdrop-blur-md border border-white/25 text-sm font-black uppercase shadow-sm flex items-center gap-1.5 ${getEloTier(player.elo_rating).bg} ${getEloTier(player.elo_rating).color}`}>
+                      <Trophy className="w-4 h-4" /> {getEloTier(player.elo_rating).name} • {player.elo_rating} OVR
+                    </span>
                  )}
                  {player.singles_elo != null && (
                    <span className="px-3 py-1.5 rounded-lg bg-white/80 dark:bg-black/40 backdrop-blur-md border border-emerald-200/80 dark:border-emerald-500/25 text-slate-800 dark:text-white text-sm font-bold shadow-sm flex items-center gap-1.5">
@@ -1461,8 +1565,29 @@ export default function PlayerProfile({
                  )}
                </div>
              </div>
-          </div>
-        </div>
+             {/* QR Code Section (Only visible on own profile) */}
+             {currentUser && player && currentUser.id === player.userId && (
+               <div className="absolute top-0 right-0 hidden lg:flex flex-col items-center bg-white/10 dark:bg-black/20 p-4 rounded-3xl backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-2xl">
+                 <div className="bg-white p-2 rounded-xl">
+                   <QRCode value={player.id} size={100} />
+                 </div>
+                 <span className="text-[10px] font-black uppercase text-slate-800 dark:text-white/60 mt-3 tracking-widest text-center max-w-[100px]">Let Opponents Scan You</span>
+               </div>
+             )}
+           </div>
+
+           {/* Mobile QR Code (Only visible on own profile) */}
+           {currentUser && player && currentUser.id === player.userId && (
+             <div className="lg:hidden mt-6 flex flex-col items-center justify-center bg-white/60 dark:bg-black/30 backdrop-blur-md p-6 rounded-3xl border border-white/40 dark:border-white/10 shadow-lg relative z-20">
+               <div className="bg-white p-3 rounded-2xl shadow-sm">
+                 <QRCode value={player.id} size={140} />
+               </div>
+               <p className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-slate-300 mt-4 text-center">
+                 Let opponents scan to log matches
+               </p>
+             </div>
+           )}
+         </div>
 
         {/* Tab Navigation */}
         <div className="w-full border-b border-slate-200 dark:border-amber-900/20 bg-white dark:bg-[#0a1628] sticky top-0 z-30 shadow-sm dark:shadow-amber-900/10">

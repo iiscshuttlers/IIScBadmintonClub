@@ -217,7 +217,7 @@ export default function ScheduleCalendar() {
     .map((e) => new Date(e.registrationDeadline as string));
 
   return (
-    <section className="font-sans pb-24 md:pb-8">
+    <section className="font-sans pb-32 lg:pb-12">
       <div className="container mx-auto px-4 relative z-20 pt-8">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-2 h-8 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full" />

@@ -120,6 +120,7 @@ const PlayerProfile = lazy(() => import("./pages/PlayerProfile"));
 const Join = lazy(() => import("./pages/Join"));
 const ProfileSetup = lazy(() => import("./pages/ProfileSetup"));
 const PlayersDirectory = lazy(() => import("./pages/PlayersDirectory"));
+const ComparePlayers = lazy(() => import("./pages/ComparePlayers"));
 const HallOfFame = lazy(() => import("./pages/HallOfFame"));
 const ChangePassword = lazy(() => import("./pages/ChangePassword"));// Save scroll position before navigating away, restore on back-navigation
 const scrollMap = new Map<string, number>();
@@ -231,6 +232,7 @@ function AppRoutes() {
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/feed" component={Feed} />
+        <Route path="/feed/:tab" component={Feed} />
         <Route path="/about" component={About} />
         <Route path="/hall-of-fame" component={HallOfFame} />
         <Route path="/gallery" component={Gallery} />
@@ -243,6 +245,7 @@ function AppRoutes() {
         <Route path="/players" component={PlayersDirectory} />
         <Route path="/player/:id/edit" component={ProfileSetup} />
         <Route path="/player/:id" component={PlayerProfile} />
+        <Route path="/compare/:p1/:p2" component={ComparePlayers} />
         <Route path="/profile/password" component={ChangePassword} />
 
         <Route path="/404" component={NotFound} />

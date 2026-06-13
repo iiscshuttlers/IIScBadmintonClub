@@ -29,6 +29,10 @@ const APK_SRC = resolve(
   root,
   "android/app/build/outputs/apk/release/app-release.apk",
 );
+const AAB_SRC = resolve(
+  root,
+  "android/app/build/outputs/bundle/release/app-release.aab",
+);
 const ONEDRIVE_DIR = "D:\\OneDrive - Indian Institute of Science\\Temp_apk";
 const REPO = "iiscshuttlers/iiscshuttlers";
 
@@ -115,6 +119,7 @@ if (!autoChangelog) {
 
 const changelog = process.argv[2] || autoChangelog || `Version ${newName} released`;
 const finalApkName = `IIScShuttlers_v${newName}.apk`;
+const finalAabName = `IIScShuttlers_v${newName}.aab`;
 
 const versionJsonPath = resolve(root, "client/public/data/app-version.json");
 writeFileSync(
@@ -159,20 +164,22 @@ run("vite build", { cwd: root });
 log("Syncing Capacitor…");
 run("npx cap sync android", { cwd: root });
 
-/* ── 5. Build release APK ───────────────────────────────────────── */
-log("Building release APK…");
-run("gradlew assembleRelease", {
+/* ── 5. Build release APK & AAB ─────────────────────────────────── */
+log("Building release APK and AAB…");
+run("gradlew assembleRelease bundleRelease", {
   cwd: resolve(root, "android"),
   env: { ...process.env, JAVA_HOME },
   shell: true,
 });
 
-/* ── 6. Copy APK to OneDrive ────────────────────────────────────── */
-log("Copying APK to OneDrive…");
+/* ── 6. Copy artifacts to OneDrive ──────────────────────────────── */
+log("Copying APK and AAB to OneDrive…");
 try {
   const oneDriveApkPath = resolve(ONEDRIVE_DIR, finalApkName);
+  const oneDriveAabPath = resolve(ONEDRIVE_DIR, finalAabName);
   run(`copy "${APK_SRC}" "${oneDriveApkPath}"`, { shell: true });
-  ok("APK copied to OneDrive");
+  run(`copy "${AAB_SRC}" "${oneDriveAabPath}"`, { shell: true });
+  ok("APK and AAB copied to OneDrive");
 } catch {
   console.warn("⚠ OneDrive copy failed (non-fatal) — continuing");
 }
@@ -181,12 +188,14 @@ try {
 log(`Creating GitHub Release v${newName} (build ${newCode})…`);
 const tag = `v${newName}-build${newCode}`;
 
-// Rename APK to IIScShuttlers_v{version}.apk
+// Rename APK & AAB to IIScShuttlers_v{version}.[apk|aab]
 const releaseApkPath = resolve(dirname(APK_SRC), finalApkName);
+const releaseAabPath = resolve(dirname(AAB_SRC), finalAabName);
 try {
   run(`copy "${APK_SRC}" "${releaseApkPath}"`, { shell: true });
+  run(`copy "${AAB_SRC}" "${releaseAabPath}"`, { shell: true });
 } catch (e) {
-  fail("Failed to rename APK for release");
+  fail("Failed to rename APK/AAB for release");
 }
 
 // Delete tag/release if it somehow already exists
@@ -200,13 +209,13 @@ try {
 } catch {}
 
 run(
-  `gh release create ${tag} "${releaseApkPath}" ` +
+  `gh release create ${tag} "${releaseApkPath}" "${releaseAabPath}" ` +
     `--repo ${REPO} ` +
     `--title "v${newName}" ` +
     `--notes "${changelog.replace(/"/g, "'")}" ` +
     `--latest`,
 );
-ok(`GitHub Release v${newName} published`);
+ok(`GitHub Release v${newName} published with APK and AAB`);
 
 /* ── 8. Commit + push ───────────────────────────────────────────── */
 log("Committing version bump and pushing…");

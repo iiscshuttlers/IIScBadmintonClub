@@ -7,16 +7,7 @@ import { Filesystem, Directory } from "@capacitor/filesystem";
 import { Capacitor } from "@capacitor/core";
 import { toast } from "sonner";
 import { getBaseShareUrl } from "@/lib/utils";
-
-const loadImg = (url: string): Promise<HTMLImageElement | null> =>
-  new Promise((resolve) => {
-    if (!url) return resolve(null);
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => resolve(img);
-    img.onerror = () => resolve(null);
-    img.src = url;
-  });
+import { renderMatchShareCard } from "@/lib/matchShareCard";
 
 function drawCircleAvatar(
   ctx: CanvasRenderingContext2D,
@@ -511,136 +502,46 @@ export function MatchHistorySection({
                                 };
 
                                 try {
-                                  const [winImg, loseImg] = await Promise.all([
-                                    loadImg(winnerAvatar || ""),
-                                    loadImg(loserAvatar || ""),
-                                  ]);
+                                  const canvas = await renderMatchShareCard({
+                                    winnerName: won
+                                      ? viewedPlayer?.full_name || "Player"
+                                      : opponent?.full_name || "Player",
+                                    loserName: won
+                                      ? opponent?.full_name || "Player"
+                                      : viewedPlayer?.full_name || "Player",
+                                    winnerAvatar: won
+                                      ? viewedPlayer?.avatar_url || ""
+                                      : opponent?.avatar_url || "",
+                                    loserAvatar: won
+                                      ? opponent?.avatar_url || ""
+                                      : viewedPlayer?.avatar_url || "",
+                                    displayScore,
+                                    winnerEloChange: won
+                                      ? (isP1
+                                          ? m.elo_change_p1
+                                          : m.elo_change_p2)
+                                      : (isP1
+                                          ? m.elo_change_p2
+                                          : m.elo_change_p1),
+                                    loserEloChange: won
+                                      ? (isP1
+                                          ? m.elo_change_p2
+                                          : m.elo_change_p1)
+                                      : (isP1
+                                          ? m.elo_change_p1
+                                          : m.elo_change_p2),
+                                    matchType:
+                                      m.is_friendly !== false
+                                        ? "Friendly"
+                                        : "Tournament",
+                                    matchDate: new Date(m.created_at),
+                                    category: m.category,
+                                  });
 
-                                  const W = 1080,
-                                    H = 1080;
-                                  const canvas =
-                                    document.createElement("canvas");
-                                  canvas.width = W;
-                                  canvas.height = H;
-                                  const ctx = canvas.getContext("2d");
-                                  if (!ctx) {
+                                  if (!canvas) {
                                     await fallback();
                                     return;
                                   }
-
-                                  // Background
-                                  const bg = ctx.createLinearGradient(
-                                    0,
-                                    0,
-                                    W,
-                                    H,
-                                  );
-                                  bg.addColorStop(0, "#0f172a");
-                                  bg.addColorStop(1, "#020617");
-                                  ctx.fillStyle = bg;
-                                  ctx.fillRect(0, 0, W, H);
-
-                                  // Winner glow
-                                  const glow = ctx.createRadialGradient(
-                                    270,
-                                    380,
-                                    0,
-                                    270,
-                                    380,
-                                    320,
-                                  );
-                                  glow.addColorStop(0, "rgba(16,185,129,0.18)");
-                                  glow.addColorStop(1, "rgba(16,185,129,0)");
-                                  ctx.fillStyle = glow;
-                                  ctx.fillRect(0, 0, W, H);
-
-                                  // Header
-                                  ctx.fillStyle = "#10b981";
-                                  ctx.font = "bold 44px sans-serif";
-                                  ctx.textAlign = "center";
-                                  ctx.textBaseline = "alphabetic";
-                                  ctx.fillText("🏸 IISc Shuttlers", W / 2, 90);
-                                  ctx.fillStyle = "rgba(255,255,255,0.15)";
-                                  ctx.fillRect(120, 108, W - 240, 3);
-                                  ctx.fillStyle = "#64748b";
-                                  ctx.font = "bold 32px sans-serif";
-                                  ctx.fillText("MATCH RESULT", W / 2, 168);
-
-                                  // Winner (left)
-                                  drawCircleAvatar(
-                                    ctx,
-                                    winImg,
-                                    270,
-                                    360,
-                                    170,
-                                    winnerName[0],
-                                    "#10b981",
-                                  );
-                                  ctx.font = "72px sans-serif";
-                                  ctx.textAlign = "center";
-                                  ctx.fillText("🏆", 270, 175);
-                                  ctx.fillStyle = "#10b981";
-                                  ctx.font = "bold 32px sans-serif";
-                                  ctx.fillText("WINNER", 270, 570);
-                                  ctx.fillStyle = "#ffffff";
-                                  ctx.font = "bold 52px sans-serif";
-                                  ctx.fillText(
-                                    truncateText(ctx, winnerName, 480),
-                                    270,
-                                    636,
-                                  );
-
-                                  // Score center
-                                  const scoreY = 760;
-                                  ctx.fillStyle = "#1e293b";
-                                  ctx.beginPath();
-                                  (ctx as any).roundRect?.(
-                                    W / 2 - 200,
-                                    scoreY - 64,
-                                    400,
-                                    96,
-                                    24,
-                                  ) ||
-                                    ctx.rect(W / 2 - 200, scoreY - 64, 400, 96);
-                                  ctx.fill();
-                                  ctx.fillStyle = "#f59e0b";
-                                  ctx.font = "bold 72px monospace";
-                                  ctx.fillText(displayScore, W / 2, scoreY);
-                                  ctx.fillStyle = "#475569";
-                                  ctx.font = "bold 26px sans-serif";
-                                  ctx.fillText("DEF.", W / 2, scoreY + 52);
-
-                                  // Loser (right)
-                                  drawCircleAvatar(
-                                    ctx,
-                                    loseImg,
-                                    W - 270,
-                                    360,
-                                    140,
-                                    loserName[0],
-                                    "#475569",
-                                  );
-                                  ctx.fillStyle = "#64748b";
-                                  ctx.font = "bold 28px sans-serif";
-                                  ctx.fillText("Runner-up", W - 270, 536);
-                                  ctx.fillStyle = "#94a3b8";
-                                  ctx.font = "bold 46px sans-serif";
-                                  ctx.fillText(
-                                    truncateText(ctx, loserName, 420),
-                                    W - 270,
-                                    596,
-                                  );
-
-                                  // Footer
-                                  ctx.fillStyle = "rgba(255,255,255,0.06)";
-                                  ctx.fillRect(0, H - 100, W, 100);
-                                  ctx.fillStyle = "#475569";
-                                  ctx.font = "bold 30px sans-serif";
-                                  ctx.fillText(
-                                    "iiscshuttlers.com",
-                                    W / 2,
-                                    H - 36,
-                                  );
 
                                   if (Capacitor.isNativePlatform()) {
                                     const base64 = canvas

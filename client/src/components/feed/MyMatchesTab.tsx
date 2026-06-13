@@ -5,6 +5,9 @@ import { Calendar, Search, Filter, CheckCircle2, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { Link } from "wouter";
+import { MatchCard } from "./MatchCard";
+import { Capacitor } from "@capacitor/core";
+import { Haptics, ImpactStyle } from "@capacitor/haptics";
 
 export function MyMatchesTab() {
   const { profile } = useAuth();
@@ -76,10 +79,25 @@ export function MyMatchesTab() {
   }, [matches, subTab, searchQuery, categoryFilter]);
 
   const handleAction = async (matchId: string, action: "confirm" | "reject") => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await Haptics.impact({ style: ImpactStyle.Medium });
+      } catch (e) {
+        console.warn("Haptics failed", e);
+      }
+    }
+    
     if (action === "confirm") {
       const { error } = await supabase.rpc("confirm_friendly_match", { match_uuid: matchId });
       if (error) toast.error("Failed to confirm: " + error.message);
-      else toast.success("Match confirmed!");
+      else {
+        toast.success("Match confirmed!");
+        if (Capacitor.isNativePlatform()) {
+          try {
+            await Haptics.impact({ style: ImpactStyle.Heavy });
+          } catch (e) {}
+        }
+      }
     } else {
       const { error } = await supabase.from("matches").delete().eq("id", matchId);
       if (error) toast.error("Failed to reject match");
@@ -167,8 +185,19 @@ export function MyMatchesTab() {
             const needsMyAction = isPending && !iAmSubmitter;
 
             return (
-              <div key={match.id} className={`bg-white dark:bg-slate-900 rounded-3xl p-5 border ${isPending ? "border-amber-200 dark:border-amber-900/30" : "border-slate-200 dark:border-slate-800"} shadow-sm transition-all hover:shadow-md`}>
-                <div className="flex justify-between items-start mb-4">
+              <MatchCard
+                key={match.id}
+                match={match}
+                currentUser={profile}
+                isLiveNow={false}
+                isMatchOfTheDay={false}
+                upsetDiff={0}
+                isKudosed={false}
+                kudosCount={0}
+                index={0}
+              >
+                {/* Actions Row */}
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-2">
                   <div className="flex items-center gap-2">
                     {isPending ? (
                       <span className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-black uppercase tracking-wider rounded-lg">
@@ -179,25 +208,8 @@ export function MyMatchesTab() {
                         <CheckCircle2 className="w-3.5 h-3.5" /> Accepted
                       </span>
                     )}
-                    <span className="text-xs font-bold text-slate-400">{match.category}</span>
                   </div>
-                  <span className="text-xs font-semibold text-slate-400">
-                    {new Date(match.created_at).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </div>
 
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-slate-500 mb-1">
-                      {match.player1?.full_name}{match.partner1 ? ` & ${match.partner1.full_name}` : ""}
-                      {" vs "}
-                      {match.player2?.full_name}{match.partner2 ? ` & ${match.partner2.full_name}` : ""}
-                    </p>
-                    <p className="text-2xl font-black text-slate-900 dark:text-white">
-                      {match.match_score}
-                    </p>
-                  </div>
-                  
                   {needsMyAction && (
                     <div className="flex gap-2 w-full sm:w-auto">
                       <button onClick={() => handleAction(match.id, "reject")} className="flex-1 sm:flex-none px-4 py-2 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-sm font-bold rounded-xl transition-colors">
@@ -214,7 +226,7 @@ export function MyMatchesTab() {
                     </p>
                   )}
                 </div>
-              </div>
+              </MatchCard>
             );
           })}
         </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
-import { Swords, Trophy, Activity, ArrowLeft } from "lucide-react";
+import { Swords, Trophy, Activity, ArrowLeft, BarChart3 } from "lucide-react";
 import { Link } from "wouter";
 
 export function H2HSection() {
@@ -202,6 +202,16 @@ export function H2HSection() {
               <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">
                 {h2hMatches.length} Matches Played
               </div>
+
+              {/* Link to Deep Analytics */}
+              {p1Id && p2Id && (
+                <Link href={`/compare/${p1Id}/${p2Id}`}>
+                  <button className="flex items-center gap-2 px-4 py-2 bg-slate-900 dark:bg-emerald-600 text-white rounded-full text-xs font-black uppercase tracking-wider mb-4 hover:scale-105 transition-transform shadow-md">
+                    <BarChart3 className="w-4 h-4" /> View Deep Analytics
+                  </button>
+                </Link>
+              )}
+
               {/* H2H wins visual bar */}
               {h2hMatches.length > 0 && (
                 <div className="w-full mb-4" aria-label={`Head to head wins: ${p1?.full_name} ${p1Wins} vs ${p2?.full_name} ${p2Wins}`}>

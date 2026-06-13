@@ -5,8 +5,7 @@ const config: CapacitorConfig = {
   appName: "IISc Badminton Club",
   webDir: "dist",
   server: {
-    androidScheme: "https",
-    cleartext: true,
+    androidScheme: "https"
   },
 };
 

@@ -26,7 +26,7 @@ export function useMatchNotification() {
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
+          event: "*",
           schema: "public",
           table: "matches",
         },
@@ -43,15 +43,45 @@ export function useMatchNotification() {
 
           if (!isInvolved) return;
 
-          // Removed early return so submitter also gets visual feedback
-          // Deduplicate
-          if (shownRef.current.has(match.id)) return;
-          shownRef.current.add(match.id);
-
           // Determine who the opponent is (the submitter)
           const challengerId = match.submitted_by;
           const isSubmitter = match.submitted_by === profile.id;
           const isUmpire = challengerId !== match.player1_id && challengerId !== match.player2_id && challengerId !== match.team1_partner_id && challengerId !== match.team2_partner_id;
+
+          if (payload.eventType === "UPDATE") {
+            const oldMatch = payload.old as any;
+            if (oldMatch.status === "pending" && match.status === "confirmed" && !isSubmitter) {
+              // Match confirmed
+              if (Capacitor.isNativePlatform()) {
+                try {
+                  const permStatus = await LocalNotifications.checkPermissions();
+                  if (permStatus.display === "prompt") await LocalNotifications.requestPermissions();
+                  if (permStatus.display === "granted" || permStatus.display === "prompt") {
+                    await LocalNotifications.schedule({
+                      notifications: [{
+                        title: "✅ Match Confirmed!",
+                        body: "Your recent match has been confirmed. Check your new ELO!",
+                        id: Math.floor(Math.random() * 1000000),
+                        schedule: { at: new Date(Date.now() + 100) },
+                      }],
+                    });
+                  }
+                } catch(e){}
+              } else {
+                showWebNotification("✅ Match Confirmed!", "Your recent match has been confirmed. Check your new ELO!", () => {});
+              }
+              playSmashSound();
+            }
+            return;
+          }
+
+          if (payload.eventType !== "INSERT") return;
+
+          // Deduplicate
+          if (shownRef.current.has(match.id)) return;
+          shownRef.current.add(match.id);
+
+
 
           // Fetch opponent name for the notification
           let opponentName = "Someone";
@@ -76,7 +106,7 @@ export function useMatchNotification() {
             const notifBody = isUmpire
               ? `Umpire ${alertName} logged your match. Tap to view.`
               : (isFriendly
-                  ? `${alertName} logged a friendly match against you. Tap to view.`
+                  ? `You've been challenged by ${alertName}! 🏸`
                   : `${alertName} logged a tournament match against you. Tap to confirm.`);
 
             if (Capacitor.isNativePlatform()) {
@@ -125,6 +155,55 @@ export function useMatchNotification() {
             setNotification(null);
           }, 2000);
         },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "players",
+          filter: `id=eq.${profile.id}`
+        },
+        async (payload) => {
+          const oldPlayer = payload.old as any;
+          const newPlayer = payload.new as any;
+          
+          if (newPlayer.elo_rating > oldPlayer.elo_rating) {
+            // Check if entered top 10
+            const { data } = await supabase
+              .from("players")
+              .select("id")
+              .order("elo_rating", { ascending: false })
+              .limit(10);
+              
+            if (data && data.some((p: any) => p.id === profile.id)) {
+              // They are in top 10!
+              if (!localStorage.getItem("notified_top10")) {
+                localStorage.setItem("notified_top10", "true");
+                if (Capacitor.isNativePlatform()) {
+                  try {
+                    const permStatus = await LocalNotifications.checkPermissions();
+                    if (permStatus.display === "prompt") await LocalNotifications.requestPermissions();
+                    if (permStatus.display === "granted" || permStatus.display === "prompt") {
+                      await LocalNotifications.schedule({
+                        notifications: [{
+                          title: "🎉 Top 10 Reached!",
+                          body: "You've just entered the Top 10! Keep up the great work!",
+                          id: Math.floor(Math.random() * 1000000),
+                          schedule: { at: new Date(Date.now() + 100) },
+                        }],
+                      });
+                    }
+                  } catch(e){}
+                } else {
+                  showWebNotification("🎉 Top 10 Reached!", "You've just entered the Top 10! Keep up the great work!", () => {});
+                }
+              }
+            } else {
+              localStorage.removeItem("notified_top10");
+            }
+          }
+        }
       )
       .subscribe();
 

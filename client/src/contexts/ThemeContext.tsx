@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { Capacitor } from "@capacitor/core";
+import { Haptics, ImpactStyle } from "@capacitor/haptics";
 
 type Theme = "light" | "dark";
 type Accent = "emerald" | "violet" | "rose" | "amber" | "blue" | "cyberpunk";
@@ -61,8 +63,15 @@ export function ThemeProvider({
   }, [theme, accent, switchable]);
 
   const toggleTheme = switchable
-    ? () => {
+    ? async () => {
         setTheme((prev) => (prev === "light" ? "dark" : "light"));
+        if (Capacitor.isNativePlatform()) {
+          try {
+            await Haptics.impact({ style: ImpactStyle.Light });
+          } catch (e) {
+            console.warn("Haptics failed", e);
+          }
+        }
       }
     : undefined;
 
