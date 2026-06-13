@@ -35,7 +35,18 @@ interface LeaderboardProps {
 
 export function LeaderboardSection({ players }: LeaderboardProps) {
   const [activeTab, setActiveTab] = useState<"elo" | "ironman">("elo");
-  const [categoryFilter, setCategoryFilter] = useState<"ALL" | "MEN" | "WOMEN">("ALL");
+  const [categoryFilter, setCategoryFilter] = useState<"ALL" | "MS" | "WS" | "MD" | "WD" | "XD">("ALL");
+
+  const getCategoryElo = (player: PlayerRank) => {
+    if (categoryFilter === "MS" || categoryFilter === "WS") {
+      return player.singles_elo ?? player.elo_rating;
+    } else if (categoryFilter === "MD" || categoryFilter === "WD") {
+      return player.doubles_elo ?? player.elo_rating;
+    } else if (categoryFilter === "XD") {
+      return player.mixed_elo ?? player.elo_rating;
+    }
+    return player.elo_rating;
+  };
 
   // Parse total matches from "10W - 5L" or similar format
   const getMatchesCount = (record: string | any) => {
@@ -79,15 +90,15 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
   };
 
   let filteredByGender = players;
-  if (categoryFilter === "MEN") {
+  if (categoryFilter === "MS" || categoryFilter === "MD") {
     filteredByGender = players.filter(p => p.gender?.toUpperCase() === "MALE");
-  } else if (categoryFilter === "WOMEN") {
+  } else if (categoryFilter === "WS" || categoryFilter === "WD") {
     filteredByGender = players.filter(p => p.gender?.toUpperCase() === "FEMALE");
-  } // ALL shows everyone
+  } // ALL and XD show everyone
 
   const rankedPlayers = [...filteredByGender]
     .sort((a, b) => {
-      if (activeTab === "elo") return b.elo_rating - a.elo_rating;
+      if (activeTab === "elo") return getCategoryElo(b) - getCategoryElo(a);
       return (
         getMatchesCount(b.win_loss_record) - getMatchesCount(a.win_loss_record)
       );
@@ -139,7 +150,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
         {/* Category Filters */}
         <div className="flex justify-center mb-10 overflow-x-auto px-4 hide-scrollbar">
           <div className="flex gap-2 bg-slate-100 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700/50">
-            {(["ALL", "MEN", "WOMEN"] as const).map((cat) => (
+            {(["ALL", "MS", "WS", "MD", "WD", "XD"] as const).map((cat) => (
               <button
                 key={cat}
                 onClick={() => setCategoryFilter(cat)}
@@ -187,7 +198,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                   <div className="flex items-center justify-center gap-1.5 mt-2">
                     <span className="font-bold text-slate-600 dark:text-slate-300 text-sm">
                       {activeTab === "elo"
-                        ? `${top3[1].elo_rating} ELO`
+                        ? `${getCategoryElo(top3[1])} ELO`
                         : `${getMatchesCount(top3[1].win_loss_record)} Matches`}
                     </span>
                   </div>
@@ -225,7 +236,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                   <div className="flex items-center justify-center gap-1.5 mt-2">
                     <span className="font-black text-amber-900 dark:text-amber-100 text-base">
                       {activeTab === "elo"
-                        ? `${top3[0].elo_rating} ELO`
+                        ? `${getCategoryElo(top3[0])} ELO`
                         : `${getMatchesCount(top3[0].win_loss_record)} Matches`}
                     </span>
                   </div>
@@ -262,7 +273,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                   <div className="flex items-center justify-center gap-1 mt-1">
                     <span className="font-bold text-orange-800 dark:text-orange-200 text-xs">
                       {activeTab === "elo"
-                        ? `${top3[2].elo_rating} ELO`
+                        ? `${getCategoryElo(top3[2])} ELO`
                         : `${getMatchesCount(top3[2].win_loss_record)} Matches`}
                     </span>
                   </div>
@@ -292,7 +303,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                   {rest.map((player, index) => {
                     // Derive a visual rank-trend indicator from ELO vs baseline (1200)
                     const eloBaseline = 1200;
-                    const eloGap = player.elo_rating - eloBaseline;
+                    const eloGap = getCategoryElo(player) - eloBaseline;
                     const trend =
                       activeTab !== "elo"
                         ? null
@@ -364,7 +375,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                           <Swords className="w-3 h-3" />
                           <span className="font-black">
                             {activeTab === "elo"
-                              ? player.elo_rating
+                              ? getCategoryElo(player)
                               : getMatchesCount(player.win_loss_record)}
                           </span>
                         </div>

@@ -184,6 +184,9 @@ interface Player {
   social?: Social;
   userId?: string;
   elo_rating?: number;
+  singles_elo?: number;
+  doubles_elo?: number;
+  mixed_elo?: number;
   isApproved?: boolean;
   buddies?: string[];
   buddyRequests?: string[];
@@ -547,6 +550,9 @@ export default function PlayerProfile({
       buddies: data.buddies || [],
       buddyRequests: data.buddy_requests || [],
       elo_rating: data.elo_rating,
+      singles_elo: data.singles_elo,
+      doubles_elo: data.doubles_elo,
+      mixed_elo: data.mixed_elo,
     };
   }
 
@@ -1348,7 +1354,22 @@ export default function PlayerProfile({
                  )}
                  {player.elo_rating != null && (
                    <span className="px-3 py-1.5 rounded-lg bg-white/80 dark:bg-black/40 backdrop-blur-md border border-slate-200/80 dark:border-white/25 text-slate-800 dark:text-white text-sm font-bold uppercase shadow-sm flex items-center gap-1.5">
-                     {getEloTier(player.elo_rating).icon} {player.elo_rating} ELO
+                     {getEloTier(player.elo_rating).icon} {player.elo_rating} OVR
+                   </span>
+                 )}
+                 {player.singles_elo != null && (
+                   <span className="px-3 py-1.5 rounded-lg bg-white/80 dark:bg-black/40 backdrop-blur-md border border-emerald-200/80 dark:border-emerald-500/25 text-slate-800 dark:text-white text-sm font-bold shadow-sm flex items-center gap-1.5">
+                     <User className="w-4 h-4 text-emerald-500" /> S: {player.singles_elo}
+                   </span>
+                 )}
+                 {player.doubles_elo != null && (
+                   <span className="px-3 py-1.5 rounded-lg bg-white/80 dark:bg-black/40 backdrop-blur-md border border-blue-200/80 dark:border-blue-500/25 text-slate-800 dark:text-white text-sm font-bold shadow-sm flex items-center gap-1.5">
+                     <Users className="w-4 h-4 text-blue-500" /> D: {player.doubles_elo}
+                   </span>
+                 )}
+                 {player.mixed_elo != null && (
+                   <span className="px-3 py-1.5 rounded-lg bg-white/80 dark:bg-black/40 backdrop-blur-md border border-rose-200/80 dark:border-rose-500/25 text-slate-800 dark:text-white text-sm font-bold shadow-sm flex items-center gap-1.5">
+                     <Heart className="w-4 h-4 text-rose-500" /> XD: {player.mixed_elo}
                    </span>
                  )}
                </div>
