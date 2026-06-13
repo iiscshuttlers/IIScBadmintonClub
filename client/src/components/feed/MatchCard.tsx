@@ -15,6 +15,7 @@ interface MatchCardProps {
   onKudos?: () => void;
   onShare?: () => void;
   index?: number;
+  hideActions?: boolean;
   children?: React.ReactNode;
 }
 
@@ -29,6 +30,7 @@ export function MatchCard({
   onKudos,
   onShare,
   index = 0,
+  hideActions = false,
   children
 }: MatchCardProps) {
   const p1 = match.player1;
@@ -289,6 +291,7 @@ export function MatchCard({
       {children && <div className="mt-4">{children}</div>}
 
       {/* Reaction Kudos & Edit */}
+      {!hideActions && (
       <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/50 flex justify-between items-center">
         <div>
           {isPlayerInMatch && (
@@ -325,6 +328,7 @@ export function MatchCard({
         </button>
         </div>
       </div>
+      )}
     </motion.div>
   );
 }

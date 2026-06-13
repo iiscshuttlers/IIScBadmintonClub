@@ -70,7 +70,7 @@ export default function Feed() {
   const [loading, setLoading] = useState(true);
   const [liveMatchIds, setLiveMatchIds] = useState<Set<string>>(new Set());
 
-  const [limitCount, setLimitCount] = useState(30);
+  const [limitCount, setLimitCount] = useState(100);
 
   // Subscribe to live tournament broadcasts and track which player-pairs are live
   useEffect(() => {
@@ -156,23 +156,35 @@ export default function Feed() {
   const [kudosState, setKudosState] = useState<Record<string, boolean>>({});
 
   const followingIds = useMemo(() => {
-    return Array.isArray(ownProfile?.following) ? ownProfile.following : [];
+    const list = Array.isArray(ownProfile?.following) ? ownProfile.following : [];
+    return list.map(String);
   }, [ownProfile?.following]);
 
   const buddyIds = useMemo(() => {
-    return Array.isArray(ownProfile?.buddies) ? ownProfile.buddies : [];
+    const list = Array.isArray(ownProfile?.buddies) ? ownProfile.buddies : [];
+    return list.map(String);
   }, [ownProfile?.buddies]);
 
   const displayMatches = useMemo(() => {
     if (feedFilter === "global") return matches;
     const ids = feedFilter === "buddies" ? buddyIds : followingIds;
-    return matches.filter(
-      (m: any) =>
-        ids.includes(m.player1_id) ||
-        ids.includes(m.player2_id) ||
-        (m.team1_partner_id && ids.includes(m.team1_partner_id)) ||
-        (m.team2_partner_id && ids.includes(m.team2_partner_id)),
-    );
+    
+    if (ids.length === 0) return [];
+    
+    return matches.filter((m: any) => {
+      const matchIds = [
+        m.player1_id,
+        m.player2_id,
+        m.team1_partner_id,
+        m.team2_partner_id,
+        m.player1?.id,
+        m.player2?.id,
+        m.partner1?.id,
+        m.partner2?.id
+      ].filter(Boolean).map(String);
+      
+      return ids.some(id => matchIds.includes(id));
+    });
   }, [matches, feedFilter, followingIds, buddyIds]);
 
   const courtUtil = useMemo(() => {
@@ -788,7 +800,7 @@ export default function Feed() {
                   if (!err.message?.includes("cancel")) fallbackShare();
                 }
               };
-
+              return (
                 <MatchCard
                   key={match.id}
                   match={match}
@@ -808,12 +820,13 @@ export default function Feed() {
                   onShare={() => handleShare(match)}
                   index={i}
                 />
+              );
             })}
 
-            {displayMatches.length >= limitCount && (
+            {matches.length >= limitCount && (
               <div className="flex justify-center mt-6 pt-4 pb-8">
                 <button
-                  onClick={() => setLimitCount((prev) => prev + 30)}
+                  onClick={() => setLimitCount((prev) => prev + 50)}
                   className="px-6 py-2.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full font-bold text-sm transition shadow-sm hover:shadow-md"
                 >
                   Load More Matches
@@ -821,7 +834,7 @@ export default function Feed() {
               </div>
             )}
           </div>
-        ) : (
+        ) : feedFilter === "global" ? (
           <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm mt-8">
             <div className="w-24 h-24 mx-auto bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
               <Trophy className="w-10 h-10 text-slate-300 dark:text-slate-600" />
@@ -834,7 +847,7 @@ export default function Feed() {
               get the action started!
             </p>
           </div>
-        )}
+        ) : null}
           </>
         )}
       </div>

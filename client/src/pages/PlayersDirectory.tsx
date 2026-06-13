@@ -151,6 +151,7 @@ export default function PlayersDirectory() {
     session: authSession,
     isInitializing: authLoading,
     profile,
+    refreshProfile
   } = useAuth();
   useEffect(() => {
     let isMounted = true;
@@ -516,6 +517,7 @@ export default function PlayersDirectory() {
       
       // Trigger a silent refresh of players to update states
       fetchPlayers({ silent: true });
+      refreshProfile();
     } catch (e) {
       console.error("Buddy action failed in directory:", e);
       toast.error("Could not complete buddy action.");
@@ -541,6 +543,7 @@ export default function PlayersDirectory() {
       if (error) throw error;
       const player = players.find(p => p.id === playerId);
       toast.success(!isFollowing ? `Following ${player?.full_name || 'player'}!` : `Unfollowed.`);
+      refreshProfile();
     } catch (e) {
       setOwnProfile((prev: any) => prev ? { ...prev, following: Array.from(followingIds) } : prev);
       toast.error("Could not update follow status.");
@@ -1207,7 +1210,6 @@ export default function PlayersDirectory() {
                     autoComplete="off"
                     autoCorrect="off"
                     autoCapitalize="off"
-                    autoFocus
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search by name, nickname, or department..."

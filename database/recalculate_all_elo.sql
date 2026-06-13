@@ -39,6 +39,9 @@ DECLARE
   team2_actual NUMERIC;
 
   elo_multiplier NUMERIC;
+  
+  num_sets INTEGER;
+  sets_multiplier NUMERIC;
 BEGIN
   -- 1. Reset all players
   UPDATE players SET 
@@ -58,6 +61,18 @@ BEGIN
     ORDER BY created_at ASC 
   LOOP
     elo_multiplier := 1.0;
+    sets_multiplier := 1.0;
+    
+    -- Determine number of sets played
+    IF m_record.score IS NULL OR trim(m_record.score) = '' THEN
+      num_sets := 1;
+    ELSE
+      num_sets := array_length(string_to_array(m_record.score, ','), 1);
+    END IF;
+
+    IF num_sets > 3 THEN num_sets := 3; END IF;
+    IF num_sets < 1 THEN num_sets := 1; END IF;
+    sets_multiplier := num_sets / 3.0;
     
     SELECT singles_elo, doubles_elo, mixed_elo, total_friendly_matches, gender INTO p1_s, p1_d, p1_m, p1_matches, p1_gender FROM players WHERE id = m_record.player1_id;
     SELECT singles_elo, doubles_elo, mixed_elo, total_friendly_matches, gender INTO p2_s, p2_d, p2_m, p2_matches, p2_gender FROM players WHERE id = m_record.player2_id;
@@ -100,8 +115,8 @@ BEGIN
     team1_expected := 1.0 / (1.0 + power(10.0, (team2_elo - team1_elo) / 400.0));
     team2_expected := 1.0 / (1.0 + power(10.0, (team1_elo - team2_elo) / 400.0));
 
-    change_p1 := round(k_p1 * (team1_actual - team1_expected) * elo_multiplier);
-    change_p2 := round(k_p2 * (team2_actual - team2_expected) * elo_multiplier);
+    change_p1 := round(k_p1 * (team1_actual - team1_expected) * elo_multiplier * sets_multiplier);
+    change_p2 := round(k_p2 * (team2_actual - team2_expected) * elo_multiplier * sets_multiplier);
 
     IF m_record.category = 'Singles' THEN
       UPDATE players SET singles_elo = p1_elo + change_p1, total_friendly_matches = total_friendly_matches + 1 WHERE id = m_record.player1_id;
@@ -128,8 +143,8 @@ BEGIN
     (m_record.id, m_record.player2_id, p2_elo, p2_elo + change_p2, change_p2, team2_expected, team2_actual, m_record.category);
 
     IF m_record.category = 'Doubles' THEN
-      change_p3 := round(k_p3 * (team1_actual - team1_expected) * elo_multiplier);
-      change_p4 := round(k_p4 * (team2_actual - team2_expected) * elo_multiplier);
+      change_p3 := round(k_p3 * (team1_actual - team1_expected) * elo_multiplier * sets_multiplier);
+      change_p4 := round(k_p4 * (team2_actual - team2_expected) * elo_multiplier * sets_multiplier);
       
       IF team1_type = 'XD' THEN
         UPDATE players SET mixed_elo = p3_elo + change_p3, total_friendly_matches = total_friendly_matches + 1 WHERE id = m_record.team1_partner_id;

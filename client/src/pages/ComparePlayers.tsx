@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { useRoute } from "wouter";
+import { useRoute, useLocation } from "wouter";
 import { supabase } from "@/lib/supabase";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { Card } from "@/components/ui/card";
 import { Link } from "wouter";
-import { ChevronLeft, Swords, Trophy, TrendingUp, Flame, Calendar, MapPin, User, Activity, Ruler } from "lucide-react";
+import { ChevronLeft, Swords, Trophy, TrendingUp, Flame, Calendar, MapPin, User, Activity, Ruler, ChevronDown } from "lucide-react";
 import { getEloTier } from "@/lib/utils";
 import {
   LineChart,
@@ -15,6 +15,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useAuth } from "@/contexts/AuthContext";
+import { MatchCard } from "@/components/feed/MatchCard";
 
 export default function ComparePlayers() {
   const [match, rawParams] = useRoute("/compare/:p1/:p2");
@@ -22,12 +24,20 @@ export default function ComparePlayers() {
   const p1 = params?.p1;
   const p2 = params?.p2;
   
+  const [, setLocation] = useLocation();
+  const { session } = useAuth();
+  
   const [player1, setPlayer1] = useState<any>(null);
   const [player2, setPlayer2] = useState<any>(null);
+  const [allPlayers, setAllPlayers] = useState<any[]>([]);
   const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   usePageMeta({ title: "Player Comparison" });
+
+  useEffect(() => {
+    supabase.from("players").select("id, full_name").is("deleted_at", null).order("full_name").then(({ data }) => setAllPlayers(data || []));
+  }, []);
 
   useEffect(() => {
     if (!p1 || !p2) return;
@@ -46,7 +56,7 @@ export default function ComparePlayers() {
       // Fetch head to head matches
       const { data: matchesData } = await supabase
         .from("matches")
-        .select("*")
+        .select("*, player1:players!player1_id(*), player2:players!player2_id(*), partner1:players!team1_partner_id(*), partner2:players!team2_partner_id(*)")
         .eq("status", "confirmed")
         .or(`player1_id.eq.${p1},player2_id.eq.${p1},team1_partner_id.eq.${p1},team2_partner_id.eq.${p1}`)
         .order("created_at", { ascending: true });
@@ -166,7 +176,27 @@ export default function ComparePlayers() {
         {/* Player 1 */}
         <div className="flex flex-col items-center text-center">
           <img src={player1.avatar_url || ""} className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-emerald-100 dark:border-emerald-900 shadow-lg mb-4" />
-          <h2 className="text-xl font-black text-slate-900 dark:text-white">{player1.full_name}</h2>
+          <div className="relative group w-full max-w-[200px] mx-auto">
+            <select
+              value={player1.id}
+              onChange={(e) => {
+                if (e.target.value !== player2.id) {
+                  setLocation(`/compare/${e.target.value}/${player2.id}`);
+                }
+              }}
+              className="text-xl font-black text-slate-900 dark:text-white bg-transparent appearance-none text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-6 py-1 rounded-xl w-full truncate focus:outline-none"
+            >
+              <option value={player1.id} className="hidden">{player1.full_name}</option>
+              {allPlayers.map((p) => (
+                <option key={p.id} value={p.id} className="text-sm font-bold bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                  {p.full_name}
+                </option>
+              ))}
+            </select>
+            <div className="absolute top-1/2 -translate-y-1/2 right-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+              <ChevronDown className="w-4 h-4 text-slate-400" />
+            </div>
+          </div>
           
           <div className={`mt-2 px-3 py-1 rounded-lg backdrop-blur-md border border-white/25 text-xs font-black uppercase shadow-sm flex items-center gap-1.5 ${getEloTier(player1.elo_rating).bg} ${getEloTier(player1.elo_rating).color}`}>
              <Trophy className="w-3 h-3" /> {getEloTier(player1.elo_rating).name} • {player1.elo_rating} OVR
@@ -176,7 +206,27 @@ export default function ComparePlayers() {
         {/* Player 2 */}
         <div className="flex flex-col items-center text-center">
           <img src={player2.avatar_url || ""} className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-blue-100 dark:border-blue-900 shadow-lg mb-4" />
-          <h2 className="text-xl font-black text-slate-900 dark:text-white">{player2.full_name}</h2>
+          <div className="relative group w-full max-w-[200px] mx-auto">
+            <select
+              value={player2.id}
+              onChange={(e) => {
+                if (e.target.value !== player1.id) {
+                  setLocation(`/compare/${player1.id}/${e.target.value}`);
+                }
+              }}
+              className="text-xl font-black text-slate-900 dark:text-white bg-transparent appearance-none text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-6 py-1 rounded-xl w-full truncate focus:outline-none"
+            >
+              <option value={player2.id} className="hidden">{player2.full_name}</option>
+              {allPlayers.map((p) => (
+                <option key={p.id} value={p.id} className="text-sm font-bold bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                  {p.full_name}
+                </option>
+              ))}
+            </select>
+            <div className="absolute top-1/2 -translate-y-1/2 right-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+              <ChevronDown className="w-4 h-4 text-slate-400" />
+            </div>
+          </div>
           
           <div className={`mt-2 px-3 py-1 rounded-lg backdrop-blur-md border border-white/25 text-xs font-black uppercase shadow-sm flex items-center gap-1.5 ${getEloTier(player2.elo_rating).bg} ${getEloTier(player2.elo_rating).color}`}>
              <Trophy className="w-3 h-3" /> {getEloTier(player2.elo_rating).name} • {player2.elo_rating} OVR
@@ -269,30 +319,16 @@ export default function ComparePlayers() {
             <Swords className="w-4 h-4 text-slate-500" /> Recent Encounters
           </h3>
           <div className="space-y-3">
-            {[...matches].reverse().slice(0, 5).map((m) => {
-              const p1Team = m.player1_id === player1.id || m.team1_partner_id === player1.id ? 1 : 2;
-              const winnerTeam = m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id ? 1 : 2;
-              const p1Won = winnerTeam === p1Team;
-              
-              return (
-                <div key={m.id} className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-2 h-10 rounded-full ${p1Won ? 'bg-emerald-500' : 'bg-blue-500'}`} />
-                    <div>
-                      <div className="font-bold text-slate-900 dark:text-white">
-                        {p1Won ? player1.full_name : player2.full_name} won
-                      </div>
-                      <div className="text-xs text-slate-500">{new Date(m.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-mono font-bold text-sm bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-slate-700 dark:text-slate-300">
-                      {m.match_score}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            {[...matches].reverse().slice(0, 5).map((m) => (
+              <MatchCard
+                key={m.id}
+                match={m}
+                currentUser={session?.user}
+                isKudosed={false}
+                kudosCount={0}
+                hideActions={true}
+              />
+            ))}
           </div>
         </div>
       )}

@@ -87,7 +87,7 @@ import {
 } from "recharts";
 import QRCode from "react-qr-code";
 import confetti from "canvas-confetti";
-import { cn, getBaseShareUrl, getEloTier } from "@/lib/utils";
+import { cn, getBaseShareUrl } from "@/lib/utils";
 import { renderWrappedShareCard } from "@/lib/wrappedShareCard";
 
 /* ------------------------------------------------------------------ */
@@ -1120,6 +1120,8 @@ export default function PlayerProfile({
     return history;
   }, [eloLogs, id, player, eloChartFilter]);
 
+  const [generatingWrapped, setGeneratingWrapped] = useState(false);
+
   if (loading) {
     return <LoadingScreen />;
   }
@@ -1178,7 +1180,7 @@ export default function PlayerProfile({
     }
   };
 
-  const [generatingWrapped, setGeneratingWrapped] = useState(false);
+
   const handleWrapped = async () => {
     if (!player) return;
     setGeneratingWrapped(true);
