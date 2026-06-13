@@ -1,5 +1,15 @@
 [
   {
+    "versionCode": 108,
+    "versionName": "1.107",
+    "date": "2026-06-13T09:45:36.239Z",
+    "changes": [
+      "- feat(client): remove 5-match minimum requirement for rankings",
+      "- fix(client): resolve ambiguous RPC for friendly matches",
+      "- chore: release v1.106 (build 107)"
+    ]
+  },
+  {
     "versionCode": 107,
     "versionName": "1.106",
     "date": "2026-06-13T09:08:35.099Z",

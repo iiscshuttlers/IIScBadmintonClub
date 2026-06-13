@@ -1,6 +1,6 @@
 {
-  "versionCode": 107,
-  "versionName": "1.106",
-  "downloadUrl": "https://github.com/iiscshuttlers/iiscshuttlers/releases/latest/download/IIScShuttlers_v1.106.apk",
-  "changelog": "- chore: release v1.105 (build 106)"
+  "versionCode": 108,
+  "versionName": "1.107",
+  "downloadUrl": "https://github.com/iiscshuttlers/iiscshuttlers/releases/latest/download/IIScShuttlers_v1.107.apk",
+  "changelog": "- feat(client): remove 5-match minimum requirement for rankings\n- fix(client): resolve ambiguous RPC for friendly matches\n- chore: release v1.106 (build 107)"
 }
