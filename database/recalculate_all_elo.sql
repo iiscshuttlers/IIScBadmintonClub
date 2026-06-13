@@ -120,8 +120,8 @@ BEGIN
       END IF;
     END IF;
 
-    UPDATE players SET elo_rating = elo_rating + (change_p1 / 2) WHERE id = m_record.player1_id;
-    UPDATE players SET elo_rating = elo_rating + (change_p2 / 2) WHERE id = m_record.player2_id;
+    UPDATE players SET elo_rating = elo_rating + (change_p1 / 3) WHERE id = m_record.player1_id;
+    UPDATE players SET elo_rating = elo_rating + (change_p2 / 3) WHERE id = m_record.player2_id;
 
     INSERT INTO elo_calculation_logs (match_uuid, player_id, previous_elo, new_elo, elo_change, expected_score, actual_score, category) VALUES
     (m_record.id, m_record.player1_id, p1_elo, p1_elo + change_p1, change_p1, team1_expected, team1_actual, m_record.category),
@@ -143,8 +143,8 @@ BEGIN
         UPDATE players SET doubles_elo = p4_elo + change_p4, total_friendly_matches = total_friendly_matches + 1 WHERE id = m_record.team2_partner_id;
       END IF;
 
-      UPDATE players SET elo_rating = elo_rating + (change_p3 / 2) WHERE id = m_record.team1_partner_id;
-      UPDATE players SET elo_rating = elo_rating + (change_p4 / 2) WHERE id = m_record.team2_partner_id;
+      UPDATE players SET elo_rating = elo_rating + (change_p3 / 3) WHERE id = m_record.team1_partner_id;
+      UPDATE players SET elo_rating = elo_rating + (change_p4 / 3) WHERE id = m_record.team2_partner_id;
 
       INSERT INTO elo_calculation_logs (match_uuid, player_id, previous_elo, new_elo, elo_change, expected_score, actual_score, category) VALUES
       (m_record.id, m_record.team1_partner_id, p3_elo, p3_elo + change_p3, change_p3, team1_expected, team1_actual, m_record.category),

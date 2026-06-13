@@ -164,8 +164,8 @@ BEGIN
   END IF;
 
   -- We still update elo_rating to act as a general average or legacy column so things don't break immediately
-  UPDATE players SET elo_rating = elo_rating + (change_p1 / 2) WHERE id = m_record.player1_id;
-  UPDATE players SET elo_rating = elo_rating + (change_p2 / 2) WHERE id = m_record.player2_id;
+  UPDATE players SET elo_rating = elo_rating + (change_p1 / 3) WHERE id = m_record.player1_id;
+  UPDATE players SET elo_rating = elo_rating + (change_p2 / 3) WHERE id = m_record.player2_id;
 
   -- Record ELO Logs
   INSERT INTO elo_calculation_logs (match_uuid, player_id, previous_elo, new_elo, elo_change, expected_score, actual_score, category) VALUES
@@ -190,8 +190,8 @@ BEGIN
     END IF;
 
     -- Legacy update
-    UPDATE players SET elo_rating = elo_rating + (change_p3 / 2) WHERE id = m_record.team1_partner_id;
-    UPDATE players SET elo_rating = elo_rating + (change_p4 / 2) WHERE id = m_record.team2_partner_id;
+    UPDATE players SET elo_rating = elo_rating + (change_p3 / 3) WHERE id = m_record.team1_partner_id;
+    UPDATE players SET elo_rating = elo_rating + (change_p4 / 3) WHERE id = m_record.team2_partner_id;
 
     INSERT INTO elo_calculation_logs (match_uuid, player_id, previous_elo, new_elo, elo_change, expected_score, actual_score, category) VALUES
     (match_uuid, m_record.team1_partner_id, p3_elo, p3_elo + change_p3, change_p3, team1_expected, team1_actual, m_record.category),
