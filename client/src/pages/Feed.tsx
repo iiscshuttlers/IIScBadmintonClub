@@ -31,7 +31,6 @@ import { AnnouncementsSection } from "@/components/feed/AnnouncementsSection";
 import { LiveScoreSection } from "@/components/events/LiveScoreSection";
 import { UmpireTab } from "@/components/umpire/UmpireTab";
 import { MyMatchesTab } from "@/components/feed/MyMatchesTab";
-import { AnalyticsTab } from "@/components/feed/AnalyticsTab";
 
 export default function Feed() {
   usePageMeta({
@@ -41,7 +40,7 @@ export default function Feed() {
   });
 
   const { session, profile: ownProfile, isUmpire, isAdmin } = useAuth();
-  const [activeTab, setActiveTab] = useState<"matches" | "announcements" | "umpire" | "my_matches" | "analytics">(() => {
+  const [activeTab, setActiveTab] = useState<"matches" | "announcements" | "umpire" | "my_matches">(() => {
     return typeof window !== "undefined" && window.location.search.includes("tab=announcements")
       ? "announcements"
       : "matches";
@@ -354,16 +353,6 @@ export default function Feed() {
                   <UserCheck className="w-4 h-4" /> My Matches
                 </button>
               )}
-              <button
-                onClick={() => setActiveTab("analytics")}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
-                  activeTab === "analytics"
-                    ? "bg-white text-emerald-900 shadow-md scale-100"
-                    : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
-                }`}
-              >
-                <TrendingUp className="w-4 h-4" /> Analytics
-              </button>
             </div>
           </div>
         </div>
@@ -376,8 +365,6 @@ export default function Feed() {
           <UmpireTab />
         ) : activeTab === "my_matches" ? (
           <MyMatchesTab />
-        ) : activeTab === "analytics" ? (
-          <AnalyticsTab />
         ) : (
           <>
         {!loading && displayMatches.length > 0 && (

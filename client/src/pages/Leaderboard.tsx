@@ -27,6 +27,7 @@ interface PlayerRank {
   win_loss_record: string;
   playing_level: string;
   gender?: string;
+  win_streak?: number;
 }
 
 interface LeaderboardProps {
@@ -54,6 +55,34 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
     params.set("cat", categoryFilter);
     window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}${window.location.hash}`);
   }, [activeTab, categoryFilter]);
+
+  const [upsets, setUpsets] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (activeTab === "elo") {
+      supabase
+        .from("matches")
+        .select("*, player1:players!player1_id(id, full_name, avatar_url), player2:players!player2_id(id, full_name, avatar_url)")
+        .eq("status", "confirmed")
+        .order("created_at", { ascending: false })
+        .limit(200)
+        .then(({ data }) => {
+          if (data) {
+            const significantUpsets = data
+              .filter(m => m.elo_change_p1 !== undefined && m.elo_change_p2 !== undefined)
+              .map(m => {
+                const isP1Winner = m.winner_id === m.player1_id;
+                const upsetScore = isP1Winner ? (m.elo_change_p1 || 0) : (m.elo_change_p2 || 0);
+                return { ...m, upsetScore };
+              })
+              .filter(m => m.upsetScore > 20)
+              .sort((a, b) => b.upsetScore - a.upsetScore)
+              .slice(0, 3);
+            setUpsets(significantUpsets);
+          }
+        });
+    }
+  }, [activeTab]);
 
   const getCategoryElo = (player: PlayerRank) => {
     if (categoryFilter === "MS" || categoryFilter === "WS") {
@@ -132,6 +161,11 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
   const top3 = rankedPlayers.slice(0, 3);
   const rest = rankedPlayers.slice(3);
 
+  const activeStreaks = [...players]
+    .filter(p => (p.win_streak || 0) > 1)
+    .sort((a, b) => (b.win_streak || 0) - (a.win_streak || 0))
+    .slice(0, 5);
+
   return (
     <div className="pb-24 font-sans">
       <div className="mt-8 relative z-20">
@@ -192,6 +226,75 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
             ))}
           </div>
         </div>
+
+        {activeTab === "elo" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16 px-4">
+            {/* BIGGEST UPSETS */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-500 to-orange-500" />
+              <h3 className="text-sm font-black text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-rose-500" /> Biggest Upsets (Recent)
+              </h3>
+              <div className="space-y-3">
+                {upsets.length > 0 ? upsets.map((match: any) => {
+                  const winner = match.winner_id === match.player1_id ? match.player1 : match.player2;
+                  const loser = match.winner_id === match.player1_id ? match.player2 : match.player1;
+                  return (
+                    <div key={match.id} className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+                      <img src={winner?.avatar_url || ""} className="w-8 h-8 rounded-full object-cover shrink-0 border-2 border-emerald-500" />
+                      <div className="min-w-0 flex-1 flex flex-col">
+                        <div className="text-xs font-bold text-slate-800 dark:text-white truncate flex items-center gap-1.5">
+                          {winner?.full_name?.split(' ')[0]}
+                          <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 px-1 py-0.5 rounded font-black">
+                            +{match.upsetScore}
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-slate-500">def. {loser?.full_name?.split(' ')[0]}</div>
+                      </div>
+                    </div>
+                  )
+                }) : (
+                  <div className="text-center py-4 text-slate-400 text-xs">No recent upsets found.</div>
+                )}
+              </div>
+            </motion.div>
+
+            {/* ACTIVE WIN STREAKS */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-400 to-amber-500" />
+              <h3 className="text-sm font-black text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                <Flame className="w-4 h-4 text-orange-500" /> Hottest Win Streaks
+              </h3>
+              <div className="space-y-3">
+                {activeStreaks.length > 0 ? activeStreaks.map((p: any, i: number) => (
+                  <div key={p.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700/50">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-4 text-center font-black text-[10px] text-slate-400">#{i + 1}</div>
+                      <img src={p.avatar_url || ""} className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0" />
+                      <div className="font-bold text-xs text-slate-800 dark:text-white truncate">
+                        {p.full_name?.split(' ')[0]}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 px-2 py-1 rounded-lg font-black text-xs shrink-0">
+                      <Flame className="w-3 h-3" /> {p.win_streak}
+                    </div>
+                  </div>
+                )) : (
+                  <div className="text-center py-4 text-slate-400 text-xs">No active streaks above 1.</div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
 
         {/* Podium (Top 3) */}
         {top3.length > 0 && (

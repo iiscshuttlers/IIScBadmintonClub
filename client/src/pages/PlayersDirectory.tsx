@@ -50,7 +50,7 @@ const itemVariants: Variants = {
 };
 
 const PLAYER_SELECT =
-  "id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating, singles_elo, doubles_elo, mixed_elo, win_loss_record, singles_record, doubles_record, mixed_record, recent_form, is_looking_to_play, buddies, following, buddy_requests, gender";
+  "id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating, singles_elo, doubles_elo, mixed_elo, win_loss_record, singles_record, doubles_record, mixed_record, recent_form, is_looking_to_play, buddies, following, buddy_requests, gender, win_streak";
 const PLAYERS_CACHE_KEY = "iisc_players_directory_cache_v4";
 const REQUEST_TIMEOUT_MS = 15_000;
 const MAX_FETCH_RETRIES = 1;
