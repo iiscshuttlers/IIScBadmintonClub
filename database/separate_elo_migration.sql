@@ -36,6 +36,7 @@ CREATE OR REPLACE FUNCTION confirm_friendly_match(
 ) RETURNS JSONB AS $$
 DECLARE
   m_record RECORD;
+  p_id TEXT;
   
   -- Player variables
   p1_elo INTEGER; p1_matches INTEGER; p1_gender TEXT; k_p1 INTEGER; change_p1 INTEGER;
@@ -206,75 +207,54 @@ BEGIN
     elo_change_p4 = change_p4
   WHERE id = match_uuid;
 
-  -- Recalculate win_loss_record for player 1
-  WITH p1_stats AS (
-    SELECT 
-      COUNT(*) FILTER (
-        WHERE ( (player1_id = m_record.player1_id OR team1_partner_id = m_record.player1_id) AND (winner_id = player1_id OR winner_id = team1_partner_id) )
-           OR ( (player2_id = m_record.player1_id OR team2_partner_id = m_record.player1_id) AND (winner_id = player2_id OR winner_id = team2_partner_id) )
-      ) as wins,
-      COUNT(*) FILTER (
-        WHERE ( (player1_id = m_record.player1_id OR team1_partner_id = m_record.player1_id) AND (winner_id = player2_id OR winner_id = team2_partner_id) )
-           OR ( (player2_id = m_record.player1_id OR team2_partner_id = m_record.player1_id) AND (winner_id = player1_id OR winner_id = team1_partner_id) )
-      ) as losses
-    FROM matches 
-    WHERE status = 'confirmed' 
-      AND (player1_id = m_record.player1_id OR player2_id = m_record.player1_id OR team1_partner_id = m_record.player1_id OR team2_partner_id = m_record.player1_id)
-  )
-  UPDATE players SET win_loss_record = COALESCE((SELECT wins FROM p1_stats), 0) || 'W - ' || COALESCE((SELECT losses FROM p1_stats), 0) || 'L' WHERE id = m_record.player1_id;
-
-  -- Recalculate win_loss_record for player 2
-  WITH p2_stats AS (
-    SELECT 
-      COUNT(*) FILTER (
-        WHERE ( (player1_id = m_record.player2_id OR team1_partner_id = m_record.player2_id) AND (winner_id = player1_id OR winner_id = team1_partner_id) )
-           OR ( (player2_id = m_record.player2_id OR team2_partner_id = m_record.player2_id) AND (winner_id = player2_id OR winner_id = team2_partner_id) )
-      ) as wins,
-      COUNT(*) FILTER (
-        WHERE ( (player1_id = m_record.player2_id OR team1_partner_id = m_record.player2_id) AND (winner_id = player2_id OR winner_id = team2_partner_id) )
-           OR ( (player2_id = m_record.player2_id OR team2_partner_id = m_record.player2_id) AND (winner_id = player1_id OR winner_id = team1_partner_id) )
-      ) as losses
-    FROM matches 
-    WHERE status = 'confirmed' 
-      AND (player1_id = m_record.player2_id OR player2_id = m_record.player2_id OR team1_partner_id = m_record.player2_id OR team2_partner_id = m_record.player2_id)
-  )
-  UPDATE players SET win_loss_record = COALESCE((SELECT wins FROM p2_stats), 0) || 'W - ' || COALESCE((SELECT losses FROM p2_stats), 0) || 'L' WHERE id = m_record.player2_id;
-
-  IF m_record.category = 'Doubles' THEN
-    -- Recalculate win_loss_record for partner 1
-    WITH p3_stats AS (
-      SELECT 
-        COUNT(*) FILTER (
-          WHERE ( (player1_id = m_record.team1_partner_id OR team1_partner_id = m_record.team1_partner_id) AND (winner_id = player1_id OR winner_id = team1_partner_id) )
-             OR ( (player2_id = m_record.team1_partner_id OR team2_partner_id = m_record.team1_partner_id) AND (winner_id = player2_id OR winner_id = team2_partner_id) )
-        ) as wins,
-        COUNT(*) FILTER (
-          WHERE ( (player1_id = m_record.team1_partner_id OR team1_partner_id = m_record.team1_partner_id) AND (winner_id = player2_id OR winner_id = team2_partner_id) )
-             OR ( (player2_id = m_record.team1_partner_id OR team2_partner_id = m_record.team1_partner_id) AND (winner_id = player1_id OR winner_id = team1_partner_id) )
-        ) as losses
-      FROM matches 
-      WHERE status = 'confirmed' 
-        AND (player1_id = m_record.team1_partner_id OR player2_id = m_record.team1_partner_id OR team1_partner_id = m_record.team1_partner_id OR team2_partner_id = m_record.team1_partner_id)
-    )
-    UPDATE players SET win_loss_record = COALESCE((SELECT wins FROM p3_stats), 0) || 'W - ' || COALESCE((SELECT losses FROM p3_stats), 0) || 'L' WHERE id = m_record.team1_partner_id;
-
-    -- Recalculate win_loss_record for partner 2
-    WITH p4_stats AS (
-      SELECT 
-        COUNT(*) FILTER (
-          WHERE ( (player1_id = m_record.team2_partner_id OR team1_partner_id = m_record.team2_partner_id) AND (winner_id = player1_id OR winner_id = team1_partner_id) )
-             OR ( (player2_id = m_record.team2_partner_id OR team2_partner_id = m_record.team2_partner_id) AND (winner_id = player2_id OR winner_id = team2_partner_id) )
-        ) as wins,
-        COUNT(*) FILTER (
-          WHERE ( (player1_id = m_record.team2_partner_id OR team1_partner_id = m_record.team2_partner_id) AND (winner_id = player2_id OR winner_id = team2_partner_id) )
-             OR ( (player2_id = m_record.team2_partner_id OR team2_partner_id = m_record.team2_partner_id) AND (winner_id = player1_id OR winner_id = team1_partner_id) )
-        ) as losses
-      FROM matches 
-      WHERE status = 'confirmed' 
-        AND (player1_id = m_record.team2_partner_id OR player2_id = m_record.team2_partner_id OR team1_partner_id = m_record.team2_partner_id OR team2_partner_id = m_record.team2_partner_id)
-    )
-    UPDATE players SET win_loss_record = COALESCE((SELECT wins FROM p4_stats), 0) || 'W - ' || COALESCE((SELECT losses FROM p4_stats), 0) || 'L' WHERE id = m_record.team2_partner_id;
-  END IF;
+  -- Helper array of players to update
+  FOR p_id IN SELECT unnest(ARRAY[m_record.player1_id, m_record.player2_id, m_record.team1_partner_id, m_record.team2_partner_id]) LOOP
+    IF p_id IS NOT NULL THEN
+      WITH p_stats AS (
+        SELECT 
+          COUNT(*) FILTER (
+            WHERE ( (player1_id = p_id OR team1_partner_id = p_id) AND (winner_id = player1_id OR winner_id = team1_partner_id) )
+               OR ( (player2_id = p_id OR team2_partner_id = p_id) AND (winner_id = player2_id OR winner_id = team2_partner_id) )
+          ) as wins,
+          COUNT(*) FILTER (
+            WHERE ( (player1_id = p_id OR team1_partner_id = p_id) AND (winner_id = player2_id OR winner_id = team2_partner_id) )
+               OR ( (player2_id = p_id OR team2_partner_id = p_id) AND (winner_id = player1_id OR winner_id = team1_partner_id) )
+          ) as losses,
+          COUNT(*) FILTER (
+            WHERE category = 'Singles' AND (
+              ( (player1_id = p_id OR team1_partner_id = p_id) AND (winner_id = player1_id OR winner_id = team1_partner_id) )
+              OR ( (player2_id = p_id OR team2_partner_id = p_id) AND (winner_id = player2_id OR winner_id = team2_partner_id) )
+            )
+          ) as s_wins,
+          COUNT(*) FILTER (
+            WHERE category = 'Singles' AND (
+              ( (player1_id = p_id OR team1_partner_id = p_id) AND (winner_id = player2_id OR winner_id = team2_partner_id) )
+              OR ( (player2_id = p_id OR team2_partner_id = p_id) AND (winner_id = player1_id OR winner_id = team1_partner_id) )
+            )
+          ) as s_losses,
+          COUNT(*) FILTER (
+            WHERE category = 'Doubles' AND (
+              ( (player1_id = p_id OR team1_partner_id = p_id) AND (winner_id = player1_id OR winner_id = team1_partner_id) )
+              OR ( (player2_id = p_id OR team2_partner_id = p_id) AND (winner_id = player2_id OR winner_id = team2_partner_id) )
+            )
+          ) as d_wins,
+          COUNT(*) FILTER (
+            WHERE category = 'Doubles' AND (
+              ( (player1_id = p_id OR team1_partner_id = p_id) AND (winner_id = player2_id OR winner_id = team2_partner_id) )
+              OR ( (player2_id = p_id OR team2_partner_id = p_id) AND (winner_id = player1_id OR winner_id = team1_partner_id) )
+            )
+          ) as d_losses
+        FROM matches 
+        WHERE status = 'confirmed' 
+          AND (player1_id = p_id OR player2_id = p_id OR team1_partner_id = p_id OR team2_partner_id = p_id)
+      )
+      UPDATE players SET 
+        win_loss_record = COALESCE((SELECT wins FROM p_stats), 0) || 'W - ' || COALESCE((SELECT losses FROM p_stats), 0) || 'L',
+        singles_record = COALESCE((SELECT s_wins FROM p_stats), 0) || 'W - ' || COALESCE((SELECT s_losses FROM p_stats), 0) || 'L',
+        doubles_record = COALESCE((SELECT d_wins FROM p_stats), 0) || 'W - ' || COALESCE((SELECT d_losses FROM p_stats), 0) || 'L'
+      WHERE id = p_id;
+    END IF;
+  END LOOP;
 
   RETURN jsonb_build_object(
     'p1_elo_change', change_p1,

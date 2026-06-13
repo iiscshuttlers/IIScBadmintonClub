@@ -48,6 +48,13 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
     return player.elo_rating;
   };
 
+  const getCategoryRecord = (player: PlayerRank) => {
+    if (categoryFilter === "MS" || categoryFilter === "WS") return player.singles_record || "0W - 0L";
+    if (categoryFilter === "MD" || categoryFilter === "WD") return player.doubles_record || "0W - 0L";
+    if (categoryFilter === "XD") return player.mixed_record || "0W - 0L";
+    return player.win_loss_record || "0W - 0L";
+  };
+
   // Parse total matches from "10W - 5L" or similar format
   const getMatchesCount = (record: string | any) => {
     if (!record) return 0;
@@ -100,7 +107,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
     .sort((a, b) => {
       if (activeTab === "elo") return getCategoryElo(b) - getCategoryElo(a);
       return (
-        getMatchesCount(b.win_loss_record) - getMatchesCount(a.win_loss_record)
+        getMatchesCount(getCategoryRecord(b)) - getMatchesCount(getCategoryRecord(a))
       );
     });
 
@@ -360,13 +367,13 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                         {player.department}
                       </td>
                       <td className="p-4 hidden md:table-cell">
-                        {player.win_loss_record ? (
+                        {getCategoryRecord(player) && getCategoryRecord(player) !== "0W - 0L" ? (
                           <span className="px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded text-xs font-bold font-mono">
-                            {displayRecord(player.win_loss_record)}
+                            {displayRecord(getCategoryRecord(player))}
                           </span>
                         ) : (
                           <span className="text-slate-300 dark:text-slate-600 text-xs font-bold italic">
-                            No data
+                            0W - 0L
                           </span>
                         )}
                       </td>
@@ -376,7 +383,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                           <span className="font-black">
                             {activeTab === "elo"
                               ? getCategoryElo(player)
-                              : getMatchesCount(player.win_loss_record)}
+                              : getMatchesCount(getCategoryRecord(player))}
                           </span>
                         </div>
                       </td>
