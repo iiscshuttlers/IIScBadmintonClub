@@ -112,6 +112,7 @@ import NotFound from "./pages/NotFound";
 const About = lazy(() => import("./pages/About"));
 const Gallery = lazy(() => import("./pages/Gallery"));
 const TournamentDetail = lazy(() => import("./pages/TournamentDetail"));
+const Analytics = lazy(() => import("./pages/Analytics"));
 
 
 // TournamentAdmin merged into SiteAdmin — /tournament/admin redirects to /admin
@@ -234,6 +235,7 @@ function AppRoutes() {
         <Route path="/about" component={About} />
         <Route path="/hall-of-fame" component={HallOfFame} />
         <Route path="/gallery" component={Gallery} />
+        <Route path="/analytics" component={Analytics} />
         
         <Route path="/admin" component={SiteAdmin} />
         <Route path="/events/:slug" component={TournamentDetail} />
