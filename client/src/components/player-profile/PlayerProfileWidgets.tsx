@@ -348,18 +348,21 @@ export const Badges = ({
 
 export const ActivityHeatmap = ({ matches }: { matches: any[] }) => {
   const [heatmapData, setHeatmapData] = useState<
-    { date: string; count: number }[]
+    { date: string; count: number; dayMatches: any[] }[]
   >([]);
+  const [selectedDateData, setSelectedDateData] = useState<{ date: string; count: number; dayMatches: any[] } | null>(null);
 
   useEffect(() => {
-    const counts: Record<string, number> = {};
+    const counts: Record<string, any[]> = {};
     matches.forEach((m) => {
       const dateStr = new Date(m.created_at).toISOString().split("T")[0];
-      counts[dateStr] = (counts[dateStr] || 0) + 1;
+      if (!counts[dateStr]) counts[dateStr] = [];
+      counts[dateStr].push(m);
     });
     const data = Object.keys(counts).map((date) => ({
       date,
-      count: counts[date],
+      count: counts[date].length,
+      dayMatches: counts[date].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
     }));
     setHeatmapData(data);
   }, [matches]);
@@ -370,8 +373,13 @@ export const ActivityHeatmap = ({ matches }: { matches: any[] }) => {
 
   return (
     <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-5 sm:p-6 shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 mt-6 md:mt-8 overflow-hidden">
-      <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-6">
-        Activity Heatmap
+      <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-6 flex justify-between items-center">
+        <span>Activity Heatmap</span>
+        {selectedDateData && (
+          <button onClick={() => setSelectedDateData(null)} className="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+            Clear Selection
+          </button>
+        )}
       </h3>
       <div className="overflow-x-auto pb-4 custom-scrollbar">
         <div style={{ minWidth: "600px" }}>
@@ -379,12 +387,26 @@ export const ActivityHeatmap = ({ matches }: { matches: any[] }) => {
             startDate={startDate}
             endDate={endDate}
             values={heatmapData}
-            classForValue={(value) => {
-              if (!value || value.count === 0) {
-                return "color-empty";
+            onClick={(value: any) => {
+              if (value && value.count > 0) {
+                setSelectedDateData(value);
+              } else {
+                setSelectedDateData(null);
               }
-              if (value.count >= 4) return `color-scale-4`;
-              return `color-scale-${value.count}`;
+            }}
+            classForValue={(value) => {
+              let classes = "";
+              if (!value || value.count === 0) {
+                classes = "color-empty";
+              } else if (value.count >= 4) {
+                classes = "color-scale-4";
+              } else {
+                classes = `color-scale-${value.count}`;
+              }
+              if (value && selectedDateData && value.date === selectedDateData.date) {
+                classes += " ring-2 ring-emerald-500 ring-offset-1 dark:ring-offset-slate-800";
+              }
+              return classes;
             }}
             showWeekdayLabels={true}
             titleForValue={(value) => {
@@ -394,15 +416,69 @@ export const ActivityHeatmap = ({ matches }: { matches: any[] }) => {
           />
         </div>
       </div>
+
+      {selectedDateData && (
+        <motion.div 
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700"
+        >
+          <div className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center justify-between">
+            <span>Matches on {new Date(selectedDateData.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+            <span className="text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded text-xs">{selectedDateData.count} Total</span>
+          </div>
+          <div className="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+            {selectedDateData.dayMatches.map((match: any) => {
+              // Parse out the format, score, and players
+              const format = match.category === "Singles" ? "Singles" : (match.team1_partner_id ? (match.player1?.gender !== match.partner1?.gender ? "Mixed Doubles" : "Doubles") : "Doubles");
+              let displayScore = match.score || "N/A";
+              if (displayScore.includes(" | ")) displayScore = displayScore.split(" | ")[0];
+              
+              return (
+                <div key={match.id} className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800 flex flex-col gap-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded">
+                      {format}
+                    </span>
+                    <span className="text-[10px] font-black text-slate-400">
+                      {new Date(match.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                  
+                  <div className="flex flex-col text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    <div className="flex justify-between items-center">
+                      <div className="truncate flex-1">
+                        {match.player1?.full_name?.split(' ')[0]} {match.partner1 ? `& ${match.partner1?.full_name?.split(' ')[0]}` : ''}
+                      </div>
+                      {match.winner_id === match.player1_id && <span className="text-amber-500 ml-2 text-xs">👑</span>}
+                    </div>
+                    <div className="flex justify-between items-center text-xs font-black text-slate-400 my-0.5">
+                      <span className="mx-auto bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded">{displayScore}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <div className="truncate flex-1">
+                        {match.player2?.full_name?.split(' ')[0]} {match.partner2 ? `& ${match.partner2?.full_name?.split(' ')[0]}` : ''}
+                      </div>
+                      {match.winner_id === match.player2_id && <span className="text-amber-500 ml-2 text-xs">👑</span>}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
+
       <style>{`
         .react-calendar-heatmap .color-empty { fill: rgba(148, 163, 184, 0.1); }
         .react-calendar-heatmap .color-scale-1 { fill: #6ee7b7; }
         .react-calendar-heatmap .color-scale-2 { fill: #34d399; }
         .react-calendar-heatmap .color-scale-3 { fill: #10b981; }
         .react-calendar-heatmap .color-scale-4 { fill: #059669; }
-        .react-calendar-heatmap rect { rx: 2; ry: 2; transition: all 0.2s; }
-        .react-calendar-heatmap rect:hover { stroke: #000; stroke-width: 1px; }
+        .react-calendar-heatmap rect { rx: 2; ry: 2; transition: all 0.2s; cursor: pointer; }
+        .react-calendar-heatmap rect:hover { stroke: #000; stroke-width: 1px; opacity: 0.8; }
         .dark .react-calendar-heatmap .color-empty { fill: rgba(30, 41, 59, 0.5); }
+        .dark .react-calendar-heatmap rect:hover { stroke: #fff; }
         .react-calendar-heatmap text { fill: #94a3b8; font-size: 8px; }
       `}</style>
     </div>
