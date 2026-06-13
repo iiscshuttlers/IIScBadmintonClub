@@ -14,6 +14,8 @@ UPDATE players SET
   mixed_elo = elo_rating;
 
 -- 3. Update the match confirmation RPC
+DROP FUNCTION IF EXISTS confirm_friendly_match(UUID, TEXT);
+
 CREATE OR REPLACE FUNCTION confirm_friendly_match(
   match_uuid UUID, 
   confirmer_id TEXT
@@ -67,6 +69,12 @@ BEGIN
   SELECT singles_elo, doubles_elo, mixed_elo, total_friendly_matches, gender INTO p1_s, p1_d, p1_m, p1_matches, p1_gender FROM players WHERE id = m_record.player1_id;
   SELECT singles_elo, doubles_elo, mixed_elo, total_friendly_matches, gender INTO p2_s, p2_d, p2_m, p2_matches, p2_gender FROM players WHERE id = m_record.player2_id;
 
+  IF m_record.category = 'Singles' THEN
+    IF p1_gender IS DISTINCT FROM p2_gender AND p1_gender IS NOT NULL AND p2_gender IS NOT NULL THEN
+      RAISE EXCEPTION 'Cross-gender Singles matches (MS vs WS) are not allowed.';
+    END IF;
+  END IF;
+
   k_p1 := CASE WHEN p1_matches < 10 THEN 40 ELSE 20 END;
   k_p2 := CASE WHEN p2_matches < 10 THEN 40 ELSE 20 END;
 
@@ -91,6 +99,10 @@ BEGIN
     ELSIF p2_gender = 'Female' AND p4_gender = 'Female' THEN team2_type := 'WD';
     ELSE team2_type := 'XD'; END IF;
 
+    IF team1_type != team2_type THEN
+      RAISE EXCEPTION 'Hybrid matches (e.g. % vs %) are not allowed. Teams must be the same format.', team1_type, team2_type;
+    END IF;
+
     -- Assign specific ELO based on team type
     p1_elo := CASE WHEN team1_type = 'XD' THEN p1_m ELSE p1_d END;
     p3_elo := CASE WHEN team1_type = 'XD' THEN p3_m ELSE p3_d END;
@@ -102,33 +114,12 @@ BEGIN
     team1_elo := (p1_elo + p3_elo) / 2.0;
     team2_elo := (p2_elo + p4_elo) / 2.0;
 
-    -- Multiplier Logic for cross-category Doubles
-    IF team1_type = 'MD' AND team2_type = 'XD' THEN
-      elo_multiplier := CASE WHEN team1_actual = 1.0 THEN 0.5 ELSE 2.0 END;
-    ELSIF team1_type = 'MD' AND team2_type = 'WD' THEN
-      elo_multiplier := CASE WHEN team1_actual = 1.0 THEN 0.5 ELSE 2.0 END;
-    ELSIF team1_type = 'XD' AND team2_type = 'MD' THEN
-      elo_multiplier := CASE WHEN team1_actual = 1.0 THEN 2.0 ELSE 0.5 END;
-    ELSIF team1_type = 'XD' AND team2_type = 'WD' THEN
-      elo_multiplier := CASE WHEN team1_actual = 1.0 THEN 0.5 ELSE 2.0 END;
-    ELSIF team1_type = 'WD' AND team2_type = 'MD' THEN
-      elo_multiplier := CASE WHEN team1_actual = 1.0 THEN 2.0 ELSE 0.5 END;
-    ELSIF team1_type = 'WD' AND team2_type = 'XD' THEN
-      elo_multiplier := CASE WHEN team1_actual = 1.0 THEN 2.0 ELSE 0.5 END;
-    END IF;
-
   ELSIF m_record.category = 'Singles' THEN
     p1_elo := p1_s;
     p2_elo := p2_s;
     
     team1_elo := p1_elo;
     team2_elo := p2_elo;
-
-    IF p1_gender = 'Male' AND p2_gender = 'Female' THEN
-      elo_multiplier := CASE WHEN team1_actual = 1.0 THEN 0.5 ELSE 2.0 END;
-    ELSIF p1_gender = 'Female' AND p2_gender = 'Male' THEN
-      elo_multiplier := CASE WHEN team1_actual = 1.0 THEN 2.0 ELSE 0.5 END;
-    END IF;
   END IF;
 
   -- Calculate Expected Outcomes based on Team Elos

@@ -605,6 +605,10 @@ export function UmpireEngine({
       }
     }
     const cat = deduceCategory();
+    if (["Singles", "Doubles", "Hybrid"].includes(cat)) {
+      toast.error("Invalid format! Only pure MS, WS, MD, WD, or XD are allowed.");
+      return;
+    }
     // Compute fixed initial receiver position from setup choice.
     // Score 0 (even), server on left when serverTeam=1 (endsSwapped=false at start).
     // Server at bottom-left (even+left) → diagonal at top-right → if receiverPlayerIndex=0, P0 at top.

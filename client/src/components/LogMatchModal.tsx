@@ -267,6 +267,38 @@ export default function LogMatchModal({
       }
     }
 
+    // Strict Category Validation
+    const opp = otherPlayers.find((p) => p.id === opponentId);
+    if (matchType === "singles") {
+      const g1 = currentUser.gender?.toLowerCase() || "unknown";
+      const g2 = opp?.gender?.toLowerCase() || "unknown";
+      if (g1 !== "unknown" && g2 !== "unknown" && g1 !== g2) {
+        setError("Cross-gender Singles matches (MS vs WS) are not allowed.");
+        return;
+      }
+    } else {
+      const partner = otherPlayers.find((p) => p.id === partnerId);
+      const oppPartner = otherPlayers.find((p) => p.id === opponentPartnerId);
+      const g1 = currentUser.gender?.toLowerCase() || "unknown";
+      const g2 = partner?.gender?.toLowerCase() || "unknown";
+      const g3 = opp?.gender?.toLowerCase() || "unknown";
+      const g4 = oppPartner?.gender?.toLowerCase() || "unknown";
+      
+      if (g1 !== "unknown" && g2 !== "unknown" && g3 !== "unknown" && g4 !== "unknown") {
+        const t1Mixed = g1 !== g2;
+        const t2Mixed = g3 !== g4;
+        const t1Male = g1 === "male" && g2 === "male";
+        const t2Male = g3 === "male" && g4 === "male";
+        const t1Female = g1 === "female" && g2 === "female";
+        const t2Female = g3 === "female" && g4 === "female";
+
+        if ((t1Mixed !== t2Mixed) || (t1Male !== t2Male) || (t1Female !== t2Female)) {
+           setError("Hybrid Doubles matches (e.g. MD vs XD) are not allowed.");
+           return;
+        }
+      }
+    }
+
     setLoading(true);
     setError(null);
 
