@@ -328,7 +328,17 @@ export default function PlayerProfile({
     "all" | "friendly" | "tournament"
   >("all");
   const [isMatchHistoryOpen, setIsMatchHistoryOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"OVERVIEW" | "RANKING" | "STATS" | "MATCHES">("OVERVIEW");
+  const [activeTab, setActiveTab] = useState<"OVERVIEW" | "RANKING" | "STATS" | "MATCHES">(() => {
+    const hash = window.location.hash.replace("#", "").toUpperCase();
+    if (["OVERVIEW", "RANKING", "STATS", "MATCHES"].includes(hash)) {
+      return hash as "OVERVIEW" | "RANKING" | "STATS" | "MATCHES";
+    }
+    return "OVERVIEW";
+  });
+
+  useEffect(() => {
+    window.history.replaceState(null, "", `#${activeTab.toLowerCase()}`);
+  }, [activeTab]);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isBuddy, setIsBuddy] = useState(false);
   const [hasSentRequest, setHasSentRequest] = useState(false);

@@ -114,7 +114,17 @@ export default function ProfileSetup() {
   // Active Tab
   const [activeTab, setActiveTab] = useState<
     "basic" | "badminton" | "equipment" | "highlights" | "media"
-  >("basic");
+  >(() => {
+    const hash = window.location.hash.replace("#", "");
+    if (["basic", "badminton", "equipment", "highlights", "media"].includes(hash)) {
+      return hash as "basic" | "badminton" | "equipment" | "highlights" | "media";
+    }
+    return "basic";
+  });
+
+  useEffect(() => {
+    window.history.replaceState(null, "", `#${activeTab}`);
+  }, [activeTab]);
 
   // ==========================================
   // Form State variables matching DB columns

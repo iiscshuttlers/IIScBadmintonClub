@@ -167,8 +167,19 @@ export default function SiteAdmin() {
   const { session, isInitializing, isAdmin, isMainAdmin, isUmpire } = useAuth();
 
   const [activeTab, setActiveTab] = useState<TabId>(() => {
+    const hash = window.location.hash.replace("#", "");
+    if ([
+      "config", "holidays", "announcements", "events", "videos",
+      "players", "umpire", "registrations", "matches", "changelog"
+    ].includes(hash)) {
+      return hash as TabId;
+    }
     return isAdmin ? "holidays" : "umpire";
   });
+
+  useEffect(() => {
+    window.history.replaceState(null, "", `#${activeTab}`);
+  }, [activeTab]);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
   const [dirty, setDirty] = useState(false);
