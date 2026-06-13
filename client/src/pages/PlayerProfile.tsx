@@ -303,7 +303,7 @@ export default function PlayerProfile({
     const [w, l] = (player as any).win_loss_record.split("-").map(Number);
     return (w || 0) + (l || 0);
   }, [(player as any)?.win_loss_record]);
-  const isUnranked = totalPlayedGames < 5;
+  const isUnranked = false;
 
   const [loading, setLoading] = useState(true);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);

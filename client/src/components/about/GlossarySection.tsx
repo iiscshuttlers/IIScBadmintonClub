@@ -77,13 +77,13 @@ export function GlossarySection() {
         },
         {
           title: "Elo Ranking",
-          desc: "Global and dynamic player ranking system with 'Unranked' calibration phases.",
+          desc: "Global and dynamic player ranking system with early calibration phases.",
           modal: {
             title: "HOW ELO RANKING WORKS",
             mainIcon: <BarChart3 className="w-5 h-5" />,
             items: [
               { badge: "SYS", title: "The Elo System", desc: "A method used to calculate relative skill. Beating a high-ranked player grants you significantly more points than beating a low-ranked one." },
-              { badge: "CAL", title: "Calibration Phase", desc: "New players remain 'Unranked' for their first 5 matches to determine their true baseline." },
+              { badge: "CAL", title: "Calibration Phase", desc: "Players are assigned an initial baseline rating and it fluctuates heavily during their first few matches to determine their true baseline." },
               { badge: "VOL", title: "Volatility", desc: "Your rank fluctuates wildly in your first 20 matches. It stabilizes as you play more." },
               { badge: "PTS", title: "Point Difference", desc: "Winning 21-5 rewards slightly more ELO than winning 21-19. Every point matters!" }
             ]

@@ -118,7 +118,7 @@ export function PlayerCard({
     const [w, l] = player.win_loss_record.split("-").map(Number);
     return (w || 0) + (l || 0);
   })();
-  const isUnranked = totalMatches < 5;
+  const isUnranked = false;
   const [isPinged, setIsPinged] = useState(false);
   const winPct = parseWinPct(player.win_loss_record);
 
