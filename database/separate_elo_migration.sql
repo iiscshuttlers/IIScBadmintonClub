@@ -7,11 +7,11 @@ ALTER TABLE players ADD COLUMN IF NOT EXISTS singles_elo INTEGER DEFAULT 1200;
 ALTER TABLE players ADD COLUMN IF NOT EXISTS doubles_elo INTEGER DEFAULT 1200;
 ALTER TABLE players ADD COLUMN IF NOT EXISTS mixed_elo INTEGER DEFAULT 1200;
 
--- 2. Initialize them with the current elo_rating to preserve progress
+-- 2. Initialize them ONLY if they are not already set (to prevent overwriting if script run twice)
 UPDATE players SET 
-  singles_elo = elo_rating,
-  doubles_elo = elo_rating,
-  mixed_elo = elo_rating;
+  singles_elo = COALESCE(singles_elo, 1200),
+  doubles_elo = COALESCE(doubles_elo, 1200),
+  mixed_elo = COALESCE(mixed_elo, 1200);
 
 -- 2.5 Create ELO calculation logs table
 CREATE TABLE IF NOT EXISTS elo_calculation_logs (
