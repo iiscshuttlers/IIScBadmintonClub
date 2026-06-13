@@ -605,8 +605,16 @@ export function UmpireEngine({
       }
     }
     const cat = deduceCategory();
-    if (["Singles", "Doubles", "Hybrid"].includes(cat)) {
-      toast.error("Invalid format! Only pure MS, WS, MD, WD, or XD are allowed.");
+    if (cat === "Singles") {
+      toast.error("Invalid format: Cross-gender Singles matches (e.g. MS vs WS) are not allowed.");
+      return;
+    }
+    if (cat === "Doubles") {
+      toast.error("Invalid format: Hybrid Doubles matches (e.g. MD vs XD) are not allowed.");
+      return;
+    }
+    if (cat === "Hybrid") {
+      toast.error("Invalid format: Singles vs Doubles matches are not allowed.");
       return;
     }
     // Compute fixed initial receiver position from setup choice.
