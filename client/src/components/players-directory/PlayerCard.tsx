@@ -27,6 +27,7 @@ export interface Player {
   is_approved?: boolean;
   is_looking_to_play?: boolean;
   status?: string;
+  gender?: string;
 }
 
 const AVATAR_GRADIENTS = [
