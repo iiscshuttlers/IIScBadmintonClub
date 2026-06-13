@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { getMessaging } from "firebase/messaging";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -13,14 +14,18 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-let app, db, auth;
+let app, db, auth, messaging;
 try {
   app = initializeApp(firebaseConfig);
   db = getFirestore(app);
   auth = getAuth(app);
+  
+  // Only initialize messaging if supported in the browser
+  if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+    messaging = getMessaging(app);
+  }
 } catch (e) {
   console.warn("Firebase blocked or failed to initialize", e);
 }
 
-// Initialize Cloud Firestore and Authentication and export them
-export { db, auth };
+export { db, auth, messaging };

@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { PushNotifications } from "@capacitor/push-notifications";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/lib/supabase";
+import { messaging } from "@/lib/firebase";
+import { getToken, onMessage } from "firebase/messaging";
 
 /**
  * Registers for push notifications on native (Android/iOS via FCM)
@@ -93,17 +95,59 @@ export function usePushNotifications(
   // ─── Web/PWA Browser Notification Permission ───
   useEffect(() => {
     if (Capacitor.isNativePlatform() || !userId) return;
-    if (!("Notification" in window)) return;
+    if (!("Notification" in window) || !messaging) return;
+
+    const setupWebPush = async () => {
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission === "granted") {
+          // Get Firebase Web Push Token using the VAPID key
+          // Note: VAPID Key comes from Firebase Console -> Project Settings -> Cloud Messaging -> Web configuration
+          const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+          
+          if (!vapidKey) {
+            console.warn("[WebPush] VITE_FIREBASE_VAPID_KEY is missing. Web push won't work.");
+            return;
+          }
+
+          const token = await getToken(messaging, { vapidKey });
+          
+          if (token) {
+            // Save token to Supabase
+            await supabase
+              .from("push_tokens")
+              .upsert(
+                {
+                  user_id: userId,
+                  token: token,
+                  platform: "web",
+                },
+                { onConflict: "token" }
+              );
+            
+            // Listen for foreground messages
+            onMessage(messaging, (payload) => {
+              console.log("[WebPush] Message received in foreground:", payload);
+              const title = payload.notification?.title || "New Match Update";
+              const body = payload.notification?.body || "Check out the latest action!";
+              showWebNotification(title, body);
+            });
+          }
+        }
+      } catch (err) {
+        console.warn("[WebPush] Failed to register web push:", err);
+      }
+    };
 
     // Request permission if not already decided
     if (Notification.permission === "default") {
       // Delay slightly so we don't annoy users on first page load
       const timer = setTimeout(() => {
-        Notification.requestPermission().then((perm) => {
-          console.log("[WebPush] Notification permission:", perm);
-        });
+        setupWebPush();
       }, 5000);
       return () => clearTimeout(timer);
+    } else if (Notification.permission === "granted") {
+      setupWebPush();
     }
   }, [userId]);
 }
