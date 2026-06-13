@@ -983,8 +983,12 @@ export default function Feed() {
 
                     {/* Score */}
                     <div className="shrink-0 flex flex-col items-center">
-                      <div className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight bg-slate-100 dark:bg-slate-800 px-4 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner text-center">
-                        {displayScore}
+                      <div className="flex flex-col gap-1 items-center bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner text-center min-w-[80px]">
+                        {displayScore.split(',').map((setScore: string, idx: number, arr: string[]) => (
+                          <div key={idx} className={`font-black tracking-tight text-slate-800 dark:text-slate-100 ${arr.length > 1 ? 'text-lg leading-none' : 'text-2xl'}`}>
+                            {setScore.trim()}
+                          </div>
+                        ))}
                       </div>
                       <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2">
                         {new Date(match.created_at).toLocaleDateString(
