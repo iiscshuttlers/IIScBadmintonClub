@@ -152,10 +152,50 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
 
   const rankedPlayers = [...filteredByGender]
     .sort((a, b) => {
-      if (activeTab === "elo") return getCategoryElo(b) - getCategoryElo(a);
-      return (
-        getMatchesCount(getCategoryRecord(b)) - getMatchesCount(getCategoryRecord(a))
-      );
+      if (activeTab === "elo") {
+        const eloA = getCategoryElo(a);
+        const eloB = getCategoryElo(b);
+        if (eloB !== eloA) return eloB - eloA;
+
+        // Tie-breaker 1: Win Percentage
+        const recA = getCategoryRecord(a);
+        const recB = getCategoryRecord(b);
+        
+        const parseWinsLosses = (rec: any) => {
+          const str = displayRecord(rec);
+          const match = str.match(/(\d+)\s*W\s*-\s*(\d+)\s*L/i);
+          if (match) {
+            const w = parseInt(match[1]);
+            const l = parseInt(match[2]);
+            return { w, l, total: w + l, pct: w + l > 0 ? w / (w + l) : 0 };
+          }
+          return { w: 0, l: 0, total: 0, pct: 0 };
+        };
+
+        const statsA = parseWinsLosses(recA);
+        const statsB = parseWinsLosses(recB);
+
+        if (statsB.pct !== statsA.pct) return statsB.pct - statsA.pct;
+        
+        // Tie-breaker 2: Total Matches Played
+        if (statsB.total !== statsA.total) return statsB.total - statsA.total;
+
+        // Tie-breaker 3: Alphabetical Order
+        return a.full_name.localeCompare(b.full_name);
+      }
+      // Ironman sorting (by total matches)
+      const matchesA = getMatchesCount(getCategoryRecord(a));
+      const matchesB = getMatchesCount(getCategoryRecord(b));
+      
+      if (matchesB !== matchesA) return matchesB - matchesA;
+      
+      // Tie-breaker 1: ELO Rating
+      const eloA = getCategoryElo(a);
+      const eloB = getCategoryElo(b);
+      if (eloB !== eloA) return eloB - eloA;
+      
+      // Tie-breaker 2: Alphabetical
+      return a.full_name.localeCompare(b.full_name);
     });
 
   const top3 = rankedPlayers.slice(0, 3);
