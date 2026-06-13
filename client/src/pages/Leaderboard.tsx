@@ -184,7 +184,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                 transition={{ delay: 0.4 }}
                 className="flex-1 w-full md:w-auto max-w-xs flex flex-col items-center order-2 md:order-1"
               >
-                <Link href={`/players/${top3[1].nickname || top3[1].id}`} className="flex flex-col items-center w-full group">
+                <Link href={`/player/${top3[1].nickname || top3[1].id}`} className="flex flex-col items-center w-full group">
                   <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-slate-300 dark:border-slate-600 bg-slate-800 shadow-xl overflow-hidden mb-3 relative z-10 transition-transform group-hover:scale-105">
                     {top3[1].avatar_url ? (
                       <img
@@ -228,7 +228,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                 transition={{ delay: 0.3 }}
                 className="flex-1 w-full md:w-auto max-w-xs flex flex-col items-center order-1 md:order-2 z-10 -mb-4 md:mb-0"
               >
-                <Link href={`/players/${top3[0].nickname || top3[0].id}`} className="flex flex-col items-center w-full group">
+                <Link href={`/player/${top3[0].nickname || top3[0].id}`} className="flex flex-col items-center w-full group">
                   <div className="w-28 h-28 md:w-32 md:h-32 rounded-full border-4 border-amber-400 bg-amber-900 shadow-[0_0_40px_rgba(251,191,36,0.3)] overflow-hidden mb-3 relative z-10 transition-transform group-hover:scale-105">
                     {top3[0].avatar_url ? (
                       <img
@@ -273,7 +273,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                 transition={{ delay: 0.5 }}
                 className="flex-1 w-full md:w-auto max-w-xs flex flex-col items-center order-3"
               >
-                <Link href={`/players/${top3[2].nickname || top3[2].id}`} className="flex flex-col items-center w-full group">
+                <Link href={`/player/${top3[2].nickname || top3[2].id}`} className="flex flex-col items-center w-full group">
                   <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-orange-300 dark:border-orange-800 bg-orange-900 shadow-xl overflow-hidden mb-3 relative z-10 transition-transform group-hover:scale-105">
                     {top3[2].avatar_url ? (
                       <img
