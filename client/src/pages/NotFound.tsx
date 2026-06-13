@@ -12,10 +12,10 @@ import {
 const quickLinks = [
   { href: "/", label: "Home", icon: Home },
   { href: "/events", label: "Events", icon: Calendar },
-  { href: "/winners", label: "Winners", icon: Trophy },
-  { href: "/announcements", label: "Announcements", icon: Bell },
+  { href: "/hall-of-fame", label: "Winners Wall", icon: Trophy },
+  { href: "/feed", label: "Feed", icon: Bell },
   { href: "/gallery", label: "Gallery", icon: Image },
-  { href: "/contact", label: "Contact", icon: Mail },
+  { href: "/join", label: "Join Us", icon: Mail },
 ];
 
 export default function NotFound() {

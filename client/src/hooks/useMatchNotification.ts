@@ -51,6 +51,7 @@ export function useMatchNotification() {
           // Determine who the opponent is (the submitter)
           const challengerId = match.submitted_by;
           const isSubmitter = match.submitted_by === profile.id;
+          const isUmpire = challengerId !== match.player1_id && challengerId !== match.player2_id && challengerId !== match.team1_partner_id && challengerId !== match.team2_partner_id;
 
           // Fetch opponent name for the notification
           let opponentName = "Someone";
@@ -70,12 +71,13 @@ export function useMatchNotification() {
           if (!isSubmitter) {
             const alertName = opponentName || "Someone";
             const isFriendly = !!match.is_friendly;
-            const notifTitle = isFriendly
-              ? "🏸 Friendly Match Logged!"
-              : "🏸 New Tournament Match!";
-            const notifBody = isFriendly
-              ? `${alertName} logged a friendly match against you. Tap to view.`
-              : `${alertName} logged a tournament match against you. Tap to confirm.`;
+            
+            const notifTitle = isUmpire ? "📺 Match Logged by Umpire" : (isFriendly ? "🏸 Friendly Match Logged!" : "🏸 New Tournament Match!");
+            const notifBody = isUmpire
+              ? `Umpire ${alertName} logged your match. Tap to view.`
+              : (isFriendly
+                  ? `${alertName} logged a friendly match against you. Tap to view.`
+                  : `${alertName} logged a tournament match against you. Tap to confirm.`);
 
             if (Capacitor.isNativePlatform()) {
               try {

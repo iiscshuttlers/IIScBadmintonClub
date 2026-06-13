@@ -16,28 +16,23 @@ export function useOfflineSync() {
           const failedQueue = [];
 
           for (const payload of queue) {
+            const rpcPayload = {
+              submitter_id: payload.submitter_id,
+              opponent_id: payload.opponent_id,
+              match_winner_id: payload.match_winner_id,
+              match_score: payload.match_score,
+              submitter_partner_id: payload.submitter_partner_id || null,
+              opponent_partner_id: payload.opponent_partner_id || null,
+            };
+
             const { error } = await supabase.rpc(
               "submit_friendly_match",
-              payload,
+              rpcPayload,
             );
             if (!error) {
               successCount++;
             } else {
-              // Legacy fallback
-              const { error: legacyError } = await supabase.rpc(
-                "submit_friendly_match",
-                {
-                  submitter_id: payload.submitter_id,
-                  opponent_id: payload.opponent_id,
-                  match_winner_id: payload.match_winner_id,
-                  match_score: payload.match_score,
-                },
-              );
-              if (!legacyError) {
-                successCount++;
-              } else {
-                failedQueue.push(payload);
-              }
+              failedQueue.push(payload);
             }
           }
 

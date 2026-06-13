@@ -309,7 +309,7 @@ export default function LogMatchModal({
         localStorage.setItem("recent_opponents", JSON.stringify(newRecents));
       } catch (e) {}
 
-      const matchPayload = {
+      const offlinePayload = {
         submitter_id: currentUser.id,
         opponent_id: opponentId,
         match_winner_id: winnerId,
@@ -319,12 +319,21 @@ export default function LogMatchModal({
         match_category: matchCategory, // Save category to handle later if offline
       };
 
+      const rpcPayload = {
+        submitter_id: currentUser.id,
+        opponent_id: opponentId,
+        match_winner_id: winnerId,
+        match_score: finalScore,
+        submitter_partner_id: matchType === "doubles" ? partnerId : null,
+        opponent_partner_id: matchType === "doubles" ? opponentPartnerId : null,
+      };
+
       if (!navigator.onLine) {
         // OFFLINE QUEUE LOGIC
         const existingQueue = JSON.parse(
           localStorage.getItem("offline_matches") || "[]",
         );
-        existingQueue.push({ ...matchPayload, timestamp: Date.now() });
+        existingQueue.push({ ...offlinePayload, timestamp: Date.now() });
         localStorage.setItem("offline_matches", JSON.stringify(existingQueue));
 
         toast.success(
@@ -337,22 +346,10 @@ export default function LogMatchModal({
         return;
       }
 
-      let { error: rpcError } = await supabase.rpc(
+      const { error: rpcError } = await supabase.rpc(
         "submit_friendly_match",
-        matchPayload,
+        rpcPayload,
       );
-      if (rpcError && matchType === "singles") {
-        const { error: legacyRpcError } = await supabase.rpc(
-          "submit_friendly_match",
-          {
-            submitter_id: currentUser.id,
-            opponent_id: opponentId,
-            match_winner_id: winnerId,
-            match_score: finalScore,
-          },
-        );
-        rpcError = legacyRpcError;
-      }
 
       if (rpcError) throw rpcError;
 

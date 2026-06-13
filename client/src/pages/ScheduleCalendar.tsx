@@ -141,12 +141,15 @@ export default function ScheduleCalendar() {
     async function loadEvents() {
       try {
         const [eventsData, holidaysData, tourneySnap] = await Promise.all([
-          fetchSiteData<CalendarEvent[]>("events", "events.json"),
-          fetchSiteData<Holiday[]>("holidays", "holidays.json"),
-          getDoc(doc(db, "live_data", "tournament")),
+          fetchSiteData<CalendarEvent[]>("events", "events.json").catch(() => []),
+          fetchSiteData<Holiday[]>("holidays", "holidays.json").catch(() => []),
+          getDoc(doc(db, "live_data", "tournament")).catch((err) => {
+            console.error("Firebase tourney fetch failed:", err);
+            return null;
+          }),
         ]);
 
-        if (tourneySnap.exists()) {
+        if (tourneySnap && tourneySnap.exists && tourneySnap.exists()) {
           setTournamentData(tourneySnap.data());
         }
 
@@ -214,7 +217,7 @@ export default function ScheduleCalendar() {
     .map((e) => new Date(e.registrationDeadline as string));
 
   return (
-    <section className="font-sans">
+    <section className="font-sans pb-24 md:pb-8">
       <div className="container mx-auto px-4 relative z-20 pt-8">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-2 h-8 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full" />

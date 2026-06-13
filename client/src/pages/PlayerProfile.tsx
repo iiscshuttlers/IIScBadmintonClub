@@ -1156,8 +1156,8 @@ export default function PlayerProfile({
 
   const nameParts = player.fullName.trim().split(/\s+/);
   // Last word is the giant display word; everything before it is the smaller label.
-  const heroLastWord = nameParts[nameParts.length - 1];
-  const heroRestName = nameParts.length > 1 ? nameParts.slice(0, -1).join(" ") : nameParts[0];
+  const heroLastWord = nameParts.length > 0 ? nameParts[nameParts.length - 1] : "";
+  const heroRestName = nameParts.length > 1 ? nameParts.slice(0, -1).join(" ") : "";
   const targetUserRole = userRoles.find((r) => r.id === player.id)?.role;
 
   if (matchesOnly) {

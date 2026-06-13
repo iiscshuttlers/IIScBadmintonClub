@@ -437,14 +437,14 @@ export default function PlayersDirectory() {
       if (action === 'send') {
         const currentRequests = (targetPlayer as any)?.buddy_requests || [];
         const newRequests = Array.from(new Set([...currentRequests, ownProfile.id]));
-        const { error } = await supabase.from('players').update({ buddy_requests: newRequests }).eq('id', playerId);
+        const { error } = await supabase.rpc('send_buddy_request', { p_target_id: playerId });
         if (error) throw error;
         setPlayers(players.map(p => p.id === playerId ? { ...p, buddy_requests: newRequests } : p));
         toast.success(`Buddy request sent!`);
       } else if (action === 'cancel') {
         const currentRequests = (targetPlayer as any)?.buddy_requests || [];
         const newRequests = currentRequests.filter((id: string) => id !== ownProfile.id);
-        const { error } = await supabase.from('players').update({ buddy_requests: newRequests }).eq('id', playerId);
+        const { error } = await supabase.rpc('cancel_buddy_request', { p_target_id: playerId });
         if (error) throw error;
         setPlayers(players.map(p => p.id === playerId ? { ...p, buddy_requests: newRequests } : p));
         toast.success(`Buddy request cancelled.`);
@@ -452,13 +452,12 @@ export default function PlayersDirectory() {
         // Remove from my requests, add to my buddies
         const myNewRequests = Array.from(new Set((ownProfile as any).buddy_requests || [])).filter((id) => id !== playerId);
         const myNewBuddies = Array.from(new Set([...((ownProfile as any).buddies || []), playerId]));
-        const { error: myErr } = await supabase.from('players').update({ buddy_requests: myNewRequests, buddies: myNewBuddies }).eq('id', ownProfile.id);
-        if (myErr) throw myErr;
-
+        
         // Add me to their buddies
         const theirNewBuddies = Array.from(new Set([...((targetPlayer as any)?.buddies || []), ownProfile.id]));
-        const { error: theirErr } = await supabase.from('players').update({ buddies: theirNewBuddies }).eq('id', playerId);
-        if (theirErr) throw theirErr;
+        
+        const { error } = await supabase.rpc('accept_buddy_request', { p_target_id: playerId });
+        if (error) throw error;
 
         setPlayers(players.map(p => p.id === playerId ? { ...p, buddies: theirNewBuddies } : p));
         setOwnProfile((prev: any) => prev ? { ...prev, buddy_requests: myNewRequests, buddies: myNewBuddies } : prev);
@@ -477,10 +476,7 @@ export default function PlayersDirectory() {
         const newBuddies = new Set(myBuddyIds);
         newBuddies.delete(playerId);
         setOwnProfile((prev: any) => prev ? { ...prev, buddies: Array.from(newBuddies) } : prev);
-        const { error } = await supabase
-          .from("players")
-          .update({ buddies: Array.from(newBuddies) })
-          .eq("user_id", session.user.id);
+        const { error } = await supabase.rpc('remove_buddy', { p_target_id: playerId });
         if (error) throw error;
         toast.success(`Removed from buddies.`);
       }
@@ -789,11 +785,11 @@ export default function PlayersDirectory() {
         <div className="container mx-auto px-4 relative z-10">
           <div className="flex flex-col items-center justify-center gap-6">
             {/* View Toggle */}
-            <div className="w-full md:w-auto overflow-x-auto hide-scrollbar -mx-4 md:mx-0 px-4 md:px-0 flex justify-center">
-              <div className="inline-flex bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 whitespace-nowrap min-w-max">
+            <div className="w-full md:w-auto flex justify-center">
+              <div className="flex flex-wrap sm:flex-nowrap bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 gap-1.5 w-full sm:w-auto">
                 <button
                   onClick={() => setActiveTab("directory")}
-                  className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-black transition-all ${
+                  className={`flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-sm font-black transition-all flex-1 basis-[45%] sm:basis-auto shrink-0 ${
                     activeTab === "directory"
                       ? "bg-white text-emerald-700 shadow-md scale-100"
                       : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
@@ -803,7 +799,7 @@ export default function PlayersDirectory() {
                 </button>
                 <button
                   onClick={() => setActiveTab("leaderboard")}
-                  className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-black transition-all ${
+                  className={`flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-sm font-black transition-all flex-1 basis-[45%] sm:basis-auto shrink-0 ${
                     activeTab === "leaderboard"
                       ? "bg-white text-emerald-700 shadow-md scale-100"
                       : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
@@ -813,7 +809,7 @@ export default function PlayersDirectory() {
                 </button>
                 <button
                   onClick={() => setActiveTab("h2h")}
-                  className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-black transition-all ${
+                  className={`flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-sm font-black transition-all flex-1 basis-[45%] sm:basis-auto shrink-0 ${
                     activeTab === "h2h"
                       ? "bg-white text-rose-700 shadow-md scale-100"
                       : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
@@ -824,7 +820,7 @@ export default function PlayersDirectory() {
                 {session && ownProfile && (
                   <button
                     onClick={() => setActiveTab("network")}
-                    className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-black transition-all ${
+                    className={`flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-sm font-black transition-all flex-1 basis-[45%] sm:basis-auto shrink-0 ${
                       activeTab === "network"
                         ? "bg-white text-violet-700 shadow-md scale-100"
                         : "text-white/80 hover:text-white hover:bg-white/10 scale-95"

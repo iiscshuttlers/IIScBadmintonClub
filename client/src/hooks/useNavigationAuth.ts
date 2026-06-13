@@ -78,7 +78,7 @@ export function useNavigationAuth() {
           .from("matches")
           .select("*", { count: "exact", head: true })
           .eq("status", "pending")
-          .neq("submitted_by", profile.id)
+          .or(`submitted_by.neq.${profile.id},submitted_by.is.null`)
           .or(
             `player1_id.eq.${profile.id},player2_id.eq.${profile.id},team1_partner_id.eq.${profile.id},team2_partner_id.eq.${profile.id}`,
           );

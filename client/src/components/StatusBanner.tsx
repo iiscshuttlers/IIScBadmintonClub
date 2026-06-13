@@ -163,7 +163,7 @@ export default function StatusBanner() {
 
   return (
     <div className="relative bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-2.5 overflow-hidden flex items-center z-20 shadow-md">
-      <Link href="/announcements" className="flex-1 overflow-hidden min-w-0 pr-10">
+      <Link href="/feed" className="flex-1 overflow-hidden min-w-0 pr-10">
         <div className="marquee-anim flex gap-8 font-semibold tracking-wide text-sm md:text-base whitespace-nowrap hover:opacity-90 transition-opacity cursor-pointer">
           {Array(2)
             .fill(null)

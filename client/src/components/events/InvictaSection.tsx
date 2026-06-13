@@ -25,6 +25,8 @@ import { doc, onSnapshot } from "firebase/firestore";
 import { ScheduleView } from "@/pages/ScheduleView";
 import { LiveScoreSection } from "@/components/events/LiveScoreSection";
 import { LiveBracketsSection } from "@/components/events/LiveBracketsSection";
+import { UmpireTab } from "@/components/umpire/UmpireTab";
+import { Tv2 } from "lucide-react";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -47,13 +49,13 @@ const INVICTA_CONFIG = {
 };
 
 export function InvictaSection() {
-  const { session } = useAuth();
+  const { session, isUmpire } = useAuth();
   const isAdmin = isAdminEmail(session?.user?.email);
   const [files, setFiles] = useState<any[]>([]);
   const [loadingFiles, setLoadingFiles] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"notices" | "schedule" | "broadcast" | "brackets">("notices");
+  const [activeTab, setActiveTab] = useState<"notices" | "schedule" | "broadcast" | "brackets" | "umpire">("notices");
   const [tournamentData, setTournamentData] = useState<any>(null);
   const mountedRef = useRef(true);
 
@@ -265,17 +267,18 @@ export function InvictaSection() {
         </motion.div>
 
         {/* Tab Navigation */}
-        <div className="flex bg-white/5 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-1.5 rounded-2xl overflow-x-auto scrollbar-hide mb-6 shadow-sm">
+        <div className="flex flex-wrap sm:flex-nowrap bg-white/5 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-1.5 rounded-2xl mb-6 shadow-sm gap-1.5">
           {[
             { id: "notices", label: "Info & Notices", icon: FileText },
             { id: "schedule", label: "Match Schedule", icon: Calendar },
             { id: "broadcast", label: "Live Broadcast", icon: Radio },
             { id: "brackets", label: "Brackets", icon: LayoutList },
+            ...((isUmpire || isAdmin) ? [{ id: "umpire", label: "Umpire", icon: Tv2 }] : []),
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all whitespace-nowrap flex-1 justify-center ${
+              className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-3 rounded-xl text-sm font-bold transition-all whitespace-nowrap flex-1 basis-[45%] sm:basis-auto shrink-0 ${
                 activeTab === tab.id
                   ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
                   : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -423,6 +426,12 @@ export function InvictaSection() {
         {activeTab === "brackets" && (
           <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-md border border-slate-100 dark:border-slate-700 p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-[500px]">
              <LiveBracketsSection />
+          </div>
+        )}
+
+        {activeTab === "umpire" && (isUmpire || isAdmin) && (
+          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-md border border-slate-100 dark:border-slate-700 p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-[500px]">
+             <UmpireTab />
           </div>
         )}
       </div>

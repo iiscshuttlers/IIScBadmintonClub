@@ -401,7 +401,7 @@ export default function TournamentDetail() {
                       </button>
                     </Link>
                   )}
-                  <Link href="/winners">
+                  <Link href="/hall-of-fame">
                     <button className="w-full flex items-center justify-center gap-2 bg-blue-900 hover:bg-blue-800 dark:bg-blue-800 dark:hover:bg-blue-700 text-white font-bold px-4 py-3 rounded-xl text-sm transition-all hover:-translate-y-0.5">
                       <Trophy className="w-4 h-4" />
                       All Winners

@@ -224,7 +224,7 @@ export default function Home() {
                   tagColor: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400",
                 },
                 {
-                  href: "/winners", title: "Winners Wall", description: "See champions and podiums from all club events.",
+                  href: "/hall-of-fame", title: "Winners Wall", description: "See champions and podiums from all club events.",
                   Icon: Medal,
                   iconBg: "bg-amber-100 dark:bg-amber-900/40",
                   iconColor: "text-amber-600 dark:text-amber-400",
@@ -234,7 +234,7 @@ export default function Home() {
                   tagColor: "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400",
                 },
                 {
-                  href: "/announcements", title: "Announcements", description: "Check court notices, event updates and club news.",
+                  href: "/feed", title: "Announcements", description: "Check court notices, event updates and club news.",
                   Icon: Bell,
                   iconBg: "bg-blue-100 dark:bg-blue-900/40",
                   iconColor: "text-blue-600 dark:text-blue-400",
@@ -478,7 +478,7 @@ export default function Home() {
                         View Results <Trophy className="w-4 h-4" />
                       </Button>
                     </Link>
-                    <Link href="/winners">
+                    <Link href="/hall-of-fame">
                       <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 font-semibold px-6 py-3 rounded-xl cursor-pointer transition-all">
                         Winners Wall
                       </Button>
@@ -512,7 +512,7 @@ export default function Home() {
                 Whether you're a seasoned player or just starting out, there's a court and a community waiting for you at IISc.
               </p>
               <div className="flex flex-col sm:flex-row gap-3.5 justify-center pt-2">
-                <Link href="/contact">
+                <Link href="/join">
                   <Button className="bg-emerald-500 hover:bg-emerald-400 text-white px-10 py-6 text-sm font-bold rounded-xl shadow-lg shadow-emerald-500/20 hover:-translate-y-0.5 transition-all duration-300 glow-emerald cursor-pointer">
                     Get Started Today
                   </Button>

@@ -384,11 +384,11 @@ export default function Events() {
             Live tournaments, upcoming competitions and archived results.
           </p>
 
-          <div className="mt-10 flex justify-center">
-            <div className="flex bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20">
+          <div className="mt-10 w-full flex justify-center">
+            <div className="flex flex-wrap sm:flex-nowrap bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 gap-1.5 w-full sm:w-auto">
               <button
                 onClick={() => setActiveTab("calendar")}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
+                className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all flex-1 basis-[45%] sm:basis-auto shrink-0 ${
                   activeTab === "calendar"
                     ? "bg-white text-blue-900 shadow-md scale-100"
                     : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
@@ -398,7 +398,7 @@ export default function Events() {
               </button>
               <button
                 onClick={() => setActiveTab("invicta")}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
+                className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all flex-1 basis-[45%] sm:basis-auto shrink-0 ${
                   activeTab === "invicta"
                     ? "bg-rose-500 text-white shadow-md scale-100 shadow-rose-500/30"
                     : "text-white/80 hover:text-rose-400 hover:bg-rose-500/10 scale-95"
@@ -408,7 +408,7 @@ export default function Events() {
               </button>
               <button
                 onClick={() => setActiveTab("history")}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
+                className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all flex-1 basis-[100%] sm:basis-auto shrink-0 ${
                   activeTab === "history"
                     ? "bg-white text-blue-900 shadow-md scale-100"
                     : "text-white/80 hover:text-white hover:bg-white/10 scale-95"

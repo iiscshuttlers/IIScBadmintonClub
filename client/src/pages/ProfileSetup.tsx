@@ -2031,9 +2031,7 @@ export default function ProfileSetup() {
 
                 <button
                   type="button"
-                  onClick={() =>
-                    setLocation(playerSlug ? `/player/${playerSlug}` : "/")
-                  }
+                  onClick={(e) => handleSubmit(e as any)}
                   disabled={loading}
                   className="min-h-[52px] px-6 py-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed text-xs sm:text-sm"
                 >

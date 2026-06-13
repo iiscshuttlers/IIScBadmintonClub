@@ -17,6 +17,7 @@ import {
   UserCheck,
   Heart,
   Bell,
+  Tv2,
 } from "lucide-react";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { useAuth } from "@/contexts/AuthContext";
@@ -28,6 +29,8 @@ import { Filesystem, Directory } from "@capacitor/filesystem";
 import { getBaseShareUrl } from "@/lib/utils";
 import { AnnouncementsSection } from "@/components/feed/AnnouncementsSection";
 import { LiveScoreSection } from "@/components/events/LiveScoreSection";
+import { UmpireTab } from "@/components/umpire/UmpireTab";
+import { MyMatchesTab } from "@/components/feed/MyMatchesTab";
 
 export default function Feed() {
   usePageMeta({
@@ -36,8 +39,8 @@ export default function Feed() {
       "Live badminton activity, upsets, and recent matches at IISc Badminton Club.",
   });
 
-  const { session, profile: ownProfile } = useAuth();
-  const [activeTab, setActiveTab] = useState<"matches" | "announcements">(() => {
+  const { session, profile: ownProfile, isUmpire, isAdmin } = useAuth();
+  const [activeTab, setActiveTab] = useState<"matches" | "announcements" | "umpire" | "my_matches">(() => {
     return typeof window !== "undefined" && window.location.search.includes("tab=announcements")
       ? "announcements"
       : "matches";
@@ -326,6 +329,30 @@ export default function Feed() {
               >
                 <Bell className="w-4 h-4" /> Announcements
               </button>
+              {(isUmpire || isAdmin) && (
+                <button
+                  onClick={() => setActiveTab("umpire")}
+                  className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
+                    activeTab === "umpire"
+                      ? "bg-white text-emerald-900 shadow-md scale-100"
+                      : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                  }`}
+                >
+                  <Tv2 className="w-4 h-4" /> Umpire
+                </button>
+              )}
+              {session && (
+                <button
+                  onClick={() => setActiveTab("my_matches")}
+                  className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
+                    activeTab === "my_matches"
+                      ? "bg-white text-emerald-900 shadow-md scale-100"
+                      : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                  }`}
+                >
+                  <UserCheck className="w-4 h-4" /> My Matches
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -334,6 +361,10 @@ export default function Feed() {
       <div className="container mx-auto px-4 max-w-3xl mt-8">
         {activeTab === "announcements" ? (
           <AnnouncementsSection />
+        ) : activeTab === "umpire" && (isUmpire || isAdmin) ? (
+          <UmpireTab />
+        ) : activeTab === "my_matches" ? (
+          <MyMatchesTab />
         ) : (
           <>
         {!loading && displayMatches.length > 0 && (
@@ -886,9 +917,7 @@ export default function Feed() {
 
                   <div className="text-center text-xs font-bold text-slate-400 dark:text-slate-500 mb-3 flex items-center justify-center gap-1">
                     <Swords className="w-3.5 h-3.5" />
-                    {match.is_friendly === false
-                      ? "Tournament Match"
-                      : "Friendly Match"}
+                    {match.round || (match.is_friendly === false ? "Tournament Match" : "Friendly Match")}
                   </div>
 
                   <div className="flex items-center justify-between gap-4">

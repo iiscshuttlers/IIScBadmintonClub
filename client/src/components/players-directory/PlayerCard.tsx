@@ -178,10 +178,10 @@ export function PlayerCard({
     }
   };
 
-  const nameParts = player.full_name.split(" ");
-  const firstName = nameParts[0];
-  const lastName = nameParts[nameParts.length - 1];
-  const displayFirst = nameParts.length > 1 ? nameParts.slice(0, -1).join(" ") : firstName;
+  const cleanName = (player.full_name || "").trim();
+  const nameParts = cleanName.split(/\s+/);
+  const displayFirst = nameParts.length > 1 ? nameParts.slice(0, -1).join(" ") : "";
+  const lastName = nameParts.length > 0 ? nameParts[nameParts.length - 1] : "";
 
   return (
     <motion.div
@@ -242,8 +242,8 @@ export function PlayerCard({
 
         {/* Center: Name & Rank */}
         <div className="flex flex-col items-center w-full mb-6">
-          <div className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] mb-0.5 w-full truncate px-2">
-            {displayFirst}
+          <div className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] mb-0.5 w-full truncate px-2 min-h-[14px]">
+            {displayFirst || "\u00A0"}
           </div>
           <div className="text-2xl font-black text-slate-900 dark:text-white leading-none uppercase tracking-tight w-full truncate px-2">
             {lastName}

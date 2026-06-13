@@ -160,8 +160,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 .eq("id", payload.new.player1_id)
                 .single();
               const challengerName = data?.full_name || "Someone";
-              toast.info(`🏸 New Match Request`, {
-                description: `${challengerName} just logged a match against you!`,
+              
+              let description = `${challengerName} just logged a match against you!`;
+              let title = "🏸 New Match Request";
+
+              if (payload.new.submitted_by && payload.new.submitted_by !== payload.new.player1_id && payload.new.submitted_by !== payload.new.player2_id) {
+                 const { data: umpireData } = await supabase.from("players").select("full_name").eq("id", payload.new.submitted_by).single();
+                 if (umpireData) {
+                     title = "📺 Match Logged by Umpire";
+                     description = `Umpire ${umpireData.full_name} logged your match: ${payload.new.match_score}`;
+                 }
+              }
+
+              toast.info(title, {
+                description,
                 action: {
                   label: "View",
                   onClick: () =>
