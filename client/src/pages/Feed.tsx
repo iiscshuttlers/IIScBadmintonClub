@@ -304,7 +304,7 @@ export default function Feed() {
           </p>
 
           <div className="mt-8 flex justify-center">
-            <div className="flex bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20">
+            <div className="flex flex-wrap justify-center gap-1 sm:gap-0 bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20">
               <button
                 onClick={() => setActiveTab("matches")}
                 className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${

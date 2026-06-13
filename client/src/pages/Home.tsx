@@ -88,7 +88,7 @@ export default function Home() {
 
   return (
     <>
-      <div className="min-h-screen">
+      <div className="min-h-screen pb-24 lg:pb-8">
 
         {/* ── HERO ──────────────────────────────────────────────────────── */}
         <section aria-label="Hero" className="relative overflow-hidden text-white min-h-[90vh] flex items-center">
