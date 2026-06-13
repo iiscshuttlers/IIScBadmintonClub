@@ -1888,29 +1888,30 @@ export default function PlayerProfile({
                   playerId={id!}
                 />
 
-                {eloHistoryData.length > 1 && (
-                  <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-3xl p-5 sm:p-6 border border-slate-200 dark:border-white/8">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-                      <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-white/45 flex items-center gap-2">
-                        <TrendingUp className="w-4 h-4 text-amber-400" /> ELO Progression
-                      </h3>
-                      
-                      <div className="flex items-center bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl">
-                        {["ALL", "S", "D", "XD"].map((filter) => (
-                          <button
-                            key={filter}
-                            onClick={() => setEloChartFilter(filter as any)}
-                            className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all ${
-                              eloChartFilter === filter
-                                ? "bg-white dark:bg-slate-700 text-amber-500 shadow-sm"
-                                : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-                            }`}
-                          >
-                            {filter === "ALL" ? "OVR" : filter}
-                          </button>
-                        ))}
-                      </div>
+                <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-3xl p-5 sm:p-6 border border-slate-200 dark:border-white/8">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-white/45 flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-amber-400" /> ELO Progression
+                    </h3>
+                    
+                    <div className="flex items-center bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl">
+                      {["ALL", "S", "D", "XD"].map((filter) => (
+                        <button
+                          key={filter}
+                          onClick={() => setEloChartFilter(filter as any)}
+                          className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all ${
+                            eloChartFilter === filter
+                              ? "bg-white dark:bg-slate-700 text-amber-500 shadow-sm"
+                              : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                          }`}
+                        >
+                          {filter === "ALL" ? "OVR" : filter}
+                        </button>
+                      ))}
                     </div>
+                  </div>
+                  
+                  {eloHistoryData.length > 1 ? (
                     <div className="h-64 w-full" aria-label="ELO rating progression chart" role="img">
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={eloHistoryData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -1947,8 +1948,18 @@ export default function PlayerProfile({
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <div className="h-64 w-full flex flex-col items-center justify-center text-center">
+                      <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3">
+                        <TrendingUp className="w-6 h-6 text-slate-400" />
+                      </div>
+                      <h4 className="text-sm font-bold text-slate-600 dark:text-slate-300">No Data Available</h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs">
+                        Play more {eloChartFilter === "S" ? "Singles" : eloChartFilter === "D" ? "Doubles" : eloChartFilter === "XD" ? "Mixed Doubles" : ""} matches to unlock the progression chart.
+                      </p>
+                    </div>
+                  )}
+                </div>
 
                 {(!authSession?.user?.id || player.userId === authSession.user.id) && eloHistoryData.length <= 1 && liveMatches.length < 5 && (
                   <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-8 border border-slate-200 dark:border-white/8 text-center">
