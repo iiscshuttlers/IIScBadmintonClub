@@ -34,8 +34,26 @@ interface LeaderboardProps {
 }
 
 export function LeaderboardSection({ players }: LeaderboardProps) {
-  const [activeTab, setActiveTab] = useState<"elo" | "ironman">("elo");
-  const [categoryFilter, setCategoryFilter] = useState<"ALL" | "MS" | "WS" | "MD" | "WD" | "XD">("ALL");
+  const [activeTab, setActiveTab] = useState<"elo" | "ironman">(() => {
+    const params = new URLSearchParams(window.location.search);
+    const lb = params.get("lb");
+    if (lb === "elo" || lb === "ironman") return lb;
+    return "elo";
+  });
+  
+  const [categoryFilter, setCategoryFilter] = useState<"ALL" | "MS" | "WS" | "MD" | "WD" | "XD">(() => {
+    const params = new URLSearchParams(window.location.search);
+    const cat = params.get("cat");
+    if (["ALL", "MS", "WS", "MD", "WD", "XD"].includes(cat || "")) return cat as any;
+    return "ALL";
+  });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    params.set("lb", activeTab);
+    params.set("cat", categoryFilter);
+    window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}${window.location.hash}`);
+  }, [activeTab, categoryFilter]);
 
   const getCategoryElo = (player: PlayerRank) => {
     if (categoryFilter === "MS" || categoryFilter === "WS") {

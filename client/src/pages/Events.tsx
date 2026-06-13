@@ -188,7 +188,17 @@ export default function Events() {
       "Browse live, upcoming and completed badminton tournaments at IISc.",
   });
 
-  const [activeTab, setActiveTab] = useState<"calendar" | "invicta" | "history">("calendar");
+  const [activeTab, setActiveTab] = useState<"calendar" | "invicta" | "history">(() => {
+    const hash = window.location.hash.replace("#", "");
+    if (["calendar", "invicta", "history"].includes(hash)) {
+      return hash as "calendar" | "invicta" | "history";
+    }
+    return "calendar";
+  });
+
+  useEffect(() => {
+    window.history.replaceState(null, "", `#${activeTab}`);
+  }, [activeTab]);
   const [events, setEvents] = useState<LiveTournament[]>([]);
   const [loading, setLoading] = useState(true);
 
