@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { supabase } from "@/lib/supabase";
 import { motion } from "framer-motion";
-import { TrendingUp, Flame, Activity, Swords, Medal, AlertCircle } from "lucide-react";
-import { Layout } from "@/components/Layout";
+import { TrendingUp, Flame, Activity, Swords } from "lucide-react";
 
 export default function Analytics() {
   const [loading, setLoading] = useState(true);
@@ -18,13 +17,11 @@ export default function Analytics() {
     async function fetchData() {
       setLoading(true);
       try {
-        // Fetch all players to get streaks and activity
         const { data: playersData } = await supabase
           .from("players")
           .select("*")
           .is("deleted_at", null);
 
-        // Fetch recent matches for upsets
         const { data: matchesData } = await supabase
           .from("matches")
           .select("*, player1:players!player1_id(id, full_name, avatar_url), player2:players!player2_id(id, full_name, avatar_url)")
@@ -34,13 +31,11 @@ export default function Analytics() {
 
         if (!playersData || !matchesData) return;
 
-        // Process active streaks
         const streaks = [...playersData]
           .filter(p => p.win_streak > 1)
           .sort((a, b) => b.win_streak - a.win_streak)
           .slice(0, 5);
 
-        // Process most active players
         const mostActive = [...playersData]
           .map(p => {
             let total = 0;
@@ -55,7 +50,6 @@ export default function Analytics() {
           .sort((a, b) => b.totalMatches - a.totalMatches)
           .slice(0, 5);
 
-        // Process biggest upsets (largest elo difference where lower elo player won)
         const upsets = matchesData
           .filter(m => m.elo_change_p1 !== undefined && m.elo_change_p2 !== undefined)
           .map(m => {
@@ -63,7 +57,7 @@ export default function Analytics() {
             const upsetScore = isP1Winner ? (m.elo_change_p1 || 0) : (m.elo_change_p2 || 0);
             return { ...m, upsetScore };
           })
-          .filter(m => m.upsetScore > 20) // Only significant upsets
+          .filter(m => m.upsetScore > 20)
           .sort((a, b) => b.upsetScore - a.upsetScore)
           .slice(0, 5);
 
@@ -94,7 +88,7 @@ export default function Analytics() {
   };
 
   return (
-    <Layout>
+    <div className="min-h-screen bg-slate-50 dark:bg-[#070d1a] selection:bg-indigo-500/30">
       <div className="max-w-4xl mx-auto px-4 pb-24 pt-6">
         <div className="mb-8 flex items-center justify-between">
           <div>
@@ -217,6 +211,6 @@ export default function Analytics() {
           </motion.div>
         )}
       </div>
-    </Layout>
+    </div>
   );
 }
