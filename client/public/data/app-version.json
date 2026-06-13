@@ -1,6 +1,6 @@
 {
-  "versionCode": 110,
-  "versionName": "1.110",
-  "downloadUrl": "https://github.com/iiscshuttlers/iiscshuttlers/releases/latest/download/IIScShuttlers_v1.110.apk",
-  "changelog": "- chore: release v1.108 (build 109)\n- fix(ui): remove dead analytics imports and routes\n- feat(push): implement web push notifications via firebase cloud messaging\n- fix(ui): remove win_streak from player query and calculate dynamically\n- fix(leaderboard): implement strict tie-breaker logic for identical ELO ratings\n- feat(ui): merge analytics into leaderboard\n- feat(ui): embed Analytics directly into Feed as a tab\n- fix(ui): resolve Layout import error in Analytics page\n- feat(ui): add Global Analytics page for insights and trends\n- chore: release v1.108 (build 109)"
+  "versionCode": 111,
+  "versionName": "1.111",
+  "downloadUrl": "https://github.com/iiscshuttlers/iiscshuttlers/releases/latest/download/IIScShuttlers_v1.111.apk",
+  "changelog": "- chore: release v1.110 (build 110)"
 }
