@@ -44,10 +44,18 @@ export function ThemeProvider({
 
   useEffect(() => {
     const root = document.documentElement;
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    
     if (theme === "dark") {
       root.classList.add("dark");
+      if (metaThemeColor) {
+        metaThemeColor.setAttribute("content", "#020617"); // slate-950
+      }
     } else {
       root.classList.remove("dark");
+      if (metaThemeColor) {
+        metaThemeColor.setAttribute("content", "#f8fafc"); // slate-50
+      }
     }
 
     if (accent === "emerald") {

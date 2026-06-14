@@ -14,6 +14,7 @@ export function MyMatchesTab() {
   const { profile } = useAuth();
   const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [kudosState, setKudosState] = useState<Record<string, boolean>>({});
   
   // Filter states
   const [subTab, setSubTab] = useState<"all" | "pending" | "confirmed">("all");
@@ -78,6 +79,39 @@ export function MyMatchesTab() {
     
     return result;
   }, [matches, subTab, searchQuery, categoryFilter]);
+
+  const isKudosed = (m: any) => {
+    if (kudosState.hasOwnProperty(m.id)) return kudosState[m.id];
+    return (
+      (Array.isArray(m.kudos_users) &&
+        profile?.id &&
+        m.kudos_users.includes(profile.id)) ||
+      !!localStorage.getItem(`liked_${m.id}`)
+    );
+  };
+
+  const handleKudos = async (match: any) => {
+    const storageKey = `liked_${match.id}`;
+    const isCurrentlyLiked = isKudosed(match);
+
+    if (!isCurrentlyLiked) {
+      localStorage.setItem(storageKey, "1");
+      setKudosState((prev) => ({ ...prev, [match.id]: true }));
+      toast.success("Match liked! ❤️");
+    } else {
+      localStorage.removeItem(storageKey);
+      setKudosState((prev) => ({ ...prev, [match.id]: false }));
+      toast.success("Like removed");
+    }
+
+    if (profile?.id) {
+      supabase
+        .rpc("toggle_match_kudos", { p_match_id: match.id })
+        .then(({ error }) => {
+          if (error) console.warn("Failed to sync likes live:", error);
+        });
+    }
+  };
 
   const handleAction = async (matchId: string, action: "confirm" | "reject") => {
     if (Capacitor.isNativePlatform()) {
@@ -172,9 +206,23 @@ export function MyMatchesTab() {
 
       {/* List */}
       {loading ? (
-        <div className="text-center py-12">
-          <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-slate-500 font-medium">Loading your matches...</p>
+        <div className="space-y-4">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="animate-pulse bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-10 h-10 bg-slate-200 dark:bg-slate-800 rounded-full" />
+                <div className="h-2 bg-slate-200 dark:bg-slate-800 rounded w-12" />
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-16" />
+                <div className="h-6 bg-slate-200 dark:bg-slate-800 rounded-xl w-24" />
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-10 h-10 bg-slate-200 dark:bg-slate-800 rounded-full" />
+                <div className="h-2 bg-slate-200 dark:bg-slate-800 rounded w-12" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : filteredMatches.length === 0 ? (
         <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
@@ -199,8 +247,15 @@ export function MyMatchesTab() {
                 isLiveNow={false}
                 isMatchOfTheDay={false}
                 upsetDiff={0}
-                isKudosed={false}
-                kudosCount={0}
+                isKudosed={isKudosed(match)}
+                kudosCount={
+                  Array.isArray(match.kudos_users)
+                    ? match.kudos_users.length +
+                      (kudosState[match.id] === true && !match.kudos_users.includes(profile?.id) ? 1 : 0) +
+                      (kudosState[match.id] === false && match.kudos_users.includes(profile?.id) ? -1 : 0)
+                    : (match.kudos_count || 0) + (kudosState[match.id] === true ? 1 : 0)
+                }
+                onKudos={() => handleKudos(match)}
                 index={0}
               >
                 {/* Actions Row */}

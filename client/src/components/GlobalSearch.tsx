@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, User, Swords, Megaphone, ArrowRight, Loader2 } from "lucide-react";
+import { Search, X, User, Swords, Megaphone, ArrowRight, Loader2, CalendarDays } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface SearchResult {
-  type: "player" | "match" | "announcement";
+  type: "player" | "match" | "announcement" | "event";
   id: string;
   title: string;
   subtitle?: string;
@@ -39,10 +39,6 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        if (!open) onClose(); // parent toggles; no-op here
-      }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
@@ -56,7 +52,9 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
     }
     setLoading(true);
     try {
-      const [playersRes, matchesRes] = await Promise.all([
+      const lq = q.toLowerCase();
+
+      const [playersRes, matchesRes, annRes, eventsRes] = await Promise.all([
         supabase
           .from("players")
           .select("id, full_name, avatar_url, department, elo_rating")
@@ -66,16 +64,24 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
         supabase
           .from("matches")
           .select(
-            "id, score, category, created_at, player1:players!player1_id(full_name), player2:players!player2_id(full_name)"
+            "id, match_score, score, category, created_at, player1:players!player1_id(full_name), player2:players!player2_id(full_name)"
           )
           .eq("status", "confirmed")
           .or(
-            `player1_id.in.(${
-              "select id from players where full_name ilike '%' || '${q}' || '%'"
-            }),player2_id.in.(select id from players where full_name ilike '%${q}%')`
+            `player1_id.in.(select id from players where full_name ilike '%${q}%'),player2_id.in.(select id from players where full_name ilike '%${q}%')`
           )
           .order("created_at", { ascending: false })
           .limit(4),
+        supabase
+          .from("site_data")
+          .select("value")
+          .eq("key", "announcements")
+          .maybeSingle(),
+        supabase
+          .from("site_data")
+          .select("value")
+          .eq("key", "events")
+          .maybeSingle(),
       ]);
 
       const playerResults: SearchResult[] = (playersRes.data || []).map((p) => ({
@@ -87,15 +93,16 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
         href: `/player/${p.id}`,
       }));
 
-      // Also search announcements client-side via site_data
-      const annRes = await supabase
-        .from("site_data")
-        .select("value")
-        .eq("key", "announcements")
-        .maybeSingle();
+      const matchResults: SearchResult[] = (matchesRes.data || []).map((m: any) => ({
+        type: "match",
+        id: m.id,
+        title: `${m.player1?.full_name ?? "?"} vs ${m.player2?.full_name ?? "?"}`,
+        subtitle: `${m.category ?? "Match"} · ${m.match_score || m.score || ""}`,
+        href: `/feed`,
+      }));
+
       const annList: SearchResult[] = [];
       if (annRes.data?.value?.recent) {
-        const lq = q.toLowerCase();
         for (const ann of annRes.data.value.recent) {
           if (
             ann.title?.toLowerCase().includes(lq) ||
@@ -113,7 +120,30 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
         }
       }
 
-      setResults([...playerResults, ...annList]);
+      // Search events from site_data
+      const eventList: SearchResult[] = [];
+      const eventsData = eventsRes.data?.value;
+      const eventArray = Array.isArray(eventsData)
+        ? eventsData
+        : (eventsData?.upcoming || eventsData?.events || eventsData?.all || []);
+      for (const ev of eventArray) {
+        if (
+          ev.title?.toLowerCase().includes(lq) ||
+          ev.category?.toLowerCase().includes(lq) ||
+          ev.venue?.toLowerCase().includes(lq)
+        ) {
+          eventList.push({
+            type: "event",
+            id: ev.id || ev.title,
+            title: ev.title,
+            subtitle: `${ev.category ?? "Event"}${ev.venue ? ` · ${ev.venue}` : ""}`,
+            href: "/events",
+          });
+          if (eventList.length >= 3) break;
+        }
+      }
+
+      setResults([...playerResults, ...matchResults, ...annList, ...eventList]);
     } catch (e) {
       console.error("Search error:", e);
     } finally {
@@ -135,6 +165,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
   const iconFor = (type: SearchResult["type"]) => {
     if (type === "player") return <User className="w-4 h-4 shrink-0 text-emerald-500" />;
     if (type === "match") return <Swords className="w-4 h-4 shrink-0 text-blue-500" />;
+    if (type === "event") return <CalendarDays className="w-4 h-4 shrink-0 text-violet-500" />;
     return <Megaphone className="w-4 h-4 shrink-0 text-amber-500" />;
   };
 
@@ -174,7 +205,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
               ref={inputRef}
               value={query}
               onChange={(e) => handleChange(e.target.value)}
-              placeholder="Search players, announcements…"
+              placeholder="Search players, matches, events, announcements…"
               className="flex-1 bg-transparent text-slate-800 dark:text-white placeholder-slate-400 text-sm outline-none"
             />
             <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
@@ -196,10 +227,10 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
             )}
 
             {/* Group by type */}
-            {(["player", "match", "announcement"] as const).map((type) => {
+            {(["player", "match", "announcement", "event"] as const).map((type) => {
               const group = results.filter((r) => r.type === type);
               if (!group.length) return null;
-              const labels = { player: "Players", match: "Matches", announcement: "Announcements" };
+              const labels = { player: "Players", match: "Matches", announcement: "Announcements", event: "Events" };
               return (
                 <div key={type}>
                   <div className="px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/80 dark:bg-slate-800/50">

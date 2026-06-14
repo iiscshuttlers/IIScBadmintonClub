@@ -56,7 +56,12 @@ import {
   type SiteConfig,
 } from "@/components/admin/AdminEditors";
 import { AdminStatsOverview } from "@/components/admin/AdminStatsOverview";
-import { Paintbrush, ClipboardList } from "lucide-react";
+import { DisputePanel } from "@/components/admin/DisputePanel";
+import { AdminSettings } from "@/components/admin/AdminSettings";
+import { AdminActivityLog } from "@/components/admin/AdminActivityLog";
+import { EloAuditPanel } from "@/components/admin/EloAuditPanel";
+import { AdminFeaturesPanel } from "@/components/admin/AdminFeaturesPanel";
+import { Paintbrush, ClipboardList, Settings, AlertTriangle, BarChart2, Zap } from "lucide-react";
 
 /* ── Types ──────────────────────────────────────────────────────── */
 type Holiday = { date: string; name: string };
@@ -108,7 +113,12 @@ type TabId =
   | "umpire"
   | "registrations"
   | "matches"
-  | "changelog";
+  | "changelog"
+  | "disputes"
+  | "elo_audit"
+  | "settings"
+  | "activity_log"
+  | "features";
 
 const TABS: { id: TabId; label: string; icon: any }[] = [
   { id: "overview", label: "Overview", icon: Activity },
@@ -119,8 +129,13 @@ const TABS: { id: TabId; label: string; icon: any }[] = [
   { id: "videos", label: "Videos", icon: Video },
   { id: "players", label: "Players", icon: Users },
   { id: "matches", label: "Matches", icon: Trophy },
+  { id: "disputes", label: "Disputes", icon: AlertTriangle },
+  { id: "elo_audit", label: "ELO Audit", icon: BarChart2 },
   { id: "umpire", label: "Umpire", icon: Activity },
   { id: "changelog", label: "System Logs", icon: FileCode2 },
+  { id: "activity_log", label: "Activity Log", icon: ClipboardList },
+  { id: "settings", label: "Settings", icon: Settings },
+  { id: "features", label: "Features", icon: Zap },
 ];
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
@@ -173,7 +188,8 @@ export default function SiteAdmin() {
     const hash = window.location.hash.replace("#", "");
     if ([
       "overview", "config", "holidays", "announcements", "events", "videos",
-      "players", "umpire", "registrations", "matches", "changelog"
+      "players", "umpire", "registrations", "matches", "changelog",
+      "disputes", "elo_audit", "settings", "activity_log", "features"
     ].includes(hash)) {
       return hash as TabId;
     }
@@ -454,6 +470,9 @@ export default function SiteAdmin() {
     matches: null,
     umpire: null,
     changelog: null,
+    disputes: null,
+    settings: null,
+    activity_log: null,
   };
 
   return (
@@ -492,7 +511,7 @@ export default function SiteAdmin() {
       <div className="container mx-auto px-4 py-8 max-w-5xl">
         {/* Tabs */}
         <div className="w-full pb-4 mb-4">
-          <div className="flex flex-wrap items-center p-1.5 bg-slate-200/70 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-inner gap-1">
+          <div className="grid grid-cols-2 p-1.5 bg-slate-200/70 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-inner gap-1">
             {TABS.filter((tab) => isAdmin || tab.id === "umpire").map((tab) => {
               const Icon = tab.icon;
               const active = activeTab === tab.id;
@@ -501,7 +520,7 @@ export default function SiteAdmin() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`group flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-300 ${
+                  className={`group flex items-center justify-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${
                     active
                       ? "bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700"
                       : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-700/50"
@@ -553,8 +572,13 @@ export default function SiteAdmin() {
             )}
             {activeTab === "players" && <PlayersManager />}
             {activeTab === "matches" && <MatchesManager />}
+            {activeTab === "disputes" && <DisputePanel />}
+            {activeTab === "elo_audit" && <EloAuditPanel />}
             {activeTab === "umpire" && <UmpireMode />}
             {activeTab === "changelog" && <ChangelogViewer />}
+            {activeTab === "activity_log" && <AdminActivityLog />}
+            {activeTab === "settings" && <AdminSettings />}
+            {activeTab === "features" && <AdminFeaturesPanel />}
           </motion.div>
         </AnimatePresence>
 

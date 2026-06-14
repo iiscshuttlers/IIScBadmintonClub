@@ -182,7 +182,7 @@ serve(async (req) => {
 
     // 4. Fetch Player 2's Push Tokens (the Challenged)
     const { data: tokens, error: tokensError } = await supabaseClient
-      .from("push_tokens")
+      .from("user_push_tokens")
       .select("token")
       .eq("user_id", challenged.user_id);
 
@@ -222,7 +222,7 @@ serve(async (req) => {
 
         if (partner?.user_id) {
           const { data: partnerTokens } = await supabaseClient
-            .from("push_tokens")
+            .from("user_push_tokens")
             .select("token")
             .eq("user_id", partner.user_id);
           if (partnerTokens) allTokensToSend.push(...partnerTokens);
@@ -300,7 +300,7 @@ serve(async (req) => {
               `[notify-match] Removing stale token ${t.token.slice(0, 20)}...`,
             );
             await supabaseClient
-              .from("push_tokens")
+              .from("user_push_tokens")
               .delete()
               .eq("token", t.token);
           }

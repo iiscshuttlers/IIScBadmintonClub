@@ -33,6 +33,12 @@ import { LiveScoreSection } from "@/components/events/LiveScoreSection";
 import { UmpireTab } from "@/components/umpire/UmpireTab";
 import { MyMatchesTab } from "@/components/feed/MyMatchesTab";
 import { MatchCard } from "@/components/feed/MatchCard";
+import { ChallengeHubTab } from "@/components/feed/ChallengeHubTab";
+import { PollsSection } from "@/components/feed/PollsSection";
+import { RivalryCards } from "@/components/feed/RivalryCards";
+import { WeeklyChallenges } from "@/components/feed/WeeklyChallenges";
+import { LiveScoreWidget, StartLiveScoringButton } from "@/components/feed/LiveScoreWidget";
+import { MatchPredictions } from "@/components/feed/MatchPredictions";
 
 export default function Feed() {
   usePageMeta({
@@ -45,7 +51,7 @@ export default function Feed() {
   const [, setLocation] = useLocation();
   const [match, params] = useRoute("/feed/:tab");
 
-  const [activeTab, setActiveTab] = useState<"matches" | "announcements" | "umpire" | "my_matches">("matches");
+  const [activeTab, setActiveTab] = useState<"matches" | "announcements" | "umpire" | "my_matches" | "challenges">("matches");
 
   useEffect(() => {
     if (match && params?.tab) {
@@ -54,19 +60,21 @@ export default function Feed() {
       else if (tab === "announcements") { setActiveTab("announcements"); localStorage.setItem("feed_tab", "announcements"); }
       else if (tab === "umpire") { setActiveTab("umpire"); localStorage.setItem("feed_tab", "umpire"); }
       else if (tab === "my-matches") { setActiveTab("my_matches"); localStorage.setItem("feed_tab", "my_matches"); }
+      else if (tab === "challenges") { setActiveTab("challenges"); localStorage.setItem("feed_tab", "challenges"); }
     } else {
       const saved = localStorage.getItem("feed_tab") || "matches";
       setActiveTab(saved as any);
     }
   }, [match, params?.tab]);
 
-  const handleTabChange = (tabId: "matches" | "announcements" | "umpire" | "my_matches") => {
+  const handleTabChange = (tabId: "matches" | "announcements" | "umpire" | "my_matches" | "challenges") => {
     setActiveTab(tabId);
     localStorage.setItem("feed_tab", tabId);
     if (tabId === "matches") setLocation("/feed/activity");
     else if (tabId === "announcements") setLocation("/feed/announcements");
     else if (tabId === "umpire") setLocation("/feed/umpire");
     else if (tabId === "my_matches") setLocation("/feed/my-matches");
+    else if (tabId === "challenges") setLocation("/feed/challenges");
   };
   
   const [matches, setMatches] = useState<any[]>([]);
@@ -332,14 +340,14 @@ export default function Feed() {
             See what's happening on the courts in real-time.
           </p>
 
-          <div className="mt-8 flex justify-center">
-            <div className="flex flex-wrap justify-center gap-1 sm:gap-0 bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20">
+          <div className="mt-8 w-full flex justify-center">
+            <div className="w-full grid grid-cols-2 gap-2 sm:flex sm:w-auto sm:gap-0 bg-transparent sm:bg-white/10 sm:backdrop-blur-md sm:p-1.5 sm:rounded-2xl sm:border sm:border-white/20">
               <button
                 onClick={() => handleTabChange("matches")}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
+                className={`flex justify-center items-center gap-2 px-4 py-3 sm:px-6 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${
                   activeTab === "matches"
-                    ? "bg-white text-emerald-900 shadow-md scale-100"
-                    : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                    ? "bg-white text-emerald-900 shadow-md"
+                    : "bg-white/10 sm:bg-transparent text-white/90 sm:text-white/80 hover:bg-white/20 sm:hover:bg-white/10"
                 }`}
               >
                 <Activity className="w-4 h-4" /> Match Activity
@@ -350,10 +358,10 @@ export default function Feed() {
                   localStorage.setItem("iisc_announcements_last_seen", Date.now().toString());
                   window.dispatchEvent(new Event("announcements-read"));
                 }}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
+                className={`flex justify-center items-center gap-2 px-4 py-3 sm:px-6 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${
                   activeTab === "announcements"
-                    ? "bg-white text-emerald-900 shadow-md scale-100"
-                    : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                    ? "bg-white text-emerald-900 shadow-md"
+                    : "bg-white/10 sm:bg-transparent text-white/90 sm:text-white/80 hover:bg-white/20 sm:hover:bg-white/10"
                 }`}
               >
                 <Bell className="w-4 h-4" /> Announcements
@@ -361,26 +369,38 @@ export default function Feed() {
               {(isUmpire || isAdmin) && (
                 <button
                   onClick={() => handleTabChange("umpire")}
-                  className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
+                  className={`flex justify-center items-center gap-2 px-4 py-3 sm:px-6 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${
                     activeTab === "umpire"
-                      ? "bg-white text-emerald-900 shadow-md scale-100"
-                      : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                      ? "bg-white text-emerald-900 shadow-md"
+                      : "bg-white/10 sm:bg-transparent text-white/90 sm:text-white/80 hover:bg-white/20 sm:hover:bg-white/10"
                   }`}
                 >
                   <Tv2 className="w-4 h-4" /> Umpire
                 </button>
               )}
               {session && (
-                <button
-                  onClick={() => handleTabChange("my_matches")}
-                  className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
-                    activeTab === "my_matches"
-                      ? "bg-white text-emerald-900 shadow-md scale-100"
-                      : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
-                  }`}
-                >
-                  <UserCheck className="w-4 h-4" /> My Matches
-                </button>
+                <>
+                  <button
+                    onClick={() => handleTabChange("my_matches")}
+                    className={`flex justify-center items-center gap-2 px-4 py-3 sm:px-6 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${
+                      activeTab === "my_matches"
+                        ? "bg-white text-emerald-900 shadow-md"
+                        : "bg-white/10 sm:bg-transparent text-white/90 sm:text-white/80 hover:bg-white/20 sm:hover:bg-white/10"
+                    }`}
+                  >
+                    <UserCheck className="w-4 h-4" /> My Matches
+                  </button>
+                  <button
+                    onClick={() => handleTabChange("challenges")}
+                    className={`col-span-full sm:col-span-1 flex justify-center items-center gap-2 px-4 py-3 sm:px-6 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${
+                      activeTab === "challenges"
+                        ? "bg-white text-emerald-900 shadow-md"
+                        : "bg-white/10 sm:bg-transparent text-white/90 sm:text-white/80 hover:bg-white/20 sm:hover:bg-white/10"
+                    }`}
+                  >
+                    <Swords className="w-4 h-4" /> Challenges
+                  </button>
+                </>
               )}
             </div>
           </div>
@@ -394,8 +414,23 @@ export default function Feed() {
           <UmpireTab />
         ) : activeTab === "my_matches" ? (
           <MyMatchesTab />
+        ) : activeTab === "challenges" ? (
+          <>
+            <div className="mb-6">
+              <WeeklyChallenges />
+            </div>
+            <ChallengeHubTab currentUser={session?.user} />
+          </>
         ) : (
           <>
+        {!loading && session && (
+          <div className="flex justify-end mb-4">
+            <StartLiveScoringButton />
+          </div>
+        )}
+        {!loading && <LiveScoreWidget />}
+        {!loading && session && <MatchPredictions />}
+
         {!loading && displayMatches.length > 0 && (
           <>
             <div className="-mx-4 sm:mx-0 mb-6">
@@ -444,7 +479,15 @@ export default function Feed() {
           </>
         )}
 
-
+        {/* Community Polls */}
+        {!loading && (
+          <div className="mb-6">
+            <PollsSection />
+          </div>
+        )}
+        {!loading && displayMatches.length >= 6 && (
+          <RivalryCards matches={displayMatches} limit={3} />
+        )}
 
         {!loading && weeklyRecap && (
           <div className="mb-6 bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 shadow-xl border border-slate-700 relative overflow-hidden text-white">
@@ -614,11 +657,11 @@ export default function Feed() {
                 if (!isCurrentlyLiked) {
                   localStorage.setItem(storageKey, "1");
                   setKudosState((prev) => ({ ...prev, [match.id]: true }));
-                  toast.success("Kudos given! ⭐");
+                  toast.success("Match liked! ❤️");
                 } else {
                   localStorage.removeItem(storageKey);
                   setKudosState((prev) => ({ ...prev, [match.id]: false }));
-                  toast.success("Kudos removed");
+                  toast.success("Like removed");
                 }
 
                 if (session?.user?.id) {
@@ -628,6 +671,15 @@ export default function Feed() {
                       if (error)
                         console.warn("Failed to sync kudos live:", error);
                     });
+
+                  if (!isCurrentlyLiked) {
+                    const giverName = ownProfile?.full_name ?? "Someone";
+                    supabase.functions
+                      .invoke("notify-kudos", {
+                        body: { match_id: match.id, giver_name: giverName },
+                      })
+                      .catch(() => {});
+                  }
                 }
               };
 

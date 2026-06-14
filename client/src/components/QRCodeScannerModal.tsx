@@ -37,15 +37,20 @@ export function QRCodeScannerModal({ isOpen, onClose, onScan }: QRCodeScannerMod
 
     scanner.render(
       (decodedText) => {
-        // Assume decodedText is the player_id
-        if (decodedText.length > 10 && !scanResult) {
-          setScanResult(decodedText);
+        // Assume decodedText is the player_id or the full player profile URL
+        let playerId = decodedText;
+        if (decodedText.includes("/player/")) {
+          playerId = decodedText.split("/player/")[1].split("?")[0].replace(/\/$/, "");
+        }
+
+        if (playerId && playerId.length > 1 && !scanResult) {
+          setScanResult(playerId);
           scanner.clear().catch(console.error);
           
           // Small delay for user to see success UI
           setTimeout(() => {
             onClose();
-            onScan(decodedText);
+            onScan(playerId);
           }, 600);
         }
       },

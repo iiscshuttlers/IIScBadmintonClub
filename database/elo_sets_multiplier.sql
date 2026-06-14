@@ -276,6 +276,19 @@ BEGIN
     UPDATE players SET win_loss_record = (SELECT wins FROM p4_stats) || 'W - ' || (SELECT losses FROM p4_stats) || 'L' WHERE id = m_record.team2_partner_id;
   END IF;
 
+  -- ── Update recent_form array for Dynamic Form Indicators ──
+  DECLARE
+    p1_res TEXT := CASE WHEN team1_actual = 1.0 THEN 'W' ELSE 'L' END;
+    p2_res TEXT := CASE WHEN team2_actual = 1.0 THEN 'W' ELSE 'L' END;
+  BEGIN
+    UPDATE players SET recent_form = (ARRAY[p1_res] || COALESCE(recent_form, ARRAY[]::TEXT[]))[1:5] WHERE id = m_record.player1_id;
+    UPDATE players SET recent_form = (ARRAY[p2_res] || COALESCE(recent_form, ARRAY[]::TEXT[]))[1:5] WHERE id = m_record.player2_id;
+    IF m_record.category = 'Doubles' AND m_record.team1_partner_id IS NOT NULL THEN
+      UPDATE players SET recent_form = (ARRAY[p1_res] || COALESCE(recent_form, ARRAY[]::TEXT[]))[1:5] WHERE id = m_record.team1_partner_id;
+      UPDATE players SET recent_form = (ARRAY[p2_res] || COALESCE(recent_form, ARRAY[]::TEXT[]))[1:5] WHERE id = m_record.team2_partner_id;
+    END IF;
+  END;
+
   -- ── ELO Audit Trail: insert logs so the ranking history chart has data ──
   INSERT INTO elo_calculation_logs (player_id, match_id, previous_elo, new_elo, elo_change, expected_score, actual_score, category, created_at)
   VALUES
@@ -287,6 +300,23 @@ BEGIN
     VALUES
       (m_record.team1_partner_id, match_uuid, p3_elo, p3_elo + change_p3, change_p3, round(team1_expected::numeric, 4), team1_actual, m_record.category, now()),
       (m_record.team2_partner_id, match_uuid, p4_elo, p4_elo + change_p4, change_p4, round(team2_expected::numeric, 4), team2_actual, m_record.category, now());
+  END IF;
+
+  -- ── Automated Achievement Engine: Giant Slayer Notification ──
+  IF team1_actual = 1.0 AND (team2_elo - team1_elo) >= 150 THEN
+    INSERT INTO notifications (user_id, message, type, source_id, created_at, read_status)
+    VALUES (m_record.player1_id, '🏅 Achievement Unlocked: Giant Slayer! You defeated an opponent 150+ ELO points higher than you!', 'achievement', m_record.id::TEXT, NOW(), false);
+    IF m_record.category = 'Doubles' AND m_record.team1_partner_id IS NOT NULL THEN
+      INSERT INTO notifications (user_id, message, type, source_id, created_at, read_status)
+      VALUES (m_record.team1_partner_id, '🏅 Achievement Unlocked: Giant Slayer! You defeated opponents 150+ ELO points higher than you!', 'achievement', m_record.id::TEXT, NOW(), false);
+    END IF;
+  ELSIF team2_actual = 1.0 AND (team1_elo - team2_elo) >= 150 THEN
+    INSERT INTO notifications (user_id, message, type, source_id, created_at, read_status)
+    VALUES (m_record.player2_id, '🏅 Achievement Unlocked: Giant Slayer! You defeated an opponent 150+ ELO points higher than you!', 'achievement', m_record.id::TEXT, NOW(), false);
+    IF m_record.category = 'Doubles' AND m_record.team2_partner_id IS NOT NULL THEN
+      INSERT INTO notifications (user_id, message, type, source_id, created_at, read_status)
+      VALUES (m_record.team2_partner_id, '🏅 Achievement Unlocked: Giant Slayer! You defeated opponents 150+ ELO points higher than you!', 'achievement', m_record.id::TEXT, NOW(), false);
+    END IF;
   END IF;
 
   RETURN jsonb_build_object(

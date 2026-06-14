@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { getTournaments } from "@/lib/tournaments";
 import { fetchSiteData } from "@/lib/siteData";
+import { NotificationsMenu } from "@/components/NotificationsMenu";
+import { registerPushNotifications } from "@/lib/pushNotifications";
 import {
   Menu,
   X,
@@ -40,6 +42,7 @@ const TOP_LEVEL_LINKS = [
   { href: "/events", label: "Events" },
   { href: "/feed", label: "Feed" },
   { href: "/players", label: "Players" },
+  { href: "/find-lost", label: "Find & Lost" },
   { href: "/hall-of-fame", label: "Winners Wall" },
   { href: "/gallery", label: "Gallery" },
   { href: "/about", label: "Club" },
@@ -73,6 +76,18 @@ export default function Navigation() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Global Ctrl+K / Cmd+K keyboard shortcut to open search
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
   // Fetch live event count once on mount (lightweight, fire-and-forget)
   useEffect(() => {
     getTournaments()
@@ -82,6 +97,13 @@ export default function Navigation() {
       })
       .catch(() => {});
   }, []);
+
+  // Register push notifications
+  useEffect(() => {
+    if (myPlayerId) {
+      registerPushNotifications(myPlayerId).catch(console.error);
+    }
+  }, [myPlayerId]);
 
   useEffect(() => {
     setIsOpen(false);
@@ -232,7 +254,9 @@ export default function Navigation() {
               {authLoading ? (
                 <div className="w-24 h-9 bg-slate-100 dark:bg-slate-800 rounded-full animate-pulse" />
               ) : isLoggedIn ? (
-                <DropdownMenu>
+                <>
+                  {myPlayerId && <NotificationsMenu currentUser={{ id: myPlayerId }} />}
+                  <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="relative w-9 h-9 rounded-full border-2 border-slate-200 dark:border-slate-700 hover:border-emerald-500 dark:hover:border-emerald-500 transition-all duration-200 overflow-hidden focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-950 shrink-0 shadow-sm">
                       {userAvatar ? (
@@ -385,6 +409,7 @@ export default function Navigation() {
                     </div>
                   </DropdownMenuContent>
                 </DropdownMenu>
+                </>
               ) : (
                 <Link href="/join">
                   <Button className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-4 rounded-full h-9 shadow-sm shadow-emerald-200 dark:shadow-none transition-all duration-200 cursor-pointer">

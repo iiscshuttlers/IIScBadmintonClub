@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS elo_calculation_logs (
   category TEXT
 );
 
-DO $$
+CREATE OR REPLACE FUNCTION recalculate_all_elo() RETURNS void AS $$
 DECLARE
   m_record RECORD;
   
@@ -213,4 +213,5 @@ BEGIN
       elo_change_p4 = change_p4
     WHERE id = m_record.id;
   END LOOP;
-END $$;
+END;
+$$ LANGUAGE plpgsql;

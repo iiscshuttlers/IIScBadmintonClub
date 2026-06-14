@@ -130,6 +130,23 @@ export default function ComparePlayers() {
   const p1WinRate = totalMatches > 0 ? Math.round((p1Wins / totalMatches) * 100) : 0;
   const p2WinRate = totalMatches > 0 ? Math.round((p2Wins / totalMatches) * 100) : 0;
 
+  // Format breakdown
+  const formatBreakdown = ["Singles", "Doubles", "Mixed Doubles"].map(fmt => {
+    const fmtMatches = matches.filter(m => m.category === fmt);
+    let fP1Wins = 0, fP2Wins = 0;
+    for (const m of fmtMatches) {
+      const p1Team = m.player1_id === player1.id || m.team1_partner_id === player1.id ? 1 : 2;
+      const winnerTeam = m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id ? 1 : 2;
+      if (winnerTeam === p1Team) fP1Wins++; else fP2Wins++;
+    }
+    return { format: fmt, p1Wins: fP1Wins, p2Wins: fP2Wins, total: fmtMatches.length };
+  }).filter(f => f.total > 0);
+
+  // Single format labels: "Singles" → "S", "Doubles" → "D", "Mixed Doubles" → "XD"
+  const fmtLabel = (f: string) => f === "Singles" ? "Singles" : f === "Doubles" ? "Doubles" : "Mixed";
+  const fmtColor1 = "text-emerald-600 dark:text-emerald-400";
+  const fmtColor2 = "text-blue-600 dark:text-blue-400";
+
   return (
     <div className="pb-24 max-w-4xl mx-auto px-4 mt-6">
       <Link href="/players">
@@ -287,6 +304,35 @@ export default function ComparePlayers() {
           ))}
         </div>
       </Card>
+
+      {/* Format Breakdown */}
+      {formatBreakdown.length > 0 && (
+        <Card className="p-6 bg-white dark:bg-slate-900 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 mb-8 overflow-hidden">
+          <h3 className="text-sm font-black text-slate-800 dark:text-white mb-4 text-center uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-4">
+            Format Breakdown
+          </h3>
+          <div className="space-y-4">
+            {formatBreakdown.map(f => {
+              const p1Pct = f.total > 0 ? Math.round((f.p1Wins / f.total) * 100) : 0;
+              const p2Pct = 100 - p1Pct;
+              return (
+                <div key={f.format}>
+                  <div className="flex justify-between text-xs font-black mb-1.5">
+                    <span className={f.p1Wins >= f.p2Wins ? fmtColor1 : "text-slate-400"}>{f.p1Wins}W · {p1Pct}%</span>
+                    <span className="text-slate-400 uppercase tracking-widest">{fmtLabel(f.format)}</span>
+                    <span className={f.p2Wins > f.p1Wins ? fmtColor2 : "text-slate-400"}>{p2Pct}% · {f.p2Wins}W</span>
+                  </div>
+                  <div className="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex">
+                    <div className="h-full bg-emerald-500 transition-all duration-700 rounded-l-full" style={{ width: `${p1Pct}%` }} />
+                    <div className="h-full bg-blue-500 transition-all duration-700 rounded-r-full" style={{ width: `${p2Pct}%` }} />
+                  </div>
+                  <div className="text-[10px] text-slate-400 text-center mt-1">{f.total} match{f.total !== 1 ? "es" : ""}</div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
 
       {/* Trend Chart */}
       {eloHistory.length > 0 && (

@@ -43,7 +43,7 @@ export function usePushNotifications(
         // Save FCM token to Supabase for backend to use when user is offline
         if (userId && token.value) {
           await supabase
-            .from("push_tokens")
+            .from("user_push_tokens")
             .upsert(
               {
                 user_id: userId,
@@ -115,7 +115,7 @@ export function usePushNotifications(
           if (token) {
             // Save token to Supabase
             await supabase
-              .from("push_tokens")
+              .from("user_push_tokens")
               .upsert(
                 {
                   user_id: userId,

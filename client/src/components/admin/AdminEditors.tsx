@@ -319,6 +319,25 @@ export function AnnouncementEditor({
   data: Announcement[];
   onChange: (d: Announcement[]) => void;
 }) {
+  const [pushingIdx, setPushingIdx] = useState<number | null>(null);
+
+  const sendPush = async (a: Announcement) => {
+    if (!a.title || !a.content) { toast.error("Title and content required before sending push."); return; }
+    const idx = data.indexOf(a);
+    setPushingIdx(idx);
+    try {
+      const { error } = await supabase.functions.invoke("send-announcement", {
+        body: { title: a.title, body: a.content.slice(0, 120) },
+      });
+      if (error) throw error;
+      toast.success(`Push sent for "${a.title}"!`);
+    } catch (err: any) {
+      toast.error("Push failed: " + (err.message ?? String(err)));
+    } finally {
+      setPushingIdx(null);
+    }
+  };
+
   const add = () =>
     onChange([
       {
@@ -351,12 +370,22 @@ export function AnnouncementEditor({
             <span className="text-xs font-black text-slate-400 uppercase tracking-wider">
               #{i + 1}
             </span>
-            <button
-              onClick={() => remove(i)}
-              className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => sendPush(a)}
+                disabled={pushingIdx === i}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 text-[10px] font-black uppercase tracking-wider transition disabled:opacity-50"
+              >
+                {pushingIdx === i ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                Send Push
+              </button>
+              <button
+                onClick={() => remove(i)}
+                className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
@@ -897,6 +926,49 @@ export function PlayersManager() {
     setActionId(null);
   };
 
+  const approveAllPending = async () => {
+    const pendingPlayers = players.filter((p) => !p.is_approved);
+    if (pendingPlayers.length === 0) return;
+    if (!confirm(`Approve all ${pendingPlayers.length} pending players?`)) return;
+    
+    const ids = pendingPlayers.map(p => p.id);
+    const { error } = await supabase.from("players").update({ is_approved: true }).in("id", ids);
+    if (error) {
+      toast.error("Bulk approve failed: " + error.message);
+    } else {
+      toast.success(`Approved ${pendingPlayers.length} players!`);
+      setPlayers(p => p.map(pl => ids.includes(pl.id) ? { ...pl, is_approved: true } : pl));
+    }
+  };
+
+  const exportCsv = () => {
+    if (players.length === 0) return;
+    const headers = ["ID", "Name", "Email", "Department", "Approved", "Created At", "ELO", "Singles", "Doubles", "Mixed"];
+    const rows = players.map(p => {
+      const elo = p.stats?.elo ?? p.stats?.eloRating ?? "";
+      const s = p.stats?.singles ?? "";
+      const d = p.stats?.doubles ?? "";
+      const xd = p.stats?.mixed ?? "";
+      return [
+        p.id,
+        `"${p.full_name || ""}"`,
+        `"${p.email || ""}"`,
+        `"${p.department || ""}"`,
+        p.is_approved,
+        p.created_at,
+        elo, s, d, xd
+      ].join(",");
+    });
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `players_export_${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const removeProfile = async (id: string, name: string) => {
     if (
       !confirm(
@@ -1035,7 +1107,21 @@ export function PlayersManager() {
             className={`${inputCls} pl-10`}
           />
         </div>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center">
+          <button 
+             onClick={approveAllPending}
+             disabled={pending === 0}
+             className="px-3 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 font-bold text-xs hover:bg-emerald-100 disabled:opacity-50 transition mr-2"
+          >
+             <UserCheck className="w-3.5 h-3.5 inline mr-1" />
+             Approve All ({pending})
+          </button>
+          <button 
+             onClick={exportCsv}
+             className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 disabled:opacity-50 transition mr-2"
+          >
+             Download CSV
+          </button>
           {(["profile", "no-profile", "pending", "approved"] as const).map(
             (f) => (
               <button
@@ -1468,6 +1554,23 @@ export function MatchesManager() {
     setActionId(null);
   };
 
+  const recalculateElo = async () => {
+    if (!confirm("WARNING: This will wipe all current ELOs and recalculate them from scratch. It might take up to a minute. Proceed?")) return;
+    setActionId("recalc");
+    const start = Date.now();
+    const { error } = await supabase.rpc("recalculate_all_elo");
+    if (error) {
+      toast.error("Recalculation failed: " + error.message);
+      await supabase.from("admin_logs").insert({ admin_email: "admin", action: "elo_recalculate_failed", details: error.message });
+    } else {
+      const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+      toast.success("ELO Recalculation complete!");
+      await supabase.from("admin_logs").insert({ admin_email: "admin", action: "elo_recalculate_all", details: `Completed in ${elapsed}s` });
+      load();
+    }
+    setActionId(null);
+  };
+
   const revokeMatch = async (id: string) => {
     if (
       !confirm(
@@ -1490,6 +1593,31 @@ export function MatchesManager() {
     setActionId(null);
   };
 
+  const exportMatchesCsv = () => {
+    if (matches.length === 0) return;
+    const headers = ["ID", "Status", "Created At", "Player1", "Player2", "Category", "Score", "Winner ID", "P1 Elo Change", "P2 Elo Change"];
+    const rows = matches.map(m => [
+      m.id,
+      m.status,
+      m.created_at,
+      `"${m.player1?.full_name || m.player1_id || ""}"`,
+      `"${m.player2?.full_name || m.player2_id || ""}"`,
+      m.category || "friendly",
+      `"${m.match_score || m.score || ""}"`,
+      m.winner_id,
+      m.elo_change_p1 || "",
+      m.elo_change_p2 || ""
+    ].join(","));
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `matches_export_${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (loading)
     return (
       <div className="flex justify-center py-10">
@@ -1503,12 +1631,29 @@ export function MatchesManager() {
         <h3 className="font-black text-slate-800 dark:text-white">
           Recent Matches (Last 100)
         </h3>
-        <button
-          onClick={load}
-          className="p-2 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800"
-        >
-          <RefreshCw className="w-4 h-4 text-slate-500" />
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={recalculateElo}
+            disabled={actionId === "recalc"}
+            className="flex items-center gap-2 px-3 py-2 border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 font-bold text-xs rounded-xl hover:bg-rose-100 disabled:opacity-50 transition"
+          >
+            {actionId === "recalc" ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+            Recalculate All ELOs
+          </button>
+          <button
+            onClick={exportMatchesCsv}
+            className="flex items-center gap-2 px-3 py-2 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-50 transition"
+          >
+            <Download className="w-4 h-4" />
+            Download CSV
+          </button>
+          <button
+            onClick={load}
+            className="p-2 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800"
+          >
+            <RefreshCw className="w-4 h-4 text-slate-500" />
+          </button>
+        </div>
       </div>
       <div className="space-y-3">
         {matches.map((m, idx) => {

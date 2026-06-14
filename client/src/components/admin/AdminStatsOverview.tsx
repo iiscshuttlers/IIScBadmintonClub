@@ -5,6 +5,8 @@ import {
   Users, Trophy, Activity, Clock, TrendingUp, TrendingDown,
   Zap, CheckCircle, XCircle, AlertTriangle, BarChart3, Download, Database
 } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, Cell } from "recharts";
+import { format, subDays, parseISO } from "date-fns";
 
 interface Stats {
   totalPlayers: number;
@@ -17,6 +19,7 @@ interface Stats {
   topPlayer: { name: string; elo: number } | null;
   biggestGainerWeek: { name: string; gain: number } | null;
   eloDistribution: { label: string; count: number; color: string }[];
+  matchVolumeData: { date: string; matches: number }[];
   dbLatency: number;
 }
 
@@ -50,7 +53,20 @@ export function AdminStatsOverview() {
           ]);
 
         const players = playersRes.data ?? [];
+        const matches = matchesRes.data ?? []; // Not full matches, just count
         const weekMatches = weekMatchesRes.data ?? [];
+
+        // Calculate Match Volume for last 7 days
+        const volumeMap: Record<string, number> = {};
+        for (let i = 6; i >= 0; i--) {
+          const d = format(subDays(new Date(), i), "MMM d");
+          volumeMap[d] = 0;
+        }
+        weekMatches.forEach((m) => {
+          const d = format(parseISO(m.created_at), "MMM d");
+          if (volumeMap[d] !== undefined) volumeMap[d]++;
+        });
+        const matchVolumeData = Object.entries(volumeMap).map(([date, matches]) => ({ date, matches }));
 
         // ELO distribution
         const eloDistribution = TIER_BANDS.map((band) => ({
@@ -87,6 +103,7 @@ export function AdminStatsOverview() {
           topPlayer: topPlayer ? { name: topPlayer.full_name, elo: topPlayer.elo_rating ?? 1200 } : null,
           biggestGainerWeek: topGainerData,
           eloDistribution,
+          matchVolumeData,
           dbLatency: Math.round(performance.now() - startTime),
         });
       } catch (e) {
@@ -214,6 +231,28 @@ export function AdminStatsOverview() {
               </span>
             </div>
           ))}
+        </div>
+      </div>
+      
+      {/* Match Volume Over Time */}
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5">
+        <h3 className="text-sm font-black text-slate-700 dark:text-white mb-6 flex items-center gap-2">
+          <TrendingUp className="w-4 h-4 text-violet-500" /> Match Volume (Last 7 Days)
+        </h3>
+        <div className="h-64 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={stats.matchVolumeData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} vertical={false} />
+              <XAxis dataKey="date" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} dy={10} />
+              <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} dx={-10} allowDecimals={false} />
+              <RechartsTooltip 
+                contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px', color: '#f8fafc', fontWeight: 'bold' }}
+                itemStyle={{ color: '#a78bfa' }}
+                cursor={{ stroke: '#334155', strokeWidth: 1, strokeDasharray: '4 4' }}
+              />
+              <Line type="monotone" dataKey="matches" name="Matches" stroke="#8b5cf6" strokeWidth={3} dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 4, stroke: '#fff' }} activeDot={{ r: 6, strokeWidth: 0 }} />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>

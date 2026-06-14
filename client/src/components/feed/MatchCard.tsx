@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { Trophy, Swords, Sparkles, TrendingUp, Star, Share2, Video, Edit2 } from "lucide-react";
+import { Trophy, Swords, Sparkles, TrendingUp, Heart, Share2, Video, Edit2, BarChart2 } from "lucide-react";
 import { EditVideoModal } from "./EditVideoModal";
+import { MatchScorecardModal } from "./MatchScorecardModal";
 
 interface MatchCardProps {
   match: any;
@@ -39,6 +40,7 @@ export function MatchCard({
 
   const [currentVideoUrl, setCurrentVideoUrl] = useState(match.video_url || null);
   const [isEditVideoOpen, setIsEditVideoOpen] = useState(false);
+  const [isScorecardOpen, setIsScorecardOpen] = useState(false);
 
   let displayScore = match.score || match.match_score || "";
   let highlightUrl = currentVideoUrl;
@@ -287,6 +289,13 @@ export function MatchCard({
         onSuccess={(url) => setCurrentVideoUrl(url)}
       />
 
+      <MatchScorecardModal
+        match={match}
+        isOpen={isScorecardOpen}
+        onClose={() => setIsScorecardOpen(false)}
+        currentUser={currentUser}
+      />
+
       {/* Children (e.g., Accept/Reject buttons) */}
       {children && <div className="mt-4">{children}</div>}
 
@@ -303,23 +312,37 @@ export function MatchCard({
               {highlightUrl ? "Edit Video" : "Add Video"}
             </button>
           )}
-        </div>
-        <div className="flex justify-end">
           <button
-          onClick={onKudos}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsScorecardOpen(true); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
+          >
+            <BarChart2 className="w-3.5 h-3.5" /> Scorecard
+          </button>
+        </div>
+        <div className="flex justify-end relative z-50">
+          <button
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (onKudos) onKudos();
+          }}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${
             isKudosed
-              ? "text-yellow-500 bg-yellow-50 dark:bg-yellow-500/20"
+              ? "text-rose-500 bg-rose-50 dark:bg-rose-500/20"
               : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
           }`}
         >
-          <Star className="w-4 h-4" fill={isKudosed ? "currentColor" : "none"} stroke="currentColor" />
-          Kudos <span className="kudos-count font-medium ml-1">{kudosCount}</span>
+          <Heart className="w-4 h-4" fill={isKudosed ? "currentColor" : "none"} stroke="currentColor" />
+          Like <span className="kudos-count font-medium ml-1">{kudosCount}</span>
         </button>
 
         <button
+          onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => {
             e.preventDefault();
+            e.stopPropagation();
             if (onShare) onShare();
           }}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 ml-2"

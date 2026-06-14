@@ -11,6 +11,7 @@ import {
   Crown,
   Flame,
   BarChart3,
+  Download,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { usePageMeta } from "@/hooks/usePageMeta";
@@ -63,10 +64,34 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
     localStorage.setItem("leaderboard_tab", activeTab);
   }, [activeTab, categoryFilter]);
 
+  const [ironmanFilter, setIronmanFilter] = useState<"all" | "monthly">("all");
+  const [monthlyCounts, setMonthlyCounts] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    if (activeTab === "ironman" && ironmanFilter === "monthly") {
+      const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+      supabase.from("matches").select("player1_id, player2_id, team1_partner_id, team2_partner_id")
+        .eq("status", "confirmed")
+        .gte("created_at", startOfMonth)
+        .then(({data}) => {
+           if (data) {
+             const counts: Record<string, number> = {};
+             for (const match of data) {
+               [match.player1_id, match.player2_id, match.team1_partner_id, match.team2_partner_id].forEach(id => {
+                 if (id) counts[id] = (counts[id] || 0) + 1;
+               });
+             }
+             setMonthlyCounts(counts);
+           }
+        });
+    }
+  }, [activeTab, ironmanFilter]);
+
   const [upsets, setUpsets] = useState<any[]>([]);
   const [activeStreaks, setActiveStreaks] = useState<any[]>([]);
   const [allStreaks, setAllStreaks] = useState<Record<string, number>>({});
   const [lastEloChange, setLastEloChange] = useState<Record<string, number>>({});
+  const [eloHistory, setEloHistory] = useState<Record<string, number[]>>({});
 
   useEffect(() => {
     if (activeTab === "elo") {
@@ -91,8 +116,9 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
               .slice(0, 3);
             setUpsets(significantUpsets);
 
-            // 3. Compute last ELO change per player
+            // 3. Compute last ELO change + history (last 5) per player
             const lastChange: Record<string, number> = {};
+            const history: Record<string, number[]> = {};
             // data is newest first — first occurrence per player = their last match
             for (const match of data) {
               const players4 = [
@@ -102,12 +128,15 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                 { id: match.team2_partner_id, change: match.elo_change_p4 },
               ];
               for (const p of players4) {
-                if (p.id && !(p.id in lastChange) && p.change != null) {
-                  lastChange[p.id] = p.change;
+                if (p.id && p.change != null) {
+                  if (!history[p.id]) history[p.id] = [];
+                  if (history[p.id].length < 5) history[p.id].push(p.change);
+                  if (!(p.id in lastChange)) lastChange[p.id] = p.change;
                 }
               }
             }
             setLastEloChange(lastChange);
+            setEloHistory(history);
 
             // 2. Calculate Active Streaks
             const playerStreaks: Record<string, { id: string, name: string, avatar: string, streak: number, isAlive: boolean }> = {};
@@ -249,8 +278,8 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
         return a.full_name.localeCompare(b.full_name);
       }
       // Ironman sorting (by total matches)
-      const matchesA = getMatchesCount(getCategoryRecord(a));
-      const matchesB = getMatchesCount(getCategoryRecord(b));
+      const matchesA = ironmanFilter === "monthly" ? (monthlyCounts[a.id] || 0) : getMatchesCount(getCategoryRecord(a));
+      const matchesB = ironmanFilter === "monthly" ? (monthlyCounts[b.id] || 0) : getMatchesCount(getCategoryRecord(b));
       
       if (matchesB !== matchesA) return matchesB - matchesA;
       
@@ -265,6 +294,38 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
 
   const top3 = rankedPlayers.slice(0, 3);
   const rest = rankedPlayers.slice(3);
+
+  const exportLeaderboard = () => {
+    if (rankedPlayers.length === 0) return;
+    const headers = ["Rank", "Name", "Department", "Gender", "Level", "Global ELO", "MS", "WS", "MD", "WD", "XD", "Singles Record", "Doubles Record", "Mixed Record", "Matches Played"];
+    const rows = rankedPlayers.map((p, index) => {
+      return [
+        index + 1,
+        `"${p.full_name || ""}"`,
+        `"${p.department || ""}"`,
+        p.gender || "",
+        getEloTier(p.elo_rating).name,
+        p.elo_rating,
+        p.singles_elo || "",
+        p.womens_singles_elo || "",
+        p.doubles_elo || "",
+        p.womens_doubles_elo || "",
+        p.mixed_elo || "",
+        p.singles_record || "0W - 0L",
+        p.doubles_record || "0W - 0L",
+        p.mixed_record || "0W - 0L",
+        getMatchesCount(p.win_loss_record)
+      ].join(",");
+    });
+    const csv = [headers.join(","), ...rows].join("\\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Leaderboard_${categoryFilter}_${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="pb-24 font-sans">
@@ -310,24 +371,56 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
           </div>
         </div>
 
-        {/* Category Filters */}
-        <div className="flex justify-center mb-10 overflow-x-auto px-4 hide-scrollbar">
-          <div className="flex gap-2 bg-slate-100 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700/50">
-            {(["ALL", "MS", "WS", "MD", "WD", "XD"] as const).map((cat) => (
+        {/* Filters */}
+        <div className="flex flex-col md:flex-row items-center justify-center gap-4 mb-10 px-4">
+          <div className="flex gap-2 bg-slate-100/50 dark:bg-slate-800/30 p-1.5 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 w-full md:w-auto overflow-x-auto hide-scrollbar">
+            {["ALL", "MS", "WS", "MD", "WD", "XD"].map(cat => (
               <button
                 key={cat}
-                onClick={() => setCategoryFilter(cat)}
-                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all ${
+                onClick={() => setCategoryFilter(cat as any)}
+                className={`px-4 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
                   categoryFilter === cat
-                    ? "bg-emerald-500 text-white shadow-md"
-                    : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+                    ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm ring-1 ring-slate-200 dark:ring-slate-600"
+                    : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                 }`}
               >
-                {cat}
+                {cat === "ALL" ? "Global" : cat}
               </button>
             ))}
           </div>
+          {activeTab === "ironman" && (
+            <div className="flex gap-2 bg-slate-100/50 dark:bg-slate-800/30 p-1.5 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 w-full md:w-auto shrink-0">
+              <button
+                onClick={() => setIronmanFilter("all")}
+                className={`flex-1 px-4 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                  ironmanFilter === "all"
+                    ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm ring-1 ring-slate-200 dark:ring-slate-600"
+                    : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                }`}
+              >
+                All-Time
+              </button>
+              <button
+                onClick={() => setIronmanFilter("monthly")}
+                className={`flex-1 px-4 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                  ironmanFilter === "monthly"
+                    ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm ring-1 ring-slate-200 dark:ring-slate-600"
+                    : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                }`}
+              >
+                This Month
+              </button>
+            </div>
+          )}
+          <button 
+             onClick={exportLeaderboard}
+             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs transition-all border border-slate-200 dark:border-slate-700 w-full md:w-auto justify-center md:absolute right-4"
+          >
+             <Download className="w-4 h-4" /> Export CSV
+          </button>
         </div>
+
+
 
         {activeTab === "elo" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16 px-4">
@@ -432,7 +525,9 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                       <span className="font-bold text-slate-600 dark:text-slate-300 text-sm">
                         {activeTab === "elo"
                           ? `${getEloTier(getCategoryElo(top3[1])).name} • ${getCategoryElo(top3[1])} ELO`
-                          : `${getMatchesCount(getCategoryRecord(top3[1]))} Matches`}
+                          : ironmanFilter === "monthly" 
+                            ? `${monthlyCounts[top3[1].id] || 0} Matches This Month`
+                            : `${getMatchesCount(getCategoryRecord(top3[1]))} Matches All-Time`}
                       </span>
                       {activeTab === "elo" && lastEloChange[top3[1].id] != null && (
                         <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
@@ -581,15 +676,15 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
                   {rest.map((player, index) => {
-                    // Derive a visual rank-trend indicator from ELO vs baseline (1200)
-                    const eloBaseline = 1200;
-                    const eloGap = getCategoryElo(player) - eloBaseline;
+                    // Derive trend from last 5 match ELO changes (positive sum = rising)
+                    const hist = eloHistory[player.id] ?? [];
+                    const trendSum = hist.reduce((a, b) => a + b, 0);
                     const trend =
-                      activeTab !== "elo"
+                      activeTab !== "elo" || hist.length === 0
                         ? null
-                        : eloGap > 80
+                        : trendSum > 10
                           ? "up"
-                          : eloGap < -80
+                          : trendSum < -10
                             ? "down"
                             : "stable";
                     return (
@@ -601,13 +696,25 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                         <div className="flex flex-col items-center gap-0.5">
                           <span className="font-black text-slate-400 dark:text-slate-500">#{index + 4}</span>
                           {trend === "up" && (
-                            <span className="text-emerald-500 text-[10px] font-black leading-none">▲</span>
+                            <span className="inline-flex items-center gap-0.5 text-emerald-500 text-[10px] font-black leading-none bg-emerald-50 dark:bg-emerald-950/30 px-1 rounded">▲ HOT</span>
                           )}
                           {trend === "down" && (
-                            <span className="text-rose-500 text-[10px] font-black leading-none">▼</span>
+                            <span className="inline-flex items-center gap-0.5 text-rose-500 text-[10px] font-black leading-none bg-rose-50 dark:bg-rose-950/30 px-1 rounded">▼ DIP</span>
                           )}
                           {trend === "stable" && (
                             <span className="text-slate-400 text-[10px] font-black leading-none">—</span>
+                          )}
+                          {/* Mini ELO sparkline dots */}
+                          {hist.length > 1 && (
+                            <div className="flex items-end gap-[1px] mt-0.5 h-3">
+                              {hist.slice().reverse().map((v, i) => (
+                                <div
+                                  key={i}
+                                  className={`w-1 rounded-sm ${v >= 0 ? "bg-emerald-400" : "bg-rose-400"}`}
+                                  style={{ height: `${Math.min(12, 4 + Math.abs(v) / 3)}px` }}
+                                />
+                              ))}
+                            </div>
                           )}
                         </div>
                       </td>

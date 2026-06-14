@@ -304,18 +304,22 @@ export function H2HSection() {
             {h2hMatches.map((m, i) => (
               <div
                 key={i}
-                className="flex justify-between items-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl"
+                className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl gap-4"
               >
-                <div className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                <div className="text-sm font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
                   {new Date(m.created_at).toLocaleDateString()}
                 </div>
-                <div className="text-xl font-black bg-slate-200 dark:bg-slate-700 px-3 py-1 rounded-lg">
-                  {m.score.split(" | ")[0]}
+                <div className="flex flex-wrap gap-1.5 justify-start sm:justify-center flex-1">
+                  {m.score.split(" | ")[0].split(",").map((s: string, idx: number) => (
+                    <div key={idx} className="text-sm sm:text-base font-black bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 px-2.5 py-1 rounded-lg whitespace-nowrap">
+                      {s.trim()}
+                    </div>
+                  ))}
                 </div>
                 <div
-                  className={`text-sm font-bold flex items-center gap-1 ${m.winner_id === p1Id ? "text-emerald-500" : "text-slate-400"}`}
+                  className={`text-sm font-bold flex items-center gap-1.5 whitespace-nowrap ${m.winner_id === p1Id ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"}`}
                 >
-                  {m.winner_id === p1Id ? <Trophy className="w-4 h-4" /> : ""}{" "}
+                  {m.winner_id === p1Id ? <Trophy className="w-4 h-4 text-amber-500" /> : ""}{" "}
                   {m.winner_id === p1Id ? p1?.full_name : p2?.full_name} Won
                 </div>
               </div>

@@ -205,6 +205,7 @@ export default defineConfig({
     emptyOutDir: true,
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
+      external: ["capacitor-native-biometric"],
       output: {
         manualChunks: {
           vendor: ["react", "react-dom", "wouter", "framer-motion"],

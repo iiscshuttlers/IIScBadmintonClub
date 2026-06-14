@@ -126,6 +126,17 @@ export function PlayerCard({
   const [isPinged, setIsPinged] = useState(false);
   const winPct = parseWinPct(player.win_loss_record);
 
+  const currentStreak = player.recent_form?.[0];
+  let streakLen = 0;
+  if (player.recent_form && currentStreak) {
+    for (const r of player.recent_form) {
+      if (r === currentStreak) streakLen++;
+      else break;
+    }
+  }
+  const isHot = currentStreak === "W" && streakLen >= 3;
+  const isCold = currentStreak === "L" && streakLen >= 3;
+
   const handlePing = () => {
     if (isOwn) return;
     if (isPinged) {
@@ -259,6 +270,16 @@ export function PlayerCard({
             {winPct !== null && (
               <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2.5 py-1 rounded-md">
                 {winPct}% WIN
+              </span>
+            )}
+            {isHot && (
+              <span className="text-[10px] flex items-center justify-center font-bold text-orange-700 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30 px-2.5 py-1 rounded-md" title={`${streakLen} Match Win Streak!`}>
+                🔥 HOT
+              </span>
+            )}
+            {isCold && (
+              <span className="text-[10px] flex items-center justify-center font-bold text-sky-700 dark:text-sky-400 bg-sky-100 dark:bg-sky-900/30 px-2.5 py-1 rounded-md" title={`${streakLen} Match Losing Streak`}>
+                🧊 COLD
               </span>
             )}
           </div>

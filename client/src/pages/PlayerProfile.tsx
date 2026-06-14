@@ -1,4 +1,4 @@
-import { useParams, useLocation } from "wouter";
+import { useParams, useLocation, Link } from "wouter";
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence, useSpring, useTransform, type Variants } from "framer-motion";
@@ -47,6 +47,7 @@ import {
   Heart,
   Sun,
   Moon,
+  FileDown,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,7 @@ import {
   EquipmentArsenalSection,
   CareerHighlightsSection,
 } from "@/components/player-profile/PlayerProfileSections";
+import { EloAuditModal } from "@/components/player-profile/EloAuditModal";
 import {
   LoadingScreen,
   FormPill,
@@ -70,6 +72,11 @@ import {
   DoublesSynergyWidget,
 } from "@/components/player-profile/PlayerProfileWidgets";
 import { HeadToHeadWidget } from "@/components/player-profile/HeadToHeadWidget";
+import { PlayerAnalyticsWidget } from "@/components/player-profile/PlayerAnalyticsWidget";
+import { AchievementBadges } from "@/components/player-profile/AchievementBadges";
+import { WrappedCard } from "@/components/player-profile/WrappedCard";
+import { PerformanceTrends } from "@/components/player-profile/PerformanceTrends";
+import { exportProfilePdf } from "@/lib/exportProfilePdf";
 import { Capacitor } from "@capacitor/core";
 import { Share } from "@capacitor/share";
 import { toast } from "sonner";
@@ -84,8 +91,10 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis
 } from "recharts";
 import QRCode from "react-qr-code";
+import { ChallengeModal } from "@/components/ChallengeModal";
 import confetti from "canvas-confetti";
 import { cn, getBaseShareUrl } from "@/lib/utils";
 import { renderWrappedShareCard } from "@/lib/wrappedShareCard";
@@ -193,6 +202,9 @@ interface Player {
   isApproved?: boolean;
   buddies?: string[];
   buddyRequests?: string[];
+  singles_record?: string;
+  doubles_record?: string;
+  mixed_record?: string;
 }
 
 const MATCH_SELECT =
@@ -324,6 +336,7 @@ export default function PlayerProfile({
   const isUnranked = false;
 
   const [loading, setLoading] = useState(true);
+  const [showEloAudit, setShowEloAudit] = useState(false);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
   const [isAvatarOpen, setIsAvatarOpen] = useState(false);
@@ -360,6 +373,7 @@ export default function PlayerProfile({
   const [isBuddy, setIsBuddy] = useState(false);
   const [hasSentRequest, setHasSentRequest] = useState(false);
   const [hasReceivedRequest, setHasReceivedRequest] = useState(false);
+  const [isChallengeModalOpen, setIsChallengeModalOpen] = useState(false);
   const [introPhase, setIntroPhase] = useState(0);
   const profileLoadRetried = useRef(false);
 
@@ -580,6 +594,9 @@ export default function PlayerProfile({
       singles_elo: data.singles_elo,
       doubles_elo: data.doubles_elo,
       mixed_elo: data.mixed_elo,
+      singles_record: data.singles_record,
+      doubles_record: data.doubles_record,
+      mixed_record: data.mixed_record,
     };
   }
 
@@ -1068,10 +1085,17 @@ export default function PlayerProfile({
       };
     };
 
+    const singles = confirmed.filter((m) => m.category === "MS" || m.category === "WS");
+    const doubles = confirmed.filter((m) => m.category === "MD" || m.category === "WD");
+    const mixed = confirmed.filter((m) => m.category === "XD");
+
     return {
       all: computeStats(confirmed),
       friendly: computeStats(friendly),
       tournament: computeStats(tournament),
+      singles: computeStats(singles),
+      doubles: computeStats(doubles),
+      mixed: computeStats(mixed),
     };
   }, [liveMatches, id]);
 
@@ -1247,6 +1271,34 @@ export default function PlayerProfile({
     }
   };
 
+  const handleExportPdf = () => {
+    const recentMatches = liveMatches
+      .filter((m: any) => m.status === "confirmed")
+      .slice(0, 15)
+      .map((m: any) => {
+        const isP1 = m.player1_id === id;
+        const opponentName = isP1
+          ? m.player2?.full_name ?? "Unknown"
+          : m.player1?.full_name ?? "Unknown";
+        const won = m.winner_id === id;
+        return {
+          date: m.created_at,
+          opponent: opponentName,
+          score: m.match_score?.split("[")[0]?.trim() ?? "",
+          result: (won ? "W" : "L") as "W" | "L",
+        };
+      });
+
+    exportProfilePdf({
+      name: player.fullName,
+      elo: player.elo_rating ?? 1200,
+      wins: player.stats?.wins ?? 0,
+      losses: player.stats?.losses ?? 0,
+      avatarUrl: player.avatar ?? null,
+      recentMatches,
+    });
+  };
+
 
   const handleWrapped = async () => {
     if (!player) return;
@@ -1258,49 +1310,54 @@ export default function PlayerProfile({
       const totalMatches = parseInt(match[1]) + parseInt(match[2]);
       const winPctStr = (player.stats?.winPercentage ?? 0).toFixed(1) + "%";
       
+      const safeStreak = String(player.stats?.currentStreak || "0").replace("W", "");
+      const safeName = player.fullName || "Player";
+
       const canvas = await renderWrappedShareCard({
-        playerName: player.fullName,
+        playerName: safeName,
         avatarUrl: player.avatar,
         totalMatches: player.stats?.totalMatches || totalMatches,
         winRate: winPctStr,
         biggestRival: "Unknown", // Can be dynamically calculated later
-        bestStreak: parseInt((player.stats?.currentStreak || "0").replace("W", "")),
+        bestStreak: parseInt(safeStreak) || 0,
         highestElo: player.elo_rating || 1200
       });
 
       if (!canvas) throw new Error("Canvas rendering failed");
 
-      // Convert to blob and share
-      canvas.toBlob(async (blob) => {
-        if (!blob) throw new Error("Blob conversion failed");
-        
-        try {
-          if (navigator.share && navigator.canShare) {
-            const file = new File([blob], "wrapped.png", { type: "image/png" });
-            if (navigator.canShare({ files: [file] })) {
-              await navigator.share({
-                title: "My IISc Shuttlers Year in Review",
-                files: [file]
-              });
-              setGeneratingWrapped(false);
-              return;
-            }
+      // Use toDataURL which is synchronous and avoids unhandled promise rejections
+      const dataUrl = canvas.toDataURL("image/png");
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      
+      try {
+        if (navigator.share && navigator.canShare) {
+          const file = new File([blob], "wrapped.png", { type: "image/png" });
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              title: "My IISc Shuttlers Year in Review",
+              files: [file]
+            });
+            setGeneratingWrapped(false);
+            return;
           }
-          
-          // Fallback to download
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `wrapped_${player.fullName.replace(/\s+/g, "_")}.png`;
-          a.click();
-          URL.revokeObjectURL(url);
-          toast.success("Wrapped image downloaded!");
-        } catch (e) {
-          console.error("Share error:", e);
         }
-        setGeneratingWrapped(false);
-      });
+        
+        // Fallback to download
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `wrapped_${safeName.replace(/\s+/g, "_")}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success("Wrapped image downloaded!");
+      } catch (e) {
+        console.error("Share error:", e);
+        // If navigator.share fails (e.g. user cancelled), do not show an error toast
+      }
+      setGeneratingWrapped(false);
     } catch (err) {
+      console.error(err);
       toast.error("Failed to generate Wrapped card");
       setGeneratingWrapped(false);
     }
@@ -1468,6 +1525,14 @@ export default function PlayerProfile({
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">{generatingWrapped ? "Loading..." : "Wrapped"}</span>
+            </button>
+
+            <button
+              onClick={handleExportPdf}
+              className="p-2.5 rounded-xl bg-white/80 dark:bg-black/20 border border-slate-200/80 dark:border-white/20 text-slate-700 dark:text-white hover:bg-white dark:hover:bg-black/40 transition-all backdrop-blur-md shadow-sm"
+              title="Export PDF"
+            >
+              <FileDown className="w-4 h-4" />
             </button>
 
             <button
@@ -1673,6 +1738,14 @@ export default function PlayerProfile({
                          Add Buddy
                        </button>
                      )}
+                     
+                     <button
+                       onClick={() => setIsChallengeModalOpen(true)}
+                       className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-orange-500 text-white hover:bg-orange-600 border border-orange-400"
+                     >
+                       <Swords className="w-4 h-4" />
+                       Challenge
+                     </button>
                    </>
                  )}
                </div>
@@ -1681,7 +1754,7 @@ export default function PlayerProfile({
              {currentUser && player && currentUser.id === player.userId && (
                <div className="absolute top-0 right-0 hidden lg:flex flex-col items-center bg-white/10 dark:bg-black/20 p-4 rounded-3xl backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-2xl">
                  <div className="bg-white p-2 rounded-xl">
-                   <QRCode value={player.id} size={100} />
+                   <QRCode value={`${getBaseShareUrl()}/player/${player.id}`} size={100} />
                  </div>
                  <span className="text-[10px] font-black uppercase text-slate-800 dark:text-white/60 mt-3 tracking-widest text-center max-w-[100px]">Let Opponents Scan You</span>
                </div>
@@ -1692,7 +1765,7 @@ export default function PlayerProfile({
            {currentUser && player && currentUser.id === player.userId && (
              <div className="lg:hidden mt-6 flex flex-col items-center justify-center bg-white/60 dark:bg-black/30 backdrop-blur-md p-6 rounded-3xl border border-white/40 dark:border-white/10 shadow-lg relative z-20">
                <div className="bg-white p-3 rounded-2xl shadow-sm">
-                 <QRCode value={player.id} size={140} />
+                 <QRCode value={`${window.location.origin}/player/${player.id}`} size={140} />
                </div>
                <p className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-slate-300 mt-4 text-center">
                  Let opponents scan to log matches
@@ -1965,6 +2038,126 @@ export default function PlayerProfile({
                   )}
                 </div>
               </div>
+
+              {/* Singles */}
+              <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden group hover:shadow-md transition-shadow">
+                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-300 to-blue-500" />
+                <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-blue-500/[0.04] rounded-full blur-2xl" />
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2.5 mb-4">
+                    <div className="w-8 h-8 rounded-xl bg-blue-500/[0.12] flex items-center justify-center text-base shrink-0">
+                      👤
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-[0.18em] text-blue-400">
+                      Singles
+                    </span>
+                  </div>
+                  {splitStats.singles.total > 0 ? (
+                    <>
+                      <div className="text-3xl font-black text-white tabular-nums mb-1">
+                        {splitStats.singles.wins}W
+                        <span className="text-white/20 font-light mx-1">–</span>
+                        {splitStats.singles.losses}L
+                      </div>
+                      <div className="text-xs text-slate-500 dark:text-white/35 font-medium mb-2">
+                        {splitStats.singles.total} matches · {splitStats.singles.winPct}% win
+                      </div>
+                      <div className="h-1.5 rounded-full bg-slate-200 dark:bg-white/8 overflow-hidden mb-3">
+                        <motion.div
+                          className="h-full rounded-full bg-gradient-to-r from-blue-400 to-indigo-500"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${splitStats.singles.winPct}%` }}
+                          transition={{ duration: 1, ease: "easeOut", delay: 0.4 }}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-sm text-slate-500 dark:text-white/35 italic">
+                      No singles matches
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Doubles */}
+              <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden group hover:shadow-md transition-shadow">
+                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-purple-300 to-purple-500" />
+                <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-purple-500/[0.04] rounded-full blur-2xl" />
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2.5 mb-4">
+                    <div className="w-8 h-8 rounded-xl bg-purple-500/[0.12] flex items-center justify-center text-base shrink-0">
+                      👥
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-[0.18em] text-purple-400">
+                      Doubles
+                    </span>
+                  </div>
+                  {splitStats.doubles.total > 0 ? (
+                    <>
+                      <div className="text-3xl font-black text-white tabular-nums mb-1">
+                        {splitStats.doubles.wins}W
+                        <span className="text-white/20 font-light mx-1">–</span>
+                        {splitStats.doubles.losses}L
+                      </div>
+                      <div className="text-xs text-slate-500 dark:text-white/35 font-medium mb-2">
+                        {splitStats.doubles.total} matches · {splitStats.doubles.winPct}% win
+                      </div>
+                      <div className="h-1.5 rounded-full bg-slate-200 dark:bg-white/8 overflow-hidden mb-3">
+                        <motion.div
+                          className="h-full rounded-full bg-gradient-to-r from-purple-400 to-fuchsia-500"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${splitStats.doubles.winPct}%` }}
+                          transition={{ duration: 1, ease: "easeOut", delay: 0.5 }}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-sm text-slate-500 dark:text-white/35 italic">
+                      No doubles matches
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Mixed */}
+              <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden group hover:shadow-md transition-shadow">
+                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-rose-300 to-rose-500" />
+                <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-rose-500/[0.04] rounded-full blur-2xl" />
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2.5 mb-4">
+                    <div className="w-8 h-8 rounded-xl bg-rose-500/[0.12] flex items-center justify-center text-base shrink-0">
+                      👫
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-[0.18em] text-rose-400">
+                      Mixed
+                    </span>
+                  </div>
+                  {splitStats.mixed.total > 0 ? (
+                    <>
+                      <div className="text-3xl font-black text-white tabular-nums mb-1">
+                        {splitStats.mixed.wins}W
+                        <span className="text-white/20 font-light mx-1">–</span>
+                        {splitStats.mixed.losses}L
+                      </div>
+                      <div className="text-xs text-slate-500 dark:text-white/35 font-medium mb-2">
+                        {splitStats.mixed.total} matches · {splitStats.mixed.winPct}% win
+                      </div>
+                      <div className="h-1.5 rounded-full bg-slate-200 dark:bg-white/8 overflow-hidden mb-3">
+                        <motion.div
+                          className="h-full rounded-full bg-gradient-to-r from-rose-400 to-pink-500"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${splitStats.mixed.winPct}%` }}
+                          transition={{ duration: 1, ease: "easeOut", delay: 0.6 }}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-sm text-slate-500 dark:text-white/35 italic">
+                      No mixed matches
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </motion.div>
         )}
@@ -2140,8 +2333,14 @@ export default function PlayerProfile({
                     <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-white/45 flex items-center gap-2">
                       <TrendingUp className="w-4 h-4 text-amber-400" /> ELO Progression
                     </h3>
-                    
-                    <div className="flex items-center bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setShowEloAudit(true)}
+                        className="px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-500 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 transition"
+                      >
+                        Audit Log
+                      </button>
+                      <div className="flex items-center bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl">
                       {["ALL", "S", "D", "XD"].map((filter) => (
                         <button
                           key={filter}
@@ -2155,6 +2354,7 @@ export default function PlayerProfile({
                           {filter === "ALL" ? "OVR" : filter}
                         </button>
                       ))}
+                    </div>
                     </div>
                   </div>
                   
@@ -2174,12 +2374,14 @@ export default function PlayerProfile({
                           <Tooltip
                             contentStyle={{
                               borderRadius: "16px",
-                              border: "none",
-                              boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
-                              background: "var(--tw-colors-slate-900)",
+                              border: "1px solid rgba(255,255,255,0.08)",
+                              boxShadow: "0 20px 40px -8px rgb(0 0 0 / 0.4)",
+                              background: "#0f172a",
+                              color: "#f8fafc",
                             }}
                             itemStyle={{ color: "#f59e0b", fontWeight: "bold" }}
                             labelStyle={{ color: "#94a3b8", fontSize: "12px", marginBottom: "4px" }}
+                            formatter={(value: any, name: string) => [`${value} ELO`, "Rating"]}
                           />
                           <Line
                             type="monotone"
@@ -2221,10 +2423,72 @@ export default function PlayerProfile({
             {/* ── STATS TAB ── */}
             {activeTab === "STATS" && (
               <motion.section variants={itemVariants} className="space-y-6 md:space-y-8">
+                
+                <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-3xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden">
+                  <h2 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-white/45 flex items-center gap-2 mb-6">
+                    <Target className="w-4 h-4 text-emerald-500 dark:text-emerald-400" /> Player Type Analysis
+                  </h2>
+                  <div className="h-72 w-full" aria-label="Player strengths radar chart" role="img">
+                    {(() => {
+                      const sRecord = player.singles_record || "0W - 0L";
+                      const dRecord = player.doubles_record || "0W - 0L";
+                      const xdRecord = player.mixed_record || "0W - 0L";
+                      const parseWinPct = (r: string) => {
+                        const m = r.match(/(\d+)\s*W\s*-\s*(\d+)\s*L/i);
+                        if (!m) return 0;
+                        const w = +m[1];
+                        const l = +m[2];
+                        return (w+l) ? Math.round((w/(w+l))*100) : 0;
+                      };
+                      const data = [
+                        { subject: 'Singles', A: parseWinPct(sRecord) || 20, fullMark: 100 },
+                        { subject: 'Doubles', A: parseWinPct(dRecord) || 20, fullMark: 100 },
+                        { subject: 'Mixed', A: parseWinPct(xdRecord) || 20, fullMark: 100 },
+                        { subject: 'Activity', A: Math.min(100, Math.max(20, liveMatches.length * 5)), fullMark: 100 },
+                        { subject: 'Synergy', A: (player.doubles_elo || 1200) > 1300 ? 90 : 50, fullMark: 100 },
+                      ];
+                      return (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
+                            <PolarGrid stroke="#e2e8f0" className="dark:stroke-slate-800" />
+                            <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 12, fontWeight: 'bold' }} />
+                            <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                            <Radar name="Performance" dataKey="A" stroke="#10b981" strokeWidth={3} fill="#10b981" fillOpacity={0.4} />
+                            <Tooltip 
+                              contentStyle={{ backgroundColor: 'var(--tw-colors-slate-900)', borderColor: 'var(--tw-colors-slate-800)', borderRadius: '12px' }}
+                              itemStyle={{ color: '#10b981', fontWeight: 'bold' }}
+                            />
+                          </RadarChart>
+                        </ResponsiveContainer>
+                      );
+                    })()}
+                  </div>
+                </div>
+
                 <DoublesSynergyWidget
                   matches={liveMatches.filter((m) => m.status === "confirmed")}
                   playerId={id!}
                   allPlayers={allPlayers}
+                />
+                <AchievementBadges
+                  matches={liveMatches}
+                  playerId={id!}
+                  elo={player.elo_rating ?? 1200}
+                  wins={player.stats?.wins ?? 0}
+                  losses={player.stats?.losses ?? 0}
+                />
+                <PerformanceTrends matches={liveMatches} playerId={id!} />
+                <WrappedCard
+                  playerName={player.full_name}
+                  avatarUrl={player.avatar_url}
+                  elo={player.elo_rating ?? 1200}
+                  matches={liveMatches}
+                  playerId={id!}
+                />
+                <PlayerAnalyticsWidget
+                  matches={liveMatches}
+                  playerId={id!}
+                  playerElo={player.elo_rating ?? 1200}
                 />
                 <ActivityHeatmap
                   matches={liveMatches.filter((m) => m.status === "confirmed")}
@@ -2760,6 +3024,21 @@ export default function PlayerProfile({
           </div>
         </div>
       )}
+      {player && (
+        <ChallengeModal
+          isOpen={isChallengeModalOpen}
+          onClose={() => setIsChallengeModalOpen(false)}
+          currentUser={currentUser}
+          targetPlayer={player}
+        />
+      )}
+
+      <EloAuditModal
+        isOpen={showEloAudit}
+        onClose={() => setShowEloAudit(false)}
+        matches={liveMatches}
+        playerId={id!}
+      />
     </div>
   );
 }

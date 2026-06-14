@@ -123,7 +123,10 @@ const ProfileSetup = lazy(() => import("./pages/ProfileSetup"));
 const PlayersDirectory = lazy(() => import("./pages/PlayersDirectory"));
 const ComparePlayers = lazy(() => import("./pages/ComparePlayers"));
 const HallOfFame = lazy(() => import("./pages/HallOfFame"));
-const ChangePassword = lazy(() => import("./pages/ChangePassword"));// Save scroll position before navigating away, restore on back-navigation
+const ChangePassword = lazy(() => import("./pages/ChangePassword"));
+const FindLost = lazy(() => import("./pages/FindLost"));
+const DeleteAccount = lazy(() => import("./pages/DeleteAccount"));
+const DoublesPairProfile = lazy(() => import("./pages/DoublesPairProfile"));// Save scroll position before navigating away, restore on back-navigation
 const scrollMap = new Map<string, number>();
 
 function ScrollToTop() {
@@ -226,33 +229,36 @@ function ScrollProgress() {
 }
 
 function AppRoutes() {
-  const [location] = useLocation();
-
   return (
-    <Suspense fallback={<PageSkeleton />}>
-      <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/feed" component={Feed} />
-        <Route path="/feed/:tab" component={Feed} />
-        <Route path="/about" component={About} />
-        <Route path="/hall-of-fame" component={HallOfFame} />
-        <Route path="/gallery" component={Gallery} />
-        
-        <Route path="/admin" component={SiteAdmin} />
-        <Route path="/events/:slug" component={TournamentDetail} />
-        <Route path="/events" component={Events} />
-        <Route path="/join" component={Join} />
-        <Route path="/profile/setup" component={ProfileSetup} />
-        <Route path="/players" component={PlayersDirectory} />
-        <Route path="/player/:id/edit" component={ProfileSetup} />
-        <Route path="/player/:id" component={PlayerProfile} />
-        <Route path="/compare/:p1/:p2" component={ComparePlayers} />
-        <Route path="/profile/password" component={ChangePassword} />
+    <ErrorBoundary>
+      <Suspense fallback={<PageSkeleton />}>
+        <Switch>
+          <Route path="/" component={Home} />
+          <Route path="/feed" component={Feed} />
+          <Route path="/feed/:tab" component={Feed} />
+          <Route path="/about" component={About} />
+          <Route path="/hall-of-fame" component={HallOfFame} />
+          <Route path="/gallery" component={Gallery} />
 
-        <Route path="/404" component={NotFound} />
-        <Route component={NotFound} />
-      </Switch>
-    </Suspense>
+          <Route path="/admin" component={SiteAdmin} />
+          <Route path="/events/:slug" component={TournamentDetail} />
+          <Route path="/events" component={Events} />
+          <Route path="/join" component={Join} />
+          <Route path="/profile/setup" component={ProfileSetup} />
+          <Route path="/players" component={PlayersDirectory} />
+          <Route path="/player/:id/edit" component={ProfileSetup} />
+          <Route path="/player/:id" component={PlayerProfile} />
+          <Route path="/compare/:p1/:p2" component={ComparePlayers} />
+          <Route path="/profile/password" component={ChangePassword} />
+          <Route path="/find-lost" component={FindLost} />
+          <Route path="/delete-account" component={DeleteAccount} />
+          <Route path="/doubles/:p1/:p2" component={DoublesPairProfile} />
+
+          <Route path="/404" component={NotFound} />
+          <Route component={NotFound} />
+        </Switch>
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 
