@@ -1,5 +1,14 @@
 [
   {
+    "versionCode": 114,
+    "versionName": "1.114",
+    "date": "2026-06-14T13:35:05.375Z",
+    "changes": [
+      "- Apply sets multiplier to ELO and UI improvements",
+      "- chore: release v1.113 (build 113)"
+    ]
+  },
+  {
     "versionCode": 113,
     "versionName": "1.113",
     "date": "2026-06-13T14:17:23.000Z",
