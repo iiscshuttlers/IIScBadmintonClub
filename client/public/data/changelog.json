@@ -1,5 +1,14 @@
 [
   {
+    "versionCode": 115,
+    "versionName": "1.115",
+    "date": "2026-06-14T14:54:42.267Z",
+    "changes": [
+      "- Add global search, onboarding, admin stats",
+      "- chore: release v1.114 (build 114)"
+    ]
+  },
+  {
     "versionCode": 114,
     "versionName": "1.114",
     "date": "2026-06-14T13:35:05.375Z",
