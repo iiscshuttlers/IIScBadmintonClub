@@ -55,6 +55,7 @@ import {
   ChangelogViewer,
   type SiteConfig,
 } from "@/components/admin/AdminEditors";
+import { AdminStatsOverview } from "@/components/admin/AdminStatsOverview";
 import { Paintbrush, ClipboardList } from "lucide-react";
 
 /* ── Types ──────────────────────────────────────────────────────── */
@@ -97,6 +98,7 @@ type Player = {
 };
 
 type TabId =
+  | "overview"
   | "config"
   | "holidays"
   | "announcements"
@@ -109,6 +111,7 @@ type TabId =
   | "changelog";
 
 const TABS: { id: TabId; label: string; icon: any }[] = [
+  { id: "overview", label: "Overview", icon: Activity },
   { id: "config", label: "Landing Pages", icon: Paintbrush },
   { id: "holidays", label: "Holidays", icon: Calendar },
   { id: "announcements", label: "Announcements", icon: Megaphone },
@@ -169,12 +172,12 @@ export default function SiteAdmin() {
   const [activeTab, setActiveTab] = useState<TabId>(() => {
     const hash = window.location.hash.replace("#", "");
     if ([
-      "config", "holidays", "announcements", "events", "videos",
+      "overview", "config", "holidays", "announcements", "events", "videos",
       "players", "umpire", "registrations", "matches", "changelog"
     ].includes(hash)) {
       return hash as TabId;
     }
-    return isAdmin ? "holidays" : "umpire";
+    return isAdmin ? "overview" : "umpire";
   });
 
   useEffect(() => {
@@ -441,6 +444,7 @@ export default function SiteAdmin() {
     "videos",
   ];
   const counts: Record<Exclude<TabId, "registrations">, number | null> = {
+    overview: null,
     config: null,
     holidays: holidays.length,
     announcements: announcements.length,
@@ -531,6 +535,7 @@ export default function SiteAdmin() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.15 }}
           >
+            {activeTab === "overview" && isAdmin && <AdminStatsOverview />}
             {activeTab === "config" && (
               <ConfigEditor data={config} onChange={setC} />
             )}

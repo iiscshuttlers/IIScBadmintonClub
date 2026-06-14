@@ -13,6 +13,7 @@ import {
   Lock,
   Video,
   QrCode,
+  WifiOff,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { isAdminEmail } from "@/lib/admin";
@@ -187,6 +188,8 @@ export default function LogMatchModal({
   const [recentOpponentIds, setRecentOpponentIds] = useState<string[]>([]);
   const [isScanOpen, setIsScanOpen] = useState(false);
   const [scanTarget, setScanTarget] = useState<"opponent" | "partner" | "opponentPartner">("opponent");
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [offlineQueueCount, setOfflineQueueCount] = useState(0);
 
   useEffect(() => {
     try {
@@ -195,6 +198,21 @@ export default function LogMatchModal({
       );
       if (Array.isArray(stored)) setRecentOpponentIds(stored.slice(0, 3));
     } catch (e) {}
+
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    
+    try {
+      const q = JSON.parse(localStorage.getItem("offline_matches") || "[]");
+      setOfflineQueueCount(q.length);
+    } catch(e) {}
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
   }, []);
 
   const isAdmin = isAdminEmail(userEmail);
@@ -259,6 +277,8 @@ export default function LogMatchModal({
     }
 
     // Validate each set has reasonable scores
+    let myTeamSetsWon = 0;
+    let opponentSetsWon = 0;
     for (let i = 0; i < filledSets.length; i++) {
       const p1 = parseInt(filledSets[i].p1);
       const p2 = parseInt(filledSets[i].p2);
@@ -270,6 +290,10 @@ export default function LogMatchModal({
         setError(`Set ${i + 1}: Scores cannot be equal (a set must have a winner).`);
         return;
       }
+      
+      if (p1 > p2) myTeamSetsWon++;
+      else opponentSetsWon++;
+
       const hi = Math.max(p1, p2);
       const lo = Math.min(p1, p2);
       // Badminton: must reach 21 (or 30 at deuce), and win by ≥2 unless at 29-30
@@ -280,6 +304,15 @@ export default function LogMatchModal({
         setError(`Set ${i + 1}: Invalid badminton score (${p1}-${p2}). Winner must reach at least 21 and lead by 2, or win 30-29.`);
         return;
       }
+    }
+
+    if (myTeamWon && opponentSetsWon >= myTeamSetsWon) {
+      setError(`You claimed victory, but the scores indicate you lost more sets (${opponentSetsWon}) than you won (${myTeamSetsWon}).`);
+      return;
+    }
+    if (!myTeamWon && myTeamSetsWon >= opponentSetsWon) {
+      setError(`You claimed defeat, but the scores indicate you won more sets (${myTeamSetsWon}) than you lost (${opponentSetsWon}).`);
+      return;
     }
 
     // Strict Category Validation
@@ -482,6 +515,19 @@ export default function LogMatchModal({
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-6 space-y-5">
+            {isOffline && (
+              <div className="bg-amber-100 dark:bg-amber-900/40 border border-amber-200 dark:border-amber-800 rounded-xl p-3 flex items-start gap-3 text-amber-800 dark:text-amber-200">
+                <WifiOff className="w-5 h-5 shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-sm font-bold">You are offline (Gym Mode)</h4>
+                  <p className="text-xs opacity-90 mt-0.5">Matches logged will be queued locally and synced automatically when internet is restored.</p>
+                  {offlineQueueCount > 0 && (
+                    <p className="text-xs font-black mt-1">{offlineQueueCount} match{offlineQueueCount > 1 ? "es" : ""} in queue waiting to sync.</p>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Timestamp */}
             <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-xl px-3 py-2 border border-slate-100 dark:border-slate-800">
               <Clock className="w-3.5 h-3.5" /> Logging at:{" "}

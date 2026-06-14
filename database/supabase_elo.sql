@@ -54,9 +54,26 @@ CREATE OR REPLACE FUNCTION submit_friendly_match(
 ) RETURNS UUID AS $$
 DECLARE
   new_match_id UUID;
+  existing_match_id UUID;
 BEGIN
   IF match_winner_id != submitter_id AND match_winner_id != opponent_id THEN
     RAISE EXCEPTION 'Winner must be one of the two players.';
+  END IF;
+
+  -- ── Dedup: return existing pending match if submitted in the last 2 hours ──
+  SELECT id INTO existing_match_id
+  FROM matches
+  WHERE status = 'pending'
+    AND created_at > now() - INTERVAL '2 hours'
+    AND (
+      (player1_id = submitter_id AND player2_id = opponent_id)
+      OR (player1_id = opponent_id AND player2_id = submitter_id)
+    )
+  ORDER BY created_at DESC
+  LIMIT 1;
+
+  IF existing_match_id IS NOT NULL THEN
+    RETURN existing_match_id;
   END IF;
 
   INSERT INTO matches (
@@ -90,6 +107,9 @@ BEGIN
   RETURN new_match_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+
+
 
 
 -- 4. RPC to CONFIRM a match (Calculates Elo, updates ratings, marks as 'confirmed')

@@ -45,7 +45,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
     const params = new URLSearchParams(window.location.search);
     const lb = params.get("lb");
     if (lb === "elo" || lb === "ironman") return lb;
-    return "elo";
+    return (localStorage.getItem("leaderboard_tab") as "elo" | "ironman") || "elo";
   });
   
   const [categoryFilter, setCategoryFilter] = useState<"ALL" | "MS" | "WS" | "MD" | "WD" | "XD">(() => {
@@ -60,10 +60,13 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
     params.set("lb", activeTab);
     params.set("cat", categoryFilter);
     window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}${window.location.hash}`);
+    localStorage.setItem("leaderboard_tab", activeTab);
   }, [activeTab, categoryFilter]);
 
   const [upsets, setUpsets] = useState<any[]>([]);
   const [activeStreaks, setActiveStreaks] = useState<any[]>([]);
+  const [allStreaks, setAllStreaks] = useState<Record<string, number>>({});
+  const [lastEloChange, setLastEloChange] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (activeTab === "elo") {
@@ -87,6 +90,24 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
               .sort((a, b) => b.upsetScore - a.upsetScore)
               .slice(0, 3);
             setUpsets(significantUpsets);
+
+            // 3. Compute last ELO change per player
+            const lastChange: Record<string, number> = {};
+            // data is newest first — first occurrence per player = their last match
+            for (const match of data) {
+              const players4 = [
+                { id: match.player1_id, change: match.elo_change_p1 },
+                { id: match.player2_id, change: match.elo_change_p2 },
+                { id: match.team1_partner_id, change: match.elo_change_p3 },
+                { id: match.team2_partner_id, change: match.elo_change_p4 },
+              ];
+              for (const p of players4) {
+                if (p.id && !(p.id in lastChange) && p.change != null) {
+                  lastChange[p.id] = p.change;
+                }
+              }
+            }
+            setLastEloChange(lastChange);
 
             // 2. Calculate Active Streaks
             const playerStreaks: Record<string, { id: string, name: string, avatar: string, streak: number, isAlive: boolean }> = {};
@@ -119,6 +140,10 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
               .slice(0, 5);
             
             setActiveStreaks(topStreaks);
+            
+            const allStrks: Record<string, number> = {};
+            Object.values(playerStreaks).forEach(p => { allStrks[p.id] = p.streak; });
+            setAllStreaks(allStrks);
           }
         });
     }
@@ -409,6 +434,15 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                           ? `${getEloTier(getCategoryElo(top3[1])).name} • ${getCategoryElo(top3[1])} ELO`
                           : `${getMatchesCount(getCategoryRecord(top3[1]))} Matches`}
                       </span>
+                      {activeTab === "elo" && lastEloChange[top3[1].id] != null && (
+                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
+                          lastEloChange[top3[1].id] >= 0
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-rose-100 text-rose-700"
+                        }`}>
+                          {lastEloChange[top3[1].id] >= 0 ? "+" : ""}{lastEloChange[top3[1].id]}
+                        </span>
+                      )}
                       {activeTab === "elo" && (
                         <span className="text-xs font-mono font-bold text-slate-500 dark:text-slate-400">
                           {displayRecord(getCategoryRecord(top3[1]))}
@@ -454,6 +488,15 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                           ? `${getEloTier(getCategoryElo(top3[0])).name} • ${getCategoryElo(top3[0])} ELO`
                           : `${getMatchesCount(getCategoryRecord(top3[0]))} Matches`}
                       </span>
+                      {activeTab === "elo" && lastEloChange[top3[0].id] != null && (
+                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
+                          lastEloChange[top3[0].id] >= 0
+                            ? "bg-emerald-200/80 text-emerald-800"
+                            : "bg-rose-200/80 text-rose-800"
+                        }`}>
+                          {lastEloChange[top3[0].id] >= 0 ? "+" : ""}{lastEloChange[top3[0].id]}
+                        </span>
+                      )}
                       {activeTab === "elo" && (
                         <span className="text-sm font-mono font-bold text-amber-800/80 dark:text-amber-200/80">
                           {displayRecord(getCategoryRecord(top3[0]))}
@@ -498,6 +541,15 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                           ? `${getEloTier(getCategoryElo(top3[2])).name} • ${getCategoryElo(top3[2])} ELO`
                           : `${getMatchesCount(getCategoryRecord(top3[2]))} Matches`}
                       </span>
+                      {activeTab === "elo" && lastEloChange[top3[2].id] != null && (
+                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
+                          lastEloChange[top3[2].id] >= 0
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-rose-100 text-rose-700"
+                        }`}>
+                          {lastEloChange[top3[2].id] >= 0 ? "+" : ""}{lastEloChange[top3[2].id]}
+                        </span>
+                      )}
                       {activeTab === "elo" && (
                         <span className="text-[10px] font-mono font-bold text-orange-700/80 dark:text-orange-300/80">
                           {displayRecord(getCategoryRecord(top3[2]))}
@@ -574,8 +626,15 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                               )}
                             </div>
                             <div>
-                              <div className="font-black text-slate-800 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                                {player.full_name}
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-black text-slate-800 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                                  {player.full_name}
+                                </span>
+                                {allStreaks[player.id] >= 5 && (
+                                  <span title={`${allStreaks[player.id]} Win Streak`} className="bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400 p-0.5 rounded flex items-center justify-center">
+                                    <Flame className="w-3.5 h-3.5" />
+                                  </span>
+                                )}
                               </div>
                               <div className="text-xs font-bold text-slate-400 sm:hidden">
                                 {player.department}
@@ -610,6 +669,15 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                                 {getCategoryElo(player)}
                               </span>
                             </div>
+                            {lastEloChange[player.id] != null && (
+                              <span className={`text-[9px] font-black px-1 py-0.5 rounded ${
+                                lastEloChange[player.id] >= 0
+                                  ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-300"
+                                  : "bg-rose-500/20 text-rose-600 dark:text-rose-300"
+                              }`}>
+                                {lastEloChange[player.id] >= 0 ? "+" : ""}{lastEloChange[player.id]}
+                              </span>
+                            )}
                           </div>
                         ) : (
                           <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50">

@@ -42,6 +42,13 @@ DECLARE
   
   num_sets INTEGER;
   sets_multiplier NUMERIC;
+  clean_score TEXT;
+  set_parts TEXT[];
+  set1_parts TEXT[];
+  set2_parts TEXT[];
+  set1_p1 INTEGER; set1_p2 INTEGER;
+  set2_p1 INTEGER; set2_p2 INTEGER;
+  p1_sets_won INTEGER; p2_sets_won INTEGER;
 BEGIN
   -- 1. Reset all players
   UPDATE players SET 
@@ -64,15 +71,48 @@ BEGIN
     sets_multiplier := 1.0;
     
     -- Determine number of sets played
+    -- Strip doubles annotation (e.g. "[Mixed Doubles: A+B vs C+D]") before parsing
     IF m_record.score IS NULL OR trim(m_record.score) = '' THEN
       num_sets := 1;
+      clean_score := '';
     ELSE
-      num_sets := array_length(string_to_array(m_record.score, ','), 1);
+      clean_score := trim(split_part(m_record.score, '[', 1));
+      num_sets := array_length(string_to_array(clean_score, ','), 1);
     END IF;
 
     IF num_sets > 3 THEN num_sets := 3; END IF;
     IF num_sets < 1 THEN num_sets := 1; END IF;
-    sets_multiplier := num_sets / 3.0;
+
+    -- Smart sets multiplier:
+    -- 1 set  → 1/3
+    -- 3 sets → 1.0
+    -- 2 sets with 2-0 sweep → 1.0 (treated same as 3 sets)
+    -- 2 sets with 1-1 split → 2/3 (no decisive winner across sets)
+    IF num_sets = 1 THEN
+      sets_multiplier := 1.0 / 3.0;
+    ELSIF num_sets = 3 THEN
+      sets_multiplier := 1.0;
+    ELSE -- num_sets = 2
+      BEGIN
+        set_parts  := string_to_array(clean_score, ',');
+        set1_parts := string_to_array(trim(set_parts[1]), '-');
+        set2_parts := string_to_array(trim(set_parts[2]), '-');
+        set1_p1 := trim(set1_parts[1])::INTEGER;
+        set1_p2 := trim(set1_parts[2])::INTEGER;
+        set2_p1 := trim(set2_parts[1])::INTEGER;
+        set2_p2 := trim(set2_parts[2])::INTEGER;
+        p1_sets_won := 0; p2_sets_won := 0;
+        IF set1_p1 > set1_p2 THEN p1_sets_won := p1_sets_won + 1; ELSE p2_sets_won := p2_sets_won + 1; END IF;
+        IF set2_p1 > set2_p2 THEN p1_sets_won := p1_sets_won + 1; ELSE p2_sets_won := p2_sets_won + 1; END IF;
+        IF p1_sets_won = 2 OR p2_sets_won = 2 THEN
+          sets_multiplier := 1.0;       -- 2-0 clean sweep
+        ELSE
+          sets_multiplier := 2.0 / 3.0; -- 1-1 split
+        END IF;
+      EXCEPTION WHEN OTHERS THEN
+        sets_multiplier := 2.0 / 3.0;   -- fallback if score parsing fails
+      END;
+    END IF;
     
     SELECT singles_elo, doubles_elo, mixed_elo, total_friendly_matches, gender INTO p1_s, p1_d, p1_m, p1_matches, p1_gender FROM players WHERE id = m_record.player1_id;
     SELECT singles_elo, doubles_elo, mixed_elo, total_friendly_matches, gender INTO p2_s, p2_d, p2_m, p2_matches, p2_gender FROM players WHERE id = m_record.player2_id;

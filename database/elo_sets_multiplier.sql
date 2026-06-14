@@ -29,6 +29,13 @@ DECLARE
   -- Set scaling variables
   num_sets INTEGER;
   sets_multiplier NUMERIC := 1.0;
+  clean_score TEXT;
+  set_parts TEXT[];
+  set1_parts TEXT[];
+  set2_parts TEXT[];
+  set1_p1 INTEGER; set1_p2 INTEGER;
+  set2_p1 INTEGER; set2_p2 INTEGER;
+  p1_sets_won INTEGER; p2_sets_won INTEGER;
 BEGIN
   -- Fetch the match
   SELECT * INTO m_record FROM matches WHERE id = match_uuid;
@@ -48,19 +55,95 @@ BEGIN
     RAISE EXCEPTION 'You were not a part of this match.';
   END IF;
 
-  -- Determine number of sets played and apply multiplier
+  -- ── Server-side score integrity check ──────────────────────────────
+  -- Parse actual set scores and verify the declared winner_id is consistent.
+  -- Prevents submitter from logging "15-21" but claiming they won.
+  DECLARE
+    v_score_clean TEXT;
+    v_all_parts   TEXT[];
+    v_n           INTEGER;
+    v_side1_sets  INTEGER := 0;
+    v_side2_sets  INTEGER := 0;
+    v_s           TEXT[];
+    v_i           INTEGER;
+    v_a           INTEGER;
+    v_b           INTEGER;
+    v_is_p1_winner BOOLEAN;
+  BEGIN
+    IF m_record.score IS NOT NULL AND trim(m_record.score) != '' THEN
+      v_score_clean := trim(split_part(m_record.score, '[', 1));
+      v_all_parts   := string_to_array(v_score_clean, ',');
+      v_n           := array_length(v_all_parts, 1);
+      IF v_n IS NOT NULL AND v_n BETWEEN 1 AND 3 THEN
+        FOR v_i IN 1..v_n LOOP
+          BEGIN
+            v_s := string_to_array(trim(v_all_parts[v_i]), '-');
+            v_a := trim(v_s[1])::INTEGER;
+            v_b := trim(v_s[2])::INTEGER;
+            IF v_a > v_b THEN v_side1_sets := v_side1_sets + 1;
+            ELSIF v_b > v_a THEN v_side2_sets := v_side2_sets + 1;
+            END IF;
+          EXCEPTION WHEN OTHERS THEN NULL; -- skip unparseable set
+          END;
+        END LOOP;
+
+        -- Only enforce when there's a clear winner by sets (not a 1-1 split)
+        IF v_side1_sets != v_side2_sets THEN
+          v_is_p1_winner := (v_side1_sets > v_side2_sets);
+          IF v_is_p1_winner AND m_record.winner_id NOT IN (m_record.player1_id, m_record.team1_partner_id) THEN
+            RAISE EXCEPTION 'Score mismatch: Team 1 won more sets but winner is declared as Team 2.';
+          END IF;
+          IF NOT v_is_p1_winner AND m_record.winner_id NOT IN (m_record.player2_id, m_record.team2_partner_id) THEN
+            RAISE EXCEPTION 'Score mismatch: Team 2 won more sets but winner is declared as Team 1.';
+          END IF;
+        END IF;
+      END IF;
+    END IF;
+  END;
+
+  -- Determine number of sets played
+  -- Strip doubles annotation (e.g. "[Mixed Doubles: A+B vs C+D]") before parsing
   IF m_record.score IS NULL OR trim(m_record.score) = '' THEN
     num_sets := 1;
+    clean_score := '';
   ELSE
-    num_sets := array_length(string_to_array(m_record.score, ','), 1);
+    clean_score := trim(split_part(m_record.score, '[', 1));
+    num_sets := array_length(string_to_array(clean_score, ','), 1);
   END IF;
 
-  -- Constrain bounds (1 to 3 sets)
   IF num_sets > 3 THEN num_sets := 3; END IF;
   IF num_sets < 1 THEN num_sets := 1; END IF;
 
-  -- Apply user preference: 1 set = 1/3, 2 sets = 2/3, 3 sets = 1
-  sets_multiplier := num_sets / 3.0;
+  -- Smart sets multiplier:
+  -- 1 set  → 1/3
+  -- 3 sets → 1.0
+  -- 2 sets with 2-0 sweep → 1.0 (treated same as 3 sets)
+  -- 2 sets with 1-1 split → 2/3 (no decisive winner across sets)
+  IF num_sets = 1 THEN
+    sets_multiplier := 1.0 / 3.0;
+  ELSIF num_sets = 3 THEN
+    sets_multiplier := 1.0;
+  ELSE -- num_sets = 2
+    BEGIN
+      set_parts  := string_to_array(clean_score, ',');
+      set1_parts := string_to_array(trim(set_parts[1]), '-');
+      set2_parts := string_to_array(trim(set_parts[2]), '-');
+      set1_p1 := trim(set1_parts[1])::INTEGER;
+      set1_p2 := trim(set1_parts[2])::INTEGER;
+      set2_p1 := trim(set2_parts[1])::INTEGER;
+      set2_p2 := trim(set2_parts[2])::INTEGER;
+      p1_sets_won := 0; p2_sets_won := 0;
+      IF set1_p1 > set1_p2 THEN p1_sets_won := p1_sets_won + 1; ELSE p2_sets_won := p2_sets_won + 1; END IF;
+      IF set2_p1 > set2_p2 THEN p1_sets_won := p1_sets_won + 1; ELSE p2_sets_won := p2_sets_won + 1; END IF;
+      IF p1_sets_won = 2 OR p2_sets_won = 2 THEN
+        sets_multiplier := 1.0;       -- 2-0 clean sweep
+      ELSE
+        sets_multiplier := 2.0 / 3.0; -- 1-1 split
+      END IF;
+    EXCEPTION WHEN OTHERS THEN
+      sets_multiplier := 2.0 / 3.0;   -- fallback if score parsing fails
+    END;
+  END IF;
 
   -- Get current Elo ratings and genders for primary players
   SELECT elo_rating, total_friendly_matches, gender INTO p1_elo, p1_matches, p1_gender FROM players WHERE id = m_record.player1_id;
@@ -191,6 +274,19 @@ BEGIN
       WHERE status = 'confirmed' AND (player1_id = m_record.team2_partner_id OR player2_id = m_record.team2_partner_id OR team1_partner_id = m_record.team2_partner_id OR team2_partner_id = m_record.team2_partner_id)
     )
     UPDATE players SET win_loss_record = (SELECT wins FROM p4_stats) || 'W - ' || (SELECT losses FROM p4_stats) || 'L' WHERE id = m_record.team2_partner_id;
+  END IF;
+
+  -- ── ELO Audit Trail: insert logs so the ranking history chart has data ──
+  INSERT INTO elo_calculation_logs (player_id, match_id, previous_elo, new_elo, elo_change, expected_score, actual_score, category, created_at)
+  VALUES
+    (m_record.player1_id, match_uuid, p1_elo, p1_elo + change_p1, change_p1, round(team1_expected::numeric, 4), team1_actual, m_record.category, now()),
+    (m_record.player2_id, match_uuid, p2_elo, p2_elo + change_p2, change_p2, round(team2_expected::numeric, 4), team2_actual, m_record.category, now());
+
+  IF m_record.category = 'Doubles' AND m_record.team1_partner_id IS NOT NULL THEN
+    INSERT INTO elo_calculation_logs (player_id, match_id, previous_elo, new_elo, elo_change, expected_score, actual_score, category, created_at)
+    VALUES
+      (m_record.team1_partner_id, match_uuid, p3_elo, p3_elo + change_p3, change_p3, round(team1_expected::numeric, 4), team1_actual, m_record.category, now()),
+      (m_record.team2_partner_id, match_uuid, p4_elo, p4_elo + change_p4, change_p4, round(team2_expected::numeric, 4), team2_actual, m_record.category, now());
   END IF;
 
   RETURN jsonb_build_object(

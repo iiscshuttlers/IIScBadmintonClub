@@ -8,6 +8,7 @@ import { Link } from "wouter";
 import { MatchCard } from "./MatchCard";
 import { Capacitor } from "@capacitor/core";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import confetti from "canvas-confetti";
 
 export function MyMatchesTab() {
   const { profile } = useAuth();
@@ -92,6 +93,12 @@ export function MyMatchesTab() {
       if (error) toast.error("Failed to confirm: " + error.message);
       else {
         toast.success("Match confirmed!");
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ["#10b981", "#3b82f6", "#f59e0b"]
+        });
         if (Capacitor.isNativePlatform()) {
           try {
             await Haptics.impact({ style: ImpactStyle.Heavy });

@@ -1,7 +1,7 @@
 import { useParams, useLocation } from "wouter";
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { motion, AnimatePresence, type Variants } from "framer-motion";
+import { motion, AnimatePresence, useSpring, useTransform, type Variants } from "framer-motion";
 import {
   Trophy,
   User,
@@ -277,6 +277,18 @@ function getYouTubeId(url: string) {
     /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
   const match = url.match(regExp);
   return match && match[2].length === 11 ? match[2] : null;
+}
+
+function AnimatedCounter({ value, className }: { value: number, className?: string }) {
+  const spring = useSpring(0, { duration: 1500, bounce: 0 });
+  
+  useEffect(() => {
+    spring.set(value);
+  }, [spring, value]);
+  
+  const display = useTransform(spring, (current) => Math.round(current));
+  
+  return <motion.span className={className}>{display}</motion.span>;
 }
 
 export default function PlayerProfile({
@@ -1063,6 +1075,61 @@ export default function PlayerProfile({
     };
   }, [liveMatches, id]);
 
+  const streakStats = useMemo(() => {
+    if (!id || liveMatches.length === 0) return { current: 0, max: 0 };
+    const confirmed = liveMatches.filter(m => m.status === "confirmed").sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    let current = 0;
+    let max = 0;
+    confirmed.forEach(m => {
+      if (m.winner_id === id) {
+        current++;
+        max = Math.max(max, current);
+      } else {
+        current = 0;
+      }
+    });
+    return { current, max };
+  }, [liveMatches, id]);
+
+  const recentOpponents = useMemo(() => {
+    if (!id || liveMatches.length === 0) return [];
+    const confirmed = liveMatches.filter(m => m.status === "confirmed").sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    const seen = new Set<string>();
+    const opponents: any[] = [];
+    for (const m of confirmed) {
+      const isP1 = m.player1_id === id || m.team1_partner_id === id;
+      const opps = isP1 ? [m.player2, m.partner2] : [m.player1, m.partner1];
+      for (const op of opps) {
+        if (op && !seen.has(op.id)) {
+          seen.add(op.id);
+          opponents.push(op);
+          if (opponents.length >= 5) return opponents;
+        }
+      }
+    }
+    return opponents;
+  }, [liveMatches, id]);
+
+  const bestOpponent = useMemo(() => {
+    if (!id || liveMatches.length === 0) return null;
+    const confirmed = liveMatches.filter(m => m.status === "confirmed");
+    let highestElo = -1;
+    let bestOpp: any = null;
+    for (const m of confirmed) {
+      if (m.winner_id === id) {
+        const isP1 = m.player1_id === id || m.team1_partner_id === id;
+        const opps = isP1 ? [m.player2, m.partner2] : [m.player1, m.partner1];
+        for (const op of opps) {
+          if (op && op.elo_rating > highestElo) {
+            highestElo = op.elo_rating;
+            bestOpp = op;
+          }
+        }
+      }
+    }
+    return bestOpp;
+  }, [liveMatches, id]);
+
   // Generate ELO progression data for the chart from actual calculation logs
   const eloHistoryData = useMemo(() => {
     if (!id || !player) return [];
@@ -1485,7 +1552,7 @@ export default function PlayerProfile({
                <div className="flex flex-wrap gap-2 mt-2">
                  {player.elo_rating != null && (
                     <span className={`px-3 py-1.5 rounded-lg backdrop-blur-md border border-white/25 text-sm font-black uppercase shadow-sm flex items-center gap-1.5 ${getEloTier(player.elo_rating).bg} ${getEloTier(player.elo_rating).color}`}>
-                      <Trophy className="w-4 h-4" /> {getEloTier(player.elo_rating).name} • {player.elo_rating} OVR
+                      <Trophy className="w-4 h-4" /> {getEloTier(player.elo_rating).name} • <AnimatedCounter value={player.elo_rating} /> OVR
                     </span>
                  )}
                  {player.singles_elo != null && (
@@ -1498,12 +1565,55 @@ export default function PlayerProfile({
                      <Users className="w-4 h-4 text-blue-500" /> D: {player.doubles_elo}
                    </span>
                  )}
-                 {player.mixed_elo != null && (
+                {player.mixed_elo != null && (
                    <span className="px-3 py-1.5 rounded-lg bg-white/80 dark:bg-black/40 backdrop-blur-md border border-rose-200/80 dark:border-rose-500/25 text-slate-800 dark:text-white text-sm font-bold shadow-sm flex items-center gap-1.5">
                      <Heart className="w-4 h-4 text-rose-500" /> XD: {player.mixed_elo}
                    </span>
                  )}
                </div>
+
+               {/* Next Tier Progress Bar */}
+               {player.elo_rating != null && (() => {
+                 const tierOrder = [
+                   { name: "Bronze", minElo: 0 },
+                   { name: "Silver", minElo: 1000 },
+                   { name: "Gold", minElo: 1200 },
+                   { name: "Platinum", minElo: 1400 },
+                   { name: "Diamond", minElo: 1600 },
+                   { name: "Grandmaster", minElo: 1800 },
+                 ];
+                 const currentTierInfo = getEloTier(player.elo_rating);
+                 const currentIdx = tierOrder.findIndex(t => t.name === currentTierInfo.name);
+                 const nextTier = tierOrder[currentIdx + 1];
+                 if (!nextTier) return (
+                   <div className="mt-3 max-w-xs">
+                     <div className="flex items-center justify-between mb-1">
+                       <span className="text-[10px] font-black uppercase tracking-wider text-white/70">Max Tier Reached</span>
+                       <span className="text-[10px] font-black text-amber-400">👑</span>
+                     </div>
+                     <div className="h-1.5 w-full rounded-full bg-white/20 overflow-hidden">
+                       <div className="h-full w-full rounded-full bg-gradient-to-r from-amber-400 to-rose-500" />
+                     </div>
+                   </div>
+                 );
+                 const currentMin = tierOrder[currentIdx].minElo;
+                 const progress = Math.min(100, Math.max(0, ((player.elo_rating - currentMin) / (nextTier.minElo - currentMin)) * 100));
+                 const remaining = nextTier.minElo - player.elo_rating;
+                 return (
+                   <div className="mt-3 max-w-xs">
+                     <div className="flex items-center justify-between mb-1">
+                       <span className="text-[10px] font-black uppercase tracking-wider text-white/70 dark:text-slate-900/70">{remaining} ELO to {nextTier.name}</span>
+                       <span className="text-[10px] font-black text-white/80 dark:text-slate-900/80">{Math.round(progress)}%</span>
+                     </div>
+                     <div className="h-1.5 w-full rounded-full bg-white/20 dark:bg-slate-900/20 overflow-hidden">
+                       <div
+                         className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-400 transition-all duration-700"
+                         style={{ width: `${progress}%` }}
+                       />
+                     </div>
+                   </div>
+                 );
+               })()}
 
                {/* CTAs */}
                <div className="flex flex-wrap items-center gap-3 mt-6">
@@ -1727,6 +1837,16 @@ export default function PlayerProfile({
                       className={`mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black ${isWinStreak ? "bg-emerald-500/15 text-emerald-400" : "bg-rose-500/15 text-rose-400"}`}
                     >
                       <Flame className="w-3 h-3" /> {streak} streak
+                    </div>
+                  )}
+                  {streakStats.max > 0 && (
+                    <div className="mt-3 ml-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black bg-orange-500/15 text-orange-400" title="All-Time Best Win Streak">
+                      <Trophy className="w-3 h-3" /> Max {streakStats.max}W
+                    </div>
+                  )}
+                  {bestOpponent && (
+                    <div className="mt-2 text-[10px] text-slate-500 dark:text-white/40 flex items-center gap-1.5 font-bold uppercase tracking-wider">
+                      <Swords className="w-3 h-3 text-indigo-400" /> Best win vs {bestOpponent.full_name} ({bestOpponent.elo_rating})
                     </div>
                   )}
                 </div>
@@ -2413,6 +2533,42 @@ export default function PlayerProfile({
                   {h2hRecord.wins + h2hRecord.losses} match
                   {h2hRecord.wins + h2hRecord.losses !== 1 ? "es" : ""} total
                 </p>
+              </motion.section>
+            )}
+
+            {/* Recently Played Against */}
+            {activeTab === "RANKING" && recentOpponents.length > 0 && (
+              <motion.section variants={itemVariants} className="mt-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500 dark:text-white/35 shrink-0 flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5" /> Recently Played Against
+                  </span>
+                  <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {recentOpponents.map((opp, idx) => (
+                    <Link key={idx} href={`/player/${opp.id}`}>
+                      <div className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/8 hover:border-emerald-400 dark:hover:border-emerald-500/50 hover:shadow-md transition-all group cursor-pointer">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden border border-slate-200 dark:border-white/10 group-hover:border-emerald-400 shrink-0">
+                          {opp.avatar_url ? (
+                            <img src={opp.avatar_url} alt={opp.full_name} className="w-full h-full object-cover" />
+                          ) : (
+                            <User className="w-full h-full p-2 text-slate-400" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-bold text-sm text-slate-800 dark:text-white truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                            {opp.full_name}
+                          </div>
+                          <div className="text-[10px] font-bold text-slate-500 dark:text-white/40 uppercase tracking-widest flex items-center gap-1">
+                            <Trophy className="w-3 h-3 text-emerald-500" /> {opp.elo_rating}
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
               </motion.section>
             )}
           </div>

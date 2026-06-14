@@ -23,6 +23,7 @@ import { usePullToRefresh } from "./hooks/usePullToRefresh";
 import { useOfflineSync } from "./hooks/useOfflineSync";
 import { useBroadcastNotification } from "./hooks/useBroadcastNotification";
 import { usePingsNotification } from "./hooks/usePingsNotification";
+import { OnboardingTour } from "./components/OnboardingTour";
 
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { FileOpener } from "@capacitor-community/file-opener";
@@ -333,6 +334,7 @@ function App() {
             <PwaUpdatePrompt />
             <MatchAlert />
             <GlobalAuthHooks />
+            <OnboardingTour />
             {updateInfo && (
               <UpdateDialog info={updateInfo} onDismiss={dismissUpdate} />
             )}

@@ -49,17 +49,20 @@ export default function Feed() {
 
   useEffect(() => {
     if (match && params?.tab) {
-      if (params.tab === "activity") setActiveTab("matches");
-      else if (params.tab === "announcements") setActiveTab("announcements");
-      else if (params.tab === "umpire") setActiveTab("umpire");
-      else if (params.tab === "my-matches") setActiveTab("my_matches");
+      const tab = params.tab;
+      if (tab === "activity") { setActiveTab("matches"); localStorage.setItem("feed_tab", "matches"); }
+      else if (tab === "announcements") { setActiveTab("announcements"); localStorage.setItem("feed_tab", "announcements"); }
+      else if (tab === "umpire") { setActiveTab("umpire"); localStorage.setItem("feed_tab", "umpire"); }
+      else if (tab === "my-matches") { setActiveTab("my_matches"); localStorage.setItem("feed_tab", "my_matches"); }
     } else {
-      setActiveTab("matches");
+      const saved = localStorage.getItem("feed_tab") || "matches";
+      setActiveTab(saved as any);
     }
   }, [match, params?.tab]);
 
   const handleTabChange = (tabId: "matches" | "announcements" | "umpire" | "my_matches") => {
     setActiveTab(tabId);
+    localStorage.setItem("feed_tab", tabId);
     if (tabId === "matches") setLocation("/feed/activity");
     else if (tabId === "announcements") setLocation("/feed/announcements");
     else if (tabId === "umpire") setLocation("/feed/umpire");

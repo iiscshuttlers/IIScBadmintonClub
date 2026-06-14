@@ -18,6 +18,7 @@ import {
   BookOpen,
   Plus,
   Lock,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,6 +34,7 @@ import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useNavigationAuth } from "@/hooks/useNavigationAuth";
 import { QuickSettingsContent } from "@/components/QuickSettings";
+import { GlobalSearch } from "@/components/GlobalSearch";
 
 const TOP_LEVEL_LINKS = [
   { href: "/events", label: "Events" },
@@ -45,6 +47,7 @@ const TOP_LEVEL_LINKS = [
 
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [location] = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [liveEventCount, setLiveEventCount] = useState(0);
@@ -214,6 +217,17 @@ export default function Navigation() {
                 </Button>
               )}
 
+              {/* Global Search Button */}
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all border border-slate-200 dark:border-slate-700 mr-1"
+                title="Search (⌘K)"
+              >
+                <Search className="w-4 h-4" />
+                <span className="hidden xl:inline text-xs font-medium">Search</span>
+                <kbd className="hidden xl:inline font-mono text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-400">⌘K</kbd>
+              </button>
+
               {/* Icons removed from here and moved to dropdown */}
               {authLoading ? (
                 <div className="w-24 h-9 bg-slate-100 dark:bg-slate-800 rounded-full animate-pulse" />
@@ -382,6 +396,14 @@ export default function Navigation() {
 
             {/* ── Mobile Controls ───────────────────── */}
             <div className="flex lg:hidden items-center gap-1">
+              {/* Mobile Search */}
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                aria-label="Search"
+              >
+                <Search className="w-5 h-5" />
+              </button>
               {isLoggedIn && !authLoading && (
                 <Link href={myPlayerId ? `/player/${myPlayerId}` : "/profile/setup"}>
                   <button 
@@ -501,6 +523,9 @@ export default function Navigation() {
           </div>
         )}
       </nav>
+
+      {/* Global Search Modal */}
+      <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );
 }
