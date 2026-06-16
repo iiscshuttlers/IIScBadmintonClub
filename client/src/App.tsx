@@ -126,7 +126,11 @@ const HallOfFame = lazy(() => import("./pages/HallOfFame"));
 const ChangePassword = lazy(() => import("./pages/ChangePassword"));
 const FindLost = lazy(() => import("./pages/FindLost"));
 const DeleteAccount = lazy(() => import("./pages/DeleteAccount"));
-const DoublesPairProfile = lazy(() => import("./pages/DoublesPairProfile"));// Save scroll position before navigating away, restore on back-navigation
+const DoublesPairProfile = lazy(() => import("./pages/DoublesPairProfile"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+
+// Save scroll position before navigating away, restore on back-navigation
 const scrollMap = new Map<string, number>();
 
 function ScrollToTop() {
@@ -253,6 +257,8 @@ function AppRoutes() {
           <Route path="/find-lost" component={FindLost} />
           <Route path="/delete-account" component={DeleteAccount} />
           <Route path="/doubles/:p1/:p2" component={DoublesPairProfile} />
+          <Route path="/privacy" component={PrivacyPolicy} />
+          <Route path="/terms" component={TermsOfService} />
 
           <Route path="/404" component={NotFound} />
           <Route component={NotFound} />

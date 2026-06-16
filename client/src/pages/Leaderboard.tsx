@@ -19,6 +19,7 @@ import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { InfoModal } from "@/components/InfoModal";
 import { getEloTier } from "@/lib/utils";
+import { useHashTab } from "@/hooks/useHashTab";
 
 interface PlayerRank {
   id: string;
@@ -42,12 +43,16 @@ interface LeaderboardProps {
 }
 
 export function LeaderboardSection({ players }: LeaderboardProps) {
-  const [activeTab, setActiveTab] = useState<"elo" | "ironman">(() => {
-    const params = new URLSearchParams(window.location.search);
-    const lb = params.get("lb");
-    if (lb === "elo" || lb === "ironman") return lb;
-    return (localStorage.getItem("leaderboard_tab") as "elo" | "ironman") || "elo";
-  });
+  const [activeTab, setActiveTab] = useHashTab(
+    ["elo", "ironman"] as const,
+    (() => {
+      const params = new URLSearchParams(window.location.search);
+      const lb = params.get("lb");
+      return (lb === "elo" || lb === "ironman" ? lb : null) ||
+        (localStorage.getItem("leaderboard_tab") as "elo" | "ironman") ||
+        "elo";
+    })()
+  );
   
   const [categoryFilter, setCategoryFilter] = useState<"ALL" | "MS" | "WS" | "MD" | "WD" | "XD">(() => {
     const params = new URLSearchParams(window.location.search);
@@ -56,11 +61,12 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
     return "ALL";
   });
 
+  // Also keep ?lb= query param in sync for shareable URLs
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     params.set("lb", activeTab);
     params.set("cat", categoryFilter);
-    window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}${window.location.hash}`);
+    window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}#${activeTab}`);
     localStorage.setItem("leaderboard_tab", activeTab);
   }, [activeTab, categoryFilter]);
 
@@ -95,23 +101,29 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
 
   useEffect(() => {
     if (activeTab === "elo") {
-      supabase
+      let query = supabase
         .from("matches")
         .select("*, player1:players!player1_id(id, full_name, avatar_url), player2:players!player2_id(id, full_name, avatar_url), partner1:players!team1_partner_id(id, full_name, avatar_url), partner2:players!team2_partner_id(id, full_name, avatar_url)")
         .eq("status", "confirmed")
         .order("created_at", { ascending: false })
-        .limit(200)
-        .then(({ data }) => {
+        .limit(200);
+
+      if (categoryFilter !== "ALL") {
+        query = query.eq("category", categoryFilter);
+      }
+
+      query.then(({ data }) => {
           if (data) {
             // 1. Calculate Upsets
             const significantUpsets = data
               .filter(m => m.elo_change_p1 !== undefined && m.elo_change_p2 !== undefined)
               .map(m => {
-                const isP1Winner = m.winner_id === m.player1_id;
-                const upsetScore = isP1Winner ? (m.elo_change_p1 || 0) : (m.elo_change_p2 || 0);
+                const isP1Winner = m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id;
+                const upsetScoreRaw = isP1Winner ? (m.elo_change_p1 || 0) : (m.elo_change_p2 || 0);
+                const upsetScore = categoryFilter === "ALL" ? Math.floor(upsetScoreRaw / 3) : upsetScoreRaw;
                 return { ...m, upsetScore };
               })
-              .filter(m => m.upsetScore > 20)
+              .filter(m => m.upsetScore > (categoryFilter === "ALL" ? 6 : 20))
               .sort((a, b) => b.upsetScore - a.upsetScore)
               .slice(0, 3);
             setUpsets(significantUpsets);
@@ -129,9 +141,10 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
               ];
               for (const p of players4) {
                 if (p.id && p.change != null) {
+                  const displayChange = categoryFilter === "ALL" ? Math.floor(p.change / 3) : p.change;
                   if (!history[p.id]) history[p.id] = [];
-                  if (history[p.id].length < 5) history[p.id].push(p.change);
-                  if (!(p.id in lastChange)) lastChange[p.id] = p.change;
+                  if (history[p.id].length < 5) history[p.id].push(displayChange);
+                  if (!(p.id in lastChange)) lastChange[p.id] = displayChange;
                 }
               }
             }
@@ -143,7 +156,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
             
             // Matches are ordered newest to oldest
             for (const match of data) {
-              const isP1Winner = match.winner_id === match.player1_id;
+              const isP1Winner = match.winner_id === match.player1_id || match.winner_id === match.team1_partner_id;
               
               const updatePlayer = (pId: string, pName: string, pAvatar: string, won: boolean) => {
                 if (!pId) return;
@@ -176,7 +189,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
           }
         });
     }
-  }, [activeTab]);
+  }, [activeTab, categoryFilter]);
 
   const getCategoryElo = (player: PlayerRank) => {
     if (categoryFilter === "MS" || categoryFilter === "WS") {

@@ -15,7 +15,7 @@ const CONSEQUENCES = [
 ];
 
 export default function DeleteAccount() {
-  usePageMeta({ title: "Delete Account", description: "Permanently delete your IISc Shuttlers account" });
+  usePageMeta({ title: "Delete Account", description: "Permanently delete your IISc Badminton Club account" });
   const { session, profile } = useAuth();
   const [, navigate] = useLocation();
   const [step, setStep] = useState<"confirm" | "final" | "done">("confirm");
@@ -26,9 +26,34 @@ export default function DeleteAccount() {
   if (!session) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
-        <div className="text-center">
-          <p className="text-slate-500 mb-4">You must be logged in to delete your account.</p>
-          <button onClick={() => navigate("/join")} className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl">Sign In</button>
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full shadow-xl border border-slate-200 dark:border-slate-800">
+          <div className="text-center space-y-4">
+            <div className="w-14 h-14 rounded-full bg-rose-100 dark:bg-rose-950/40 flex items-center justify-center mx-auto">
+              <Trash2 className="w-7 h-7 text-rose-600 dark:text-rose-400" />
+            </div>
+            <h2 className="text-xl font-black text-slate-900 dark:text-white">Delete Your Account</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              To delete your account through the app, please sign in first.
+            </p>
+            <button onClick={() => navigate("/join")} className="w-full px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition">
+              Sign In to Delete
+            </button>
+            <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
+              <p className="text-xs text-slate-400 dark:text-slate-500 mb-2">
+                Can't sign in? You can also request account deletion by emailing us:
+              </p>
+              <a
+                href="mailto:office.gym@iisc.ac.in?subject=Account%20Deletion%20Request&body=Please%20delete%20my%20account.%20My%20registered%20email%20is%3A%20"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+              >
+                <AlertTriangle className="w-4 h-4 text-amber-500" />
+                Email: office.gym@iisc.ac.in
+              </a>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2">
+                Include your registered email address. We will process your request within 7 business days.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     );

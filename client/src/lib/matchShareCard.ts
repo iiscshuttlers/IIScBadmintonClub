@@ -469,7 +469,7 @@ export async function renderMatchShareCard(
   ctx.font = "bold 26px sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("iiscshuttlers.com", W / 2, H - 44);
+  ctx.fillText("iiscshuttlers.github.io/iiscshuttlers", W / 2, H - 44);
 
   return canvas;
 }

@@ -1,5 +1,5 @@
 /**
- * Public read-only API for IISc Shuttlers
+ * Public read-only API for IISc Badminton Club
  * Endpoints (all GET, no auth required):
  *   /public-api/leaderboard   → top 20 players by ELO
  *   /public-api/recent-matches → last 20 confirmed matches
@@ -121,7 +121,7 @@ serve(async (req) => {
 </style>
 </head>
 <body>
-<h3>🏸 IISc Shuttlers — Top 5</h3>
+<h3>🏸 IISc Badminton Club — Top 5</h3>
 <table>
 <thead><tr><th>#</th><th>Player</th><th>ELO</th></tr></thead>
 <tbody>${rows}</tbody>

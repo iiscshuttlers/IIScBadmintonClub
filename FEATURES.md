@@ -1,4 +1,4 @@
-# IISc Shuttlers Platform Evolution
+# IISc Badminton Club Platform Evolution
 
 _A comprehensive log of the top 30+ major features, architectural upgrades, and platform additions implemented during the June 2026 development cycle._
 

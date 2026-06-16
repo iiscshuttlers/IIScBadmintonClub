@@ -15,8 +15,8 @@ export function EloAuditModal({ isOpen, onClose, matches, playerId }: EloAuditMo
   const getEloChange = (match: any) => {
     if (match.player1_id === playerId) return match.elo_change_p1;
     if (match.player2_id === playerId) return match.elo_change_p2;
-    if (match.team1_partner_id === playerId) return match.elo_change_p1; // assuming team shares elo change
-    if (match.team2_partner_id === playerId) return match.elo_change_p2;
+    if (match.team1_partner_id === playerId) return match.elo_change_p3;
+    if (match.team2_partner_id === playerId) return match.elo_change_p4;
     return 0;
   };
 
@@ -35,9 +35,22 @@ export function EloAuditModal({ isOpen, onClose, matches, playerId }: EloAuditMo
     }
   };
 
+  let totalChange = 0;
+  let singlesChange = 0;
+  let doublesChange = 0;
+  let mixedChange = 0;
+
   const validMatches = matches
-    .filter((m) => m.status === "confirmed" && !m.is_friendly && getEloChange(m) !== undefined)
+    .filter((m) => m.status === "confirmed" && getEloChange(m) !== undefined && getEloChange(m) !== null)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+  validMatches.forEach(m => {
+    const change = getEloChange(m) || 0;
+    totalChange += change;
+    if (m.category === "singles") singlesChange += change;
+    else if (m.category === "doubles") doublesChange += change;
+    else if (m.category === "mixed") mixedChange += change;
+  });
 
   return (
     <AnimatePresence>
@@ -74,6 +87,37 @@ export function EloAuditModal({ isOpen, onClose, matches, playerId }: EloAuditMo
             </button>
           </div>
 
+          {/* Summary Strip */}
+          <div className="bg-slate-100 dark:bg-slate-800/50 px-6 py-3 shrink-0 flex gap-4 overflow-x-auto hide-scrollbar border-b border-slate-200 dark:border-slate-800">
+            <div className="flex flex-col">
+              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Overall</span>
+              <span className={`text-sm font-black ${totalChange >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                {totalChange > 0 ? "+" : ""}{totalChange}
+              </span>
+            </div>
+            <div className="w-px bg-slate-300 dark:bg-slate-700 my-1" />
+            <div className="flex flex-col">
+              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Singles</span>
+              <span className={`text-sm font-black ${singlesChange >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                {singlesChange > 0 ? "+" : ""}{singlesChange}
+              </span>
+            </div>
+            <div className="w-px bg-slate-300 dark:bg-slate-700 my-1" />
+            <div className="flex flex-col">
+              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Doubles</span>
+              <span className={`text-sm font-black ${doublesChange >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                {doublesChange > 0 ? "+" : ""}{doublesChange}
+              </span>
+            </div>
+            <div className="w-px bg-slate-300 dark:bg-slate-700 my-1" />
+            <div className="flex flex-col">
+              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Mixed</span>
+              <span className={`text-sm font-black ${mixedChange >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                {mixedChange > 0 ? "+" : ""}{mixedChange}
+              </span>
+            </div>
+          </div>
+
           <div className="overflow-y-auto p-4 space-y-2 flex-1 bg-slate-50/50 dark:bg-slate-950">
             {validMatches.length === 0 ? (
               <div className="py-12 text-center text-slate-500 dark:text-slate-400">
@@ -90,6 +134,7 @@ export function EloAuditModal({ isOpen, onClose, matches, playerId }: EloAuditMo
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
                           {m.category === "singles" ? "S" : m.category === "doubles" ? "D" : "XD"}
+                          {m.is_friendly ? " • F" : ""}
                         </span>
                         <span className="text-xs font-bold text-slate-500 flex items-center gap-1 truncate">
                           <Calendar className="w-3 h-3" />

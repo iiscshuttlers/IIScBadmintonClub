@@ -21,6 +21,10 @@ import {
   Plus,
   Lock,
   Search,
+  Home,
+  Activity,
+  Users,
+  Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,12 +43,12 @@ import { QuickSettingsContent } from "@/components/QuickSettings";
 import { GlobalSearch } from "@/components/GlobalSearch";
 
 const TOP_LEVEL_LINKS = [
-  { href: "/events", label: "Events" },
   { href: "/feed", label: "Feed" },
   { href: "/players", label: "Players" },
-  { href: "/find-lost", label: "Find & Lost" },
+  { href: "/events", label: "Events" },
   { href: "/hall-of-fame", label: "Winners Wall" },
   { href: "/gallery", label: "Gallery" },
+  { href: "/find-lost", label: "Find & Lost" },
   { href: "/about", label: "Club" },
 ];
 
@@ -155,7 +159,7 @@ export default function Navigation() {
 
   const handleInvite = async () => {
     const inviteText = "Join me on IISc Shuttlers! The ultimate platform for badminton tracking.";
-    const inviteUrl = "https://iiscshuttlers.com/join";
+    const inviteUrl = "https://iiscshuttlers.github.io/iiscshuttlers/join";
     
     if (Capacitor.isNativePlatform()) {
       await Share.share({
@@ -190,11 +194,11 @@ export default function Navigation() {
         }`}
       >
         <div className={`container mx-auto px-4 transition-all duration-300 ${scrolled ? "py-2" : "py-3"}`}>
-          <div className="flex justify-between items-center gap-4">
+          <div className="flex flex-wrap justify-between items-center gap-y-3 gap-x-4">
 
             {/* ── Logo ─────────────────────────────── */}
             <Link href="/">
-              <div className="flex items-center gap-3 cursor-pointer min-w-0 flex-shrink-0">
+              <div className="flex items-center gap-3 cursor-pointer min-w-0 flex-shrink-0 order-1">
                 <img
                   src={`${import.meta.env.BASE_URL}iisc-logo.png`}
                   alt="IISc Logo"
@@ -214,7 +218,7 @@ export default function Navigation() {
             </Link>
 
             {/* ── Desktop Nav Links ─────────────────── */}
-            <div className="hidden lg:flex items-center gap-0.5">
+            <div className="hidden lg:flex items-center gap-0.5 order-3 lg:order-2 w-full lg:w-auto justify-center">
               <NavLink href="/" label="Home" isActive={isActive("/")} />
               {TOP_LEVEL_LINKS.map((link) => (
                 <NavLink
@@ -228,7 +232,7 @@ export default function Navigation() {
             </div>
 
             {/* ── Desktop Right Controls ────────────── */}
-            <div className="hidden lg:flex items-center gap-2">
+            <div className="hidden lg:flex items-center gap-2 order-2 lg:order-3">
               {isLoggedIn && (
                 <Button
                   onClick={() => window.dispatchEvent(new Event('openLogMatchModal'))}
@@ -397,6 +401,11 @@ export default function Navigation() {
                         <DropdownMenuItem onClick={handleInvite} className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:bg-slate-50 dark:focus:bg-slate-800 border-t border-slate-100 dark:border-slate-800 gap-2.5 px-3 py-2.5">
                           <UserPlus className="h-4 w-4 text-emerald-500" /> Invite Friends
                         </DropdownMenuItem>
+                        <Link href="/privacy">
+                          <DropdownMenuItem className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:bg-slate-50 dark:focus:bg-slate-800 border-t border-slate-100 dark:border-slate-800 gap-2.5 px-3 py-2.5">
+                            <Shield className="h-4 w-4 text-slate-400" /> Privacy Policy
+                          </DropdownMenuItem>
+                        </Link>
                       </div>
 
                       {/* Sign Out */}
@@ -449,34 +458,31 @@ export default function Navigation() {
                   </button>
                 </Link>
               )}
-              <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="p-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                aria-label="Toggle menu"
-              >
-                {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </button>
             </div>
           </div>
         </div>
 
-        {/* ── Mobile Dropdown Menu ─────────────────────────────── */}
+        {/* ── Mobile Bottom Sheet Menu ─────────────────────────────── */}
         {isOpen && (
-          <div className="lg:hidden border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 max-h-[85vh] overflow-y-auto">
-            <div className="container mx-auto px-4 py-3 space-y-0.5">
-              <MobileNavLink href="/" label="Home" isActive={isActive("/")} onClick={() => setIsOpen(false)} />
-              {TOP_LEVEL_LINKS.map((link) => (
-                <MobileNavLink
-                  key={link.href}
-                  href={link.href}
-                  label={link.label}
-                  badge={link.href === "/events" ? liveEventCount : link.href === "/feed" && hasUnreadAnnouncements ? -1 : undefined}
-                  isActive={isActive(link.href)}
-                  onClick={() => setIsOpen(false)}
-                />
-              ))}
+          <div className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setIsOpen(false)}>
+            <div 
+              className="absolute bottom-[72px] left-2 right-2 bg-white dark:bg-slate-950 rounded-3xl shadow-2xl overflow-y-auto border border-slate-200 dark:border-slate-800 max-h-[75vh]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-4 py-4 space-y-1">
+                <div className="w-10 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mb-4" />
+                {TOP_LEVEL_LINKS.filter(l => l.href !== "/feed" && l.href !== "/players").map((link) => (
+                  <MobileNavLink
+                    key={link.href}
+                    href={link.href}
+                    label={link.label}
+                    badge={link.href === "/events" ? liveEventCount : undefined}
+                    isActive={isActive(link.href)}
+                    onClick={() => setIsOpen(false)}
+                  />
+                ))}
 
-              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 mt-1">
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 mt-2">
 
                 {/* ── Light / Dark toggle — always visible ── */}
                 <div className="mb-3 flex bg-slate-100 dark:bg-slate-900 rounded-2xl p-1.5 gap-1.5 border border-slate-200/60 dark:border-slate-800">
@@ -529,6 +535,11 @@ export default function Navigation() {
                     >
                       <UserPlus className="h-4 w-4 text-emerald-500" /> Invite Friends
                     </button>
+                    <Link href="/privacy">
+                      <button className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
+                        <Shield className="h-4 w-4 text-slate-400" /> Privacy Policy
+                      </button>
+                    </Link>
                     <button
                       className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-600 font-medium text-sm transition-colors cursor-pointer"
                       onClick={() => handleSignOut()}
@@ -544,9 +555,59 @@ export default function Navigation() {
                   </Link>
                 )}
               </div>
+              </div>
             </div>
           </div>
         )}
+
+        {/* ── Mobile Bottom Navigation Bar ─────────────────────────────── */}
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 flex justify-around items-end px-2 pb-safe pt-1 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]">
+            <Link href="/">
+              <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/") ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}>
+                <Home className={`w-[22px] h-[22px] mb-1 ${isActive("/") ? "fill-emerald-600/20" : ""}`} />
+                <span className="text-[10px] font-bold">Home</span>
+              </button>
+            </Link>
+            <Link href="/feed">
+              <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/feed") ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}>
+                <Activity className={`w-[22px] h-[22px] mb-1 ${isActive("/feed") ? "fill-emerald-600/20" : ""}`} />
+                <span className="text-[10px] font-bold">Feed</span>
+                {hasUnreadAnnouncements && <span className="absolute top-1.5 right-3 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-slate-950" />}
+              </button>
+            </Link>
+            
+            {/* Center Log Match FAB */}
+            <div className="relative -top-5 mx-1">
+              {isLoggedIn ? (
+                <button 
+                  onClick={() => window.dispatchEvent(new Event('openLogMatchModal'))}
+                  className="w-[52px] h-[52px] bg-gradient-to-tr from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 rounded-full flex items-center justify-center text-white shadow-xl shadow-emerald-500/40 border-4 border-white dark:border-slate-950 transition-transform active:scale-95 cursor-pointer"
+                >
+                  <Plus className="w-6 h-6 stroke-[3]" />
+                </button>
+              ) : (
+                <Link href="/join">
+                  <button className="w-[52px] h-[52px] bg-slate-800 hover:bg-slate-700 rounded-full flex items-center justify-center text-white shadow-xl border-4 border-white dark:border-slate-950 transition-transform active:scale-95 cursor-pointer">
+                    <LogIn className="w-5 h-5 ml-1" />
+                  </button>
+                </Link>
+              )}
+            </div>
+
+            <Link href="/players">
+              <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/players") ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}>
+                <Users className={`w-[22px] h-[22px] mb-1 ${isActive("/players") ? "fill-emerald-600/20" : ""}`} />
+                <span className="text-[10px] font-bold">Players</span>
+              </button>
+            </Link>
+            <button 
+              onClick={() => setIsOpen(!isOpen)}
+              className={`relative flex flex-col items-center p-2 min-w-[60px] cursor-pointer ${isOpen ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}
+            >
+              {isOpen ? <X className="w-[22px] h-[22px] mb-1" /> : <Menu className="w-[22px] h-[22px] mb-1" />}
+              <span className="text-[10px] font-bold">Menu</span>
+            </button>
+        </div>
       </nav>
 
       {/* Global Search Modal */}

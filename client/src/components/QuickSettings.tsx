@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, Palette, Activity, Check, Lock, Bell, BellOff, Fingerprint } from "lucide-react";
+import { Settings, Palette, Activity, Check, Lock, Bell, BellOff, Fingerprint, ChevronDown, ChevronUp } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { useBiometricAuth, getBiometricEnabled, setBiometricEnabled } from "@/hooks/useBiometricAuth";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ export function QuickSettingsContent({ onClose }: { onClose?: () => void }) {
   const { checkAvailability, authenticate } = useBiometricAuth();
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [biometricEnabled, setBiometricEnabledState] = useState(getBiometricEnabled);
+  const [notifsExpanded, setNotifsExpanded] = useState(false);
 
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
@@ -195,42 +196,52 @@ export function QuickSettingsContent({ onClose }: { onClose?: () => void }) {
 
           {/* NOTIFICATION PREFERENCES */}
           <div className="px-3 py-3">
-            <div className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              <Bell className="w-3 h-3" /> Notifications
-            </div>
-            <div className="flex flex-col gap-1">
-              {NOTIF_KEYS.map(({ key, label, storage }) => {
-                const val = notifPrefs[key];
-                return (
-                  <button
-                    key={key}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      toggleNotif(key, storage);
-                    }}
-                    className="w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-bold transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60"
-                  >
-                    <span className={val ? "text-slate-700 dark:text-slate-200" : "text-slate-400 dark:text-slate-500"}>{label}</span>
-                    <div className={`w-8 h-4.5 rounded-full relative transition-colors shrink-0 ${val ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"}`}>
-                      <div className={`absolute top-0.5 w-3.5 h-3.5 bg-white rounded-full shadow transition-all ${val ? "left-4.5" : "left-0.5"}`} />
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
             <button
               onClick={(e) => {
                 e.preventDefault();
-                const allOn = NOTIF_KEYS.every(({ key }) => notifPrefs[key]);
-                NOTIF_KEYS.forEach(({ key, storage }) => {
-                  setNotifPrefs((prev) => ({ ...prev, [key]: !allOn }));
-                  localStorage.setItem(storage, String(!allOn));
-                });
+                setNotifsExpanded(!notifsExpanded);
               }}
-              className="mt-2 w-full text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition text-center py-1"
+              className="w-full flex items-center justify-between text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2"
             >
-              {NOTIF_KEYS.every(({ key }) => notifPrefs[key]) ? "Mute all" : "Enable all"}
+              <span className="flex items-center gap-1.5"><Bell className="w-3 h-3" /> Notifications</span>
+              {notifsExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </button>
+            
+            {notifsExpanded && (
+              <div className="flex flex-col gap-1 mt-2">
+                {NOTIF_KEYS.map(({ key, label, storage }) => {
+                  const val = notifPrefs[key];
+                  return (
+                    <button
+                      key={key}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        toggleNotif(key, storage);
+                      }}
+                      className="w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-bold transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                    >
+                      <span className={val ? "text-slate-700 dark:text-slate-200" : "text-slate-400 dark:text-slate-500"}>{label}</span>
+                      <div className={`w-8 h-4.5 rounded-full relative transition-colors shrink-0 ${val ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"}`}>
+                        <div className={`absolute top-0.5 w-3.5 h-3.5 bg-white rounded-full shadow transition-all ${val ? "left-4.5" : "left-0.5"}`} />
+                      </div>
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const allOn = NOTIF_KEYS.every(({ key }) => notifPrefs[key]);
+                    NOTIF_KEYS.forEach(({ key, storage }) => {
+                      setNotifPrefs((prev) => ({ ...prev, [key]: !allOn }));
+                      localStorage.setItem(storage, String(!allOn));
+                    });
+                  }}
+                  className="mt-2 w-full text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition text-center py-1"
+                >
+                  {NOTIF_KEYS.every(({ key }) => notifPrefs[key]) ? "Mute all" : "Enable all"}
+                </button>
+              </div>
+            )}
           </div>
           {/* BIOMETRIC AUTH — only shown on native with biometrics available */}
           {biometricAvailable && (

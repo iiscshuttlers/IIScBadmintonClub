@@ -24,6 +24,13 @@ type BannerMessage = {
   colorClass: string;
 };
 
+export type DynamicFlyer = {
+  id: string;
+  enabled: boolean;
+  bgColorClass: string;
+  items: BannerMessage[];
+};
+
 function getActiveAnnouncements(announcements: Announcement[]): string[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -51,8 +58,11 @@ function getActiveAnnouncements(announcements: Announcement[]): string[] {
 
 export default function StatusBanner() {
   const [messages, setMessages] = useState<BannerMessage[]>([]);
+  const [dynamicFlyers, setDynamicFlyers] = useState<DynamicFlyer[]>([]);
   const [location] = useLocation();
   const [isClosed, setIsClosed] = useState(false);
+  const [closedFlyers, setClosedFlyers] = useState<Set<string>>(new Set());
+  const [maintenance, setMaintenance] = useState<{mode: boolean, msg: string}>({ mode: false, msg: "" });
 
   useEffect(() => {
     Promise.all([
@@ -62,13 +72,20 @@ export default function StatusBanner() {
         "announcements",
         "announcements.json",
       ).catch(() => ({ recent: [] })),
+      fetchSiteData<DynamicFlyer[]>("flyers", "flyers.json").catch(() => []),
+      fetchSiteData<any>("club_settings", "settings.json").catch(() => null),
     ])
-      .then(([holidaysData, eventsData, announcementsData]) => {
+      .then(([holidaysData, eventsData, announcementsData, flyersData, settingsData]) => {
+        if (settingsData?.maintenanceMode) {
+          setMaintenance({ mode: true, msg: settingsData.maintenanceMessage || "Site is under maintenance. Please check back shortly." });
+        }
         const holidays = Array.isArray(holidaysData) ? holidaysData : [];
         const events = Array.isArray(eventsData) ? eventsData : [];
         const announcements = Array.isArray(announcementsData?.recent)
           ? announcementsData.recent
           : [];
+        const flyers = Array.isArray(flyersData) ? flyersData : [];
+        setDynamicFlyers(flyers.filter((f) => f.enabled));
 
         const todayDate = new Date();
         const today = todayDate.toLocaleDateString("en-CA", {
@@ -159,9 +176,18 @@ export default function StatusBanner() {
       .catch((err) => console.warn("StatusBanner data fetch failed:", err));
   }, []);
 
-  if (location !== "/" || isClosed || !messages.length) return null;
+  if (location !== "/" && !maintenance.mode) return null;
 
   return (
+    <div className="flex flex-col">
+      {maintenance.mode && (
+        <div className="bg-rose-600 text-white p-3 text-center text-sm font-bold shadow-md z-50 relative flex items-center justify-center gap-2">
+          <span className="animate-pulse">🔴</span>
+          {maintenance.msg}
+        </div>
+      )}
+
+      {location === "/" && !isClosed && messages.length > 0 && (
     <div className="relative bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-2.5 overflow-hidden flex items-center z-20 shadow-md">
       <Link href="/feed" className="flex-1 overflow-hidden min-w-0 pr-10">
         <div className="marquee-anim flex gap-8 font-semibold tracking-wide text-sm md:text-base whitespace-nowrap hover:opacity-90 transition-opacity cursor-pointer">
@@ -195,6 +221,50 @@ export default function StatusBanner() {
       >
         <X className="w-5 h-5 text-white/90" />
       </button>
+    </div>
+  )}
+      
+      {/* Dynamic Admin Flyers */}
+      {location === "/" && dynamicFlyers.filter(f => !closedFlyers.has(f.id)).map((flyer) => (
+        <div key={flyer.id} className={`relative ${flyer.bgColorClass} text-white py-2.5 overflow-hidden flex items-center z-20 shadow-md`}>
+          <div className="flex-1 overflow-hidden min-w-0 pr-10">
+            <div className="marquee-anim flex gap-8 font-semibold tracking-wide text-sm md:text-base whitespace-nowrap hover:opacity-90 transition-opacity">
+              {Array(2)
+                .fill(null)
+                .map((_, blockIdx) => (
+                  <span
+                    key={blockIdx}
+                    className="whitespace-nowrap flex items-center gap-8"
+                  >
+                    {Array(10)
+                      .fill(flyer.items)
+                      .flat()
+                      .map((msg, idx) => (
+                        <span
+                          key={`${blockIdx}-${idx}`}
+                          className="flex items-center gap-8"
+                        >
+                          <span className={msg.colorClass}>{msg.text}</span>
+                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-white/40 flex-shrink-0" />
+                        </span>
+                      ))}
+                  </span>
+                ))}
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              const newClosed = new Set(closedFlyers);
+              newClosed.add(flyer.id);
+              setClosedFlyers(newClosed);
+            }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-black/10 rounded-full transition-colors z-30"
+            aria-label="Close flyer"
+          >
+            <X className="w-5 h-5 text-white/90" />
+          </button>
+        </div>
+      ))}
     </div>
   );
 }

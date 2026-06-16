@@ -16,6 +16,9 @@ import {
   PackageSearch,
   Bell,
   Clock,
+  Edit2,
+  Trash2,
+  ImageIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -31,6 +34,8 @@ interface Post {
   contact?: string;
   image_url?: string;
   resolved: boolean;
+  claimed_by_id?: string;
+  claimed_by_name?: string;
   created_at: string;
   author?: { full_name: string; avatar_url?: string };
 }
@@ -53,15 +58,55 @@ const TYPE_STYLES: Record<PostType, { bg: string; badge: string; icon: any; labe
 export default function FindLost() {
   usePageMeta({ title: "Find & Lost", description: "Lost or found items at the IISc badminton courts" });
 
-  const { session, profile } = useAuth();
+  const { session, profile, isAdmin } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | PostType>("all");
   const [showResolved, setShowResolved] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
-  const [form, setForm] = useState({ type: "lost" as PostType, title: "", description: "", location: "", contact: "" });
+  const [form, setForm] = useState({ type: "lost" as PostType, title: "", description: "", location: "", contact: "", image_url: "" });
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingImage(true);
+    try {
+      const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
+      const { error } = await supabase.storage.from("avatars").upload(fileName, file);
+      if (error) throw error;
+      const { data } = supabase.storage.from("avatars").getPublicUrl(fileName);
+      setForm((prev) => ({ ...prev, image_url: data.publicUrl }));
+      toast.success("Image uploaded!");
+    } catch (err: any) {
+      toast.error(`Upload failed: ${err.message}`);
+    } finally {
+      setUploadingImage(false);
+      e.target.value = "";
+    }
+  };
+
+  const openNewPost = () => {
+    setEditingId(null);
+    setForm({ type: "lost", title: "", description: "", location: "", contact: "", image_url: "" });
+    setShowForm(true);
+  };
+
+  const editPost = (post: Post) => {
+    setEditingId(post.id);
+    setForm({ 
+      type: post.type, 
+      title: post.title, 
+      description: post.description || "", 
+      location: post.location || "", 
+      contact: post.contact || "",
+      image_url: post.image_url || ""
+    });
+    setShowForm(true);
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -96,21 +141,30 @@ export default function FindLost() {
     if (!profile?.id || !form.title.trim()) return;
     setSubmitting(true);
     try {
-      const { error } = await supabase.from("find_lost_posts").insert({
-        author_id: profile.id,
+      const payload = {
         type: form.type,
         title: form.title.trim(),
         description: form.description.trim() || null,
         location: form.location.trim() || null,
         contact: form.contact.trim() || null,
-      });
+        image_url: form.image_url || null,
+      };
+
+      let error;
+      if (editingId) {
+        ({ error } = await supabase.from("find_lost_posts").update(payload).eq("id", editingId));
+      } else {
+        ({ error } = await supabase.from("find_lost_posts").insert({ ...payload, author_id: profile.id }));
+      }
+      
       if (error) throw error;
-      toast.success("Post published!");
-      setForm({ type: "lost", title: "", description: "", location: "", contact: "" });
+      toast.success(editingId ? "Post updated!" : "Post published!");
+      setForm({ type: "lost", title: "", description: "", location: "", contact: "", image_url: "" });
+      setEditingId(null);
       setShowForm(false);
       load();
     } catch (err: any) {
-      toast.error(err?.message || "Failed to post");
+      toast.error(err?.message || "Failed to save post");
     } finally {
       setSubmitting(false);
     }
@@ -120,7 +174,38 @@ export default function FindLost() {
     const { error } = await supabase.from("find_lost_posts").update({ resolved: true }).eq("id", post.id);
     if (!error) {
       toast.success("Marked as resolved!");
-      setPosts((prev) => prev.filter((p) => p.id !== post.id));
+      load(); // Reload to get updated state
+    } else {
+      toast.error(error.message || "Failed to resolve post");
+    }
+  };
+
+  const claimItem = async (post: Post) => {
+    if (!profile?.id) return;
+    if (!confirm(`Are you sure you want to claim this ${post.type === "lost" ? "found" : "lost"} item?`)) return;
+    
+    const { error } = await supabase.rpc("claim_find_lost_item", {
+      post_uuid: post.id,
+      claimer_id: profile.id,
+      claimer_name: profile.full_name
+    });
+    
+    if (!error) {
+      toast.success("Successfully claimed!");
+      load(); // Reload to get updated state
+    } else {
+      toast.error(error.message || "Failed to claim item. Check if columns exist.");
+    }
+  };
+
+  const deletePost = async (post: Post) => {
+    if (!confirm("Are you sure you want to permanently delete this post?")) return;
+    const { error } = await supabase.from("find_lost_posts").delete().eq("id", post.id);
+    if (!error) {
+      toast.success("Post deleted");
+      load();
+    } else {
+      toast.error(error.message || "Failed to delete post");
     }
   };
 
@@ -140,7 +225,7 @@ export default function FindLost() {
           <p className="text-slate-300 text-sm">Post about lost or found items at the IISc badminton courts. Get real-time notifications when someone replies.</p>
           {session && (
             <button
-              onClick={() => setShowForm((v) => !v)}
+              onClick={openNewPost}
               className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-lg shadow-indigo-900/40 transition"
             >
               <Plus className="w-4 h-4" /> Post Item
@@ -160,8 +245,10 @@ export default function FindLost() {
               className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-black text-slate-800 dark:text-white">New Post</h3>
-                <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
+                <h3 className="font-black text-slate-800 dark:text-white">
+                  {editingId ? "Edit Post" : "New Post"}
+                </h3>
+                <button onClick={() => { setShowForm(false); setEditingId(null); }} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -201,6 +288,22 @@ export default function FindLost() {
                     className={inputCls}
                   />
                 </div>
+                <div>
+                  <label className={labelCls}>Image (Optional)</label>
+                  <div className="flex items-center gap-4">
+                    {form.image_url && (
+                      <img src={form.image_url} alt="Item" className="w-16 h-16 rounded-xl object-cover border border-slate-200 dark:border-slate-700" />
+                    )}
+                    <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-sm rounded-xl transition">
+                      {uploadingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />}
+                      {form.image_url ? "Change Image" : "Upload Image"}
+                      <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploadingImage} />
+                    </label>
+                    {form.image_url && (
+                      <button onClick={() => setForm(f => ({ ...f, image_url: "" }))} className="text-rose-500 hover:text-rose-600 text-sm font-bold">Remove</button>
+                    )}
+                  </div>
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className={labelCls}>Location</label>
@@ -226,14 +329,14 @@ export default function FindLost() {
               </div>
 
               <div className="flex justify-end gap-3 mt-4">
-                <Button variant="ghost" onClick={() => setShowForm(false)}>Cancel</Button>
+                <Button variant="ghost" onClick={() => { setShowForm(false); setEditingId(null); }}>Cancel</Button>
                 <Button
                   onClick={submit}
                   disabled={submitting || !form.title.trim()}
                   className="bg-indigo-600 hover:bg-indigo-700 text-white"
                 >
-                  {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
-                  {submitting ? "Posting…" : "Publish Post"}
+                  {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : (editingId ? <Edit2 className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />)}
+                  {submitting ? "Saving…" : (editingId ? "Save Changes" : "Publish Post")}
                 </Button>
               </div>
             </motion.div>
@@ -301,6 +404,20 @@ export default function FindLost() {
                       {post.description && (
                         <p className="text-sm text-slate-600 dark:text-slate-300 mb-2">{post.description}</p>
                       )}
+                      
+                      {post.image_url && (
+                        <div className="mb-3">
+                          <img src={post.image_url} alt={post.title} className="w-full max-w-sm rounded-xl object-cover border border-slate-200 dark:border-slate-800" />
+                        </div>
+                      )}
+                      
+                      {post.resolved && post.claimed_by_name && (
+                        <div className="mb-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-lg text-xs font-bold border border-indigo-100 dark:border-indigo-800">
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          Claimed / Handed over to: {post.claimed_by_name}
+                        </div>
+                      )}
+
                       <div className="flex flex-wrap gap-3 text-xs text-slate-400">
                         {post.location && (
                           <span className="flex items-center gap-1">
@@ -324,15 +441,46 @@ export default function FindLost() {
                       </div>
                     </div>
 
-                    {isOwn && !post.resolved && (
-                      <button
-                        onClick={() => resolve(post)}
-                        title="Mark as resolved"
-                        className="shrink-0 p-2 rounded-xl text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition"
-                      >
-                        <CheckCircle className="w-5 h-5" />
-                      </button>
-                    )}
+                    <div className="flex flex-col gap-2 shrink-0 ml-3">
+                      {(isOwn || isAdmin) && !post.resolved && (
+                        <>
+                          <button
+                            onClick={() => resolve(post)}
+                            title="Mark as resolved"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/60 transition"
+                          >
+                            <CheckCircle className="w-4 h-4" /> Resolve
+                          </button>
+                          <button
+                            onClick={() => editPost(post)}
+                            title="Edit post"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/60 transition"
+                          >
+                            <Edit2 className="w-4 h-4" /> Edit
+                          </button>
+                        </>
+                      )}
+                      
+                      {(isOwn || isAdmin) && (
+                        <button
+                          onClick={() => deletePost(post)}
+                          title="Delete post"
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400 hover:bg-rose-200 dark:hover:bg-rose-900/60 transition"
+                        >
+                          <Trash2 className="w-4 h-4" /> Delete
+                        </button>
+                      )}
+                      
+                      {!isOwn && !post.resolved && session && (
+                        <button
+                          onClick={() => claimItem(post)}
+                          title="Claim this item"
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-900/60 transition"
+                        >
+                          <CheckCircle className="w-4 h-4" /> Claim
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </motion.div>
               );

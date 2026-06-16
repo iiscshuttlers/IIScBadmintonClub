@@ -1,5 +1,6 @@
 import { useParams, useLocation, Link } from "wouter";
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { useHashTab } from "@/hooks/useHashTab";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence, useSpring, useTransform, type Variants } from "framer-motion";
 import {
@@ -48,10 +49,17 @@ import {
   Sun,
   Moon,
   FileDown,
+  Settings,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { isAdminEmail } from "@/lib/admin";
@@ -293,13 +301,13 @@ function getYouTubeId(url: string) {
 
 function AnimatedCounter({ value, className }: { value: number, className?: string }) {
   const spring = useSpring(0, { duration: 1500, bounce: 0 });
-  
+
   useEffect(() => {
     spring.set(value);
   }, [spring, value]);
-  
+
   const display = useTransform(spring, (current) => Math.round(current));
-  
+
   return <motion.span className={className}>{display}</motion.span>;
 }
 
@@ -319,7 +327,7 @@ export default function PlayerProfile({
     updateRole,
     refreshProfile,
   } = useAuth();
-  
+
   const { theme, toggleTheme } = useTheme();
 
   // If we're in matchesOnly mode and no routeId is provided, use the logged-in user's profile ID
@@ -358,17 +366,10 @@ export default function PlayerProfile({
   >("all");
   const [isMatchHistoryOpen, setIsMatchHistoryOpen] = useState(false);
   const [eloChartFilter, setEloChartFilter] = useState<"ALL" | "S" | "D" | "XD">("ALL");
-  const [activeTab, setActiveTab] = useState<"OVERVIEW" | "RANKING" | "STATS" | "MATCHES">(() => {
-    const hash = window.location.hash.replace("#", "").toUpperCase();
-    if (["OVERVIEW", "RANKING", "STATS", "MATCHES"].includes(hash)) {
-      return hash as "OVERVIEW" | "RANKING" | "STATS" | "MATCHES";
-    }
-    return "OVERVIEW";
-  });
-
-  useEffect(() => {
-    window.history.replaceState(null, "", `#${activeTab.toLowerCase()}`);
-  }, [activeTab]);
+  const [activeTab, setActiveTab] = useHashTab(
+    ["OVERVIEW", "RANKING", "STATS", "MATCHES"] as const,
+    "OVERVIEW"
+  );
   const [isFollowing, setIsFollowing] = useState(false);
   const [isBuddy, setIsBuddy] = useState(false);
   const [hasSentRequest, setHasSentRequest] = useState(false);
@@ -436,7 +437,7 @@ export default function PlayerProfile({
 
   const handleBuddyAction = async (action: 'send' | 'cancel' | 'accept' | 'remove') => {
     if (!player?.id || !ownPlayerProfile?.id) return;
-    
+
     try {
       if (action === 'send') {
         setHasSentRequest(true);
@@ -446,7 +447,7 @@ export default function PlayerProfile({
         if (error) throw error;
         setPlayer({ ...player, buddyRequests: newRequests });
         toast.success(`Buddy request sent to ${player.fullName}!`);
-      } 
+      }
       else if (action === 'cancel') {
         setHasSentRequest(false);
         const currentRequests = player.buddyRequests || (player as any).buddy_requests || [];
@@ -473,7 +474,7 @@ export default function PlayerProfile({
 
         setPlayer({ ...player, buddies: theirNewBuddies });
         toast.success(`You and ${player.fullName} are now buddies!`);
-        
+
         // Trigger push notification to the sender
         await supabase.from("site_data").upsert({
           key: "latest_buddy_acceptance",
@@ -577,8 +578,8 @@ export default function PlayerProfile({
       shoes:
         data.shoes && data.shoes.startsWith("[")
           ? JSON.parse(data.shoes).find((s: any) => s.primary)?.name ||
-            JSON.parse(data.shoes)[0]?.name ||
-            ""
+          JSON.parse(data.shoes)[0]?.name ||
+          ""
           : data.shoes,
       shoesList: parseShoesList(data.shoes),
       apparel: data.apparel,
@@ -615,13 +616,13 @@ export default function PlayerProfile({
         );
       const res = fullRes.error
         ? await supabase
-            .from("matches")
-            .select(
-              "*, player1:players!player1_id(full_name), player2:players!player2_id(full_name)",
-            )
-            .eq("status", "pending")
-            .neq("submitted_by", profileId)
-            .or(`player1_id.eq.${profileId},player2_id.eq.${profileId}`)
+          .from("matches")
+          .select(
+            "*, player1:players!player1_id(full_name), player2:players!player2_id(full_name)",
+          )
+          .eq("status", "pending")
+          .neq("submitted_by", profileId)
+          .or(`player1_id.eq.${profileId},player2_id.eq.${profileId}`)
         : fullRes;
       setPendingMatches(
         (res.data || []).filter((match) =>
@@ -720,7 +721,7 @@ export default function PlayerProfile({
           }
         },
       },
-      cancel: { label: "Cancel", onClick: () => {} },
+      cancel: { label: "Cancel", onClick: () => { } },
     });
   };
 
@@ -1157,7 +1158,7 @@ export default function PlayerProfile({
   // Generate ELO progression data for the chart from actual calculation logs
   const eloHistoryData = useMemo(() => {
     if (!id || !player) return [];
-    
+
     let currentElo = 1200;
     if (eloChartFilter === "ALL" && player.elo_rating) currentElo = player.elo_rating;
     if (eloChartFilter === "S" && player.singles_elo) currentElo = player.singles_elo;
@@ -1188,7 +1189,7 @@ export default function PlayerProfile({
       let rollingAllElo = 1200;
       filteredLogs.forEach(log => {
         if (eloChartFilter === "ALL") {
-           rollingAllElo += Math.trunc((log.elo_change || 0) / 3);
+          rollingAllElo += Math.trunc((log.elo_change || 0) / 3);
         }
         history.push({
           name: new Date(log.created_at).toLocaleDateString(undefined, {
@@ -1198,16 +1199,16 @@ export default function PlayerProfile({
           elo: eloChartFilter === "ALL" ? rollingAllElo : log.new_elo,
         });
       });
-      
+
       // Ensure the final point matches current Elo to avoid weird chart drops/spikes at the end
       if (history.length > 0) {
         history[history.length - 1].elo = currentElo;
       }
     } else {
-       // Fallback if no logs exist yet
-       history.push({ name: "Current", elo: currentElo });
+      // Fallback if no logs exist yet
+      history.push({ name: "Current", elo: currentElo });
     }
-    
+
     return history;
   }, [eloLogs, id, player, eloChartFilter]);
 
@@ -1266,7 +1267,7 @@ export default function PlayerProfile({
         navigator.clipboard
           .writeText(url)
           .then(() => toast.success("Profile link copied!"))
-          .catch(() => {});
+          .catch(() => { });
       }
     }
   };
@@ -1304,12 +1305,12 @@ export default function PlayerProfile({
     if (!player) return;
     setGeneratingWrapped(true);
     toast.info("Generating your Year in Review...", { duration: 2000 });
-    
+
     try {
       const match = player.winLossRecord?.match(/(\d+)W\s*-\s*(\d+)L/) || ["", "0", "0"];
       const totalMatches = parseInt(match[1]) + parseInt(match[2]);
       const winPctStr = (player.stats?.winPercentage ?? 0).toFixed(1) + "%";
-      
+
       const safeStreak = String(player.stats?.currentStreak || "0").replace("W", "");
       const safeName = player.fullName || "Player";
 
@@ -1329,20 +1330,20 @@ export default function PlayerProfile({
       const dataUrl = canvas.toDataURL("image/png");
       const res = await fetch(dataUrl);
       const blob = await res.blob();
-      
+
       try {
         if (navigator.share && navigator.canShare) {
           const file = new File([blob], "wrapped.png", { type: "image/png" });
           if (navigator.canShare({ files: [file] })) {
             await navigator.share({
-              title: "My IISc Shuttlers Year in Review",
+              title: "My IISc Badminton Club Year in Review",
               files: [file]
             });
             setGeneratingWrapped(false);
             return;
           }
         }
-        
+
         // Fallback to download
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -1382,23 +1383,40 @@ export default function PlayerProfile({
           setLocation("/");
         },
       },
-      cancel: { label: "Cancel", onClick: () => {} },
+      cancel: { label: "Cancel", onClick: () => { } },
     });
   };
 
   const handleSelfDelete = async () => {
     if (!player || !currentUser) return;
-    const { error } = await supabase
-      .from("players")
-      .update({ deleted_at: new Date().toISOString() })
-      .eq("id", player.id);
-    if (error) {
-      alert("Failed to delete profile: " + error.message);
-      return;
-    }
-    alert("Your profile has been deleted.");
-    await supabase.auth.signOut();
-    setLocation("/join");
+    toast("Delete Account & Data?", {
+      description: "This action is irreversible. Your profile, matches, and all associated personal data will be permanently deleted from our servers in accordance with Play Store policies.",
+      action: {
+        label: "Delete Permanently",
+        onClick: async () => {
+          // Soft delete in the database which triggers server-side cleanup policies
+          const { error } = await supabase
+            .from("players")
+            .update({ deleted_at: new Date().toISOString() })
+            .eq("id", player.id);
+
+          if (error) {
+            toast.error("Failed to delete account", { description: error.message });
+            return;
+          }
+
+          // Clear local data
+          localStorage.clear();
+          sessionStorage.clear();
+
+          toast.success("Account and all data successfully deleted.");
+          await supabase.auth.signOut();
+          setLocation("/join");
+        },
+      },
+      cancel: { label: "Cancel", onClick: () => { } },
+      duration: 10000,
+    });
   };
 
   const nameParts = player.fullName.trim().split(/\s+/);
@@ -1502,18 +1520,53 @@ export default function PlayerProfile({
                   <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
                   <span className="hidden sm:inline">Edit Profile</span>
                 </button>
-                <button
-                  onClick={async () => {
-                    if (confirm("Sign out?")) {
-                      await supabase.auth.signOut();
-                      setLocation("/join");
-                    }
-                  }}
-                  className="p-2.5 rounded-xl bg-white/80 dark:bg-black/20 border border-slate-200/80 dark:border-white/20 text-slate-700 dark:text-white hover:bg-white dark:hover:bg-black/40 transition-all backdrop-blur-md shadow-sm"
-                  title="Sign Out"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className="p-2.5 rounded-xl bg-white/80 dark:bg-black/20 border border-slate-200/80 dark:border-white/20 text-slate-700 dark:text-white hover:bg-white dark:hover:bg-black/40 transition-all backdrop-blur-md shadow-sm"
+                      title="Settings"
+                    >
+                      <Settings className="w-4 h-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem
+                      onClick={async () => {
+                        if (confirm("Sign out?")) {
+                          await supabase.auth.signOut();
+                          setLocation("/join");
+                        }
+                      }}
+                      className="cursor-pointer font-medium"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign Out
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => {
+                        if (confirm("Clear all local app data? You will need to sign in again.")) {
+                          localStorage.clear();
+                          sessionStorage.clear();
+                          supabase.auth.signOut().then(() => {
+                            window.location.href = "/join";
+                          });
+                        }
+                      }}
+                      className="cursor-pointer font-medium text-orange-600 focus:text-orange-600 focus:bg-orange-50 dark:focus:bg-orange-950/50"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete Data
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={handleSelfDelete}
+                      className="cursor-pointer font-medium text-rose-600 focus:text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-950/50"
+                    >
+                      <UserMinus className="w-4 h-4 mr-2" />
+                      Delete Profile
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </>
             )}
 
@@ -1548,231 +1601,230 @@ export default function PlayerProfile({
         {/* Hero Content */}
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-4 pb-12">
           <div className="flex flex-col md:flex-row gap-8 items-end relative">
-             {/* Left: Avatar overlapping header */}
-             <div className="relative mt-8 md:mt-24 shrink-0 z-20">
-               <div className="w-40 h-40 md:w-64 md:h-64 rounded-2xl border-4 border-slate-200/70 dark:border-white/35 overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.55)] bg-slate-200 dark:bg-slate-800">
-                 {player.avatar ? (
-                   <img src={player.avatar} alt={player.fullName} className="w-full h-full object-cover" />
-                 ) : (
-                   <div className="w-full h-full flex items-center justify-center text-6xl font-black text-slate-400">
-                     {player.fullName.charAt(0)}
-                   </div>
-                 )}
-               </div>
-               {/* Floating rank badge */}
-               {eloRank && (
-                 <div className="absolute -bottom-4 -right-4 bg-emerald-500 text-white px-4 py-2 rounded-lg font-black text-xl shadow-lg border-2 border-white dark:border-slate-950 flex items-center gap-2">
-                   <Trophy className="w-5 h-5" /> #{eloRank}
-                 </div>
-               )}
-             </div>
+            {/* Left: Avatar overlapping header */}
+            <div className="relative mt-8 md:mt-24 shrink-0 z-20">
+              <div className="w-40 h-40 md:w-64 md:h-64 rounded-2xl border-4 border-slate-200/70 dark:border-white/35 overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.55)] bg-slate-200 dark:bg-slate-800">
+                {player.avatar ? (
+                  <img src={player.avatar} alt={player.fullName} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-6xl font-black text-slate-400">
+                    {player.fullName.charAt(0)}
+                  </div>
+                )}
+              </div>
+              {/* Floating rank badge */}
+              {eloRank && (
+                <div className="absolute -bottom-4 -right-4 bg-emerald-500 text-white px-4 py-2 rounded-lg font-black text-xl shadow-lg border-2 border-white dark:border-slate-950 flex items-center gap-2">
+                  <Trophy className="w-5 h-5" /> #{eloRank}
+                </div>
+              )}
+            </div>
 
-             {/* Right: Info */}
-             <div className="flex-1 pb-2 md:pb-4 text-slate-900 dark:text-white mt-4 md:mt-0">
-               {/* Name */}
-               <div className="flex flex-col">
-                 {heroRestName && (
-                   <span
-                     className="text-xl md:text-3xl font-bold uppercase tracking-[0.2em] text-white/95 dark:text-slate-900"
-                     style={theme === "light" ? { textShadow: "0 2px 12px rgba(0,0,0,0.7), 0 1px 4px rgba(0,0,0,0.5)" } : undefined}
-                   >{heroRestName}</span>
-                 )}
-                 <div className="flex items-center flex-wrap gap-4">
-                   <h1
-                     className="text-5xl md:text-8xl font-black uppercase tracking-tighter leading-none text-white dark:text-slate-900"
-                     style={theme === "light" ? { textShadow: "0 4px 24px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4)" } : undefined}
-                   >{heroLastWord}</h1>
-                   {player.social?.instagram && (
-                     <a
-                       href={`https://instagram.com/${player.social.instagram.replace("@", "")}`}
-                       target="_blank"
-                       rel="noopener noreferrer"
-                       className="flex items-center gap-1.5 px-3 py-2 mt-2 md:mt-4 bg-white/80 dark:bg-black/40 backdrop-blur-md border border-pink-300/60 dark:border-pink-500/30 text-pink-600 dark:text-pink-300 hover:bg-pink-50 dark:hover:bg-pink-600/60 font-bold rounded-2xl transition-all shadow-sm"
-                       title="Instagram"
-                     >
-                       <Instagram className="w-5 h-5 md:w-7 md:h-7" />
-                       <span className="text-xs md:text-sm tracking-widest hidden sm:inline-block">@{player.social.instagram.replace("@", "")}</span>
-                     </a>
-                   )}
-                 </div>
-               </div>
-               
-               {/* Stats / Details Pill Row */}
-               <div className="flex flex-wrap gap-2 mt-4 md:mt-6">
-                 <span className="px-3 py-1.5 rounded-lg bg-white/80 dark:bg-black/40 backdrop-blur-md border border-slate-200/80 dark:border-white/25 text-slate-800 dark:text-white text-sm font-bold uppercase shadow-sm flex items-center gap-1.5">
-                   <MapPin className="w-4 h-4 text-rose-400" /> {player.department}
-                 </span>
-                 <span className="px-3 py-1.5 rounded-lg bg-white/80 dark:bg-black/40 backdrop-blur-md border border-slate-200/80 dark:border-white/25 text-slate-800 dark:text-white text-sm font-bold uppercase shadow-sm">
-                   {player.playingLevel}
-                 </span>
+            {/* Right: Info */}
+            <div className="flex-1 pb-2 md:pb-4 text-slate-900 dark:text-white mt-4 md:mt-0">
+              {/* Name */}
+              <div className="flex flex-col">
+                {heroRestName && (
+                  <span
+                    className="text-xl md:text-3xl font-bold uppercase tracking-[0.2em] text-white/95 dark:text-slate-900"
+                    style={theme === "light" ? { textShadow: "0 2px 12px rgba(0,0,0,0.7), 0 1px 4px rgba(0,0,0,0.5)" } : undefined}
+                  >{heroRestName}</span>
+                )}
+                <div className="flex items-center flex-wrap gap-4">
+                  <h1
+                    className="text-5xl md:text-8xl font-black uppercase tracking-tighter leading-none text-white dark:text-slate-900"
+                    style={theme === "light" ? { textShadow: "0 4px 24px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4)" } : undefined}
+                  >{heroLastWord}</h1>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
 
-                 {player.dominantHand && (
-                   <span className="px-3 py-1.5 rounded-lg bg-white/80 dark:bg-black/40 backdrop-blur-md border border-slate-200/80 dark:border-white/25 text-slate-800 dark:text-white text-sm font-bold uppercase shadow-sm flex items-center gap-1.5">
-                     <User className="w-4 h-4 text-violet-400" /> {player.dominantHand.split("-")[0]} Hand
-                   </span>
-                 )}
-               </div>
+        {/* Floating Details Section - Placed beautifully below the avatar/name to keep the banner clean */}
+        <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pb-8 mt-2 md:mt-8">
+          <div className="flex flex-col lg:flex-row gap-6 justify-between items-start">
+            
+            {/* Left/Main Column: Stats, Tags, CTAs */}
+            <div className="flex flex-col gap-5 w-full lg:w-2/3">
+              {/* Instagram link */}
+              {player.social?.instagram && (
+                <a
+                  href={`https://instagram.com/${player.social.instagram.replace("@", "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 w-max bg-white dark:bg-slate-900 border border-pink-200 dark:border-pink-900/50 text-pink-600 dark:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-900/20 font-bold rounded-2xl transition-all shadow-sm"
+                  title="Instagram"
+                >
+                  <Instagram className="w-5 h-5" />
+                  <span className="text-sm tracking-widest">@{player.social.instagram.replace("@", "")}</span>
+                </a>
+              )}
 
-               {/* ELO Row */}
-               <div className="flex flex-wrap gap-2 mt-2">
-                 {player.elo_rating != null && (
-                    <span className={`px-3 py-1.5 rounded-lg backdrop-blur-md border border-white/25 text-sm font-black uppercase shadow-sm flex items-center gap-1.5 ${getEloTier(player.elo_rating).bg} ${getEloTier(player.elo_rating).color}`}>
-                      <Trophy className="w-4 h-4" /> {getEloTier(player.elo_rating).name} • <AnimatedCounter value={player.elo_rating} /> OVR
-                    </span>
-                 )}
-                 {player.singles_elo != null && (
-                   <span className="px-3 py-1.5 rounded-lg bg-white/80 dark:bg-black/40 backdrop-blur-md border border-emerald-200/80 dark:border-emerald-500/25 text-slate-800 dark:text-white text-sm font-bold shadow-sm flex items-center gap-1.5">
-                     <User className="w-4 h-4 text-emerald-500" /> S: {player.singles_elo}
-                   </span>
-                 )}
-                 {player.doubles_elo != null && (
-                   <span className="px-3 py-1.5 rounded-lg bg-white/80 dark:bg-black/40 backdrop-blur-md border border-blue-200/80 dark:border-blue-500/25 text-slate-800 dark:text-white text-sm font-bold shadow-sm flex items-center gap-1.5">
-                     <Users className="w-4 h-4 text-blue-500" /> D: {player.doubles_elo}
-                   </span>
-                 )}
+              {/* Stats / Details Pill Row */}
+              <div className="flex flex-wrap gap-2">
+                <span className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-sm font-bold uppercase shadow-sm flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4 text-rose-400" /> {player.department}
+                </span>
+                <span className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-sm font-bold uppercase shadow-sm">
+                  {player.playingLevel}
+                </span>
+                {player.dominantHand && (
+                  <span className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-sm font-bold uppercase shadow-sm flex items-center gap-1.5">
+                    <User className="w-4 h-4 text-violet-400" /> {player.dominantHand.split("-")[0]} Hand
+                  </span>
+                )}
+              </div>
+
+              {/* ELO Row */}
+              <div className="flex flex-wrap gap-2">
+                {player.elo_rating != null && (
+                  <span className={`px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-sm font-black uppercase shadow-sm flex items-center gap-1.5 ${getEloTier(player.elo_rating).bg} ${getEloTier(player.elo_rating).color}`}>
+                    <Trophy className="w-4 h-4" /> {getEloTier(player.elo_rating).name} • <AnimatedCounter value={player.elo_rating} /> OVR
+                  </span>
+                )}
+                {player.singles_elo != null && (
+                  <span className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-900/50 text-slate-800 dark:text-slate-200 text-sm font-bold shadow-sm flex items-center gap-1.5">
+                    <User className="w-4 h-4 text-emerald-500" /> S: {player.singles_elo}
+                  </span>
+                )}
+                {player.doubles_elo != null && (
+                  <span className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-900/50 text-slate-800 dark:text-slate-200 text-sm font-bold shadow-sm flex items-center gap-1.5">
+                    <Users className="w-4 h-4 text-blue-500" /> D: {player.doubles_elo}
+                  </span>
+                )}
                 {player.mixed_elo != null && (
-                   <span className="px-3 py-1.5 rounded-lg bg-white/80 dark:bg-black/40 backdrop-blur-md border border-rose-200/80 dark:border-rose-500/25 text-slate-800 dark:text-white text-sm font-bold shadow-sm flex items-center gap-1.5">
-                     <Heart className="w-4 h-4 text-rose-500" /> XD: {player.mixed_elo}
-                   </span>
-                 )}
-               </div>
+                  <span className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-900/50 text-slate-800 dark:text-slate-200 text-sm font-bold shadow-sm flex items-center gap-1.5">
+                    <Heart className="w-4 h-4 text-rose-500" /> XD: {player.mixed_elo}
+                  </span>
+                )}
+              </div>
 
-               {/* Next Tier Progress Bar */}
-               {player.elo_rating != null && (() => {
-                 const tierOrder = [
-                   { name: "Bronze", minElo: 0 },
-                   { name: "Silver", minElo: 1000 },
-                   { name: "Gold", minElo: 1200 },
-                   { name: "Platinum", minElo: 1400 },
-                   { name: "Diamond", minElo: 1600 },
-                   { name: "Grandmaster", minElo: 1800 },
-                 ];
-                 const currentTierInfo = getEloTier(player.elo_rating);
-                 const currentIdx = tierOrder.findIndex(t => t.name === currentTierInfo.name);
-                 const nextTier = tierOrder[currentIdx + 1];
-                 if (!nextTier) return (
-                   <div className="mt-3 max-w-xs">
-                     <div className="flex items-center justify-between mb-1">
-                       <span className="text-[10px] font-black uppercase tracking-wider text-white/70">Max Tier Reached</span>
-                       <span className="text-[10px] font-black text-amber-400">👑</span>
-                     </div>
-                     <div className="h-1.5 w-full rounded-full bg-white/20 overflow-hidden">
-                       <div className="h-full w-full rounded-full bg-gradient-to-r from-amber-400 to-rose-500" />
-                     </div>
-                   </div>
-                 );
-                 const currentMin = tierOrder[currentIdx].minElo;
-                 const progress = Math.min(100, Math.max(0, ((player.elo_rating - currentMin) / (nextTier.minElo - currentMin)) * 100));
-                 const remaining = nextTier.minElo - player.elo_rating;
-                 return (
-                   <div className="mt-3 max-w-xs">
-                     <div className="flex items-center justify-between mb-1">
-                       <span className="text-[10px] font-black uppercase tracking-wider text-white/70 dark:text-slate-900/70">{remaining} ELO to {nextTier.name}</span>
-                       <span className="text-[10px] font-black text-white/80 dark:text-slate-900/80">{Math.round(progress)}%</span>
-                     </div>
-                     <div className="h-1.5 w-full rounded-full bg-white/20 dark:bg-slate-900/20 overflow-hidden">
-                       <div
-                         className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-400 transition-all duration-700"
-                         style={{ width: `${progress}%` }}
-                       />
-                     </div>
-                   </div>
-                 );
-               })()}
+              {/* Next Tier Progress Bar */}
+              {player.elo_rating != null && (() => {
+                const tierOrder = [
+                  { name: "Bronze", minElo: 0 },
+                  { name: "Silver", minElo: 1000 },
+                  { name: "Gold", minElo: 1200 },
+                  { name: "Platinum", minElo: 1400 },
+                  { name: "Diamond", minElo: 1600 },
+                  { name: "Grandmaster", minElo: 1800 },
+                ];
+                const currentTierInfo = getEloTier(player.elo_rating);
+                const currentIdx = tierOrder.findIndex(t => t.name === currentTierInfo.name);
+                const nextTier = tierOrder[currentIdx + 1];
+                
+                if (!nextTier) return (
+                  <div className="mt-1 max-w-sm bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Max Tier Reached</span>
+                      <span className="text-xs font-black text-amber-500">👑</span>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                      <div className="h-full w-full rounded-full bg-gradient-to-r from-amber-400 to-rose-500" />
+                    </div>
+                  </div>
+                );
+                
+                const currentMin = tierOrder[currentIdx].minElo;
+                const progress = Math.min(100, Math.max(0, ((player.elo_rating - currentMin) / (nextTier.minElo - currentMin)) * 100));
+                const remaining = nextTier.minElo - player.elo_rating;
+                return (
+                  <div className="mt-1 max-w-sm bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{remaining} ELO to {nextTier.name}</span>
+                      <span className="text-[10px] font-black text-slate-600 dark:text-slate-300">{Math.round(progress)}%</span>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-400 transition-all duration-700"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })()}
 
-               {/* CTAs */}
-               <div className="flex flex-wrap items-center gap-3 mt-6">
-                 {currentUser && player && currentUser.id !== player.userId && ownPlayerProfile && (
-                   <>
-                     {/* Follow */}
-                     <button
-                       onClick={handleToggleFollow}
-                       className={`flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider ${
-                         isFollowing
-                           ? "bg-violet-600 text-white hover:bg-rose-500"
-                           : "bg-black/40 backdrop-blur-md border border-white/25 text-white hover:bg-violet-600/80"
-                       }`}
-                     >
-                       {isFollowing ? (
-                         <>
-                           <UserCheck className="w-4 h-4 group-hover:hidden" />
-                           <span className="group-hover:hidden">Following</span>
-                         </>
-                       ) : (
-                         <>
-                           <UserPlus className="w-4 h-4" /> Follow
-                         </>
-                       )}
-                     </button>
-                     {/* Buddy Logic */}
-                     {isBuddy ? (
-                       <button
-                         onClick={() => handleBuddyAction('remove')}
-                         className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-rose-600 text-white hover:bg-rose-700"
-                       >
-                         <Heart className="w-4 h-4 fill-white text-white" />
-                         Buddy
-                       </button>
-                     ) : hasReceivedRequest ? (
-                       <button
-                         onClick={() => handleBuddyAction('accept')}
-                         className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-emerald-600 text-white hover:bg-emerald-700"
-                       >
-                         <Heart className="w-4 h-4" />
-                         Accept Request
-                       </button>
-                     ) : hasSentRequest ? (
-                       <button
-                         onClick={() => handleBuddyAction('cancel')}
-                         className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-slate-600 text-white hover:bg-slate-700"
-                       >
-                         <Heart className="w-4 h-4" />
-                         Request Sent
-                       </button>
-                     ) : (
-                       <button
-                         onClick={() => handleBuddyAction('send')}
-                         className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-black/40 backdrop-blur-md border border-white/25 text-white hover:bg-rose-600/70"
-                       >
-                         <Heart className="w-4 h-4" />
-                         Add Buddy
-                       </button>
-                     )}
-                     
-                     <button
-                       onClick={() => setIsChallengeModalOpen(true)}
-                       className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-orange-500 text-white hover:bg-orange-600 border border-orange-400"
-                     >
-                       <Swords className="w-4 h-4" />
-                       Challenge
-                     </button>
-                   </>
-                 )}
-               </div>
-             </div>
-             {/* QR Code Section (Only visible on own profile) */}
-             {currentUser && player && currentUser.id === player.userId && (
-               <div className="absolute top-0 right-0 hidden lg:flex flex-col items-center bg-white/10 dark:bg-black/20 p-4 rounded-3xl backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-2xl">
-                 <div className="bg-white p-2 rounded-xl">
-                   <QRCode value={`${getBaseShareUrl()}/player/${player.id}`} size={100} />
-                 </div>
-                 <span className="text-[10px] font-black uppercase text-slate-800 dark:text-white/60 mt-3 tracking-widest text-center max-w-[100px]">Let Opponents Scan You</span>
-               </div>
-             )}
-           </div>
+              {/* CTAs */}
+              <div className="flex flex-wrap items-center gap-3 mt-2">
+                {currentUser && player && currentUser.id !== player.userId && ownPlayerProfile && (
+                  <>
+                    <button
+                      onClick={handleToggleFollow}
+                      className={`flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider ${isFollowing
+                          ? "bg-violet-600 text-white hover:bg-rose-500"
+                          : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white hover:bg-violet-50 dark:hover:bg-violet-900/30 hover:border-violet-300 dark:hover:border-violet-700"
+                        }`}
+                    >
+                      {isFollowing ? (
+                        <>
+                          <UserCheck className="w-4 h-4 group-hover:hidden" />
+                          <span className="group-hover:hidden">Following</span>
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="w-4 h-4" /> Follow
+                        </>
+                      )}
+                    </button>
+                    {isBuddy ? (
+                      <button
+                        onClick={() => handleBuddyAction('remove')}
+                        className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-rose-600 text-white hover:bg-rose-700"
+                      >
+                        <Heart className="w-4 h-4 fill-white text-white" />
+                        Buddy
+                      </button>
+                    ) : hasReceivedRequest ? (
+                      <button
+                        onClick={() => handleBuddyAction('accept')}
+                        className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-emerald-600 text-white hover:bg-emerald-700"
+                      >
+                        <Heart className="w-4 h-4" />
+                        Accept Request
+                      </button>
+                    ) : hasSentRequest ? (
+                      <button
+                        onClick={() => handleBuddyAction('cancel')}
+                        className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-slate-600 text-white hover:bg-slate-700"
+                      >
+                        <Heart className="w-4 h-4" />
+                        Request Sent
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleBuddyAction('send')}
+                        className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white hover:bg-rose-50 dark:hover:bg-rose-900/30 hover:border-rose-300 dark:hover:border-rose-700"
+                      >
+                        <Heart className="w-4 h-4" />
+                        Add Buddy
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setIsChallengeModalOpen(true)}
+                      className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-orange-500 text-white hover:bg-orange-600 border border-orange-400"
+                    >
+                      <Swords className="w-4 h-4" />
+                      Challenge
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
 
-           {/* Mobile QR Code (Only visible on own profile) */}
-           {currentUser && player && currentUser.id === player.userId && (
-             <div className="lg:hidden mt-6 flex flex-col items-center justify-center bg-white/60 dark:bg-black/30 backdrop-blur-md p-6 rounded-3xl border border-white/40 dark:border-white/10 shadow-lg relative z-20">
-               <div className="bg-white p-3 rounded-2xl shadow-sm">
-                 <QRCode value={`${window.location.origin}/player/${player.id}`} size={140} />
-               </div>
-               <p className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-slate-300 mt-4 text-center">
-                 Let opponents scan to log matches
-               </p>
-             </div>
-           )}
-         </div>
+            {/* Right Column: QR Code */}
+            {currentUser && player && currentUser.id === player.userId && (
+              <div className="w-full lg:w-auto flex flex-col items-center bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm mt-4 lg:mt-0">
+                <div className="bg-white p-2 rounded-xl shadow-sm border border-slate-100 dark:border-slate-200">
+                  <QRCode value={`${getBaseShareUrl()}/player/${player.id}`} size={140} />
+                </div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mt-4 text-center max-w-[140px]">
+                  Let opponents scan to log matches
+                </p>
+              </div>
+            )}
+
+          </div>
 
         {/* Tab Navigation */}
         <div className="w-full border-b border-slate-200 dark:border-amber-900/20 bg-white dark:bg-[#0a1628] sticky top-0 z-30 shadow-sm dark:shadow-amber-900/10">
@@ -1782,11 +1834,10 @@ export default function PlayerProfile({
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab as any)}
-                  className={`py-4 text-sm font-black tracking-widest uppercase transition-colors relative ${
-                    activeTab === tab
+                  className={`py-4 text-sm font-black tracking-widest uppercase transition-colors relative ${activeTab === tab
                       ? "text-amber-600 dark:text-amber-400"
                       : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-300"
-                  }`}
+                    }`}
                 >
                   {tab}
                   {activeTab === tab && (
@@ -2170,145 +2221,145 @@ export default function PlayerProfile({
               <>
                 {/* Player Attributes */}
                 <motion.section variants={itemVariants}>
-              <div className="flex items-center gap-3 mb-5">
-                <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
-                <span className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500 dark:text-white/35 shrink-0">
-                  Player Attributes
-                </span>
-                <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
-              </div>
-              <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                {(
-                  [
-                    {
-                      Icon: Crosshair,
-                      label: "Playing Style",
-                      value: player.playingStyle,
-                      accent: "from-amber-400 to-orange-500",
-                      iconBg: "bg-amber-500/[0.12]",
-                      iconColor: "text-amber-500",
-                    },
-                    {
-                      Icon: Zap,
-                      label: "Signature Shot",
-                      value: player.favoriteShot,
-                      accent: "from-rose-400 to-pink-500",
-                      iconBg: "bg-rose-500/[0.12]",
-                      iconColor: "text-rose-500",
-                    },
-                    {
-                      Icon: User,
-                      label: "Dominant Hand",
-                      value: player.dominantHand,
-                      accent: "from-blue-400 to-cyan-500",
-                      iconBg: "bg-blue-500/[0.12]",
-                      iconColor: "text-blue-500",
-                    },
-                    {
-                      Icon: Sparkles,
-                      label: "Badminton Idol",
-                      value: player.favoriteIdol,
-                      accent: "from-violet-400 to-purple-500",
-                      iconBg: "bg-violet-500/[0.12]",
-                      iconColor: "text-violet-500",
-                    },
-                    {
-                      Icon: Activity,
-                      label: "Favorite Format",
-                      value: player.favoriteFormat,
-                      accent: "from-emerald-400 to-teal-500",
-                      iconBg: "bg-emerald-500/[0.12]",
-                      iconColor: "text-emerald-500",
-                    },
-                  ] as const
-                ).map((attr) => (
-                  <div
-                    key={attr.label}
-                    className="relative overflow-hidden bg-white/5 rounded-2xl p-5 sm:p-6 border border-slate-200 dark:border-white/8 hover:border-slate-300 dark:hover:border-white/14 hover:bg-slate-50 dark:hover:bg-slate-200 dark:bg-white/8 hover:-translate-y-0.5 transition-all duration-300 group"
-                  >
-                    <div
-                      className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${attr.accent}`}
-                    />
-                    <div
-                      className={`w-9 h-9 rounded-xl ${attr.iconBg} flex items-center justify-center mb-4`}
-                    >
-                      <attr.Icon className={`w-4 h-4 ${attr.iconColor}`} />
-                    </div>
-                    <div className="text-[10px] font-bold text-slate-500 dark:text-white/35 mb-1.5 uppercase tracking-wider">
-                      {attr.label}
-                    </div>
-                    <div className="text-sm sm:text-base font-black text-slate-800 dark:text-white/90 leading-snug">
-                      {attr.value}
-                    </div>
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500 dark:text-white/35 shrink-0">
+                      Player Attributes
+                    </span>
+                    <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
                   </div>
-                ))}
-              </div>
-            </motion.section>
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                    {(
+                      [
+                        {
+                          Icon: Crosshair,
+                          label: "Playing Style",
+                          value: player.playingStyle,
+                          accent: "from-amber-400 to-orange-500",
+                          iconBg: "bg-amber-500/[0.12]",
+                          iconColor: "text-amber-500",
+                        },
+                        {
+                          Icon: Zap,
+                          label: "Signature Shot",
+                          value: player.favoriteShot,
+                          accent: "from-rose-400 to-pink-500",
+                          iconBg: "bg-rose-500/[0.12]",
+                          iconColor: "text-rose-500",
+                        },
+                        {
+                          Icon: User,
+                          label: "Dominant Hand",
+                          value: player.dominantHand,
+                          accent: "from-blue-400 to-cyan-500",
+                          iconBg: "bg-blue-500/[0.12]",
+                          iconColor: "text-blue-500",
+                        },
+                        {
+                          Icon: Sparkles,
+                          label: "Badminton Idol",
+                          value: player.favoriteIdol,
+                          accent: "from-violet-400 to-purple-500",
+                          iconBg: "bg-violet-500/[0.12]",
+                          iconColor: "text-violet-500",
+                        },
+                        {
+                          Icon: Activity,
+                          label: "Favorite Format",
+                          value: player.favoriteFormat,
+                          accent: "from-emerald-400 to-teal-500",
+                          iconBg: "bg-emerald-500/[0.12]",
+                          iconColor: "text-emerald-500",
+                        },
+                      ] as const
+                    ).map((attr) => (
+                      <div
+                        key={attr.label}
+                        className="relative overflow-hidden bg-white/5 rounded-2xl p-5 sm:p-6 border border-slate-200 dark:border-white/8 hover:border-slate-300 dark:hover:border-white/14 hover:bg-slate-50 dark:hover:bg-slate-200 dark:bg-white/8 hover:-translate-y-0.5 transition-all duration-300 group"
+                      >
+                        <div
+                          className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${attr.accent}`}
+                        />
+                        <div
+                          className={`w-9 h-9 rounded-xl ${attr.iconBg} flex items-center justify-center mb-4`}
+                        >
+                          <attr.Icon className={`w-4 h-4 ${attr.iconColor}`} />
+                        </div>
+                        <div className="text-[10px] font-bold text-slate-500 dark:text-white/35 mb-1.5 uppercase tracking-wider">
+                          {attr.label}
+                        </div>
+                        <div className="text-sm sm:text-base font-black text-slate-800 dark:text-white/90 leading-snug">
+                          {attr.value}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </motion.section>
 
-            {/* Performance Breakdown */}
-            {player.stats?.categoryStats && (
-              <motion.section variants={itemVariants}>
-                <div className="flex items-center gap-3 mb-5">
+                {/* Performance Breakdown */}
+                {player.stats?.categoryStats && (
+                  <motion.section variants={itemVariants}>
+                    <div className="flex items-center gap-3 mb-5">
+                      <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
+                      <span className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500 dark:text-white/35 shrink-0">
+                        Performance Breakdown
+                      </span>
+                      <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
+                    </div>
+                    <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 space-y-5 relative overflow-hidden">
+                      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-400 via-blue-500 to-blue-700" />
+                      {player.stats.categoryStats.singles && (
+                        <CategoryBar
+                          label="Singles"
+                          wins={player.stats.categoryStats.singles.wins}
+                          losses={player.stats.categoryStats.singles.losses}
+                          color="bg-emerald-500"
+                        />
+                      )}
+                      {player.stats.categoryStats.doubles && (
+                        <CategoryBar
+                          label="Doubles"
+                          wins={player.stats.categoryStats.doubles.wins}
+                          losses={player.stats.categoryStats.doubles.losses}
+                          color="bg-blue-500"
+                        />
+                      )}
+                      {player.stats.categoryStats.mixed && (
+                        <CategoryBar
+                          label="Mixed"
+                          wins={player.stats.categoryStats.mixed.wins}
+                          losses={player.stats.categoryStats.mixed.losses}
+                          color="bg-violet-500"
+                        />
+                      )}
+                    </div>
+                  </motion.section>
+                )}
+
+                {/* Match History */}
+                <div className="flex items-center gap-3 mb-4">
                   <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
-                  <span className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500 dark:text-white/35 shrink-0">
-                    Performance Breakdown
+                  <span className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500 dark:text-white/35 shrink-0 flex items-center gap-2">
+                    <Swords className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" /> Match History
                   </span>
                   <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
+
                 </div>
-                <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 space-y-5 relative overflow-hidden">
-                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-400 via-blue-500 to-blue-700" />
-                  {player.stats.categoryStats.singles && (
-                    <CategoryBar
-                      label="Singles"
-                      wins={player.stats.categoryStats.singles.wins}
-                      losses={player.stats.categoryStats.singles.losses}
-                      color="bg-emerald-500"
-                    />
-                  )}
-                  {player.stats.categoryStats.doubles && (
-                    <CategoryBar
-                      label="Doubles"
-                      wins={player.stats.categoryStats.doubles.wins}
-                      losses={player.stats.categoryStats.doubles.losses}
-                      color="bg-blue-500"
-                    />
-                  )}
-                  {player.stats.categoryStats.mixed && (
-                    <CategoryBar
-                      label="Mixed"
-                      wins={player.stats.categoryStats.mixed.wins}
-                      losses={player.stats.categoryStats.mixed.losses}
-                      color="bg-violet-500"
-                    />
-                  )}
-                </div>
-              </motion.section>
-            )}
+                <MatchHistorySection
+                  id={id}
+                  liveMatches={liveMatches}
+                  ownPlayerProfile={ownPlayerProfile}
+                  handleWithdrawMatch={handleWithdrawMatch}
+                  handleConfirmMatch={handleConfirmMatch}
+                  handleRejectMatch={handleRejectMatch}
+                  handleResendRequest={handleResendRequest}
+                />
 
-            {/* Match History */}
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
-              <span className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500 dark:text-white/35 shrink-0 flex items-center gap-2">
-                <Swords className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" /> Match History
-              </span>
-              <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
+                {/* Equipment Arsenal */}
+                <EquipmentArsenalSection player={player} />
 
-            </div>
-            <MatchHistorySection
-              id={id}
-              liveMatches={liveMatches}
-              ownPlayerProfile={ownPlayerProfile}
-              handleWithdrawMatch={handleWithdrawMatch}
-              handleConfirmMatch={handleConfirmMatch}
-              handleRejectMatch={handleRejectMatch}
-              handleResendRequest={handleResendRequest}
-            />
-
-            {/* Equipment Arsenal */}
-            <EquipmentArsenalSection player={player} />
-
-            {/* Career Highlights */}
-            <CareerHighlightsSection player={player} />
+                {/* Career Highlights */}
+                <CareerHighlightsSection player={player} />
               </>
             )}
             {/* ── RANKING TAB ── */}
@@ -2322,7 +2373,7 @@ export default function PlayerProfile({
                     matches={liveMatches.filter((m) => m.status === "confirmed")}
                   />
                 )}
-                
+
                 <Badges
                   matches={liveMatches.filter((m) => m.status === "confirmed")}
                   playerId={id!}
@@ -2341,23 +2392,22 @@ export default function PlayerProfile({
                         Audit Log
                       </button>
                       <div className="flex items-center bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl">
-                      {["ALL", "S", "D", "XD"].map((filter) => (
-                        <button
-                          key={filter}
-                          onClick={() => setEloChartFilter(filter as any)}
-                          className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all ${
-                            eloChartFilter === filter
-                              ? "bg-white dark:bg-slate-700 text-amber-500 shadow-sm"
-                              : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-                          }`}
-                        >
-                          {filter === "ALL" ? "OVR" : filter}
-                        </button>
-                      ))}
-                    </div>
+                        {["ALL", "S", "D", "XD"].map((filter) => (
+                          <button
+                            key={filter}
+                            onClick={() => setEloChartFilter(filter as any)}
+                            className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all ${eloChartFilter === filter
+                                ? "bg-white dark:bg-slate-700 text-amber-500 shadow-sm"
+                                : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                              }`}
+                          >
+                            {filter === "ALL" ? "OVR" : filter}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                  
+
                   {eloHistoryData.length > 1 ? (
                     <div className="h-64 w-full" aria-label="ELO rating progression chart" role="img">
                       <ResponsiveContainer width="100%" height="100%">
@@ -2423,7 +2473,7 @@ export default function PlayerProfile({
             {/* ── STATS TAB ── */}
             {activeTab === "STATS" && (
               <motion.section variants={itemVariants} className="space-y-6 md:space-y-8">
-                
+
                 <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-3xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden">
                   <h2 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-white/45 flex items-center gap-2 mb-6">
                     <Target className="w-4 h-4 text-emerald-500 dark:text-emerald-400" /> Player Type Analysis
@@ -2438,7 +2488,7 @@ export default function PlayerProfile({
                         if (!m) return 0;
                         const w = +m[1];
                         const l = +m[2];
-                        return (w+l) ? Math.round((w/(w+l))*100) : 0;
+                        return (w + l) ? Math.round((w / (w + l)) * 100) : 0;
                       };
                       const data = [
                         { subject: 'Singles', A: parseWinPct(sRecord) || 20, fullMark: 100 },
@@ -2454,7 +2504,7 @@ export default function PlayerProfile({
                             <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 12, fontWeight: 'bold' }} />
                             <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
                             <Radar name="Performance" dataKey="A" stroke="#10b981" strokeWidth={3} fill="#10b981" fillOpacity={0.4} />
-                            <Tooltip 
+                            <Tooltip
                               contentStyle={{ backgroundColor: 'var(--tw-colors-slate-900)', borderColor: 'var(--tw-colors-slate-800)', borderRadius: '12px' }}
                               itemStyle={{ color: '#10b981', fontWeight: 'bold' }}
                             />
@@ -2532,186 +2582,186 @@ export default function PlayerProfile({
                 {(player.coach ||
                   player.yearsPlaying != null ||
                   player.highestRanking != null) && (
-                  <div className="mt-4 pt-4 border-t border-slate-200 dark:border-white/8 space-y-2.5">
-                    {player.coach && (
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-slate-500 dark:text-white/35 font-medium">
-                          Coach
-                        </span>
-                        <span className="font-bold text-slate-800 dark:text-white/90">
-                          {player.coach}
-                        </span>
-                      </div>
-                    )}
-                    {player.yearsPlaying != null && (
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-slate-500 dark:text-white/35 font-medium">
-                          Years Playing
-                        </span>
-                        <span className="font-bold text-slate-800 dark:text-white/90">
-                          {player.yearsPlaying} yrs
-                        </span>
-                      </div>
-                    )}
-                    {player.highestRanking != null && (
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-slate-500 dark:text-white/35 font-medium">
-                          Career-High Rank
-                        </span>
-                        <span className="font-bold text-slate-800 dark:text-white/90">
-                          #{player.highestRanking}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                )}
+                    <div className="mt-4 pt-4 border-t border-slate-200 dark:border-white/8 space-y-2.5">
+                      {player.coach && (
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-slate-500 dark:text-white/35 font-medium">
+                            Coach
+                          </span>
+                          <span className="font-bold text-slate-800 dark:text-white/90">
+                            {player.coach}
+                          </span>
+                        </div>
+                      )}
+                      {player.yearsPlaying != null && (
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-slate-500 dark:text-white/35 font-medium">
+                            Years Playing
+                          </span>
+                          <span className="font-bold text-slate-800 dark:text-white/90">
+                            {player.yearsPlaying} yrs
+                          </span>
+                        </div>
+                      )}
+                      {player.highestRanking != null && (
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-slate-500 dark:text-white/35 font-medium">
+                            Career-High Rank
+                          </span>
+                          <span className="font-bold text-slate-800 dark:text-white/90">
+                            #{player.highestRanking}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
               </motion.section>
             )}
 
             {/* Career Record + Achievements */}
             {activeTab === "OVERVIEW" && (
-            <motion.section
-              variants={itemVariants}
-              className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden"
-            >
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-400 to-orange-500" />
-              <h2 className="text-[10px] font-black text-slate-500 dark:text-white/35 uppercase tracking-[0.2em] mb-5 flex items-center gap-2">
-                <Trophy className="w-3.5 h-3.5 text-amber-500" /> Career Record
-              </h2>
+              <motion.section
+                variants={itemVariants}
+                className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden"
+              >
+                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-400 to-orange-500" />
+                <h2 className="text-[10px] font-black text-slate-500 dark:text-white/35 uppercase tracking-[0.2em] mb-5 flex items-center gap-2">
+                  <Trophy className="w-3.5 h-3.5 text-amber-500" /> Career Record
+                </h2>
 
-              {/* W/L block */}
-              <div className="mb-6 p-5 bg-black/40 rounded-xl relative overflow-hidden border border-slate-300 dark:border-white/6">
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-500/[0.08] to-transparent" />
-                <div className="relative z-10">
-                  <div className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-400 mb-2">
-                    Overall W/L
-                  </div>
-                  <div className="text-2xl font-black text-white">
-                    {player.winLossRecord}
+                {/* W/L block */}
+                <div className="mb-6 p-5 bg-black/40 rounded-xl relative overflow-hidden border border-slate-300 dark:border-white/6">
+                  <div className="absolute inset-0 bg-gradient-to-r from-amber-500/[0.08] to-transparent" />
+                  <div className="relative z-10">
+                    <div className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-400 mb-2">
+                      Overall W/L
+                    </div>
+                    <div className="text-2xl font-black text-white">
+                      {player.winLossRecord}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Achievements */}
-              {validAchievements.length > 0 && (
-                <div className="mb-5">
-                  <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-slate-500 dark:text-white/35 mb-4 flex items-center gap-1.5">
-                    <Medal className="w-3 h-3 text-amber-500 dark:text-amber-400" /> Achievements
-                  </h3>
-                  <div className="relative ml-5 space-y-3">
-                    <div className="absolute left-0 top-2 bottom-2 w-px bg-gradient-to-b from-amber-400/70 via-amber-300/40 to-amber-500/60 rounded-full" />
-                    {[...validAchievements]
-                      .sort((a, b) => {
-                        const yearA = parseInt(
-                          a.match(/\b(20\d{2})\b/)?.[1] || "0",
-                          10,
-                        );
-                        const yearB = parseInt(
-                          b.match(/\b(20\d{2})\b/)?.[1] || "0",
-                          10,
-                        );
-                        return yearA !== yearB
-                          ? yearB - yearA
-                          : a.localeCompare(b);
-                      })
-                      .map((ach, idx) => {
-                        const lower = ach.toLowerCase();
-                        const isGold =
-                          lower.includes("winner") ||
-                          lower.includes("champion") ||
-                          lower.includes("1st") ||
-                          lower.includes("gold");
-                        const isSilver =
-                          lower.includes("runner-up") ||
-                          lower.includes("2nd") ||
-                          lower.includes("silver");
-                        const isBronze =
-                          lower.includes("semifinalist") ||
-                          lower.includes("bronze") ||
-                          lower.includes("3rd");
-                        const icon = isGold
-                          ? "🥇"
-                          : isSilver
-                            ? "🥈"
-                            : isBronze
-                              ? "🥉"
-                              : "⭐";
-                        const bg = isGold
-                          ? "bg-amber-500/10 ring-amber-500/25"
-                          : isSilver
-                            ? "bg-slate-200 dark:bg-white/8 ring-white/20"
-                            : isBronze
-                              ? "bg-orange-500/10 ring-orange-500/25"
-                              : "bg-emerald-500/10 ring-emerald-500/25";
-                        return (
+                {/* Achievements */}
+                {validAchievements.length > 0 && (
+                  <div className="mb-5">
+                    <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-slate-500 dark:text-white/35 mb-4 flex items-center gap-1.5">
+                      <Medal className="w-3 h-3 text-amber-500 dark:text-amber-400" /> Achievements
+                    </h3>
+                    <div className="relative ml-5 space-y-3">
+                      <div className="absolute left-0 top-2 bottom-2 w-px bg-gradient-to-b from-amber-400/70 via-amber-300/40 to-amber-500/60 rounded-full" />
+                      {[...validAchievements]
+                        .sort((a, b) => {
+                          const yearA = parseInt(
+                            a.match(/\b(20\d{2})\b/)?.[1] || "0",
+                            10,
+                          );
+                          const yearB = parseInt(
+                            b.match(/\b(20\d{2})\b/)?.[1] || "0",
+                            10,
+                          );
+                          return yearA !== yearB
+                            ? yearB - yearA
+                            : a.localeCompare(b);
+                        })
+                        .map((ach, idx) => {
+                          const lower = ach.toLowerCase();
+                          const isGold =
+                            lower.includes("winner") ||
+                            lower.includes("champion") ||
+                            lower.includes("1st") ||
+                            lower.includes("gold");
+                          const isSilver =
+                            lower.includes("runner-up") ||
+                            lower.includes("2nd") ||
+                            lower.includes("silver");
+                          const isBronze =
+                            lower.includes("semifinalist") ||
+                            lower.includes("bronze") ||
+                            lower.includes("3rd");
+                          const icon = isGold
+                            ? "🥇"
+                            : isSilver
+                              ? "🥈"
+                              : isBronze
+                                ? "🥉"
+                                : "⭐";
+                          const bg = isGold
+                            ? "bg-amber-500/10 ring-amber-500/25"
+                            : isSilver
+                              ? "bg-slate-200 dark:bg-white/8 ring-white/20"
+                              : isBronze
+                                ? "bg-orange-500/10 ring-orange-500/25"
+                                : "bg-emerald-500/10 ring-emerald-500/25";
+                          return (
+                            <div
+                              key={idx}
+                              className="relative flex gap-3 items-start"
+                            >
+                              <div
+                                className={`relative -ml-[18px] mt-0.5 shrink-0 w-8 h-8 rounded-full ${bg} ring-2 flex items-center justify-center shadow-sm`}
+                              >
+                                <span className="text-xs">{icon}</span>
+                              </div>
+                              <div className="flex-1 py-2 px-3 rounded-xl bg-slate-100 dark:bg-white/4 border border-slate-300 dark:border-white/6 hover:bg-slate-50 dark:hover:bg-slate-200 dark:bg-white/8 transition-colors">
+                                <span className="text-xs font-bold text-slate-700 dark:text-white/80 leading-snug">
+                                  {ach}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tournament history */}
+                {player.tournamentHistory.length > 0 && (
+                  <div
+                    className={
+                      validAchievements.length > 0
+                        ? "pt-5 border-t border-slate-200 dark:border-white/8"
+                        : ""
+                    }
+                  >
+                    <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-slate-500 dark:text-white/35 mb-4 flex items-center gap-1.5">
+                      <Calendar className="w-3 h-3 text-blue-500" /> Tournaments
+                    </h3>
+                    <div className="relative ml-5 space-y-2.5">
+                      <div className="absolute left-0 top-2 bottom-2 w-px bg-gradient-to-b from-blue-500/50 to-indigo-500/50 rounded-full" />
+                      {[...player.tournamentHistory]
+                        .sort((a, b) => {
+                          const yearA = parseInt(
+                            a.match(/\b(20\d{2})\b/)?.[1] || "0",
+                            10,
+                          );
+                          const yearB = parseInt(
+                            b.match(/\b(20\d{2})\b/)?.[1] || "0",
+                            10,
+                          );
+                          return yearA !== yearB
+                            ? yearB - yearA
+                            : a.localeCompare(b);
+                        })
+                        .map((t, idx) => (
                           <div
                             key={idx}
-                            className="relative flex gap-3 items-start"
+                            className="relative flex gap-3 items-center"
                           >
-                            <div
-                              className={`relative -ml-[18px] mt-0.5 shrink-0 w-8 h-8 rounded-full ${bg} ring-2 flex items-center justify-center shadow-sm`}
-                            >
-                              <span className="text-xs">{icon}</span>
+                            <div className="relative -ml-[11px] shrink-0 w-6 h-6 rounded-full bg-blue-500/10 ring-2 ring-blue-500/25 flex items-center justify-center">
+                              <div className="w-2 h-2 rounded-full bg-blue-500" />
                             </div>
-                            <div className="flex-1 py-2 px-3 rounded-xl bg-slate-100 dark:bg-white/4 border border-slate-300 dark:border-white/6 hover:bg-slate-50 dark:hover:bg-slate-200 dark:bg-white/8 transition-colors">
-                              <span className="text-xs font-bold text-slate-700 dark:text-white/80 leading-snug">
-                                {ach}
+                            <div className="flex-1 py-1.5 px-3 rounded-xl bg-slate-100 dark:bg-white/4 border border-slate-300 dark:border-white/6 hover:bg-slate-50 dark:hover:bg-slate-200 dark:bg-white/8 transition-colors">
+                              <span className="text-xs font-bold text-slate-700 dark:text-white/80">
+                                {t}
                               </span>
                             </div>
                           </div>
-                        );
-                      })}
+                        ))}
+                    </div>
                   </div>
-                </div>
-              )}
-
-              {/* Tournament history */}
-              {player.tournamentHistory.length > 0 && (
-                <div
-                  className={
-                    validAchievements.length > 0
-                      ? "pt-5 border-t border-slate-200 dark:border-white/8"
-                      : ""
-                  }
-                >
-                  <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-slate-500 dark:text-white/35 mb-4 flex items-center gap-1.5">
-                    <Calendar className="w-3 h-3 text-blue-500" /> Tournaments
-                  </h3>
-                  <div className="relative ml-5 space-y-2.5">
-                    <div className="absolute left-0 top-2 bottom-2 w-px bg-gradient-to-b from-blue-500/50 to-indigo-500/50 rounded-full" />
-                    {[...player.tournamentHistory]
-                      .sort((a, b) => {
-                        const yearA = parseInt(
-                          a.match(/\b(20\d{2})\b/)?.[1] || "0",
-                          10,
-                        );
-                        const yearB = parseInt(
-                          b.match(/\b(20\d{2})\b/)?.[1] || "0",
-                          10,
-                        );
-                        return yearA !== yearB
-                          ? yearB - yearA
-                          : a.localeCompare(b);
-                      })
-                      .map((t, idx) => (
-                        <div
-                          key={idx}
-                          className="relative flex gap-3 items-center"
-                        >
-                          <div className="relative -ml-[11px] shrink-0 w-6 h-6 rounded-full bg-blue-500/10 ring-2 ring-blue-500/25 flex items-center justify-center">
-                            <div className="w-2 h-2 rounded-full bg-blue-500" />
-                          </div>
-                          <div className="flex-1 py-1.5 px-3 rounded-xl bg-slate-100 dark:bg-white/4 border border-slate-300 dark:border-white/6 hover:bg-slate-50 dark:hover:bg-slate-200 dark:bg-white/8 transition-colors">
-                            <span className="text-xs font-bold text-slate-700 dark:text-white/80">
-                              {t}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              )}
-            </motion.section>
+                )}
+              </motion.section>
             )}
 
             {/* Frequent Partners */}
@@ -2810,10 +2860,10 @@ export default function PlayerProfile({
                   </span>
                   <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="flex overflow-x-auto gap-3 pb-4 hide-scrollbar snap-x">
                   {recentOpponents.map((opp, idx) => (
                     <Link key={idx} href={`/player/${opp.id}`}>
-                      <div className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/8 hover:border-emerald-400 dark:hover:border-emerald-500/50 hover:shadow-md transition-all group cursor-pointer">
+                      <div className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/8 hover:border-emerald-400 dark:hover:border-emerald-500/50 hover:shadow-md transition-all group cursor-pointer shrink-0 w-40 sm:w-48 snap-center">
                         <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden border border-slate-200 dark:border-white/10 group-hover:border-emerald-400 shrink-0">
                           {opp.avatar_url ? (
                             <img src={opp.avatar_url} alt={opp.full_name} className="w-full h-full object-cover" />
@@ -3039,6 +3089,7 @@ export default function PlayerProfile({
         matches={liveMatches}
         playerId={id!}
       />
+    </div>
     </div>
   );
 }

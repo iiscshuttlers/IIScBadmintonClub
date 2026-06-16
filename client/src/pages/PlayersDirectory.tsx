@@ -40,6 +40,7 @@ import {
 } from "@/components/players-directory/PlayerCard";
 import { LeaderboardSection } from "./Leaderboard";
 import { H2HSection } from "@/components/players-directory/H2HSection";
+import { useHashTab } from "@/hooks/useHashTab";
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -110,20 +111,12 @@ export default function PlayersDirectory() {
   const [sortBy, setSortBy] = useState<
     "elo" | "winpct" | "name" | "department" | "level"
   >("name");
-  const [activeTab, setActiveTab] = useState<"directory" | "leaderboard" | "network" | "h2h">(
-    () => {
-      const hash = window.location.hash.replace("#", "");
-      if (["directory", "leaderboard", "network", "h2h"].includes(hash)) {
-        return hash as "directory" | "leaderboard" | "network" | "h2h";
-      }
-      return "directory";
-    }
+  const [activeTab, setActiveTab] = useHashTab(
+    ["directory", "leaderboard", "network", "h2h"] as const,
+    "directory"
   );
 
-  useEffect(() => {
-    // Sync active tab to URL hash without jumping/scrolling
-    window.history.replaceState(null, "", `#${activeTab}`);
-  }, [activeTab]);
+
   const [followers, setFollowers] = useState<any[]>([]);
   const [visibleCount, setVisibleCount] = useState(24);
 

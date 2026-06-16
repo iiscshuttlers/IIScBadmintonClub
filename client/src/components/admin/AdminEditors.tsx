@@ -8,6 +8,7 @@ import {
   Activity,
   Search,
   RefreshCw,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
@@ -62,6 +63,13 @@ export type SiteConfig = {
     trophies: string;
   };
   about: { history: string; mission: string };
+};
+export type FlyerItem = { text: string; colorClass: string; };
+export type DynamicFlyer = {
+  id: string;
+  enabled: boolean;
+  bgColorClass: string;
+  items: FlyerItem[];
 };
 
 const inputCls =
@@ -304,6 +312,116 @@ export function HolidayEditor({
         className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 text-slate-500 hover:border-emerald-400 hover:text-emerald-600 transition text-sm font-bold w-full justify-center"
       >
         <Plus className="w-4 h-4" /> Add Holiday
+      </button>
+    </div>
+  );
+}
+
+/* ================================================================ */
+/*  Flyer Editor                                                     */
+/* ================================================================ */
+export function FlyerEditor({
+  data,
+  onChange,
+}: {
+  data: DynamicFlyer[];
+  onChange: (d: DynamicFlyer[]) => void;
+}) {
+  const add = () => onChange([...data, { id: `flyer_${Date.now()}`, enabled: true, bgColorClass: "bg-gradient-to-r from-violet-600 to-fuchsia-600", items: [{ text: "New Announcement", colorClass: "text-white" }] }]);
+  const remove = (i: number) => onChange(data.filter((_, idx) => idx !== i));
+  const update = (i: number, field: keyof DynamicFlyer, val: any) => {
+    const next = [...data];
+    next[i] = { ...next[i], [field]: val };
+    onChange(next);
+  };
+
+  const addItem = (i: number) => {
+    const next = [...data];
+    next[i].items = [...next[i].items, { text: "", colorClass: "text-white" }];
+    onChange(next);
+  };
+  const removeItem = (i: number, itemIdx: number) => {
+    const next = [...data];
+    next[i].items = next[i].items.filter((_, idx) => idx !== itemIdx);
+    onChange(next);
+  };
+  const updateItem = (i: number, itemIdx: number, field: keyof FlyerItem, val: string) => {
+    const next = [...data];
+    next[i].items[itemIdx] = { ...next[i].items[itemIdx], [field]: val };
+    onChange(next);
+  };
+
+  return (
+    <div className="space-y-4">
+      {data.map((f, i) => (
+        <div key={f.id} className={`${cardCls} flex flex-col gap-3`}>
+          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end border-b border-slate-200 dark:border-slate-800 pb-4">
+            <div className="flex-1 w-full sm:w-auto">
+              <label className={labelCls}>Background Color Class</label>
+              <input
+                value={f.bgColorClass}
+                onChange={(e) => update(i, "bgColorClass", e.target.value)}
+                className={inputCls}
+                placeholder="e.g. bg-gradient-to-r from-red-600 to-orange-600"
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-slate-700 dark:text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={f.enabled}
+                  onChange={(e) => update(i, "enabled", e.target.checked)}
+                  className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
+                />
+                Enabled
+              </label>
+              <button
+                onClick={() => remove(i)}
+                className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <label className={labelCls}>Flyer Items</label>
+            {f.items.map((item, itemIdx) => (
+              <div key={itemIdx} className="flex flex-col sm:flex-row gap-2 items-start sm:items-center bg-slate-50 dark:bg-slate-800/50 p-2 rounded-xl">
+                <input
+                  value={item.text}
+                  onChange={(e) => updateItem(i, itemIdx, "text", e.target.value)}
+                  className={`${inputCls} flex-[2]`}
+                  placeholder="Text to display..."
+                />
+                <input
+                  value={item.colorClass}
+                  onChange={(e) => updateItem(i, itemIdx, "colorClass", e.target.value)}
+                  className={`${inputCls} flex-1`}
+                  placeholder="e.g. text-yellow-300 font-bold"
+                />
+                <button
+                  onClick={() => removeItem(i, itemIdx)}
+                  className="p-2 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-900/40 rounded-lg transition"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+            <button
+              onClick={() => addItem(i)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 rounded-lg transition"
+            >
+              <Plus className="w-3.5 h-3.5" /> Add Item
+            </button>
+          </div>
+        </div>
+      ))}
+      <button
+        onClick={add}
+        className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 text-slate-500 hover:border-emerald-400 hover:text-emerald-600 transition text-sm font-bold w-full justify-center"
+      >
+        <Plus className="w-4 h-4" /> Add Flyer
       </button>
     </div>
   );

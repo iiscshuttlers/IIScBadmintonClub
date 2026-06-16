@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Mail,
@@ -73,6 +73,7 @@ export default function Join() {
   const [otp, setOtp] = useState("");
   const [infoMsg, setInfoMsg] = useState<React.ReactNode>("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   // ── Biometric state ──
   const [biometricCred, setBiometricCred] = useState<BiometricCred | null>(null);
@@ -141,7 +142,7 @@ export default function Join() {
       const challenge = crypto.getRandomValues(new Uint8Array(32));
       const credential = (await navigator.credentials.create({
         publicKey: {
-          rp: { name: "IISc Badminton Club", id: window.location.hostname },
+          rp: { name: "IISc Badminton Club" },
           user: {
             id: new TextEncoder().encode(userId),
             name: email,
@@ -293,6 +294,10 @@ export default function Join() {
       setErrorMsg("Passwords do not match.");
       return;
     }
+    if (!agreedToTerms) {
+      setErrorMsg("You must agree to the Privacy Policy and Terms of Service.");
+      return;
+    }
     setLoading(true);
     setErrorMsg("");
     try {
@@ -314,7 +319,7 @@ export default function Join() {
         email,
         password,
         options: {
-          emailRedirectTo: window.location.origin + window.location.pathname,
+          emailRedirectTo: "https://iiscshuttlers.github.io/iiscshuttlers/join",
         },
       });
 
@@ -380,7 +385,7 @@ export default function Join() {
         email,
         options: {
           shouldCreateUser: false,
-          emailRedirectTo: window.location.origin + window.location.pathname,
+          emailRedirectTo: "https://iiscshuttlers.github.io/iiscshuttlers/join",
         },
       });
       if (error) throw error;
@@ -854,10 +859,27 @@ export default function Join() {
                     />
                   </div>
                 </div>
+
+                {/* Consent Checkbox */}
+                <label className="flex items-start gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={agreedToTerms}
+                    onChange={(e) => setAgreedToTerms(e.target.checked)}
+                    className="mt-1 w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-emerald-600 focus:ring-emerald-500 accent-emerald-600 shrink-0"
+                  />
+                  <span className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                    I agree to the{" "}
+                    <Link href="/privacy"><span className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline">Privacy Policy</span></Link>
+                    {" "}and{" "}
+                    <Link href="/terms"><span className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline">Terms of Service</span></Link>.
+                  </span>
+                </label>
+
                 <Button
                   type="submit"
-                  disabled={loading}
-                  className="w-full py-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all text-base flex items-center justify-center gap-2"
+                  disabled={loading || !agreedToTerms}
+                  className="w-full py-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all text-base flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {loading ? (
                     <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />

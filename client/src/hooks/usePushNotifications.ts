@@ -31,6 +31,27 @@ export function usePushNotifications(
         }
 
         await PushNotifications.register();
+
+        if (Capacitor.getPlatform() === 'android') {
+          const channels = [
+            { id: "notify_friendly", name: "Friendly matches", description: "Alerts for friendly match requests", importance: 4, visibility: 1 },
+            { id: "notify_tournament", name: "Tournament matches", description: "Updates for tournament matches", importance: 4, visibility: 1 },
+            { id: "notify_challenges", name: "Challenge invites", description: "Alerts for new challenges", importance: 4, visibility: 1 },
+            { id: "notify_confirmation", name: "Match confirmations", description: "Updates when matches are confirmed", importance: 4, visibility: 1 },
+            { id: "notify_announcements", name: "Announcements", description: "Important club announcements", importance: 3, visibility: 1 },
+            { id: "notify_find_lost", name: "Find & Lost posts", description: "Updates on lost and found items", importance: 3, visibility: 1 },
+            { id: "notify_elo_milestone", name: "ELO milestones", description: "Alerts for reaching new ELO milestones", importance: 3, visibility: 1 },
+            { id: "notify_weekly_digest", name: "Weekly digest", description: "Weekly platform activity summary", importance: 2, visibility: 1 }
+          ];
+
+          for (const channel of channels) {
+            try {
+              await PushNotifications.createChannel(channel);
+            } catch (e) {
+              console.warn(`Failed to create channel ${channel.id}`, e);
+            }
+          }
+        }
       } catch (err) {
         console.warn("Failed to register push notifications", err);
       }

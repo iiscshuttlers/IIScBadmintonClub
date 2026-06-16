@@ -2,12 +2,14 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { UmpireEngine } from "./UmpireEngine";
-import { Play, Tv2, Activity } from "lucide-react";
+import { Play, Tv2, Activity, AlertTriangle } from "lucide-react";
+import { fetchSiteData } from "@/lib/siteData";
 
 export function UmpireTab() {
   const { session, isUmpire } = useAuth();
   const [isUmpiring, setIsUmpiring] = useState(false);
   const [myLiveMatch, setMyLiveMatch] = useState<any>(null);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -22,6 +24,12 @@ export function UmpireTab() {
           setMyLiveMatch(data.value[session.user.id]);
         }
       });
+
+    fetchSiteData<any>("club_settings", "settings.json").then(data => {
+      if (data?.maintenanceMode) {
+        setMaintenanceMode(true);
+      }
+    });
 
     const sub = supabase
       .channel("umpire_tab_matches")
@@ -77,15 +85,25 @@ export function UmpireTab() {
             Umpire Station
           </h2>
           <p className="text-slate-400 max-w-md mx-auto">
-            Start a new live broadcast. Your match will be visible to everyone in the Match Activity feed.
+            {maintenanceMode 
+              ? "Match logging is temporarily disabled due to system maintenance." 
+              : "Start a new live broadcast. Your match will be visible to everyone in the Match Activity feed."}
           </p>
         </div>
-        <button
-          onClick={() => setIsUmpiring(true)}
-          className="px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg transition-colors text-lg"
-        >
-          <Play className="w-6 h-6 fill-white" /> Start Umpiring
-        </button>
+        
+        {maintenanceMode ? (
+          <div className="bg-rose-900/40 text-rose-300 px-6 py-4 rounded-xl flex items-center gap-3 border border-rose-800">
+            <AlertTriangle className="w-6 h-6" />
+            <span className="font-bold">Maintenance Mode Active</span>
+          </div>
+        ) : (
+          <button
+            onClick={() => setIsUmpiring(true)}
+            className="px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg transition-colors text-lg"
+          >
+            <Play className="w-6 h-6 fill-white" /> Start Umpiring
+          </button>
+        )}
       </div>
       
       <RecentUmpireMatches 

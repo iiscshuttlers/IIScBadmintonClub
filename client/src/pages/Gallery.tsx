@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useHashTab } from "@/hooks/useHashTab";
 import {
   X,
   Youtube,
@@ -77,7 +78,10 @@ export default function Gallery() {
   const { session } = useAuth();
   const [, setLocation] = useLocation();
 
-  const [activeTab, setActiveTab] = useState<"albums" | "photos" | "videos">("albums");
+  const [activeTab, setActiveTab] = useHashTab(
+    ["albums", "photos", "videos"] as const,
+    "albums"
+  );
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedSubfolder, setSelectedSubfolder] = useState("all");
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -465,7 +469,11 @@ export default function Gallery() {
           )}
 
           {/* Videos embedded within Albums */}
-          {activeTab === "albums" && videos.filter(v => selectedCategory === "all" || (v.tournament && v.tournament.toLowerCase().includes(selectedCategory.toLowerCase().replace(/[-_]/g, ' ')))).length > 0 && (
+          {activeTab === "albums" && videos.filter(v => {
+            if (selectedCategory !== "all" && (!v.tournament || !v.tournament.toLowerCase().includes(selectedCategory.toLowerCase().replace(/[-_]/g, ' ')))) return false;
+            if (selectedSubfolder !== "all" && (!v.tournament || !v.tournament.toLowerCase().includes(selectedSubfolder.toLowerCase().replace(/[-_]/g, ' ')))) return false;
+            return true;
+          }).length > 0 && (
             <div className="mt-16 animate-in fade-in slide-in-from-bottom-4">
               <div className="flex items-center gap-3 mb-8">
                 <div className="w-2 h-8 bg-gradient-to-b from-red-500 to-orange-500 rounded-full" />
@@ -474,7 +482,11 @@ export default function Gallery() {
                 </h2>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {videos.filter(v => selectedCategory === "all" || (v.tournament && v.tournament.toLowerCase().includes(selectedCategory.toLowerCase().replace(/[-_]/g, ' ')))).map((video) => (
+                {videos.filter(v => {
+                  if (selectedCategory !== "all" && (!v.tournament || !v.tournament.toLowerCase().includes(selectedCategory.toLowerCase().replace(/[-_]/g, ' ')))) return false;
+                  if (selectedSubfolder !== "all" && (!v.tournament || !v.tournament.toLowerCase().includes(selectedSubfolder.toLowerCase().replace(/[-_]/g, ' ')))) return false;
+                  return true;
+                }).map((video) => (
                   <button
                     key={video.id}
                     className="group text-left bg-white dark:bg-slate-800 rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl border border-slate-100 dark:border-slate-700 transition duration-500"

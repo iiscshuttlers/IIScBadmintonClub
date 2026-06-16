@@ -128,7 +128,7 @@ serve(async () => {
     const tokens = (allPlayers ?? []).map(p => p.fcm_token).filter(Boolean) as string[];
     await sendFcmToAll(
       tokens,
-      "📊 IISc Shuttlers Weekly Digest",
+      "📊 IISc Badminton Club Weekly Digest",
       `${totalMatches} matches this week! Check the Feed to see who dominated the courts 🏸`
     );
 

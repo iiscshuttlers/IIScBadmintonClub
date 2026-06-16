@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { Info, MapPin, BookOpen, ShieldCheck } from "lucide-react";
-import { useLocation } from "wouter";
 import { ContactSection } from "@/components/about/ContactSection";
 import { FacilitiesSection } from "@/components/about/FacilitiesSection";
 import { GlossarySection } from "@/components/about/GlossarySection";
+import { useHashTab } from "@/hooks/useHashTab";
 
 export default function About() {
   usePageMeta({
@@ -12,18 +11,10 @@ export default function About() {
     description: "Learn more about IISc Badminton Club, our facilities, contact info, and platform features.",
   });
 
-  const [location] = useLocation();
-  const [activeTab, setActiveTab] = useState<"contact" | "facilities" | "glossary">(() => {
-    const hash = window.location.hash.replace("#", "");
-    if (["contact", "facilities", "glossary"].includes(hash)) {
-      return hash as "contact" | "facilities" | "glossary";
-    }
-    return "contact";
-  });
-
-  useEffect(() => {
-    window.history.replaceState(null, "", `#${activeTab}`);
-  }, [activeTab]);
+  const [activeTab, setActiveTab] = useHashTab(
+    ["contact", "facilities", "glossary"] as const,
+    "contact"
+  );
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 lg:pb-8 font-sans selection:bg-emerald-500/30">

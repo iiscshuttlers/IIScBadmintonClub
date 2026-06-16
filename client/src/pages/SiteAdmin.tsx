@@ -53,6 +53,8 @@ import {
   RegistrationsManager,
   MatchesManager,
   ChangelogViewer,
+  FlyerEditor,
+  type DynamicFlyer,
   type SiteConfig,
 } from "@/components/admin/AdminEditors";
 import { AdminStatsOverview } from "@/components/admin/AdminStatsOverview";
@@ -61,7 +63,7 @@ import { AdminSettings } from "@/components/admin/AdminSettings";
 import { AdminActivityLog } from "@/components/admin/AdminActivityLog";
 import { EloAuditPanel } from "@/components/admin/EloAuditPanel";
 import { AdminFeaturesPanel } from "@/components/admin/AdminFeaturesPanel";
-import { Paintbrush, ClipboardList, Settings, AlertTriangle, BarChart2, Zap } from "lucide-react";
+import { Paintbrush, ClipboardList, Settings, BarChart2, Zap } from "lucide-react";
 
 /* ── Types ──────────────────────────────────────────────────────── */
 type Holiday = { date: string; name: string };
@@ -105,6 +107,7 @@ type Player = {
 type TabId =
   | "overview"
   | "config"
+  | "flyers"
   | "holidays"
   | "announcements"
   | "events"
@@ -123,6 +126,7 @@ type TabId =
 const TABS: { id: TabId; label: string; icon: any }[] = [
   { id: "overview", label: "Overview", icon: Activity },
   { id: "config", label: "Landing Pages", icon: Paintbrush },
+  { id: "flyers", label: "Flyers", icon: Megaphone },
   { id: "holidays", label: "Holidays", icon: Calendar },
   { id: "announcements", label: "Announcements", icon: Megaphone },
   { id: "events", label: "Events", icon: CalendarDays },
@@ -187,7 +191,7 @@ export default function SiteAdmin() {
   const [activeTab, setActiveTab] = useState<TabId>(() => {
     const hash = window.location.hash.replace("#", "");
     if ([
-      "overview", "config", "holidays", "announcements", "events", "videos",
+      "overview", "config", "flyers", "holidays", "announcements", "events", "videos",
       "players", "umpire", "registrations", "matches", "changelog",
       "disputes", "elo_audit", "settings", "activity_log", "features"
     ].includes(hash)) {
@@ -197,14 +201,37 @@ export default function SiteAdmin() {
   });
 
   useEffect(() => {
-    window.history.replaceState(null, "", `#${activeTab}`);
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace("#", "");
+      if ([
+        "overview", "config", "flyers", "holidays", "announcements", "events", "videos",
+        "players", "umpire", "registrations", "matches", "changelog",
+        "disputes", "elo_audit", "settings", "activity_log", "features"
+      ].includes(hash)) {
+        setActiveTab(hash as TabId);
+      }
+    };
+    window.addEventListener("hashchange", handleHashChange);
+    
+    // Ensure initial hash is set without pushing to history if none exists
+    if (!window.location.hash) {
+      window.history.replaceState(null, "", `#${activeTab}`);
+    }
+    
+    return () => window.removeEventListener("hashchange", handleHashChange);
   }, [activeTab]);
+
+  const handleTabChange = (tabId: TabId) => {
+    setActiveTab(tabId);
+    window.location.hash = tabId; // This pushes history state natively
+  };
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
   const originals = useRef({
+    flyers: [] as DynamicFlyer[],
     holidays: [] as Holiday[],
     announcements: [] as Announcement[],
     events: [] as EventItem[],
@@ -212,6 +239,7 @@ export default function SiteAdmin() {
     config: null as SiteConfig | null,
   });
 
+  const [flyers, setFlyersRaw] = useState<DynamicFlyer[]>([]);
   const [holidays, setHolidaysRaw] = useState<Holiday[]>([]);
   const [announcements, setAnnouncementsRaw] = useState<Announcement[]>([]);
   const [events, setEventsRaw] = useState<EventItem[]>([]);
@@ -237,13 +265,18 @@ export default function SiteAdmin() {
   const loadAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [h, a, e, v, c] = await Promise.all([
+      const [f, h, a, e, v, c] = await Promise.all([
+        loadKey<DynamicFlyer[]>("flyers"),
         loadKey<Holiday[]>("holidays"),
         loadKey<{ recent: Announcement[] }>("announcements"),
         loadKey<EventItem[]>("events"),
         loadKey<VideoItem[]>("videos"),
         loadKey<SiteConfig>("site_config"),
       ]);
+      if (f) {
+        setFlyersRaw(f);
+        originals.current.flyers = JSON.parse(JSON.stringify(f));
+      }
       if (h) {
         setHolidaysRaw(h);
         originals.current.holidays = JSON.parse(JSON.stringify(h));
@@ -277,6 +310,10 @@ export default function SiteAdmin() {
   }, [authState, loadAll]);
 
   // Dirty wrappers
+  const setF = (d: DynamicFlyer[]) => {
+    setFlyersRaw(d);
+    setDirty(true);
+  };
   const setH = (d: Holiday[]) => {
     setHolidaysRaw(d);
     setDirty(true);
@@ -303,6 +340,9 @@ export default function SiteAdmin() {
       case "config":
         setConfigRaw(JSON.parse(JSON.stringify(originals.current.config)));
         break;
+      case "flyers":
+        setFlyersRaw(JSON.parse(JSON.stringify(originals.current.flyers)));
+        break;
       case "holidays":
         setHolidaysRaw(JSON.parse(JSON.stringify(originals.current.holidays)));
         break;
@@ -328,6 +368,10 @@ export default function SiteAdmin() {
       case "config":
         oldObj = originals.current.config;
         newObj = config;
+        break;
+      case "flyers":
+        oldObj = originals.current.flyers;
+        newObj = flyers;
         break;
       case "holidays":
         oldObj = originals.current.holidays;
@@ -379,6 +423,10 @@ export default function SiteAdmin() {
             await saveKey("site_config", config);
             originals.current.config = JSON.parse(JSON.stringify(config));
           }
+          break;
+        case "flyers":
+          await saveKey("flyers", flyers);
+          originals.current.flyers = JSON.parse(JSON.stringify(flyers));
           break;
         case "holidays":
           await saveKey(
@@ -454,6 +502,7 @@ export default function SiteAdmin() {
 
   const contentTabs: TabId[] = [
     "config",
+    "flyers",
     "holidays",
     "announcements",
     "events",
@@ -462,6 +511,7 @@ export default function SiteAdmin() {
   const counts: Record<Exclude<TabId, "registrations">, number | null> = {
     overview: null,
     config: null,
+    flyers: flyers.length,
     holidays: holidays.length,
     announcements: announcements.length,
     events: events.length,
@@ -519,7 +569,7 @@ export default function SiteAdmin() {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => handleTabChange(tab.id)}
                   className={`group flex items-center justify-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${
                     active
                       ? "bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700"
@@ -557,6 +607,9 @@ export default function SiteAdmin() {
             {activeTab === "overview" && isAdmin && <AdminStatsOverview />}
             {activeTab === "config" && (
               <ConfigEditor data={config} onChange={setC} />
+            )}
+            {activeTab === "flyers" && (
+              <FlyerEditor data={flyers} onChange={setF} />
             )}
             {activeTab === "holidays" && (
               <HolidayEditor data={holidays} onChange={setH} />

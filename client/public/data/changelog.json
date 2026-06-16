@@ -1,5 +1,14 @@
 [
   {
+    "versionCode": 118,
+    "versionName": "1.118",
+    "date": "2026-06-15T08:44:30.618Z",
+    "changes": [
+      "- Add privacy policy, SW push & new UI features",
+      "- chore: release v1.117 (build 117)"
+    ]
+  },
+  {
     "versionCode": 117,
     "versionName": "1.117",
     "date": "2026-06-14T23:09:03.573Z",

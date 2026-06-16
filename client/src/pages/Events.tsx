@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import ScheduleCalendar from "./ScheduleCalendar";
 import { InvictaSection } from "@/components/events/InvictaSection";
 import { LiveScoreSection } from "@/components/events/LiveScoreSection";
+import { useHashTab } from "@/hooks/useHashTab";
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 28 },
@@ -51,7 +52,6 @@ const UPCOMING_MILESTONE = {
 const MILESTONE_ICONS: LucideIcon[] = [Trophy, Medal, Award, GraduationCap, Star];
 
 const MILESTONES = [
-  UPCOMING_MILESTONE,
   ...[...ARCHIVED_TOURNAMENTS]
     .sort((a, b) => b.startDate.localeCompare(a.startDate))
     .slice(0, 5)
@@ -188,17 +188,10 @@ export default function Events() {
       "Browse live, upcoming and completed badminton tournaments at IISc.",
   });
 
-  const [activeTab, setActiveTab] = useState<"calendar" | "invicta" | "history">(() => {
-    const hash = window.location.hash.replace("#", "");
-    if (["calendar", "invicta", "history"].includes(hash)) {
-      return hash as "calendar" | "invicta" | "history";
-    }
-    return "calendar";
-  });
-
-  useEffect(() => {
-    window.history.replaceState(null, "", `#${activeTab}`);
-  }, [activeTab]);
+  const [activeTab, setActiveTab] = useHashTab(
+    ["calendar", "invicta", "history"] as const,
+    "calendar"
+  );
   const [events, setEvents] = useState<LiveTournament[]>([]);
   const [loading, setLoading] = useState(true);
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { Calendar, Search, Filter, CheckCircle2, Clock } from "lucide-react";
+import { Calendar, Search, CheckCircle2, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { Link } from "wouter";
@@ -9,6 +9,7 @@ import { MatchCard } from "./MatchCard";
 import { Capacitor } from "@capacitor/core";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import confetti from "canvas-confetti";
+import { useHashTab } from "@/hooks/useHashTab";
 
 export function MyMatchesTab() {
   const { profile } = useAuth();
@@ -16,8 +17,9 @@ export function MyMatchesTab() {
   const [loading, setLoading] = useState(true);
   const [kudosState, setKudosState] = useState<Record<string, boolean>>({});
   
-  // Filter states
-  const [subTab, setSubTab] = useState<"all" | "pending" | "confirmed">("all");
+  // Sub-tab — synced to URL hash for back/forward support
+  const SUB_TABS = ["all", "requested", "accepted"] as const;
+  const [subTab, setSubTab] = useHashTab(SUB_TABS, "all");
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
 
@@ -56,9 +58,9 @@ export function MyMatchesTab() {
   const filteredMatches = useMemo(() => {
     let result = matches;
     
-    // Sub-tab filter
-    if (subTab === "pending") result = result.filter(m => m.status === "pending");
-    if (subTab === "confirmed") result = result.filter(m => m.status === "confirmed");
+    // Sub-tab filter — "requested" = pending matches, "accepted" = confirmed
+    if (subTab === "requested") result = result.filter(m => m.status === "pending");
+    if (subTab === "accepted") result = result.filter(m => m.status === "confirmed");
     
     // Category filter
     if (categoryFilter !== "All") {
@@ -162,8 +164,8 @@ export function MyMatchesTab() {
             All Matches
           </button>
           <button 
-            onClick={() => setSubTab("pending")}
-            className={`flex-1 py-2 text-sm font-bold rounded-xl transition-colors relative ${subTab === "pending" ? "bg-white dark:bg-slate-700 shadow-sm text-amber-600 dark:text-amber-400" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+            onClick={() => setSubTab("requested")}
+            className={`flex-1 py-2 text-sm font-bold rounded-xl transition-colors relative ${subTab === "requested" ? "bg-white dark:bg-slate-700 shadow-sm text-amber-600 dark:text-amber-400" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
           >
             Requested
             {matches.some(m => m.status === "pending" && m.submitted_by !== profile.id) && (
@@ -171,8 +173,8 @@ export function MyMatchesTab() {
             )}
           </button>
           <button 
-            onClick={() => setSubTab("confirmed")}
-            className={`flex-1 py-2 text-sm font-bold rounded-xl transition-colors ${subTab === "confirmed" ? "bg-white dark:bg-slate-700 shadow-sm text-emerald-600 dark:text-emerald-400" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+            onClick={() => setSubTab("accepted")}
+            className={`flex-1 py-2 text-sm font-bold rounded-xl transition-colors ${subTab === "accepted" ? "bg-white dark:bg-slate-700 shadow-sm text-emerald-600 dark:text-emerald-400" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
           >
             Accepted
           </button>
@@ -230,7 +232,7 @@ export function MyMatchesTab() {
             <Calendar className="w-8 h-8 text-slate-400" />
           </div>
           <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2">No Matches Found</h3>
-          <p className="text-slate-500 text-sm">You don't have any {subTab !== "all" ? subTab : ""} matches matching your filters.</p>
+          <p className="text-slate-500 text-sm">You don't have any {subTab !== "all" ? subTab === "requested" ? "requested" : "accepted" : ""} matches matching your filters.</p>
         </div>
       ) : (
         <div className="space-y-4">

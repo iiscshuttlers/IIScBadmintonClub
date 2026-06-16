@@ -7,15 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function getBaseShareUrl() {
-  if (Capacitor.isNativePlatform()) {
-    return "https://iiscshuttlers.github.io/iiscshuttlers";
-  }
-  return (
-    window.location.origin +
-    (import.meta.env.BASE_URL.endsWith("/")
-      ? import.meta.env.BASE_URL.slice(0, -1)
-      : import.meta.env.BASE_URL)
-  );
+  return "https://iiscshuttlers.github.io/iiscshuttlers";
 }
 
 export function getEloTier(elo: number | undefined | null) {

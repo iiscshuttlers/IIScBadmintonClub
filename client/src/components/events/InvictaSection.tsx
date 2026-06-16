@@ -27,6 +27,7 @@ import { LiveScoreSection } from "@/components/events/LiveScoreSection";
 import { LiveBracketsSection } from "@/components/events/LiveBracketsSection";
 import { UmpireTab } from "@/components/umpire/UmpireTab";
 import { Tv2 } from "lucide-react";
+import { useHashTab } from "@/hooks/useHashTab";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -38,13 +39,13 @@ const fadeUp = {
 };
 
 const INVICTA_CONFIG = {
-  dates: "1st – 21st June",
+  dates: "Postponed",
   venue: "Gymkhana Courts",
   categories: "MS · WS · MD · WD · XD",
   eligibility: "All IISc Members",
   registrationClosed: true,
   description:
-    "The registration window for INVICTA 2026 has ended. Check back for fixtures and updates below.",
+    "The INVICTA Open Tournament has been postponed. Please check back later for new dates and updates.",
   formUrl: "https://forms.cloud.microsoft/r/c82F9mgTv5",
 };
 
@@ -55,7 +56,10 @@ export function InvictaSection() {
   const [loadingFiles, setLoadingFiles] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"notices" | "schedule" | "broadcast" | "brackets" | "umpire">("notices");
+  const [activeTab, setActiveTab] = useHashTab(
+    ["notices", "schedule", "broadcast", "brackets", "umpire"] as const,
+    "notices"
+  );
   const [tournamentData, setTournamentData] = useState<any>(null);
   const mountedRef = useRef(true);
 

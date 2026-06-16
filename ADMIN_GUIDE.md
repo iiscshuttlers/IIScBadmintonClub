@@ -1,6 +1,6 @@
 # IISc Shuttlers - Administrator Guide
 
-Welcome to the IISc Shuttlers website admin guide! This document explains how the website works under the hood, what your specific admin powers are, and exactly how to host and manage a live tournament from start to finish.
+Welcome to the IISc Badminton Club website admin guide! This document explains how the website works under the hood, what your specific admin powers are, and exactly how to host and manage a live tournament from start to finish.
 
 ---
 

@@ -1,12 +1,13 @@
 /**
- * Live Match Spectator Mode (#2)
+ * Live Match Spectator Mode
  * Scoreboard showing live matches with real-time Supabase subscription.
  * Players with the app open can watch live scores update in real time.
+ * Supports Singles and Doubles.
  */
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { Zap, Circle, Plus, Minus, Trophy, X } from "lucide-react";
+import { Zap, Circle, Plus, Minus, X, Users } from "lucide-react";
 import { toast } from "sonner";
 
 interface LiveMatch {
@@ -23,6 +24,8 @@ interface LiveMatch {
   started_at: string;
   player1?: { full_name: string; avatar_url?: string };
   player2?: { full_name: string; avatar_url?: string };
+  partner1?: { full_name: string; avatar_url?: string };
+  partner2?: { full_name: string; avatar_url?: string };
 }
 
 interface Props {
@@ -32,13 +35,19 @@ interface Props {
 export function LiveScoreWidget({ onClose }: Props) {
   const { profile } = useAuth();
   const [liveMatches, setLiveMatches] = useState<LiveMatch[]>([]);
-  const [scoring, setScoring] = useState<string | null>(null); // live_match id being scored
+  const [scoring, setScoring] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchLive = async () => {
       const { data } = await supabase
         .from("live_matches")
-        .select("*, player1:players!player1_id(full_name, avatar_url), player2:players!player2_id(full_name, avatar_url)")
+        .select(`
+          *,
+          player1:players!player1_id(full_name, avatar_url),
+          player2:players!player2_id(full_name, avatar_url),
+          partner1:players!partner1_id(full_name, avatar_url),
+          partner2:players!partner2_id(full_name, avatar_url)
+        `)
         .eq("status", "live")
         .order("started_at", { ascending: false })
         .limit(5);
@@ -59,27 +68,6 @@ export function LiveScoreWidget({ onClose }: Props) {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
-  const startScoring = async () => {
-    if (!profile?.id) return;
-
-    const { data, error } = await supabase
-      .from("live_matches")
-      .insert({
-        player1_id: profile.id,
-        player2_id: profile.id, // placeholder — should pick opponent
-        scorer_id: profile.id,
-      })
-      .select()
-      .single();
-
-    if (error || !data) {
-      toast.error("Could not start live scoring. Pick players first.");
-      return;
-    }
-    setScoring(data.id);
-    toast.success("Live scoring started! Share the feed so others can watch.");
-  };
-
   const updateScore = async (matchId: string, side: "p1" | "p2", delta: 1 | -1) => {
     const match = liveMatches.find((m) => m.id === matchId);
     if (!match) return;
@@ -87,7 +75,6 @@ export function LiveScoreWidget({ onClose }: Props) {
     const newP1 = side === "p1" ? Math.max(0, match.score_p1 + delta) : match.score_p1;
     const newP2 = side === "p2" ? Math.max(0, match.score_p2 + delta) : match.score_p2;
 
-    // Check if a set is over (21+ with 2 ahead, or 30-29)
     let sets_p1 = match.sets_p1, sets_p2 = match.sets_p2;
     let scoreP1 = newP1, scoreP2 = newP2;
     let setNumber = match.set_number;
@@ -122,9 +109,9 @@ export function LiveScoreWidget({ onClose }: Props) {
 
     if (matchDone) {
       const winner = sets_p1 > sets_p2
-        ? (match.player1 as any)?.full_name ?? "Player 1"
-        : (match.player2 as any)?.full_name ?? "Player 2";
-      toast.success(`Match over! ${winner} wins!`);
+        ? (match.player1 as any)?.full_name ?? "Team 1"
+        : (match.player2 as any)?.full_name ?? "Team 2";
+      toast.success(`Match over! ${winner}'s team wins!`);
       setScoring(null);
     }
   };
@@ -151,13 +138,17 @@ export function LiveScoreWidget({ onClose }: Props) {
           const isScorer = m.scorer_id === profile?.id;
           const p1Name = (m.player1 as any)?.full_name ?? "Player 1";
           const p2Name = (m.player2 as any)?.full_name ?? "Player 2";
+          const partner1Name = (m.partner1 as any)?.full_name;
+          const partner2Name = (m.partner2 as any)?.full_name;
+          const team1Label = partner1Name ? `${p1Name} & ${partner1Name}` : p1Name;
+          const team2Label = partner2Name ? `${p2Name} & ${partner2Name}` : p2Name;
 
           return (
             <div key={m.id} className="px-5 py-4">
               <div className="flex items-center justify-between">
-                {/* Player 1 */}
+                {/* Team 1 */}
                 <div className="flex-1 text-center">
-                  <p className="text-sm font-black text-white truncate">{p1Name}</p>
+                  <p className="text-sm font-black text-white truncate">{team1Label}</p>
                   <p className="text-3xl font-black text-emerald-400 mt-1">{m.score_p1}</p>
                   {isScorer && scoring === m.id && (
                     <div className="flex gap-2 justify-center mt-1">
@@ -181,9 +172,9 @@ export function LiveScoreWidget({ onClose }: Props) {
                   <Zap className="w-4 h-4 text-amber-400 mx-auto animate-pulse" />
                 </div>
 
-                {/* Player 2 */}
+                {/* Team 2 */}
                 <div className="flex-1 text-center">
-                  <p className="text-sm font-black text-white truncate">{p2Name}</p>
+                  <p className="text-sm font-black text-white truncate">{team2Label}</p>
                   <p className="text-3xl font-black text-slate-300 mt-1">{m.score_p2}</p>
                   {isScorer && scoring === m.id && (
                     <div className="flex gap-2 justify-center mt-1">
@@ -200,6 +191,14 @@ export function LiveScoreWidget({ onClose }: Props) {
                   <p className="text-xs text-slate-500 font-black mt-0.5">{m.sets_p2} sets</p>
                 </div>
               </div>
+              {isScorer && scoring !== m.id && (
+                <button
+                  onClick={() => setScoring(m.id)}
+                  className="mt-3 w-full py-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 text-xs font-black transition"
+                >
+                  Control Score
+                </button>
+              )}
             </div>
           );
         })}
@@ -208,12 +207,15 @@ export function LiveScoreWidget({ onClose }: Props) {
   );
 }
 
-/** Button to start a new live scoring session */
+/** Button to start a new live scoring session — supports Singles and Doubles */
 export function StartLiveScoringButton() {
   const { profile } = useAuth();
   const [open, setOpen] = useState(false);
+  const [isDoubles, setIsDoubles] = useState(false);
   const [player1Id, setPlayer1Id] = useState("");
+  const [partner1Id, setPartner1Id] = useState("");
   const [player2Id, setPlayer2Id] = useState("");
+  const [partner2Id, setPartner2Id] = useState("");
   const [players, setPlayers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -223,29 +225,50 @@ export function StartLiveScoringButton() {
         .from("players")
         .select("id, full_name")
         .eq("is_approved", true)
+        .is("deleted_at", null)
         .order("full_name")
         .then(({ data }) => setPlayers(data ?? []));
     }
   }, [open]);
 
+  const reset = () => {
+    setPlayer1Id(""); setPartner1Id("");
+    setPlayer2Id(""); setPartner2Id("");
+    setIsDoubles(false);
+  };
+
+  const canStart = player1Id && player2Id && player1Id !== player2Id &&
+    (!isDoubles || (partner1Id && partner2Id && partner1Id !== partner2Id &&
+      partner1Id !== player1Id && partner2Id !== player2Id));
+
   const start = async () => {
-    if (!profile?.id || !player1Id || !player2Id) return;
+    if (!profile?.id || !canStart) return;
     setLoading(true);
-    const { error } = await supabase.from("live_matches").insert({
+    const payload: any = {
       player1_id: player1Id,
       player2_id: player2Id,
       scorer_id: profile.id,
-    });
+    };
+    if (isDoubles) {
+      payload.partner1_id = partner1Id;
+      payload.partner2_id = partner2Id;
+    }
+    const { error } = await supabase.from("live_matches").insert(payload);
     setLoading(false);
     if (error) {
       toast.error("Failed to start live scoring");
       return;
     }
     toast.success("Live match started! Everyone watching the feed will see the score.");
+    reset();
     setOpen(false);
   };
 
   if (!profile?.id) return null;
+
+  const otherIds = [player1Id, partner1Id, player2Id, partner2Id].filter(Boolean);
+
+  const selectCls = "w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500";
 
   return (
     <>
@@ -258,35 +281,84 @@ export function StartLiveScoringButton() {
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setOpen(false)}>
-          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-6 max-w-sm w-full space-y-4" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => { setOpen(false); reset(); }}>
+          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-6 max-w-sm w-full space-y-5" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <h3 className="font-black text-lg text-slate-900 dark:text-white">Start Live Scoring</h3>
-              <button onClick={() => setOpen(false)} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              <button onClick={() => { setOpen(false); reset(); }} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                 <X className="w-4 h-4 text-slate-500" />
               </button>
             </div>
-            <div className="space-y-3">
-              <select
-                value={player1Id}
-                onChange={(e) => setPlayer1Id(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500"
+
+            {/* Format Toggle */}
+            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+              <button
+                onClick={() => setIsDoubles(false)}
+                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${!isDoubles ? "bg-white dark:bg-slate-700 shadow text-slate-900 dark:text-white" : "text-slate-500"}`}
               >
-                <option value="">Select Player 1</option>
-                {players.map((p) => <option key={p.id} value={p.id}>{p.full_name}</option>)}
-              </select>
-              <select
-                value={player2Id}
-                onChange={(e) => setPlayer2Id(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                Singles
+              </button>
+              <button
+                onClick={() => setIsDoubles(true)}
+                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 ${isDoubles ? "bg-white dark:bg-slate-700 shadow text-slate-900 dark:text-white" : "text-slate-500"}`}
               >
-                <option value="">Select Player 2</option>
-                {players.map((p) => <option key={p.id} value={p.id}>{p.full_name}</option>)}
-              </select>
+                <Users className="w-3.5 h-3.5" /> Doubles
+              </button>
             </div>
+
+            <div className="space-y-4">
+              {/* Team 1 */}
+              <div>
+                <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">
+                  {isDoubles ? "Team 1" : "Player 1"}
+                </p>
+                <div className="space-y-2">
+                  <select value={player1Id} onChange={(e) => setPlayer1Id(e.target.value)} className={selectCls}>
+                    <option value="">Select Player 1</option>
+                    {players.filter(p => !otherIds.filter(id => id !== player1Id).includes(p.id)).map((p) => (
+                      <option key={p.id} value={p.id}>{p.full_name}</option>
+                    ))}
+                  </select>
+                  {isDoubles && (
+                    <select value={partner1Id} onChange={(e) => setPartner1Id(e.target.value)} className={selectCls}>
+                      <option value="">Select Partner 1</option>
+                      {players.filter(p => !otherIds.filter(id => id !== partner1Id).includes(p.id)).map((p) => (
+                        <option key={p.id} value={p.id}>{p.full_name}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              </div>
+
+              <div className="text-center text-slate-400 font-black text-sm">VS</div>
+
+              {/* Team 2 */}
+              <div>
+                <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">
+                  {isDoubles ? "Team 2" : "Player 2"}
+                </p>
+                <div className="space-y-2">
+                  <select value={player2Id} onChange={(e) => setPlayer2Id(e.target.value)} className={selectCls}>
+                    <option value="">Select Player 2</option>
+                    {players.filter(p => !otherIds.filter(id => id !== player2Id).includes(p.id)).map((p) => (
+                      <option key={p.id} value={p.id}>{p.full_name}</option>
+                    ))}
+                  </select>
+                  {isDoubles && (
+                    <select value={partner2Id} onChange={(e) => setPartner2Id(e.target.value)} className={selectCls}>
+                      <option value="">Select Partner 2</option>
+                      {players.filter(p => !otherIds.filter(id => id !== partner2Id).includes(p.id)).map((p) => (
+                        <option key={p.id} value={p.id}>{p.full_name}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <button
               onClick={start}
-              disabled={loading || !player1Id || !player2Id || player1Id === player2Id}
+              disabled={loading || !canStart}
               className="w-full py-3 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-black transition"
             >
               {loading ? "Starting..." : "Start Match"}

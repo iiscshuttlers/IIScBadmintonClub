@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export function useBroadcastNotification() {
   const lastAnnouncementRef = useRef<string | null>(null);
   const knownMatchesRef = useRef<Set<string>>(new Set());
+  const lastAdminPushRef = useRef<number | null>(null);
   const { profile } = useAuth();
   
   const profileRef = useRef(profile);
@@ -153,6 +154,30 @@ export function useBroadcastNotification() {
               }
             } catch (e) {
               console.error("Failed to parse buddy notification", e);
+            }
+          } else if (row.key === "admin_push") {
+            try {
+              const data = row.value;
+              if (data && data.title && data.timestamp && data.timestamp !== lastAdminPushRef.current) {
+                lastAdminPushRef.current = data.timestamp;
+                
+                if (Capacitor.isNativePlatform()) {
+                  LocalNotifications.schedule({
+                    notifications: [{
+                      title: data.title,
+                      body: data.body || "",
+                      id: Math.floor(Math.random() * 1000000),
+                      schedule: { at: new Date(Date.now() + 100) },
+                    }]
+                  }).catch(console.warn);
+                } else {
+                  showWebNotification(data.title, data.body || "", () => {
+                    if (data.url) window.location.href = data.url;
+                  });
+                }
+              }
+            } catch (e) {
+              console.error("Failed to parse admin push", e);
             }
           }
         },

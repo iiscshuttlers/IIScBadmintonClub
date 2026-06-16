@@ -23,6 +23,9 @@ export default function Footer() {
     { href: "/players", label: "Players" },
     { href: "/about", label: "About" },
     { href: "/gallery", label: "Gallery" },
+    { href: "/privacy", label: "Privacy Policy" },
+    { href: "/terms", label: "Terms of Service" },
+    { href: "/delete-account", label: "Delete Account" },
   ];
 
   const facilities = [
