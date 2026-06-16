@@ -1,6 +1,6 @@
 {
-  "versionCode": 118,
-  "versionName": "1.118",
-  "downloadUrl": "https://github.com/iiscshuttlers/iiscshuttlers/releases/latest/download/IIScShuttlers_v1.118.apk",
-  "changelog": "- Add privacy policy, SW push & new UI features\n- chore: release v1.117 (build 117)"
+  "versionCode": 119,
+  "versionName": "1.119",
+  "downloadUrl": "https://github.com/iiscshuttlers/iiscshuttlers/releases/latest/download/IIScShuttlers_v1.119.apk",
+  "changelog": "Hash-based tab navigation for all pages, doubles live scoring, privacy policy, terms of service, admin push notifications, maintenance mode, PlayStore readiness"
 }

@@ -158,7 +158,7 @@ ok("app-version.json and changelog.json updated");
 
 /* ── 3. Vite build ──────────────────────────────────────────────── */
 log("Building web app (vite build)…");
-run("vite build", { cwd: root });
+run("npx vite build", { cwd: root });
 
 /* ── 4. Capacitor sync ──────────────────────────────────────────── */
 log("Syncing Capacitor…");

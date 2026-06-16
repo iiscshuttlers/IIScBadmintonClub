@@ -1,5 +1,13 @@
 [
   {
+    "versionCode": 119,
+    "versionName": "1.119",
+    "date": "2026-06-16T11:17:22.396Z",
+    "changes": [
+      "Hash-based tab navigation for all pages, doubles live scoring, privacy policy, terms of service, admin push notifications, maintenance mode, PlayStore readiness"
+    ]
+  },
+  {
     "versionCode": 118,
     "versionName": "1.118",
     "date": "2026-06-15T08:44:30.618Z",
