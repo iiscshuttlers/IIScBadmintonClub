@@ -229,8 +229,8 @@ export default function LogMatchModal({
     if (matchType === "singles") {
       const g1 = currentUser.gender?.toLowerCase() || "unknown";
       const g2 = opp?.gender?.toLowerCase() || "unknown";
-      if (g1 !== "unknown" && g2 !== "unknown" && g1 !== g2)
-        return "Cross-gender Singles matches (MS vs WS) are not allowed.";
+      if (matchCategory === "tournament" && g1 !== "unknown" && g2 !== "unknown" && g1 !== g2)
+        return "Cross-gender Singles matches are not allowed in Tournaments.";
     } else if (matchType === "doubles" || matchType === "hybrid") {
       const partner = otherPlayers.find((p) => p.id === partnerId);
       const oppPartner = otherPlayers.find((p) => p.id === opponentPartnerId);
@@ -309,6 +309,14 @@ export default function LogMatchModal({
     const winnerId = myTeamWon ? currentUser.id : opponentId;
     const scoreStr = formatScore();
 
+    // Detect cross-gender singles (won't get ELO)
+    const isCrossGenderSingles = (): boolean => {
+      if (matchType !== "singles") return false;
+      const g1 = currentUser.gender?.toLowerCase() || "unknown";
+      const g2 = otherPlayers.find(p => p.id === opponentId)?.gender?.toLowerCase() || "unknown";
+      return g1 !== "unknown" && g2 !== "unknown" && g1 !== g2;
+    };
+
     let finalScore = scoreStr;
     if (matchType === "doubles" || matchType === "hybrid") {
       const partnerName = otherPlayers.find((p) => p.id === partnerId)?.full_name ?? "";
@@ -349,6 +357,7 @@ export default function LogMatchModal({
       submitter_partner_id: (matchType === "doubles" || matchType === "hybrid") ? partnerId : null,
       opponent_partner_id: (matchType === "doubles" || matchType === "hybrid") ? opponentPartnerId : null,
       is_hybrid: matchType === "hybrid" || undefined,
+      is_cross_gender_singles: isCrossGenderSingles() || undefined,
     };
 
     if (!navigator.onLine) {
@@ -636,6 +645,14 @@ export default function LogMatchModal({
                         {myTeamWon ? "🏆 Win" : "Defeat"}
                       </span>
                     </div>
+                    {(matchType === "hybrid" || isCrossGenderSingles()) && (
+                      <div className="flex items-center gap-2 p-2.5 rounded-lg bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800/50">
+                        <Sword className="w-4 h-4 text-violet-600 dark:text-violet-400 shrink-0" />
+                        <span className="text-xs font-bold text-violet-700 dark:text-violet-300">
+                          {matchType === "hybrid" ? "Hybrid match" : "Cross-gender"} — won't affect ELO
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Optional fields */}
