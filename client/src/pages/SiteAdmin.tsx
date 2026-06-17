@@ -125,25 +125,66 @@ type TabId =
   | "features"
   | "all_features";
 
-const TABS: { id: TabId; label: string; icon: any }[] = [
-  { id: "overview", label: "Overview", icon: Activity },
-  { id: "config", label: "Landing Pages", icon: Paintbrush },
-  { id: "flyers", label: "Flyers", icon: Megaphone },
-  { id: "holidays", label: "Holidays", icon: Calendar },
-  { id: "announcements", label: "Announcements", icon: Megaphone },
-  { id: "events", label: "Events", icon: CalendarDays },
-  { id: "videos", label: "Videos", icon: Video },
-  { id: "players", label: "Players", icon: Users },
-  { id: "matches", label: "Matches", icon: Trophy },
-  { id: "disputes", label: "Disputes", icon: AlertTriangle },
-  { id: "elo_audit", label: "ELO Audit", icon: BarChart2 },
-  { id: "umpire", label: "Umpire", icon: Activity },
-  { id: "changelog", label: "System Logs", icon: FileCode2 },
-  { id: "activity_log", label: "Activity Log", icon: ClipboardList },
-  { id: "settings", label: "Settings", icon: Settings },
-  { id: "features", label: "Features", icon: Zap },
-  { id: "all_features", label: "All Features", icon: Sparkles },
+interface TabGroup {
+  title: string;
+  description: string;
+  tabs: { id: TabId; label: string; icon: any }[];
+}
+
+const TAB_GROUPS: TabGroup[] = [
+  {
+    title: "📊 Dashboard",
+    description: "Platform statistics and overview",
+    tabs: [
+      { id: "overview", label: "Statistics", icon: Activity },
+    ],
+  },
+  {
+    title: "📝 Content Management",
+    description: "Manage club content, announcements, and events",
+    tabs: [
+      { id: "config", label: "Landing Pages", icon: Paintbrush },
+      { id: "flyers", label: "Flyers", icon: Megaphone },
+      { id: "announcements", label: "Announcements", icon: Megaphone },
+      { id: "holidays", label: "Holidays", icon: Calendar },
+      { id: "events", label: "Events", icon: CalendarDays },
+      { id: "videos", label: "Videos", icon: Video },
+    ],
+  },
+  {
+    title: "🎮 Match Management",
+    description: "Manage players, matches, umpiring, and disputes",
+    tabs: [
+      { id: "players", label: "Players", icon: Users },
+      { id: "matches", label: "Matches", icon: Trophy },
+      { id: "umpire", label: "Umpire Mode", icon: Activity },
+      { id: "disputes", label: "Disputes", icon: AlertTriangle },
+      { id: "elo_audit", label: "ELO Audit", icon: BarChart2 },
+    ],
+  },
+  {
+    title: "✨ Features & Info",
+    description: "View platform features and system information",
+    tabs: [
+      { id: "all_features", label: "All Features", icon: Sparkles },
+      { id: "features", label: "Live Features", icon: Zap },
+    ],
+  },
+  {
+    title: "⚙️ System",
+    description: "System configuration, logs, and settings",
+    tabs: [
+      { id: "settings", label: "Settings", icon: Settings },
+      { id: "activity_log", label: "Activity Log", icon: ClipboardList },
+      { id: "changelog", label: "System Logs", icon: FileCode2 },
+    ],
+  },
 ];
+
+// Flatten for easier access
+const TABS: { id: TabId; label: string; icon: any }[] = TAB_GROUPS.flatMap(
+  (group) => group.tabs
+);
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
 async function loadKey<T>(key: string): Promise<T | null> {
@@ -528,6 +569,7 @@ export default function SiteAdmin() {
     settings: null,
     activity_log: null,
     features: null,
+    all_features: null,
   };
 
   return (
@@ -563,41 +605,56 @@ export default function SiteAdmin() {
         </div>
       </section>
 
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
-        {/* Tabs */}
-        <div className="w-full pb-4 mb-4">
-          <div className="grid grid-cols-2 p-1.5 bg-slate-200/70 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-inner gap-1">
-            {TABS.filter((tab) => isAdmin || tab.id === "umpire").map((tab) => {
-              const Icon = tab.icon;
-              const active = activeTab === tab.id;
-              const count = counts[tab.id];
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => handleTabChange(tab.id)}
-                  className={`group flex items-center justify-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${
-                    active
-                      ? "bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700"
-                      : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-700/50"
-                  }`}
-                >
-                  {Icon && (
-                    <Icon
-                      className={`w-4 h-4 transition-colors ${active ? "text-emerald-500" : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300"}`}
-                    />
-                  )}
-                  {tab.label}
-                  {count !== null && (
-                    <span
-                      className={`text-[11px] px-2 py-0.5 rounded-full font-black tracking-wide ${active ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400" : "bg-slate-300/60 dark:bg-slate-700 text-slate-500 dark:text-slate-400"}`}
-                    >
-                      {count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        {/* Tab Groups Navigation */}
+        <div className="mb-8 space-y-4">
+          {TAB_GROUPS.map((group) => {
+            const visibleTabs = group.tabs.filter((tab) => isAdmin || tab.id === "umpire");
+            if (visibleTabs.length === 0) return null;
+
+            return (
+              <div key={group.title} className="space-y-2">
+                <div className="flex items-start gap-3 px-4 py-2">
+                  <div>
+                    <h3 className="font-black text-slate-900 dark:text-white text-sm">{group.title}</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{group.description}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 px-2">
+                  {visibleTabs.map((tab) => {
+                    const Icon = tab.icon;
+                    const active = activeTab === tab.id;
+                    const count = counts[tab.id];
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => handleTabChange(tab.id)}
+                        className={`group flex flex-col items-center justify-center gap-2 px-3 py-3 rounded-xl text-xs font-bold transition-all duration-300 relative ${
+                          active
+                            ? "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-2 border-emerald-300 dark:border-emerald-700/60 shadow-sm"
+                            : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700/60 hover:text-emerald-600 dark:hover:text-emerald-400"
+                        }`}
+                      >
+                        {Icon && (
+                          <Icon
+                            className={`w-5 h-5 transition-colors ${active ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400"}`}
+                          />
+                        )}
+                        <span className="text-center leading-tight">{tab.label}</span>
+                        {count !== null && (
+                          <span
+                            className={`absolute top-1 right-1 text-[10px] px-1.5 py-0.5 rounded-full font-black ${active ? "bg-emerald-600 text-white" : "bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300"}`}
+                          >
+                            {count}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* Editor */}
