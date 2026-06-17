@@ -240,12 +240,12 @@ export default function LogMatchModal({
         opp?.gender?.toLowerCase() || "unknown",
         oppPartner?.gender?.toLowerCase() || "unknown",
       ];
-      if (matchType === "doubles" && ![g1, g2, g3, g4].includes("unknown")) {
+      if (matchCategory === "tournament" && matchType === "doubles" && ![g1, g2, g3, g4].includes("unknown")) {
         const t1Mixed = g1 !== g2, t2Mixed = g3 !== g4;
         const t1Male = g1 === "male" && g2 === "male", t2Male = g3 === "male" && g4 === "male";
         const t1Female = g1 === "female" && g2 === "female", t2Female = g3 === "female" && g4 === "female";
         if (t1Mixed !== t2Mixed || t1Male !== t2Male || t1Female !== t2Female)
-          return "Hybrid Doubles matches (e.g. MD vs XD) are not allowed.";
+          return "Mixed-category Doubles matches (e.g. MD vs XD) are not allowed in Tournaments.";
       }
     }
     return null;
@@ -317,6 +317,24 @@ export default function LogMatchModal({
       return g1 !== "unknown" && g2 !== "unknown" && g1 !== g2;
     };
 
+    // Detect mixed-category doubles (won't get ELO)
+    const isMixedCategoryDoubles = (): boolean => {
+      if (matchType !== "doubles") return false;
+      const partner = otherPlayers.find(p => p.id === partnerId);
+      const oppPartner = otherPlayers.find(p => p.id === opponentPartnerId);
+      const [g1, g2, g3, g4] = [
+        currentUser.gender?.toLowerCase() || "unknown",
+        partner?.gender?.toLowerCase() || "unknown",
+        otherPlayers.find(p => p.id === opponentId)?.gender?.toLowerCase() || "unknown",
+        oppPartner?.gender?.toLowerCase() || "unknown",
+      ];
+      if ([g1, g2, g3, g4].includes("unknown")) return false;
+      const t1Mixed = g1 !== g2, t2Mixed = g3 !== g4;
+      const t1Male = g1 === "male" && g2 === "male", t2Male = g3 === "male" && g4 === "male";
+      const t1Female = g1 === "female" && g2 === "female", t2Female = g3 === "female" && g4 === "female";
+      return t1Mixed !== t2Mixed || t1Male !== t2Male || t1Female !== t2Female;
+    };
+
     let finalScore = scoreStr;
     if (matchType === "doubles" || matchType === "hybrid") {
       const partnerName = otherPlayers.find((p) => p.id === partnerId)?.full_name ?? "";
@@ -358,6 +376,7 @@ export default function LogMatchModal({
       opponent_partner_id: (matchType === "doubles" || matchType === "hybrid") ? opponentPartnerId : null,
       is_hybrid: matchType === "hybrid" || undefined,
       is_cross_gender_singles: isCrossGenderSingles() || undefined,
+      is_mixed_category_doubles: isMixedCategoryDoubles() || undefined,
     };
 
     if (!navigator.onLine) {
@@ -645,11 +664,11 @@ export default function LogMatchModal({
                         {myTeamWon ? "🏆 Win" : "Defeat"}
                       </span>
                     </div>
-                    {(matchType === "hybrid" || isCrossGenderSingles()) && (
+                    {(matchType === "hybrid" || isCrossGenderSingles() || isMixedCategoryDoubles()) && (
                       <div className="flex items-center gap-2 p-2.5 rounded-lg bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800/50">
                         <Sword className="w-4 h-4 text-violet-600 dark:text-violet-400 shrink-0" />
                         <span className="text-xs font-bold text-violet-700 dark:text-violet-300">
-                          {matchType === "hybrid" ? "Hybrid match" : "Cross-gender"} — won't affect ELO
+                          {matchType === "hybrid" ? "Hybrid match" : isCrossGenderSingles() ? "Cross-gender singles" : "Mixed-category doubles"} — won't affect ELO
                         </span>
                       </div>
                     )}
