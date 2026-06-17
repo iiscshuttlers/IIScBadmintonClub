@@ -1,5 +1,18 @@
 [
   {
+    "versionCode": 136,
+    "versionName": "1.136",
+    "date": "2026-06-17T21:22:10.857Z",
+    "changes": [
+      "- fix: show notifications when app is open but minimized",
+      "- fix: create notification channels in Android native code",
+      "- chore: release v1.135 (build 135)",
+      "- chore: remove misleading VitePWA comment",
+      "- fix: add missing Android notification channel IDs to FCM payloads",
+      "- chore: release v1.134 (build 134)"
+    ]
+  },
+  {
     "versionCode": 135,
     "versionName": "1.135",
     "date": "2026-06-17T21:05:19.934Z",
