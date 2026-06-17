@@ -1,6 +1,6 @@
 {
-  "versionCode": 125,
-  "versionName": "1.125",
-  "downloadUrl": "https://github.com/iiscshuttlers/iiscshuttlers/releases/latest/download/IIScShuttlers_v1.125.apk",
-  "changelog": "- chore: release v1.124 (build 124)\n- Updates\n- chore: release v1.123 (build 123)\n- fix: fix flyers visibility on all pages and add comprehensive admin documentation\n- fix: resolve 6 critical issues - challenges, notifications, and cross-gender validation\n- fix: improve QR/NFC handling, deep links, and menu visibility"
+  "versionCode": 126,
+  "versionName": "1.126",
+  "downloadUrl": "https://github.com/iiscshuttlers/iiscshuttlers/releases/latest/download/IIScShuttlers_v1.126.apk",
+  "changelog": "- Updates\n- chore: release v1.125 (build 125)"
 }
