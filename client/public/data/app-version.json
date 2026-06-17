@@ -1,6 +1,6 @@
 {
-  "versionCode": 123,
-  "versionName": "1.123",
-  "downloadUrl": "https://github.com/iiscshuttlers/iiscshuttlers/releases/latest/download/IIScShuttlers_v1.123.apk",
-  "changelog": "- fix: fix flyers visibility on all pages and add comprehensive admin documentation\n- fix: resolve 6 critical issues - challenges, notifications, and cross-gender validation\n- fix: improve QR/NFC handling, deep links, and menu visibility\n- docs: add Play Store submission guide and project status report\n- docs: add comprehensive documentation for users, admins, and API\n- test: add comprehensive integration tests for core features\n- chore: set up comprehensive testing infrastructure with vitest\n- chore: update privacy policy, clean up configs, and remove deprecated offline queue\n- chore: release v1.122 (build 122)\n- docs: add final Play Store completion summary and status\n- docs: add quick-start guide for Play Store submission\n- docs: add Play Store completion summary and status report\n- docs: comprehensive Play Store preparation and project cleanup guides\n- refactor: reorganize admin panel with grouped tab navigation\n- feat: add comprehensive features tracking to admin panel"
+  "versionCode": 124,
+  "versionName": "1.124",
+  "downloadUrl": "https://github.com/iiscshuttlers/iiscshuttlers/releases/latest/download/IIScShuttlers_v1.124.apk",
+  "changelog": "- Updates\n- chore: release v1.123 (build 123)\n- fix: fix flyers visibility on all pages and add comprehensive admin documentation\n- fix: resolve 6 critical issues - challenges, notifications, and cross-gender validation\n- fix: improve QR/NFC handling, deep links, and menu visibility"
 }

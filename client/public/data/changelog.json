@@ -1,5 +1,17 @@
 [
   {
+    "versionCode": 124,
+    "versionName": "1.124",
+    "date": "2026-06-17T13:32:57.941Z",
+    "changes": [
+      "- Updates",
+      "- chore: release v1.123 (build 123)",
+      "- fix: fix flyers visibility on all pages and add comprehensive admin documentation",
+      "- fix: resolve 6 critical issues - challenges, notifications, and cross-gender validation",
+      "- fix: improve QR/NFC handling, deep links, and menu visibility"
+    ]
+  },
+  {
     "versionCode": 123,
     "versionName": "1.123",
     "date": "2026-06-17T12:49:21.530Z",
