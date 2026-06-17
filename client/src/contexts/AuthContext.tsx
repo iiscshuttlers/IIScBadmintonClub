@@ -157,7 +157,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (count > 0) {
               await Badge.set({ count });
             } else {
-              await PushNotifications.removeAllDeliveredNotifications();
               await Badge.clear();
             }
           } catch (e) {

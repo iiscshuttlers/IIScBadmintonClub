@@ -374,9 +374,9 @@ export default function LogMatchModal({
       match_score: finalScore,
       submitter_partner_id: (matchType === "doubles" || matchType === "hybrid") ? partnerId : null,
       opponent_partner_id: (matchType === "doubles" || matchType === "hybrid") ? opponentPartnerId : null,
-      is_hybrid: matchType === "hybrid" || undefined,
-      is_cross_gender_singles: isCrossGenderSingles() || undefined,
-      is_mixed_category_doubles: isMixedCategoryDoubles() || undefined,
+      ...(matchType === "hybrid" && { is_hybrid: true }),
+      ...(isCrossGenderSingles() && { is_cross_gender_singles: true }),
+      ...(isMixedCategoryDoubles() && { is_mixed_category_doubles: true }),
     };
 
     if (!navigator.onLine) {
@@ -500,8 +500,9 @@ export default function LogMatchModal({
                       className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold border transition ${matchType === "doubles" ? "bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-700 dark:text-blue-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"}`}>
                       <Users className="w-4 h-4" /> Doubles
                     </button>
-                    <button type="button" onClick={() => { if (matchCategory === "friendly") setMatchType("hybrid"); else alert("Hybrid matches are only allowed for Friendly, not Tournament"); }}
+                    <button type="button" onClick={() => setMatchType("hybrid")}
                       disabled={matchCategory !== "friendly"}
+                      title={matchCategory !== "friendly" ? "Hybrid matches only allowed for Friendly" : ""}
                       className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold border transition disabled:opacity-50 disabled:cursor-not-allowed ${matchType === "hybrid" ? "bg-violet-50 dark:bg-violet-900/30 border-violet-500 text-violet-700 dark:text-violet-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"}`}>
                       <Sword className="w-4 h-4" /> Hybrid
                     </button>
