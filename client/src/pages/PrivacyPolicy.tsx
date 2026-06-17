@@ -134,9 +134,10 @@ export default function PrivacyPolicy() {
               Upon account deletion:
             </p>
             <ul className="list-disc pl-5 space-y-2">
-              <li>Your player profile, avatar, and personal details are permanently deleted.</li>
+              <li><strong>30-Day Grace Period:</strong> When you delete your account, it is first "soft-deleted" and hidden from the public directory. Your data is retained securely for 30 days, allowing you to easily restore your profile if you change your mind.</li>
+              <li><strong>Permanent Deletion:</strong> After the 30-day grace period, your player profile, avatar, and personal details are permanently and irreversibly deleted from our active databases.</li>
               <li>Your match history records may be retained in an anonymized form for statistical integrity of the platform's competitive data.</li>
-              <li>Your push notification tokens are immediately deleted.</li>
+              <li>Your push notification tokens are immediately deleted upon your initial deletion request.</li>
               <li>Deletion logs are retained for administrative audit purposes.</li>
             </ul>
 

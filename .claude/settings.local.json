@@ -33,7 +33,11 @@
       "Bash(curl -s http://localhost:3000)",
       "Bash(pnpm add *)",
       "Bash(pnpm dev *)",
-      "Bash(grep -v \"//\\\\|string\\\\|interface\\\\|type\\\\|import\")"
+      "Bash(grep -v \"//\\\\|string\\\\|interface\\\\|type\\\\|import\")",
+      "PowerShell(npx tsc --noEmit 2>&1)",
+      "Bash(git reset *)",
+      "Bash(xargs grep -l \"localStorage\\\\|sessionStorage\")",
+      "Bash(npx tsc *)"
     ]
   }
 }

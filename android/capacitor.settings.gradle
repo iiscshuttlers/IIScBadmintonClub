@@ -23,5 +23,8 @@ project(':capacitor-push-notifications').projectDir = new File('../node_modules/
 include ':capacitor-share'
 project(':capacitor-share').projectDir = new File('../node_modules/.pnpm/@capacitor+share@8.0.1_@capacitor+core@8.3.4/node_modules/@capacitor/share/android')
 
+include ':capawesome-capacitor-badge'
+project(':capawesome-capacitor-badge').projectDir = new File('../node_modules/.pnpm/@capawesome+capacitor-badge@8.0.2_@capacitor+core@8.3.4/node_modules/@capawesome/capacitor-badge/android')
+
 include ':capacitor-native-biometric'
 project(':capacitor-native-biometric').projectDir = new File('../node_modules/.pnpm/capacitor-native-biometric@4.2.2/node_modules/capacitor-native-biometric/android')

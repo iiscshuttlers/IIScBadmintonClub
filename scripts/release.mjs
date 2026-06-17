@@ -24,7 +24,6 @@ const root = resolve(__dirname, "..");
 // Add GitHub CLI to PATH in case the terminal hasn't picked it up yet
 process.env.PATH = `${process.env.PATH};C:\\Program Files\\GitHub CLI`;
 
-const JAVA_HOME = "C:\\Program Files\\Microsoft\\jdk-21.0.11.10-hotspot";
 const APK_SRC = resolve(
   root,
   "android/app/build/outputs/apk/release/app-release.apk",
@@ -168,7 +167,6 @@ run("npx cap sync android", { cwd: root });
 log("Building release APK and AAB…");
 run("gradlew assembleRelease bundleRelease", {
   cwd: resolve(root, "android"),
-  env: { ...process.env, JAVA_HOME },
   shell: true,
 });
 
