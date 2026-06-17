@@ -14,11 +14,5 @@ async function checkRoles() {
     .single();
   console.log("Roles:", JSON.stringify(data, null, 2));
 
-  // also get the JAHA player
-  const { data: players } = await supabase
-    .from("players")
-    .select("id, full_name, user_id, iisc_email");
-  const jaha = players.find((p) => p.full_name.toLowerCase().includes("jaha"));
-  console.log("JAHA Player:", jaha);
 }
 checkRoles();
