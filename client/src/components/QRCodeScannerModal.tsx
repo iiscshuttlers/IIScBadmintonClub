@@ -2,11 +2,32 @@ import { useState, useEffect, useRef } from "react";
 import { Html5QrcodeScanner, Html5QrcodeScanType, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, QrCode } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
+import { toast } from "sonner";
 
 interface QRCodeScannerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onScan: (playerId: string) => void;
+}
+
+// Extract app path from various URL formats
+function extractAppPath(url: string): string | null {
+  // Handle iiscshuttlers:// scheme
+  if (url.startsWith("iiscshuttlers://")) {
+    const path = url.slice("iiscshuttlers://".length);
+    return "/" + path;
+  }
+
+  // Handle GitHub Pages URLs
+  if (url.includes("iiscbadmintonclub.github.io")) {
+    const match = url.match(/iiscbadmintonclub\.github\.io\/iiscshuttlers(\/[^?]*)?/);
+    if (match) {
+      return match[1] || "/";
+    }
+  }
+
+  return null;
 }
 
 export function QRCodeScannerModal({ isOpen, onClose, onScan }: QRCodeScannerModalProps) {
@@ -53,6 +74,32 @@ export function QRCodeScannerModal({ isOpen, onClose, onScan }: QRCodeScannerMod
 
     scanner.render(
       (decodedText) => {
+        // Check if this is a website URL that should open in app
+        if (decodedText.includes("iiscbadmintonclub.github.io") || decodedText.startsWith("iiscshuttlers://")) {
+          scanner.clear().catch(console.error);
+          setScanResult(decodedText);
+
+          if (Capacitor.isNativePlatform()) {
+            // On native app, show prompt to open scanned link in app
+            setTimeout(() => {
+              const appPath = extractAppPath(decodedText);
+              if (appPath) {
+                // Navigate within app by reopening the modal with the path
+                onClose();
+                window.history.pushState(null, "", appPath);
+                window.dispatchEvent(new PopStateEvent("popstate"));
+                toast.success("Navigating in app...");
+              }
+            }, 600);
+          } else {
+            // On web, just navigate normally
+            setTimeout(() => {
+              window.location.href = decodedText;
+            }, 600);
+          }
+          return;
+        }
+
         // Assume decodedText is the player_id or the full player profile URL
         let playerId = decodedText;
         if (decodedText.includes("/player/")) {

@@ -465,8 +465,8 @@ export default function Navigation() {
         {/* ── Mobile Bottom Sheet Menu ─────────────────────────────── */}
         {isOpen && (
           <div className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setIsOpen(false)}>
-            <div 
-              className="absolute bottom-[72px] left-2 right-2 bg-white dark:bg-slate-950 rounded-3xl shadow-2xl overflow-y-auto border border-slate-200 dark:border-slate-800 max-h-[75vh]"
+            <div
+              className="fixed bottom-[72px] left-2 right-2 bg-white dark:bg-slate-950 rounded-3xl shadow-2xl overflow-y-auto border border-slate-200 dark:border-slate-800 max-h-[calc(100vh-88px)]"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="px-4 py-4 space-y-1">

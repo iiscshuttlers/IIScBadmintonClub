@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Route, Switch, Router, useLocation } from "wouter";
 import { Capacitor } from "@capacitor/core";
+import { App as CapacitorApp } from "@capacitor/app";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUp, WifiOff } from "lucide-react";
 
@@ -307,11 +308,43 @@ function AppContent() {
   const [defaultOpponentId, setDefaultOpponentId] = useState<string | undefined>(undefined);
   const [otherPlayers, setOtherPlayers] = useState<any[]>([]);
   const { profile } = useAuth();
+  const [, setLocation] = useLocation();
 
   useInactivityLogout();
   useNativeBackButton();
   usePullToRefresh();
   useOfflineSync();
+
+  // Handle deep links from QR codes and NFC scans
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    const handleDeepLink = (event: any) => {
+      const url = event.url;
+      if (url) {
+        // Handle iiscshuttlers:// scheme
+        if (url.startsWith("iiscshuttlers://")) {
+          const path = url.slice("iiscshuttlers://".length);
+          setLocation("/" + path);
+          return;
+        }
+        // Handle https URLs
+        if (url.includes("iiscbadmintonclub.github.io")) {
+          const match = url.match(/iiscbadmintonclub\.github\.io\/iiscshuttlers(\/[^?]*)?/);
+          if (match) {
+            setLocation(match[1] || "/");
+          }
+        }
+      }
+    };
+
+    CapacitorApp.addListener("appUrlOpen", handleDeepLink);
+
+    // Clean up listeners on unmount
+    return () => {
+      CapacitorApp.removeAllListeners();
+    };
+  }, [setLocation]);
 
   useEffect(() => {
     const handleOpenLogMatch = (e: any) => {
