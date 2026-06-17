@@ -521,8 +521,10 @@ export default function SiteAdmin() {
     umpire: null,
     changelog: null,
     disputes: null,
+    elo_audit: null,
     settings: null,
     activity_log: null,
+    features: null,
   };
 
   return (

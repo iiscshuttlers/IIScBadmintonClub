@@ -1711,7 +1711,7 @@ export default function PlayerProfile({
               {/* ELO Row */}
               <div className="flex flex-wrap gap-2">
                 {player.elo_rating != null && (
-                  <span className={`px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-sm font-black uppercase shadow-sm flex items-center gap-1.5 ${getEloTier(player.elo_rating).bg} ${getEloTier(player.elo_rating).color}`}>
+                  <span className={`px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-sm font-black uppercase shadow-sm flex items-center gap-1.5 ${getEloTier(player.elo_rating).bg} ${getEloTier(player.elo_rating).text}`}>
                     <Trophy className="w-4 h-4" /> {getEloTier(player.elo_rating).name} • <AnimatedCounter value={player.elo_rating} /> OVR
                   </span>
                 )}

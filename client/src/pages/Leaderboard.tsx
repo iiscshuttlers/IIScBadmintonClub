@@ -314,7 +314,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
 
   const exportLeaderboard = () => {
     if (rankedPlayers.length === 0) return;
-    const headers = ["Rank", "Name", "Department", "Gender", "Level", "Global ELO", "MS", "WS", "MD", "WD", "XD", "Singles Record", "Doubles Record", "Mixed Record", "Matches Played"];
+    const headers = ["Rank", "Name", "Department", "Gender", "Level", "Global ELO", "Singles ELO", "Doubles ELO", "Mixed ELO", "Singles Record", "Doubles Record", "Mixed Record", "Matches Played"];
     const rows = rankedPlayers.map((p, index) => {
       return [
         index + 1,
@@ -324,9 +324,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
         getEloTier(p.elo_rating).name,
         p.elo_rating,
         p.singles_elo || "",
-        p.womens_singles_elo || "",
         p.doubles_elo || "",
-        p.womens_doubles_elo || "",
         p.mixed_elo || "",
         p.singles_record || "0W - 0L",
         p.doubles_record || "0W - 0L",
@@ -334,7 +332,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
         getMatchesCount(p.win_loss_record)
       ].join(",");
     });
-    const csv = [headers.join(","), ...rows].join("\\n");
+    const csv = [headers.join(","), ...rows].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -783,7 +781,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
                       </td>
                       <td className="p-4 text-right">
                         {activeTab === "elo" ? (
-                          <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-xl border ${getEloTier(getCategoryElo(player)).bg} ${getEloTier(getCategoryElo(player)).color} border-current/20`}>
+                          <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-xl border ${getEloTier(getCategoryElo(player)).bg} ${getEloTier(getCategoryElo(player)).text} border-current/20`}>
                             <Swords className="w-3.5 h-3.5 shrink-0 opacity-70" />
                             <div className="flex flex-col items-end leading-none gap-0.5">
                               <span className="text-[9px] uppercase font-black tracking-wider opacity-70">

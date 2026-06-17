@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { PushNotifications } from "@capacitor/push-notifications";
+import { PushNotifications, type Channel } from "@capacitor/push-notifications";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/lib/supabase";
 import { messaging } from "@/lib/firebase";
@@ -33,7 +33,7 @@ export function usePushNotifications(
         await PushNotifications.register();
 
         if (Capacitor.getPlatform() === 'android') {
-          const channels = [
+          const channels: Channel[] = [
             { id: "notify_friendly", name: "Friendly matches", description: "Alerts for friendly match requests", importance: 4, visibility: 1 },
             { id: "notify_tournament", name: "Tournament matches", description: "Updates for tournament matches", importance: 4, visibility: 1 },
             { id: "notify_challenges", name: "Challenge invites", description: "Alerts for new challenges", importance: 4, visibility: 1 },

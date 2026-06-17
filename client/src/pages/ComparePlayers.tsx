@@ -215,7 +215,7 @@ export default function ComparePlayers() {
             </div>
           </div>
           
-          <div className={`mt-2 px-3 py-1 rounded-lg backdrop-blur-md border border-white/25 text-xs font-black uppercase shadow-sm flex items-center gap-1.5 ${getEloTier(player1.elo_rating).bg} ${getEloTier(player1.elo_rating).color}`}>
+          <div className={`mt-2 px-3 py-1 rounded-lg backdrop-blur-md border border-white/25 text-xs font-black uppercase shadow-sm flex items-center gap-1.5 ${getEloTier(player1.elo_rating).bg} ${getEloTier(player1.elo_rating).text}`}>
              <Trophy className="w-3 h-3" /> {getEloTier(player1.elo_rating).name} • {player1.elo_rating} OVR
           </div>
         </div>
@@ -245,7 +245,7 @@ export default function ComparePlayers() {
             </div>
           </div>
           
-          <div className={`mt-2 px-3 py-1 rounded-lg backdrop-blur-md border border-white/25 text-xs font-black uppercase shadow-sm flex items-center gap-1.5 ${getEloTier(player2.elo_rating).bg} ${getEloTier(player2.elo_rating).color}`}>
+          <div className={`mt-2 px-3 py-1 rounded-lg backdrop-blur-md border border-white/25 text-xs font-black uppercase shadow-sm flex items-center gap-1.5 ${getEloTier(player2.elo_rating).bg} ${getEloTier(player2.elo_rating).text}`}>
              <Trophy className="w-3 h-3" /> {getEloTier(player2.elo_rating).name} • {player2.elo_rating} OVR
           </div>
         </div>

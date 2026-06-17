@@ -8,7 +8,12 @@ export type EloTier =
 
 export interface TierInfo {
   name: EloTier;
+  /** Gradient stops (use with `bg-gradient-to-*`). */
   color: string;
+  /** Subtle background tint for badges/chips. */
+  bg: string;
+  /** Solid text color for badges/chips. */
+  text: string;
   shadow: string;
   border: string;
   icon: string;
@@ -19,6 +24,8 @@ export const ELO_TIERS: TierInfo[] = [
   {
     name: "Grandmaster",
     color: "from-red-500 to-rose-600",
+    bg: "bg-rose-500/10",
+    text: "text-rose-600 dark:text-rose-400",
     shadow: "shadow-rose-500/50",
     border: "border-rose-500",
     icon: "👑",
@@ -27,6 +34,8 @@ export const ELO_TIERS: TierInfo[] = [
   {
     name: "Diamond",
     color: "from-cyan-400 to-blue-500",
+    bg: "bg-cyan-500/10",
+    text: "text-cyan-600 dark:text-cyan-400",
     shadow: "shadow-cyan-400/50",
     border: "border-cyan-400",
     icon: "💎",
@@ -35,6 +44,8 @@ export const ELO_TIERS: TierInfo[] = [
   {
     name: "Platinum",
     color: "from-emerald-400 to-teal-500",
+    bg: "bg-emerald-500/10",
+    text: "text-emerald-600 dark:text-emerald-400",
     shadow: "shadow-emerald-400/50",
     border: "border-emerald-400",
     icon: "✨",
@@ -43,6 +54,8 @@ export const ELO_TIERS: TierInfo[] = [
   {
     name: "Gold",
     color: "from-amber-300 to-yellow-500",
+    bg: "bg-amber-500/10",
+    text: "text-amber-600 dark:text-amber-500",
     shadow: "shadow-amber-400/50",
     border: "border-amber-400",
     icon: "🥇",
@@ -51,6 +64,8 @@ export const ELO_TIERS: TierInfo[] = [
   {
     name: "Silver",
     color: "from-slate-300 to-gray-400",
+    bg: "bg-slate-400/10",
+    text: "text-slate-600 dark:text-slate-300",
     shadow: "shadow-slate-400/50",
     border: "border-slate-300",
     icon: "🥈",
@@ -59,6 +74,8 @@ export const ELO_TIERS: TierInfo[] = [
   {
     name: "Bronze",
     color: "from-orange-700 to-amber-800",
+    bg: "bg-orange-700/10",
+    text: "text-orange-700 dark:text-orange-400",
     shadow: "shadow-orange-700/50",
     border: "border-orange-700",
     icon: "🥉",

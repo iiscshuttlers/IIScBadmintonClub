@@ -13,6 +13,7 @@ import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 import { PushNotifications } from "@capacitor/push-notifications";
+import { Badge } from "@capawesome/capacitor-badge";
 
 export interface PlayerProfile {
   id: string;
@@ -154,10 +155,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!error && count !== null && Capacitor.isNativePlatform()) {
           try {
             if (count > 0) {
-              await PushNotifications.setBadgeCount({ count });
+              await Badge.set({ count });
             } else {
               await PushNotifications.removeAllDeliveredNotifications();
-              await PushNotifications.setBadgeCount({ count: 0 });
+              await Badge.clear();
             }
           } catch (e) {
             console.warn("Failed to set app badge", e);
