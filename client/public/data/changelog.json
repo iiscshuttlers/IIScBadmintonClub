@@ -1,5 +1,24 @@
 [
   {
+    "versionCode": 137,
+    "versionName": "1.137",
+    "date": "2026-06-17T21:58:29.098Z",
+    "changes": [
+      "- chore: release v1.136 (build 136)",
+      "- fix: move hooks before early returns in SiteAdmin",
+      "- fix: prevent infinite useEffect loop in SiteAdmin",
+      "- fix: only schedule foreground notifications on native platforms",
+      "- fix: use players.id instead of players.user_id in notification trigger",
+      "- fix: cast TEXT parameters to UUID in submit_friendly_match RPC",
+      "- fix: show notifications when app is open but minimized",
+      "- fix: create notification channels in Android native code",
+      "- chore: release v1.135 (build 135)",
+      "- chore: remove misleading VitePWA comment",
+      "- fix: add missing Android notification channel IDs to FCM payloads",
+      "- chore: release v1.134 (build 134)"
+    ]
+  },
+  {
     "versionCode": 136,
     "versionName": "1.136",
     "date": "2026-06-17T21:22:10.857Z",
