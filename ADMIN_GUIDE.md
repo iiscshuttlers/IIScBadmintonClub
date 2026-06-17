@@ -61,7 +61,87 @@ Admins have access to the hidden `/tournament/admin` page (accessible via the ti
 
 ---
 
-## 4. How to Host a Tournament
+## 4. Admin Panel Features
+
+The **Site Admin** page (`/admin`) provides tools to manage announcements, events, flyers, and other site-wide content.
+
+### A. Announcements
+
+**Access**: Site Admin → **Announcements** tab
+
+Announcements appear in the status banner at the top of all pages and notify users about important events.
+
+**Fields**:
+- **Title**: The announcement headline
+- **Publish Date**: When to start showing the announcement
+- **Category**: One of `tournament`, `facility`, `general`, or `event`
+- **Priority**: 
+  - `high` - Shows in status banner and pushes to all users
+  - `medium` - Shows in status banner only
+  - `low` - Only shown in the Feed
+- **Location** (Optional): Where the announcement applies
+- **Start/End Date** (Optional): For time-limited announcements
+- **Content**: Markdown-supported text, can include images and attachments
+
+**Actions**:
+- Click **"Send Push"** to notify all users immediately via push notification
+- Announcements marked as `category: tournament` or `priority: high` appear in the status banner
+
+**Important Announcements**: To make an announcement appear at the top of the Feed, set `priority: high`.
+
+### B. Flyers
+
+**Access**: Site Admin → **Flyers** tab
+
+Flyers are scrolling marquee banners that appear at the top of all pages (excluding when closed by users).
+
+**Fields**:
+- **Background Color**: CSS gradient class (e.g., `from-violet-600 to-fuchsia-600`)
+- **Items**: Text snippets to display in the scrolling marquee
+- **Item Color**: Text color class for each item
+
+**Example**: "Tournament Registration Open" or "Facility Closure This Weekend"
+
+**Tips**:
+- Keep text short and eye-catching
+- Use multiple items for variety (they repeat in a scrolling loop)
+- Users can close flyers individually; closed flyers don't re-appear
+
+### C. Events
+
+**Access**: Site Admin → **Events** tab
+
+Display upcoming tournaments, workshops, and special events.
+
+**Fields**:
+- **Date**: Event date
+- **Title**: Event name
+- **Link**: Registration or details URL
+- **Registration Deadline**: Last day to register
+
+**Visibility**: Events appear in the Events page (`/events`) and are sorted by date.
+
+### D. Holiday Closures
+
+**Access**: Site Admin → **Holidays** tab
+
+Mark facility closure dates on the calendar.
+
+**Fields**:
+- **Date**: Closure date
+- **Name**: Reason (e.g., "Diwali Break", "Maintenance")
+
+**Visibility**: Appears on the calendar and in the status banner during closure periods.
+
+### E. Settings
+
+**Access**: Site Admin → **Settings** tab
+
+Configure site-wide settings like logo, color scheme, and emergency notices.
+
+---
+
+## 5. How to Host a Tournament
 
 Hosting a tournament requires moving from Google Forms to Brackets, and finally to Live Scores. Follow these steps:
 

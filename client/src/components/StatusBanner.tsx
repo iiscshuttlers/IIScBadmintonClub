@@ -225,7 +225,7 @@ export default function StatusBanner() {
   )}
       
       {/* Dynamic Admin Flyers */}
-      {location === "/" && dynamicFlyers.filter(f => !closedFlyers.has(f.id)).map((flyer) => (
+      {dynamicFlyers.filter(f => !closedFlyers.has(f.id)).map((flyer) => (
         <div key={flyer.id} className={`relative ${flyer.bgColorClass} text-white py-2.5 overflow-hidden flex items-center z-20 shadow-md`}>
           <div className="flex-1 overflow-hidden min-w-0 pr-10">
             <div className="marquee-anim flex gap-8 font-semibold tracking-wide text-sm md:text-base whitespace-nowrap hover:opacity-90 transition-opacity">
