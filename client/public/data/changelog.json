@@ -1,5 +1,16 @@
 [
   {
+    "versionCode": 134,
+    "versionName": "1.134",
+    "date": "2026-06-17T20:25:30.378Z",
+    "changes": [
+      "- fix: consolidate role management to single source of truth",
+      "- Update check-roles.js",
+      "- ok",
+      "- chore: release v1.133 (build 133)"
+    ]
+  },
+  {
     "versionCode": 133,
     "versionName": "1.133",
     "date": "2026-06-17T19:47:34.412Z",

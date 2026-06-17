@@ -1,6 +1,6 @@
 {
-  "versionCode": 133,
-  "versionName": "1.133",
-  "downloadUrl": "https://github.com/iiscshuttlers/iiscshuttlers/releases/latest/download/IIScShuttlers_v1.133.apk",
-  "changelog": "- chore: release v1.132 (build 132)\n- chore: release v1.131 (build 131)\n- chore: release v1.130 (build 130)\n- chore: release v1.129 (build 129)"
+  "versionCode": 134,
+  "versionName": "1.134",
+  "downloadUrl": "https://github.com/iiscshuttlers/iiscshuttlers/releases/latest/download/IIScShuttlers_v1.134.apk",
+  "changelog": "- fix: consolidate role management to single source of truth\n- Update check-roles.js\n- ok\n- chore: release v1.133 (build 133)"
 }
