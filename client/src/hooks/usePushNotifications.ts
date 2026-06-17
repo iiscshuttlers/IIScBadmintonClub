@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { PushNotifications, type Channel } from "@capacitor/push-notifications";
+import { LocalNotifications } from "@capacitor/local-notifications";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/lib/supabase";
 import { getFirebaseMessaging } from "@/lib/firebase";
@@ -63,8 +64,27 @@ export function usePushNotifications(userId: string | undefined) {
 
         await PushNotifications.addListener(
           "pushNotificationReceived",
-          (notification) => {
+          async (notification) => {
             console.log("Push received: " + JSON.stringify(notification));
+            // Show notification even when app is in foreground
+            const title = notification.notification?.title || "New notification";
+            const body = notification.notification?.body || "";
+            const channelId = (notification.notification as any)?.channelId || "notify_announcements";
+
+            try {
+              await LocalNotifications.schedule({
+                notifications: [
+                  {
+                    title,
+                    body,
+                    id: Math.floor(Math.random() * 100000),
+                    channelId,
+                  },
+                ],
+              });
+            } catch (e) {
+              console.warn("Failed to show foreground notification:", e);
+            }
           },
         );
 
