@@ -4,7 +4,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { defineConfig, type Plugin, type ViteDevServer } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
-// VitePWA removed to prevent caching
 import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
 
 /* ===================== Debug + Storage Plugins (unchanged) ===================== */
@@ -135,93 +134,96 @@ function vitePluginStorageProxy(): Plugin {
 const pkgPath = path.resolve(PROJECT_ROOT, "package.json");
 const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
 
-export default defineConfig({
-  define: {
-    __APP_VERSION__: JSON.stringify(pkg.version),
-  },
-  plugins: [
-    react(),
-    tailwindcss(),
-    vitePluginManusRuntime(),
-    vitePluginManusDebugCollector(),
-    vitePluginStorageProxy(),
-
-    VitePWA({
-      registerType: "autoUpdate",
-      workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,json,webp,woff2}"],
-        globIgnores: ["**/profile_banner*.png"],
-        maximumFileSizeToCacheInBytes: 5000000,
-        skipWaiting: true,
-        clientsClaim: true,
-      },
-      manifest: {
-        name: "IISc Shuttlers",
-        short_name: "Shuttlers",
-        description: "IISc Badminton Club Application",
-        theme_color: "#10b981",
-        background_color: "#ffffff",
-        display: "standalone",
-        icons: [
-          {
-            src: "/icon-192.png",
-            sizes: "192x192",
-            type: "image/png",
-          },
-          {
-            src: "/icon-512.png",
-            sizes: "512x512",
-            type: "image/png",
-          },
-        ],
-      },
-    }),
-  ],
-
+export default defineConfig(() => {
   // 🔥 CRITICAL FIX
   // For Capacitor, we want relative base './'. For github pages we want '/iiscshuttlers/'.
   // Otherwise use '/'
-  base:
-    process.env.CAPACITOR === "true"
-      ? "./"
-      : process.env.GITHUB_PAGES === "true"
-        ? "/iiscshuttlers/"
-        : "/",
+  const isCapacitor = process.env.CAPACITOR === "true";
+  const isGithubPages = process.env.GITHUB_PAGES === "true";
+  const basePath = isCapacitor ? "./" : isGithubPages ? "/iiscshuttlers/" : "/";
+  const manifestIconPath = (name: string) => isGithubPages ? `/iiscshuttlers/${name}` : `/${name}`;
 
-  resolve: {
-    alias: {
-      "@": path.resolve(import.meta.dirname, "client", "src"),
-      "@shared": path.resolve(import.meta.dirname, "shared"),
-      "@assets": path.resolve(import.meta.dirname, "attached_assets"),
+  return {
+    define: {
+      __APP_VERSION__: JSON.stringify(pkg.version),
     },
-  },
+    plugins: [
+      react(),
+      tailwindcss(),
+      vitePluginManusRuntime(),
+      vitePluginManusDebugCollector(),
+      vitePluginStorageProxy(),
 
-  envDir: path.resolve(import.meta.dirname),
-
-  root: path.resolve(import.meta.dirname, "client"),
-
-  build: {
-    outDir: path.resolve(import.meta.dirname, "dist"),
-    emptyOutDir: true,
-    chunkSizeWarningLimit: 1000,
-    rollupOptions: {
-      external: ["capacitor-native-biometric"],
-      output: {
-        manualChunks: {
-          vendor: ["react", "react-dom", "wouter", "framer-motion"],
-          ui: [
-            "@radix-ui/react-dialog",
-            "lucide-react",
+      VitePWA({
+        registerType: "autoUpdate",
+        workbox: {
+          globPatterns: ["**/*.{js,css,html,ico,png,svg,json,webp,woff2}"],
+          globIgnores: ["**/profile_banner*.png"],
+          maximumFileSizeToCacheInBytes: 5000000,
+          skipWaiting: true,
+          clientsClaim: true,
+        },
+        manifest: {
+          name: "IISc Shuttlers",
+          short_name: "Shuttlers",
+          description: "IISc Badminton Club Application",
+          theme_color: "#10b981",
+          background_color: "#ffffff",
+          display: "standalone",
+          gcm_sender_id: "103953800507",
+          icons: [
+            {
+              src: manifestIconPath("icon-192.png"),
+              sizes: "192x192",
+              type: "image/png",
+            },
+            {
+              src: manifestIconPath("icon-512.png"),
+              sizes: "512x512",
+              type: "image/png",
+            },
           ],
-          supabase: ["@supabase/supabase-js"],
-          firebase: ["firebase/app", "firebase/messaging"],
+        },
+      }),
+    ],
+
+    base: basePath,
+
+    resolve: {
+      alias: {
+        "@": path.resolve(import.meta.dirname, "client", "src"),
+        "@shared": path.resolve(import.meta.dirname, "shared"),
+        "@assets": path.resolve(import.meta.dirname, "attached_assets"),
+      },
+    },
+
+    envDir: path.resolve(import.meta.dirname),
+
+    root: path.resolve(import.meta.dirname, "client"),
+
+    build: {
+      outDir: path.resolve(import.meta.dirname, "dist"),
+      emptyOutDir: true,
+      chunkSizeWarningLimit: 1000,
+      rollupOptions: {
+        external: ["capacitor-native-biometric"],
+        output: {
+          manualChunks: {
+            vendor: ["react", "react-dom", "wouter", "framer-motion"],
+            ui: [
+              "@radix-ui/react-dialog",
+              "lucide-react",
+            ],
+            supabase: ["@supabase/supabase-js"],
+            firebase: ["firebase/app", "firebase/messaging"],
+          },
         },
       },
     },
-  },
 
-  server: {
-    port: 3000,
-    host: true,
-  },
+    server: {
+      port: 3000,
+      host: true,
+    },
+  };
 });
