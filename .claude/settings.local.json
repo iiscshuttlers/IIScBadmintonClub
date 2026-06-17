@@ -37,7 +37,10 @@
       "PowerShell(npx tsc --noEmit 2>&1)",
       "Bash(git reset *)",
       "Bash(xargs grep -l \"localStorage\\\\|sessionStorage\")",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(grep -E \"^d|\\\\.tsx$|\\\\.ts$\")",
+      "Bash(xargs grep -l \"find\\\\|lost\")",
+      "Bash(xargs grep -l \"notification\\\\|buddy\\\\|follow\")"
     ]
   }
 }
