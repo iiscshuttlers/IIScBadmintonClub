@@ -1,5 +1,29 @@
 [
   {
+    "versionCode": 122,
+    "versionName": "1.122",
+    "date": "2026-06-17T11:46:27.252Z",
+    "changes": [
+      "- docs: add final Play Store completion summary and status",
+      "- docs: add quick-start guide for Play Store submission",
+      "- docs: add Play Store completion summary and status report",
+      "- docs: comprehensive Play Store preparation and project cleanup guides",
+      "- refactor: reorganize admin panel with grouped tab navigation",
+      "- feat: add comprehensive features tracking to admin panel",
+      "- fix: sync pnpm lockfile",
+      "- fix: replace dangerous .single() with safe array check",
+      "- fix: remove dead code, clean RPC payloads, fix notification clearing bug",
+      "- chore: release v1.121 (build 121)",
+      "- feat: allow mixed-category doubles for friendly matches, no ELO",
+      "- feat: allow cross-gender singles for friendly matches, no ELO calculation",
+      "- fix: resolve offline sync conflicts, route params type safety, and add hybrid match support",
+      "- fix: resolve 6 bugs in CSV export, app badges, tier badges, and admin panel",
+      "- Update ProfileSetup.tsx",
+      "- Fix",
+      "- chore: release v1.120 (build 120)"
+    ]
+  },
+  {
     "versionCode": 121,
     "versionName": "1.121",
     "date": "2026-06-17T09:52:48.281Z",

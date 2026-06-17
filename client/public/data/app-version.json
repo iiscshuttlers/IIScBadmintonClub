@@ -1,6 +1,6 @@
 {
-  "versionCode": 121,
-  "versionName": "1.121",
-  "downloadUrl": "https://github.com/iiscshuttlers/iiscshuttlers/releases/latest/download/IIScShuttlers_v1.121.apk",
-  "changelog": "- fix: resolve offline sync conflicts, route params type safety, and add hybrid match support\n- fix: resolve 6 bugs in CSV export, app badges, tier badges, and admin panel\n- Update ProfileSetup.tsx\n- Fix\n- chore: release v1.120 (build 120)"
+  "versionCode": 122,
+  "versionName": "1.122",
+  "downloadUrl": "https://github.com/iiscshuttlers/iiscshuttlers/releases/latest/download/IIScShuttlers_v1.122.apk",
+  "changelog": "- docs: add final Play Store completion summary and status\n- docs: add quick-start guide for Play Store submission\n- docs: add Play Store completion summary and status report\n- docs: comprehensive Play Store preparation and project cleanup guides\n- refactor: reorganize admin panel with grouped tab navigation\n- feat: add comprehensive features tracking to admin panel\n- fix: sync pnpm lockfile\n- fix: replace dangerous .single() with safe array check\n- fix: remove dead code, clean RPC payloads, fix notification clearing bug\n- chore: release v1.121 (build 121)\n- feat: allow mixed-category doubles for friendly matches, no ELO\n- feat: allow cross-gender singles for friendly matches, no ELO calculation\n- fix: resolve offline sync conflicts, route params type safety, and add hybrid match support\n- fix: resolve 6 bugs in CSV export, app badges, tier badges, and admin panel\n- Update ProfileSetup.tsx\n- Fix\n- chore: release v1.120 (build 120)"
 }
