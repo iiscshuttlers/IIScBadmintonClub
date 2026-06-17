@@ -291,6 +291,11 @@ export default function SiteAdmin() {
   const [videos, setVideosRaw] = useState<VideoItem[]>([]);
   const [config, setConfigRaw] = useState<SiteConfig | null>(null);
 
+  // Navigation UI state - MUST be before any early returns (Rules of Hooks)
+  const [navOpen, setNavOpen] = useState(false);
+  const navRef = useRef<HTMLDivElement>(null);
+  useClickOutside(navRef, () => setNavOpen(false), navOpen);
+
   // Auth gate
   useEffect(() => {
     if (isInitializing) {
@@ -544,10 +549,6 @@ export default function SiteAdmin() {
         </div>
       </div>
     );
-
-  const [navOpen, setNavOpen] = useState(false);
-  const navRef = useRef<HTMLDivElement>(null);
-  useClickOutside(navRef, () => setNavOpen(false), navOpen);
 
   const contentTabs: TabId[] = [
     "config",
