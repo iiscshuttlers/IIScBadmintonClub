@@ -1,6 +1,6 @@
 {
-  "versionCode": 119,
-  "versionName": "1.119",
-  "downloadUrl": "https://github.com/iiscshuttlers/iiscshuttlers/releases/latest/download/IIScShuttlers_v1.119.apk",
-  "changelog": "Hash-based tab navigation for all pages, doubles live scoring, privacy policy, terms of service, admin push notifications, maintenance mode, PlayStore readiness"
+  "versionCode": 120,
+  "versionName": "1.120",
+  "downloadUrl": "https://github.com/iiscshuttlers/iiscshuttlers/releases/latest/download/IIScShuttlers_v1.120.apk",
+  "changelog": "- fix: move Firebase config to env vars, find-lost bucket, auto-refresh\"\n- fix: add missing date-fns dependency\n- chore: release v1.119 (build 119)\n- feat: hash-based tab navigation, doubles support, privacy/terms, admin push notifications, maintenance mode, PlayStore hardening"
 }

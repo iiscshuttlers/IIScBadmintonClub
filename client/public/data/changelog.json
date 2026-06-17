@@ -1,5 +1,16 @@
 [
   {
+    "versionCode": 120,
+    "versionName": "1.120",
+    "date": "2026-06-17T08:05:36.075Z",
+    "changes": [
+      "- fix: move Firebase config to env vars, find-lost bucket, auto-refresh\"",
+      "- fix: add missing date-fns dependency",
+      "- chore: release v1.119 (build 119)",
+      "- feat: hash-based tab navigation, doubles support, privacy/terms, admin push notifications, maintenance mode, PlayStore hardening"
+    ]
+  },
+  {
     "versionCode": 119,
     "versionName": "1.119",
     "date": "2026-06-16T11:17:22.396Z",
