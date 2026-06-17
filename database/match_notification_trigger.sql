@@ -37,12 +37,12 @@ BEGIN
       AND pid <> NEW.submitted_by
   );
 
-  -- Insert one notification per recipient (resolve player_id → auth user_id)
+  -- Insert one notification per recipient
   FOREACH recipient IN ARRAY recipients LOOP
     INSERT INTO public.notifications (user_id, title, message, type, link, is_read)
-    SELECT p.user_id, notif_title, notif_message, 'match_logged', '/feed/my-matches', false
+    SELECT p.id, notif_title, notif_message, 'match_logged', '/feed/my-matches', false
     FROM public.players p
-    WHERE p.id = recipient AND p.user_id IS NOT NULL;
+    WHERE p.id = recipient;
   END LOOP;
 
   RETURN NEW;
