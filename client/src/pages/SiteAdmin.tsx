@@ -251,20 +251,20 @@ export default function SiteAdmin() {
       if ([
         "overview", "config", "flyers", "holidays", "announcements", "events", "videos",
         "players", "umpire", "registrations", "matches", "changelog",
-        "disputes", "elo_audit", "settings", "activity_log", "features"
+        "disputes", "elo_audit", "settings", "activity_log", "features", "all_features"
       ].includes(hash)) {
         setActiveTab(hash as TabId);
       }
     };
     window.addEventListener("hashchange", handleHashChange);
-    
+
     // Ensure initial hash is set without pushing to history if none exists
     if (!window.location.hash) {
       window.history.replaceState(null, "", `#${activeTab}`);
     }
-    
+
     return () => window.removeEventListener("hashchange", handleHashChange);
-  }, [activeTab]);
+  }, []);
 
   const handleTabChange = (tabId: TabId) => {
     setActiveTab(tabId);
