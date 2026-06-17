@@ -607,6 +607,7 @@ export default function ProfileSetup() {
             .filter(Boolean)
         : [],
       career_highlights: careerHighlights.filter((h) => h.year && h.title),
+      deleted_at: null, // Restore profile if it was soft-deleted
     };
 
     const timeoutMs = 60000;
