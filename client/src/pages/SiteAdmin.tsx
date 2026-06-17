@@ -63,7 +63,8 @@ import { AdminSettings } from "@/components/admin/AdminSettings";
 import { AdminActivityLog } from "@/components/admin/AdminActivityLog";
 import { EloAuditPanel } from "@/components/admin/EloAuditPanel";
 import { AdminFeaturesPanel } from "@/components/admin/AdminFeaturesPanel";
-import { Paintbrush, ClipboardList, Settings, BarChart2, Zap } from "lucide-react";
+import { AdminAllFeaturesPanel } from "@/components/admin/AdminAllFeaturesPanel";
+import { Paintbrush, ClipboardList, Settings, BarChart2, Zap, Sparkles } from "lucide-react";
 
 /* ── Types ──────────────────────────────────────────────────────── */
 type Holiday = { date: string; name: string };
@@ -121,7 +122,8 @@ type TabId =
   | "elo_audit"
   | "settings"
   | "activity_log"
-  | "features";
+  | "features"
+  | "all_features";
 
 const TABS: { id: TabId; label: string; icon: any }[] = [
   { id: "overview", label: "Overview", icon: Activity },
@@ -140,6 +142,7 @@ const TABS: { id: TabId; label: string; icon: any }[] = [
   { id: "activity_log", label: "Activity Log", icon: ClipboardList },
   { id: "settings", label: "Settings", icon: Settings },
   { id: "features", label: "Features", icon: Zap },
+  { id: "all_features", label: "All Features", icon: Sparkles },
 ];
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
@@ -634,6 +637,7 @@ export default function SiteAdmin() {
             {activeTab === "activity_log" && <AdminActivityLog />}
             {activeTab === "settings" && <AdminSettings />}
             {activeTab === "features" && <AdminFeaturesPanel />}
+            {activeTab === "all_features" && <AdminAllFeaturesPanel />}
           </motion.div>
         </AnimatePresence>
 
