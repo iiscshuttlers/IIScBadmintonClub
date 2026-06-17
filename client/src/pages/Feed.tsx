@@ -54,8 +54,8 @@ export default function Feed() {
   const [activeTab, setActiveTab] = useState<"matches" | "announcements" | "umpire" | "my_matches" | "challenges">("matches");
 
   useEffect(() => {
-    if (match && params?.tab) {
-      const tab = params.tab;
+    if (match && params) {
+      const tab = (params as any).tab;
       if (tab === "activity") { setActiveTab("matches"); localStorage.setItem("feed_tab", "matches"); }
       else if (tab === "announcements") { setActiveTab("announcements"); localStorage.setItem("feed_tab", "announcements"); }
       else if (tab === "umpire") { setActiveTab("umpire"); localStorage.setItem("feed_tab", "umpire"); }
@@ -65,7 +65,7 @@ export default function Feed() {
       const saved = localStorage.getItem("feed_tab") || "matches";
       setActiveTab(saved as any);
     }
-  }, [match, params?.tab]);
+  }, [match, params]);
 
   const handleTabChange = (tabId: "matches" | "announcements" | "umpire" | "my_matches" | "challenges") => {
     setActiveTab(tabId);

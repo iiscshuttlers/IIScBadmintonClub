@@ -7,7 +7,6 @@ import {
 import QRCode from "react-qr-code";
 import { Capacitor } from "@capacitor/core";
 import { SwipeToConfirm } from "@/components/ui/SwipeToConfirm";
-import { enqueueOfflineMatch } from "@/lib/offlineQueue";
 import { supabase } from "@/lib/supabase";
 import { isAdminEmail } from "@/lib/admin";
 import { toast } from "sonner";
@@ -133,7 +132,7 @@ export default function LogMatchModal({
   isOpen, onClose, currentUser, otherPlayers, onSuccess, defaultOpponentId, userEmail,
 }: LogMatchModalProps) {
   const [step, setStep] = useState(0);
-  const [matchType, setMatchType] = useState<"singles" | "doubles">("singles");
+  const [matchType, setMatchType] = useState<"singles" | "doubles" | "hybrid">("singles");
   const [matchCategory, setMatchCategory] = useState<"friendly" | "tournament">("friendly");
   const [opponentId, setOpponentId] = useState(defaultOpponentId ?? "");
   const [partnerId, setPartnerId] = useState("");
@@ -158,17 +157,31 @@ export default function LogMatchModal({
       if (Array.isArray(stored)) setRecentOpponentIds(stored.slice(0, 3));
     } catch (e) {}
 
-    const handleOnline = () => setIsOffline(false);
+    const updateQueueCount = () => {
+      try {
+        const q = JSON.parse(localStorage.getItem("offline_matches") || "[]");
+        setOfflineQueueCount(q.length);
+      } catch (e) {}
+    };
+
+    const handleOnline = () => {
+      setIsOffline(false);
+      updateQueueCount();
+    };
     const handleOffline = () => setIsOffline(true);
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "offline_matches") updateQueueCount();
+    };
+
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
-    try {
-      const q = JSON.parse(localStorage.getItem("offline_matches") || "[]");
-      setOfflineQueueCount(q.length);
-    } catch (e) {}
+    window.addEventListener("storage", handleStorageChange);
+    updateQueueCount();
+
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
 
@@ -208,8 +221,9 @@ export default function LogMatchModal({
   // ── Step 0 validation ──────────────────────────────────────
   const validateStep0 = (): string | null => {
     if (!opponentId) return "Please select the main opponent.";
-    if (matchType === "doubles" && !partnerId) return "Please select your doubles partner.";
-    if (matchType === "doubles" && !opponentPartnerId) return "Please select the opponent's partner.";
+    if ((matchType === "doubles" || matchType === "hybrid") && !partnerId) return "Please select your partner.";
+    if ((matchType === "doubles" || matchType === "hybrid") && !opponentPartnerId) return "Please select the opponent's partner.";
+    if (matchType === "hybrid" && matchCategory !== "friendly") return "Hybrid matches are only allowed for Friendly matches.";
 
     const opp = otherPlayers.find((p) => p.id === opponentId);
     if (matchType === "singles") {
@@ -217,7 +231,7 @@ export default function LogMatchModal({
       const g2 = opp?.gender?.toLowerCase() || "unknown";
       if (g1 !== "unknown" && g2 !== "unknown" && g1 !== g2)
         return "Cross-gender Singles matches (MS vs WS) are not allowed.";
-    } else {
+    } else if (matchType === "doubles" || matchType === "hybrid") {
       const partner = otherPlayers.find((p) => p.id === partnerId);
       const oppPartner = otherPlayers.find((p) => p.id === opponentPartnerId);
       const [g1, g2, g3, g4] = [
@@ -226,7 +240,7 @@ export default function LogMatchModal({
         opp?.gender?.toLowerCase() || "unknown",
         oppPartner?.gender?.toLowerCase() || "unknown",
       ];
-      if (![g1, g2, g3, g4].includes("unknown")) {
+      if (matchType === "doubles" && ![g1, g2, g3, g4].includes("unknown")) {
         const t1Mixed = g1 !== g2, t2Mixed = g3 !== g4;
         const t1Male = g1 === "male" && g2 === "male", t2Male = g3 === "male" && g4 === "male";
         const t1Female = g1 === "female" && g2 === "female", t2Female = g3 === "female" && g4 === "female";
@@ -296,7 +310,7 @@ export default function LogMatchModal({
     const scoreStr = formatScore();
 
     let finalScore = scoreStr;
-    if (matchType === "doubles") {
+    if (matchType === "doubles" || matchType === "hybrid") {
       const partnerName = otherPlayers.find((p) => p.id === partnerId)?.full_name ?? "";
       const opp1Name = otherPlayers.find((p) => p.id === opponentId)?.full_name ?? "";
       const opp2Name = otherPlayers.find((p) => p.id === opponentPartnerId)?.full_name ?? "";
@@ -306,7 +320,8 @@ export default function LogMatchModal({
         otherPlayers.find((p) => p.id === opponentId),
         otherPlayers.find((p) => p.id === opponentPartnerId),
       ]);
-      finalScore = `${scoreStr} [${category}: ${currentUser.full_name}+${partnerName} vs ${opp1Name}+${opp2Name}]`;
+      const typeLabel = matchType === "hybrid" ? `${category} (Hybrid)` : category;
+      finalScore = `${scoreStr} [${typeLabel}: ${currentUser.full_name}+${partnerName} vs ${opp1Name}+${opp2Name}]`;
     }
     // Sanitize free-text inputs (#69)
     const safeVideoUrl = (() => {
@@ -331,8 +346,9 @@ export default function LogMatchModal({
       opponent_id: opponentId,
       match_winner_id: winnerId,
       match_score: finalScore,
-      submitter_partner_id: matchType === "doubles" ? partnerId : null,
-      opponent_partner_id: matchType === "doubles" ? opponentPartnerId : null,
+      submitter_partner_id: (matchType === "doubles" || matchType === "hybrid") ? partnerId : null,
+      opponent_partner_id: (matchType === "doubles" || matchType === "hybrid") ? opponentPartnerId : null,
+      is_hybrid: matchType === "hybrid" || undefined,
     };
 
     if (!navigator.onLine) {
@@ -446,8 +462,8 @@ export default function LogMatchModal({
                     </button>
                   </div>
 
-                  {/* Singles / Doubles */}
-                  <div className="grid grid-cols-2 gap-2">
+                  {/* Singles / Doubles / Hybrid */}
+                  <div className="grid grid-cols-3 gap-2">
                     <button type="button" onClick={() => setMatchType("singles")}
                       className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold border transition ${matchType === "singles" ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 text-emerald-700 dark:text-emerald-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"}`}>
                       <User className="w-4 h-4" /> Singles
@@ -455,6 +471,11 @@ export default function LogMatchModal({
                     <button type="button" onClick={() => setMatchType("doubles")}
                       className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold border transition ${matchType === "doubles" ? "bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-700 dark:text-blue-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"}`}>
                       <Users className="w-4 h-4" /> Doubles
+                    </button>
+                    <button type="button" onClick={() => { if (matchCategory === "friendly") setMatchType("hybrid"); else alert("Hybrid matches are only allowed for Friendly, not Tournament"); }}
+                      disabled={matchCategory !== "friendly"}
+                      className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold border transition disabled:opacity-50 disabled:cursor-not-allowed ${matchType === "hybrid" ? "bg-violet-50 dark:bg-violet-900/30 border-violet-500 text-violet-700 dark:text-violet-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"}`}>
+                      <Sword className="w-4 h-4" /> Hybrid
                     </button>
                   </div>
 
@@ -576,11 +597,11 @@ export default function LogMatchModal({
                     <div className="grid grid-cols-2 gap-3">
                       <button type="button" onClick={() => setMyTeamWon(true)}
                         className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition border ${myTeamWon ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 text-emerald-700 dark:text-emerald-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"}`}>
-                        {myTeamWon && <Trophy className="w-4 h-4" />} {matchType === "doubles" ? "My Team Won" : "I Won"}
+                        {myTeamWon && <Trophy className="w-4 h-4" />} {(matchType === "doubles" || matchType === "hybrid") ? "My Team Won" : "I Won"}
                       </button>
                       <button type="button" onClick={() => setMyTeamWon(false)} disabled={!opponentId}
                         className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition border ${!myTeamWon ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 text-emerald-700 dark:text-emerald-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"} ${!opponentId ? "opacity-50 cursor-not-allowed" : ""}`}>
-                        {!myTeamWon && <Trophy className="w-4 h-4" />} {matchType === "doubles" ? "They Won" : "Opponent Won"}
+                        {!myTeamWon && <Trophy className="w-4 h-4" />} {(matchType === "doubles" || matchType === "hybrid") ? "They Won" : "Opponent Won"}
                       </button>
                     </div>
                   </div>
@@ -602,7 +623,7 @@ export default function LogMatchModal({
                       <span className="font-bold text-slate-700 dark:text-slate-200 text-right max-w-[60%]">
                         {matchType === "singles"
                           ? `${currentUser.full_name} vs ${opponent?.full_name}`
-                          : `${currentUser.full_name} + ${otherPlayers.find(p => p.id === partnerId)?.full_name} vs ${otherPlayers.find(p => p.id === opponentId)?.full_name} + ${otherPlayers.find(p => p.id === opponentPartnerId)?.full_name}`}
+                          : `${currentUser.full_name} + ${otherPlayers.find(p => p.id === partnerId)?.full_name || "—"} vs ${otherPlayers.find(p => p.id === opponentId)?.full_name || "—"} + ${otherPlayers.find(p => p.id === opponentPartnerId)?.full_name || "—"}`}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
