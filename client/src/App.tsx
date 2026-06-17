@@ -301,7 +301,7 @@ function GlobalAuthHooks() {
   return null;
 }
 
-function App() {
+function AppContent() {
   const { updateInfo, dismissUpdate } = useAppUpdate();
   const [isLogMatchOpen, setIsLogMatchOpen] = useState(false);
   const [defaultOpponentId, setDefaultOpponentId] = useState<string | undefined>(undefined);
@@ -312,8 +312,6 @@ function App() {
   useNativeBackButton();
   usePullToRefresh();
   useOfflineSync();
-  useBroadcastNotification();
-  usePingsNotification();
 
   useEffect(() => {
     const handleOpenLogMatch = (e: any) => {
@@ -345,9 +343,6 @@ function App() {
   }, [profile?.id]);
 
   return (
-    <ErrorBoundary>
-      <ThemeProvider defaultTheme="light" switchable>
-        <AuthProvider>
           <TooltipProvider>
             <Router
               base={
@@ -397,6 +392,15 @@ function App() {
               <UpdateDialog info={updateInfo} onDismiss={dismissUpdate} />
             )}
           </TooltipProvider>
+  );
+}
+
+function App() {
+  return (
+    <ErrorBoundary>
+      <ThemeProvider defaultTheme="light" switchable>
+        <AuthProvider>
+          <AppContent />
         </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
