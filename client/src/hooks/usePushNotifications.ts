@@ -52,7 +52,7 @@ export function usePushNotifications(userId: string | undefined) {
                   token: token.value,
                   platform: Capacitor.getPlatform(),
                 },
-                { onConflict: "token" },
+                { onConflict: "user_id, token" },
               );
           }
         });
@@ -145,7 +145,7 @@ export function usePushNotifications(userId: string | undefined) {
               .from("user_push_tokens")
               .upsert(
                 { user_id: userId, token, platform: "web" },
-                { onConflict: "token" }
+                { onConflict: "user_id, token" }
               );
 
             onMessage(messaging, (payload) => {

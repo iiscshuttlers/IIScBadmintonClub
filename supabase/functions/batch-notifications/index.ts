@@ -60,7 +60,13 @@ async function sendFcm(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        message: { token, notification: { title, body } },
+        message: {
+          token,
+          notification: { title, body },
+          android: { priority: "high" },
+          webpush: { headers: { Urgency: "high" } },
+          apns: { headers: { "apns-priority": "10" } },
+        },
       }),
     },
   );

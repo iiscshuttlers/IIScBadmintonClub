@@ -30,7 +30,7 @@ async function signUpUser(email: string, password: string, nickname: string): Pr
   return {
     success: true,
     user: {
-      id: `user-${Date.now()}`,
+      id: crypto.randomUUID(),
       email,
       nickname,
       profile_setup_complete: false,
@@ -47,7 +47,7 @@ async function signInUser(email: string, password: string): Promise<AuthResult> 
   return {
     success: true,
     user: {
-      id: 'user-123',
+      id: '11111111-2222-3333-4444-555555555555',
       email,
       nickname: 'User',
       profile_setup_complete: true,
@@ -175,7 +175,7 @@ describe('Authentication', () => {
 
       // In real app, this ID would be stored in session
       const userId = signUpResult.user?.id;
-      expect(userId).toMatch(/user-\d+/);
+      expect(userId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
     });
 
     it('clears session on sign out', async () => {

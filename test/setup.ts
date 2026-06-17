@@ -67,7 +67,7 @@ vi.mock('@supabase/supabase-js', () => ({
 
 // Global test utilities
 export const createMockUser = (overrides = {}) => ({
-  id: 'test-user-123',
+  id: '11111111-2222-3333-4444-555555555555',
   email: 'test@example.com',
   nickname: 'TestPlayer',
   gender: 'M',
@@ -77,19 +77,19 @@ export const createMockUser = (overrides = {}) => ({
 });
 
 export const createMockMatch = (overrides = {}) => ({
-  id: 'match-123',
+  id: '33333333-4444-5555-6666-777777777777',
   format: 'MS',
   score: [21, 15],
-  player1_id: 'user-1',
-  player2_id: 'user-2',
-  winner_id: 'user-1',
-  tournament_id: 'tournament-1',
+  player1_id: '11111111-2222-3333-4444-555555555555',
+  player2_id: '22222222-3333-4444-5555-666666666666',
+  winner_id: '11111111-2222-3333-4444-555555555555',
+  tournament_id: '44444444-5555-6666-7777-888888888888',
   created_at: new Date().toISOString(),
   ...overrides,
 });
 
 export const createMockTournament = (overrides = {}) => ({
-  id: 'tournament-123',
+  id: '44444444-5555-6666-7777-888888888888',
   name: 'Test Tournament',
   format: 'Single Elimination',
   start_date: new Date().toISOString(),

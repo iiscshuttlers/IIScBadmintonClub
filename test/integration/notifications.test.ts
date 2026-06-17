@@ -78,7 +78,7 @@ describe('Notifications', () => {
   describe('Notification Creation', () => {
     it('creates notification with required fields', () => {
       const notif = createNotification(
-        'user-123',
+        '11111111-2222-3333-4444-555555555555',
         'Match Start',
         'Your match is starting in 10 minutes',
         'match'
@@ -87,12 +87,12 @@ describe('Notifications', () => {
       expect(notif.title).toBe('Match Start');
       expect(notif.body).toBe('Your match is starting in 10 minutes');
       expect(notif.type).toBe('match');
-      expect(notif.user_id).toBe('user-123');
+      expect(notif.user_id).toBe('11111111-2222-3333-4444-555555555555');
     });
 
     it('sets read status to false by default', () => {
       const notif = createNotification(
-        'user-123',
+        '11111111-2222-3333-4444-555555555555',
         'Test',
         'Test body',
         'announcement'
@@ -110,13 +110,13 @@ describe('Notifications', () => {
 
     it('requires notification title', () => {
       expect(() => {
-        createNotification('user-123', '', 'Body', 'match');
+        createNotification('11111111-2222-3333-4444-555555555555', '', 'Body', 'match');
       }).toThrow('title is required');
     });
 
     it('stamps notification with creation time', () => {
       const before = new Date();
-      const notif = createNotification('user-123', 'Test', 'Body', 'match');
+      const notif = createNotification('11111111-2222-3333-4444-555555555555', 'Test', 'Body', 'match');
       const after = new Date();
 
       const notifTime = new Date(notif.created_at);
@@ -128,7 +128,7 @@ describe('Notifications', () => {
   describe('Notification Types', () => {
     it('handles match notifications', () => {
       const notif = createNotification(
-        'user-123',
+        '11111111-2222-3333-4444-555555555555',
         'Match Scheduled',
         'vs John at 5 PM',
         'match'
@@ -139,7 +139,7 @@ describe('Notifications', () => {
 
     it('handles buddy notifications', () => {
       const notif = createNotification(
-        'user-123',
+        '11111111-2222-3333-4444-555555555555',
         'New Buddy Request',
         'John wants to be your buddy',
         'buddy'
@@ -150,7 +150,7 @@ describe('Notifications', () => {
 
     it('handles tournament notifications', () => {
       const notif = createNotification(
-        'user-123',
+        '11111111-2222-3333-4444-555555555555',
         'Tournament Start',
         'INVICTA 2026 is starting',
         'tournament'
@@ -161,7 +161,7 @@ describe('Notifications', () => {
 
     it('handles achievement notifications', () => {
       const notif = createNotification(
-        'user-123',
+        '11111111-2222-3333-4444-555555555555',
         'Achievement Unlocked',
         'You reached Gold tier!',
         'achievement'
@@ -172,7 +172,7 @@ describe('Notifications', () => {
 
     it('handles announcement notifications', () => {
       const notif = createNotification(
-        'user-123',
+        '11111111-2222-3333-4444-555555555555',
         'Announcement',
         'New feature released',
         'announcement'
@@ -184,7 +184,7 @@ describe('Notifications', () => {
 
   describe('Notification Status', () => {
     it('marks notification as read', () => {
-      const notif = createNotification('user-123', 'Test', 'Body', 'match');
+      const notif = createNotification('11111111-2222-3333-4444-555555555555', 'Test', 'Body', 'match');
       expect(notif.read).toBe(false);
 
       const readNotif = markAsRead(notif);
@@ -192,7 +192,7 @@ describe('Notifications', () => {
     });
 
     it('preserves notification data when marking as read', () => {
-      const notif = createNotification('user-123', 'Test', 'Body', 'match');
+      const notif = createNotification('11111111-2222-3333-4444-555555555555', 'Test', 'Body', 'match');
       const readNotif = markAsRead(notif);
 
       expect(readNotif.id).toBe(notif.id);
@@ -284,15 +284,15 @@ describe('Notifications', () => {
 
   describe('Notification Permissions', () => {
     it('only user can see their own notifications', () => {
-      const notif = createNotification('user-123', 'Title', 'Body', 'match');
-      const viewerId = 'user-123';
+      const notif = createNotification('11111111-2222-3333-4444-555555555555', 'Title', 'Body', 'match');
+      const viewerId = '11111111-2222-3333-4444-555555555555';
 
       expect(notif.user_id === viewerId).toBe(true);
     });
 
     it('prevents viewing other user notifications', () => {
-      const notif = createNotification('user-123', 'Title', 'Body', 'match');
-      const viewerId = 'user-456';
+      const notif = createNotification('11111111-2222-3333-4444-555555555555', 'Title', 'Body', 'match');
+      const viewerId = '22222222-3333-4444-5555-666666666666';
 
       expect(notif.user_id === viewerId).toBe(false);
     });

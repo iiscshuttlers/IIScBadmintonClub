@@ -128,78 +128,104 @@ serve(async (req) => {
 
     const matchRecord = payload.record;
 
-    // We only notify if it's a pending match (a challenge)
-    if (matchRecord.status !== "pending") {
+    const isFriendly = !!matchRecord.is_friendly;
+
+    // For tournament matches, only notify on pending (challenge sent).
+    // Friendly matches are logged directly as confirmed — notify immediately.
+    if (!isFriendly && matchRecord.status !== "pending") {
       console.log(
-        "[notify-match] Not a pending match, skipping. Status:",
+        "[notify-match] Tournament match not pending, skipping. Status:",
         matchRecord.status,
       );
       return new Response(
-        JSON.stringify({ message: "Not a pending match, skipped" }),
+        JSON.stringify({ message: "Not a pending tournament match, skipped" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
     const player1Id = matchRecord.player1_id;
     const player2Id = matchRecord.player2_id;
-    console.log(`[notify-match] Challenge: ${player1Id} -> ${player2Id}`);
-
-    // 2. Fetch Player 1's Name (the Challenger)
-    const { data: challenger, error: challengerError } = await supabaseClient
-      .from("players")
-      .select("full_name")
-      .eq("id", player1Id)
-      .single();
-
-    if (challengerError || !challenger) {
-      console.error(
-        "[notify-match] Could not find challenger:",
-        challengerError,
-      );
-      // Don't crash — just use a fallback name
-      // throw new Error("Could not find challenger info");
-    }
-
-    const challengerName = challenger?.full_name || "Someone";
-
-    // 3. Fetch Player 2's Push Tokens (player2Id is now the auth UUID)
-    const { data: tokens, error: tokensError } = await supabaseClient
-      .from("user_push_tokens")
-      .select("token")
-      .eq("user_id", player2Id);
-
-    console.log(
-      `[notify-match] Found ${tokens?.length ?? 0} push tokens for ${player2Id}`,
-    );
-
-    if (tokensError) {
-      console.error("[notify-match] Error fetching tokens:", tokensError);
-    }
-
-    if (!tokens || tokens.length === 0) {
-      return new Response(
-        JSON.stringify({
-          message: `No push tokens found for user ${player2Id}`,
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
-
-    // 4. Also fetch tokens for doubles partners (partner IDs are now auth UUIDs)
     const partnerIds = [
       matchRecord.team1_partner_id,
       matchRecord.team2_partner_id,
     ].filter(Boolean);
 
-    let allTokensToSend = [...(tokens || [])];
-    for (const partnerId of partnerIds) {
-      if (partnerId && partnerId !== player1Id) {
-        const { data: partnerTokens } = await supabaseClient
-          .from("user_push_tokens")
-          .select("token")
-          .eq("user_id", partnerId);
-        if (partnerTokens) allTokensToSend.push(...partnerTokens);
+    // All player IDs involved in the match
+    const matchPlayerIds = [player1Id, player2Id, ...partnerIds].filter(Boolean);
+
+    console.log(`[notify-match] Match players: ${matchPlayerIds.join(", ")} friendly=${isFriendly}`);
+
+    // 2. Fetch all players involved to get names + buddies + followers
+    const { data: playerRows } = await supabaseClient
+      .from("players")
+      .select("id, full_name, buddies, following")
+      .in("id", matchPlayerIds);
+
+    const playerMap = new Map((playerRows ?? []).map((p: any) => [p.id, p]));
+    const challenger = playerMap.get(player1Id);
+    const challengerName = challenger?.full_name || "Someone";
+
+    // 3. Collect recipient user IDs
+    //    - For tournament matches: just player2 + partners (player1 is the challenger)
+    //    - For friendly matches: both players + partners + their buddies + their followers
+    let recipientIds: Set<string>;
+
+    if (!isFriendly) {
+      // Tournament challenge: notify the challenged player(s) only
+      recipientIds = new Set([player2Id, ...partnerIds].filter((id) => id && id !== player1Id));
+    } else {
+      // Friendly: notify both players/partners + buddies + followers of all involved players
+      recipientIds = new Set<string>();
+
+      for (const playerId of matchPlayerIds) {
+        const player = playerMap.get(playerId);
+        if (!player) continue;
+
+        // Buddies (stored as array of player IDs)
+        if (Array.isArray(player.buddies)) {
+          for (const buddyId of player.buddies) recipientIds.add(buddyId);
+        }
+        // Followers (people who follow this player — stored as array on the follower's row,
+        // so we need to query who has this player in their following list)
       }
+
+      // Fetch players who follow any of the match participants
+      const { data: followers } = await supabaseClient
+        .from("players")
+        .select("id")
+        .overlaps("following", matchPlayerIds);
+
+      if (followers) {
+        for (const f of followers) recipientIds.add(f.id);
+      }
+
+      // Also notify both players themselves (except player1 who logged it)
+      for (const id of matchPlayerIds) recipientIds.add(id);
+      // Don't notify the logger (player1) about their own match
+      recipientIds.delete(player1Id);
+    }
+
+    console.log(`[notify-match] Recipients: ${recipientIds.size}`);
+
+    // 4. Fetch push tokens for all recipients
+    const recipientArr = [...recipientIds];
+    let allTokensToSend: { token: string }[] = [];
+
+    if (recipientArr.length > 0) {
+      const { data: tokenRows } = await supabaseClient
+        .from("user_push_tokens")
+        .select("token")
+        .in("user_id", recipientArr);
+      if (tokenRows) allTokensToSend = tokenRows as { token: string }[];
+    }
+
+    console.log(`[notify-match] Found ${allTokensToSend.length} tokens`);
+
+    if (allTokensToSend.length === 0) {
+      return new Response(
+        JSON.stringify({ message: "No push tokens found for any recipient" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     // Deduplicate tokens
@@ -211,12 +237,11 @@ serve(async (req) => {
     const serviceAccountStr = Deno.env.get("FIREBASE_SERVICE_ACCOUNT")!;
     const projectId = JSON.parse(serviceAccountStr).project_id;
 
-    const isFriendly = !!matchRecord.is_friendly;
     const notificationTitle = isFriendly
       ? "🏸 Friendly Match Logged!"
       : "🏸 New Tournament Match!";
     const notificationBody = isFriendly
-      ? `${challengerName} logged a friendly match against you. Open the app to view.`
+      ? `${challengerName} just played a friendly match. Tap to view.`
       : `${challengerName} logged a tournament match against you. Open the app to confirm.`;
 
     console.log(
@@ -235,12 +260,12 @@ serve(async (req) => {
             android: {
               priority: "high",
               notification: {
-                sound: "smash", // Refers to res/raw/smash.wav
-                // Must match a channel the app actually creates (see usePushNotifications.ts).
-                // A non-existent channelId causes Android 8+ to silently drop the notification.
+                sound: "smash",
                 channelId: isFriendly ? "notify_friendly" : "notify_tournament",
               },
             },
+            webpush: { headers: { Urgency: "high" } },
+            apns: { headers: { "apns-priority": "10" } },
             data: {
               matchId: matchRecord.id,
               action: "view_match",

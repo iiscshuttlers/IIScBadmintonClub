@@ -238,11 +238,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   usePushNotifications(profile?.id);
 
   const updateRole = async (playerId: string, role: string) => {
-    await supabase
+    const { error } = await supabase
       .from("players")
       .update({ role })
       .eq("id", playerId);
-    await refreshProfile();
+    if (error) throw new Error(`Failed to update role: ${error.message}`);
+    if (session?.user?.id === playerId) {
+      await refreshProfile();
+    }
   };
 
   return (

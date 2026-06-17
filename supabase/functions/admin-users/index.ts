@@ -49,15 +49,13 @@ serve(async (req) => {
     const isAdmin = adminEmails.includes(user.email ?? "");
 
     if (!isAdmin) {
-      // Check if they are in site_data roles
-      const { data: rolesData } = await supabaseAdmin
-        .from("site_data")
-        .select("value")
-        .eq("key", "roles")
+      // Check if they have admin role in players table
+      const { data: playerData } = await supabaseAdmin
+        .from("players")
+        .select("role")
+        .eq("id", user.id)
         .single();
-      const roles = rolesData?.value || [];
-      const userRole = roles.find((r: any) => r.id === user.id);
-      if (userRole?.role !== "admin") {
+      if (playerData?.role !== "admin" && playerData?.role !== "master_admin") {
         return new Response(JSON.stringify({ error: "Not an admin" }), {
           status: 403,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
