@@ -6,12 +6,14 @@ export default function Footer() {
   const [apkUrl, setApkUrl] = useState(
     "https://github.com/iiscshuttlers/iiscshuttlers/releases/latest"
   );
+  const [versionName, setVersionName] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`${import.meta.env.BASE_URL}data/app-version.json?v=${Date.now()}`)
       .then((r) => r.json())
       .then((data) => {
         if (data?.downloadUrl) setApkUrl(data.downloadUrl);
+        if (data?.versionName) setVersionName(data.versionName);
       })
       .catch(() => {});
   }, []);
@@ -203,11 +205,18 @@ export default function Footer() {
                 <span className="text-slate-950 ml-1 select-none">·</span>
               </Link>
             </p>
-            <p className="text-slate-600 text-xs flex items-center gap-1">
-              Built with
-              <span className="text-rose-500/70">♥</span>
-              by the IISc community
-            </p>
+            <div className="flex items-center gap-3">
+              <p className="text-slate-600 text-xs flex items-center gap-1">
+                Built with
+                <span className="text-rose-500/70">♥</span>
+                by the IISc community
+              </p>
+              {versionName && (
+                <span className="text-slate-700 text-xs font-mono bg-slate-800 px-2 py-0.5 rounded-md">
+                  v{versionName}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -286,93 +286,106 @@ export function PlayerCard({
         </div>
 
         {/* Bottom: Actions */}
-        <div className="mt-auto w-full flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-4">
-           {/* Admin Actions */}
-           <div className="flex gap-1">
-             {isAdmin && !isOwn && (
-               <>
-                 <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit?.(player.id); }} className="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"><Pencil className="w-4 h-4" /></button>
-                 <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete?.(player.id); }} className="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
-               </>
-             )}
-           </div>
+        <div className="mt-auto w-full border-t border-slate-100 dark:border-slate-800 pt-3 space-y-2">
 
-             <div className="flex items-center gap-1">
-               {/* User Actions */}
-               {onBuddyAction && !isOwn && (
-                 <button
-                   onClick={(e) => {
-                     e.stopPropagation();
-                     if (isBuddy) onBuddyAction(player.id, 'remove');
-                     else if (hasReceivedRequest) onBuddyAction(player.id, 'accept');
-                     else if (hasSentRequest) onBuddyAction(player.id, 'cancel');
-                     else onBuddyAction(player.id, 'send');
-                   }}
-                   className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
-                     isBuddy
-                       ? "text-rose-500 hover:text-rose-600 bg-rose-50 dark:bg-rose-950/30"
-                       : hasReceivedRequest
-                       ? "text-emerald-500 hover:text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30"
-                       : hasSentRequest
-                       ? "text-amber-500 hover:text-amber-600 bg-amber-50 dark:bg-amber-950/30"
-                       : "text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30"
-                   }`}
-                   title={isBuddy ? "Buddy" : hasReceivedRequest ? "Accept Request" : hasSentRequest ? "Cancel Request" : "Add Buddy"}
-                 >
-                   <svg className="w-4 h-4" fill={isBuddy ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={isBuddy ? "0" : "2"}>
-                     <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                   </svg>
-                 </button>
-               )}
-             {onToggleFollow && !isOwn && (
-               <button
-                 onClick={(e) => {
-                   e.stopPropagation();
-                   onToggleFollow(player.id);
-                 }}
-                 className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
-                   isFollowing
-                     ? "text-violet-500 hover:text-violet-600 bg-violet-50 dark:bg-violet-950/30"
-                     : "text-slate-400 hover:text-violet-500 hover:bg-violet-50 dark:hover:bg-violet-950/30"
-                 }`}
-                 title={isFollowing ? "Unfollow" : "Follow"}
-               >
-                 {isFollowing ? (
-                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9 8v-1c0-2.66 5.33-4 8-4s8 1.34 8 4v1H3zm18-6v-3h-3v-2h3V6h2v3h3v2h-3v3h-2z" /></svg>
-                 ) : (
-                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
-                 )}
-               </button>
-             )}
-             <button
-               onClick={handleShare}
-               className="w-9 h-9 flex items-center justify-center rounded-full text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
-             >
-               <Share2 className="w-4 h-4" />
-             </button>
-             
-             {!isOwn && (
-               <button
-                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); handlePing(); }}
-                 className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
-                   isPinged ? "text-amber-500 bg-amber-50 dark:bg-amber-950/30" : "text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30"
-                 }`}
-                 title="Ping player"
-               >
-                 {isPinged ? <BellRing className="w-4 h-4" /> : <BellRing className="w-4 h-4" />}
-               </button>
-             )}
+          {/* Row 1: Social actions (buddy + follow) — full-width pills */}
+          {!isOwn && (onBuddyAction || onToggleFollow) && (
+            <div className="flex gap-2">
+              {onBuddyAction && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (isBuddy) onBuddyAction(player.id, 'remove');
+                    else if (hasReceivedRequest) onBuddyAction(player.id, 'accept');
+                    else if (hasSentRequest) onBuddyAction(player.id, 'cancel');
+                    else onBuddyAction(player.id, 'send');
+                  }}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-[11px] font-bold border transition-colors ${
+                    isBuddy
+                      ? "text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/30 border-violet-200 dark:border-violet-800/50"
+                      : hasReceivedRequest
+                      ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/50"
+                      : hasSentRequest
+                      ? "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/50"
+                      : "text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:text-violet-600 hover:border-violet-300 hover:bg-violet-50 dark:hover:bg-violet-950/20"
+                  }`}
+                  title={isBuddy ? "Remove Buddy" : hasReceivedRequest ? "Accept Request" : hasSentRequest ? "Cancel Request" : "Add Buddy"}
+                >
+                  {isBuddy ? (
+                    <svg className="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9 8v-1c0-2.66 5.33-4 8-4s8 1.34 8 4v1H3z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                    </svg>
+                  )}
+                  <span>{isBuddy ? "Buddy" : hasReceivedRequest ? "Accept" : hasSentRequest ? "Pending" : "Add Buddy"}</span>
+                </button>
+              )}
+              {onToggleFollow && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleFollow(player.id);
+                  }}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-[11px] font-bold border transition-colors ${
+                    isFollowing
+                      ? "text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800/50"
+                      : "text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:text-rose-500 hover:border-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/20"
+                  }`}
+                  title={isFollowing ? "Unfollow" : "Follow"}
+                >
+                  <svg className="w-3.5 h-3.5 shrink-0" fill={isFollowing ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={isFollowing ? "0" : "2"}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                  <span>{isFollowing ? "Following" : "Follow"}</span>
+                </button>
+              )}
+            </div>
+          )}
 
-             {onLogMatch && !isOwn && (
-               <button
-                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); onLogMatch(player.id); }}
-                 className="w-9 h-9 flex items-center justify-center rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
-                 title="Log Match"
-               >
-                 <Sword className="w-4 h-4" />
-               </button>
-             )}
-           </div>
+          {/* Row 2: Admin + utility icon buttons */}
+          <div className="flex items-center justify-between">
+            <div className="flex gap-1">
+              {isAdmin && !isOwn && (
+                <>
+                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit?.(player.id); }} className="p-1.5 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"><Pencil className="w-3.5 h-3.5" /></button>
+                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete?.(player.id); }} className="p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-lg transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                </>
+              )}
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={handleShare}
+                className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
+                title="Share profile"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+              </button>
+              {!isOwn && (
+                <button
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); handlePing(); }}
+                  className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
+                    isPinged ? "text-amber-500 bg-amber-50 dark:bg-amber-950/30" : "text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30"
+                  }`}
+                  title="Ping player"
+                >
+                  <BellRing className="w-3.5 h-3.5" />
+                </button>
+              )}
+              {onLogMatch && !isOwn && (
+                <button
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); onLogMatch(player.id); }}
+                  className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                  title="Log Match"
+                >
+                  <Sword className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+
         </div>
         
         {/* 'You' badge */}

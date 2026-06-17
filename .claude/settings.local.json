@@ -40,7 +40,8 @@
       "Bash(npx tsc *)",
       "Bash(grep -E \"^d|\\\\.tsx$|\\\\.ts$\")",
       "Bash(xargs grep -l \"find\\\\|lost\")",
-      "Bash(xargs grep -l \"notification\\\\|buddy\\\\|follow\")"
+      "Bash(xargs grep -l \"notification\\\\|buddy\\\\|follow\")",
+      "PowerShell(cd \"D:\\\\NF\\\\New folder\\\\iiscshuttlers\\\\client\"; npx tsc --noEmit 2>&1 | Where-Object { $_ -notmatch \"npm warn\" })"
     ]
   }
 }

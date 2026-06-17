@@ -52,7 +52,7 @@ const itemVariants: Variants = {
 };
 
 const PLAYER_SELECT =
-  "id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating, singles_elo, doubles_elo, mixed_elo, win_loss_record, singles_record, doubles_record, mixed_record, recent_form, is_looking_to_play, buddies, following, buddy_requests, gender";
+  "id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating, singles_elo, doubles_elo, mixed_elo, win_loss_record, singles_record, doubles_record, mixed_record, recent_form, is_looking_to_play, status, buddies, following, buddy_requests, gender";
 const PLAYERS_CACHE_KEY = "iisc_players_directory_cache_v4";
 const REQUEST_TIMEOUT_MS = 15_000;
 const MAX_FETCH_RETRIES = 1;
@@ -510,6 +510,25 @@ export default function PlayersDirectory() {
         if (error) throw error;
         toast.success(`Buddy request sent!`);
         fetchBuddyRequests(ownProfile.id);
+        // In-app notification record
+        void (async () => {
+          await supabase.from("notifications").insert({
+            user_id: playerId,
+            title: "New Buddy Request",
+            message: `${ownProfile.full_name} sent you a buddy request`,
+            type: "buddy_request",
+            link: `/player/${ownProfile.id}`,
+          });
+        })().catch(() => {});
+        // Push notification via Edge Function
+        void supabase.functions.invoke("notify-social", {
+          body: {
+            type: "buddy_request",
+            to_player_id: playerId,
+            from_name: ownProfile.full_name,
+            from_player_id: ownProfile.id,
+          },
+        });
       }
       else if (action === 'cancel') {
         const { error } = await supabase.from("buddy_requests")
@@ -570,11 +589,32 @@ export default function PlayersDirectory() {
         .from("players")
         .update({ following: Array.from(newFollowing) })
         .eq("user_id", session.user.id);
-      
+
       if (error) throw error;
       const player = players.find(p => p.id === playerId);
       toast.success(!isFollowing ? `Following ${player?.full_name || 'player'}!` : `Unfollowed.`);
       refreshProfile();
+      if (!isFollowing) {
+        // In-app notification record
+        void (async () => {
+          await supabase.from("notifications").insert({
+            user_id: playerId,
+            title: "New Follower",
+            message: `${ownProfile.full_name} is now following you`,
+            type: "follow",
+            link: `/player/${ownProfile.id}`,
+          });
+        })().catch(() => {});
+        // Push notification via Edge Function
+        void supabase.functions.invoke("notify-social", {
+          body: {
+            type: "follow",
+            to_player_id: playerId,
+            from_name: ownProfile.full_name,
+            from_player_id: ownProfile.id,
+          },
+        });
+      }
     } catch (e) {
       setOwnProfile((prev: any) => prev ? { ...prev, following: Array.from(followingIds) } : prev);
       toast.error("Could not update follow status.");
@@ -931,8 +971,8 @@ export default function PlayersDirectory() {
                 </div>
               ) : (() => {
                 const buddyPlayers = players.filter((p) => myBuddyIds.has(p.id));
-                const ltp = buddyPlayers.filter((p) => (p as any).is_looking_to_play);
-                const others = buddyPlayers.filter((p) => !(p as any).is_looking_to_play);
+                const ltp = buddyPlayers.filter((p) => p.status === "looking" || (!p.status && (p as any).is_looking_to_play));
+                const others = buddyPlayers.filter((p) => p.status !== "looking" && (p.status || !(p as any).is_looking_to_play));
                 return (
                   <div className="space-y-6">
                     {ltp.length > 0 && (
@@ -1003,12 +1043,14 @@ export default function PlayersDirectory() {
                                     {player.full_name[0]}
                                   </div>
                                 )}
-                                <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-slate-400 border-2 border-white dark:border-slate-900" />
+                                <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900 ${player.status === "playing" ? "bg-amber-400" : player.status === "injured" ? "bg-rose-400" : player.status === "resting" ? "bg-indigo-400" : "bg-slate-400"}`} />
                               </div>
                               <div className="min-w-0">
                                 <p className="font-black text-sm text-slate-800 dark:text-slate-100 truncate">{player.full_name}</p>
                                 <p className="text-xs text-slate-400 truncate">{player.department}</p>
-                                <p className="text-xs font-bold text-slate-500 mt-0.5">ELO {player.elo_rating ?? "—"}</p>
+                                <p className={`text-xs font-bold mt-0.5 ${player.status === "playing" ? "text-amber-500" : player.status === "injured" ? "text-rose-500" : player.status === "resting" ? "text-indigo-500" : "text-slate-500"}`}>
+                                  {player.status === "playing" ? "Playing Right Now" : player.status === "injured" ? "Injured" : player.status === "resting" ? "Taking a break" : "ELO " + (player.elo_rating ?? "—")}
+                                </p>
                               </div>
                               {ownProfile && (
                                 <button

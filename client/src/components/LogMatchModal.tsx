@@ -5,7 +5,6 @@ import {
   Clock, Lock, QrCode, WifiOff, ChevronRight, ChevronLeft, Check, Wifi,
 } from "lucide-react";
 import QRCode from "react-qr-code";
-import { Capacitor } from "@capacitor/core";
 import { SwipeToConfirm } from "@/components/ui/SwipeToConfirm";
 import { supabase } from "@/lib/supabase";
 import { isAdminEmail } from "@/lib/admin";
@@ -284,24 +283,32 @@ export default function LogMatchModal({
     setStep((s) => s + 1);
   };
 
-  const handleNFC = async () => {
-    // Check if on native platform (Android/iOS)
-    const isNative = Capacitor.isNativePlatform();
+  const isCrossGenderSingles = (): boolean => {
+    if (matchType !== "singles") return false;
+    const g1 = currentUser.gender?.toLowerCase() || "unknown";
+    const g2 = otherPlayers.find(p => p.id === opponentId)?.gender?.toLowerCase() || "unknown";
+    return g1 !== "unknown" && g2 !== "unknown" && g1 !== g2;
+  };
 
-    if (!isNative) {
-      setIsNFCOpen(true);
-      return;
-    }
+  const isMixedCategoryDoubles = (): boolean => {
+    if (matchType !== "doubles") return false;
+    const partner = otherPlayers.find(p => p.id === partnerId);
+    const oppPartner = otherPlayers.find(p => p.id === opponentPartnerId);
+    const [g1, g2, g3, g4] = [
+      currentUser.gender?.toLowerCase() || "unknown",
+      partner?.gender?.toLowerCase() || "unknown",
+      otherPlayers.find(p => p.id === opponentId)?.gender?.toLowerCase() || "unknown",
+      oppPartner?.gender?.toLowerCase() || "unknown",
+    ];
+    if ([g1, g2, g3, g4].includes("unknown")) return false;
+    const t1Mixed = g1 !== g2, t2Mixed = g3 !== g4;
+    const t1Male = g1 === "male" && g2 === "male", t2Male = g3 === "male" && g4 === "male";
+    const t1Female = g1 === "female" && g2 === "female", t2Female = g3 === "female" && g4 === "female";
+    return t1Mixed !== t2Mixed || t1Male !== t2Male || t1Female !== t2Female;
+  };
 
-    try {
-      // For native Android, we would use native NFC APIs
-      // For now, show a message and fallback to QR scanning
-      toast.info("NFC scanning will be available in the native app. Using QR code scanner instead.");
-      setIsScanOpen(true);
-    } catch (error) {
-      console.error(error);
-      setIsNFCOpen(true);
-    }
+  const handleNFC = () => {
+    setIsNFCOpen(true);
   };
 
   const handleSubmit = async () => {
@@ -309,32 +316,6 @@ export default function LogMatchModal({
     const filledSets = sets.filter((s) => s.p1 !== "" && s.p2 !== "");
     const winnerId = myTeamWon ? currentUser.id : opponentId;
     const scoreStr = formatScore();
-
-    // Detect cross-gender singles (won't get ELO)
-    const isCrossGenderSingles = (): boolean => {
-      if (matchType !== "singles") return false;
-      const g1 = currentUser.gender?.toLowerCase() || "unknown";
-      const g2 = otherPlayers.find(p => p.id === opponentId)?.gender?.toLowerCase() || "unknown";
-      return g1 !== "unknown" && g2 !== "unknown" && g1 !== g2;
-    };
-
-    // Detect mixed-category doubles (won't get ELO)
-    const isMixedCategoryDoubles = (): boolean => {
-      if (matchType !== "doubles") return false;
-      const partner = otherPlayers.find(p => p.id === partnerId);
-      const oppPartner = otherPlayers.find(p => p.id === opponentPartnerId);
-      const [g1, g2, g3, g4] = [
-        currentUser.gender?.toLowerCase() || "unknown",
-        partner?.gender?.toLowerCase() || "unknown",
-        otherPlayers.find(p => p.id === opponentId)?.gender?.toLowerCase() || "unknown",
-        oppPartner?.gender?.toLowerCase() || "unknown",
-      ];
-      if ([g1, g2, g3, g4].includes("unknown")) return false;
-      const t1Mixed = g1 !== g2, t2Mixed = g3 !== g4;
-      const t1Male = g1 === "male" && g2 === "male", t2Male = g3 === "male" && g4 === "male";
-      const t1Female = g1 === "female" && g2 === "female", t2Female = g3 === "female" && g4 === "female";
-      return t1Mixed !== t2Mixed || t1Male !== t2Male || t1Female !== t2Female;
-    };
 
     let finalScore = scoreStr;
     if (matchType === "doubles" || matchType === "hybrid") {
@@ -481,11 +462,11 @@ export default function LogMatchModal({
 
                   {/* Friendly / Tournament */}
                   <div className="grid grid-cols-2 gap-2">
-                    <button type="button" onClick={() => setMatchCategory("friendly")}
+                    <button type="button" onClick={() => { setMatchCategory("friendly"); setError(null); }}
                       className={`flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold border transition ${matchCategory === "friendly" ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 text-emerald-700 dark:text-emerald-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"}`}>
                       🏸 Friendly
                     </button>
-                    <button type="button" onClick={() => { if (isAdmin) setMatchCategory("tournament"); }} disabled={!isAdmin}
+                    <button type="button" onClick={() => { if (isAdmin) { setMatchCategory("tournament"); setError(null); } }} disabled={!isAdmin}
                       className={`flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold border transition ${matchCategory === "tournament" ? "bg-amber-50 dark:bg-amber-900/30 border-amber-500 text-amber-700 dark:text-amber-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"} ${!isAdmin ? "opacity-40 cursor-not-allowed" : ""}`}>
                       🏆 Tournament {!isAdmin && <Lock className="w-3 h-3" />}
                     </button>
@@ -493,15 +474,15 @@ export default function LogMatchModal({
 
                   {/* Singles / Doubles / Hybrid */}
                   <div className="grid grid-cols-3 gap-2">
-                    <button type="button" onClick={() => setMatchType("singles")}
+                    <button type="button" onClick={() => { setMatchType("singles"); setError(null); }}
                       className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold border transition ${matchType === "singles" ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 text-emerald-700 dark:text-emerald-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"}`}>
                       <User className="w-4 h-4" /> Singles
                     </button>
-                    <button type="button" onClick={() => setMatchType("doubles")}
+                    <button type="button" onClick={() => { setMatchType("doubles"); setError(null); }}
                       className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold border transition ${matchType === "doubles" ? "bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-700 dark:text-blue-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"}`}>
                       <Users className="w-4 h-4" /> Doubles
                     </button>
-                    <button type="button" onClick={() => setMatchType("hybrid")}
+                    <button type="button" onClick={() => { setMatchType("hybrid"); setError(null); }}
                       disabled={matchCategory !== "friendly"}
                       title={matchCategory !== "friendly" ? "Hybrid matches only allowed for Friendly" : ""}
                       className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold border transition disabled:opacity-50 disabled:cursor-not-allowed ${matchType === "hybrid" ? "bg-violet-50 dark:bg-violet-900/30 border-violet-500 text-violet-700 dark:text-violet-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"}`}>
@@ -524,7 +505,7 @@ export default function LogMatchModal({
                         <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 overflow-hidden mb-2 shadow-md">
                           <PlayerAvatar player={opponent} />
                         </div>
-                        <PlayerSelect value={opponentId} onChange={setOpponentId} players={otherPlayers} />
+                        <PlayerSelect value={opponentId} onChange={(v) => { setOpponentId(v); setError(null); }} players={otherPlayers} />
                         {recentOpponentIds.length > 0 && !opponentId && (
                           <div className="flex gap-2 mt-3 justify-center">
                             {recentOpponentIds.map((id) => {
@@ -698,8 +679,11 @@ export default function LogMatchModal({
 
               {/* Error */}
               {error && (
-                <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 text-sm font-bold text-center">
-                  {error}
+                <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 text-sm font-bold flex items-start gap-2">
+                  <span className="flex-1">{error}</span>
+                  <button type="button" onClick={() => setError(null)} className="shrink-0 text-rose-400 hover:text-rose-600 transition-colors mt-0.5">
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
               )}
 

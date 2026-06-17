@@ -48,6 +48,8 @@ export function QRCodeScannerModal({ isOpen, onClose, onScan }: QRCodeScannerMod
         setError("Camera permission denied. Please enable camera access in settings.");
       } else if (err.name === "NotFoundError") {
         setError("No camera found on this device.");
+      } else if (err.name === "NotReadableError") {
+        setError("Camera is busy. Close other camera apps and try again.");
       } else {
         setError("Unable to access camera. Please try again.");
       }

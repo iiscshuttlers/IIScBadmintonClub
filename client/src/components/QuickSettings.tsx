@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, Palette, Activity, Check, Lock, Bell, BellOff, Fingerprint, ChevronDown, ChevronUp } from "lucide-react";
+import { Settings, Palette, Activity, Check, Lock, Bell, BellOff, Fingerprint, ChevronDown, ChevronUp, Info } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { useBiometricAuth, getBiometricEnabled, setBiometricEnabled } from "@/hooks/useBiometricAuth";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,14 @@ export function QuickSettingsContent({ onClose }: { onClose?: () => void }) {
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [biometricEnabled, setBiometricEnabledState] = useState(getBiometricEnabled);
   const [notifsExpanded, setNotifsExpanded] = useState(false);
+  const [appVersion, setAppVersion] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch(`${import.meta.env.BASE_URL}data/app-version.json?v=${Date.now()}`)
+      .then((r) => r.json())
+      .then((data) => { if (data?.versionName) setAppVersion(data.versionName); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
@@ -263,6 +271,17 @@ export function QuickSettingsContent({ onClose }: { onClose?: () => void }) {
             </div>
           )}
         </>
+      )}
+      {/* APP VERSION */}
+      {appVersion && (
+        <div className="px-3 py-2.5 flex items-center justify-between">
+          <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+            <Info className="w-3 h-3" /> App Version
+          </span>
+          <span className="text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
+            v{appVersion}
+          </span>
+        </div>
       )}
     </div>
   );

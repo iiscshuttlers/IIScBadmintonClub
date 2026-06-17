@@ -114,11 +114,18 @@ serve(async () => {
   const staleTokens: string[] = [];
 
   for (const [playerId, notifs] of byPlayer) {
-    // Fetch player's push tokens
+    // Resolve player_id → user_id (auth UUID)
+    const { data: playerRow } = await supabase
+      .from("players")
+      .select("user_id")
+      .eq("id", playerId)
+      .single();
+
+    // Fetch player's push tokens by auth user_id
     const { data: tokens } = await supabase
       .from("user_push_tokens")
       .select("token")
-      .eq("player_id", playerId);
+      .eq("user_id", playerRow?.user_id ?? "");
 
     if (!tokens || tokens.length === 0) {
       // No token — mark as sent anyway to clear queue

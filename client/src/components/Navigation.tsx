@@ -3,7 +3,6 @@ import { Link, useLocation } from "wouter";
 import { getTournaments } from "@/lib/tournaments";
 import { fetchSiteData } from "@/lib/siteData";
 import { NotificationsMenu } from "@/components/NotificationsMenu";
-import { registerPushNotifications } from "@/lib/pushNotifications";
 import {
   Menu,
   X,
@@ -102,12 +101,6 @@ export default function Navigation() {
       .catch(() => {});
   }, []);
 
-  // Register push notifications
-  useEffect(() => {
-    if (myPlayerId) {
-      registerPushNotifications(myPlayerId).catch(console.error);
-    }
-  }, [myPlayerId]);
 
   useEffect(() => {
     setIsOpen(false);
@@ -231,244 +224,74 @@ export default function Navigation() {
               ))}
             </div>
 
-            {/* ── Desktop Right Controls ────────────── */}
-            <div className="hidden lg:flex items-center gap-2 order-2 lg:order-3">
-              {isLoggedIn && (
-                <Button
-                  onClick={() => window.dispatchEvent(new Event('openLogMatchModal'))}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-4 rounded-full h-9 shadow-sm mr-2"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Log Match
-                </Button>
-              )}
-
-              {/* Global Search Button */}
-              <button
-                onClick={() => setSearchOpen(true)}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all border border-slate-200 dark:border-slate-700 mr-1"
-                title="Search (⌘K)"
-              >
-                <Search className="w-4 h-4" />
-                <span className="hidden xl:inline text-xs font-medium">Search</span>
-                <kbd className="hidden xl:inline font-mono text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-400">⌘K</kbd>
-              </button>
-
-              {/* Icons removed from here and moved to dropdown */}
-              {authLoading ? (
-                <div className="w-24 h-9 bg-slate-100 dark:bg-slate-800 rounded-full animate-pulse" />
-              ) : isLoggedIn ? (
-                <>
-                  {myPlayerId && <NotificationsMenu currentUser={{ id: myPlayerId }} />}
-                  <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="relative w-9 h-9 rounded-full border-2 border-slate-200 dark:border-slate-700 hover:border-emerald-500 dark:hover:border-emerald-500 transition-all duration-200 overflow-hidden focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-950 shrink-0 shadow-sm">
-                      {userAvatar ? (
-                        <img src={userAvatar} alt={userName} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center font-black text-sm">
-                          {userName ? userName[0].toUpperCase() : "U"}
-                        </div>
-                      )}
-                      {pendingActionCount > 0 && (
-                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow ring-2 ring-white dark:ring-slate-950">
-                          {pendingActionCount > 9 ? "9+" : pendingActionCount}
-                        </span>
-                      )}
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    className="w-80 p-0 border-0 overflow-hidden rounded-2xl shadow-2xl shadow-slate-300/40 dark:shadow-black/60"
-                  >
-                    {/* ── Hero user card ── */}
-                    <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 dark:from-slate-900 dark:via-slate-800 dark:to-emerald-950 px-4 pt-3 pb-4">
-                      {/* Decorative circles */}
-                      <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full bg-white/10 pointer-events-none" />
-                      <div className="absolute -bottom-4 -left-4 w-20 h-20 rounded-full bg-white/5 pointer-events-none" />
-                      <div className="absolute top-6 right-16 w-8 h-8 rounded-full bg-white/10 pointer-events-none" />
-
-                      <div className="relative flex justify-between items-center mb-3">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-white/50">IISc Badminton Club</span>
-                        <button onClick={() => handleSignOut()} className="text-[11px] font-bold text-white/50 hover:text-white/90 transition-colors px-2 py-0.5 rounded-md hover:bg-white/10">
-                          Sign out
-                        </button>
-                      </div>
-
-                      <div className="relative flex items-center gap-3">
-                        <div className="w-14 h-14 rounded-2xl overflow-hidden shrink-0 border-2 border-white/30 shadow-lg shadow-black/20 ring-2 ring-white/10">
-                          {userAvatar ? (
-                            <img src={userAvatar} alt="Profile" className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center font-black text-xl">
-                              {userName ? userName[0].toUpperCase() : "U"}
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-black text-white text-base leading-tight truncate">{userName}</p>
-                          <p className="text-white/55 text-xs truncate mt-0.5">{userEmail}</p>
-                          <Link
-                            href={myPlayerId ? `/player/${myPlayerId}` : "/profile/setup"}
-                            className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-bold text-white/70 hover:text-white bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-full transition-all"
-                          >
-                            View profile →
-                          </Link>
-                        </div>
-                        {pendingActionCount > 0 && (
-                          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-black text-white shadow ring-2 ring-white/30">
-                            {pendingActionCount > 9 ? "9+" : pendingActionCount}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* ── Settings body ── */}
-                    <div className="bg-slate-50 dark:bg-slate-950 p-2.5 space-y-2 max-h-[70vh] overflow-y-auto">
-
-                      {/* Light / Dark toggle */}
-                      <div className="bg-white dark:bg-slate-900 rounded-xl p-1 flex gap-1 shadow-sm border border-slate-100 dark:border-slate-800">
-                        <button
-                          onClick={() => { if (theme === "dark") toggleTheme(); }}
-                          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${
-                            theme === "light"
-                              ? "bg-amber-50 text-amber-700 shadow-sm border border-amber-200 dark:bg-slate-700 dark:text-amber-400 dark:border-slate-600"
-                              : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
-                          }`}
-                        >
-                          <Sun className="w-3.5 h-3.5" /> Light
-                        </button>
-                        <button
-                          onClick={() => { if (theme === "light") toggleTheme(); }}
-                          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${
-                            theme === "dark"
-                              ? "bg-indigo-950/60 text-indigo-300 shadow-sm border border-indigo-800 dark:bg-indigo-950/60"
-                              : "text-slate-400 hover:text-slate-600"
-                          }`}
-                        >
-                          <Moon className="w-3.5 h-3.5" /> Dark
-                        </button>
-                      </div>
-
-                      {/* QuickSettings: accent colors + live status + notifications */}
-                      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
-                        <QuickSettingsContent />
-                      </div>
-
-                      {/* Action items */}
-                      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
-                        <Link href="/profile/password">
-                          <DropdownMenuItem className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2.5 gap-2.5">
-                            <Lock className="w-4 h-4 text-slate-400" /> Change Password
-                          </DropdownMenuItem>
-                        </Link>
-                        {isAdmin && (
-                          <Link href="/admin">
-                            <DropdownMenuItem className="cursor-pointer font-semibold rounded-none text-violet-600 dark:text-violet-400 focus:bg-violet-50 dark:focus:bg-violet-950/30 gap-2.5 px-3 py-2.5 border-t border-slate-100 dark:border-slate-800">
-                              <Zap className="h-4 w-4" /> Site Admin
-                            </DropdownMenuItem>
-                          </Link>
-                        )}
-                      </div>
-
-                      {/* Switch / Add Account */}
-                      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
-                        {savedAccounts.length > 0 && (
-                          <>
-                            <div className="px-3 py-2 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
-                              Switch Account
-                            </div>
-                            {savedAccounts.map((acc) => (
-                              <DropdownMenuItem
-                                key={acc.id}
-                                className="cursor-pointer font-medium rounded-none focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2.5 border-b border-slate-50 dark:border-slate-800/50 last:border-b-0"
-                                onClick={async () => { await switchAccount(acc); }}
-                              >
-                                <div className="flex flex-col">
-                                  <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{acc.name}</span>
-                                  <span className="text-[10px] text-slate-400 dark:text-slate-500">{acc.email}</span>
-                                </div>
-                              </DropdownMenuItem>
-                            ))}
-                            <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800 m-0" />
-                          </>
-                        )}
-                        <Link href="/join?add_account=true">
-                          <DropdownMenuItem className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:bg-slate-50 dark:focus:bg-slate-800 gap-2.5 px-3 py-2.5">
-                            <UserPlus className="h-4 w-4 text-slate-400" /> Add Account
-                          </DropdownMenuItem>
-                        </Link>
-                        <DropdownMenuItem onClick={handleInvite} className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:bg-slate-50 dark:focus:bg-slate-800 border-t border-slate-100 dark:border-slate-800 gap-2.5 px-3 py-2.5">
-                          <UserPlus className="h-4 w-4 text-emerald-500" /> Invite Friends
-                        </DropdownMenuItem>
-                        <Link href="/privacy">
-                          <DropdownMenuItem className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:bg-slate-50 dark:focus:bg-slate-800 border-t border-slate-100 dark:border-slate-800 gap-2.5 px-3 py-2.5">
-                            <Shield className="h-4 w-4 text-slate-400" /> Privacy Policy
-                          </DropdownMenuItem>
-                        </Link>
-                      </div>
-
-                      {/* Sign Out */}
-                      <button
-                        onClick={() => handleSignOut("Are you sure you want to sign out of this account?")}
-                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/25 hover:bg-rose-100 dark:hover:bg-rose-950/50 text-rose-600 dark:text-rose-400 font-bold text-sm border border-rose-100 dark:border-rose-900/50 transition-colors"
-                      >
-                        <LogOut className="h-4 w-4" /> Sign Out
-                      </button>
-                    </div>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                </>
-              ) : (
-                <Link href="/join">
-                  <Button className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-4 rounded-full h-9 shadow-sm shadow-emerald-200 dark:shadow-none transition-all duration-200 cursor-pointer">
-                    <LogIn className="w-4 h-4" /> Sign In
-                  </Button>
-                </Link>
-              )}
-            </div>
-
-            {/* ── Mobile Controls ───────────────────── */}
-            <div className="flex lg:hidden items-center gap-1">
-              {/* Mobile Search */}
-              <button
-                onClick={() => setSearchOpen(true)}
-                className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                aria-label="Search"
-              >
-                <Search className="w-5 h-5" />
-              </button>
-              {isLoggedIn && !authLoading && (
-                <Link href={myPlayerId ? `/player/${myPlayerId}` : "/profile/setup"}>
-                  <button 
-                    className="relative w-8 h-8 rounded-full border-2 border-slate-200 dark:border-slate-700 hover:border-emerald-500 transition-all duration-200 overflow-hidden shrink-0 shadow-sm mr-1 cursor-pointer"
-                  >
-                    {userAvatar ? (
-                      <img src={userAvatar} alt={userName} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center font-black text-xs">
-                        {userName ? userName[0].toUpperCase() : "U"}
-                      </div>
-                    )}
-                    {pendingActionCount > 0 && (
-                      <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-rose-500 text-[8px] font-bold text-white shadow ring-1 ring-white dark:ring-slate-950">
-                        {pendingActionCount > 9 ? "9+" : pendingActionCount}
-                      </span>
-                    )}
-                  </button>
-                </Link>
-              )}
-            </div>
           </div>
         </div>
 
-        {/* ── Mobile Bottom Sheet Menu ─────────────────────────────── */}
-        {isOpen && (
-          <div className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setIsOpen(false)}>
-            <div
-              className="fixed bottom-[72px] left-2 right-2 bg-white dark:bg-slate-950 rounded-3xl shadow-2xl overflow-y-auto border border-slate-200 dark:border-slate-800 max-h-[calc(100vh-88px)]"
-              onClick={(e) => e.stopPropagation()}
+        </nav>
+
+      {/* ── Secondary Action Bar (below navbar, right-aligned, all screens) ── */}
+      <div className="sticky top-[var(--navbar-height,57px)] z-40 flex justify-end px-4 py-1.5 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 shadow-sm">
+        <div className="flex items-center gap-1.5">
+          {/* Log Match */}
+          {isLoggedIn && (
+            <Button
+              onClick={() => window.dispatchEvent(new Event('openLogMatchModal'))}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3 rounded-full h-8 shadow-sm"
             >
+              <Plus className="w-3.5 h-3.5 mr-1" />
+              Log Match
+            </Button>
+          )}
+
+          {/* Search */}
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            aria-label="Search"
+          >
+            <Search className="w-4.5 h-4.5" />
+          </button>
+
+          {/* Notifications */}
+          {isLoggedIn && myPlayerId && (
+            <NotificationsMenu currentUser={{ id: myPlayerId }} />
+          )}
+
+          {/* User Profile */}
+          {!authLoading && (
+            isLoggedIn ? (
+              <SubBarProfileButton
+                userAvatar={userAvatar}
+                userName={userName}
+                userEmail={userEmail}
+                myPlayerId={myPlayerId}
+                pendingActionCount={pendingActionCount}
+                isAdmin={isAdmin}
+                theme={theme}
+                toggleTheme={toggleTheme}
+                savedAccounts={savedAccounts}
+                switchAccount={switchAccount}
+                handleSignOut={handleSignOut}
+                handleInvite={handleInvite}
+              />
+            ) : (
+              <Link href="/join">
+                <Button className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 rounded-full h-8 shadow-sm cursor-pointer">
+                  <LogIn className="w-3.5 h-3.5" /> Sign In
+                </Button>
+              </Link>
+            )
+          )}
+        </div>
+      </div>
+
+      {/* ── Mobile Bottom Sheet Menu (outside nav so backdrop-blur doesn't break fixed positioning) ── */}
+      {isOpen && (
+        <div className="lg:hidden fixed inset-0 z-[9998] bg-black/60 backdrop-blur-sm" onClick={() => setIsOpen(false)}>
+          <div
+            className="fixed bottom-[72px] left-2 right-2 bg-white dark:bg-slate-950 rounded-3xl shadow-2xl overflow-y-auto border border-slate-200 dark:border-slate-800 max-h-[calc(100vh-88px)]"
+            onClick={(e) => e.stopPropagation()}
+          >
               <div className="px-4 py-4 space-y-1">
                 <div className="w-10 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mb-4" />
                 {TOP_LEVEL_LINKS.filter(l => l.href !== "/feed" && l.href !== "/players").map((link) => (
@@ -560,8 +383,6 @@ export default function Navigation() {
           </div>
         )}
 
-      </nav>
-
       {/* ── Mobile Bottom Navigation Bar (outside nav to ensure fixed positioning) ─────────────────────────────── */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-white/95 dark:bg-slate-950/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 flex justify-around items-end px-2 pb-safe pt-1 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]">
             <Link href="/">
@@ -574,7 +395,14 @@ export default function Navigation() {
               <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/feed") ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}>
                 <Activity className={`w-[22px] h-[22px] mb-1 ${isActive("/feed") ? "fill-emerald-600/20" : ""}`} />
                 <span className="text-[10px] font-bold">Feed</span>
-                {hasUnreadAnnouncements && <span className="absolute top-1.5 right-3 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-slate-950" />}
+                {hasUnreadAnnouncements && (
+                  <span
+                    title="New announcements"
+                    className="absolute top-1 right-2.5 flex items-center justify-center"
+                  >
+                    <span className="w-2 h-2 bg-red-500 rounded-full border border-white dark:border-slate-950" />
+                  </span>
+                )}
               </button>
             </Link>
 
@@ -701,5 +529,123 @@ function DarkModeToggle({ insideMenu }: { insideMenu?: boolean }) {
         <Moon className="h-5 w-5" />
       )}
     </Button>
+  );
+}
+
+function SubBarProfileButton({
+  userAvatar, userName, userEmail, myPlayerId, pendingActionCount,
+  isAdmin, theme, toggleTheme, savedAccounts, switchAccount, handleSignOut, handleInvite,
+}: {
+  userAvatar: string | null; userName: string; userEmail: string; myPlayerId: string | null;
+  pendingActionCount: number; isAdmin: boolean; theme: string; toggleTheme: () => void;
+  savedAccounts: any[]; switchAccount: (acc: any) => Promise<void>;
+  handleSignOut: (msg?: string) => void; handleInvite: () => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="relative w-8 h-8 rounded-full border-2 border-slate-200 dark:border-slate-700 hover:border-emerald-500 transition-all duration-200 overflow-hidden shrink-0 shadow-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-950">
+          {userAvatar ? (
+            <img src={userAvatar} alt={userName} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center font-black text-xs">
+              {userName ? userName[0].toUpperCase() : "U"}
+            </div>
+          )}
+          {pendingActionCount > 0 && (
+            <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-rose-500 text-[8px] font-bold text-white shadow ring-1 ring-white dark:ring-slate-950">
+              {pendingActionCount > 9 ? "9+" : pendingActionCount}
+            </span>
+          )}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-80 p-0 border-0 overflow-hidden rounded-2xl shadow-2xl shadow-slate-300/40 dark:shadow-black/60">
+        <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 dark:from-slate-900 dark:via-slate-800 dark:to-emerald-950 px-4 pt-3 pb-4">
+          <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full bg-white/10 pointer-events-none" />
+          <div className="absolute -bottom-4 -left-4 w-20 h-20 rounded-full bg-white/5 pointer-events-none" />
+          <div className="relative flex justify-between items-center mb-3">
+            <span className="text-[10px] font-black uppercase tracking-widest text-white/50">IISc Badminton Club</span>
+            <button onClick={() => handleSignOut()} className="text-[11px] font-bold text-white/50 hover:text-white/90 transition-colors px-2 py-0.5 rounded-md hover:bg-white/10">Sign out</button>
+          </div>
+          <div className="relative flex items-center gap-3">
+            <div className="w-14 h-14 rounded-2xl overflow-hidden shrink-0 border-2 border-white/30 shadow-lg shadow-black/20">
+              {userAvatar ? (
+                <img src={userAvatar} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-white/20 text-white flex items-center justify-center font-black text-xl">
+                  {userName ? userName[0].toUpperCase() : "U"}
+                </div>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-black text-white text-base leading-tight truncate">{userName}</p>
+              <p className="text-white/55 text-xs truncate mt-0.5">{userEmail}</p>
+              <Link href={myPlayerId ? `/player/${myPlayerId}` : "/profile/setup"} className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-bold text-white/70 hover:text-white bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-full transition-all">
+                View profile →
+              </Link>
+            </div>
+          </div>
+        </div>
+        <div className="bg-slate-50 dark:bg-slate-950 p-2.5 space-y-2 max-h-[70vh] overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-xl p-1 flex gap-1 shadow-sm border border-slate-100 dark:border-slate-800">
+            <button onClick={() => { if (theme === "dark") toggleTheme(); }} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${theme === "light" ? "bg-amber-50 text-amber-700 shadow-sm border border-amber-200" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"}`}>
+              <Sun className="w-3.5 h-3.5" /> Light
+            </button>
+            <button onClick={() => { if (theme === "light") toggleTheme(); }} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${theme === "dark" ? "bg-indigo-950/60 text-indigo-300 shadow-sm border border-indigo-800" : "text-slate-400 hover:text-slate-600"}`}>
+              <Moon className="w-3.5 h-3.5" /> Dark
+            </button>
+          </div>
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+            <QuickSettingsContent />
+          </div>
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+            <Link href="/profile/password">
+              <DropdownMenuItem className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2.5 gap-2.5">
+                <Lock className="w-4 h-4 text-slate-400" /> Change Password
+              </DropdownMenuItem>
+            </Link>
+            {isAdmin && (
+              <Link href="/admin">
+                <DropdownMenuItem className="cursor-pointer font-semibold rounded-none text-violet-600 dark:text-violet-400 focus:bg-violet-50 dark:focus:bg-violet-950/30 gap-2.5 px-3 py-2.5 border-t border-slate-100 dark:border-slate-800">
+                  <Zap className="h-4 w-4" /> Site Admin
+                </DropdownMenuItem>
+              </Link>
+            )}
+          </div>
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+            {savedAccounts.length > 0 && (
+              <>
+                <div className="px-3 py-2 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">Switch Account</div>
+                {savedAccounts.map((acc) => (
+                  <DropdownMenuItem key={acc.id} className="cursor-pointer font-medium rounded-none focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2.5 border-b border-slate-50 dark:border-slate-800/50 last:border-b-0" onClick={async () => { await switchAccount(acc); }}>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{acc.name}</span>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500">{acc.email}</span>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800 m-0" />
+              </>
+            )}
+            <Link href="/join?add_account=true">
+              <DropdownMenuItem className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:bg-slate-50 dark:focus:bg-slate-800 gap-2.5 px-3 py-2.5">
+                <UserPlus className="h-4 w-4 text-slate-400" /> Add Account
+              </DropdownMenuItem>
+            </Link>
+            <DropdownMenuItem onClick={handleInvite} className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:bg-slate-50 dark:focus:bg-slate-800 border-t border-slate-100 dark:border-slate-800 gap-2.5 px-3 py-2.5">
+              <UserPlus className="h-4 w-4 text-emerald-500" /> Invite Friends
+            </DropdownMenuItem>
+            <Link href="/privacy">
+              <DropdownMenuItem className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:bg-slate-50 dark:focus:bg-slate-800 border-t border-slate-100 dark:border-slate-800 gap-2.5 px-3 py-2.5">
+                <Shield className="h-4 w-4 text-slate-400" /> Privacy Policy
+              </DropdownMenuItem>
+            </Link>
+          </div>
+          <button onClick={() => handleSignOut("Are you sure you want to sign out of this account?")} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/25 hover:bg-rose-100 dark:hover:bg-rose-950/50 text-rose-600 dark:text-rose-400 font-bold text-sm border border-rose-100 dark:border-rose-900/50 transition-colors">
+            <LogOut className="h-4 w-4" /> Sign Out
+          </button>
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

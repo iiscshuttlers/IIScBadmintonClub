@@ -26,15 +26,15 @@ CREATE POLICY "Anyone can read find_lost posts"
 
 CREATE POLICY "Authors can insert their posts"
   ON public.find_lost_posts FOR INSERT
-  WITH CHECK (auth.uid() = (SELECT user_id FROM public.players WHERE id = author_id));
+  WITH CHECK (auth.uid()::text = (SELECT user_id FROM public.players WHERE id = author_id));
 
 CREATE POLICY "Authors can update their own posts"
   ON public.find_lost_posts FOR UPDATE
-  USING (auth.uid() = (SELECT user_id FROM public.players WHERE id = author_id));
+  USING (auth.uid()::text = (SELECT user_id FROM public.players WHERE id = author_id));
 
 CREATE POLICY "Authors can delete their own posts"
   ON public.find_lost_posts FOR DELETE
-  USING (auth.uid() = (SELECT user_id FROM public.players WHERE id = author_id));
+  USING (auth.uid()::text = (SELECT user_id FROM public.players WHERE id = author_id));
 
 CREATE INDEX IF NOT EXISTS idx_find_lost_created  ON public.find_lost_posts (created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_find_lost_type     ON public.find_lost_posts (type);
