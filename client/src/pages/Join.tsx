@@ -12,7 +12,6 @@ import {
   UserPlus,
   LogIn,
   Clock,
-  Fingerprint,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,32 +20,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ADMIN_EMAILS } from "@/lib/admin";
 import { toast } from "sonner";
 
-// ── Biometric helpers ────────────────────────────────────────────────────────
-const BIOMETRIC_KEY = "iisc_biometric_cred_v1";
-interface BiometricCred { credentialId: string; email: string; refreshToken: string; }
-
-function getBiometricCred(): BiometricCred | null {
-  try { const r = localStorage.getItem(BIOMETRIC_KEY); return r ? JSON.parse(r) : null; }
-  catch { return null; }
-}
-function saveBiometricCred(c: BiometricCred) {
-  localStorage.setItem(BIOMETRIC_KEY, JSON.stringify(c));
-}
-function removeBiometricCred() { localStorage.removeItem(BIOMETRIC_KEY); }
-
-function b64ToUint8(b64: string): Uint8Array {
-  return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-}
-function uint8ToB64(buf: ArrayBuffer): string {
-  return btoa(String.fromCharCode(...new Uint8Array(buf)));
-}
-
-async function isPlatformAuthenticatorAvailable(): Promise<boolean> {
-  if (!window.PublicKeyCredential) return false;
-  try {
-    return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-  } catch { return false; }
-}
 
 type Mode = "welcome" | "signin" | "signup" | "otp-email" | "otp-verify";
 
@@ -75,12 +48,6 @@ export default function Join() {
   const [errorMsg, setErrorMsg] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
-  // ── Biometric state ──
-  const [biometricCred, setBiometricCred] = useState<BiometricCred | null>(null);
-  const [biometricAvailable, setBiometricAvailable] = useState(false);
-  const [showBiometricPrompt, setShowBiometricPrompt] = useState(false);
-  const [pendingBiometricSession, setPendingBiometricSession] = useState<{ userId: string; email: string; refreshToken: string } | null>(null);
-
   // Read inactivity logout reason set by App.tsx
   const [inactivityLogout, setInactivityLogout] = useState(false);
 
@@ -90,91 +57,6 @@ export default function Join() {
     setOtp("");
     setInfoMsg("");
     setErrorMsg("");
-  };
-
-  // ── Biometric init ──────────────────────────────────────────────────────
-  useEffect(() => {
-    const stored = getBiometricCred();
-    setBiometricCred(stored);
-    isPlatformAuthenticatorAvailable().then(setBiometricAvailable);
-  }, []);
-
-  const handleBiometricSignIn = async () => {
-    const stored = biometricCred;
-    if (!stored) return;
-    setLoading(true);
-    setErrorMsg("");
-    try {
-      const challenge = crypto.getRandomValues(new Uint8Array(32));
-      const assertion = (await navigator.credentials.get({
-        publicKey: {
-          challenge,
-          allowCredentials: [{ id: b64ToUint8(stored.credentialId), type: "public-key" as const }],
-          userVerification: "required",
-          timeout: 60000,
-        },
-      })) as PublicKeyCredential | null;
-
-      if (!assertion) throw new Error("Biometric cancelled");
-
-      // Restore Supabase session using stored refresh token
-      const { data, error } = await supabase.auth.refreshSession({ refresh_token: stored.refreshToken });
-      if (error || !data.session) {
-        removeBiometricCred();
-        setBiometricCred(null);
-        throw new Error("Your biometric session has expired. Please sign in with your password.");
-      }
-      // Rotate stored refresh token
-      saveBiometricCred({ ...stored, refreshToken: data.session.refresh_token });
-    } catch (err: any) {
-      if (err?.name === "NotAllowedError") {
-        setErrorMsg("Biometric authentication was cancelled or timed out.");
-      } else {
-        setErrorMsg(err?.message || "Biometric sign-in failed.");
-      }
-      setLoading(false);
-    }
-  };
-
-  const registerBiometric = async (userId: string, email: string, refreshToken: string) => {
-    if (!biometricAvailable) return;
-    try {
-      const challenge = crypto.getRandomValues(new Uint8Array(32));
-      const credential = (await navigator.credentials.create({
-        publicKey: {
-          rp: { name: "IISc Badminton Club" },
-          user: {
-            id: new TextEncoder().encode(userId),
-            name: email,
-            displayName: email.split("@")[0],
-          },
-          challenge,
-          pubKeyCredParams: [
-            { alg: -7, type: "public-key" as const },
-            { alg: -257, type: "public-key" as const },
-          ],
-          authenticatorSelection: {
-            authenticatorAttachment: "platform" as const,
-            requireResidentKey: false,
-            userVerification: "required" as const,
-          },
-          timeout: 60000,
-        },
-      })) as PublicKeyCredential | null;
-
-      if (!credential) return;
-      const credId = uint8ToB64(credential.rawId);
-      const stored: BiometricCred = { credentialId: credId, email, refreshToken };
-      saveBiometricCred(stored);
-      setBiometricCred(stored);
-      setShowBiometricPrompt(false);
-      toast.success("Biometric login enabled!");
-    } catch (err: any) {
-      if (err?.name !== "NotAllowedError") {
-        toast.error("Could not enable biometric login.");
-      }
-      setShowBiometricPrompt(false);
-    }
   };
 
   const { session, profile, isInitializing } = useAuth();
@@ -247,15 +129,6 @@ export default function Join() {
         "true"
       ) {
         setLocation("/");
-      }
-      // Offer biometric registration if supported and not already set up
-      if (biometricAvailable && !biometricCred && data.session) {
-        setPendingBiometricSession({
-          userId: data.session.user.id,
-          email: data.session.user.email ?? email,
-          refreshToken: data.session.refresh_token,
-        });
-        setShowBiometricPrompt(true);
       }
       // Success! We do not set loading to false. The AuthContext will catch the session, load profile, and redirect.
     } catch (err: any) {
@@ -584,20 +457,6 @@ export default function Join() {
                     Track matches · Climb the ladder · Connect with players
                   </p>
                 </div>
-                {biometricCred && (
-                  <button
-                    onClick={handleBiometricSignIn}
-                    disabled={loading}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-slate-900 dark:bg-slate-700 border border-slate-700 dark:border-slate-600 text-white font-bold text-sm shadow-lg transition hover:bg-slate-800 dark:hover:bg-slate-600"
-                  >
-                    {loading ? (
-                      <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                    ) : (
-                      <Fingerprint className="w-4 h-4 text-emerald-400" />
-                    )}
-                    Sign in as {biometricCred.email.split("@")[0]}
-                  </button>
-                )}
                 <button
                   onClick={() => {
                     reset();
@@ -713,17 +572,6 @@ export default function Join() {
                       Resend Verification Link
                     </Button>
                   </div>
-                )}
-
-                {biometricCred && (
-                  <button
-                    type="button"
-                    onClick={handleBiometricSignIn}
-                    disabled={loading}
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-sm hover:border-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition"
-                  >
-                    <Fingerprint className="w-4 h-4" /> Use biometric instead
-                  </button>
                 )}
 
                 <div className="text-center pt-1 flex items-center justify-between">
@@ -1028,54 +876,6 @@ export default function Join() {
         </div>
       </div>
 
-      {/* Biometric registration prompt — appears after successful password sign-in */}
-      {showBiometricPrompt && pendingBiometricSession && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm px-4 pb-8 sm:pb-0">
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-6 border border-slate-200 dark:border-slate-700"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                <Fingerprint className="w-6 h-6 text-emerald-500" />
-              </div>
-              <button
-                onClick={() => { setShowBiometricPrompt(false); setPendingBiometricSession(null); }}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <h3 className="text-lg font-black text-slate-900 dark:text-white mb-1">
-              Enable biometric login?
-            </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-              Use your fingerprint or face to sign in instantly next time — no password needed.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  registerBiometric(
-                    pendingBiometricSession.userId,
-                    pendingBiometricSession.email,
-                    pendingBiometricSession.refreshToken,
-                  );
-                }}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition"
-              >
-                <Fingerprint className="w-4 h-4" /> Enable
-              </button>
-              <button
-                onClick={() => { setShowBiometricPrompt(false); setPendingBiometricSession(null); }}
-                className="flex-1 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition"
-              >
-                Not now
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
     </div>
   );
 }

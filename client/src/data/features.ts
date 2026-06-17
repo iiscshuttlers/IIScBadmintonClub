@@ -337,14 +337,6 @@ export const FEATURES: Feature[] = [
     icon: "Lock",
   },
   {
-    id: "biometric-auth",
-    name: "Biometric Authentication",
-    description: "Fingerprint/Face unlock on mobile devices",
-    category: "Authentication & Security",
-    status: "active",
-    icon: "Fingerprint",
-  },
-  {
     id: "password-reset",
     name: "Password Change & Reset",
     description: "Secure password management and recovery",

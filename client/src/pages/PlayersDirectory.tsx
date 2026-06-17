@@ -32,7 +32,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import LogMatchModal from "@/components/LogMatchModal";
-import { isAdminEmail } from "@/lib/admin";
+import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
 import {
   PlayerCard,
   type Player,
@@ -52,7 +52,7 @@ const itemVariants: Variants = {
 };
 
 const PLAYER_SELECT =
-  "id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, user_id, elo_rating, singles_elo, doubles_elo, mixed_elo, win_loss_record, singles_record, doubles_record, mixed_record, recent_form, is_looking_to_play, status, buddies, following, buddy_requests, gender";
+  "id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, elo_rating, singles_elo, doubles_elo, mixed_elo, win_loss_record, singles_record, doubles_record, mixed_record, recent_form, is_looking_to_play, status, buddies, following, buddy_requests, gender";
 const PLAYERS_CACHE_KEY = "iisc_players_directory_cache_v4";
 const REQUEST_TIMEOUT_MS = 15_000;
 const MAX_FETCH_RETRIES = 1;
@@ -181,7 +181,7 @@ export default function PlayersDirectory() {
           const { data } = await supabase
             .from("players")
             .select(PLAYER_SELECT)
-            .eq("user_id", userData.user.id)
+            .eq("id", userData.user.id)
             .maybeSingle();
           if (isMounted) {
             setOwnProfile(data ?? null);
@@ -411,7 +411,7 @@ export default function PlayersDirectory() {
   useAutoRefresh(silentRefresh, 60_000, !loading);
 
   /* Filter + sort logic */
-  const otherPlayers = players.filter((p) => p.user_id !== session?.user?.id);
+  const otherPlayers = players.filter((p) => p.id !== session?.user?.id);
   const allDepartments = Array.from(
     new Set(players.map((p) => p.department).filter(Boolean)),
   ).sort();
@@ -588,7 +588,7 @@ export default function PlayersDirectory() {
       const { error } = await supabase
         .from("players")
         .update({ following: Array.from(newFollowing) })
-        .eq("user_id", session.user.id);
+        .eq("id", session.user.id);
 
       if (error) throw error;
       const player = players.find(p => p.id === playerId);
@@ -1447,6 +1447,7 @@ export default function PlayersDirectory() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {recommended.map((player) => (
+                        <div key={"rec-" + player.id} className="cursor-pointer h-full" onClick={() => setLocation(`/player/${player.id}`)}>
                         <PlayerCard
                           key={"rec-" + player.id}
                           player={player}
@@ -1470,6 +1471,7 @@ export default function PlayersDirectory() {
                           onToggleFollow={ownProfile ? handleToggleFollow : undefined}
                           currentUserName={ownProfile?.full_name}
                         />
+                        </div>
                       ))}
                     </div>
                   </div>

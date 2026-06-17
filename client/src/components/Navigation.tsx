@@ -186,21 +186,21 @@ export default function Navigation() {
             : "bg-white dark:bg-slate-950 border-b border-transparent"
         }`}
       >
-        <div className={`container mx-auto px-4 transition-all duration-300 ${scrolled ? "py-2" : "py-3"}`}>
-          <div className="flex flex-wrap justify-between items-center gap-y-3 gap-x-4">
+        <div className={`container mx-auto px-4 transition-all duration-300 ${scrolled ? "py-1.5" : "py-2"}`}>
 
-            {/* ── Logo ─────────────────────────────── */}
+          {/* ── Row 1: Logo + Nav Links ─────────────────────────────── */}
+          <div className="flex items-center gap-2">
             <Link href="/">
-              <div className="flex items-center gap-3 cursor-pointer min-w-0 flex-shrink-0 order-1">
+              <div className="flex items-center gap-2.5 cursor-pointer flex-shrink-0">
                 <img
                   src={`${import.meta.env.BASE_URL}iisc-logo.png`}
                   alt="IISc Logo"
                   className={`w-auto object-contain flex-shrink-0 transition-all duration-300 ${
-                    scrolled ? "h-8 sm:h-9" : "h-10 sm:h-11"
+                    scrolled ? "h-7 sm:h-8" : "h-9 sm:h-10"
                   }`}
                 />
-                <div className="min-w-0">
-                  <span className="font-bold text-slate-900 dark:text-white leading-tight text-base sm:text-lg block truncate tracking-tight">
+                <div>
+                  <span className="font-bold text-slate-900 dark:text-white leading-tight text-sm sm:text-base block whitespace-nowrap tracking-tight">
                     IISc Badminton Club
                   </span>
                   <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold uppercase tracking-widest hidden sm:block">
@@ -210,8 +210,8 @@ export default function Navigation() {
               </div>
             </Link>
 
-            {/* ── Desktop Nav Links ─────────────────── */}
-            <div className="hidden lg:flex items-center gap-0.5 order-3 lg:order-2 w-full lg:w-auto justify-center">
+            {/* Desktop Nav Links */}
+            <div className="hidden lg:flex items-center gap-0.5 flex-1 justify-center">
               <NavLink href="/" label="Home" isActive={isActive("/")} />
               {TOP_LEVEL_LINKS.map((link) => (
                 <NavLink
@@ -224,66 +224,95 @@ export default function Navigation() {
               ))}
             </div>
 
+            {/* Mobile action buttons (search + profile) — always visible on mobile */}
+            <div className="flex lg:hidden items-center gap-1.5 ml-auto flex-shrink-0">
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                aria-label="Search"
+              >
+                <Search className="w-4.5 h-4.5" />
+              </button>
+              {isLoggedIn && myPlayerId && (
+                <NotificationsMenu currentUser={{ id: myPlayerId }} />
+              )}
+              {!authLoading && (
+                isLoggedIn ? (
+                  <SubBarProfileButton
+                    userAvatar={userAvatar}
+                    userName={userName}
+                    userEmail={userEmail}
+                    myPlayerId={myPlayerId}
+                    pendingActionCount={pendingActionCount}
+                    isAdmin={isAdmin}
+                    theme={theme}
+                    toggleTheme={toggleTheme}
+                    savedAccounts={savedAccounts}
+                    switchAccount={switchAccount}
+                    handleSignOut={handleSignOut}
+                    handleInvite={handleInvite}
+                  />
+                ) : (
+                  <Link href="/join">
+                    <Button className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 rounded-full h-8 shadow-sm cursor-pointer">
+                      <LogIn className="w-3.5 h-3.5" /> Sign In
+                    </Button>
+                  </Link>
+                )
+              )}
+            </div>
           </div>
+
+          {/* ── Row 2: Action Buttons — desktop only ─────────────────── */}
+          <div className="hidden lg:flex items-center justify-end gap-1.5 mt-1 border-t border-slate-100 dark:border-slate-800/60 pt-1.5">
+            {isLoggedIn && (
+              <Button
+                onClick={() => window.dispatchEvent(new Event('openLogMatchModal'))}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3 rounded-full h-7 shadow-sm"
+              >
+                <Plus className="w-3.5 h-3.5 mr-1" />
+                Log Match
+              </Button>
+            )}
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="p-1.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              aria-label="Search"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+            {isLoggedIn && myPlayerId && (
+              <NotificationsMenu currentUser={{ id: myPlayerId }} />
+            )}
+            {!authLoading && (
+              isLoggedIn ? (
+                <SubBarProfileButton
+                  userAvatar={userAvatar}
+                  userName={userName}
+                  userEmail={userEmail}
+                  myPlayerId={myPlayerId}
+                  pendingActionCount={pendingActionCount}
+                  isAdmin={isAdmin}
+                  theme={theme}
+                  toggleTheme={toggleTheme}
+                  savedAccounts={savedAccounts}
+                  switchAccount={switchAccount}
+                  handleSignOut={handleSignOut}
+                  handleInvite={handleInvite}
+                />
+              ) : (
+                <Link href="/join">
+                  <Button className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 rounded-full h-7 shadow-sm cursor-pointer">
+                    <LogIn className="w-3.5 h-3.5" /> Sign In
+                  </Button>
+                </Link>
+              )
+            )}
+          </div>
+
         </div>
 
         </nav>
-
-      {/* ── Secondary Action Bar (below navbar, right-aligned, all screens) ── */}
-      <div className="sticky top-[var(--navbar-height,57px)] z-40 flex justify-end px-4 py-1.5 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 shadow-sm">
-        <div className="flex items-center gap-1.5">
-          {/* Log Match */}
-          {isLoggedIn && (
-            <Button
-              onClick={() => window.dispatchEvent(new Event('openLogMatchModal'))}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3 rounded-full h-8 shadow-sm"
-            >
-              <Plus className="w-3.5 h-3.5 mr-1" />
-              Log Match
-            </Button>
-          )}
-
-          {/* Search */}
-          <button
-            onClick={() => setSearchOpen(true)}
-            className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            aria-label="Search"
-          >
-            <Search className="w-4.5 h-4.5" />
-          </button>
-
-          {/* Notifications */}
-          {isLoggedIn && myPlayerId && (
-            <NotificationsMenu currentUser={{ id: myPlayerId }} />
-          )}
-
-          {/* User Profile */}
-          {!authLoading && (
-            isLoggedIn ? (
-              <SubBarProfileButton
-                userAvatar={userAvatar}
-                userName={userName}
-                userEmail={userEmail}
-                myPlayerId={myPlayerId}
-                pendingActionCount={pendingActionCount}
-                isAdmin={isAdmin}
-                theme={theme}
-                toggleTheme={toggleTheme}
-                savedAccounts={savedAccounts}
-                switchAccount={switchAccount}
-                handleSignOut={handleSignOut}
-                handleInvite={handleInvite}
-              />
-            ) : (
-              <Link href="/join">
-                <Button className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 rounded-full h-8 shadow-sm cursor-pointer">
-                  <LogIn className="w-3.5 h-3.5" /> Sign In
-                </Button>
-              </Link>
-            )
-          )}
-        </div>
-      </div>
 
       {/* ── Mobile Bottom Sheet Menu (outside nav so backdrop-blur doesn't break fixed positioning) ── */}
       {isOpen && (

@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
-import { getMessaging } from "firebase/messaging";
+import { getMessaging, type Messaging } from "firebase/messaging";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -12,19 +12,25 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
-let app, db, auth, messaging;
+let app, db, auth;
 try {
   app = initializeApp(firebaseConfig);
   db = getFirestore(app);
   auth = getAuth(app);
-
-  // Only initialize messaging if supported in the browser
-  if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-    messaging = getMessaging(app);
-  }
 } catch (e) {
   console.warn("Firebase blocked or failed to initialize", e);
 }
 
-export { db, auth, messaging };
+// Initialized lazily (after SW is registered) so Firebase doesn't try to
+// register firebase-messaging-sw.js at the domain root before we point it
+// at the correct subpath (needed for GitHub Pages /iiscshuttlers/ deployment).
+export function getFirebaseMessaging(): Messaging | null {
+  if (!app || typeof window === "undefined" || !("serviceWorker" in navigator)) return null;
+  try {
+    return getMessaging(app);
+  } catch {
+    return null;
+  }
+}
+
+export { db, auth };

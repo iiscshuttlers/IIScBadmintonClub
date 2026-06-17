@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, Palette, Activity, Check, Lock, Bell, BellOff, Fingerprint, ChevronDown, ChevronUp, Info } from "lucide-react";
-import { Capacitor } from "@capacitor/core";
-import { useBiometricAuth, getBiometricEnabled, setBiometricEnabled } from "@/hooks/useBiometricAuth";
+import { Settings, Palette, Activity, Check, Lock, Bell, BellOff, ChevronDown, ChevronUp, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -19,9 +17,6 @@ export function QuickSettingsContent({ onClose }: { onClose?: () => void }) {
   const { accent, setAccent } = useTheme();
   const { profile, session, refreshProfile } = useAuth();
   const [updating, setUpdating] = useState(false);
-  const { checkAvailability, authenticate } = useBiometricAuth();
-  const [biometricAvailable, setBiometricAvailable] = useState(false);
-  const [biometricEnabled, setBiometricEnabledState] = useState(getBiometricEnabled);
   const [notifsExpanded, setNotifsExpanded] = useState(false);
   const [appVersion, setAppVersion] = useState<string | null>(null);
 
@@ -31,29 +26,6 @@ export function QuickSettingsContent({ onClose }: { onClose?: () => void }) {
       .then((data) => { if (data?.versionName) setAppVersion(data.versionName); })
       .catch(() => {});
   }, []);
-
-  useEffect(() => {
-    if (Capacitor.isNativePlatform()) {
-      checkAvailability().then(setBiometricAvailable);
-    }
-  }, [checkAvailability]);
-
-  const toggleBiometric = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!biometricEnabled) {
-      const result = await authenticate("Enable biometric login for IISc Badminton Club");
-      if (!result.verified) {
-        toast.error(result.error ?? "Biometric verification failed");
-        return;
-      }
-    }
-    const next = !biometricEnabled;
-    setBiometricEnabled(next);
-    setBiometricEnabledState(next);
-    toast.success(next ? "Biometric login enabled" : "Biometric login disabled");
-  };
-
-
 
   // ── Notification preferences (localStorage + DB sync) ───────────
   const NOTIF_KEYS = [
@@ -96,8 +68,19 @@ export function QuickSettingsContent({ onClose }: { onClose?: () => void }) {
       const { error } = await supabase
         .from("players")
         .update({ status: newStatus })
-        .eq("user_id", session?.user?.id);
+        .eq("id", session?.user?.id);
       if (error) throw error;
+
+      if (newStatus === "playing" && session?.user?.id) {
+        const now = new Date();
+        await supabase.from("court_visits").insert({
+          user_id: session.user.id,
+          visited_at: now.toISOString(),
+          day_of_week: now.getDay(),
+          hour: now.getHours(),
+        });
+      }
+
       await refreshProfile();
       toast.success("Live status updated!");
     } catch (err: any) {
@@ -251,25 +234,6 @@ export function QuickSettingsContent({ onClose }: { onClose?: () => void }) {
               </div>
             )}
           </div>
-          {/* BIOMETRIC AUTH — only shown on native with biometrics available */}
-          {biometricAvailable && (
-            <div className="px-3 py-3">
-              <div className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <Fingerprint className="w-3 h-3" /> Security
-              </div>
-              <button
-                onClick={toggleBiometric}
-                className="w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-bold transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60"
-              >
-                <span className={biometricEnabled ? "text-slate-700 dark:text-slate-200" : "text-slate-400 dark:text-slate-500"}>
-                  Biometric login
-                </span>
-                <div className={`w-8 h-4.5 rounded-full relative transition-colors shrink-0 ${biometricEnabled ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"}`}>
-                  <div className={`absolute top-0.5 w-3.5 h-3.5 bg-white rounded-full shadow transition-all ${biometricEnabled ? "left-4.5" : "left-0.5"}`} />
-                </div>
-              </button>
-            </div>
-          )}
         </>
       )}
       {/* APP VERSION */}

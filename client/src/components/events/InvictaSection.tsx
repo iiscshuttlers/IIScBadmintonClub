@@ -18,7 +18,7 @@ import {
   LayoutList,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { isAdminEmail } from "@/lib/admin";
+import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
 import { useAuth } from "@/contexts/AuthContext";
 import { db } from "@/lib/firebase";
 import { doc, onSnapshot } from "firebase/firestore";

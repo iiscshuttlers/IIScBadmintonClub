@@ -100,7 +100,6 @@ export default function PrivacyPolicy() {
               <li>Maintain your authentication session.</li>
               <li>Store your theme preference (light/dark mode) and accent color choice.</li>
               <li>Remember notification preferences.</li>
-              <li>Cache biometric authentication credentials locally on your device (never sent to our servers).</li>
             </ul>
             <p>We do not use third-party tracking cookies. Google Analytics uses its own cookies as described in their privacy policy.</p>
 

@@ -1,45 +1,12 @@
-import { useState, useEffect } from "react";
 import { Home, Activity, Plus, Users, CalendarDays } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabase";
 import { useLocation } from "wouter";
-import LogMatchModal from "./LogMatchModal";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { Capacitor } from "@capacitor/core";
 
 export default function MobileBottomNav() {
   const { profile } = useAuth();
   const [location, setLocation] = useLocation();
-  const [isOpen, setIsOpen] = useState(false);
-  const [defaultOpponentId, setDefaultOpponentId] = useState<string | undefined>(undefined);
-  const [otherPlayers, setOtherPlayers] = useState<any[]>([]);
-
-  useEffect(() => {
-    const handleOpenLogMatch = (e: any) => {
-      if (e.detail?.player2_id) {
-        setDefaultOpponentId(e.detail.player2_id);
-      } else {
-        setDefaultOpponentId(undefined);
-      }
-      setIsOpen(true);
-    };
-    window.addEventListener("openLogMatchModal", handleOpenLogMatch);
-    return () =>
-      window.removeEventListener("openLogMatchModal", handleOpenLogMatch);
-  }, []);
-
-  useEffect(() => {
-    if (!profile?.id) return;
-    supabase
-      .from("players")
-      .select("id, full_name, avatar_url, gender")
-      .neq("id", profile.id)
-      .is("deleted_at", null)
-      .order("full_name")
-      .then(({ data }) => {
-        if (data) setOtherPlayers(data);
-      });
-  }, [profile?.id]);
 
   if (!profile) return null;
 
@@ -144,19 +111,6 @@ export default function MobileBottomNav() {
           </button>
         </div>
       </div>
-
-      {/* Modal */}
-      <LogMatchModal
-        isOpen={isOpen}
-        onClose={() => {
-          setIsOpen(false);
-          setDefaultOpponentId(undefined);
-        }}
-        currentUser={profile as any}
-        otherPlayers={otherPlayers}
-        onSuccess={() => setIsOpen(false)}
-        defaultOpponentId={defaultOpponentId}
-      />
     </>
   );
 }

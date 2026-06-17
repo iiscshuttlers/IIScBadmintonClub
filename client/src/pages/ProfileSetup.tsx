@@ -305,14 +305,14 @@ export default function ProfileSetup() {
     if (paramId && isAdmin && !isSelfEdit) {
       query = query.eq("id", paramId);
     } else {
-      query = query.eq("user_id", session.user.id);
+      query = query.eq("id", session.user.id);
     }
 
     Promise.resolve(query.maybeSingle())
       .then(({ data: profile, error }) => {
         if (!mounted) return;
         if (profile && !error) {
-          setTargetUserId(profile.user_id);
+          setTargetUserId(profile.id);
           setIsEditing(true);
           setPlayerSlug(profile.id);
           setFullName(profile.full_name || "");
@@ -631,7 +631,7 @@ export default function ProfileSetup() {
           supabase
             .from("players")
             .update(payload)
-            .eq("user_id", targetUserId || session.user.id),
+            .eq("id", targetUserId || session.user.id),
           mkTimeout(),
         ])) as { error: any };
 
@@ -641,17 +641,11 @@ export default function ProfileSetup() {
         setLocation(`/player/${playerSlug}`);
       } else {
         // INSERT new profile
-        const slug = fullName
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/(^-|-$)+/g, "");
-
         const { error } = (await Promise.race([
           supabase
             .from("players")
             .insert({
-              id: slug,
-              user_id: session.user.id,
+              id: session.user.id,
               email: session.user.email,
               ...payload,
             }),
@@ -668,7 +662,7 @@ export default function ProfileSetup() {
           }
         } else {
           // Success! Go to their new shiny profile
-          setLocation(`/player/${slug}`);
+          setLocation(`/player/${session.user.id}`);
         }
       }
     } catch (err: any) {

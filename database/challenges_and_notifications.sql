@@ -1,8 +1,8 @@
 -- Challenges table for matchmaking
 CREATE TABLE IF NOT EXISTS public.challenges (
   id             UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
-  challenger_id  TEXT        REFERENCES public.players(id) ON DELETE CASCADE,
-  challenged_id  TEXT        REFERENCES public.players(id) ON DELETE CASCADE,
+  challenger_id  UUID        REFERENCES public.players(id) ON DELETE CASCADE,
+  challenged_id  UUID        REFERENCES public.players(id) ON DELETE CASCADE,
   format         TEXT        NOT NULL,
   status         TEXT        DEFAULT 'pending' CHECK (status IN ('pending','accepted','declined','completed','cancelled')),
   scheduled_time TIMESTAMPTZ,
@@ -40,7 +40,7 @@ CREATE TRIGGER update_challenges_modtime
 -- Notifications table
 CREATE TABLE IF NOT EXISTS public.notifications (
   id         UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id    TEXT        REFERENCES public.players(id) ON DELETE CASCADE,
+  user_id    UUID        REFERENCES public.players(id) ON DELETE CASCADE,
   title      TEXT        NOT NULL,
   message    TEXT        NOT NULL,
   type       TEXT        NOT NULL,

@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import { useClickOutside } from "@/hooks/useClickOutside";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -29,7 +30,7 @@ import {
   FileCode2
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { isAdminEmail } from "@/lib/admin";
+import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { toast } from "sonner";
@@ -64,7 +65,7 @@ import { AdminActivityLog } from "@/components/admin/AdminActivityLog";
 import { EloAuditPanel } from "@/components/admin/EloAuditPanel";
 import { AdminFeaturesPanel } from "@/components/admin/AdminFeaturesPanel";
 import { AdminAllFeaturesPanel } from "@/components/admin/AdminAllFeaturesPanel";
-import { Paintbrush, ClipboardList, Settings, BarChart2, Zap, Sparkles } from "lucide-react";
+import { Paintbrush, ClipboardList, Settings, BarChart2, Zap, Sparkles, ChevronUp } from "lucide-react";
 
 /* ── Types ──────────────────────────────────────────────────────── */
 type Holiday = { date: string; name: string };
@@ -544,6 +545,10 @@ export default function SiteAdmin() {
       </div>
     );
 
+  const [navOpen, setNavOpen] = useState(false);
+  const navRef = useRef<HTMLDivElement>(null);
+  useClickOutside(navRef, () => setNavOpen(false), navOpen);
+
   const contentTabs: TabId[] = [
     "config",
     "flyers",
@@ -607,55 +612,79 @@ export default function SiteAdmin() {
 
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Tab Groups Navigation */}
-        <div className="mb-8 space-y-4">
-          {TAB_GROUPS.map((group) => {
-            const visibleTabs = group.tabs.filter((tab) => isAdmin || tab.id === "umpire");
-            if (visibleTabs.length === 0) return null;
+        {(() => {
+          const activeGroup = TAB_GROUPS.find(g => g.tabs.some(t => t.id === activeTab));
+          const activeTabMeta = TABS.find(t => t.id === activeTab);
+          const ActiveIcon = activeTabMeta?.icon;
 
-            return (
-              <div key={group.title} className="space-y-2">
-                <div className="flex items-start gap-3 px-4 py-2">
-                  <div>
-                    <h3 className="font-black text-slate-900 dark:text-white text-sm">{group.title}</h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{group.description}</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 px-2">
-                  {visibleTabs.map((tab) => {
-                    const Icon = tab.icon;
-                    const active = activeTab === tab.id;
-                    const count = counts[tab.id];
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() => handleTabChange(tab.id)}
-                        className={`group flex flex-col items-center justify-center gap-2 px-3 py-3 rounded-xl text-xs font-bold transition-all duration-300 relative ${
-                          active
-                            ? "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-2 border-emerald-300 dark:border-emerald-700/60 shadow-sm"
-                            : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700/60 hover:text-emerald-600 dark:hover:text-emerald-400"
-                        }`}
-                      >
-                        {Icon && (
-                          <Icon
-                            className={`w-5 h-5 transition-colors ${active ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400"}`}
-                          />
-                        )}
-                        <span className="text-center leading-tight">{tab.label}</span>
-                        {count !== null && (
-                          <span
-                            className={`absolute top-1 right-1 text-[10px] px-1.5 py-0.5 rounded-full font-black ${active ? "bg-emerald-600 text-white" : "bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300"}`}
+          const navGrid = (
+            <div className="space-y-4">
+              {TAB_GROUPS.map((group) => {
+                const visibleTabs = group.tabs.filter((tab) => isAdmin || tab.id === "umpire");
+                if (visibleTabs.length === 0) return null;
+                return (
+                  <div key={group.title} className="space-y-2">
+                    <div className="flex items-start gap-3 px-4 py-2">
+                      <div>
+                        <h3 className="font-black text-slate-900 dark:text-white text-sm">{group.title}</h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{group.description}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 px-2">
+                      {visibleTabs.map((tab) => {
+                        const Icon = tab.icon;
+                        const active = activeTab === tab.id;
+                        const count = counts[tab.id];
+                        return (
+                          <button
+                            key={tab.id}
+                            onClick={() => { handleTabChange(tab.id); setNavOpen(false); }}
+                            className={`group flex flex-col items-center justify-center gap-2 px-3 py-3 rounded-xl text-xs font-bold transition-all duration-300 relative ${
+                              active
+                                ? "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-2 border-emerald-300 dark:border-emerald-700/60 shadow-sm"
+                                : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700/60 hover:text-emerald-600 dark:hover:text-emerald-400"
+                            }`}
                           >
-                            {count}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
+                            {Icon && (
+                              <Icon className={`w-5 h-5 transition-colors ${active ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400"}`} />
+                            )}
+                            <span className="text-center leading-tight">{tab.label}</span>
+                            {count !== null && (
+                              <span className={`absolute top-1 right-1 text-[10px] px-1.5 py-0.5 rounded-full font-black ${active ? "bg-emerald-600 text-white" : "bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300"}`}>
+                                {count}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+
+          return (
+            <div className="mb-8">
+              {/* Mobile: compact collapsed bar */}
+              <div className="lg:hidden" ref={navRef}>
+                <button
+                  onClick={() => setNavOpen(o => !o)}
+                  className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm text-sm font-bold text-slate-700 dark:text-slate-200 mb-3"
+                >
+                  <span className="flex items-center gap-2.5 min-w-0">
+                    {ActiveIcon && <ActiveIcon className="w-4 h-4 text-emerald-500 shrink-0" />}
+                    <span className="truncate">{activeGroup?.title ?? "Navigation"} › {activeTabMeta?.label}</span>
+                  </span>
+                  <ChevronUp className={`w-4 h-4 shrink-0 text-slate-400 transition-transform ${navOpen ? "" : "rotate-180"}`} />
+                </button>
+                {navOpen && navGrid}
               </div>
-            );
-          })}
-        </div>
+              {/* Desktop: always visible */}
+              <div className="hidden lg:block">{navGrid}</div>
+            </div>
+          );
+        })()}
 
         {/* Editor */}
         <AnimatePresence mode="wait">
@@ -735,12 +764,13 @@ export default function SiteAdmin() {
         {/* Confirm Save Modal */}
         <AnimatePresence>
           {showConfirm && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowConfirm(false)}>
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="bg-white dark:bg-slate-900 w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+                onClick={e => e.stopPropagation()}
               >
                 <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
                   <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2 capitalize">

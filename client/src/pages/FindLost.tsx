@@ -186,7 +186,7 @@ export default function FindLost() {
     
     const { error } = await supabase.rpc("claim_find_lost_item", {
       post_uuid: post.id,
-      claimer_id: profile.user_id,
+      claimer_id: profile.id,
       claimer_name: profile.full_name
     });
     

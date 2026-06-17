@@ -1,9 +1,3 @@
-/**
- * Client-side player profile PDF export (#59).
- * Uses the browser's print API with a hidden print-only div
- * so there's no extra library dependency.
- */
-
 interface ProfileData {
   name: string;
   elo: number;
@@ -19,9 +13,10 @@ interface ProfileData {
 }
 
 export function exportProfilePdf(data: ProfileData) {
-  const winRate = data.wins + data.losses > 0
-    ? Math.round((data.wins / (data.wins + data.losses)) * 100)
-    : 0;
+  const winRate =
+    data.wins + data.losses > 0
+      ? Math.round((data.wins / (data.wins + data.losses)) * 100)
+      : 0;
 
   const rows = data.recentMatches
     .slice(0, 15)
@@ -36,104 +31,105 @@ export function exportProfilePdf(data: ProfileData) {
     )
     .join("");
 
-  const html = `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>${data.name} — IISc Badminton Club Profile</title>
-<style>
-  @page { size: A4; margin: 24mm 20mm; }
-  body { font-family: system-ui, -apple-system, sans-serif; color: #1e293b; margin: 0; padding: 0; }
-  .no-print { display: none; }
-  @media screen {
-    .no-print { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; gap: 12px; }
-    .close-btn { padding: 8px 16px; background: #059669; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; }
-    .close-btn:hover { background: #047857; }
-  }
-  @media print {
-    .no-print { display: none !important; }
-    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  }
-  .content { padding: 24px; }
-  .header { display: flex; align-items: center; gap: 20px; border-bottom: 3px solid #059669; padding-bottom: 16px; margin-bottom: 24px; }
-  .avatar { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; }
-  .avatar-placeholder { width: 72px; height: 72px; border-radius: 50%; background: #dcfce7; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 900; color: #059669; }
-  h1 { margin: 0 0 4px; font-size: 24px; font-weight: 900; }
-  .club { color: #059669; font-size: 13px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
-  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
-  .stat { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 16px; }
-  .stat-value { font-size: 28px; font-weight: 900; color: #0f172a; }
-  .stat-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
-  .elo-value { color: #059669; }
-  h2 { font-size: 14px; font-weight: 900; color: #475569; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 12px; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; padding: 8px 10px; background: #f1f5f9; font-weight: 700; color: #64748b; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; }
-  td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; }
-  .footer { margin-top: 32px; text-align: center; font-size: 10px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 12px; }
-</style>
-</head>
-<body>
-<div class="no-print">
-  <div style="font-weight: 600; color: #475569;">PDF Preview</div>
-  <button class="close-btn" onclick="window.close()">Close</button>
-</div>
-<div class="content">
-<div class="header">
-  ${data.avatarUrl
-    ? `<img src="${data.avatarUrl}" class="avatar" crossorigin="anonymous" />`
-    : `<div class="avatar-placeholder">${data.name.charAt(0).toUpperCase()}</div>`
-  }
-  <div>
-    <h1>${data.name}</h1>
-    <div class="club">IISc Badminton Club</div>
-  </div>
-</div>
+  // Remove any existing overlay first
+  document.getElementById("__pdf-overlay")?.remove();
+  document.getElementById("__pdf-print-style")?.remove();
 
-<div class="stats">
-  <div class="stat">
-    <div class="stat-value elo-value">${data.elo}</div>
-    <div class="stat-label">ELO Rating</div>
-  </div>
-  <div class="stat">
-    <div class="stat-value">${data.wins}</div>
-    <div class="stat-label">Wins</div>
-  </div>
-  <div class="stat">
-    <div class="stat-value">${data.losses}</div>
-    <div class="stat-label">Losses</div>
-  </div>
-  <div class="stat">
-    <div class="stat-value">${winRate}%</div>
-    <div class="stat-label">Win Rate</div>
-  </div>
-</div>
-
-${rows ? `
-<h2>Recent Matches</h2>
-<table>
-  <thead><tr><th>Date</th><th>Opponent</th><th>Score</th><th>Result</th></tr></thead>
-  <tbody>${rows}</tbody>
-</table>` : ""}
-
-<div class="footer">
-  Generated on ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })} • IISc Badminton Club
-</div>
-</div>
-<script>
-  window.addEventListener('afterprint', () => {
-    if (window.opener) {
-      window.close();
+  // Print stylesheet — hides everything except our overlay content when printing
+  const printStyle = document.createElement("style");
+  printStyle.id = "__pdf-print-style";
+  printStyle.textContent = `
+    @media print {
+      body > *:not(#__pdf-overlay) { display: none !important; }
+      #__pdf-overlay { position: static !important; background: white !important; }
+      #__pdf-overlay-toolbar { display: none !important; }
     }
-  });
-</script>
-</body>
-</html>`;
+  `;
+  document.head.appendChild(printStyle);
 
-  const win = window.open("", "_blank", "width=794,height=1123");
-  if (!win) return;
-  win.document.write(html);
-  win.document.close();
-  win.onload = () => {
-    win.print();
+  const overlay = document.createElement("div");
+  overlay.id = "__pdf-overlay";
+  overlay.style.cssText =
+    "position:fixed;inset:0;z-index:99999;background:white;overflow-y:auto;font-family:system-ui,-apple-system,sans-serif;color:#1e293b;";
+
+  overlay.innerHTML = `
+    <div id="__pdf-overlay-toolbar" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#f8fafc;border-bottom:1px solid #e2e8f0;gap:12px;position:sticky;top:0;z-index:1;">
+      <div style="font-weight:600;color:#475569;">PDF Preview</div>
+      <div style="display:flex;gap:8px;">
+        <button id="__pdf-save" style="padding:8px 16px;background:#059669;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;">⬇ Save as PDF</button>
+        <button id="__pdf-close" style="padding:8px 16px;background:#64748b;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;">✕ Close</button>
+      </div>
+    </div>
+    <div style="padding:24px;max-width:720px;margin:0 auto;">
+      <div style="display:flex;align-items:center;gap:20px;border-bottom:3px solid #059669;padding-bottom:16px;margin-bottom:24px;">
+        ${
+          data.avatarUrl
+            ? `<img src="${data.avatarUrl}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;" crossorigin="anonymous" />`
+            : `<div style="width:72px;height:72px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#059669;">${data.name.charAt(0).toUpperCase()}</div>`
+        }
+        <div>
+          <h1 style="margin:0 0 4px;font-size:24px;font-weight:900;">${data.name}</h1>
+          <div style="color:#059669;font-size:13px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">IISc Badminton Club</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;">
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px;">
+          <div style="font-size:28px;font-weight:900;color:#059669;">${data.elo}</div>
+          <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;">ELO Rating</div>
+        </div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px;">
+          <div style="font-size:28px;font-weight:900;color:#0f172a;">${data.wins}</div>
+          <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;">Wins</div>
+        </div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px;">
+          <div style="font-size:28px;font-weight:900;color:#0f172a;">${data.losses}</div>
+          <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;">Losses</div>
+        </div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px;">
+          <div style="font-size:28px;font-weight:900;color:#0f172a;">${winRate}%</div>
+          <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;">Win Rate</div>
+        </div>
+      </div>
+
+      ${
+        rows
+          ? `<h2 style="font-size:14px;font-weight:900;color:#475569;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 12px;">Recent Matches</h2>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead><tr>
+          <th style="text-align:left;padding:8px 10px;background:#f1f5f9;font-weight:700;color:#64748b;text-transform:uppercase;font-size:10px;letter-spacing:0.05em;">Date</th>
+          <th style="text-align:left;padding:8px 10px;background:#f1f5f9;font-weight:700;color:#64748b;text-transform:uppercase;font-size:10px;letter-spacing:0.05em;">Opponent</th>
+          <th style="text-align:left;padding:8px 10px;background:#f1f5f9;font-weight:700;color:#64748b;text-transform:uppercase;font-size:10px;letter-spacing:0.05em;">Score</th>
+          <th style="text-align:left;padding:8px 10px;background:#f1f5f9;font-weight:700;color:#64748b;text-transform:uppercase;font-size:10px;letter-spacing:0.05em;">Result</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`
+          : ""
+      }
+
+      <div style="margin-top:32px;text-align:center;font-size:10px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:12px;">
+        Generated on ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })} • IISc Badminton Club
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const close = () => {
+    overlay.remove();
+    printStyle.remove();
   };
+
+  overlay.querySelector("#__pdf-save")!.addEventListener("click", () => {
+    window.print();
+  });
+  overlay.querySelector("#__pdf-close")!.addEventListener("click", close);
+
+  // Close on Android/iOS hardware back button (popstate trick)
+  const popHandler = () => {
+    close();
+    window.removeEventListener("popstate", popHandler);
+  };
+  history.pushState({ pdfOverlay: true }, "");
+  window.addEventListener("popstate", popHandler);
 }

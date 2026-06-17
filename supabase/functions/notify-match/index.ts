@@ -162,32 +162,14 @@ serve(async (req) => {
 
     const challengerName = challenger?.full_name || "Someone";
 
-    // 3. Fetch Player 2's user_id (UUID)
-    const { data: challenged, error: challengedError } = await supabaseClient
-      .from("players")
-      .select("user_id")
-      .eq("id", player2Id)
-      .single();
-
-    if (challengedError || !challenged?.user_id) {
-      console.error(
-        "[notify-match] Could not find challenged player user_id:",
-        challengedError,
-      );
-      return new Response(
-        JSON.stringify({ message: `Could not find user_id for ${player2Id}` }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
-
-    // 4. Fetch Player 2's Push Tokens (the Challenged)
+    // 3. Fetch Player 2's Push Tokens (player2Id is now the auth UUID)
     const { data: tokens, error: tokensError } = await supabaseClient
       .from("user_push_tokens")
       .select("token")
-      .eq("user_id", challenged.user_id);
+      .eq("user_id", player2Id);
 
     console.log(
-      `[notify-match] Found ${tokens?.length ?? 0} push tokens for ${challenged.user_id}`,
+      `[notify-match] Found ${tokens?.length ?? 0} push tokens for ${player2Id}`,
     );
 
     if (tokensError) {
@@ -203,30 +185,20 @@ serve(async (req) => {
       );
     }
 
-    // 5. Also check for doubles partners
+    // 4. Also fetch tokens for doubles partners (partner IDs are now auth UUIDs)
     const partnerIds = [
       matchRecord.team1_partner_id,
       matchRecord.team2_partner_id,
     ].filter(Boolean);
 
-    // Collect all tokens for all notified players
     let allTokensToSend = [...(tokens || [])];
     for (const partnerId of partnerIds) {
       if (partnerId && partnerId !== player1Id) {
-        // Resolve slug to UUID
-        const { data: partner } = await supabaseClient
-          .from("players")
-          .select("user_id")
-          .eq("id", partnerId)
-          .single();
-
-        if (partner?.user_id) {
-          const { data: partnerTokens } = await supabaseClient
-            .from("user_push_tokens")
-            .select("token")
-            .eq("user_id", partner.user_id);
-          if (partnerTokens) allTokensToSend.push(...partnerTokens);
-        }
+        const { data: partnerTokens } = await supabaseClient
+          .from("user_push_tokens")
+          .select("token")
+          .eq("user_id", partnerId);
+        if (partnerTokens) allTokensToSend.push(...partnerTokens);
       }
     }
 
@@ -264,7 +236,9 @@ serve(async (req) => {
               priority: "high",
               notification: {
                 sound: "smash", // Refers to res/raw/smash.wav
-                channelId: "match_alerts_smash", // New channel required to apply new sound
+                // Must match a channel the app actually creates (see usePushNotifications.ts).
+                // A non-existent channelId causes Android 8+ to silently drop the notification.
+                channelId: isFriendly ? "notify_friendly" : "notify_tournament",
               },
             },
             data: {

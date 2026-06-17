@@ -2,27 +2,91 @@ import { useEffect } from "react";
 import { PushNotifications, type Channel } from "@capacitor/push-notifications";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/lib/supabase";
-import { messaging } from "@/lib/firebase";
+import { getFirebaseMessaging } from "@/lib/firebase";
 import { getToken, onMessage } from "firebase/messaging";
 
 /**
  * Registers for push notifications on native (Android/iOS via FCM)
  * AND requests Web Notification permission for PWA/browser users.
  */
-export function usePushNotifications(
-  userId: string | undefined,
-  playerSlug: string | undefined,
-) {
+export function usePushNotifications(userId: string | undefined) {
   // ─── Native Push (Android/iOS via Capacitor) ───
   useEffect(() => {
     if (!Capacitor.isNativePlatform() || !userId) return;
 
     let isRegistered = false;
 
-    const registerPush = async () => {
-      try {
-        const permStatus = await PushNotifications.checkPermissions();
+    const createAndroidChannels = async () => {
+      if (Capacitor.getPlatform() !== 'android') return;
+      const channels: Channel[] = [
+        { id: "notify_friendly", name: "Friendly matches", description: "Alerts for friendly match requests", importance: 4, visibility: 1 },
+        { id: "notify_tournament", name: "Tournament matches", description: "Updates for tournament matches", importance: 4, visibility: 1 },
+        { id: "notify_challenges", name: "Challenge invites", description: "Alerts for new challenges", importance: 4, visibility: 1 },
+        { id: "notify_confirmation", name: "Match confirmations", description: "Updates when matches are confirmed", importance: 4, visibility: 1 },
+        { id: "notify_announcements", name: "Announcements", description: "Important club announcements", importance: 3, visibility: 1 },
+        { id: "notify_find_lost", name: "Find & Lost posts", description: "Updates on lost and found items", importance: 3, visibility: 1 },
+        { id: "notify_elo_milestone", name: "ELO milestones", description: "Alerts for reaching new ELO milestones", importance: 3, visibility: 1 },
+        { id: "notify_weekly_digest", name: "Weekly digest", description: "Weekly platform activity summary", importance: 2, visibility: 1 }
+      ];
+      for (const channel of channels) {
+        try {
+          await PushNotifications.createChannel(channel);
+        } catch (e) {
+          console.warn(`Failed to create channel ${channel.id}`, e);
+        }
+      }
+    };
 
+    const setup = async () => {
+      try {
+        // 1. Attach listeners FIRST — register() fires the "registration" event
+        //    synchronously, so the listener must already be in place or the token
+        //    is emitted before anyone is listening and never gets saved.
+        await PushNotifications.addListener("registration", async (token) => {
+          if (userId && token.value) {
+            await supabase
+              .from("user_push_tokens")
+              .upsert(
+                {
+                  user_id: userId,
+                  token: token.value,
+                  platform: Capacitor.getPlatform(),
+                },
+                { onConflict: "token" },
+              );
+          }
+        });
+
+        await PushNotifications.addListener("registrationError", (error) => {
+          console.error("Error on registration: " + JSON.stringify(error));
+        });
+
+        await PushNotifications.addListener(
+          "pushNotificationReceived",
+          (notification) => {
+            console.log("Push received: " + JSON.stringify(notification));
+          },
+        );
+
+        await PushNotifications.addListener(
+          "pushNotificationActionPerformed",
+          (notification) => {
+            console.log("Push action performed: " + JSON.stringify(notification));
+            const data =
+              notification.notification.data || (notification as any).data;
+            const matchId = data?.matchId;
+
+            if (userId) {
+              window.location.href = `${import.meta.env.BASE_URL || "/"}matches${matchId ? `?highlight=${matchId}` : ""}`;
+            }
+          },
+        );
+
+        // 2. Create Android channels before registering
+        await createAndroidChannels();
+
+        // 3. Check permissions, then register (fires "registration" → listener saves token)
+        const permStatus = await PushNotifications.checkPermissions();
         if (permStatus.receive === "prompt") {
           const requested = await PushNotifications.requestPermissions();
           if (requested.receive !== "granted") return;
@@ -31,80 +95,13 @@ export function usePushNotifications(
         }
 
         await PushNotifications.register();
-
-        if (Capacitor.getPlatform() === 'android') {
-          const channels: Channel[] = [
-            { id: "notify_friendly", name: "Friendly matches", description: "Alerts for friendly match requests", importance: 4, visibility: 1 },
-            { id: "notify_tournament", name: "Tournament matches", description: "Updates for tournament matches", importance: 4, visibility: 1 },
-            { id: "notify_challenges", name: "Challenge invites", description: "Alerts for new challenges", importance: 4, visibility: 1 },
-            { id: "notify_confirmation", name: "Match confirmations", description: "Updates when matches are confirmed", importance: 4, visibility: 1 },
-            { id: "notify_announcements", name: "Announcements", description: "Important club announcements", importance: 3, visibility: 1 },
-            { id: "notify_find_lost", name: "Find & Lost posts", description: "Updates on lost and found items", importance: 3, visibility: 1 },
-            { id: "notify_elo_milestone", name: "ELO milestones", description: "Alerts for reaching new ELO milestones", importance: 3, visibility: 1 },
-            { id: "notify_weekly_digest", name: "Weekly digest", description: "Weekly platform activity summary", importance: 2, visibility: 1 }
-          ];
-
-          for (const channel of channels) {
-            try {
-              await PushNotifications.createChannel(channel);
-            } catch (e) {
-              console.warn(`Failed to create channel ${channel.id}`, e);
-            }
-          }
-        }
+        isRegistered = true;
       } catch (err) {
         console.warn("Failed to register push notifications", err);
       }
     };
 
-    registerPush();
-
-    const addListeners = async () => {
-      await PushNotifications.addListener("registration", async (token) => {
-        // Save FCM token to Supabase for backend to use when user is offline
-        if (userId && token.value) {
-          await supabase
-            .from("user_push_tokens")
-            .upsert(
-              {
-                user_id: userId,
-                token: token.value,
-                platform: Capacitor.getPlatform(),
-              },
-              { onConflict: "token" },
-            );
-        }
-      });
-
-      await PushNotifications.addListener("registrationError", (error) => {
-        console.error("Error on registration: " + JSON.stringify(error));
-      });
-
-      await PushNotifications.addListener(
-        "pushNotificationReceived",
-        (notification) => {
-          console.log("Push received: " + JSON.stringify(notification));
-        },
-      );
-
-      await PushNotifications.addListener(
-        "pushNotificationActionPerformed",
-        (notification) => {
-          console.log("Push action performed: " + JSON.stringify(notification));
-          const data =
-            notification.notification.data || (notification as any).data;
-          const matchId = data?.matchId;
-
-          // Navigate to dedicated matches page with highlight
-          if (playerSlug) {
-            window.location.href = `${import.meta.env.BASE_URL || "/"}matches${matchId ? `?highlight=${matchId}` : ""}`;
-          }
-        },
-      );
-      isRegistered = true;
-    };
-
-    addListeners();
+    setup();
 
     return () => {
       if (isRegistered) {
@@ -116,37 +113,41 @@ export function usePushNotifications(
   // ─── Web/PWA Browser Notification Permission ───
   useEffect(() => {
     if (Capacitor.isNativePlatform() || !userId) return;
-    if (!("Notification" in window) || !messaging) return;
+    if (!("Notification" in window)) return;
 
     const setupWebPush = async () => {
       try {
         const permission = await Notification.requestPermission();
         if (permission === "granted") {
-          // Get Firebase Web Push Token using the VAPID key
-          // Note: VAPID Key comes from Firebase Console -> Project Settings -> Cloud Messaging -> Web configuration
           const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
-          
           if (!vapidKey) {
             console.warn("[WebPush] VITE_FIREBASE_VAPID_KEY is missing. Web push won't work.");
             return;
           }
 
-          const token = await getToken(messaging, { vapidKey });
-          
+          // Register SW first at the correct subpath, THEN init messaging so
+          // Firebase never attempts its own root-level SW registration.
+          const swRegistration = await navigator.serviceWorker.register(
+            `${import.meta.env.BASE_URL}firebase-messaging-sw.js`,
+            { scope: import.meta.env.BASE_URL }
+          );
+
+          const messaging = getFirebaseMessaging();
+          if (!messaging) return;
+
+          const token = await getToken(messaging, {
+            vapidKey,
+            serviceWorkerRegistration: swRegistration,
+          });
+
           if (token) {
-            // Save token to Supabase
             await supabase
               .from("user_push_tokens")
               .upsert(
-                {
-                  user_id: userId,
-                  token: token,
-                  platform: "web",
-                },
+                { user_id: userId, token, platform: "web" },
                 { onConflict: "token" }
               );
-            
-            // Listen for foreground messages
+
             onMessage(messaging, (payload) => {
               console.log("[WebPush] Message received in foreground:", payload);
               const title = payload.notification?.title || "New Match Update";

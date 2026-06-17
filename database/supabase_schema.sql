@@ -8,9 +8,9 @@ DROP TABLE IF EXISTS matches CASCADE;
 DROP TABLE IF EXISTS players CASCADE;
 DROP TABLE IF EXISTS tournaments CASCADE;
 
--- 2. Create the players table with TEXT id to support '1', '2', or custom SEO slugs!
+-- 2. Create the players table
 CREATE TABLE players (
-  id TEXT PRIMARY KEY, -- Changed from UUID to TEXT for slug & numeric compatibility!
+  id UUID PRIMARY KEY REFERENCES auth.users(id),
   full_name TEXT NOT NULL,
   nickname TEXT,
   avatar_url TEXT,
@@ -35,7 +35,6 @@ CREATE TABLE players (
   apparel TEXT,
   instagram TEXT,
   email TEXT,
-  user_id UUID REFERENCES auth.users(id), -- Auth link included in schema
   racket_details JSONB,
   tournament_history TEXT[],
   achievements TEXT[],
@@ -58,22 +57,22 @@ CREATE TABLE tournaments (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 4. Create matches table (referencing TEXT id for players)
+-- 4. Create matches table
 CREATE TABLE matches (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   tournament_id UUID REFERENCES tournaments(id) ON DELETE CASCADE,
   category TEXT NOT NULL,
   round TEXT NOT NULL,
-  player1_id TEXT REFERENCES players(id),
-  player2_id TEXT REFERENCES players(id),
-  team1_partner_id TEXT REFERENCES players(id),
-  team2_partner_id TEXT REFERENCES players(id),
-  winner_id TEXT REFERENCES players(id),
+  player1_id UUID REFERENCES players(id),
+  player2_id UUID REFERENCES players(id),
+  team1_partner_id UUID REFERENCES players(id),
+  team2_partner_id UUID REFERENCES players(id),
+  winner_id UUID REFERENCES players(id),
   score TEXT NOT NULL,
   date DATE NOT NULL,
   is_friendly BOOLEAN DEFAULT false,
   status TEXT DEFAULT 'confirmed',
-  submitted_by TEXT REFERENCES players(id),
+  submitted_by UUID REFERENCES players(id),
   elo_change_p1 INTEGER,
   elo_change_p2 INTEGER,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
@@ -90,15 +89,10 @@ CREATE POLICY "Allow public read access to tournaments" ON tournaments FOR SELEC
 CREATE POLICY "Allow public read access to matches"     ON matches     FOR SELECT USING (status IS DISTINCT FROM 'pending');
 CREATE POLICY "Players can read their pending matches"  ON matches     FOR SELECT USING (
   status = 'pending'
-  AND EXISTS (
-    SELECT 1
-    FROM players viewer
-    WHERE viewer.user_id = auth.uid()
-      AND viewer.id IN (matches.player1_id, matches.player2_id, matches.team1_partner_id, matches.team2_partner_id)
-  )
+  AND auth.uid() IN (player1_id, player2_id, team1_partner_id, team2_partner_id)
 );
-CREATE POLICY "Users can create their own profile"      ON players     FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update their own profile"      ON players     FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can create their own profile"      ON players     FOR INSERT WITH CHECK (auth.uid() = id);
+CREATE POLICY "Users can update their own profile"      ON players     FOR UPDATE USING (auth.uid() = id);
 
 -- 7. Unique email constraint
 ALTER TABLE players ADD CONSTRAINT players_email_key UNIQUE (email);

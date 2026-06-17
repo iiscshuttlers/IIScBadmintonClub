@@ -13,6 +13,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { PwaInstallPrompt } from "./components/pwa/PwaInstallPrompt";
 import { PwaUpdatePrompt } from "./components/pwa/PwaUpdatePrompt";
+import { AppUpdatePrompt } from "./components/pwa/AppUpdatePrompt";
 import Navigation from "./components/Navigation";
 import Footer from "./components/Footer";
 import MatchAlert from "./components/MatchAlert";
@@ -407,18 +408,21 @@ function AppContent() {
             </Router>
             <Toaster />
             <PwaUpdatePrompt />
+            <AppUpdatePrompt updateInfo={updateInfo} onDismiss={dismissUpdate} />
             <MatchAlert />
-            <LogMatchModal
-              isOpen={isLogMatchOpen}
-              onClose={() => {
-                setIsLogMatchOpen(false);
-                setDefaultOpponentId(undefined);
-              }}
-              currentUser={profile as any}
-              otherPlayers={otherPlayers}
-              onSuccess={() => setIsLogMatchOpen(false)}
-              defaultOpponentId={defaultOpponentId}
-            />
+            {profile && (
+              <LogMatchModal
+                isOpen={isLogMatchOpen}
+                onClose={() => {
+                  setIsLogMatchOpen(false);
+                  setDefaultOpponentId(undefined);
+                }}
+                currentUser={profile as any}
+                otherPlayers={otherPlayers}
+                onSuccess={() => setIsLogMatchOpen(false)}
+                defaultOpponentId={defaultOpponentId}
+              />
+            )}
             <GlobalAuthHooks />
             <OnboardingTour />
             {updateInfo && (

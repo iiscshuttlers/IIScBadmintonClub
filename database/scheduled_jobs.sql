@@ -40,9 +40,20 @@ SELECT cron.schedule(
   $$
 );
 
+-- ── 4. Court Closing Reset — runs every day at 10:30 PM IST (17:00 UTC) ──
+-- Resets "Playing Right Now" to "Taking a break" so forgotten statuses clear overnight
+SELECT cron.schedule(
+  'reset-playing-status-at-court-close',
+  '0 17 * * *',  -- 17:00 UTC = 10:30 PM IST daily
+  $$
+  UPDATE players SET status = 'resting' WHERE status = 'playing';
+  $$
+);
+
 -- ── View scheduled jobs ───────────────────────────────────────
 -- SELECT * FROM cron.job;
 
 -- ── Remove a job if needed ───────────────────────────────────
 -- SELECT cron.unschedule('remind-pending-matches');
 -- SELECT cron.unschedule('weekly-digest');
+-- SELECT cron.unschedule('reset-playing-status-at-court-close');

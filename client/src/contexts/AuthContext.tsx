@@ -7,7 +7,7 @@ import {
 } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
-import { isAdminEmail } from "@/lib/admin";
+import { isMasterAdminEmail } from "@/lib/admin";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { toast } from "sonner";
@@ -17,7 +17,6 @@ import { Badge } from "@capawesome/capacitor-badge";
 
 export interface PlayerProfile {
   id: string;
-  user_id: string;
   full_name: string;
   nickname: string | null;
   iisc_email: string | null;
@@ -47,6 +46,7 @@ export interface PlayerProfile {
   tournament_history: string[] | null;
   elo_rating?: number;
   status?: string;
+  role?: 'master_admin' | 'admin' | 'umpire' | 'player';
   followers?: string[];
   following?: string[];
   buddies?: string[];
@@ -61,8 +61,7 @@ export interface AuthContextType {
   isMainAdmin: boolean;
   isUmpire: boolean;
   isInitializing: boolean; // True while resolving session OR fetching profile
-  userRoles: { id: string; role: string }[];
-  updateRole: (playerId: string, role: string | null) => Promise<void>;
+  updateRole: (playerId: string, role: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -79,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data, error } = await supabase
         .from("players")
         .select("*")
-        .eq("user_id", userId)
+        .eq("id", userId)
         .maybeSingle();
       if (!error && data) {
         setProfile(data as PlayerProfile);
@@ -117,27 +116,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const [userRoles, setUserRoles] = useState<{ id: string; role: string }[]>(
-    [],
-  );
-
-  useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        const { data } = await supabase
-          .from("site_data")
-          .select("value")
-          .eq("key", "roles")
-          .maybeSingle();
-        if (data?.value && Array.isArray(data.value)) {
-          setUserRoles(data.value);
-        }
-      } catch (err) {
-        console.warn("Failed to fetch roles", err);
-      }
-    };
-    fetchRoles();
-  }, [session]);
 
   // Global App Badge logic for pending matches
   useEffect(() => {
@@ -252,34 +230,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isInitializing = sessionLoading || (!!session && profileLoading);
 
-  const isMainAdmin = session?.user?.email
-    ? isAdminEmail(session.user.email)
-    : false;
-  const assignedRole = profile
-    ? userRoles.find((r) => r.id === profile.id)?.role
-    : null;
-  const isAdmin = isMainAdmin || assignedRole === "admin";
-  const isUmpire = isAdmin || assignedRole === "umpire";
+  const playerRole = profile?.role ?? 'player';
+  const isMainAdmin = playerRole === 'master_admin' || isMasterAdminEmail(session?.user?.email);
+  const isAdmin = isMainAdmin || playerRole === 'admin';
+  const isUmpire = isAdmin || playerRole === 'umpire';
 
-  usePushNotifications(profile?.user_id, profile?.id);
+  usePushNotifications(profile?.id);
 
-  const updateRole = async (playerId: string, role: string | null) => {
-    let newRoles = [...userRoles];
-    if (role === null) {
-      newRoles = newRoles.filter((r) => r.id !== playerId);
-    } else {
-      const idx = newRoles.findIndex((r) => r.id === playerId);
-      if (idx > -1) {
-        newRoles[idx].role = role;
-      } else {
-        newRoles.push({ id: playerId, role });
-      }
-    }
+  const updateRole = async (playerId: string, role: string) => {
     await supabase
-      .from("site_data")
-      .update({ value: newRoles })
-      .eq("key", "roles");
-    setUserRoles(newRoles);
+      .from("players")
+      .update({ role })
+      .eq("id", playerId);
+    await refreshProfile();
   };
 
   return (
@@ -292,7 +255,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isMainAdmin,
         isUmpire,
         isInitializing,
-        userRoles,
         updateRole,
         signOut,
         refreshProfile,

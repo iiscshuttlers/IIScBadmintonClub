@@ -6,30 +6,20 @@
 -- ==============================================================================
 
 -- 1. Players can withdraw their own pending matches.
---    submitted_by stores a player TEXT ID, so we look up the viewer's player row.
 CREATE POLICY "Players can withdraw their pending matches" ON matches FOR DELETE USING (
   status = 'pending'
-  AND EXISTS (
-    SELECT 1 FROM players p
-    WHERE p.user_id = auth.uid()
-    AND (
-      p.id = matches.submitted_by
-      OR p.id IN (matches.player1_id, matches.player2_id, matches.team1_partner_id, matches.team2_partner_id)
-    )
+  AND (
+    auth.uid() = matches.submitted_by
+    OR auth.uid() IN (matches.player1_id, matches.player2_id, matches.team1_partner_id, matches.team2_partner_id)
   )
 );
 
 -- 2. Admins can delete any match (regardless of status).
 CREATE POLICY "Admins can delete any match" ON matches FOR DELETE USING (
   EXISTS (
-    SELECT 1 FROM players p
-    WHERE p.user_id = auth.uid()
-    AND p.email IN (
-      'iiscbadmintonclub@gmail.com',
-      'janmejayraja@iisc.ac.in',
-      'janmejay@iisc.ac.in',
-      'raja79sharma@gmail.com'
-    )
+    SELECT 1 FROM players
+    WHERE id = auth.uid()
+    AND role IN ('master_admin', 'admin')
   )
 );
 

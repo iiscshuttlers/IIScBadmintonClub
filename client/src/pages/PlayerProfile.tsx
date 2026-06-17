@@ -62,7 +62,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
-import { isAdminEmail } from "@/lib/admin";
+import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
 import { MatchHistorySection } from "@/components/player-profile/MatchHistorySection";
 import {
   EquipmentArsenalSection,
@@ -101,7 +101,6 @@ import {
   ResponsiveContainer,
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis
 } from "recharts";
-import QRCode from "react-qr-code";
 import { ChallengeModal } from "@/components/ChallengeModal";
 import confetti from "canvas-confetti";
 import { cn, getBaseShareUrl } from "@/lib/utils";
@@ -208,6 +207,7 @@ interface Player {
   doubles_elo?: number;
   mixed_elo?: number;
   isApproved?: boolean;
+  role?: 'master_admin' | 'admin' | 'umpire' | 'player';
   buddies?: string[];
   buddyRequests?: string[];
   singles_record?: string;
@@ -331,7 +331,25 @@ export default function PlayerProfile({
   const { theme, toggleTheme } = useTheme();
 
   // If we're in matchesOnly mode and no routeId is provided, use the logged-in user's profile ID
-  const id = routeId || (matchesOnly ? ownPlayerProfile?.id : undefined);
+  const rawId = routeId || (matchesOnly ? ownPlayerProfile?.id : undefined);
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const isSlug = rawId && !UUID_RE.test(rawId);
+
+  // Resolve legacy slug → UUID by matching against full_name, then redirect
+  useEffect(() => {
+    if (!isSlug || !rawId) return;
+    const namePattern = rawId.replace(/-/g, " ");
+    supabase
+      .from("players")
+      .select("id")
+      .ilike("full_name", namePattern)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.id) setLocation(`/player/${data.id}`, { replace: true });
+      });
+  }, [rawId, isSlug]);
+
+  const id = isSlug ? undefined : rawId;
 
   const [player, setPlayer] = useState<Player | null>(null);
 
@@ -443,7 +461,7 @@ export default function PlayerProfile({
       const { data: myProfile, error: fetchErr } = await supabase
         .from("players")
         .select("following")
-        .eq("user_id", currentUser.id)
+        .eq("id", currentUser.id)
         .single();
       if (fetchErr) throw fetchErr;
       let arr: string[] = myProfile?.following || [];
@@ -453,7 +471,7 @@ export default function PlayerProfile({
       const { error: updateErr } = await supabase
         .from("players")
         .update({ following: arr })
-        .eq("user_id", currentUser.id);
+        .eq("id", currentUser.id);
       if (updateErr) throw updateErr;
       await refreshProfile();
       toast.success(
@@ -617,8 +635,9 @@ export default function PlayerProfile({
         data.instagram || data.email
           ? { instagram: data.instagram, email: data.email }
           : undefined,
-      userId: data.user_id,
+      userId: data.id,
       isApproved: data.is_approved,
+      role: data.role ?? 'player',
       buddies: data.buddies || [],
       buddyRequests: data.buddy_requests || [],
       elo_rating: data.elo_rating,
@@ -761,7 +780,7 @@ export default function PlayerProfile({
   useEffect(() => {
     window.scrollTo(0, 0);
     if (!id) {
-      setLoading(false);
+      if (!isSlug) setLoading(false);
       return;
     }
 
@@ -1250,6 +1269,15 @@ export default function PlayerProfile({
     return <LoadingScreen />;
   }
 
+  if (isSlug) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-slate-50 dark:bg-[#060d1b]">
+        <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Looking up player profile…</p>
+      </div>
+    );
+  }
+
   if (!player) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-[#060d1b] py-20 px-4">
@@ -1363,30 +1391,64 @@ export default function PlayerProfile({
       const res = await fetch(dataUrl);
       const blob = await res.blob();
 
-      try {
-        if (navigator.share && navigator.canShare) {
-          const file = new File([blob], "wrapped.png", { type: "image/png" });
-          if (navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              title: "My IISc Badminton Club Year in Review",
-              files: [file]
-            });
-            setGeneratingWrapped(false);
-            return;
-          }
+      const fileName = `wrapped_${safeName.replace(/\s+/g, "_")}.png`;
+
+      if (Capacitor.isNativePlatform()) {
+        // On native Android: save to gallery via Filesystem then open share sheet
+        const { Filesystem, Directory } = await import("@capacitor/filesystem");
+
+        // Save to Pictures/DCIM so it appears in the gallery
+        const base64 = dataUrl.split(",")[1];
+        let savedPath: string | null = null;
+        try {
+          const saved = await Filesystem.writeFile({
+            path: `Pictures/${fileName}`,
+            data: base64,
+            directory: Directory.ExternalStorage,
+            recursive: true,
+          });
+          savedPath = saved.uri;
+          toast.success("Saved to gallery!");
+        } catch (e) {
+          console.error("Gallery save failed:", e);
+          toast.error("Could not save to gallery — check storage permission.");
         }
 
-        // Fallback to download
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `wrapped_${safeName.replace(/\s+/g, "_")}.png`;
-        a.click();
-        URL.revokeObjectURL(url);
-        toast.success("Wrapped image downloaded!");
-      } catch (e) {
-        console.error("Share error:", e);
-        // If navigator.share fails (e.g. user cancelled), do not show an error toast
+        // Open share sheet with the saved file (or fall back to base64)
+        try {
+          await Share.share({
+            title: "My IISc Badminton Club Year in Review",
+            url: savedPath ?? dataUrl,
+            dialogTitle: "Share your Wrapped card",
+          });
+        } catch (e: any) {
+          if (e?.name !== "AbortError") console.error("Share error:", e);
+        }
+      } else {
+        // Web fallback: share sheet via navigator.share, then download
+        let shared = false;
+        if (navigator.share && navigator.canShare) {
+          const file = new File([blob], fileName, { type: "image/png" });
+          if (navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({ title: "My IISc Badminton Club Year in Review", files: [file] });
+              shared = true;
+            } catch (e: any) {
+              if (e?.name !== "AbortError") console.error("Share error:", e);
+            }
+          }
+        }
+        if (!shared) {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          toast.success("Wrapped image saved to Downloads!");
+        }
       }
       setGeneratingWrapped(false);
     } catch (err) {
@@ -1455,7 +1517,7 @@ export default function PlayerProfile({
   // Last word is the giant display word; everything before it is the smaller label.
   const heroLastWord = nameParts.length > 0 ? nameParts[nameParts.length - 1] : "";
   const heroRestName = nameParts.length > 1 ? nameParts.slice(0, -1).join(" ") : "";
-  const targetUserRole = userRoles.find((r) => r.id === player.id)?.role;
+  const targetUserRole = player.role ?? 'player';
 
   if (matchesOnly) {
     return (
@@ -1522,16 +1584,15 @@ export default function PlayerProfile({
             {isAdmin && player && currentUser?.id !== player.userId && (
               <>
                 <select
-                  value={targetUserRole || ""}
-                  onChange={(e) =>
-                    updateRole(player.id, e.target.value || null)
-                  }
+                  value={targetUserRole}
+                  onChange={(e) => updateRole(player.id, e.target.value)}
                   className="bg-black/20 border border-white/20 text-white text-xs font-semibold rounded-xl px-2 py-2 outline-none hover:bg-black/40 transition backdrop-blur-md"
                   title="Assign Role"
                 >
-                  <option value="" className="text-slate-800 font-medium">Regular Player</option>
+                  <option value="player" className="text-slate-800 font-medium">Regular Player</option>
                   <option value="umpire" className="text-slate-800 font-medium">Umpire</option>
-                  {isMainAdmin && <option value="admin" className="text-slate-800 font-medium">Admin</option>}
+                  {isAdmin && <option value="admin" className="text-slate-800 font-medium">Admin</option>}
+                  {isMainAdmin && <option value="master_admin" className="text-slate-800 font-medium">Master Admin</option>}
                 </select>
                 <button
                   onClick={handleAdminDelete}
@@ -1844,17 +1905,6 @@ export default function PlayerProfile({
               </div>
             </div>
 
-            {/* Right Column: QR Code */}
-            {currentUser && player && currentUser.id === player.userId && (
-              <div className="w-full lg:w-auto flex flex-col items-center bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm mt-4 lg:mt-0">
-                <div className="bg-white p-2 rounded-xl shadow-sm border border-slate-100 dark:border-slate-200">
-                  <QRCode value={`${getBaseShareUrl()}/player/${player.id}`} size={140} />
-                </div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mt-4 text-center max-w-[140px]">
-                  Let opponents scan to log matches
-                </p>
-              </div>
-            )}
 
           </div>
 

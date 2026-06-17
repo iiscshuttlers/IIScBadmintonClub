@@ -6,6 +6,7 @@
  */
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.10.0";
+import { SignJWT, importPKCS8 } from "https://esm.sh/jose@5.2.2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -18,34 +19,18 @@ interface ServiceAccount {
 }
 
 async function getFirebaseToken(sa: ServiceAccount): Promise<string> {
-  const now = Math.floor(Date.now() / 1000);
-  const header = btoa(JSON.stringify({ alg: "RS256", typ: "JWT" }));
-  const payload = btoa(JSON.stringify({
+  const privateKey = await importPKCS8(sa.private_key, "RS256");
+
+  const jwt = await new SignJWT({
     iss: sa.client_email,
     sub: sa.client_email,
     aud: "https://oauth2.googleapis.com/token",
-    iat: now,
-    exp: now + 3600,
     scope: "https://www.googleapis.com/auth/firebase.messaging",
-  }));
-
-  const pemKey = sa.private_key.replace(/\\n/g, "\n");
-  const binaryKey = Uint8Array.from(
-    atob(pemKey.replace(/-----[^-]+-----/g, "").replace(/\s/g, "")),
-    (c) => c.charCodeAt(0),
-  );
-  const cryptoKey = await crypto.subtle.importKey(
-    "pkcs8", binaryKey,
-    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-    false, ["sign"],
-  );
-
-  const sigInput = `${header}.${payload}`;
-  const sig = await crypto.subtle.sign(
-    "RSASSA-PKCS1-v1_5", cryptoKey,
-    new TextEncoder().encode(sigInput),
-  );
-  const jwt = `${sigInput}.${btoa(String.fromCharCode(...new Uint8Array(sig)))}`;
+  })
+    .setProtectedHeader({ alg: "RS256", typ: "JWT" })
+    .setIssuedAt()
+    .setExpirationTime("1h")
+    .sign(privateKey);
 
   const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
@@ -53,6 +38,9 @@ async function getFirebaseToken(sa: ServiceAccount): Promise<string> {
     body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
   });
   const tokenData = await tokenRes.json();
+  if (!tokenRes.ok) {
+    throw new Error(`Failed to get Firebase token: ${tokenData.error_description}`);
+  }
   return tokenData.access_token as string;
 }
 
@@ -114,18 +102,11 @@ serve(async () => {
   const staleTokens: string[] = [];
 
   for (const [playerId, notifs] of byPlayer) {
-    // Resolve player_id → user_id (auth UUID)
-    const { data: playerRow } = await supabase
-      .from("players")
-      .select("user_id")
-      .eq("id", playerId)
-      .single();
-
-    // Fetch player's push tokens by auth user_id
+    // player_id in notification_queue is now the auth UUID directly
     const { data: tokens } = await supabase
       .from("user_push_tokens")
       .select("token")
-      .eq("user_id", playerRow?.user_id ?? "");
+      .eq("user_id", playerId);
 
     if (!tokens || tokens.length === 0) {
       // No token — mark as sent anyway to clear queue

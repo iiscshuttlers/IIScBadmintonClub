@@ -30,17 +30,7 @@ CREATE POLICY "Players can read their pending matches"
   FOR SELECT
   USING (
     status = 'pending'
-    AND EXISTS (
-      SELECT 1
-      FROM players viewer
-      WHERE viewer.user_id = auth.uid()
-        AND viewer.id IN (
-          matches.player1_id,
-          matches.player2_id,
-          matches.team1_partner_id,
-          matches.team2_partner_id
-        )
-    )
+    AND auth.uid() IN (player1_id, player2_id, team1_partner_id, team2_partner_id)
   );
 
 -- 3. RPC to SUBMIT a match (Leaves it 'pending', NO Elo update yet)

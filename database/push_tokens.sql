@@ -1,7 +1,7 @@
 -- Table for storing Capacitor Push Notification tokens
 CREATE TABLE IF NOT EXISTS public.user_push_tokens (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id TEXT REFERENCES public.players(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES public.players(id) ON DELETE CASCADE,
     token TEXT NOT NULL,
     platform TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -19,18 +19,18 @@ DROP POLICY IF EXISTS "Service role can view all tokens for push triggers" ON pu
 CREATE POLICY "Users can insert their own push tokens"
 ON public.user_push_tokens FOR INSERT
 TO authenticated
-WITH CHECK (auth.uid()::text = user_id);
+WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can update their own push tokens"
 ON public.user_push_tokens FOR UPDATE
 TO authenticated
-USING (auth.uid()::text = user_id)
-WITH CHECK (auth.uid()::text = user_id);
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can view their own push tokens"
 ON public.user_push_tokens FOR SELECT
 TO authenticated
-USING (auth.uid()::text = user_id);
+USING (auth.uid() = user_id);
 
 CREATE POLICY "Service role can view all tokens for push triggers"
 ON public.user_push_tokens FOR SELECT

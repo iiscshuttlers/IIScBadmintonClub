@@ -2,14 +2,12 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Sword, Trophy, Loader2, Users, User, Plus, Minus,
-  Clock, Lock, QrCode, WifiOff, ChevronRight, ChevronLeft, Check, Wifi,
+  Clock, Lock, ChevronRight, ChevronLeft, Check, WifiOff,
 } from "lucide-react";
-import QRCode from "react-qr-code";
 import { SwipeToConfirm } from "@/components/ui/SwipeToConfirm";
 import { supabase } from "@/lib/supabase";
-import { isAdminEmail } from "@/lib/admin";
+import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
 import { toast } from "sonner";
-import { QRCodeScannerModal } from "./QRCodeScannerModal";
 
 interface Player {
   id: string;
@@ -143,10 +141,6 @@ export default function LogMatchModal({
   const [videoUrl, setVideoUrl] = useState("");
   const [matchNotes, setMatchNotes] = useState("");
   const [recentOpponentIds, setRecentOpponentIds] = useState<string[]>([]);
-  const [isScanOpen, setIsScanOpen] = useState(false);
-  const [isMyQROpen, setIsMyQROpen] = useState(false);
-  const [isNFCOpen, setIsNFCOpen] = useState(false);
-  const [scanTarget, setScanTarget] = useState<"opponent" | "partner" | "opponentPartner">("opponent");
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [offlineQueueCount, setOfflineQueueCount] = useState(0);
 
@@ -307,9 +301,6 @@ export default function LogMatchModal({
     return t1Mixed !== t2Mixed || t1Male !== t2Male || t1Female !== t2Female;
   };
 
-  const handleNFC = () => {
-    setIsNFCOpen(true);
-  };
 
   const handleSubmit = async () => {
     if (!currentUser) return;
@@ -402,12 +393,13 @@ export default function LogMatchModal({
   return (
     <>
       <AnimatePresence>
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto"
+            onClick={e => e.stopPropagation()}
           >
             {/* Header */}
             <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
@@ -437,25 +429,6 @@ export default function LogMatchModal({
               {/* ── STEP 0: Setup ─────────────────────────────────── */}
               {step === 0 && (
                 <div className="space-y-5">
-                  {/* ── Quick Action Hub ─────────────────────────────────── */}
-                  <div className="flex gap-2">
-                    <button type="button" onClick={() => { setScanTarget("opponent"); setIsScanOpen(true); }}
-                      className="flex-1 flex flex-col items-center justify-center gap-1.5 py-3 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-700 hover:border-emerald-400 dark:hover:border-emerald-500 transition-all active:scale-95">
-                      <QrCode className="w-6 h-6 text-emerald-500" />
-                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Scan QR</span>
-                    </button>
-                    <button type="button" onClick={() => setIsMyQROpen(true)}
-                      className="flex-1 flex flex-col items-center justify-center gap-1.5 py-3 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 transition-all active:scale-95">
-                      <User className="w-6 h-6 text-blue-500" />
-                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Show My QR</span>
-                    </button>
-                    <button type="button" onClick={() => { setScanTarget("opponent"); handleNFC(); }}
-                      className="flex-1 flex flex-col items-center justify-center gap-1.5 py-3 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-700 hover:border-purple-400 dark:hover:border-purple-500 transition-all active:scale-95">
-                      <Wifi className="w-6 h-6 text-purple-500 rotate-90" />
-                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Tap NFC</span>
-                    </button>
-                  </div>
-
                   <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-xl px-3 py-2 border border-slate-100 dark:border-slate-800">
                     <Clock className="w-3.5 h-3.5" /> Logging at: <span className="text-slate-700 dark:text-slate-200">{timestamp}</span>
                   </div>
@@ -524,10 +497,6 @@ export default function LogMatchModal({
                             })}
                           </div>
                         )}
-                        <button type="button" onClick={() => { setScanTarget("opponent"); setIsScanOpen(true); }}
-                          className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors">
-                          <QrCode className="w-3 h-3" /> Scan QR
-                        </button>
                         <span className="text-[10px] uppercase font-bold text-slate-400 mt-1">Opponent</span>
                       </div>
                     </div>
@@ -707,65 +676,6 @@ export default function LogMatchModal({
         </div>
       </AnimatePresence>
 
-      <AnimatePresence>
-        {isMyQROpen && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm" onClick={() => setIsMyQROpen(false)}>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-2xl text-center relative"
-            >
-              <button onClick={() => setIsMyQROpen(false)} className="absolute top-4 right-4 p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition">
-                <X className="w-5 h-5" />
-              </button>
-              <h3 className="text-xl font-black text-slate-900 dark:text-white mb-1">My Match QR</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">Have your opponent scan this to quickly log a match with you.</p>
-              
-              <div className="bg-white p-4 rounded-2xl inline-block mx-auto border-4 border-slate-100 dark:border-slate-800 shadow-sm">
-                <QRCode value={currentUser?.id || ""} size={200} />
-              </div>
-              <p className="mt-4 text-xs font-bold text-emerald-600 dark:text-emerald-400">{currentUser?.full_name}</p>
-            </motion.div>
-          </div>
-        )}
-
-        {isNFCOpen && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm" onClick={() => setIsNFCOpen(false)}>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-2xl text-center relative border border-slate-200 dark:border-slate-800"
-            >
-              <button onClick={() => setIsNFCOpen(false)} className="absolute top-4 right-4 p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition">
-                <X className="w-5 h-5" />
-              </button>
-              <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-purple-50 dark:border-purple-900/10">
-                 <Wifi className="w-8 h-8 text-purple-600 dark:text-purple-400 rotate-90" />
-              </div>
-              <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">NFC Unavailable</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Your device or browser does not currently support Web NFC. Please use Android Chrome or switch to QR Code scanning.</p>
-              
-              <button onClick={() => setIsNFCOpen(false)} className="w-full py-3 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold hover:opacity-90 transition">
-                Got it
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      <QRCodeScannerModal
-        isOpen={isScanOpen}
-        onClose={() => setIsScanOpen(false)}
-        onScan={(id) => {
-          if (scanTarget === "opponent") setOpponentId(id);
-          else if (scanTarget === "partner") setPartnerId(id);
-          else if (scanTarget === "opponentPartner") setOpponentPartnerId(id);
-        }}
-      />
     </>
   );
 }

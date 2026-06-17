@@ -43,7 +43,7 @@ CREATE POLICY "Anyone authenticated can read progress"
 
 CREATE POLICY "Player can manage own progress"
   ON public.challenge_progress FOR ALL
-  USING (auth.uid() = (SELECT user_id FROM public.players WHERE id = player_id));
+  USING (auth.uid() = player_id);
 
 CREATE INDEX IF NOT EXISTS idx_weekly_challenges_week      ON public.weekly_challenges (week_start DESC);
 CREATE INDEX IF NOT EXISTS idx_challenge_progress_player   ON public.challenge_progress (player_id);

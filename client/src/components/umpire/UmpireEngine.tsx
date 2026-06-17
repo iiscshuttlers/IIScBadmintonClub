@@ -5,7 +5,7 @@ import {
   AlertTriangle, BookOpen, ArrowLeftRight, Flag, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { toast } from "sonner";
-import { isAdminEmail } from "@/lib/admin";
+import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
 import { Capacitor } from "@capacitor/core";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -15,7 +15,6 @@ export interface Player {
   full_name: string;
   avatar_url?: string;
   gender?: string;
-  user_id?: string;
 }
 
 export type PointLogEntry = {
@@ -499,7 +498,7 @@ export function UmpireEngine({
   useEffect(() => {
     supabase
       .from("players")
-      .select("id, full_name, avatar_url, gender, user_id")
+      .select("id, full_name, avatar_url, gender")
       .is("deleted_at", null)
       .then(({ data }) => { if (data) setPlayers(data); });
   }, []);
@@ -596,7 +595,7 @@ export function UmpireEngine({
       return;
     }
     if (match.isFriendly && !isAdmin) {
-      const { data: ump } = await supabase.from("players").select("buddies").eq("user_id", userId).maybeSingle();
+      const { data: ump } = await supabase.from("players").select("buddies").eq("id", userId).maybeSingle();
       const buddies: string[] = ump?.buddies || [];
       const ids = [match.t1.p1Id, match.t1.p2Id, match.t2.p1Id, match.t2.p2Id].filter(Boolean) as string[];
       if (!ids.some(id => buddies.includes(id))) {
@@ -922,7 +921,7 @@ export function UmpireEngine({
       const durationMinutes = Math.max(1, Math.round((matchEndTs - matchStartTs) / 60000));
       const roundLabel = `${match.matchNumber || (match.isFriendly ? "Friendly" : "Tournament")} • ${durationMinutes}m`;
 
-      const umpirePlayerId = players.find(p => p.user_id === userId)?.id || "";
+      const umpirePlayerId = players.find(p => p.id === userId)?.id || "";
       const payload = {
         umpire_id:          umpirePlayerId,
         player1_id:         match.t1.p1Id,

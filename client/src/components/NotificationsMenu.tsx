@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { Bell, Swords, UserPlus, Info, CheckCircle2 } from "lucide-react";
+import { Bell, Swords, UserPlus, Info, CheckCircle2, Sword } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import {
   DropdownMenu,
@@ -34,7 +34,7 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
 
     // Subscribe to new notifications
     const channel = supabase
-      .channel("notifications_channel")
+      .channel(`notifications_channel_${currentUser.id}_${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         {
@@ -79,8 +79,10 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
     switch (type) {
       case "challenge_received":
         return <Swords className="w-5 h-5 text-orange-500" />;
+      case "match_logged":
+        return <Sword className="w-5 h-5 text-emerald-500" />;
       case "buddy_request":
-        return <UserPlus className="w-5 h-5 text-emerald-500" />;
+        return <UserPlus className="w-5 h-5 text-violet-500" />;
       default:
         return <Info className="w-5 h-5 text-blue-500" />;
     }
@@ -133,7 +135,12 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
                       {n.title}
                     </h4>
                     <span className="text-[10px] font-medium text-slate-400 whitespace-nowrap ml-2">
-                      {new Date(n.created_at).toLocaleDateString()}
+                      {new Date(n.created_at).toLocaleString([], {
+                        day: "numeric",
+                        month: "short",
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
                     </span>
                   </div>
                   <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">

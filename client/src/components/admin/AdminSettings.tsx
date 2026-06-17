@@ -74,15 +74,41 @@ export function AdminSettings() {
     if (!customPush.title.trim()) { toast.error("Title is required"); return; }
     setPushing(true);
     try {
+      // 1. Call edge function → sends real FCM push to ALL registered devices
+      const { data: fnData, error: fnError } = await supabase.functions.invoke("send-announcement", {
+        body: {
+          title: customPush.title.trim(),
+          body: customPush.body.trim() || customPush.title.trim(),
+          admin_email: session?.user?.email ?? "admin",
+        },
+      });
+      if (fnError) throw fnError;
+
+      // 2. Also write to site_data so users with the app open get it via Realtime
       const payload = {
         title: customPush.title.trim(),
         body: customPush.body.trim(),
         url: customPush.url.trim(),
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
-      const { error } = await supabase.from("site_data").upsert({ key: "admin_push", value: payload, updated_at: new Date().toISOString() }, { onConflict: "key" });
-      if (error) throw error;
-      toast.success("Push notification sent to all active users!");
+      await supabase.from("site_data").upsert(
+        { key: "admin_push", value: payload, updated_at: new Date().toISOString() },
+        { onConflict: "key" }
+      );
+
+      const sent = fnData?.sent ?? 0;
+      const failed = fnData?.failed ?? 0;
+
+      await supabase.from("broadcast_history").insert({
+        sent_by: session?.user?.email ?? "admin",
+        title: customPush.title.trim(),
+        body: customPush.body.trim() || null,
+        url: customPush.url.trim() || null,
+        devices_sent: sent,
+        devices_failed: failed,
+      });
+
+      toast.success(`Sent to ${sent} device${sent !== 1 ? "s" : ""}${failed > 0 ? ` (${failed} failed)` : ""}!`);
       setCustomPush({ title: "", body: "", url: "" });
     } catch (err: any) {
       toast.error(err?.message || "Failed to send push");

@@ -20,7 +20,6 @@ export interface Player {
   dominant_hand: string;
   avatar_url: string;
   current_racket?: string;
-  user_id?: string;
   elo_rating?: number;
   singles_elo?: number;
   doubles_elo?: number;

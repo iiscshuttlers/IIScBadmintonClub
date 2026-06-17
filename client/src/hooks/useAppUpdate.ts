@@ -4,7 +4,6 @@ import { Capacitor } from "@capacitor/core";
 
 export type AppUpdateInfo = {
   versionName: string;
-  downloadUrl: string;
   changelog: string;
 };
 
@@ -16,18 +15,17 @@ export function useAppUpdate() {
 
     (async () => {
       try {
+        const remoteVersionUrl =
+          "https://iiscshuttlers.github.io/iiscshuttlers/data/app-version.json";
         const [info, res] = await Promise.all([
           CapApp.getInfo(),
-          fetch(
-            `${import.meta.env.BASE_URL}data/app-version.json?v=${Date.now()}`,
-          ),
+          fetch(`${remoteVersionUrl}?v=${Date.now()}`),
         ]);
         const latest = await res.json();
 
         if (Number.parseInt(info.build, 10) < latest.versionCode) {
           setUpdateInfo({
             versionName: latest.versionName,
-            downloadUrl: latest.downloadUrl,
             changelog: latest.changelog,
           });
         }

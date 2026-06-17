@@ -1,8 +1,8 @@
 -- Buddy / Practice Partner System (normalized)
 CREATE TABLE IF NOT EXISTS public.buddy_requests (
   id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  sender_id   TEXT        NOT NULL REFERENCES public.players(id) ON DELETE CASCADE,
-  receiver_id TEXT        NOT NULL REFERENCES public.players(id) ON DELETE CASCADE,
+  sender_id   UUID        NOT NULL REFERENCES public.players(id) ON DELETE CASCADE,
+  receiver_id UUID        NOT NULL REFERENCES public.players(id) ON DELETE CASCADE,
   status      TEXT        NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','accepted','declined')),
   message     TEXT,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -19,22 +19,19 @@ DROP POLICY IF EXISTS "Parties can delete"                    ON public.buddy_re
 
 CREATE POLICY "Parties can read their buddy requests"
   ON public.buddy_requests FOR SELECT
-  USING (auth.uid() = (SELECT user_id FROM public.players WHERE id = sender_id)
-      OR auth.uid() = (SELECT user_id FROM public.players WHERE id = receiver_id));
+  USING (auth.uid() = sender_id OR auth.uid() = receiver_id);
 
 CREATE POLICY "Sender can insert buddy request"
   ON public.buddy_requests FOR INSERT
-  WITH CHECK (auth.uid() = (SELECT user_id FROM public.players WHERE id = sender_id));
+  WITH CHECK (auth.uid() = sender_id);
 
 CREATE POLICY "Receiver can update status"
   ON public.buddy_requests FOR UPDATE
-  USING (auth.uid() = (SELECT user_id FROM public.players WHERE id = receiver_id)
-      OR auth.uid() = (SELECT user_id FROM public.players WHERE id = sender_id));
+  USING (auth.uid() = receiver_id OR auth.uid() = sender_id);
 
 CREATE POLICY "Parties can delete"
   ON public.buddy_requests FOR DELETE
-  USING (auth.uid() = (SELECT user_id FROM public.players WHERE id = sender_id)
-      OR auth.uid() = (SELECT user_id FROM public.players WHERE id = receiver_id));
+  USING (auth.uid() = sender_id OR auth.uid() = receiver_id);
 
 CREATE INDEX IF NOT EXISTS idx_buddy_sender   ON public.buddy_requests (sender_id);
 CREATE INDEX IF NOT EXISTS idx_buddy_receiver ON public.buddy_requests (receiver_id);

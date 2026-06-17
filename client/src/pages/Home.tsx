@@ -90,7 +90,7 @@ export default function Home() {
       <div className="min-h-screen pb-24 lg:pb-8">
 
         {/* ── HERO ──────────────────────────────────────────────────────── */}
-        <section aria-label="Hero" className="relative overflow-hidden text-white min-h-[90vh] flex items-center">
+        <section aria-label="Hero" className="relative overflow-hidden text-white min-h-[calc(90vh-72px)] lg:min-h-[90vh] flex items-center">
           {/* Mobile photo bg */}
           <div className="lg:hidden absolute inset-0 z-0">
             <img src={iiscTeam} alt="IISc Badminton Team" className="w-full h-full object-cover object-[25%_center]" />
@@ -109,7 +109,7 @@ export default function Home() {
             <div className="absolute inset-0 dot-pattern opacity-30" />
           </div>
 
-          <div className="container mx-auto px-4 py-24 lg:py-28 relative z-10 w-full">
+          <div className="container mx-auto px-4 pt-16 pb-20 lg:py-28 relative z-10 w-full">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
 
               {/* Left Content */}

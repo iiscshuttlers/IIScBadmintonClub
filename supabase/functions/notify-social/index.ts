@@ -102,23 +102,11 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-    // Resolve player TEXT id → auth UUID (user_push_tokens is keyed by auth UUID)
-    const { data: recipient, error: recipientError } = await supabase
-      .from("players")
-      .select("user_id")
-      .eq("id", to_player_id)
-      .single();
-
-    if (recipientError || !recipient?.user_id) {
-      console.warn(`[notify-social] Could not find user_id for player ${to_player_id}`);
-      return new Response(JSON.stringify({ sent: 0, reason: "player_not_found" }), { headers: corsHeaders });
-    }
-
-    // Fetch FCM tokens for this user
+    // to_player_id is now the auth UUID directly
     const { data: tokens } = await supabase
       .from("user_push_tokens")
       .select("token")
-      .eq("user_id", recipient.user_id);
+      .eq("user_id", to_player_id);
 
     if (!tokens || tokens.length === 0) {
       return new Response(JSON.stringify({ sent: 0, reason: "no_tokens" }), { headers: corsHeaders });

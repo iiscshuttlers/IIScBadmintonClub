@@ -110,10 +110,10 @@ try {
   if (tags.length > 0 && tags[0]) {
     autoChangelog = execSync(`git log ${tags[0]}..HEAD --pretty=format:"- %s"`).toString().trim();
   }
-} catch (e) {}
+} catch (e) { }
 
 if (!autoChangelog) {
-  try { autoChangelog = execSync(`git log -n 5 --pretty=format:"- %s"`).toString().trim(); } catch (e) {}
+  try { autoChangelog = execSync(`git log -n 5 --pretty=format:"- %s"`).toString().trim(); } catch (e) { }
 }
 
 const changelog = process.argv[2] || autoChangelog || `Version ${newName} released`;
@@ -139,7 +139,7 @@ writeFileSync(
 const changelogFile = resolve(root, "client/public/data/changelog.json");
 let changelogData = [];
 if (existsSync(changelogFile)) {
-  try { changelogData = JSON.parse(readFileSync(changelogFile, "utf8")); } catch(e) {}
+  try { changelogData = JSON.parse(readFileSync(changelogFile, "utf8")); } catch (e) { }
 }
 
 // Avoid duplicates if retrying a failed build
@@ -171,15 +171,18 @@ run("gradlew assembleRelease bundleRelease", {
 });
 
 /* ── 6. Copy artifacts to OneDrive ──────────────────────────────── */
-log("Copying APK and AAB to OneDrive…");
+log("Copying APK and AAB to OneDrive in the background…");
 try {
-  const oneDriveApkPath = resolve(ONEDRIVE_DIR, finalApkName);
-  const oneDriveAabPath = resolve(ONEDRIVE_DIR, finalAabName);
-  run(`copy "${APK_SRC}" "${oneDriveApkPath}"`, { shell: true });
-  run(`copy "${AAB_SRC}" "${oneDriveAabPath}"`, { shell: true });
-  ok("APK and AAB copied to OneDrive");
+  import("child_process").then(({ spawn }) => {
+    const oneDriveApkPath = resolve(ONEDRIVE_DIR, finalApkName);
+    const oneDriveAabPath = resolve(ONEDRIVE_DIR, finalAabName);
+    
+    spawn("cmd.exe", ["/c", `copy "${APK_SRC}" "${oneDriveApkPath}"`], { detached: true, stdio: "ignore" }).unref();
+    spawn("cmd.exe", ["/c", `copy "${AAB_SRC}" "${oneDriveAabPath}"`], { detached: true, stdio: "ignore" }).unref();
+  });
+  ok("APK and AAB copying initiated in background");
 } catch {
-  console.warn("⚠ OneDrive copy failed (non-fatal) — continuing");
+  console.warn("⚠ OneDrive copy initiation failed (non-fatal) — continuing");
 }
 
 /* ── 7. GitHub Release ──────────────────────────────────────────── */
@@ -199,19 +202,19 @@ try {
 // Delete tag/release if it somehow already exists
 try {
   execSync(`gh release delete ${tag} --repo ${REPO} --yes`, { stdio: "pipe" });
-} catch {}
+} catch { }
 try {
   execSync(`gh api repos/${REPO}/git/refs/tags/${tag} -X DELETE`, {
     stdio: "pipe",
   });
-} catch {}
+} catch { }
 
 run(
   `gh release create ${tag} "${releaseApkPath}" "${releaseAabPath}" ` +
-    `--repo ${REPO} ` +
-    `--title "v${newName}" ` +
-    `--notes "${changelog.replace(/"/g, "'")}" ` +
-    `--latest`,
+  `--repo ${REPO} ` +
+  `--title "v${newName}" ` +
+  `--notes "${changelog.replace(/"/g, "'")}" ` +
+  `--latest`,
 );
 ok(`GitHub Release v${newName} published with APK and AAB`);
 
