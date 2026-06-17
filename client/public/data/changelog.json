@@ -1,5 +1,27 @@
 [
   {
+    "versionCode": 123,
+    "versionName": "1.123",
+    "date": "2026-06-17T12:49:21.530Z",
+    "changes": [
+      "- fix: fix flyers visibility on all pages and add comprehensive admin documentation",
+      "- fix: resolve 6 critical issues - challenges, notifications, and cross-gender validation",
+      "- fix: improve QR/NFC handling, deep links, and menu visibility",
+      "- docs: add Play Store submission guide and project status report",
+      "- docs: add comprehensive documentation for users, admins, and API",
+      "- test: add comprehensive integration tests for core features",
+      "- chore: set up comprehensive testing infrastructure with vitest",
+      "- chore: update privacy policy, clean up configs, and remove deprecated offline queue",
+      "- chore: release v1.122 (build 122)",
+      "- docs: add final Play Store completion summary and status",
+      "- docs: add quick-start guide for Play Store submission",
+      "- docs: add Play Store completion summary and status report",
+      "- docs: comprehensive Play Store preparation and project cleanup guides",
+      "- refactor: reorganize admin panel with grouped tab navigation",
+      "- feat: add comprehensive features tracking to admin panel"
+    ]
+  },
+  {
     "versionCode": 122,
     "versionName": "1.122",
     "date": "2026-06-17T11:46:27.252Z",
