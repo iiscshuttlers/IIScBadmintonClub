@@ -43,7 +43,7 @@ export function useBiometricAuth() {
 
       await NativeBiometric.verifyIdentity({
         reason,
-        title: "IISc Shuttlers",
+        title: "IISc Badminton Club",
         subtitle: "Biometric Login",
         description: reason,
         negativeButtonText: "Use Password",

@@ -56,7 +56,7 @@ export function WrappedCard({ playerName, avatarUrl, elo, matches, playerId, yea
   const share = async () => {
     setSharing(true);
     try {
-      const text = `🏸 My ${year} Badminton Wrapped at IISc Shuttlers!\n\n${wins}W / ${losses}L • ${winRate}% Win Rate\nBest Streak: ${bestStreak} 🔥\nELO: ${elo}\nBusiest Month: ${busyMonthName}\n\n#IIScShuttlers #Badminton`;
+      const text = `🏸 My ${year} Badminton Wrapped at IISc Badminton Club!\n\n${wins}W / ${losses}L • ${winRate}% Win Rate\nBest Streak: ${bestStreak} 🔥\nELO: ${elo}\nBusiest Month: ${busyMonthName}\n\n#IIScShuttlers #Badminton`;
 
       if (Capacitor.isNativePlatform()) {
         await Share.share({ text, title: `${playerName}'s ${year} Wrapped` });
@@ -144,7 +144,7 @@ export function WrappedCard({ playerName, avatarUrl, elo, matches, playerId, yea
           )}
 
           <div className="mt-4 text-center">
-            <p className="text-[10px] text-white/30 font-bold uppercase tracking-wider">IISc Shuttlers</p>
+            <p className="text-[10px] text-white/30 font-bold uppercase tracking-wider">IISc Badminton Club</p>
           </div>
         </div>
       </div>

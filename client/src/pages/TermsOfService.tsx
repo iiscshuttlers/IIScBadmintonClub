@@ -27,7 +27,7 @@ export default function TermsOfService() {
           
           <div className="prose prose-slate dark:prose-invert max-w-none space-y-6 text-slate-600 dark:text-slate-300">
             <p>
-              Welcome to the IISc Badminton Club ("IISc Shuttlers", "we", "us", or "our") platform. By accessing or using our application and website 
+              Welcome to the IISc Badminton Club ("we", "us", or "our") platform. By accessing or using our application and website 
               (collectively, the "Service"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, 
               please do not use the Service.
             </p>
@@ -127,9 +127,9 @@ export default function TermsOfService() {
             <p>
               If you have any questions about these Terms, please contact us at:
               <br /><br />
-              <strong>IISc Gymkhana Office</strong><br />
+              <strong>IISc Badminton Club</strong><br />
               Indian Institute of Science, Bangalore 560012<br />
-              Email: <a href="mailto:office.gym@iisc.ac.in" className="text-emerald-600 dark:text-emerald-400 hover:underline">office.gym@iisc.ac.in</a>
+              Email: <a href="mailto:iiscbadmintonclub@gmail.com" className="text-emerald-600 dark:text-emerald-400 hover:underline">iiscbadmintonclub@gmail.com</a>
             </p>
           </div>
         </div>

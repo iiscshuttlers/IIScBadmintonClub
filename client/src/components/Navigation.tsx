@@ -158,19 +158,19 @@ export default function Navigation() {
   };
 
   const handleInvite = async () => {
-    const inviteText = "Join me on IISc Shuttlers! The ultimate platform for badminton tracking.";
+    const inviteText = "Join me on IISc Badminton Club! The ultimate platform for badminton tracking.";
     const inviteUrl = "https://iiscshuttlers.github.io/iiscshuttlers/join";
     
     if (Capacitor.isNativePlatform()) {
       await Share.share({
-        title: "Join IISc Shuttlers",
+        title: "Join IISc Badminton Club",
         text: inviteText,
         url: inviteUrl,
         dialogTitle: "Invite Friends",
       });
     } else if (navigator.share) {
       await navigator.share({
-        title: "Join IISc Shuttlers",
+        title: "Join IISc Badminton Club",
         text: inviteText,
         url: inviteUrl,
       });
@@ -560,8 +560,10 @@ export default function Navigation() {
           </div>
         )}
 
-        {/* ── Mobile Bottom Navigation Bar ─────────────────────────────── */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 flex justify-around items-end px-2 pb-safe pt-1 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]">
+      </nav>
+
+      {/* ── Mobile Bottom Navigation Bar (outside nav to ensure fixed positioning) ─────────────────────────────── */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-white/95 dark:bg-slate-950/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 flex justify-around items-end px-2 pb-safe pt-1 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]">
             <Link href="/">
               <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/") ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}>
                 <Home className={`w-[22px] h-[22px] mb-1 ${isActive("/") ? "fill-emerald-600/20" : ""}`} />
@@ -575,11 +577,11 @@ export default function Navigation() {
                 {hasUnreadAnnouncements && <span className="absolute top-1.5 right-3 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-slate-950" />}
               </button>
             </Link>
-            
+
             {/* Center Log Match FAB */}
             <div className="relative -top-5 mx-1">
               {isLoggedIn ? (
-                <button 
+                <button
                   onClick={() => window.dispatchEvent(new Event('openLogMatchModal'))}
                   className="w-[52px] h-[52px] bg-gradient-to-tr from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 rounded-full flex items-center justify-center text-white shadow-xl shadow-emerald-500/40 border-4 border-white dark:border-slate-950 transition-transform active:scale-95 cursor-pointer"
                 >
@@ -600,7 +602,7 @@ export default function Navigation() {
                 <span className="text-[10px] font-bold">Players</span>
               </button>
             </Link>
-            <button 
+            <button
               onClick={() => setIsOpen(!isOpen)}
               className={`relative flex flex-col items-center p-2 min-w-[60px] cursor-pointer ${isOpen ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}
             >
@@ -608,7 +610,6 @@ export default function Navigation() {
               <span className="text-[10px] font-bold">Menu</span>
             </button>
         </div>
-      </nav>
 
       {/* Global Search Modal */}
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />

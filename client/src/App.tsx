@@ -9,13 +9,13 @@ import { ArrowUp, WifiOff } from "lucide-react";
 import StatusBanner from "@/components/StatusBanner";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { PwaInstallPrompt } from "./components/pwa/PwaInstallPrompt";
 import { PwaUpdatePrompt } from "./components/pwa/PwaUpdatePrompt";
 import Navigation from "./components/Navigation";
 import Footer from "./components/Footer";
-import MobileBottomNav from "./components/MobileBottomNav";
 import MatchAlert from "./components/MatchAlert";
+import LogMatchModal from "./components/LogMatchModal";
 import { useAppUpdate, type AppUpdateInfo } from "./hooks/useAppUpdate";
 import { useInactivityLogout } from "./hooks/useInactivityLogout";
 import { useNativeBackButton } from "./hooks/useNativeBackButton";
@@ -303,10 +303,46 @@ function GlobalAuthHooks() {
 
 function App() {
   const { updateInfo, dismissUpdate } = useAppUpdate();
+  const [isLogMatchOpen, setIsLogMatchOpen] = useState(false);
+  const [defaultOpponentId, setDefaultOpponentId] = useState<string | undefined>(undefined);
+  const [otherPlayers, setOtherPlayers] = useState<any[]>([]);
+  const { profile } = useAuth();
+
   useInactivityLogout();
   useNativeBackButton();
   usePullToRefresh();
   useOfflineSync();
+  useBroadcastNotification();
+  usePingsNotification();
+
+  useEffect(() => {
+    const handleOpenLogMatch = (e: any) => {
+      if (e.detail?.player2_id) {
+        setDefaultOpponentId(e.detail.player2_id);
+      } else {
+        setDefaultOpponentId(undefined);
+      }
+      setIsLogMatchOpen(true);
+    };
+    window.addEventListener("openLogMatchModal", handleOpenLogMatch);
+    return () =>
+      window.removeEventListener("openLogMatchModal", handleOpenLogMatch);
+  }, []);
+
+  useEffect(() => {
+    if (!profile?.id) return;
+    import("@/lib/supabase").then(({ supabase }) => {
+      supabase
+        .from("players")
+        .select("id, full_name, avatar_url, gender")
+        .neq("id", profile.id)
+        .is("deleted_at", null)
+        .order("full_name")
+        .then(({ data }) => {
+          if (data) setOtherPlayers(data);
+        });
+    });
+  }, [profile?.id]);
 
   return (
     <ErrorBoundary>
@@ -340,11 +376,21 @@ function App() {
                 <Footer />
               </div>
               <BackToTop />
-              <MobileBottomNav />
             </Router>
             <Toaster />
             <PwaUpdatePrompt />
             <MatchAlert />
+            <LogMatchModal
+              isOpen={isLogMatchOpen}
+              onClose={() => {
+                setIsLogMatchOpen(false);
+                setDefaultOpponentId(undefined);
+              }}
+              currentUser={profile as any}
+              otherPlayers={otherPlayers}
+              onSuccess={() => setIsLogMatchOpen(false)}
+              defaultOpponentId={defaultOpponentId}
+            />
             <GlobalAuthHooks />
             <OnboardingTour />
             {updateInfo && (

@@ -43,11 +43,11 @@ export default function DeleteAccount() {
                 Can't sign in? You can also request account deletion by emailing us:
               </p>
               <a
-                href="mailto:office.gym@iisc.ac.in?subject=Account%20Deletion%20Request&body=Please%20delete%20my%20account.%20My%20registered%20email%20is%3A%20"
+                href="mailto:iiscbadmintonclub@gmail.com?subject=Account%20Deletion%20Request&body=Please%20delete%20my%20account.%20My%20registered%20email%20is%3A%20"
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition"
               >
                 <AlertTriangle className="w-4 h-4 text-amber-500" />
-                Email: office.gym@iisc.ac.in
+                Email: iiscbadmintonclub@gmail.com
               </a>
               <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2">
                 Include your registered email address. We will process your request within 7 business days.
@@ -158,7 +158,7 @@ export default function DeleteAccount() {
                 </div>
 
                 <div className="flex gap-3">
-                  <button onClick={() => navigate(-1 as any)}
+                  <button onClick={() => window.history.back()}
                     className="flex-1 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition">
                     Cancel
                   </button>

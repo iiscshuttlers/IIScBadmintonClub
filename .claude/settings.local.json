@@ -29,7 +29,11 @@
       "Bash(node -e ' *)",
       "Bash(Get-ChildItem \"e:\\\\Github\\\\iiscshuttlers\\\\client\\\\src\\\\pages\\\\\" | Select-Object Name)",
       "Bash(Get-ChildItem \"e:\\\\Github\\\\iiscshuttlers\\\\client\\\\src\\\\components\\\\\" | Select-Object Name)",
-      "Bash(node -e \"const p=require\\('./node_modules/.pnpm/vite@7.3.3_@types+node@24.1_902f686a1b127e4de04e25eadf67754f/node_modules/vite/package.json'\\); console.log\\(p.version\\)\")"
+      "Bash(node -e \"const p=require\\('./node_modules/.pnpm/vite@7.3.3_@types+node@24.1_902f686a1b127e4de04e25eadf67754f/node_modules/vite/package.json'\\); console.log\\(p.version\\)\")",
+      "Bash(curl -s http://localhost:3000)",
+      "Bash(pnpm add *)",
+      "Bash(pnpm dev *)",
+      "Bash(grep -v \"//\\\\|string\\\\|interface\\\\|type\\\\|import\")"
     ]
   }
 }

@@ -27,7 +27,7 @@ export default function PrivacyPolicy() {
           
           <div className="prose prose-slate dark:prose-invert max-w-none space-y-6 text-slate-600 dark:text-slate-300">
             <p>
-              Welcome to the IISc Badminton Club ("IISc Shuttlers", "we", "us", or "our") Platform. We are committed to protecting your personal 
+              Welcome to the IISc Badminton Club ("we", "us", or "our") Platform. We are committed to protecting your personal 
               information and your right to privacy. This Privacy Policy explains what information we collect, how we use it, and what rights 
               you have in relation to it.
             </p>
@@ -156,9 +156,9 @@ export default function PrivacyPolicy() {
             <p>
               If you have questions or comments about this policy, your privacy rights, or wish to exercise your data rights, please contact us at:
               <br /><br />
-              <strong>IISc Gymkhana Office</strong><br />
+              <strong>IISc Badminton Club</strong><br />
               Indian Institute of Science, Bangalore 560012, India<br />
-              Email: <a href="mailto:office.gym@iisc.ac.in" className="text-emerald-600 dark:text-emerald-400 hover:underline">office.gym@iisc.ac.in</a>
+              Email: <a href="mailto:iiscbadmintonclub@gmail.com" className="text-emerald-600 dark:text-emerald-400 hover:underline">iiscbadmintonclub@gmail.com</a>
             </p>
 
             <div className="mt-10 pt-6 border-t border-slate-200 dark:border-slate-800 text-center">

@@ -471,14 +471,14 @@ export function MatchHistorySection({
                                   try {
                                     if (Capacitor.isNativePlatform()) {
                                       await Share.share({
-                                        title: "IISc Shuttlers Match",
+                                        title: "IISc Badminton Club Match",
                                         text: shareText,
                                         url: shareUrl,
                                         dialogTitle: "Share Match Result",
                                       });
                                     } else if (navigator.share) {
                                       await navigator.share({
-                                        title: "IISc Shuttlers Match",
+                                        title: "IISc Badminton Club Match",
                                         text: shareText,
                                         url: shareUrl,
                                       });
@@ -553,7 +553,7 @@ export function MatchHistorySection({
                                       directory: Directory.Cache,
                                     });
                                     await Share.share({
-                                      title: "IISc Shuttlers Match",
+                                      title: "IISc Badminton Club Match",
                                       text: shareText,
                                       files: [uri],
                                       dialogTitle: "Share Match Result",
@@ -573,7 +573,7 @@ export function MatchHistorySection({
                                           })
                                         ) {
                                           await navigator.share({
-                                            title: "IISc Shuttlers Match",
+                                            title: "IISc Badminton Club Match",
                                             text: shareText,
                                             url: shareUrl,
                                             files: [file],

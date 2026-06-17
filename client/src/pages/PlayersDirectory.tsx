@@ -119,6 +119,7 @@ export default function PlayersDirectory() {
 
   const [followers, setFollowers] = useState<any[]>([]);
   const [visibleCount, setVisibleCount] = useState(24);
+  const [buddyRequests, setBuddyRequests] = useState<Map<string, {id: string; status: string; senderId: string}>>(new Map());
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -187,6 +188,7 @@ export default function PlayersDirectory() {
             if (data) {
               fetchPendingMatches(data.id);
               fetchFollowers(data.id);
+              fetchBuddyRequests(data.id);
             }
           }
         } catch (e) {
@@ -321,6 +323,25 @@ export default function PlayersDirectory() {
     }
   }, []);
 
+  const fetchBuddyRequests = useCallback(async (profileId: string) => {
+    try {
+      const { data } = await supabase
+        .from("buddy_requests")
+        .select("id, status, sender_id, receiver_id")
+        .or(`sender_id.eq.${profileId},receiver_id.eq.${profileId}`);
+      if (data) {
+        const map = new Map();
+        data.forEach(req => {
+          const otherPlayerId = req.sender_id === profileId ? req.receiver_id : req.sender_id;
+          map.set(otherPlayerId, { id: req.id, status: req.status, senderId: req.sender_id });
+        });
+        setBuddyRequests(map);
+      }
+    } catch {
+      console.error("Error fetching buddy requests");
+    }
+  }, []);
+
   const fetchPendingMatches = useCallback(async (profileId: string) => {
     const fullRes = await supabase
       .from("matches")
@@ -371,13 +392,22 @@ export default function PlayersDirectory() {
     return () => clearTimeout(stuckLoaderTimeout);
   }, [loading]);
 
+  // Sync ownProfile with auth context when it refreshes
+  useEffect(() => {
+    if (profile && ownProfile?.id === (profile as any).id) {
+      setOwnProfile((prev: any) => prev ? { ...prev, ...(profile as any) } : prev);
+    }
+  }, [profile]);
+
   // Auto-refresh player list every 60s (silently, scroll preserved)
   const silentRefresh = useCallback(async () => {
     await fetchPlayers({ silent: true });
     if (ownProfile?.id) {
       fetchPendingMatches(ownProfile.id);
+      fetchBuddyRequests(ownProfile.id);
+      fetchFollowers(ownProfile.id);
     }
-  }, [fetchPlayers, ownProfile?.id, fetchPendingMatches]);
+  }, [fetchPlayers, ownProfile?.id, fetchPendingMatches, fetchBuddyRequests, fetchFollowers]);
   useAutoRefresh(silentRefresh, 60_000, !loading);
 
   /* Filter + sort logic */
@@ -386,9 +416,23 @@ export default function PlayersDirectory() {
     new Set(players.map((p) => p.department).filter(Boolean)),
   ).sort();
 
-  // IDs of own buddies for hoisting
-  const myBuddyIds = new Set<string>((ownProfile as any)?.buddies || []);
   const followingIds = new Set<string>((ownProfile as any)?.following || []);
+
+  // Derive buddy/request sets from the buddy_requests table map
+  const myBuddyRequests = useMemo(() => {
+    const accepted = new Set<string>();
+    const received = new Set<string>();
+    const sent = new Set<string>();
+    buddyRequests.forEach((req, playerId) => {
+      if (req.status === "accepted") accepted.add(playerId);
+      else if (req.senderId === ownProfile?.id) sent.add(playerId);
+      else received.add(playerId);
+    });
+    return { accepted, received, sent };
+  }, [buddyRequests, ownProfile?.id]);
+
+  // IDs of own buddies for hoisting — derived from accepted buddy_requests
+  const myBuddyIds = myBuddyRequests.accepted;
 
   // Fuzzy score: returns 0 if no match, higher = better match
   const fuzzyScore = (text: string, query: string): number => {
@@ -453,43 +497,39 @@ export default function PlayersDirectory() {
     }
   };
 
-  const myBuddyRequests = new Set<string>((ownProfile as any)?.buddy_requests || []);
 
   const handleBuddyAction = async (playerId: string, action: 'send'|'cancel'|'accept'|'remove') => {
     if (!ownProfile?.id || !session?.user?.id) return;
-    const isBuddy = myBuddyIds.has(playerId);
-    const targetPlayer = players.find(p => p.id === playerId);
-    
+
     try {
       if (action === 'send') {
-        const currentRequests = (targetPlayer as any)?.buddy_requests || [];
-        const newRequests = Array.from(new Set([...currentRequests, ownProfile.id]));
-        const { error } = await supabase.rpc('send_buddy_request', { p_target_id: playerId });
+        const { error } = await supabase.from("buddy_requests").insert({
+          sender_id: ownProfile.id,
+          receiver_id: playerId,
+        });
         if (error) throw error;
-        setPlayers(players.map(p => p.id === playerId ? { ...p, buddy_requests: newRequests } : p));
         toast.success(`Buddy request sent!`);
-      } else if (action === 'cancel') {
-        const currentRequests = (targetPlayer as any)?.buddy_requests || [];
-        const newRequests = currentRequests.filter((id: string) => id !== ownProfile.id);
-        const { error } = await supabase.rpc('cancel_buddy_request', { p_target_id: playerId });
+        fetchBuddyRequests(ownProfile.id);
+      }
+      else if (action === 'cancel') {
+        const { error } = await supabase.from("buddy_requests")
+          .delete()
+          .eq("sender_id", ownProfile.id)
+          .eq("receiver_id", playerId);
         if (error) throw error;
-        setPlayers(players.map(p => p.id === playerId ? { ...p, buddy_requests: newRequests } : p));
         toast.success(`Buddy request cancelled.`);
-      } else if (action === 'accept') {
-        // Remove from my requests, add to my buddies
-        const myNewRequests = Array.from(new Set((ownProfile as any).buddy_requests || [])).filter((id) => id !== playerId);
-        const myNewBuddies = Array.from(new Set([...((ownProfile as any).buddies || []), playerId]));
-        
-        // Add me to their buddies
-        const theirNewBuddies = Array.from(new Set([...((targetPlayer as any)?.buddies || []), ownProfile.id]));
-        
-        const { error } = await supabase.rpc('accept_buddy_request', { p_target_id: playerId });
+        fetchBuddyRequests(ownProfile.id);
+      }
+      else if (action === 'accept') {
+        const { error } = await supabase.from("buddy_requests")
+          .update({ status: "accepted" })
+          .eq("sender_id", playerId)
+          .eq("receiver_id", ownProfile.id);
         if (error) throw error;
-
-        setPlayers(players.map(p => p.id === playerId ? { ...p, buddies: theirNewBuddies } : p));
-        setOwnProfile((prev: any) => prev ? { ...prev, buddy_requests: myNewRequests, buddies: myNewBuddies } : prev);
         toast.success(`You are now buddies!`);
-        
+        fetchBuddyRequests(ownProfile.id);
+        refreshProfile();
+
         await supabase.from("site_data").upsert({
           key: "latest_buddy_acceptance",
           value: {
@@ -499,20 +539,18 @@ export default function PlayersDirectory() {
             timestamp: Date.now()
           }
         }, { onConflict: "key" });
-      } else if (action === 'remove') {
-        const newBuddies = new Set(myBuddyIds);
-        newBuddies.delete(playerId);
-        setOwnProfile((prev: any) => prev ? { ...prev, buddies: Array.from(newBuddies) } : prev);
-        const { error } = await supabase.rpc('remove_buddy', { p_target_id: playerId });
+      }
+      else if (action === 'remove') {
+        const { error } = await supabase.from("buddy_requests")
+          .delete()
+          .or(`and(sender_id.eq.${ownProfile.id},receiver_id.eq.${playerId}),and(sender_id.eq.${playerId},receiver_id.eq.${ownProfile.id})`);
         if (error) throw error;
         toast.success(`Removed from buddies.`);
+        fetchBuddyRequests(ownProfile.id);
+        refreshProfile();
       }
-      
-      // Trigger a silent refresh of players to update states
-      fetchPlayers({ silent: true });
-      refreshProfile();
     } catch (e) {
-      console.error("Buddy action failed in directory:", e);
+      console.error("Buddy action failed:", e);
       toast.error("Could not complete buddy action.");
     }
   };
@@ -1025,8 +1063,8 @@ export default function PlayersDirectory() {
                             : undefined
                         }
                         isBuddy={myBuddyIds.has(player.id)}
-                        hasReceivedRequest={myBuddyRequests.has(player.id)}
-                        hasSentRequest={((player as any).buddy_requests || []).includes(ownProfile?.id)}
+                        hasReceivedRequest={myBuddyRequests.received.has(player.id)}
+                        hasSentRequest={myBuddyRequests.sent.has(player.id)}
                         onBuddyAction={ownProfile ? handleBuddyAction : undefined}
                         isFollowing={followingIds.has(player.id)}
                         onToggleFollow={ownProfile ? handleToggleFollow : undefined}
@@ -1067,8 +1105,8 @@ export default function PlayersDirectory() {
                           : undefined
                       }
                       isBuddy={myBuddyIds.has(player.id)}
-                      hasReceivedRequest={myBuddyRequests.has(player.id)}
-                      hasSentRequest={((player as any).buddy_requests || []).includes(ownProfile?.id)}
+                      hasReceivedRequest={myBuddyRequests.received.has(player.id)}
+                      hasSentRequest={myBuddyRequests.sent.has(player.id)}
                       onBuddyAction={ownProfile ? handleBuddyAction : undefined}
                       isFollowing={followingIds.has(player.id)}
                       onToggleFollow={ownProfile ? handleToggleFollow : undefined}
@@ -1081,7 +1119,7 @@ export default function PlayersDirectory() {
 
             {/* Pending buddy requests (received) */}
             {ownProfile && (() => {
-              const pendingPlayers = players.filter(p => myBuddyRequests.has(p.id));
+              const pendingPlayers = players.filter(p => myBuddyRequests.received.has(p.id));
               return (
                 <div>
                   <h2 className="text-xs uppercase tracking-widest font-black text-slate-400 dark:text-slate-500 mb-5 flex items-center gap-2">
@@ -1120,12 +1158,7 @@ export default function PlayersDirectory() {
                               Accept
                             </button>
                             <button
-                              onClick={() => {
-                                const currentRequests = ((ownProfile as any).buddy_requests || []).filter((id: string) => id !== player.id);
-                                supabase.from('players').update({ buddy_requests: currentRequests }).eq('id', ownProfile.id).then(({ error }) => {
-                                  if (!error) setOwnProfile((prev: any) => prev ? { ...prev, buddy_requests: currentRequests } : prev);
-                                });
-                              }}
+                              onClick={() => handleBuddyAction(player.id, 'remove')}
                               className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-xl transition"
                             >
                               Decline
@@ -1143,8 +1176,8 @@ export default function PlayersDirectory() {
             {ownProfile && (() => {
               const sentPlayers = players.filter(p =>
                 !myBuddyIds.has(p.id) &&
-                !myBuddyRequests.has(p.id) &&
-                ((p as any).buddy_requests || []).includes(ownProfile.id)
+                !myBuddyRequests.received.has(p.id) &&
+                myBuddyRequests.sent.has(p.id)
               );
               return (
                 <div>
@@ -1388,8 +1421,8 @@ export default function PlayersDirectory() {
                               : undefined
                           }
                           isBuddy={myBuddyIds.has(player.id)}
-                          hasReceivedRequest={myBuddyRequests.has(player.id)}
-                          hasSentRequest={((player as any).buddy_requests || []).includes(ownProfile?.id)}
+                          hasReceivedRequest={myBuddyRequests.received.has(player.id)}
+                          hasSentRequest={myBuddyRequests.sent.has(player.id)}
                           onBuddyAction={ownProfile ? handleBuddyAction : undefined}
                           isFollowing={followingIds.has(player.id)}
                           onToggleFollow={ownProfile ? handleToggleFollow : undefined}
@@ -1478,8 +1511,8 @@ export default function PlayersDirectory() {
                             : undefined
                         }
                         isBuddy={myBuddyIds.has(player.id)}
-                        hasReceivedRequest={myBuddyRequests.has(player.id)}
-                        hasSentRequest={((player as any).buddy_requests || []).includes(ownProfile?.id)}
+                        hasReceivedRequest={myBuddyRequests.received.has(player.id)}
+                        hasSentRequest={myBuddyRequests.sent.has(player.id)}
                         onBuddyAction={ownProfile ? handleBuddyAction : undefined}
                         isFollowing={followingIds.has(player.id)}
                         onToggleFollow={ownProfile ? handleToggleFollow : undefined}

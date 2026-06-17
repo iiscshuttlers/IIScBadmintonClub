@@ -79,7 +79,7 @@ export async function renderWrappedShareCard(
   ctx.fillStyle = "rgba(255,255,255,0.9)";
   ctx.font = "bold 40px sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("IISc Shuttlers", W / 2, 100);
+  ctx.fillText("IISc Badminton Club", W / 2, 100);
   
   ctx.font = "900 110px sans-serif";
   ctx.fillStyle = "#ffffff";

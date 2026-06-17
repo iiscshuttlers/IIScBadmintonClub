@@ -199,7 +199,7 @@ export async function renderMatchShareCard(
   ctx.font = "bold 38px sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
-  ctx.fillText("🏸  IISc Shuttlers", W / 2, 70);
+  ctx.fillText("🏸  IISc Badminton Club", W / 2, 70);
 
   // Divider
   const divGrad = ctx.createLinearGradient(160, 0, W - 160, 0);

@@ -380,13 +380,46 @@ export default function PlayerProfile({
 
   useEffect(() => {
     if (ownPlayerProfile && player?.id) {
-      // following/buddies arrays store player slugs (player.id), not auth UUIDs
+      // Check buddy status from buddy_requests table
+      checkBuddyStatus();
+      // Check following status
       setIsFollowing(ownPlayerProfile.following?.includes(player.id) || false);
-      setIsBuddy(ownPlayerProfile.buddies?.includes(player.id) || false);
-      setHasSentRequest(player.buddyRequests?.includes(ownPlayerProfile.id) || false);
-      setHasReceivedRequest(ownPlayerProfile.buddy_requests?.includes(player.id) || false);
     }
   }, [ownPlayerProfile, player]);
+
+  const checkBuddyStatus = async () => {
+    if (!ownPlayerProfile?.id || !player?.id) return;
+
+    try {
+      const { data } = await supabase
+        .from("buddy_requests")
+        .select("id, status, sender_id")
+        .or(`and(sender_id.eq.${ownPlayerProfile.id},receiver_id.eq.${player.id}),and(sender_id.eq.${player.id},receiver_id.eq.${ownPlayerProfile.id})`)
+        .maybeSingle();
+
+      if (data) {
+        if (data.status === "accepted") {
+          setIsBuddy(true);
+          setHasSentRequest(false);
+          setHasReceivedRequest(false);
+        } else if (data.sender_id === ownPlayerProfile.id) {
+          setIsBuddy(false);
+          setHasSentRequest(true);
+          setHasReceivedRequest(false);
+        } else {
+          setIsBuddy(false);
+          setHasSentRequest(false);
+          setHasReceivedRequest(true);
+        }
+      } else {
+        setIsBuddy(false);
+        setHasSentRequest(false);
+        setHasReceivedRequest(false);
+      }
+    } catch (err) {
+      console.error("Error checking buddy status:", err);
+    }
+  };
 
   // Sports broadcast intro sequence — plays every time a profile is opened
   useEffect(() => {
@@ -441,38 +474,42 @@ export default function PlayerProfile({
     try {
       if (action === 'send') {
         setHasSentRequest(true);
-        const currentRequests = player.buddyRequests || (player as any).buddy_requests || [];
-        const newRequests = Array.from(new Set([...currentRequests, ownPlayerProfile.id]));
-        const { error } = await supabase.from('players').update({ buddy_requests: newRequests }).eq('id', player.id);
+        const { error } = await supabase.from('buddy_requests').insert({
+          sender_id: ownPlayerProfile.id,
+          receiver_id: player.id,
+        });
         if (error) throw error;
-        setPlayer({ ...player, buddyRequests: newRequests });
         toast.success(`Buddy request sent to ${player.fullName}!`);
       }
       else if (action === 'cancel') {
         setHasSentRequest(false);
-        const currentRequests = player.buddyRequests || (player as any).buddy_requests || [];
-        const newRequests = currentRequests.filter((id: string) => id !== ownPlayerProfile.id);
-        const { error } = await supabase.from('players').update({ buddy_requests: newRequests }).eq('id', player.id);
+        const { error } = await supabase
+          .from('buddy_requests')
+          .delete()
+          .eq('sender_id', ownPlayerProfile.id)
+          .eq('receiver_id', player.id);
         if (error) throw error;
-        setPlayer({ ...player, buddyRequests: newRequests });
         toast.success(`Buddy request cancelled.`);
       }
       else if (action === 'accept') {
         setIsBuddy(true);
         setHasReceivedRequest(false);
 
-        // Remove from my requests, add to my buddies
-        const myNewRequests = Array.from(new Set((ownPlayerProfile as any).buddy_requests || [])).filter((id) => id !== player.id);
-        const myNewBuddies = Array.from(new Set([...((ownPlayerProfile as any).buddies || []), player.id]));
-        const { error: myErr } = await supabase.from('players').update({ buddy_requests: myNewRequests, buddies: myNewBuddies }).eq('id', ownPlayerProfile.id);
-        if (myErr) throw myErr;
+        // Find the request and mark as accepted
+        const { data: request, error: findErr } = await supabase
+          .from('buddy_requests')
+          .select('id')
+          .eq('sender_id', player.id)
+          .eq('receiver_id', ownPlayerProfile.id)
+          .single();
+        if (findErr) throw findErr;
 
-        // Add me to their buddies
-        const theirNewBuddies = Array.from(new Set([...((player as any).buddies || []), ownPlayerProfile.id]));
-        const { error: theirErr } = await supabase.from('players').update({ buddies: theirNewBuddies }).eq('id', player.id);
-        if (theirErr) throw theirErr;
+        const { error: updateErr } = await supabase
+          .from('buddy_requests')
+          .update({ status: 'accepted' })
+          .eq('id', request.id);
+        if (updateErr) throw updateErr;
 
-        setPlayer({ ...player, buddies: theirNewBuddies });
         toast.success(`You and ${player.fullName} are now buddies!`);
 
         // Trigger push notification to the sender
@@ -488,19 +525,12 @@ export default function PlayerProfile({
       }
       else if (action === 'remove') {
         setIsBuddy(false);
-        // Fallback to array removal for removing a buddy since we don't have a 2-way remove RPC
-        const { data: myProfile, error: fetchErr } = await supabase
-          .from("players")
-          .select("buddies")
-          .eq("id", ownPlayerProfile.id)
-          .single();
-        if (fetchErr) throw fetchErr;
-        const arr = (myProfile.buddies || []).filter((s: string) => s !== player.id);
-        const { error: updateErr } = await supabase
-          .from("players")
-          .update({ buddies: arr })
-          .eq("id", ownPlayerProfile.id);
-        if (updateErr) throw updateErr;
+        // Delete the buddy request record
+        const { error } = await supabase
+          .from('buddy_requests')
+          .delete()
+          .or(`and(sender_id.eq.${ownPlayerProfile.id},receiver_id.eq.${player.id}),and(sender_id.eq.${player.id},receiver_id.eq.${ownPlayerProfile.id})`);
+        if (error) throw error;
         toast.success(`Removed ${player.fullName} from Buddies.`);
       }
       await refreshProfile();
@@ -894,6 +924,8 @@ export default function PlayerProfile({
       /* silent */
     }
   }, [id, ownPlayerProfile?.id, fetchPendingMatches]);
+
+  useAutoRefresh(silentRefresh, 60_000, !loading);
 
   // H2H record vs logged-in user
   useEffect(() => {
@@ -2529,8 +2561,8 @@ export default function PlayerProfile({
                 />
                 <PerformanceTrends matches={liveMatches} playerId={id!} />
                 <WrappedCard
-                  playerName={player.full_name}
-                  avatarUrl={player.avatar_url}
+                  playerName={player.fullName}
+                  avatarUrl={(player as any).avatar_url}
                   elo={player.elo_rating ?? 1200}
                   matches={liveMatches}
                   playerId={id!}

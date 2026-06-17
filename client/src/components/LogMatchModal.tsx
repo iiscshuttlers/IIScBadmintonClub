@@ -270,33 +270,22 @@ export default function LogMatchModal({
   };
 
   const handleNFC = async () => {
-    if (!("NDEFReader" in window)) {
-        setIsNFCOpen(true);
-        return;
+    // Check if on native platform (Android/iOS)
+    const isNative = Capacitor.isNativePlatform();
+
+    if (!isNative) {
+      setIsNFCOpen(true);
+      return;
     }
+
     try {
-        const ndef = new (window as any).NDEFReader();
-        await ndef.scan();
-        toast.success("Ready! Tap the other phone...", { duration: 4000 });
-        ndef.addEventListener("reading", ({ message }: any) => {
-            try {
-              const record = message.records[0];
-              const textDecoder = new TextDecoder(record.encoding || "utf-8");
-              const id = textDecoder.decode(record.data);
-              if (id) {
-                 if (scanTarget === "opponent") setOpponentId(id);
-                 else if (scanTarget === "partner") setPartnerId(id);
-                 else if (scanTarget === "opponentPartner") setOpponentPartnerId(id);
-                 toast.success("Player identified via NFC!");
-              }
-            } catch (e) {
-               console.error(e);
-               toast.error("Could not read NFC tag.");
-            }
-        });
+      // For native Android, we would use native NFC APIs
+      // For now, show a message and fallback to QR scanning
+      toast.info("NFC scanning will be available in the native app. Using QR code scanner instead.");
+      setIsScanOpen(true);
     } catch (error) {
-        console.error(error);
-        setIsNFCOpen(true);
+      console.error(error);
+      setIsNFCOpen(true);
     }
   };
 
@@ -492,8 +481,12 @@ export default function LogMatchModal({
                               if (!op) return null;
                               return (
                                 <button key={id} type="button" onClick={() => setOpponentId(id)}
-                                  className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm hover:scale-110 transition">
-                                  <img src={op.avatar_url || ""} className="w-full h-full object-cover" />
+                                  className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm hover:scale-110 transition flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-500 dark:text-slate-400">
+                                  {op.avatar_url ? (
+                                    <img src={op.avatar_url} className="w-full h-full object-cover" />
+                                  ) : (
+                                    op.full_name?.[0]?.toUpperCase() || "?"
+                                  )}
                                 </button>
                               );
                             })}

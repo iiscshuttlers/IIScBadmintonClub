@@ -96,10 +96,10 @@ export function ContactSection() {
               </CardHeader>
               <CardContent>
                 <a
-                  href="mailto:office.gym@iisc.ac.in"
+                  href="mailto:iiscbadmintonclub@gmail.com"
                   className="font-bold text-gray-900 dark:text-white hover:text-emerald-600 transition-colors"
                 >
-                  office.gym@iisc.ac.in
+                  iiscbadmintonclub@gmail.com
                 </a>
                 <p className="text-sm text-gray-500 dark:text-slate-400 mt-2">
                   Best for membership and official queries.

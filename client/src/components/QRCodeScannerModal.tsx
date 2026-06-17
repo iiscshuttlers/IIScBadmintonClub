@@ -11,16 +11,32 @@ interface QRCodeScannerModalProps {
 
 export function QRCodeScannerModal({ isOpen, onClose, onScan }: QRCodeScannerModalProps) {
   const [scanResult, setScanResult] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [requestingPermission, setRequestingPermission] = useState(false);
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
-  useEffect(() => {
-    if (!isOpen) {
-      if (scannerRef.current) {
-        scannerRef.current.clear().catch(console.error);
-        scannerRef.current = null;
+  const requestCameraPermission = async () => {
+    setRequestingPermission(true);
+    setError(null);
+    try {
+      await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      // Permission granted, now initialize scanner
+      initializeScanner();
+    } catch (err: any) {
+      if (err.name === "NotAllowedError") {
+        setError("Camera permission denied. Please enable camera access in settings.");
+      } else if (err.name === "NotFoundError") {
+        setError("No camera found on this device.");
+      } else {
+        setError("Unable to access camera. Please try again.");
       }
-      return;
+    } finally {
+      setRequestingPermission(false);
     }
+  };
+
+  const initializeScanner = () => {
+    if (scannerRef.current) return;
 
     const scanner = new Html5QrcodeScanner(
       "reader",
@@ -46,7 +62,7 @@ export function QRCodeScannerModal({ isOpen, onClose, onScan }: QRCodeScannerMod
         if (playerId && playerId.length > 1 && !scanResult) {
           setScanResult(playerId);
           scanner.clear().catch(console.error);
-          
+
           // Small delay for user to see success UI
           setTimeout(() => {
             onClose();
@@ -55,9 +71,26 @@ export function QRCodeScannerModal({ isOpen, onClose, onScan }: QRCodeScannerMod
         }
       },
       (error) => {
-        // ignore errors (mostly "no code found" frame by frame)
+        if (error && error.includes("NotAllowedError")) {
+          setError("Camera permission denied.");
+        }
       }
     );
+  };
+
+  useEffect(() => {
+    if (!isOpen) {
+      if (scannerRef.current) {
+        scannerRef.current.clear().catch(console.error);
+        scannerRef.current = null;
+      }
+      setError(null);
+      setScanResult(null);
+      return;
+    }
+
+    // Try to initialize scanner immediately
+    requestCameraPermission();
 
     return () => {
       if (scannerRef.current) {
@@ -102,6 +135,22 @@ export function QRCodeScannerModal({ isOpen, onClose, onScan }: QRCodeScannerMod
             </div>
             
             <div className="p-4 flex flex-col items-center justify-center min-h-[300px] relative">
+              {error && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-50 dark:bg-red-900/20 z-10 rounded-2xl p-4">
+                  <div className="w-16 h-16 bg-red-100 dark:bg-red-900/40 text-red-500 rounded-full flex items-center justify-center mb-4">
+                    <QrCode className="w-8 h-8" />
+                  </div>
+                  <p className="text-red-600 dark:text-red-400 font-bold text-center mb-4">{error}</p>
+                  <button
+                    onClick={requestCameraPermission}
+                    disabled={requestingPermission}
+                    className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-400 text-white font-bold px-6 py-2 rounded-xl transition-colors"
+                  >
+                    {requestingPermission ? "Requesting..." : "Try Again"}
+                  </button>
+                </div>
+              )}
+
               {scanResult ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-emerald-500/10 z-10">
                   <div className="w-16 h-16 bg-emerald-500 text-white rounded-full flex items-center justify-center mb-4">
@@ -110,7 +159,7 @@ export function QRCodeScannerModal({ isOpen, onClose, onScan }: QRCodeScannerMod
                   <p className="text-emerald-600 dark:text-emerald-400 font-bold text-lg">Player Found!</p>
                 </div>
               ) : null}
-              
+
               <div id="reader" className="w-full overflow-hidden rounded-2xl [&_button]:bg-emerald-500 [&_button]:text-white [&_button]:px-4 [&_button]:py-2 [&_button]:rounded-xl [&_button]:font-bold [&_button]:mt-4 [&_select]:mt-4 [&_select]:p-2 [&_select]:rounded-lg [&_select]:bg-slate-100 dark:[&_select]:bg-slate-800 dark:[&_select]:text-white"></div>
             </div>
             

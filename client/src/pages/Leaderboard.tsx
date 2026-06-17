@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { Link } from "wouter";
 import {
   Trophy,
@@ -72,6 +73,9 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
 
   const [ironmanFilter, setIronmanFilter] = useState<"all" | "monthly">("all");
   const [monthlyCounts, setMonthlyCounts] = useState<Record<string, number>>({});
+  const [refreshTick, setRefreshTick] = useState(0);
+  const bumpRefresh = useCallback(() => setRefreshTick(t => t + 1), []);
+  useAutoRefresh(bumpRefresh, 60_000);
 
   useEffect(() => {
     if (activeTab === "ironman" && ironmanFilter === "monthly") {
@@ -91,7 +95,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
            }
         });
     }
-  }, [activeTab, ironmanFilter]);
+  }, [activeTab, ironmanFilter, refreshTick]);
 
   const [upsets, setUpsets] = useState<any[]>([]);
   const [activeStreaks, setActiveStreaks] = useState<any[]>([]);
@@ -189,7 +193,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
           }
         });
     }
-  }, [activeTab, categoryFilter]);
+  }, [activeTab, categoryFilter, refreshTick]);
 
   const getCategoryElo = (player: PlayerRank) => {
     if (categoryFilter === "MS" || categoryFilter === "WS") {

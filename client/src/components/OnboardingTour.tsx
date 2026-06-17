@@ -7,7 +7,7 @@ const STORAGE_KEY = "onboarding_completed_v1";
 const STEPS = [
   {
     emoji: "🏸",
-    title: "Welcome to IISc Shuttlers!",
+    title: "Welcome to IISc Badminton Club!",
     body: "Your one-stop hub for badminton at IISc. Track matches, compete on leaderboards, and rise through the ranks.",
     cta: null,
     accent: "from-emerald-500 to-teal-500",

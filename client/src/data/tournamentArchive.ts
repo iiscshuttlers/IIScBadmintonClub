@@ -186,7 +186,7 @@ export const ARCHIVED_TOURNAMENTS: ArchivedTournament[] = [
     name: "IISM 2025 — NISER Bhubaneswar",
     subtitle: "Inter-IISER Sports Meet",
     description:
-      "IISc Shuttlers swept all three categories at IISM 2025 hosted by NISER Bhubaneswar, winning Gold in Men's, Women's, and Mixed events.",
+      "IISc Badminton Club swept all three categories at IISM 2025 hosted by NISER Bhubaneswar, winning Gold in Men's, Women's, and Mixed events.",
     galleryFolder: "IISM-2025",
     podium: ["IISc (Gold — All 3 events)"],
     highlights: [

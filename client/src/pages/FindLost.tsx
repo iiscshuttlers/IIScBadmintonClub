@@ -75,10 +75,10 @@ export default function FindLost() {
     if (!file) return;
     setUploadingImage(true);
     try {
-      const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
-      const { error } = await supabase.storage.from("avatars").upload(fileName, file);
+      const fileName = `findlost_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
+      const { error } = await supabase.storage.from("find-lost").upload(fileName, file);
       if (error) throw error;
-      const { data } = supabase.storage.from("avatars").getPublicUrl(fileName);
+      const { data } = supabase.storage.from("find-lost").getPublicUrl(fileName);
       setForm((prev) => ({ ...prev, image_url: data.publicUrl }));
       toast.success("Image uploaded!");
     } catch (err: any) {

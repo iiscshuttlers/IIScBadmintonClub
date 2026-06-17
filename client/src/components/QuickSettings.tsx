@@ -33,7 +33,7 @@ export function QuickSettingsContent({ onClose }: { onClose?: () => void }) {
   const toggleBiometric = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (!biometricEnabled) {
-      const result = await authenticate("Enable biometric login for IISc Shuttlers");
+      const result = await authenticate("Enable biometric login for IISc Badminton Club");
       if (!result.verified) {
         toast.error(result.error ?? "Biometric verification failed");
         return;

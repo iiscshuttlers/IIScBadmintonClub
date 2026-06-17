@@ -40,10 +40,21 @@ export function exportProfilePdf(data: ProfileData) {
 <html>
 <head>
 <meta charset="utf-8">
-<title>${data.name} — IISc Shuttlers Profile</title>
+<title>${data.name} — IISc Badminton Club Profile</title>
 <style>
   @page { size: A4; margin: 24mm 20mm; }
-  body { font-family: system-ui, -apple-system, sans-serif; color: #1e293b; margin: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; color: #1e293b; margin: 0; padding: 0; }
+  .no-print { display: none; }
+  @media screen {
+    .no-print { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; gap: 12px; }
+    .close-btn { padding: 8px 16px; background: #059669; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; }
+    .close-btn:hover { background: #047857; }
+  }
+  @media print {
+    .no-print { display: none !important; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+  .content { padding: 24px; }
   .header { display: flex; align-items: center; gap: 20px; border-bottom: 3px solid #059669; padding-bottom: 16px; margin-bottom: 24px; }
   .avatar { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; }
   .avatar-placeholder { width: 72px; height: 72px; border-radius: 50%; background: #dcfce7; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 900; color: #059669; }
@@ -59,10 +70,14 @@ export function exportProfilePdf(data: ProfileData) {
   th { text-align: left; padding: 8px 10px; background: #f1f5f9; font-weight: 700; color: #64748b; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; }
   td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; }
   .footer { margin-top: 32px; text-align: center; font-size: 10px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 12px; }
-  @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
 </style>
 </head>
 <body>
+<div class="no-print">
+  <div style="font-weight: 600; color: #475569;">PDF Preview</div>
+  <button class="close-btn" onclick="window.close()">Close</button>
+</div>
+<div class="content">
 <div class="header">
   ${data.avatarUrl
     ? `<img src="${data.avatarUrl}" class="avatar" crossorigin="anonymous" />`
@@ -70,7 +85,7 @@ export function exportProfilePdf(data: ProfileData) {
   }
   <div>
     <h1>${data.name}</h1>
-    <div class="club">IISc Shuttlers Badminton Club</div>
+    <div class="club">IISc Badminton Club</div>
   </div>
 </div>
 
@@ -101,8 +116,16 @@ ${rows ? `
 </table>` : ""}
 
 <div class="footer">
-  Generated on ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })} • IISc Shuttlers
+  Generated on ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })} • IISc Badminton Club
 </div>
+</div>
+<script>
+  window.addEventListener('afterprint', () => {
+    if (window.opener) {
+      window.close();
+    }
+  });
+</script>
 </body>
 </html>`;
 

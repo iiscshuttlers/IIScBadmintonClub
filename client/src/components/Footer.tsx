@@ -139,10 +139,10 @@ export default function Footer() {
                   <Mail className="w-3.5 h-3.5 text-emerald-400" />
                 </div>
                 <a
-                  href="mailto:office.gym@iisc.ac.in"
+                  href="mailto:iiscbadmintonclub@gmail.com"
                   className="text-slate-400 hover:text-emerald-400 transition-colors"
                 >
-                  office.gym@iisc.ac.in
+                  iiscbadmintonclub@gmail.com
                 </a>
               </div>
             </div>

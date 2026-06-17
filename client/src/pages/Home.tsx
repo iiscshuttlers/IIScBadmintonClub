@@ -16,7 +16,6 @@ import iiscTeam from "@/assets/iisc-team.jpg";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { motion, type Variants } from "framer-motion";
 import { useState, useEffect } from "react";
-import { CountUpNumber } from "@/components/CountUpNumber";
 import { ARCHIVED_TOURNAMENTS } from "@/data/tournamentArchive";
 import { fetchSiteData } from "@/lib/siteData";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
