@@ -53,7 +53,7 @@ export function usePushNotifications(userId: string | undefined) {
                   token: token.value,
                   platform: Capacitor.getPlatform(),
                 },
-                { onConflict: "user_id, token" },
+                { onConflict: "user_id,token" },
               );
           }
         });
@@ -66,24 +66,26 @@ export function usePushNotifications(userId: string | undefined) {
           "pushNotificationReceived",
           async (notification) => {
             console.log("Push received: " + JSON.stringify(notification));
-            // Show notification even when app is in foreground
+            // Show notification even when app is in foreground (native only)
             const title = notification.notification?.title || "New notification";
             const body = notification.notification?.body || "";
             const channelId = (notification.notification as any)?.channelId || "notify_announcements";
 
-            try {
-              await LocalNotifications.schedule({
-                notifications: [
-                  {
-                    title,
-                    body,
-                    id: Math.floor(Math.random() * 100000),
-                    channelId,
-                  },
-                ],
-              });
-            } catch (e) {
-              console.warn("Failed to show foreground notification:", e);
+            if (Capacitor.getPlatform() === 'android' || Capacitor.getPlatform() === 'ios') {
+              try {
+                await LocalNotifications.schedule({
+                  notifications: [
+                    {
+                      title,
+                      body,
+                      id: Math.floor(Math.random() * 100000),
+                      ...(Capacitor.getPlatform() === 'android' && { channelId }),
+                    },
+                  ],
+                });
+              } catch (e) {
+                console.warn("Failed to show foreground notification:", e);
+              }
             }
           },
         );
@@ -165,7 +167,7 @@ export function usePushNotifications(userId: string | undefined) {
               .from("user_push_tokens")
               .upsert(
                 { user_id: userId, token, platform: "web" },
-                { onConflict: "user_id, token" }
+                { onConflict: "user_id,token" }
               );
 
             onMessage(messaging, (payload) => {
