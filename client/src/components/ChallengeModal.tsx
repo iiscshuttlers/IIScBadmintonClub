@@ -25,7 +25,7 @@ export function ChallengeModal({ isOpen, onClose, currentUser, targetPlayer }: C
     try {
       const { error } = await supabase.from("challenges").insert({
         challenger_id: currentUser.id,
-        challenged_id: targetPlayer.userId,
+        challenged_id: targetPlayer.id,
         format,
         scheduled_time: scheduledTime ? new Date(scheduledTime).toISOString() : null,
         message: message.trim() || null

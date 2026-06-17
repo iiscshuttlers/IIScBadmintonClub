@@ -39,3 +39,30 @@ CREATE POLICY "Authors can delete their own posts"
 CREATE INDEX IF NOT EXISTS idx_find_lost_created  ON public.find_lost_posts (created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_find_lost_type     ON public.find_lost_posts (type);
 CREATE INDEX IF NOT EXISTS idx_find_lost_resolved ON public.find_lost_posts (resolved);
+
+-- Notify all users about new lost & found posts
+CREATE OR REPLACE FUNCTION trigger_find_lost_notification()
+RETURNS TRIGGER AS $$
+DECLARE author_name TEXT;
+BEGIN
+  SELECT full_name INTO author_name FROM public.players WHERE id = NEW.author_id;
+  INSERT INTO public.notifications (user_id, title, message, type, link)
+  SELECT
+    p.id,
+    CASE NEW.type WHEN 'lost' THEN 'Item Lost' ELSE 'Item Found' END,
+    CASE NEW.type
+      WHEN 'lost' THEN author_name || ' posted a lost item: ' || NEW.title
+      ELSE author_name || ' posted a found item: ' || NEW.title
+    END,
+    'find_lost_post',
+    '/find-lost'
+  FROM public.players p
+  WHERE p.id != NEW.author_id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS on_find_lost_post_created ON public.find_lost_posts;
+CREATE TRIGGER on_find_lost_post_created
+  AFTER INSERT ON public.find_lost_posts
+  FOR EACH ROW EXECUTE PROCEDURE trigger_find_lost_notification();

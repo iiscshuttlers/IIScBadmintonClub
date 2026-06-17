@@ -39,3 +39,26 @@ CREATE POLICY "Parties can delete"
 CREATE INDEX IF NOT EXISTS idx_buddy_sender   ON public.buddy_requests (sender_id);
 CREATE INDEX IF NOT EXISTS idx_buddy_receiver ON public.buddy_requests (receiver_id);
 CREATE INDEX IF NOT EXISTS idx_buddy_status   ON public.buddy_requests (status);
+
+-- Auto-notify on buddy request
+CREATE OR REPLACE FUNCTION trigger_buddy_request_notification()
+RETURNS TRIGGER AS $$
+DECLARE sender_name TEXT;
+BEGIN
+  SELECT full_name INTO sender_name FROM public.players WHERE id = NEW.sender_id;
+  INSERT INTO public.notifications (user_id, title, message, type, link)
+  VALUES (
+    NEW.receiver_id,
+    'Buddy Request',
+    sender_name || ' sent you a buddy request.',
+    'buddy_request',
+    '/player/' || NEW.sender_id
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS on_buddy_request_created ON public.buddy_requests;
+CREATE TRIGGER on_buddy_request_created
+  AFTER INSERT ON public.buddy_requests
+  FOR EACH ROW EXECUTE PROCEDURE trigger_buddy_request_notification();

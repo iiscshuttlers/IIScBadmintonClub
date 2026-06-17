@@ -13,10 +13,11 @@ AS $$
 DECLARE
   v_user_id TEXT;
   v_is_following BOOLEAN;
+  v_follower_name TEXT;
 BEGIN
   -- Get the current user's ID
   v_user_id := auth.uid()::text;
-  
+
   IF v_user_id IS NULL THEN
     RAISE EXCEPTION 'Not authenticated';
   END IF;
@@ -35,9 +36,19 @@ BEGIN
     UPDATE players SET following = array_remove(following, p_target_id) WHERE id = v_user_id;
     UPDATE players SET followers = array_remove(followers, v_user_id) WHERE id = p_target_id;
   ELSE
-    -- Follow
+    -- Follow and create notification
     UPDATE players SET following = array_append(following, p_target_id) WHERE id = v_user_id;
     UPDATE players SET followers = array_append(followers, v_user_id) WHERE id = p_target_id;
+
+    SELECT full_name INTO v_follower_name FROM public.players WHERE id = v_user_id;
+    INSERT INTO public.notifications (user_id, title, message, type, link)
+    VALUES (
+      p_target_id,
+      'New Follower',
+      v_follower_name || ' started following you.',
+      'new_follower',
+      '/player/' || v_user_id
+    );
   END IF;
 END;
 $$;

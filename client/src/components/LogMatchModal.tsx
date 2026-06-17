@@ -227,18 +227,19 @@ export default function LogMatchModal({
 
     const opp = otherPlayers.find((p) => p.id === opponentId);
     if (matchType === "singles") {
-      const g1 = currentUser.gender?.toLowerCase() || "unknown";
-      const g2 = opp?.gender?.toLowerCase() || "unknown";
+      const g1 = (currentUser.gender || "unknown").toLowerCase().trim();
+      const g2 = (opp?.gender || "unknown").toLowerCase().trim();
+      // Only enforce cross-gender restriction if both genders are known and different
       if (matchCategory === "tournament" && g1 !== "unknown" && g2 !== "unknown" && g1 !== g2)
-        return "Cross-gender Singles matches are not allowed in Tournaments.";
+        return "Cross-gender Singles matches (MS vs WS) are not allowed in Tournaments.";
     } else if (matchType === "doubles" || matchType === "hybrid") {
       const partner = otherPlayers.find((p) => p.id === partnerId);
       const oppPartner = otherPlayers.find((p) => p.id === opponentPartnerId);
       const [g1, g2, g3, g4] = [
-        currentUser.gender?.toLowerCase() || "unknown",
-        partner?.gender?.toLowerCase() || "unknown",
-        opp?.gender?.toLowerCase() || "unknown",
-        oppPartner?.gender?.toLowerCase() || "unknown",
+        (currentUser.gender || "unknown").toLowerCase().trim(),
+        (partner?.gender || "unknown").toLowerCase().trim(),
+        (opp?.gender || "unknown").toLowerCase().trim(),
+        (oppPartner?.gender || "unknown").toLowerCase().trim(),
       ];
       if (matchCategory === "tournament" && matchType === "doubles" && ![g1, g2, g3, g4].includes("unknown")) {
         const t1Mixed = g1 !== g2, t2Mixed = g3 !== g4;
