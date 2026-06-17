@@ -394,11 +394,11 @@ export default function LogMatchModal({
       if (rpcError) throw rpcError;
 
       if (matchCategory === "tournament") {
-        const { data: latestMatch } = await supabase
+        const { data: latestMatches } = await supabase
           .from("matches").select("id").eq("submitted_by", currentUser.id)
-          .eq("status", "pending").order("created_at", { ascending: false }).limit(1).single();
-        if (latestMatch)
-          await supabase.from("matches").update({ is_friendly: false, round: "Tournament" }).eq("id", latestMatch.id);
+          .eq("status", "pending").order("created_at", { ascending: false }).limit(1);
+        if (latestMatches?.length === 1)
+          await supabase.from("matches").update({ is_friendly: false, round: "Tournament" }).eq("id", latestMatches[0].id);
       }
 
       if (myTeamWon) toast.success("Incredible victory!");
