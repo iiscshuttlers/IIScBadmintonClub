@@ -1,0 +1,162 @@
+=== GOOGLE PLAY STORE LISTING ===
+App: IISc Badminton Club
+
+=== BASIC INFO ===
+App Name: IISc Badminton Club
+Subtitle: Live Scoring & Rankings
+Package Name: com.iiscshuttlers.app
+Category: Sports
+Target Audience: Teens, Adults
+
+=== PRICING ===
+Model: Free
+In-App Purchases: None
+Ads: None
+
+=== DISTRIBUTION ===
+Countries: India (Primary), Global (Optional)
+Minimum SDK: 26 (Android 8.0)
+Target SDK: 34 (Android 14)
+CPUs: arm64-v8a, armeabi-v7a
+
+=== SHORT DESCRIPTION (80 chars) ===
+Live badminton scores, rankings, and match management for IISc
+
+=== FULL DESCRIPTION (4000 chars) ===
+🏸 Welcome to IISc Badminton Club's Official App!
+
+Transform your badminton experience with real-time match tracking, dynamic ELO ratings, and community features built for serious players and casual enthusiasts alike.
+
+✨ CORE FEATURES
+
+📊 Live Leaderboards
+Track rankings across all competition categories: Men's Singles (MS), Women's Singles (WS), Men's Doubles (MD), Women's Doubles (WD), and Mixed Doubles (XD). Real-time ELO ratings from Bronze to Grandmaster tiers.
+
+🎮 Match Logging
+Log your results instantly:
+• Singles & Doubles matches
+• Friendly & Tournament modes
+• Hybrid matches (1v2 format)
+• Cross-gender matches
+• Mixed-category matches
+• Offline mode for gym training
+
+📱 Player Profiles
+Comprehensive player statistics:
+• Win/loss records by category
+• Performance trends & analytics
+• Achievement badges & milestones
+• Head-to-head matchups
+• Detailed match history
+• Favorite opponents & buddies
+
+🏆 Advanced Features
+
+• Tournament Management - Organize and track tournament brackets
+• Weekly Challenges - Time-limited competitive events with rewards
+• Match Predictions - AI-powered win probability estimates
+• Umpire Mode - Dedicated interface for match officials
+• Dispute Resolution - Admin review of contested matches
+• Activity Feed - Real-time notifications and updates
+• Announcements - Important club news and events
+• Find & Lost - Community board for lost/found items
+• Photo Gallery - Tournament photos and highlights
+• CSV Export - Download leaderboard data for analysis
+
+🌟 USER EXPERIENCE
+
+🌙 Dark Mode - Comfortable viewing in any lighting
+📱 Responsive Design - Perfect on phones, tablets, desktops
+🔔 Push Notifications - Match updates, challenges, confirmations
+📡 Offline Support - Log matches without internet, sync later
+🔐 Biometric Auth - Fingerprint/Face unlock support
+⚡ Fast & Lightweight - Optimized performance, minimal battery usage
+🔍 Global Search - Find players, matches, announcements instantly
+
+🏅 SECURITY & PRIVACY
+
+✅ No ads, no tracking, no spam
+✅ Open-source on GitHub
+✅ Secure authentication (Firebase)
+✅ HTTPS encrypted connections
+✅ Minimal permissions (Internet only)
+✅ Privacy-focused data handling
+✅ No third-party data sharing
+
+📊 BY THE NUMBERS
+
+• 62 features spanning 9 categories
+• 50,000+ lines of code
+• 100% open-source
+• Tested on Android 8.0 - 14
+• Supporting 1,000+ users
+
+🎯 WHO'S IT FOR?
+
+✓ Competitive badminton players
+✓ Club members & enthusiasts
+✓ Tournament organizers & umpires
+✓ Casual players tracking progress
+✓ Coaches analyzing team performance
+✓ Spectators following live matches
+
+🚀 QUICK START
+
+1. Sign up with email or biometric auth
+2. Complete your player profile
+3. Join your team/department
+4. Log your first match
+5. Climb the leaderboard!
+
+📞 SUPPORT & COMMUNITY
+
+📧 Email: iiscbadminton@iiscshuttlers.com
+🌐 Website: https://iiscshuttlers.github.io
+🐙 GitHub: https://github.com/iiscshuttlers
+📋 Issues: https://github.com/iiscshuttlers/issues
+
+💡 WHAT'S NEW in v1.122
+
+✨ Reorganized admin panel for better UX
+✨ Comprehensive features dashboard
+✨ Cross-gender match support (friendly only)
+✨ Hybrid match type (1v2 format)
+✨ Mixed-category doubles support
+✨ Fixed offline sync conflicts
+✨ Improved type safety & error handling
+✨ Performance optimizations
+
+🏓 Play with confidence, track with precision.
+
+App developed by IISc Badminton Club
+Last Updated: June 17, 2026
+
+=== PROMOTED TEXT (80 chars) ===
+Organized admin panel, features tracker, & new match types in v1.122!
+
+=== KEYWORDS ===
+badminton, sports, rankings, ELO, tournament, umpire, scoring, IISc, Delhi
+
+=== CONTENT RATING ===
+Category: Sports
+ESRB: E (Everyone)
+IAMAI: Suitable for All
+PEGI: 3
+
+=== PRIVACY POLICY ===
+URL: https://iiscshuttlers.github.io/privacy
+(Located in app at: Settings → Privacy Policy)
+
+=== TERMS OF SERVICE ===
+URL: https://iiscshuttlers.github.io/terms
+(Located in app at: Settings → Terms of Service)
+
+=== DEVELOPER INFO ===
+Developer Name: IISc Badminton Club
+Email: iiscbadminton@iiscshuttlers.com
+Website: https://iiscshuttlers.github.io
+Address: Indian Institute of Science, Bengaluru, India 560012
+
+=== CONTACT FOR PRIVACY/SECURITY ===
+Email: iiscbadminton@iiscshuttlers.com
+Response Time: 48 hours
