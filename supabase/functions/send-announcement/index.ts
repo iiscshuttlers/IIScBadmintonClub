@@ -71,7 +71,10 @@ serve(async (req) => {
             token: t.token,
             notification: { title: `📢 ${title}`, body },
             data: { action: "view_announcements" },
-            android: { priority: "normal" },
+            android: {
+              priority: "normal",
+              notification: { channelId: "notify_announcements" }
+            },
           },
         };
         const res = await fetch(

@@ -1,37 +1,77 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { SignJWT, importPKCS8 } from "https://esm.sh/jose@5.2.2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const FCM_SERVER_KEY = Deno.env.get("FCM_SERVER_KEY")!;
+const FIREBASE_SERVICE_ACCOUNT = Deno.env.get("FIREBASE_SERVICE_ACCOUNT")!;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+interface ServiceAccount {
+  project_id: string;
+  client_email: string;
+  private_key: string;
+}
+
+async function getFirebaseAccessToken(): Promise<string> {
+  const serviceAccount: ServiceAccount = JSON.parse(FIREBASE_SERVICE_ACCOUNT);
+  const privateKey = await importPKCS8(serviceAccount.private_key, "RS256");
+
+  const jwt = await new SignJWT({
+    iss: serviceAccount.client_email,
+    sub: serviceAccount.client_email,
+    aud: "https://oauth2.googleapis.com/token",
+    scope: "https://www.googleapis.com/auth/firebase.messaging",
+  })
+    .setProtectedHeader({ alg: "RS256", typ: "JWT" })
+    .setIssuedAt()
+    .setExpirationTime("1h")
+    .sign(privateKey);
+
+  const response = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(`Failed to get Google OAuth token: ${data.error_description}`);
+  }
+
+  return data.access_token;
+}
+
 async function sendFcmToAll(tokens: string[], title: string, body: string) {
   if (!tokens.length) return;
-  // FCM multicast (max 1000 per request)
-  const chunks: string[][] = [];
-  for (let i = 0; i < tokens.length; i += 1000) {
-    chunks.push(tokens.slice(i, i + 1000));
-  }
-  for (const chunk of chunks) {
-    await fetch("https://fcm.googleapis.com/fcm/send", {
-      method: "POST",
-      headers: {
-        Authorization: `key=${FCM_SERVER_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        registration_ids: chunk,
-        notification: { title, body, sound: "default" },
-        android: {
-          notification: {
-            channel_id: "match_alerts_smash",
-            click_action: "FLUTTER_NOTIFICATION_CLICK",
-          },
+
+  const serviceAccount: ServiceAccount = JSON.parse(FIREBASE_SERVICE_ACCOUNT);
+  const accessToken = await getFirebaseAccessToken();
+
+  for (const token of tokens) {
+    await fetch(
+      `https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
         },
-      }),
-    });
+        body: JSON.stringify({
+          message: {
+            token,
+            notification: { title, body },
+            android: {
+              priority: "normal",
+              notification: { channelId: "notify_weekly_digest" }
+            },
+            webpush: { headers: { Urgency: "normal" } },
+            apns: { headers: { "apns-priority": "10" } },
+          },
+        }),
+      },
+    );
   }
 }
 

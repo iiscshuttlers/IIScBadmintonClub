@@ -63,7 +63,10 @@ async function sendFcm(
         message: {
           token,
           notification: { title, body },
-          android: { priority: "high" },
+          android: {
+            priority: "high",
+            notification: { channelId: "notify_announcements" }
+          },
           webpush: { headers: { Urgency: "high" } },
           apns: { headers: { "apns-priority": "10" } },
         },

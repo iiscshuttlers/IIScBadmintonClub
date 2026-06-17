@@ -139,6 +139,10 @@ serve(async () => {
               token,
               notification: { title, body },
               data: { type: "challenge_expiry", tab: "challenges" },
+              android: {
+                priority: "high",
+                notification: { channelId: "notify_challenges" }
+              },
             },
           }),
         },

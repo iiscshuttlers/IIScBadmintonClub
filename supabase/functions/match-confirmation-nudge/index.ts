@@ -122,6 +122,10 @@ serve(async () => {
               token,
               notification: { title, body },
               data: { type: "match_confirmation", match_id: match.id as string, tab: "my_matches" },
+              android: {
+                priority: "high",
+                notification: { channelId: "notify_confirmation" }
+              },
             },
           }),
         },

@@ -126,6 +126,10 @@ serve(async (req) => {
             token,
             notification: { title, body },
             data: { type: "kudos", match_id },
+            android: {
+              priority: "high",
+              notification: { channelId: "notify_friendly" }
+            },
           },
         }),
       },
