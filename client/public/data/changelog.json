@@ -1,5 +1,16 @@
 [
   {
+    "versionCode": 142,
+    "versionName": "1.142",
+    "date": "2026-06-18T21:05:46.215Z",
+    "changes": [
+      "- Update firebase-messaging-sw.js",
+      "- chore: remove .env.local from tracking",
+      "- updates",
+      "- chore: release v1.141 (build 141)"
+    ]
+  },
+  {
     "versionCode": 141,
     "versionName": "1.141",
     "date": "2026-06-18T14:25:38.347Z",
