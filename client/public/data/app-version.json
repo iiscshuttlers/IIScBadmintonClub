@@ -1,6 +1,6 @@
 {
-  "versionCode": 140,
-  "versionName": "1.140",
+  "versionCode": 141,
+  "versionName": "1.141",
   "downloadUrl": "https://play.google.com/store/apps/details?id=com.iiscshuttlers.app",
-  "changelog": "- chore: release v1.139 (build 139)\n- chore: release v1.138 (build 138)\n- chore: release v1.137 (build 137)\n- chore: release v1.136 (build 136)\n- fix: move hooks before early returns in SiteAdmin\n- fix: prevent infinite useEffect loop in SiteAdmin\n- fix: only schedule foreground notifications on native platforms\n- fix: use players.id instead of players.user_id in notification trigger\n- fix: cast TEXT parameters to UUID in submit_friendly_match RPC\n- fix: show notifications when app is open but minimized\n- fix: create notification channels in Android native code\n- chore: release v1.135 (build 135)\n- chore: remove misleading VitePWA comment\n- fix: add missing Android notification channel IDs to FCM payloads\n- chore: release v1.134 (build 134)"
+  "changelog": "- chore: release v1.140 (build 140)\n- chore: release v1.139 (build 139)\n- chore: release v1.138 (build 138)\n- chore: release v1.137 (build 137)\n- chore: release v1.136 (build 136)\n- fix: move hooks before early returns in SiteAdmin\n- fix: prevent infinite useEffect loop in SiteAdmin\n- fix: only schedule foreground notifications on native platforms\n- fix: use players.id instead of players.user_id in notification trigger\n- fix: cast TEXT parameters to UUID in submit_friendly_match RPC\n- fix: show notifications when app is open but minimized\n- fix: create notification channels in Android native code\n- chore: release v1.135 (build 135)\n- chore: remove misleading VitePWA comment\n- fix: add missing Android notification channel IDs to FCM payloads\n- chore: release v1.134 (build 134)"
 }
