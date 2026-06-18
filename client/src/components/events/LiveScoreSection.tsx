@@ -256,7 +256,7 @@ export function LiveScoreSection() {
         is_friendly:      m.isFriendly,
       });
       if (error) throw error;
-      if (submitId) await supabase.rpc("confirm_friendly_match", { match_uuid: submitId });
+      if (submitId && !m.isFriendly) await supabase.rpc("confirm_friendly_match", { match_uuid: submitId });
 
       const notifMsg = `🏆 ${m.isFriendly ? "Friendly" : "Tournament"} Match: ${m.t1.p1Name}${m.t1.p2Name ? ` & ${m.t1.p2Name}` : ""} vs ${m.t2.p1Name}${m.t2.p2Name ? ` & ${m.t2.p2Name}` : ""} — ${sets.join(", ")}`;
       await supabase.from("site_data").upsert({ key: "match_alert", value: { message: notifMsg, time: Date.now() } });

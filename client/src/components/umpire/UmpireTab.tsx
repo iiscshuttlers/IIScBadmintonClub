@@ -164,20 +164,18 @@ function RecentUmpireMatches({ onEdit }: { onEdit: (m: any) => void }) {
   useEffect(() => {
     if (!profile?.id) return;
     const fetchRecent = async () => {
-      let query = supabase.from("matches").select("*, player1:players!player1_id(full_name), player2:players!player2_id(full_name), partner1:players!team1_partner_id(full_name), partner2:players!team2_partner_id(full_name)").order("date", { ascending: false }).limit(20);
-      if (!isAdmin) {
-        query = query.eq("submitted_by", profile.id);
+      let query = supabase
+        .from("matches")
+        .select("*, player1:players!player1_id(full_name), player2:players!player2_id(full_name), partner1:players!team1_partner_id(full_name), partner2:players!team2_partner_id(full_name)")
+        .order("created_at", { ascending: false });
+      if (isAdmin) {
+        query = query.limit(50);
+      } else {
+        const fifteenMinsAgo = new Date(Date.now() - 900000).toISOString();
+        query = query.eq("submitted_by", profile.id).gte("created_at", fifteenMinsAgo).limit(10);
       }
       const { data } = await query;
-      if (data) {
-        const now = new Date().getTime();
-        const filtered = data.filter(m => {
-          const mDate = new Date(m.date).getTime();
-          // Admin can see everything, umpires see last 15 mins (900000 ms)
-          return isAdmin || (now - mDate <= 900000);
-        });
-        setRecent(filtered);
-      }
+      if (data) setRecent(data);
     };
     fetchRecent();
     const interval = setInterval(fetchRecent, 30000);
@@ -196,7 +194,7 @@ function RecentUmpireMatches({ onEdit }: { onEdit: (m: any) => void }) {
               <p className="text-slate-300 font-bold text-sm">
                 {m.player1?.full_name} vs {m.player2?.full_name}
               </p>
-              <p className="text-emerald-400 font-bold text-xs">{m.match_score}</p>
+              <p className="text-emerald-400 font-bold text-xs">{m.score || m.match_score}</p>
             </div>
             <button 
               onClick={() => onEdit({ ...m, is_edit_mode: true })}

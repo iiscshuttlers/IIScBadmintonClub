@@ -1,6 +1,7 @@
 import { Capacitor } from "@capacitor/core";
 import { PushNotifications } from "@capacitor/push-notifications";
 import { supabase } from "./supabase";
+import { playSmashSound } from "./sounds";
 
 /** Navigate based on data payload from a push notification tap (#19). */
 function handleDeepLink(data: Record<string, string> | undefined) {
@@ -78,7 +79,7 @@ export const registerPushNotifications = async (userId: string) => {
   });
 
   PushNotifications.addListener("pushNotificationReceived", (_notification) => {
-    // Foreground notification — could show an in-app toast here
+    playSmashSound();
   });
 
   PushNotifications.addListener("pushNotificationActionPerformed", (action) => {

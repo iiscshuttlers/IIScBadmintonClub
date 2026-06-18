@@ -66,7 +66,9 @@ import { EloAuditPanel } from "@/components/admin/EloAuditPanel";
 import { AdminFeaturesPanel } from "@/components/admin/AdminFeaturesPanel";
 import { AdminAllFeaturesPanel } from "@/components/admin/AdminAllFeaturesPanel";
 import { TournamentEditor } from "@/components/admin/TournamentEditor";
-import { Paintbrush, ClipboardList, Settings, BarChart2, Zap, Sparkles, ChevronUp } from "lucide-react";
+import { RecycleBin } from "@/components/admin/RecycleBin";
+import { AdminHistoryProvider, useAdminHistory } from "@/contexts/AdminHistoryContext";
+import { Paintbrush, ClipboardList, Settings, BarChart2, Zap, Sparkles, ChevronUp, Undo2, Redo2 } from "lucide-react";
 
 /* ── Types ──────────────────────────────────────────────────────── */
 type Holiday = { date: string; name: string };
@@ -126,7 +128,8 @@ type TabId =
   | "settings"
   | "activity_log"
   | "features"
-  | "all_features";
+  | "all_features"
+  | "recycle_bin";
 
 interface TabGroup {
   title: string;
@@ -181,6 +184,7 @@ const TAB_GROUPS: TabGroup[] = [
       { id: "settings", label: "Settings", icon: Settings },
       { id: "activity_log", label: "Activity Log", icon: ClipboardList },
       { id: "changelog", label: "System Logs", icon: FileCode2 },
+      { id: "recycle_bin", label: "Recycle Bin", icon: Trash2 },
     ],
   },
 ];
@@ -225,6 +229,14 @@ const cardCls =
 /*  Main Admin Page                                                  */
 /* ================================================================ */
 export default function SiteAdmin() {
+  return (
+    <AdminHistoryProvider>
+      <SiteAdminInner />
+    </AdminHistoryProvider>
+  );
+}
+
+function SiteAdminInner() {
   usePageMeta({
     title: "Admin",
     description: "Manage site content, players, and live tournaments",
@@ -234,14 +246,15 @@ export default function SiteAdmin() {
   const [authState, setAuthState] = useState<"loading" | "denied" | "ok">(
     "loading",
   );
-  const { session, isInitializing, isAdmin, isMainAdmin, isUmpire } = useAuth();
+  const { session, isInitializing, isAdmin, isMainAdmin, isMasterAdmin, isUmpire } = useAuth();
+  const { canUndo, canRedo, undo, redo, recordAction, recycleBinCount, reloadTrigger } = useAdminHistory();
 
   const [activeTab, setActiveTab] = useState<TabId>(() => {
     const hash = window.location.hash.replace("#", "");
     if ([
       "overview", "config", "flyers", "holidays", "announcements", "events", "videos",
       "players", "umpire", "registrations", "matches", "changelog",
-      "disputes", "elo_audit", "settings", "activity_log", "features"
+      "disputes", "elo_audit", "settings", "activity_log", "features", "recycle_bin"
     ].includes(hash)) {
       return hash as TabId;
     }
@@ -254,7 +267,7 @@ export default function SiteAdmin() {
       if ([
         "overview", "config", "flyers", "holidays", "announcements", "events", "videos",
         "players", "umpire", "registrations", "matches", "changelog",
-        "disputes", "elo_audit", "settings", "activity_log", "features", "all_features"
+        "disputes", "elo_audit", "settings", "activity_log", "features", "all_features", "recycle_bin"
       ].includes(hash)) {
         setActiveTab(hash as TabId);
       }
@@ -304,7 +317,10 @@ export default function SiteAdmin() {
     if (isInitializing) {
       setAuthState("loading");
     } else if (session) {
-      if (activeTab === "umpire") {
+      // Real master admin always gets in; effective role controls what tabs are visible
+      if (isMasterAdmin) {
+        setAuthState("ok");
+      } else if (activeTab === "umpire") {
         setAuthState(isUmpire ? "ok" : "denied");
       } else {
         setAuthState(isAdmin ? "ok" : "denied");
@@ -312,7 +328,7 @@ export default function SiteAdmin() {
     } else {
       setAuthState("denied");
     }
-  }, [session, isInitializing, isAdmin, isUmpire, activeTab]);
+  }, [session, isInitializing, isAdmin, isMasterAdmin, isUmpire, activeTab]);
 
   // Load content data
   const loadAll = useCallback(async () => {
@@ -361,6 +377,11 @@ export default function SiteAdmin() {
   useEffect(() => {
     if (authState === "ok") loadAll();
   }, [authState, loadAll]);
+
+  // Reload content tabs after an undo/redo that touched site_data
+  useEffect(() => {
+    if (reloadTrigger > 0 && authState === "ok") loadAll();
+  }, [reloadTrigger, authState, loadAll]);
 
   // Dirty wrappers
   const setF = (d: DynamicFlyer[]) => {
@@ -470,47 +491,72 @@ export default function SiteAdmin() {
   const confirmSave = async () => {
     setSaving(true);
     try {
+      // Determine key + before/after for history recording
+      let historyKey: string | null = null;
+      let beforeState: any = null;
+      let afterState: any = null;
+
       switch (activeTab) {
         case "config":
           if (config) {
+            historyKey = "site_config";
+            beforeState = originals.current.config;
+            afterState = config;
             await saveKey("site_config", config);
             originals.current.config = JSON.parse(JSON.stringify(config));
           }
           break;
         case "flyers":
+          historyKey = "flyers";
+          beforeState = originals.current.flyers;
+          afterState = flyers;
           await saveKey("flyers", flyers);
           originals.current.flyers = JSON.parse(JSON.stringify(flyers));
           break;
         case "holidays":
-          await saveKey(
-            "holidays",
-            holidays.filter((h) => h.date && h.name),
-          );
+          historyKey = "holidays";
+          beforeState = originals.current.holidays;
+          afterState = holidays.filter((h) => h.date && h.name);
+          await saveKey("holidays", afterState);
           originals.current.holidays = JSON.parse(JSON.stringify(holidays));
           break;
         case "announcements":
-          await saveKey("announcements", {
-            recent: announcements.filter((a) => a.title),
-          });
+          historyKey = "announcements";
+          beforeState = originals.current.announcements;
+          afterState = { recent: announcements.filter((a) => a.title) };
+          await saveKey("announcements", afterState);
           originals.current.announcements = JSON.parse(
             JSON.stringify(announcements),
           );
           break;
         case "events":
-          await saveKey(
-            "events",
-            events.filter((e) => e.title && e.date),
-          );
+          historyKey = "events";
+          beforeState = originals.current.events;
+          afterState = events.filter((e) => e.title && e.date);
+          await saveKey("events", afterState);
           originals.current.events = JSON.parse(JSON.stringify(events));
           break;
         case "videos":
-          await saveKey(
-            "videos",
-            videos.filter((v) => v.title && v.videoId),
-          );
+          historyKey = "videos";
+          beforeState = originals.current.videos;
+          afterState = videos.filter((v) => v.title && v.videoId);
+          await saveKey("videos", afterState);
           originals.current.videos = JSON.parse(JSON.stringify(videos));
           break;
       }
+
+      // Record in admin history for undo support
+      if (historyKey) {
+        await recordAction({
+          action_type: "update",
+          entity_type: "site_data",
+          entity_id: historyKey,
+          before_state: beforeState,
+          after_state: afterState,
+          label: `Updated ${activeTab}`,
+        });
+      }
+
       setDirty(false);
       setShowConfirm(false);
       toast("Saved!", {
@@ -592,6 +638,7 @@ export default function SiteAdmin() {
     activity_log: null,
     features: null,
     all_features: null,
+    recycle_bin: recycleBinCount > 0 ? recycleBinCount : null,
   };
 
   return (
@@ -611,18 +658,38 @@ export default function SiteAdmin() {
                 Site content · Player management · Live tournament scoring
               </p>
             </div>
-            {contentTabs.includes(activeTab) && (
+            <div className="flex items-center gap-2">
               <button
-                onClick={loadAll}
-                disabled={loading}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-sm font-bold transition"
+                onClick={undo}
+                disabled={!canUndo}
+                title="Undo last saved action (Ctrl+Z)"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-sm font-bold transition disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                <RefreshCw
-                  className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
-                />{" "}
-                Reload
+                <Undo2 className="w-4 h-4" />
+                <span className="hidden sm:inline">Undo</span>
               </button>
-            )}
+              <button
+                onClick={redo}
+                disabled={!canRedo}
+                title="Redo (Ctrl+Y)"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-sm font-bold transition disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <Redo2 className="w-4 h-4" />
+                <span className="hidden sm:inline">Redo</span>
+              </button>
+              {contentTabs.includes(activeTab) && (
+                <button
+                  onClick={loadAll}
+                  disabled={loading}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-sm font-bold transition"
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+                  />{" "}
+                  Reload
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </section>
@@ -742,6 +809,7 @@ export default function SiteAdmin() {
             {activeTab === "settings" && <AdminSettings />}
             {activeTab === "features" && <AdminFeaturesPanel />}
             {activeTab === "all_features" && <AdminAllFeaturesPanel />}
+            {activeTab === "recycle_bin" && <RecycleBin />}
           </motion.div>
         </AnimatePresence>
 
@@ -752,29 +820,33 @@ export default function SiteAdmin() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="sticky bottom-[88px] lg:bottom-6 mt-8 mx-auto w-max z-[9998] flex items-center gap-3 px-6 py-3 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-2xl border border-slate-700 dark:border-slate-300"
+              className="sticky bottom-[88px] lg:bottom-6 mt-8 mx-auto w-[90%] sm:w-max z-[9998] flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-3 sm:gap-4 px-4 sm:px-6 py-3 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-2xl border border-slate-700 dark:border-slate-300"
             >
-              <AlertTriangle className="w-4 h-4 text-amber-400 dark:text-amber-600" />
-              <span className="text-sm font-bold">Unsaved changes</span>
-              <button
-                onClick={handleUndo}
-                disabled={saving}
-                className="px-4 py-2 rounded-xl text-slate-400 hover:text-white dark:text-slate-500 dark:hover:text-slate-900 text-sm font-bold transition disabled:opacity-50"
-              >
-                Undo
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition disabled:opacity-50 shadow-md"
-              >
-                {saving ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Save className="w-4 h-4" />
-                )}
-                {saving ? "Saving..." : "Save Changes"}
-              </button>
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-400 dark:text-amber-600 shrink-0" />
+                <span className="text-sm font-bold whitespace-nowrap">Unsaved changes</span>
+              </div>
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-center">
+                <button
+                  onClick={handleUndo}
+                  disabled={saving}
+                  className="px-4 py-2 rounded-xl text-slate-400 hover:text-white dark:text-slate-500 dark:hover:text-slate-900 text-sm font-bold transition disabled:opacity-50"
+                >
+                  Undo
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition disabled:opacity-50 shadow-md w-full sm:w-auto min-w-[140px]"
+                >
+                  {saving ? (
+                    <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                  ) : (
+                    <Save className="w-4 h-4 shrink-0" />
+                  )}
+                  {saving ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -782,7 +854,7 @@ export default function SiteAdmin() {
         {/* Confirm Save Modal */}
         <AnimatePresence>
           {showConfirm && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowConfirm(false)}>
+            <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowConfirm(false)}>
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -790,7 +862,7 @@ export default function SiteAdmin() {
                 className="bg-white dark:bg-slate-900 w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
                 onClick={e => e.stopPropagation()}
               >
-                <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
+                <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50 shrink-0">
                   <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2 capitalize">
                     <Save className="w-5 h-5 text-emerald-500" /> Review
                     Changes: {activeTab}
@@ -802,7 +874,7 @@ export default function SiteAdmin() {
                     <XCircle className="w-6 h-6" />
                   </button>
                 </div>
-                <div className="p-5 overflow-y-auto">
+                <div className="p-5 overflow-y-auto flex-1 min-h-0">
                   <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
                     Please double check your changes before confirming. The left
                     side is what is currently live, and the right side is what
@@ -810,22 +882,22 @@ export default function SiteAdmin() {
                   </p>
                   {getDiffView()}
                 </div>
-                <div className="p-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex justify-end gap-3">
+                <div className="p-4 sm:p-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex flex-col-reverse sm:flex-row justify-end gap-3 shrink-0">
                   <button
                     onClick={() => setShowConfirm(false)}
-                    className="px-5 py-2.5 rounded-xl font-bold text-slate-600 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-800 transition"
+                    className="w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-xl font-bold text-slate-600 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-800 transition"
                   >
                     Keep Editing
                   </button>
                   <button
                     onClick={confirmSave}
                     disabled={saving}
-                    className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-500/20 transition disabled:opacity-50"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 sm:py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-500/20 transition disabled:opacity-50"
                   >
                     {saving ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <Loader2 className="w-5 h-5 animate-spin shrink-0" />
                     ) : (
-                      <Save className="w-5 h-5" />
+                      <Save className="w-5 h-5 shrink-0" />
                     )}
                     {saving ? "Saving..." : "Confirm & Save"}
                   </button>

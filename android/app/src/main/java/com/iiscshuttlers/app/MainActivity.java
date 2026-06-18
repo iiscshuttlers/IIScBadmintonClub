@@ -2,6 +2,8 @@ package com.iiscshuttlers.app;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.media.AudioAttributes;
+import android.net.Uri;
 import android.os.Build;
 import com.getcapacitor.BridgeActivity;
 
@@ -12,57 +14,69 @@ public class MainActivity extends BridgeActivity {
     createNotificationChannels();
   }
 
+  private Uri soundUri(String filename) {
+    return Uri.parse("android.resource://" + getPackageName() + "/raw/" + filename);
+  }
+
+  private AudioAttributes audioAttrs() {
+    return new AudioAttributes.Builder()
+      .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+      .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+      .build();
+  }
+
   private void createNotificationChannels() {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-      NotificationManager manager = getSystemService(NotificationManager.class);
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
 
-      // Friendly matches
-      NotificationChannel friendly = new NotificationChannel(
-        "notify_friendly", "Friendly matches", NotificationManager.IMPORTANCE_HIGH);
-      friendly.setDescription("Alerts for friendly match requests");
-      manager.createNotificationChannel(friendly);
+    NotificationManager mgr = getSystemService(NotificationManager.class);
+    AudioAttributes attrs = audioAttrs();
 
-      // Tournament matches
-      NotificationChannel tournament = new NotificationChannel(
-        "notify_tournament", "Tournament matches", NotificationManager.IMPORTANCE_HIGH);
-      tournament.setDescription("Updates for tournament matches");
-      manager.createNotificationChannel(tournament);
+    // Smash sound — match logged by opponent
+    NotificationChannel smash = new NotificationChannel(
+      "notify_smash", "Match notifications", NotificationManager.IMPORTANCE_HIGH);
+    smash.setDescription("New matches logged against you");
+    smash.setSound(soundUri("smash"), attrs);
+    mgr.createNotificationChannel(smash);
 
-      // Challenge invites
-      NotificationChannel challenges = new NotificationChannel(
-        "notify_challenges", "Challenge invites", NotificationManager.IMPORTANCE_HIGH);
-      challenges.setDescription("Alerts for new challenges");
-      manager.createNotificationChannel(challenges);
+    // Point sound — match confirmed
+    NotificationChannel point = new NotificationChannel(
+      "notify_point", "Match confirmations", NotificationManager.IMPORTANCE_HIGH);
+    point.setDescription("When your match result is confirmed");
+    point.setSound(soundUri("point"), attrs);
+    mgr.createNotificationChannel(point);
 
-      // Match confirmations
-      NotificationChannel confirmation = new NotificationChannel(
-        "notify_confirmation", "Match confirmations", NotificationManager.IMPORTANCE_HIGH);
-      confirmation.setDescription("Updates when matches are confirmed");
-      manager.createNotificationChannel(confirmation);
+    // Serve sound — match request / ping
+    NotificationChannel serve = new NotificationChannel(
+      "notify_serve", "Match requests", NotificationManager.IMPORTANCE_HIGH);
+    serve.setDescription("Pings and match requests from other players");
+    serve.setSound(soundUri("serve"), attrs);
+    mgr.createNotificationChannel(serve);
 
-      // Announcements
-      NotificationChannel announcements = new NotificationChannel(
-        "notify_announcements", "Announcements", NotificationManager.IMPORTANCE_DEFAULT);
-      announcements.setDescription("Important club announcements");
-      manager.createNotificationChannel(announcements);
+    // Whistle sound — announcements, live matches, admin push
+    NotificationChannel whistle = new NotificationChannel(
+      "notify_whistle", "Announcements", NotificationManager.IMPORTANCE_DEFAULT);
+    whistle.setDescription("Club announcements and live match alerts");
+    whistle.setSound(soundUri("whistle"), attrs);
+    mgr.createNotificationChannel(whistle);
 
-      // Find & Lost
-      NotificationChannel findLost = new NotificationChannel(
-        "notify_find_lost", "Find & Lost posts", NotificationManager.IMPORTANCE_DEFAULT);
-      findLost.setDescription("Updates on lost and found items");
-      manager.createNotificationChannel(findLost);
+    // Victory sound — top-10, buddy accepted, ELO milestone
+    NotificationChannel victory = new NotificationChannel(
+      "notify_victory", "Achievements", NotificationManager.IMPORTANCE_DEFAULT);
+    victory.setDescription("ELO milestones, top-10, buddy requests");
+    victory.setSound(soundUri("victory"), attrs);
+    mgr.createNotificationChannel(victory);
 
-      // ELO milestones
-      NotificationChannel eloMilestone = new NotificationChannel(
-        "notify_elo_milestone", "ELO milestones", NotificationManager.IMPORTANCE_DEFAULT);
-      eloMilestone.setDescription("Alerts for reaching new ELO milestones");
-      manager.createNotificationChannel(eloMilestone);
+    // Weekly digest — silent (low importance, no sound)
+    NotificationChannel weekly = new NotificationChannel(
+      "notify_weekly", "Weekly digest", NotificationManager.IMPORTANCE_LOW);
+    weekly.setDescription("Weekly platform activity summary");
+    mgr.createNotificationChannel(weekly);
 
-      // Weekly digest
-      NotificationChannel weekly = new NotificationChannel(
-        "notify_weekly_digest", "Weekly digest", NotificationManager.IMPORTANCE_LOW);
-      weekly.setDescription("Weekly platform activity summary");
-      manager.createNotificationChannel(weekly);
-    }
+    // Find & Lost — whistle
+    NotificationChannel findLost = new NotificationChannel(
+      "notify_find_lost", "Find & Lost posts", NotificationManager.IMPORTANCE_DEFAULT);
+    findLost.setDescription("Updates on lost and found items");
+    findLost.setSound(soundUri("whistle"), attrs);
+    mgr.createNotificationChannel(findLost);
   }
 }

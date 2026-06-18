@@ -368,11 +368,21 @@ export function UmpireEngine({
     if (initialMatchState?.is_edit_mode) {
       const isP1Winner = initialMatchState.winner_id === initialMatchState.player1_id;
       // parse setsHistory carefully to handle possible retired strings
-      const rawScore = initialMatchState.match_score || "";
+      const rawScore = initialMatchState.score || initialMatchState.match_score || "";
       // Match score format: "21-13, 21-12 [Names]" or "21-13 (T1 Retired)"
       // Let's extract just the sets part
       const setsPartMatch = rawScore.match(/^([\d-]+(?:, [\d-]+)*)/);
       const setsHistory = setsPartMatch ? setsPartMatch[1].split(", ") : [];
+
+      // Count actual set wins from setsHistory rather than hardcoding 2
+      const t1GamesWon = setsHistory.filter(s => {
+        const [a, b] = s.split("-").map(Number);
+        return a > b;
+      }).length;
+      const t2GamesWon = setsHistory.filter(s => {
+        const [a, b] = s.split("-").map(Number);
+        return b > a;
+      }).length;
 
       return {
         id: userId,
@@ -384,8 +394,8 @@ export function UmpireEngine({
         pointsToWin: initialMatchState.points_to_win || 21,
         bestOfSets: initialMatchState.best_of_sets || 3,
         goldenPoint: 30,
-        t1: { p1Id: initialMatchState.player1_id, p1Name: initialMatchState.player1?.full_name || "", p2Id: initialMatchState.team1_partner_id, p2Name: initialMatchState.partner1?.full_name || "", score: 0, games: isP1Winner ? 2 : 0 },
-        t2: { p1Id: initialMatchState.player2_id, p1Name: initialMatchState.player2?.full_name || "", p2Id: initialMatchState.team2_partner_id, p2Name: initialMatchState.partner2?.full_name || "", score: 0, games: !isP1Winner ? 2 : 0 },
+        t1: { p1Id: initialMatchState.player1_id, p1Name: initialMatchState.player1?.full_name || "", p2Id: initialMatchState.team1_partner_id, p2Name: initialMatchState.partner1?.full_name || "", score: 0, games: t1GamesWon },
+        t2: { p1Id: initialMatchState.player2_id, p1Name: initialMatchState.player2?.full_name || "", p2Id: initialMatchState.team2_partner_id, p2Name: initialMatchState.partner2?.full_name || "", score: 0, games: t2GamesWon },
         serverTeam: 1,
         serverPlayerIndex: 0,
         receiverPlayerIndex: 0,
@@ -394,8 +404,8 @@ export function UmpireEngine({
         t2LastServedBy: 1,
         endsSwapped: false,
         pointLog: [],
-        status: "finished",
-        winner: isP1Winner ? 1 : 2,
+        status: "playing",
+        winner: undefined,
         setsHistory: setsHistory,
       } as BwfMatchState;
     }
@@ -451,6 +461,7 @@ export function UmpireEngine({
   const [showToolsMenu, setShowToolsMenu] = useState(false);
 
   const [isDirectScoreOpen, setIsDirectScoreOpen] = useState(false);
+  const [showFullTimer, setShowFullTimer] = useState(false);
   const [directSetsText, setDirectSetsText] = useState("");
   const [directWinner, setDirectWinner] = useState<1 | 2 | null>(null);
 
@@ -476,6 +487,7 @@ export function UmpireEngine({
     if (breakIntervalRef.current) clearInterval(breakIntervalRef.current);
     setBreakLabel(label);
     setBreakSecondsLeft(seconds);
+    setShowFullTimer(true);
     breakIntervalRef.current = setInterval(() => {
       setBreakSecondsLeft((prev) => {
         if (prev === null || prev <= 1) {
@@ -516,6 +528,7 @@ export function UmpireEngine({
     breakIntervalRef.current = null;
     setBreakSecondsLeft(null);
     setBreakLabel("");
+    setShowFullTimer(false);
   };
 
   useEffect(() => () => { if (breakIntervalRef.current) clearInterval(breakIntervalRef.current); }, []);
@@ -973,8 +986,9 @@ export function UmpireEngine({
         if (submitError) throw submitError;
         newMatchId = submitId;
         
-        if (newMatchId) {
-          // Admin auto-confirm bypasses the usual verification rules
+        if (newMatchId && !match.isFriendly) {
+          // Auto-confirm tournament matches only (admin-controlled)
+          // Friendly matches require opponent confirmation
           await supabase.rpc("confirm_friendly_match", { match_uuid: newMatchId });
         }
       }
@@ -1223,12 +1237,35 @@ export function UmpireEngine({
                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Detected Category</p>
                 <p className="text-sm font-black text-emerald-400">{match.customCategory || deduceCategory()}</p>
               </div>
-              <input
-                value={match.customCategory || ""}
-                onChange={(e) => setMatch({ ...match, customCategory: e.target.value })}
-                placeholder="Override…"
-                className="w-32 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white text-xs outline-none focus:border-emerald-500 transition"
-              />
+              <div className="flex flex-col gap-1.5 items-end">
+                <select
+                  value={["MS","MD","XD","WD","WS","Hybrid","Crossgender"].includes(match.customCategory || "") ? (match.customCategory || "") : match.customCategory ? "Other" : ""}
+                  onChange={(e) => {
+                    if (e.target.value === "Other") setMatch({ ...match, customCategory: "" });
+                    else setMatch({ ...match, customCategory: e.target.value });
+                  }}
+                  className="w-36 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-white text-xs outline-none focus:border-emerald-500 transition"
+                >
+                  <option value="">Override…</option>
+                  <option value="MS">MS</option>
+                  <option value="MD">MD</option>
+                  <option value="XD">XD</option>
+                  <option value="WD">WD</option>
+                  <option value="WS">WS</option>
+                  <option value="Hybrid">Hybrid</option>
+                  <option value="Crossgender">Crossgender</option>
+                  <option value="Other">Other…</option>
+                </select>
+                {match.customCategory !== undefined && !["MS","MD","XD","WD","WS","Hybrid","Crossgender",""].includes(match.customCategory) && (
+                  <input
+                    value={match.customCategory}
+                    onChange={(e) => setMatch({ ...match, customCategory: e.target.value })}
+                    placeholder="Custom category"
+                    autoFocus
+                    className="w-36 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white text-xs outline-none focus:border-emerald-500 transition"
+                  />
+                )}
+              </div>
             </div>
           )}
 
@@ -1545,17 +1582,41 @@ export function UmpireEngine({
             Wait, add a set / resume match
           </button>
         </div>
-      ) : breakSecondsLeft !== null ? (
-        /* ── Break Timer (full-focus) ── */
-        <div className="flex flex-col items-center justify-center py-12 gap-4">
-          <Timer className="w-12 h-12 text-amber-400 animate-pulse" />
-          <div className="text-8xl font-black tabular-nums text-amber-400 drop-shadow-[0_0_20px_rgba(251,191,36,0.4)]">
-            {Math.floor(breakSecondsLeft / 60).toString().padStart(2, "0")}:{(breakSecondsLeft % 60).toString().padStart(2, "0")}
-          </div>
-          {breakLabel && <p className="text-slate-400 font-bold text-xs uppercase tracking-widest text-center max-w-xs">{breakLabel}</p>}
-          <button onClick={endBreak} className="px-8 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-2xl font-bold text-sm">End Break</button>
-        </div>
       ) : (
+        <>
+        {/* ── Break Timer mini-banner (always visible when timer running) ── */}
+        {breakSecondsLeft !== null && (
+          <button
+            onClick={() => setShowFullTimer(true)}
+            className="w-full flex items-center justify-between px-4 py-3 bg-amber-400/10 border border-amber-400/40 rounded-2xl mb-4 hover:bg-amber-400/20 transition"
+          >
+            <div className="flex items-center gap-2">
+              <Timer className="w-4 h-4 text-amber-400 animate-pulse" />
+              <span className="text-amber-400 font-black text-sm uppercase tracking-widest">{breakLabel || "Break"}</span>
+            </div>
+            <span className="text-amber-400 font-black text-xl tabular-nums">
+              {Math.floor(breakSecondsLeft / 60).toString().padStart(2, "0")}:{(breakSecondsLeft % 60).toString().padStart(2, "0")}
+            </span>
+          </button>
+        )}
+        {/* ── Full-screen timer overlay ── */}
+        {showFullTimer && breakSecondsLeft !== null && (
+          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur-sm rounded-4xl gap-5 p-8 text-center">
+            <button
+              onClick={() => setShowFullTimer(false)}
+              className="absolute top-4 left-4 flex items-center gap-1.5 text-slate-400 hover:text-white text-xs font-bold uppercase tracking-widest transition"
+            >
+              ← Back
+            </button>
+            <Timer className="w-12 h-12 text-amber-400 animate-pulse" />
+            <div className="text-8xl font-black tabular-nums text-amber-400 drop-shadow-[0_0_20px_rgba(251,191,36,0.4)]">
+              {Math.floor(breakSecondsLeft / 60).toString().padStart(2, "0")}:{(breakSecondsLeft % 60).toString().padStart(2, "0")}
+            </div>
+            {breakLabel && <p className="text-slate-400 font-bold text-xs uppercase tracking-widest text-center max-w-xs">{breakLabel}</p>}
+            <button onClick={endBreak} className="px-8 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-2xl font-bold text-sm">End Break</button>
+          </div>
+        )}
+
         <>
           {/* ── Score Cards (HERO — tap card to add a point) ── */}
           <div className="grid grid-cols-2 gap-2.5 sm:gap-4 md:gap-6">
@@ -1589,12 +1650,12 @@ export function UmpireEngine({
                   </button>
 
                   {/* Names */}
-                  <div className="text-center px-7 w-full">
-                    <h3 className="text-sm sm:text-lg md:text-2xl font-black truncate leading-tight">
+                  <div className="text-center px-7 w-full min-w-0">
+                    <h3 className="text-xs sm:text-base md:text-xl font-black truncate leading-tight w-full">
                       {t.p1Name}{cardBadge(team === 1 ? "t1p1" : "t2p1")}
                     </h3>
                     {t.p2Name && (
-                      <h3 className="text-sm sm:text-lg md:text-2xl font-black truncate leading-tight">
+                      <h3 className="text-xs sm:text-base md:text-xl font-black truncate leading-tight w-full">
                         {t.p2Name}{cardBadge(team === 1 ? "t1p2" : "t2p2")}
                       </h3>
                     )}
@@ -1704,6 +1765,7 @@ export function UmpireEngine({
               {showLog ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
             </button>
           </div>
+        </>
         </>
       )}
 

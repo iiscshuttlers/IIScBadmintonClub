@@ -180,10 +180,15 @@ export default function Events() {
       "Browse live, upcoming and completed badminton tournaments at IISc.",
   });
 
+  const TOURNAMENT_SUB_TABS = ["notices", "schedule", "broadcast", "brackets", "umpire"];
   const [activeTab, setActiveTab] = useHashTab(
-    ["calendar", "tournament", "history"] as const,
+    ["calendar", "tournament", "history", ...TOURNAMENT_SUB_TABS] as const,
     "calendar"
   );
+  // Treat any tournament sub-tab hash as "tournament" at the top level
+  const effectiveTab = TOURNAMENT_SUB_TABS.includes(activeTab as string)
+    ? "tournament"
+    : activeTab as "calendar" | "tournament" | "history";
   const [events, setEvents] = useState<LiveTournament[]>([]);
   const [loading, setLoading] = useState(true);
   const [tournamentCfg, setTournamentCfg] = useState<TournamentConfig>(DEFAULT_TOURNAMENT_CONFIG);
@@ -386,7 +391,7 @@ export default function Events() {
               <button
                 onClick={() => setActiveTab("calendar")}
                 className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all flex-1 basis-[45%] sm:basis-auto shrink-0 ${
-                  activeTab === "calendar"
+                  effectiveTab === "calendar"
                     ? "bg-white text-blue-900 shadow-md scale-100"
                     : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
                 }`}
@@ -397,7 +402,7 @@ export default function Events() {
                 <button
                   onClick={() => setActiveTab("tournament")}
                   className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all flex-1 basis-[45%] sm:basis-auto shrink-0 ${
-                    activeTab === "tournament"
+                    effectiveTab === "tournament"
                       ? "bg-rose-500 text-white shadow-md scale-100 shadow-rose-500/30"
                       : "text-white/80 hover:text-rose-400 hover:bg-rose-500/10 scale-95"
                   }`}
@@ -408,7 +413,7 @@ export default function Events() {
               <button
                 onClick={() => setActiveTab("history")}
                 className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all flex-1 basis-[100%] sm:basis-auto shrink-0 ${
-                  activeTab === "history"
+                  effectiveTab === "history"
                     ? "bg-white text-blue-900 shadow-md scale-100"
                     : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
                 }`}
@@ -420,11 +425,11 @@ export default function Events() {
         </div>
       </section>
 
-      {activeTab === "tournament" && tournamentCfg.enabled && (
+      {effectiveTab === "tournament" && tournamentCfg.enabled && (
         <TournamentSection />
       )}
 
-      {activeTab === "history" && (
+      {effectiveTab === "history" && (
         <section className="py-20 bg-white dark:bg-slate-900">
           <div className="container mx-auto px-4">
             <motion.div
@@ -500,7 +505,7 @@ export default function Events() {
 
 
 
-      {activeTab === "calendar" && (
+      {effectiveTab === "calendar" && (
         <>
           {/* ── 1. Match Calendar ───────────────────────────────────────────── */}
       <ScheduleCalendar />

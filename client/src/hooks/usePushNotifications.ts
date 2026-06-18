@@ -20,14 +20,11 @@ export function usePushNotifications(userId: string | undefined) {
     const createAndroidChannels = async () => {
       if (Capacitor.getPlatform() !== 'android') return;
       const channels: Channel[] = [
-        { id: "notify_friendly", name: "Friendly matches", description: "Alerts for friendly match requests", importance: 4, visibility: 1 },
-        { id: "notify_tournament", name: "Tournament matches", description: "Updates for tournament matches", importance: 4, visibility: 1 },
-        { id: "notify_challenges", name: "Challenge invites", description: "Alerts for new challenges", importance: 4, visibility: 1 },
-        { id: "notify_confirmation", name: "Match confirmations", description: "Updates when matches are confirmed", importance: 4, visibility: 1 },
-        { id: "notify_announcements", name: "Announcements", description: "Important club announcements", importance: 3, visibility: 1 },
-        { id: "notify_find_lost", name: "Find & Lost posts", description: "Updates on lost and found items", importance: 3, visibility: 1 },
-        { id: "notify_elo_milestone", name: "ELO milestones", description: "Alerts for reaching new ELO milestones", importance: 3, visibility: 1 },
-        { id: "notify_weekly_digest", name: "Weekly digest", description: "Weekly platform activity summary", importance: 2, visibility: 1 }
+        { id: "notify_smash",   name: "Match notifications",  description: "New matches logged against you",            importance: 4, visibility: 1 },
+        { id: "notify_point",   name: "Match confirmations",  description: "When your match result is confirmed",        importance: 4, visibility: 1 },
+        { id: "notify_serve",   name: "Match requests",       description: "Pings and match requests from other players",importance: 4, visibility: 1 },
+        { id: "notify_whistle", name: "Announcements",        description: "Club announcements and live match alerts",   importance: 3, visibility: 1 },
+        { id: "notify_victory", name: "Achievements",         description: "ELO milestones, top-10, buddy requests",    importance: 3, visibility: 1 },
       ];
       for (const channel of channels) {
         try {
@@ -69,7 +66,7 @@ export function usePushNotifications(userId: string | undefined) {
             // Show notification even when app is in foreground (native only)
             const title = notification.notification?.title || "New notification";
             const body = notification.notification?.body || "";
-            const channelId = (notification.notification as any)?.channelId || "notify_announcements";
+            const channelId = (notification.notification as any)?.channelId || "notify_whistle";
 
             if (Capacitor.getPlatform() === 'android' || Capacitor.getPlatform() === 'ios') {
               try {

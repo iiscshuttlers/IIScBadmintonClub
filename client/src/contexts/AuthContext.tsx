@@ -53,14 +53,19 @@ export interface PlayerProfile {
   buddy_requests?: string[];
 }
 
+export type ViewAsRole = 'master_admin' | 'admin' | 'umpire' | 'player';
+
 export interface AuthContextType {
   session: Session | null;
   user: Session["user"] | null;
   profile: PlayerProfile | null;
   isAdmin: boolean;
   isMainAdmin: boolean;
+  isMasterAdmin: boolean; // always true for real master_admin regardless of viewAsRole
   isUmpire: boolean;
   isInitializing: boolean; // True while resolving session OR fetching profile
+  viewAsRole: ViewAsRole | null;
+  setViewAsRole: (role: ViewAsRole | null) => void;
   updateRole: (playerId: string, role: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -68,10 +73,23 @@ export interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const VIEW_AS_KEY = "iisc_view_as_role";
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { session, loading: sessionLoading } = useSupabaseSession();
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [viewAsRole, setViewAsRoleState] = useState<ViewAsRole | null>(() => {
+    try { return (localStorage.getItem(VIEW_AS_KEY) as ViewAsRole) || null; } catch { return null; }
+  });
+
+  const setViewAsRole = (role: ViewAsRole | null) => {
+    setViewAsRoleState(role);
+    try {
+      if (role) localStorage.setItem(VIEW_AS_KEY, role);
+      else localStorage.removeItem(VIEW_AS_KEY);
+    } catch {}
+  };
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -231,9 +249,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isInitializing = sessionLoading || (!!session && profileLoading);
 
   const playerRole = profile?.role ?? 'player';
-  const isMainAdmin = playerRole === 'master_admin' || isMasterAdminEmail(session?.user?.email);
-  const isAdmin = isMainAdmin || playerRole === 'admin';
-  const isUmpire = isAdmin || playerRole === 'umpire';
+  const isTrulyMainAdmin = playerRole === 'master_admin' || isMasterAdminEmail(session?.user?.email);
+  // When viewing as a different role, derive permissions from that role instead
+  const isMainAdmin = isTrulyMainAdmin && !viewAsRole;
+  const isAdmin = isTrulyMainAdmin
+    ? (!viewAsRole || viewAsRole === 'master_admin' || viewAsRole === 'admin')
+    : (playerRole === 'admin');
+  const isUmpire = isTrulyMainAdmin
+    ? (!viewAsRole || viewAsRole === 'master_admin' || viewAsRole === 'admin' || viewAsRole === 'umpire')
+    : (isAdmin || playerRole === 'umpire');
 
   usePushNotifications(profile?.id);
 
@@ -256,8 +280,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         isAdmin,
         isMainAdmin,
+        isMasterAdmin: isTrulyMainAdmin,
         isUmpire,
         isInitializing,
+        viewAsRole: isTrulyMainAdmin ? viewAsRole : null,
+        setViewAsRole: isTrulyMainAdmin ? setViewAsRole : () => {},
         updateRole,
         signOut,
         refreshProfile,

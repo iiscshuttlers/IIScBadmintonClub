@@ -38,6 +38,7 @@ import { Capacitor } from "@capacitor/core";
 import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useNavigationAuth } from "@/hooks/useNavigationAuth";
+import { useAuth, type ViewAsRole } from "@/contexts/AuthContext";
 import { QuickSettingsContent } from "@/components/QuickSettings";
 import { GlobalSearch } from "@/components/GlobalSearch";
 
@@ -72,6 +73,7 @@ export default function Navigation() {
     pendingActionCount,
   } = useNavigationAuth();
   const { theme, toggleTheme } = useTheme();
+  const { viewAsRole, setViewAsRole, isMasterAdmin: isTrulyMainAdmin } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -203,9 +205,15 @@ export default function Navigation() {
                   <span className="font-bold text-slate-900 dark:text-white leading-tight text-sm sm:text-base block whitespace-nowrap tracking-tight">
                     IISc Badminton Club
                   </span>
-                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold uppercase tracking-widest hidden sm:block">
-                    Shuttlers · Bangalore
-                  </span>
+                  {viewAsRole ? (
+                    <span className="text-[10px] text-amber-500 font-black uppercase tracking-widest hidden sm:block animate-pulse">
+                      Viewing as: {viewAsRole.replace("_", " ")}
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold uppercase tracking-widest hidden sm:block">
+                      Shuttlers · Bangalore
+                    </span>
+                  )}
                 </div>
               </div>
             </Link>
@@ -251,6 +259,9 @@ export default function Navigation() {
                     switchAccount={switchAccount}
                     handleSignOut={handleSignOut}
                     handleInvite={handleInvite}
+                    isTrulyMainAdmin={isTrulyMainAdmin}
+                    viewAsRole={viewAsRole}
+                    setViewAsRole={setViewAsRole}
                   />
                 ) : (
                   <button onClick={() => {
@@ -302,6 +313,9 @@ export default function Navigation() {
                   switchAccount={switchAccount}
                   handleSignOut={handleSignOut}
                   handleInvite={handleInvite}
+                  isTrulyMainAdmin={isTrulyMainAdmin}
+                  viewAsRole={viewAsRole}
+                  setViewAsRole={setViewAsRole}
                 />
               ) : (
                 <button onClick={() => {
@@ -380,6 +394,29 @@ export default function Navigation() {
                       </Link>
                     </div>
 
+                    {isTrulyMainAdmin && (
+                      <div className="px-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">View As</p>
+                        <div className="grid grid-cols-2 gap-1">
+                          {(["master_admin", "admin", "umpire", "player"] as ViewAsRole[]).map(role => {
+                            const active = viewAsRole === role || (!viewAsRole && role === "master_admin");
+                            const labels: Record<ViewAsRole, string> = { master_admin: "Master Admin", admin: "Admin", umpire: "Umpire", player: "Player" };
+                            return (
+                              <button
+                                key={role}
+                                onClick={() => setViewAsRole(role === "master_admin" ? null : role)}
+                                className={`px-2 py-1.5 rounded-lg text-xs font-bold transition-colors ${active ? "bg-violet-600 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+                              >
+                                {labels[role]}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {viewAsRole && (
+                          <p className="text-[10px] text-amber-500 font-bold mt-1.5 text-center">Viewing as {viewAsRole.replace("_", " ")}</p>
+                        )}
+                      </div>
+                    )}
                     {isAdmin && (
                       <Link href="/admin">
                         <button className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-violet-50 dark:hover:bg-violet-950/30 text-violet-600 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
@@ -575,14 +612,18 @@ function DarkModeToggle({ insideMenu }: { insideMenu?: boolean }) {
 function SubBarProfileButton({
   userAvatar, userName, userEmail, myPlayerId, pendingActionCount,
   isAdmin, theme, toggleTheme, savedAccounts, switchAccount, handleSignOut, handleInvite,
+  isTrulyMainAdmin, viewAsRole, setViewAsRole,
 }: {
   userAvatar: string | null; userName: string; userEmail: string; myPlayerId: string | null;
   pendingActionCount: number; isAdmin: boolean; theme: string; toggleTheme: () => void;
   savedAccounts: any[]; switchAccount: (acc: any) => Promise<void>;
   handleSignOut: (msg?: string) => void; handleInvite: () => void;
+  isTrulyMainAdmin: boolean; viewAsRole: ViewAsRole | null; setViewAsRole: (r: ViewAsRole | null) => void;
 }) {
+  const [, setLocation] = useLocation();
+  const [open, setOpen] = useState(false);
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <button className="relative w-8 h-8 rounded-full border-2 border-slate-200 dark:border-slate-700 hover:border-emerald-500 transition-all duration-200 overflow-hidden shrink-0 shadow-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-950">
           {userAvatar ? (
@@ -638,18 +679,37 @@ function SubBarProfileButton({
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
             <QuickSettingsContent />
           </div>
+          {isTrulyMainAdmin && (
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm p-3">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">View As</p>
+              <div className="grid grid-cols-2 gap-1">
+                {(["master_admin", "admin", "umpire", "player"] as ViewAsRole[]).map(role => {
+                  const active = viewAsRole === role || (!viewAsRole && role === "master_admin");
+                  const labels: Record<ViewAsRole, string> = { master_admin: "Master Admin", admin: "Admin", umpire: "Umpire", player: "Player" };
+                  return (
+                    <button
+                      key={role}
+                      onClick={() => { setViewAsRole(role === "master_admin" ? null : role); setOpen(false); }}
+                      className={`px-2 py-1.5 rounded-lg text-xs font-bold transition-colors ${active ? "bg-violet-600 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+                    >
+                      {labels[role]}
+                    </button>
+                  );
+                })}
+              </div>
+              {viewAsRole && (
+                <p className="text-[10px] text-amber-500 font-bold mt-1.5 text-center">Viewing as {viewAsRole.replace("_", " ")}</p>
+              )}
+            </div>
+          )}
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
-            <Link href="/profile/password">
-              <DropdownMenuItem className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2.5 gap-2.5">
-                <Lock className="w-4 h-4 text-slate-400" /> Change Password
-              </DropdownMenuItem>
-            </Link>
+            <DropdownMenuItem onSelect={() => setLocation("/profile/password")} className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2.5 gap-2.5">
+              <Lock className="w-4 h-4 text-slate-400" /> Change Password
+            </DropdownMenuItem>
             {isAdmin && (
-              <Link href="/admin">
-                <DropdownMenuItem className="cursor-pointer font-semibold rounded-none text-violet-600 dark:text-violet-400 focus:bg-violet-50 dark:focus:bg-violet-950/30 gap-2.5 px-3 py-2.5 border-t border-slate-100 dark:border-slate-800">
-                  <Zap className="h-4 w-4" /> Site Admin
-                </DropdownMenuItem>
-              </Link>
+              <DropdownMenuItem onSelect={() => setLocation("/admin")} className="cursor-pointer font-semibold rounded-none text-violet-600 dark:text-violet-400 focus:bg-violet-50 dark:focus:bg-violet-950/30 gap-2.5 px-3 py-2.5 border-t border-slate-100 dark:border-slate-800">
+                <Zap className="h-4 w-4" /> Site Admin
+              </DropdownMenuItem>
             )}
           </div>
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -667,19 +727,15 @@ function SubBarProfileButton({
                 <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800 m-0" />
               </>
             )}
-            <Link href="/join?add_account=true">
-              <DropdownMenuItem className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:bg-slate-50 dark:focus:bg-slate-800 gap-2.5 px-3 py-2.5">
-                <UserPlus className="h-4 w-4 text-slate-400" /> Add Account
-              </DropdownMenuItem>
-            </Link>
-            <DropdownMenuItem onClick={handleInvite} className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:bg-slate-50 dark:focus:bg-slate-800 border-t border-slate-100 dark:border-slate-800 gap-2.5 px-3 py-2.5">
+            <DropdownMenuItem onSelect={() => setLocation("/join?add_account=true")} className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:bg-slate-50 dark:focus:bg-slate-800 gap-2.5 px-3 py-2.5">
+              <UserPlus className="h-4 w-4 text-slate-400" /> Add Account
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={handleInvite} className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:bg-slate-50 dark:focus:bg-slate-800 border-t border-slate-100 dark:border-slate-800 gap-2.5 px-3 py-2.5">
               <UserPlus className="h-4 w-4 text-emerald-500" /> Invite Friends
             </DropdownMenuItem>
-            <Link href="/privacy">
-              <DropdownMenuItem className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:bg-slate-50 dark:focus:bg-slate-800 border-t border-slate-100 dark:border-slate-800 gap-2.5 px-3 py-2.5">
-                <Shield className="h-4 w-4 text-slate-400" /> Privacy Policy
-              </DropdownMenuItem>
-            </Link>
+            <DropdownMenuItem onSelect={() => setLocation("/privacy")} className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:bg-slate-50 dark:focus:bg-slate-800 border-t border-slate-100 dark:border-slate-800 gap-2.5 px-3 py-2.5">
+              <Shield className="h-4 w-4 text-slate-400" /> Privacy Policy
+            </DropdownMenuItem>
           </div>
           <button onClick={() => handleSignOut("Are you sure you want to sign out of this account?")} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/25 hover:bg-rose-100 dark:hover:bg-rose-950/50 text-rose-600 dark:text-rose-400 font-bold text-sm border border-rose-100 dark:border-rose-900/50 transition-colors">
             <LogOut className="h-4 w-4" /> Sign Out

@@ -96,10 +96,10 @@ export function LiveBracketsSection() {
           <Trophy className="w-10 h-10 text-slate-400 dark:text-slate-500" />
         </div>
         <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-2">
-          Data Pending
+          Brackets Not Yet Available
         </h3>
         <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-          {error || "Live tournament data is currently not available."}
+          Tournament brackets will appear here once the draw has been published. Check back closer to the tournament start date.
         </p>
       </div>
     );

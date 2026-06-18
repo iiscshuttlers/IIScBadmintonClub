@@ -32,7 +32,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import LogMatchModal from "@/components/LogMatchModal";
-import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
 import {
   PlayerCard,
   type Player,
@@ -91,7 +90,6 @@ export default function PlayersDirectory() {
   /* Auth + own-profile state */
   const [session, setSession] = useState<any>(null);
   const [ownProfile, setOwnProfile] = useState<Player | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [isLogMatchOpen, setIsLogMatchOpen] = useState(false);
   const [selectedOpponentId, setSelectedOpponentId] = useState<string | null>(
     null,
@@ -111,10 +109,14 @@ export default function PlayersDirectory() {
   const [sortBy, setSortBy] = useState<
     "elo" | "winpct" | "name" | "department" | "level"
   >("name");
+  const LEADERBOARD_SUB_TABS = ["elo", "ironman"];
   const [activeTab, setActiveTab] = useHashTab(
-    ["directory", "leaderboard", "network", "h2h"] as const,
+    ["directory", "leaderboard", "network", "h2h", ...LEADERBOARD_SUB_TABS] as const,
     "directory"
   );
+  const effectiveTab = LEADERBOARD_SUB_TABS.includes(activeTab as string)
+    ? "leaderboard"
+    : activeTab as "directory" | "leaderboard" | "network" | "h2h";
 
 
   const [followers, setFollowers] = useState<any[]>([]);
@@ -145,8 +147,10 @@ export default function PlayersDirectory() {
     session: authSession,
     isInitializing: authLoading,
     profile,
-    refreshProfile
+    refreshProfile,
+    isAdmin: authIsAdmin,
   } = useAuth();
+  const isAdmin = authIsAdmin;
   useEffect(() => {
     let isMounted = true;
 
@@ -155,7 +159,6 @@ export default function PlayersDirectory() {
         if (isMounted) {
           setSession(null);
           setOwnProfile(null);
-          setIsAdmin(false);
         }
         return;
       }
@@ -166,7 +169,6 @@ export default function PlayersDirectory() {
       if (userError || !userData.user || userData.user.id !== session.user.id) {
         setSession(null);
         setOwnProfile(null);
-        setIsAdmin(false);
         await supabase.auth.signOut();
         return;
       }
@@ -174,9 +176,6 @@ export default function PlayersDirectory() {
       setSession(session);
 
       if (session) {
-        const adminStatus = isAdminEmail(userData.user.email);
-        setIsAdmin(adminStatus);
-
         try {
           const { data } = await supabase
             .from("players")
@@ -791,15 +790,15 @@ export default function PlayersDirectory() {
                   )}
                 </div>
                 <div className="min-w-0">
-                  <div className="text-xl font-black text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate">
+                  <div className="text-xl font-black text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                     {ownProfile.full_name}
                     {ownProfile.nickname && (
-                      <span className="ml-2 text-sm font-semibold text-slate-400 italic">
+                      <span className="ml-2 text-sm font-semibold text-slate-400 italic whitespace-nowrap">
                         "{ownProfile.nickname}"
                       </span>
                     )}
                   </div>
-                  <div className="text-sm text-slate-500 dark:text-slate-400 font-medium truncate">
+                  <div className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                     {ownProfile.department} · Class of {ownProfile.joined_year}
                   </div>
                   <div className="flex items-center gap-1.5 mt-1 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
@@ -902,47 +901,47 @@ export default function PlayersDirectory() {
           <div className="flex flex-col items-center justify-center gap-6">
             {/* View Toggle */}
             <div className="w-full md:w-auto flex justify-center">
-              <div className="flex flex-wrap sm:flex-nowrap bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 gap-1.5 w-full sm:w-auto">
+              <div className="grid grid-cols-2 sm:flex bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 gap-1.5 w-full sm:w-auto">
                 <button
                   onClick={() => setActiveTab("directory")}
-                  className={`flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-sm font-black transition-all flex-1 basis-[45%] sm:basis-auto shrink-0 ${
-                    activeTab === "directory"
-                      ? "bg-white text-emerald-700 shadow-md scale-100"
-                      : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                  className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-sm font-black transition-all ${
+                    effectiveTab === "directory"
+                      ? "bg-white text-emerald-700 shadow-md"
+                      : "text-white/80 hover:text-white hover:bg-white/10"
                   }`}
                 >
-                  <Users className="w-4 h-4" /> Directory
+                  <Users className="w-4 h-4 shrink-0" /> Directory
                 </button>
                 <button
                   onClick={() => setActiveTab("leaderboard")}
-                  className={`flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-sm font-black transition-all flex-1 basis-[45%] sm:basis-auto shrink-0 ${
-                    activeTab === "leaderboard"
-                      ? "bg-white text-emerald-700 shadow-md scale-100"
-                      : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                  className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-sm font-black transition-all ${
+                    effectiveTab === "leaderboard"
+                      ? "bg-white text-emerald-700 shadow-md"
+                      : "text-white/80 hover:text-white hover:bg-white/10"
                   }`}
                 >
-                  <Trophy className="w-4 h-4" /> Rankings
+                  <Trophy className="w-4 h-4 shrink-0" /> Rankings
                 </button>
                 <button
                   onClick={() => setActiveTab("h2h")}
-                  className={`flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-sm font-black transition-all flex-1 basis-[45%] sm:basis-auto shrink-0 ${
-                    activeTab === "h2h"
-                      ? "bg-white text-rose-700 shadow-md scale-100"
-                      : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                  className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-sm font-black transition-all ${
+                    effectiveTab === "h2h"
+                      ? "bg-white text-rose-700 shadow-md"
+                      : "text-white/80 hover:text-white hover:bg-white/10"
                   }`}
                 >
-                  <Swords className="w-4 h-4" /> H2H
+                  <Swords className="w-4 h-4 shrink-0" /> H2H
                 </button>
                 {session && ownProfile && (
                   <button
                     onClick={() => setActiveTab("network")}
-                    className={`flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-sm font-black transition-all flex-1 basis-[45%] sm:basis-auto shrink-0 ${
-                      activeTab === "network"
-                        ? "bg-white text-violet-700 shadow-md scale-100"
-                        : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                    className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-sm font-black transition-all ${
+                      effectiveTab === "network"
+                        ? "bg-white text-violet-700 shadow-md"
+                        : "text-white/80 hover:text-white hover:bg-white/10"
                     }`}
                   >
-                    <Heart className="w-4 h-4" /> Network
+                    <Heart className="w-4 h-4 shrink-0" /> Network
                   </button>
                 )}
               </div>
@@ -956,11 +955,11 @@ export default function PlayersDirectory() {
         {/* Auth banner */}
         {renderAuthBanner()}
 
-        {activeTab === "h2h" ? (
+        {effectiveTab === "h2h" ? (
           <div className="mt-8">
             <H2HSection />
           </div>
-        ) : activeTab === "network" ? (
+        ) : effectiveTab === "network" ? (
           <div className="space-y-10">
             {/* Buddies section */}
             <div>
@@ -1278,7 +1277,7 @@ export default function PlayersDirectory() {
               );
             })()}
           </div>
-        ) : activeTab === "directory" ? (
+        ) : effectiveTab === "directory" ? (
           <>
             {/* Search + Filters */}
             <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 mb-10 space-y-5">
@@ -1421,7 +1420,7 @@ export default function PlayersDirectory() {
             {/* Recommended Opponents (Matchmaking) */}
             {!loading &&
               ownProfile &&
-              activeTab === "directory" &&
+              effectiveTab === "directory" &&
               (function () {
                 const buddiesLooking = players.filter(
                   (p) =>

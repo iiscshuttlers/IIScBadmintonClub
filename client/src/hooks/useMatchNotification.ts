@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { showWebNotification } from "./usePushNotifications";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import { Capacitor } from "@capacitor/core";
+import { playSmashSound, playPointSound, playVictorySound } from "@/lib/sounds";
 
 /**
  * Subscribes to realtime INSERT events on the `matches` table.
@@ -63,6 +64,7 @@ export function useMatchNotification() {
                         body: "Your recent match has been confirmed. Check your new ELO!",
                         id: Math.floor(Math.random() * 1000000),
                         schedule: { at: new Date(Date.now() + 100) },
+                        channelId: "notify_point",
                       }],
                     });
                   }
@@ -70,7 +72,7 @@ export function useMatchNotification() {
               } else {
                 showWebNotification("✅ Match Confirmed!", "Your recent match has been confirmed. Check your new ELO!", () => {});
               }
-              playSmashSound();
+              playPointSound();
             }
             return;
           }
@@ -127,6 +129,7 @@ export function useMatchNotification() {
                         body: notifBody,
                         id: Math.floor(Math.random() * 1000000),
                         schedule: { at: new Date(Date.now() + 100) },
+                        channelId: "notify_smash",
                         actionTypeId: "",
                         extra: { matchId: match.id },
                       },
@@ -180,6 +183,7 @@ export function useMatchNotification() {
               // They are in top 10!
               if (!localStorage.getItem("notified_top10")) {
                 localStorage.setItem("notified_top10", "true");
+                playVictorySound();
                 if (Capacitor.isNativePlatform()) {
                   try {
                     const permStatus = await LocalNotifications.checkPermissions();
@@ -191,6 +195,7 @@ export function useMatchNotification() {
                           body: "You've just entered the Top 10! Keep up the great work!",
                           id: Math.floor(Math.random() * 1000000),
                           schedule: { at: new Date(Date.now() + 100) },
+                          channelId: "notify_victory",
                         }],
                       });
                     }
@@ -215,71 +220,3 @@ export function useMatchNotification() {
   return notification;
 }
 
-/**
- * Generates and plays a short "smash" sound using Web Audio API.
- * No external audio file needed — synthesised on the fly.
- */
-function playSmashSound() {
-  try {
-    const ctx = new (
-      window.AudioContext || (window as any).webkitAudioContext
-    )();
-
-    // Impact hit — short noise burst
-    const bufferLen = ctx.sampleRate * 0.15; // 150ms
-    const buffer = ctx.createBuffer(1, bufferLen, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferLen; i++) {
-      // White noise with fast exponential decay
-      const t = i / ctx.sampleRate;
-      data[i] = (Math.random() * 2 - 1) * Math.exp(-t * 30);
-    }
-
-    const noise = ctx.createBufferSource();
-    noise.buffer = buffer;
-
-    // Bandpass filter to shape the "thwack"
-    const bandpass = ctx.createBiquadFilter();
-    bandpass.type = "bandpass";
-    bandpass.frequency.value = 800;
-    bandpass.Q.value = 1.5;
-
-    // High shelf for brightness
-    const highShelf = ctx.createBiquadFilter();
-    highShelf.type = "highshelf";
-    highShelf.frequency.value = 2000;
-    highShelf.gain.value = 6;
-
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.6, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
-
-    noise.connect(bandpass);
-    bandpass.connect(highShelf);
-    highShelf.connect(gain);
-    gain.connect(ctx.destination);
-
-    noise.start(ctx.currentTime);
-    noise.stop(ctx.currentTime + 0.15);
-
-    // Add a sharp "ping" overtone for the shuttle cork hit
-    const osc = ctx.createOscillator();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(1200, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.08);
-
-    const oscGain = ctx.createGain();
-    oscGain.gain.setValueAtTime(0.3, ctx.currentTime);
-    oscGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-
-    osc.connect(oscGain);
-    oscGain.connect(ctx.destination);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.1);
-
-    // Clean up context after sound finishes
-    setTimeout(() => ctx.close(), 500);
-  } catch (e) {
-    console.warn("Could not play smash sound:", e);
-  }
-}

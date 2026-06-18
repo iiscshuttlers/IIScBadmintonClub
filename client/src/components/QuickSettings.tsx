@@ -29,15 +29,12 @@ export function QuickSettingsContent({ onClose }: { onClose?: () => void }) {
 
   // ── Notification preferences (localStorage + DB sync) ───────────
   const NOTIF_KEYS = [
-    { key: "notify_friendly",     label: "Friendly matches",         storage: "iisc_notify_friendly_matches" },
-    { key: "notify_tournament",   label: "Tournament matches",       storage: "iisc_notify_tournament_matches" },
-    { key: "notify_challenges",   label: "Challenge invites",        storage: "iisc_notify_challenges" },
-    { key: "notify_confirmation", label: "Match confirmations",      storage: "iisc_notify_confirmation" },
-    { key: "notify_announcements",label: "Announcements",            storage: "iisc_notify_announcements" },
-    { key: "notify_find_lost",    label: "Find & Lost posts",        storage: "iisc_notify_find_lost" },
-    { key: "notify_buddy_status", label: "Buddy status updates",     storage: "iisc_notify_buddy_status" },
-    { key: "notify_elo_milestone",label: "ELO milestones",           storage: "iisc_notify_elo_milestone" },
-    { key: "notify_weekly_digest",label: "Weekly digest (email)",    storage: "iisc_notify_weekly_digest" },
+    { key: "notify_smash",        label: "Match notifications",       storage: "iisc_notify_smash" },
+    { key: "notify_point",        label: "Match confirmations",       storage: "iisc_notify_point" },
+    { key: "notify_serve",        label: "Match requests (Pings)",    storage: "iisc_notify_serve" },
+    { key: "notify_whistle",      label: "Announcements & Live",      storage: "iisc_notify_whistle" },
+    { key: "notify_victory",      label: "Achievements & Milestones", storage: "iisc_notify_victory" },
+    { key: "notify_weekly_digest",label: "Weekly digest (email)",     storage: "iisc_notify_weekly_digest" },
   ] as const;
 
   type NotifKey = typeof NOTIF_KEYS[number]["key"];

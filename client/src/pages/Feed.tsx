@@ -405,7 +405,7 @@ export default function Feed() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 max-w-3xl mt-8">
+      <div className={`container mx-auto px-4 max-w-3xl ${activeTab === "my_matches" ? "mt-0" : "mt-8"}`}>
         {activeTab === "announcements" ? (
           <AnnouncementsSection />
         ) : activeTab === "umpire" && (isUmpire || isAdmin) ? (

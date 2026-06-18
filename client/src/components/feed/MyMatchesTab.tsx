@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { Calendar, Search, CheckCircle2, Clock } from "lucide-react";
+import { Calendar, Search, CheckCircle2, Clock, Send } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { Link, useLocation } from "wouter";
@@ -12,7 +12,7 @@ import confetti from "canvas-confetti";
 import { useHashTab } from "@/hooks/useHashTab";
 
 export function MyMatchesTab() {
-  const { profile } = useAuth();
+  const { profile, isAdmin } = useAuth();
   const [, setLocation] = useLocation();
   const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,9 +36,11 @@ export function MyMatchesTab() {
           player1:players!player1_id(id, full_name, avatar_url),
           player2:players!player2_id(id, full_name, avatar_url),
           partner1:players!team1_partner_id(id, full_name, avatar_url),
-          partner2:players!team2_partner_id(id, full_name, avatar_url)
+          partner2:players!team2_partner_id(id, full_name, avatar_url),
+          submitter:players!submitted_by(id, full_name)
         `)
         .or(`player1_id.eq.${profile.id},player2_id.eq.${profile.id},team1_partner_id.eq.${profile.id},team2_partner_id.eq.${profile.id},submitted_by.eq.${profile.id}`)
+        .not("status", "eq", "rejected")
         .order("date", { ascending: false });
 
       if (!error && data) {
@@ -170,7 +172,8 @@ export function MyMatchesTab() {
   return (
     <div className="w-full max-w-3xl mx-auto pb-12">
       {/* Controls */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-slate-200 dark:border-slate-800 mb-6 sticky top-[72px] z-20">
+      <div className="sticky top-[56px] z-30 mb-6 bg-slate-50 dark:bg-slate-950 -mx-4 px-4 pt-2 pb-0">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-slate-200 dark:border-slate-800 pb-4">
         
         {/* Tabs */}
         <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-2xl mb-4">
@@ -221,6 +224,7 @@ export function MyMatchesTab() {
             <option value="Hybrid">Hybrid</option>
           </select>
         </div>
+      </div>
       </div>
 
       {/* List */}
@@ -279,15 +283,26 @@ export function MyMatchesTab() {
               >
                 {/* Actions Row */}
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-2">
-                  <div className="flex items-center gap-2">
-                    {isPending ? (
-                      <span className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-black uppercase tracking-wider rounded-lg">
-                        <Clock className="w-3.5 h-3.5" /> Pending
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-black uppercase tracking-wider rounded-lg">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Accepted
-                      </span>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      {isPending ? (
+                        <span className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-black uppercase tracking-wider rounded-lg">
+                          <Clock className="w-3.5 h-3.5" /> Pending
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-black uppercase tracking-wider rounded-lg">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Accepted
+                        </span>
+                      )}
+                    </div>
+                    {isAdmin && (
+                      <div className="flex flex-col gap-0.5 mt-1">
+                        {match.submitter?.full_name && (
+                          <span className="flex items-center gap-1 text-[10px] text-slate-400 dark:text-slate-500">
+                            <Send className="w-3 h-3 shrink-0" /> Submitted by: <span className="font-bold text-slate-600 dark:text-slate-300">{match.submitter.full_name}</span>
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
 

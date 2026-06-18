@@ -17,6 +17,7 @@ type Announcement = {
   endDate?: string;
   category: string;
   priority?: string;
+  flyer?: DynamicFlyer;
 };
 
 type BannerMessage = {
@@ -29,38 +30,19 @@ export type DynamicFlyer = {
   enabled: boolean;
   bgColorClass: string;
   items: BannerMessage[];
+  startDate?: string;
+  endDate?: string;
+  speed?: "slow" | "normal" | "fast" | "custom";
+  customSpeed?: number;
 };
 
 /* Flyer colors may be a raw CSS color/gradient (from the admin color picker)
    or a Tailwind class string. CSS values are applied via inline style since
    Tailwind can't generate arbitrary classes at runtime. */
-const isCssColor = (v: string) =>
-  !!v && /^(#|rgb|hsl)|gradient\(/i.test(v.trim());
+const isCssColor = (v?: string) =>
+  !!v && typeof v === "string" && /^(#|rgb|hsl)|gradient\(/i.test(v.trim());
 
-function getActiveAnnouncements(announcements: Announcement[]): string[] {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
 
-  return announcements
-    .filter((item) => {
-      if (item.startDate && item.endDate) {
-        const start = new Date(item.startDate);
-        const end = new Date(item.endDate);
-        if (today >= start && today <= end) return true;
-      }
-      if (item.date) {
-        const date = new Date(item.date);
-        const diff = (today.getTime() - date.getTime()) / (1000 * 3600 * 24);
-        // Show announcements from the last 30 days or future ones up to 14 days
-        return diff >= -14 && diff <= 30;
-      }
-      return false;
-    })
-    .filter(
-      (item) => item.category === "tournament" || item.priority === "high",
-    )
-    .map((item) => `🏸 ${item.title}`);
-}
 
 export default function StatusBanner() {
   const [messages, setMessages] = useState<BannerMessage[]>([]);
@@ -87,17 +69,39 @@ export default function StatusBanner() {
         }
         const holidays = Array.isArray(holidaysData) ? holidaysData : [];
         const events = Array.isArray(eventsData) ? eventsData : [];
-        const announcements = Array.isArray(announcementsData?.recent)
+        const announcements: Announcement[] = Array.isArray(announcementsData?.recent)
           ? announcementsData.recent
           : [];
-        const flyers = Array.isArray(flyersData) ? flyersData : [];
-        setDynamicFlyers(flyers.filter((f) => f.enabled));
-
+        const baseFlyers: DynamicFlyer[] = Array.isArray(flyersData) ? flyersData : [];
+        
         const todayDate = new Date();
-        const today = todayDate.toLocaleDateString("en-CA", {
+        todayDate.setHours(0, 0, 0, 0);
+
+        // Filter valid flyers based on start/end dates
+        const isValidFlyer = (f: DynamicFlyer) => {
+          if (!f.enabled) return false;
+          
+          if (f.startDate) {
+            const start = new Date(`${f.startDate}T00:00:00`);
+            if (todayDate < start) return false;
+          }
+          if (f.endDate) {
+            const end = new Date(`${f.endDate}T23:59:59`);
+            if (todayDate > end) return false;
+          }
+          return true;
+        };
+
+        const announcementFlyers = announcements
+          .filter(a => a.flyer && isValidFlyer(a.flyer))
+          .map(a => a.flyer as DynamicFlyer);
+        
+        setDynamicFlyers([...baseFlyers.filter(isValidFlyer), ...announcementFlyers]);
+
+        const today = new Date().toLocaleDateString("en-CA", {
           timeZone: "Asia/Kolkata",
         });
-        const tomorrowDate = new Date(todayDate);
+        const tomorrowDate = new Date();
         tomorrowDate.setDate(tomorrowDate.getDate() + 1);
         const tomorrow = tomorrowDate.toLocaleDateString("en-CA", {
           timeZone: "Asia/Kolkata",
@@ -162,21 +166,12 @@ export default function StatusBanner() {
           }
         });
 
-        // 3. Announcements
-        const liveAnnouncements = getActiveAnnouncements(announcements);
-        liveAnnouncements.forEach((a) =>
-          msgs.push({ text: a, colorClass: "text-white" }),
-        );
+        // 3. Announcements logic removed (Option B: No announcements in default banner)
 
         if (msgs.length > 0) {
           setMessages(msgs);
         } else {
-          setMessages([
-            {
-              text: "🏸 Welcome to IISc Badminton Club — Check Announcements for latest updates",
-              colorClass: "text-white",
-            },
-          ]);
+          setMessages([]);
         }
       })
       .catch((err) => console.warn("StatusBanner data fetch failed:", err));
@@ -240,7 +235,10 @@ export default function StatusBanner() {
           style={bgIsCss ? { background: flyer.bgColorClass } : undefined}
         >
           <div className="flex-1 overflow-hidden min-w-0 pr-10">
-            <div className="marquee-anim flex gap-8 font-semibold tracking-wide text-sm md:text-base whitespace-nowrap hover:opacity-90 transition-opacity">
+            <div 
+              className="marquee-anim flex gap-8 font-semibold tracking-wide text-sm md:text-base whitespace-nowrap hover:opacity-90 transition-opacity"
+              style={{ animationDuration: flyer.speed === 'custom' ? `${flyer.customSpeed || 90}s` : flyer.speed === 'slow' ? '150s' : flyer.speed === 'fast' ? '45s' : '90s' }}
+            >
               {Array(2)
                 .fill(null)
                 .map((_, blockIdx) => (
@@ -249,20 +247,23 @@ export default function StatusBanner() {
                     className="whitespace-nowrap flex items-center gap-8"
                   >
                     {Array(10)
-                      .fill(flyer.items)
+                      .fill(flyer.items || [])
                       .flat()
-                      .map((msg, idx) => (
-                        <span
-                          key={`${blockIdx}-${idx}`}
-                          className="flex items-center gap-8"
-                        >
+                      .map((msg, idx) => {
+                        if (!msg) return null;
+                        return (
                           <span
-                            className={isCssColor(msg.colorClass) ? "" : msg.colorClass}
-                            style={isCssColor(msg.colorClass) ? { color: msg.colorClass } : undefined}
-                          >{msg.text}</span>
-                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-white/40 flex-shrink-0" />
-                        </span>
-                      ))}
+                            key={`${blockIdx}-${idx}`}
+                            className="flex items-center gap-8"
+                          >
+                            <span
+                              className={isCssColor(msg.colorClass) ? "" : msg.colorClass}
+                              style={isCssColor(msg.colorClass) ? { color: msg.colorClass } : undefined}
+                            >{msg.text}</span>
+                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-white/40 flex-shrink-0" />
+                          </span>
+                        );
+                      })}
                   </span>
                 ))}
             </div>

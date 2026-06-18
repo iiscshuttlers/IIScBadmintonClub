@@ -4,6 +4,7 @@ import { showWebNotification } from "./usePushNotifications";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import { Capacitor } from "@capacitor/core";
 import { useAuth } from "@/contexts/AuthContext";
+import { playServeSound } from "@/lib/sounds";
 
 export function usePingsNotification() {
   const { profile } = useAuth();
@@ -20,6 +21,7 @@ export function usePingsNotification() {
           if (payload.payload?.target_id === profile.id) {
             const senderName = payload.payload.sender_name || "A player";
             const message = `${senderName} is looking to play a match with you!`;
+            playServeSound();
 
             if (Capacitor.isNativePlatform()) {
               try {
@@ -35,6 +37,7 @@ export function usePingsNotification() {
                         body: message,
                         id: Math.floor(Math.random() * 1000000),
                         schedule: { at: new Date(Date.now() + 100) },
+                        channelId: "notify_serve",
                         extra: { type: "ping" },
                       },
                     ],

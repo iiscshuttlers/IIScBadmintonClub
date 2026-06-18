@@ -5,6 +5,7 @@ import { LocalNotifications } from "@capacitor/local-notifications";
 import { Capacitor } from "@capacitor/core";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { playWhistleSound, playVictorySound } from "@/lib/sounds";
 
 export function useBroadcastNotification() {
   const lastAnnouncementRef = useRef<string | null>(null);
@@ -41,6 +42,7 @@ export function useBroadcastNotification() {
                 // If it's a new announcement we haven't seen during this session
                 if (latest.title && latest.title !== lastAnnouncementRef.current) {
                   lastAnnouncementRef.current = latest.title;
+                  playWhistleSound();
 
                   // Fire notification
                   if (Capacitor.isNativePlatform()) {
@@ -57,6 +59,7 @@ export function useBroadcastNotification() {
                               body: latest.title,
                               id: Math.floor(Math.random() * 1000000),
                               schedule: { at: new Date(Date.now() + 100) },
+                              channelId: "notify_whistle",
                               actionTypeId: "",
                               extra: { type: "announcement" },
                             },
@@ -86,6 +89,7 @@ export function useBroadcastNotification() {
               Object.values(liveMatches).forEach((match: any) => {
                 if (match.status === "playing" && !knownMatchesRef.current.has(match.id)) {
                   knownMatchesRef.current.add(match.id);
+                  playWhistleSound();
                   
                   // Check user preferences
                   const notifyFriendly = localStorage.getItem("iisc_notify_friendly_matches") !== "false";
@@ -115,7 +119,8 @@ export function useBroadcastNotification() {
                         title,
                         body,
                         id: Math.floor(Math.random() * 1000000),
-                        schedule: { at: new Date(Date.now() + 100) }
+                        schedule: { at: new Date(Date.now() + 100) },
+                        channelId: "notify_whistle",
                       }]
                     }).catch(console.warn);
                   } else {
@@ -133,6 +138,7 @@ export function useBroadcastNotification() {
               const data = row.value;
               const currentProfile = profileRef.current;
               if (data && currentProfile && data.senderId === currentProfile.id) {
+                playVictorySound();
                 const title = "🤝 Buddy Request Accepted!";
                 const body = `${data.accepterName} accepted your buddy request!`;
                 
@@ -143,6 +149,7 @@ export function useBroadcastNotification() {
                       body,
                       id: Math.floor(Math.random() * 1000000),
                       schedule: { at: new Date(Date.now() + 100) },
+                      channelId: "notify_victory",
                       extra: { type: "buddy_acceptance" }
                     }]
                   }).catch(console.warn);
@@ -160,6 +167,7 @@ export function useBroadcastNotification() {
               const data = row.value;
               if (data && data.title && data.timestamp && data.timestamp !== lastAdminPushRef.current) {
                 lastAdminPushRef.current = data.timestamp;
+                playWhistleSound();
                 
                 if (Capacitor.isNativePlatform()) {
                   LocalNotifications.schedule({
@@ -168,6 +176,7 @@ export function useBroadcastNotification() {
                       body: data.body || "",
                       id: Math.floor(Math.random() * 1000000),
                       schedule: { at: new Date(Date.now() + 100) },
+                      channelId: "notify_whistle",
                     }]
                   }).catch(console.warn);
                 } else {
