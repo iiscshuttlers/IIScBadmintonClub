@@ -8,7 +8,7 @@ importScripts('https://www.gstatic.com/firebasejs/10.8.1/firebase-messaging-comp
 // your app's Firebase config object.
 // https://firebase.google.com/docs/web/setup#config-object
 firebase.initializeApp({
-  apiKey: "AIzaSyBswPW816r-G3UDRoQSf5eZLRSIlFHtJnc",
+  apiKey: "AIzaSyBXr8e2dtNlwuXpIsINX9Cl5JOk-6jLsdw",
   authDomain: "iisc-badminton-hub.firebaseapp.com",
   projectId: "iisc-badminton-hub",
   storageBucket: "iisc-badminton-hub.firebasestorage.app",
