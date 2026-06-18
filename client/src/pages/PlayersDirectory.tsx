@@ -879,7 +879,10 @@ export default function PlayersDirectory() {
               </div>
             </div>
             <button
-              onClick={() => setLocation("/join")}
+              onClick={() => {
+                sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
+                setLocation("/join");
+              }}
               className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm transition shadow-lg shadow-emerald-500/20 shrink-0"
             >
               <LogIn className="w-5 h-5" /> Sign In / Join
@@ -971,19 +974,19 @@ export default function PlayersDirectory() {
                 </div>
               ) : (() => {
                 const buddyPlayers = players.filter((p) => myBuddyIds.has(p.id));
-                const ltp = buddyPlayers.filter((p) => p.status === "looking" || (!p.status && (p as any).is_looking_to_play));
-                const others = buddyPlayers.filter((p) => p.status !== "looking" && (p.status || !(p as any).is_looking_to_play));
+                const activeBuddies = buddyPlayers.filter((p) => p.status === "looking" || p.status === "playing" || (!p.status && (p as any).is_looking_to_play));
+                const inactiveBuddies = buddyPlayers.filter((p) => !(p.status === "looking" || p.status === "playing" || (!p.status && (p as any).is_looking_to_play)));
                 return (
                   <div className="space-y-6">
-                    {ltp.length > 0 && (
+                    {activeBuddies.length > 0 && (
                       <div>
                         <div className="flex items-center gap-2 mb-3">
                           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 text-xs font-black uppercase tracking-wider">
-                            <Activity className="w-3.5 h-3.5" /> Looking to Play
+                            <Activity className="w-3.5 h-3.5" /> Active
                           </span>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                          {ltp.map((player) => (
+                          {activeBuddies.map((player) => (
                             <div
                               key={player.id}
                               className="bg-white dark:bg-slate-900 rounded-2xl border-2 border-emerald-300 dark:border-emerald-700 p-4 flex items-center gap-4 cursor-pointer hover:shadow-md transition shadow-sm"
@@ -997,12 +1000,17 @@ export default function PlayersDirectory() {
                                     {player.full_name[0]}
                                   </div>
                                 )}
-                                <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900" />
+                                <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900 ${player.status === "playing" ? "bg-amber-400" : "bg-emerald-500"}`} />
                               </div>
-                              <div className="min-w-0">
+                              <div className="min-w-0 flex-1">
                                 <p className="font-black text-sm text-slate-800 dark:text-slate-100 truncate">{player.full_name}</p>
                                 <p className="text-xs text-slate-400 truncate">{player.department}</p>
-                                <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">ELO {player.elo_rating ?? "—"}</p>
+                                <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                                  <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">ELO {player.elo_rating ?? "—"}</span>
+                                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${player.status === "playing" ? "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400" : "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"}`}>
+                                    {player.status === "playing" ? "Playing Right Now" : "Looking to Play"}
+                                  </span>
+                                </div>
                               </div>
                               {ownProfile && (
                                 <button
@@ -1021,15 +1029,15 @@ export default function PlayersDirectory() {
                         </div>
                       </div>
                     )}
-                    {others.length > 0 && (
+                    {inactiveBuddies.length > 0 && (
                       <div>
                         <div className="flex items-center gap-2 mb-3">
                           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-black uppercase tracking-wider">
-                            <UserCheck className="w-3.5 h-3.5" /> Resting / Other
+                            <UserCheck className="w-3.5 h-3.5" /> Resting / Inactive
                           </span>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                          {others.map((player) => (
+                          {inactiveBuddies.map((player) => (
                             <div
                               key={player.id}
                               className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-4 flex items-center gap-4 cursor-pointer hover:shadow-md transition shadow-sm"
@@ -1043,14 +1051,19 @@ export default function PlayersDirectory() {
                                     {player.full_name[0]}
                                   </div>
                                 )}
-                                <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900 ${player.status === "playing" ? "bg-amber-400" : player.status === "injured" ? "bg-rose-400" : player.status === "resting" ? "bg-indigo-400" : "bg-slate-400"}`} />
+                                <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900 ${player.status === "injured" ? "bg-rose-400" : player.status === "resting" ? "bg-indigo-400" : "bg-slate-400"}`} />
                               </div>
-                              <div className="min-w-0">
+                              <div className="min-w-0 flex-1">
                                 <p className="font-black text-sm text-slate-800 dark:text-slate-100 truncate">{player.full_name}</p>
                                 <p className="text-xs text-slate-400 truncate">{player.department}</p>
-                                <p className={`text-xs font-bold mt-0.5 ${player.status === "playing" ? "text-amber-500" : player.status === "injured" ? "text-rose-500" : player.status === "resting" ? "text-indigo-500" : "text-slate-500"}`}>
-                                  {player.status === "playing" ? "Playing Right Now" : player.status === "injured" ? "Injured" : player.status === "resting" ? "Taking a break" : "ELO " + (player.elo_rating ?? "—")}
-                                </p>
+                                <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                                  <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">ELO {player.elo_rating ?? "—"}</span>
+                                  {player.status && player.status !== "offline" && (
+                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${player.status === "injured" ? "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400" : player.status === "resting" ? "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"}`}>
+                                      {player.status === "injured" ? "Injured" : player.status === "resting" ? "Taking a break" : "Offline"}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                               {ownProfile && (
                                 <button

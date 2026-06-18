@@ -14,7 +14,7 @@
  */
 
 import { readFileSync, writeFileSync, existsSync } from "fs";
-import { execSync } from "child_process";
+import { execSync, spawn } from "child_process";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -127,7 +127,7 @@ writeFileSync(
     {
       versionCode: newCode,
       versionName: newName,
-      downloadUrl: `https://github.com/${REPO}/releases/latest/download/${finalApkName}`,
+      downloadUrl: `https://play.google.com/store/apps/details?id=com.iiscshuttlers.app`,
       changelog,
     },
     null,
@@ -173,13 +173,12 @@ run("gradlew assembleRelease bundleRelease", {
 /* ── 6. Copy artifacts to OneDrive ──────────────────────────────── */
 log("Copying APK and AAB to OneDrive in the background…");
 try {
-  import("child_process").then(({ spawn }) => {
-    const oneDriveApkPath = resolve(ONEDRIVE_DIR, finalApkName);
-    const oneDriveAabPath = resolve(ONEDRIVE_DIR, finalAabName);
-    
-    spawn("cmd.exe", ["/c", `copy "${APK_SRC}" "${oneDriveApkPath}"`], { detached: true, stdio: "ignore" }).unref();
-    spawn("cmd.exe", ["/c", `copy "${AAB_SRC}" "${oneDriveAabPath}"`], { detached: true, stdio: "ignore" }).unref();
-  });
+  const oneDriveApkPath = resolve(ONEDRIVE_DIR, finalApkName);
+  const oneDriveAabPath = resolve(ONEDRIVE_DIR, finalAabName);
+  
+  spawn("cmd.exe", ["/c", `copy "${APK_SRC}" "${oneDriveApkPath}"`], { detached: true, stdio: "ignore" }).unref();
+  spawn("cmd.exe", ["/c", `copy "${AAB_SRC}" "${oneDriveAabPath}"`], { detached: true, stdio: "ignore" }).unref();
+
   ok("APK and AAB copying initiated in background");
 } catch {
   console.warn("⚠ OneDrive copy initiation failed (non-fatal) — continuing");

@@ -5,6 +5,7 @@ import { Capacitor } from "@capacitor/core";
 export type AppUpdateInfo = {
   versionName: string;
   changelog: string;
+  downloadUrl: string;
 };
 
 export function useAppUpdate() {
@@ -27,6 +28,7 @@ export function useAppUpdate() {
           setUpdateInfo({
             versionName: latest.versionName,
             changelog: latest.changelog,
+            downloadUrl: latest.downloadUrl ?? "https://play.google.com/store/apps/details?id=com.iiscshuttlers.app",
           });
         }
       } catch {

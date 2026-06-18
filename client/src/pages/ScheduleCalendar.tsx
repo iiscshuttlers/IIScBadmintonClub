@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { fetchSiteData } from "@/lib/siteData";
+import { fetchTournamentConfig } from "@/lib/tournaments";
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import {
   Tooltip,
@@ -140,13 +141,14 @@ export default function ScheduleCalendar() {
   useEffect(() => {
     async function loadEvents() {
       try {
-        const [eventsData, holidaysData, tourneySnap] = await Promise.all([
+        const [eventsData, holidaysData, tourneySnap, tourneyCfg] = await Promise.all([
           fetchSiteData<CalendarEvent[]>("events", "events.json").catch(() => []),
           fetchSiteData<Holiday[]>("holidays", "holidays.json").catch(() => []),
           getDoc(doc(db, "live_data", "tournament")).catch((err) => {
             console.error("Firebase tourney fetch failed:", err);
             return null;
           }),
+          fetchTournamentConfig().catch(() => null),
         ]);
 
         if (tourneySnap && tourneySnap.exists && tourneySnap.exists()) {
@@ -164,6 +166,33 @@ export default function ScheduleCalendar() {
             });
           });
         }
+
+        // Surface the featured tournament's key dates on the calendar.
+        if (tourneyCfg && tourneyCfg.enabled) {
+          if (tourneyCfg.startDate) {
+            merged.push({
+              date: tourneyCfg.startDate,
+              endDate: tourneyCfg.endDate || tourneyCfg.startDate,
+              title: tourneyCfg.name,
+              type: "event",
+              location: tourneyCfg.venue,
+              link: "/events#tournament",
+            });
+          }
+          if (
+            tourneyCfg.formCloseDate &&
+            (tourneyCfg.formStatus === "open" || tourneyCfg.formStatus === "closing_soon")
+          ) {
+            merged.push({
+              date: tourneyCfg.formCloseDate,
+              title: `${tourneyCfg.name} — Registration closes`,
+              type: "event",
+              link: "/events#tournament",
+              registrationDeadline: tourneyCfg.formCloseDate,
+            });
+          }
+        }
+
         setEvents(merged);
       } catch (err) {
         console.error("Failed to load events/holidays:", err);

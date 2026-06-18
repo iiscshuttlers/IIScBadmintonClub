@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Link } from "wouter";
-import { Bell, Swords, UserPlus, Info, CheckCircle2, Sword } from "lucide-react";
+import { useLocation } from "wouter";
+import { Bell, Swords, UserPlus, Info, CheckCircle2, Sword, X, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import {
   DropdownMenu,
@@ -12,6 +12,8 @@ import {
 export function NotificationsMenu({ currentUser }: { currentUser: any }) {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [open, setOpen] = useState(false);
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     if (!currentUser) return;
@@ -75,6 +77,28 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
     await supabase.from("notifications").update({ is_read: true }).eq("id", id);
   };
 
+  const handleNotificationClick = (n: any) => {
+    markAsRead(n.id, n.is_read);
+    if (n.link) {
+      setOpen(false);
+      setLocation(n.link);
+    }
+  };
+
+  const deleteNotification = async (e: React.MouseEvent, n: any) => {
+    e.stopPropagation();
+    setNotifications((prev) => prev.filter((x) => x.id !== n.id));
+    if (!n.is_read) setUnreadCount((prev) => Math.max(0, prev - 1));
+    await supabase.from("notifications").delete().eq("id", n.id);
+  };
+
+  const clearAll = async () => {
+    if (!currentUser || notifications.length === 0) return;
+    setNotifications([]);
+    setUnreadCount(0);
+    await supabase.from("notifications").delete().eq("user_id", currentUser.id);
+  };
+
   const getIcon = (type: string) => {
     switch (type) {
       case "challenge_received":
@@ -89,7 +113,7 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
   };
 
   return (
-    <DropdownMenu onOpenChange={(open) => { if (open) markAllAsRead(); }}>
+    <DropdownMenu open={open} onOpenChange={(o) => { setOpen(o); if (o) markAllAsRead(); }}>
       <DropdownMenuTrigger asChild>
         <button className="relative p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all mr-1">
           <Bell className="w-5 h-5" />
@@ -106,11 +130,22 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
           <h3 className="font-black text-slate-800 dark:text-white flex items-center gap-2">
             <Bell className="w-4 h-4 text-emerald-500" /> Notifications
           </h3>
-          {unreadCount > 0 && (
-            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
-              {unreadCount} New
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            {unreadCount > 0 && (
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
+                {unreadCount} New
+              </span>
+            )}
+            {notifications.length > 0 && (
+              <button
+                onClick={clearAll}
+                className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 hover:text-rose-500 transition"
+                title="Clear all notifications"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Clear
+              </button>
+            )}
+          </div>
         </div>
         <div className="max-h-[60vh] overflow-y-auto custom-scrollbar">
           {notifications.length === 0 ? (
@@ -123,33 +158,42 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
             notifications.map((n) => (
               <div
                 key={n.id}
-                onClick={() => markAsRead(n.id, n.is_read)}
-                className={`p-4 border-b border-slate-50 dark:border-slate-800/50 flex gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition cursor-pointer ${
+                onClick={() => handleNotificationClick(n)}
+                className={`group p-4 border-b border-slate-50 dark:border-slate-800/50 flex gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition cursor-pointer ${
                   !n.is_read ? "bg-emerald-50/50 dark:bg-emerald-900/10" : ""
                 }`}
               >
                 <div className="mt-0.5">{getIcon(n.type)}</div>
-                <div className="flex-1">
-                  <div className="flex justify-between items-start mb-1">
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-start mb-1 gap-2">
                     <h4 className="font-bold text-sm text-slate-900 dark:text-white leading-tight">
                       {n.title}
                     </h4>
-                    <span className="text-[10px] font-medium text-slate-400 whitespace-nowrap ml-2">
-                      {new Date(n.created_at).toLocaleString([], {
-                        day: "numeric",
-                        month: "short",
-                        hour: "numeric",
-                        minute: "2-digit",
-                      })}
-                    </span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="text-[10px] font-medium text-slate-400 whitespace-nowrap">
+                        {new Date(n.created_at).toLocaleString([], {
+                          day: "numeric",
+                          month: "short",
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                      <button
+                        onClick={(e) => deleteNotification(e, n)}
+                        className="p-0.5 rounded-md text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 opacity-0 group-hover:opacity-100 transition"
+                        title="Remove notification"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                   <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">
                     {n.message}
                   </p>
                   {n.link && (
-                    <Link href={n.link} className="inline-block mt-2 text-xs font-bold text-emerald-600 hover:text-emerald-700">
+                    <span className="inline-block mt-2 text-xs font-bold text-emerald-600 group-hover:text-emerald-700">
                       View details →
-                    </Link>
+                    </span>
                   )}
                 </div>
               </div>

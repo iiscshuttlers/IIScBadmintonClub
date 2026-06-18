@@ -13,7 +13,6 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { PwaInstallPrompt } from "./components/pwa/PwaInstallPrompt";
 import { PwaUpdatePrompt } from "./components/pwa/PwaUpdatePrompt";
-import { AppUpdatePrompt } from "./components/pwa/AppUpdatePrompt";
 import Navigation from "./components/Navigation";
 import Footer from "./components/Footer";
 import MatchAlert from "./components/MatchAlert";
@@ -40,6 +39,13 @@ function UpdateDialog({
   const [downloading, setDownloading] = useState(false);
 
   const handleDownloadAndInstall = async () => {
+    // If it's a Play Store link, open it natively and skip APK downloading
+    if (info.downloadUrl.includes("play.google.com") || info.downloadUrl.startsWith("market://")) {
+      window.open(info.downloadUrl, "_system");
+      onDismiss();
+      return;
+    }
+
     if (!Capacitor.isNativePlatform()) {
       window.open(info.downloadUrl, "_blank");
       return;
@@ -82,11 +88,7 @@ function UpdateDialog({
             Version {info.versionName} is ready
           </p>
         </div>
-        {info.changelog && (
-          <p className="text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-3">
-            {info.changelog}
-          </p>
-        )}
+
         <div className="flex flex-col gap-2">
           <button
             onClick={handleDownloadAndInstall}
@@ -408,7 +410,6 @@ function AppContent() {
             </Router>
             <Toaster />
             <PwaUpdatePrompt />
-            <AppUpdatePrompt updateInfo={updateInfo} onDismiss={dismissUpdate} />
             <MatchAlert />
             {profile && (
               <LogMatchModal

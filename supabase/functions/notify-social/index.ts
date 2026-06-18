@@ -4,9 +4,10 @@
  *
  * Body:
  *   type          "buddy_request" | "follow"
- *   to_player_id  players.id of the recipient
+ *   to_player_id  players.id of the recipient (not required for status_update)
  *   from_name     display name of the sender
  *   from_player_id players.id of the sender (for deep-link navigation)
+ *   new_status    new live status of the sender (only for status_update)
  */
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.10.0";
@@ -72,7 +73,7 @@ async function sendFcm(
           notification: { title, body },
           android: {
             priority: "high",
-            notification: { channelId: "notify_friendly" },
+            notification: { channel_id: "notify_friendly" },
           },
           data,
         },
@@ -86,27 +87,73 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { type, to_player_id, from_name, from_player_id } = await req.json() as {
-      type: "buddy_request" | "follow";
-      to_player_id: string;
+    const { type, to_player_id, from_name, from_player_id, new_status } = await req.json() as {
+      type: "buddy_request" | "follow" | "status_update";
+      to_player_id?: string;
       from_name: string;
       from_player_id: string;
+      new_status?: string;
     };
 
-    if (!type || !to_player_id || !from_name) {
+    if (!type || !from_name || !from_player_id) {
       return new Response(
-        JSON.stringify({ error: "type, to_player_id, and from_name are required" }),
+        JSON.stringify({ error: "type, from_player_id, and from_name are required" }),
+        { status: 400, headers: corsHeaders },
+      );
+    }
+    
+    if (type !== "status_update" && !to_player_id) {
+      return new Response(
+        JSON.stringify({ error: "to_player_id is required for this type" }),
         { status: 400, headers: corsHeaders },
       );
     }
 
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
+    let targetUserIds: string[] = [];
+
+    if (type === "status_update") {
+      // Fetch the sender's buddies
+      const { data: senderData } = await supabase
+        .from("players")
+        .select("buddies")
+        .eq("id", from_player_id)
+        .single();
+      
+      const buddies = senderData?.buddies || [];
+      if (buddies.length === 0) {
+        return new Response(JSON.stringify({ sent: 0, reason: "no_buddies" }), { headers: corsHeaders });
+      }
+
+      // Filter buddies who have pref_notify_buddy_status = true
+      let buddyPlayers = null;
+      const { data, error } = await supabase
+        .from("players")
+        .select("id")
+        .in("id", buddies)
+        .neq("pref_notify_buddy_status", false);
+        
+      if (!error) {
+        buddyPlayers = data;
+      } else {
+        console.warn("[notify-social] Could not filter by pref_notify_buddy_status:", error);
+      }
+        
+      targetUserIds = buddyPlayers ? buddyPlayers.map(p => p.id) : buddies;
+      
+      if (targetUserIds.length === 0) {
+        return new Response(JSON.stringify({ sent: 0, reason: "all_buddies_muted" }), { headers: corsHeaders });
+      }
+    } else {
+      targetUserIds = [to_player_id!];
+    }
+
     // to_player_id is now the auth UUID directly
     const { data: tokens } = await supabase
       .from("user_push_tokens")
       .select("token")
-      .eq("user_id", to_player_id);
+      .in("user_id", targetUserIds);
 
     if (!tokens || tokens.length === 0) {
       return new Response(JSON.stringify({ sent: 0, reason: "no_tokens" }), { headers: corsHeaders });
@@ -119,14 +166,22 @@ serve(async (req) => {
     const sa: ServiceAccount = JSON.parse(FIREBASE_SERVICE_ACCOUNT);
     const accessToken = await getFirebaseAccessToken(sa);
 
-    const title = type === "buddy_request"
-      ? "👋 New Buddy Request"
-      : "❤️ New Follower";
-    const body = type === "buddy_request"
-      ? `${from_name} wants to be your badminton buddy!`
-      : `${from_name} started following you.`;
+    let title = "";
+    let body = "";
+    if (type === "buddy_request") {
+      title = "👋 New Buddy Request";
+      body = `${from_name} wants to be your badminton buddy!`;
+    } else if (type === "follow") {
+      title = "❤️ New Follower";
+      body = `${from_name} started following you.`;
+    } else if (type === "status_update") {
+      const statusLabel = new_status === "playing" ? "Playing Right Now" : "Looking to play";
+      title = "🏸 Buddy Status Update";
+      body = `${from_name} is now ${statusLabel}!`;
+    }
+
     const notifData: Record<string, string> = {
-      type: type === "buddy_request" ? "player_profile" : "player_profile",
+      type: "player_profile",
       player_id: from_player_id ?? "",
     };
 

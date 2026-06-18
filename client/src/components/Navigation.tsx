@@ -54,7 +54,7 @@ const TOP_LEVEL_LINKS = [
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [liveEventCount, setLiveEventCount] = useState(0);
   const [hasUnreadAnnouncements, setHasUnreadAnnouncements] = useState(false);
@@ -253,11 +253,14 @@ export default function Navigation() {
                     handleInvite={handleInvite}
                   />
                 ) : (
-                  <Link href="/join">
+                  <button onClick={() => {
+                    sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
+                    setLocation("/join");
+                  }}>
                     <Button className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 rounded-full h-8 shadow-sm cursor-pointer">
                       <LogIn className="w-3.5 h-3.5" /> Sign In
                     </Button>
-                  </Link>
+                  </button>
                 )
               )}
             </div>
@@ -301,11 +304,14 @@ export default function Navigation() {
                   handleInvite={handleInvite}
                 />
               ) : (
-                <Link href="/join">
+                <button onClick={() => {
+                  sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
+                  setLocation("/join");
+                }}>
                   <Button className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 rounded-full h-7 shadow-sm cursor-pointer">
                     <LogIn className="w-3.5 h-3.5" /> Sign In
                   </Button>
-                </Link>
+                </button>
               )
             )}
           </div>
@@ -400,11 +406,15 @@ export default function Navigation() {
                     </button>
                   </div>
                 ) : (
-                  <Link href="/join">
-                    <Button className="w-full flex items-center gap-2 justify-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl h-11 cursor-pointer mt-1" onClick={() => setIsOpen(false)}>
+                  <button onClick={() => {
+                    sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
+                    setIsOpen(false);
+                    setLocation("/join");
+                  }} className="w-full">
+                    <Button className="w-full flex items-center gap-2 justify-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl h-11 cursor-pointer mt-1">
                       <LogIn className="w-4 h-4" /> Sign In to your account
                     </Button>
-                  </Link>
+                  </button>
                 )}
               </div>
               </div>
@@ -445,11 +455,12 @@ export default function Navigation() {
                   <Plus className="w-6 h-6 stroke-[3]" />
                 </button>
               ) : (
-                <Link href="/join">
-                  <button className="w-[52px] h-[52px] bg-slate-800 hover:bg-slate-700 rounded-full flex items-center justify-center text-white shadow-xl border-4 border-white dark:border-slate-950 transition-transform active:scale-95 cursor-pointer">
-                    <LogIn className="w-5 h-5 ml-1" />
-                  </button>
-                </Link>
+                <button onClick={() => {
+                  sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
+                  setLocation("/join");
+                }} className="w-[52px] h-[52px] bg-slate-800 hover:bg-slate-700 rounded-full flex items-center justify-center text-white shadow-xl border-4 border-white dark:border-slate-950 transition-transform active:scale-95 cursor-pointer">
+                  <LogIn className="w-5 h-5 ml-1" />
+                </button>
               )}
             </div>
 

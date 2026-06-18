@@ -36,17 +36,21 @@ messaging.onBackgroundMessage((payload) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const data = event.notification.data || {};
+  const type = data.type || '';
+  const action = data.action || '';
+  const playerId = data.player_id || data.from_player_id || '';
   let path = '/feed';
 
-  switch (data.type) {
-    case 'match_confirmation': path = '/feed/my-matches'; break;
-    case 'challenge_expiry':   path = '/feed/challenges'; break;
-    case 'find_lost':          path = '/find-lost'; break;
-    case 'announcement':       path = '/feed/announcements'; break;
-    case 'kudos':              path = '/feed'; break;
-    case 'elo_milestone':      path = data.player_id ? `/player/${data.player_id}` : '/feed'; break;
-    case 'weekly_digest':      path = '/feed/my-matches'; break;
-    default:                   path = '/feed'; break;
+  if (type === 'match_confirmation' || type === 'match_logged' || type === 'kudos' || action === 'view_match') {
+    path = '/feed/my-matches';
+  } else if (type === 'challenge_expiry' || action === 'view_challenges') {
+    path = '/feed/challenges';
+  } else if (type === 'find_lost_post' || type === 'find_lost' || action === 'view_find_lost') {
+    path = '/find-lost';
+  } else if (type === 'announcement' || type === 'weekly_digest' || action === 'view_announcements') {
+    path = '/feed/announcements';
+  } else if (type === 'player_profile' || type === 'buddy_request' || type === 'follow' || type === 'elo_milestone') {
+    path = playerId ? `/player/${playerId}` : '/feed';
   }
 
   event.waitUntil(

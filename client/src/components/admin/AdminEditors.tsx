@@ -78,6 +78,15 @@ const labelCls =
   "block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5";
 const cardCls =
   "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm";
+const colorSwatchCls =
+  "h-10 w-12 shrink-0 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent cursor-pointer p-0.5";
+
+/* A flyer color can be a plain hex (#rrggbb), chosen via the color picker,
+   or a Tailwind class string (e.g. a gradient). The picker only understands
+   hex, so fall back to a default when the stored value is a class. */
+const HEX_RE = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
+const toHex = (val: string, fallback: string) =>
+  val && HEX_RE.test(val.trim()) ? val.trim() : fallback;
 
 /* ================================================================ */
 /*  File Uploader Helper                                             */
@@ -96,11 +105,11 @@ export function FileUploader({
     try {
       const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
       const { error } = await supabase.storage
-        .from("invicta_notices")
+        .from("tournament_notices")
         .upload(fileName, file);
       if (error) throw error;
       const { data } = supabase.storage
-        .from("invicta_notices")
+        .from("tournament_notices")
         .getPublicUrl(fileName);
       onUpload(data.publicUrl);
       toast.success("File uploaded successfully");
@@ -357,13 +366,22 @@ export function FlyerEditor({
         <div key={f.id} className={`${cardCls} flex flex-col gap-3`}>
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end border-b border-slate-200 dark:border-slate-800 pb-4">
             <div className="flex-1 w-full sm:w-auto">
-              <label className={labelCls}>Background Color Class</label>
-              <input
-                value={f.bgColorClass}
-                onChange={(e) => update(i, "bgColorClass", e.target.value)}
-                className={inputCls}
-                placeholder="e.g. bg-gradient-to-r from-red-600 to-orange-600"
-              />
+              <label className={labelCls}>Background Color</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={toHex(f.bgColorClass, "#7c3aed")}
+                  onChange={(e) => update(i, "bgColorClass", e.target.value)}
+                  className={colorSwatchCls}
+                  title="Pick background color"
+                />
+                <input
+                  value={f.bgColorClass}
+                  onChange={(e) => update(i, "bgColorClass", e.target.value)}
+                  className={inputCls}
+                  placeholder="#7c3aed or a Tailwind gradient class"
+                />
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-slate-700 dark:text-slate-300">
@@ -394,12 +412,21 @@ export function FlyerEditor({
                   className={`${inputCls} flex-[2]`}
                   placeholder="Text to display..."
                 />
-                <input
-                  value={item.colorClass}
-                  onChange={(e) => updateItem(i, itemIdx, "colorClass", e.target.value)}
-                  className={`${inputCls} flex-1`}
-                  placeholder="e.g. text-yellow-300 font-bold"
-                />
+                <div className="flex items-center gap-2 flex-1 w-full">
+                  <input
+                    type="color"
+                    value={toHex(item.colorClass, "#ffffff")}
+                    onChange={(e) => updateItem(i, itemIdx, "colorClass", e.target.value)}
+                    className={colorSwatchCls}
+                    title="Pick text color"
+                  />
+                  <input
+                    value={item.colorClass}
+                    onChange={(e) => updateItem(i, itemIdx, "colorClass", e.target.value)}
+                    className={inputCls}
+                    placeholder="#ffffff or e.g. text-yellow-300"
+                  />
+                </div>
                 <button
                   onClick={() => removeItem(i, itemIdx)}
                   className="p-2 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-900/40 rounded-lg transition"
@@ -1561,7 +1588,7 @@ export function RegistrationsManager() {
                 <a
                   href={
                     supabase.storage
-                      .from("invicta_receipts")
+                      .from("tournament_receipts")
                       .getPublicUrl(r.receipt_path).data.publicUrl
                   }
                   target="_blank"

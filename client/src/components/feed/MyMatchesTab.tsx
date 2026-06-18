@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Calendar, Search, CheckCircle2, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { MatchCard } from "./MatchCard";
 import { Capacitor } from "@capacitor/core";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
@@ -13,6 +13,7 @@ import { useHashTab } from "@/hooks/useHashTab";
 
 export function MyMatchesTab() {
   const { profile } = useAuth();
+  const [, setLocation] = useLocation();
   const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [kudosState, setKudosState] = useState<Record<string, boolean>>({});
@@ -148,7 +149,23 @@ export function MyMatchesTab() {
     }
   };
 
-  if (!profile) return null;
+  if (!profile) {
+    return (
+      <div className="text-center py-24 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm mt-6">
+        <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">Sign in Required</h3>
+        <p className="text-slate-500 mb-6 max-w-sm mx-auto">You must be signed in to view your personal match history and pending requests.</p>
+        <button
+          onClick={() => {
+            sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
+            setLocation("/join");
+          }}
+          className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition shadow-lg shadow-emerald-500/20"
+        >
+          Sign In
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-3xl mx-auto pb-12">

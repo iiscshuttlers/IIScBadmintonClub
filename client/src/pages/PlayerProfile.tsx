@@ -323,7 +323,6 @@ export default function PlayerProfile({
     profile: ownPlayerProfile,
     isAdmin,
     isMainAdmin,
-    userRoles,
     updateRole,
     refreshProfile,
   } = useAuth();

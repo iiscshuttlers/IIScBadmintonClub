@@ -170,6 +170,8 @@ export default defineConfig(() => {
           theme_color: "#10b981",
           background_color: "#ffffff",
           display: "standalone",
+          // gcm_sender_id is required for legacy FCM web push but is not in the ManifestOptions type
+          // @ts-expect-error -- valid manifest field, missing from vite-plugin-pwa typings
           gcm_sender_id: "103953800507",
           icons: [
             {

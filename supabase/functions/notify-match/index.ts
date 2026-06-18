@@ -261,7 +261,7 @@ serve(async (req) => {
               priority: "high",
               notification: {
                 sound: "smash",
-                channelId: isFriendly ? "notify_friendly" : "notify_tournament",
+                channel_id: isFriendly ? "notify_friendly" : "notify_tournament",
               },
             },
             webpush: { headers: { Urgency: "high" } },

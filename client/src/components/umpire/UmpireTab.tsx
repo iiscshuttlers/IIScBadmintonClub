@@ -10,6 +10,28 @@ export function UmpireTab() {
   const [isUmpiring, setIsUmpiring] = useState(false);
   const [myLiveMatch, setMyLiveMatch] = useState<any>(null);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
+  // Admin "take over" of another umpire's broadcast (key = original umpire's id)
+  const [takeoverKey, setTakeoverKey] = useState<string | null>(null);
+  const [takeoverMatch, setTakeoverMatch] = useState<any>(null);
+
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    const key = sessionStorage.getItem("umpire_takeover_key");
+    if (!key) return;
+    sessionStorage.removeItem("umpire_takeover_key");
+    supabase
+      .from("site_data")
+      .select("value")
+      .eq("key", "live_matches")
+      .single()
+      .then(({ data }) => {
+        const m = data?.value?.[key];
+        if (m && m.status && m.status !== "setup") {
+          setTakeoverKey(key);
+          setTakeoverMatch(m);
+        }
+      });
+  }, [session?.user?.id]);
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -55,6 +77,25 @@ export function UmpireTab() {
   }, [session?.user?.id]);
 
   if (!session) return null;
+
+  // Admin took over a running broadcast — drive it under the original umpire's key
+  if (takeoverKey && takeoverMatch) {
+    return (
+      <div className="-mx-4 sm:mx-0 mb-6">
+        <UmpireEngine
+          userId={takeoverKey}
+          userEmail={session.user.email!}
+          userName={session.user.user_metadata?.full_name || "Guest"}
+          isTournamentUmpire={isUmpire}
+          initialMatchState={takeoverMatch}
+          onClose={() => {
+            setTakeoverKey(null);
+            setTakeoverMatch(null);
+          }}
+        />
+      </div>
+    );
+  }
 
   if (isUmpiring || myLiveMatch) {
     return (

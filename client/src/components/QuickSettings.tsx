@@ -35,6 +35,7 @@ export function QuickSettingsContent({ onClose }: { onClose?: () => void }) {
     { key: "notify_confirmation", label: "Match confirmations",      storage: "iisc_notify_confirmation" },
     { key: "notify_announcements",label: "Announcements",            storage: "iisc_notify_announcements" },
     { key: "notify_find_lost",    label: "Find & Lost posts",        storage: "iisc_notify_find_lost" },
+    { key: "notify_buddy_status", label: "Buddy status updates",     storage: "iisc_notify_buddy_status" },
     { key: "notify_elo_milestone",label: "ELO milestones",           storage: "iisc_notify_elo_milestone" },
     { key: "notify_weekly_digest",label: "Weekly digest (email)",    storage: "iisc_notify_weekly_digest" },
   ] as const;
@@ -79,6 +80,17 @@ export function QuickSettingsContent({ onClose }: { onClose?: () => void }) {
           day_of_week: now.getDay(),
           hour: now.getHours(),
         });
+      }
+
+      if ((newStatus === "playing" || newStatus === "looking") && profile?.id) {
+        supabase.functions.invoke("notify-social", {
+          body: {
+            type: "status_update",
+            from_player_id: profile.id,
+            from_name: profile.full_name || "A buddy",
+            new_status: newStatus,
+          },
+        }).catch((err) => console.error("Failed to notify buddies of status update:", err));
       }
 
       await refreshProfile();

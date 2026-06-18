@@ -62,6 +62,7 @@ async function sendFcmToAll(tokens: string[], title: string, body: string) {
           message: {
             token,
             notification: { title, body },
+            data: { type: "weekly_digest" },
             android: {
               priority: "normal",
               notification: { channelId: "notify_weekly_digest" }

@@ -16,7 +16,7 @@ import {
   Star,
   type LucideIcon,
 } from "lucide-react";
-import { getTournaments } from "@/lib/tournaments";
+import { getTournaments, fetchTournamentConfig, DEFAULT_TOURNAMENT_CONFIG, type TournamentConfig } from "@/lib/tournaments";
 import {
   ARCHIVED_TOURNAMENTS,
   ArchivedTournament,
@@ -26,7 +26,7 @@ import { usePageMeta } from "@/hooks/usePageMeta";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { toast } from "sonner";
 import ScheduleCalendar from "./ScheduleCalendar";
-import { InvictaSection } from "@/components/events/InvictaSection";
+import { TournamentSection } from "@/components/events/TournamentSection";
 import { LiveScoreSection } from "@/components/events/LiveScoreSection";
 import { useHashTab } from "@/hooks/useHashTab";
 
@@ -40,14 +40,6 @@ const stagger: Variants = {
   visible: { transition: { staggerChildren: 0.1 } },
 };
 
-const UPCOMING_MILESTONE = {
-  year: "Jun 2026",
-  title: "INVICTA 2026",
-  desc: "IISc's flagship open badminton tournament — MS, WS, MD, WD & XD categories. Running 1st–21st June at Gymkhana Courts.",
-  icon: Timer as LucideIcon,
-  color: "border-emerald-400",
-  upcoming: true,
-};
 
 const MILESTONE_ICONS: LucideIcon[] = [Trophy, Medal, Award, GraduationCap, Star];
 
@@ -189,11 +181,12 @@ export default function Events() {
   });
 
   const [activeTab, setActiveTab] = useHashTab(
-    ["calendar", "invicta", "history"] as const,
+    ["calendar", "tournament", "history"] as const,
     "calendar"
   );
   const [events, setEvents] = useState<LiveTournament[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tournamentCfg, setTournamentCfg] = useState<TournamentConfig>(DEFAULT_TOURNAMENT_CONFIG);
 
   const loadEvents = useCallback(async () => {
     try {
@@ -211,6 +204,7 @@ export default function Events() {
 
   useEffect(() => {
     loadEvents();
+    fetchTournamentConfig().then(setTournamentCfg).catch(() => {});
   }, [loadEvents]);
 
   // Auto-refresh every 60s
@@ -339,7 +333,7 @@ export default function Events() {
     if (isUpcoming) {
       if (item.slug) {
         const href =
-          item.slug === "invicta-2026" ? "/invicta" : `/events/${item.slug}`;
+          `/events/${item.slug}`;
         return (
           <Link href={href} key={item.id}>
             {cardContent}
@@ -399,16 +393,18 @@ export default function Events() {
               >
                 <Calendar className="w-4 h-4" /> Event Calendar
               </button>
-              <button
-                onClick={() => setActiveTab("invicta")}
-                className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all flex-1 basis-[45%] sm:basis-auto shrink-0 ${
-                  activeTab === "invicta"
-                    ? "bg-rose-500 text-white shadow-md scale-100 shadow-rose-500/30"
-                    : "text-white/80 hover:text-rose-400 hover:bg-rose-500/10 scale-95"
-                }`}
-              >
-                <Timer className="w-4 h-4" /> INVICTA 2026
-              </button>
+              {tournamentCfg.enabled && (
+                <button
+                  onClick={() => setActiveTab("tournament")}
+                  className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all flex-1 basis-[45%] sm:basis-auto shrink-0 ${
+                    activeTab === "tournament"
+                      ? "bg-rose-500 text-white shadow-md scale-100 shadow-rose-500/30"
+                      : "text-white/80 hover:text-rose-400 hover:bg-rose-500/10 scale-95"
+                  }`}
+                >
+                  <Timer className="w-4 h-4" /> {tournamentCfg.name}
+                </button>
+              )}
               <button
                 onClick={() => setActiveTab("history")}
                 className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all flex-1 basis-[100%] sm:basis-auto shrink-0 ${
@@ -423,6 +419,10 @@ export default function Events() {
           </div>
         </div>
       </section>
+
+      {activeTab === "tournament" && tournamentCfg.enabled && (
+        <TournamentSection />
+      )}
 
       {activeTab === "history" && (
         <section className="py-20 bg-white dark:bg-slate-900">
@@ -498,9 +498,7 @@ export default function Events() {
         </section>
       )}
 
-      {activeTab === "invicta" && (
-        <InvictaSection />
-      )}
+
 
       {activeTab === "calendar" && (
         <>

@@ -31,6 +31,12 @@ export type DynamicFlyer = {
   items: BannerMessage[];
 };
 
+/* Flyer colors may be a raw CSS color/gradient (from the admin color picker)
+   or a Tailwind class string. CSS values are applied via inline style since
+   Tailwind can't generate arbitrary classes at runtime. */
+const isCssColor = (v: string) =>
+  !!v && /^(#|rgb|hsl)|gradient\(/i.test(v.trim());
+
 function getActiveAnnouncements(announcements: Announcement[]): string[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -225,8 +231,14 @@ export default function StatusBanner() {
   )}
       
       {/* Dynamic Admin Flyers */}
-      {dynamicFlyers.filter(f => !closedFlyers.has(f.id)).map((flyer) => (
-        <div key={flyer.id} className={`relative ${flyer.bgColorClass} text-white py-2.5 overflow-hidden flex items-center z-20 shadow-md`}>
+      {dynamicFlyers.filter(f => !closedFlyers.has(f.id)).map((flyer) => {
+        const bgIsCss = isCssColor(flyer.bgColorClass);
+        return (
+        <div
+          key={flyer.id}
+          className={`relative ${bgIsCss ? "" : flyer.bgColorClass} text-white py-2.5 overflow-hidden flex items-center z-20 shadow-md`}
+          style={bgIsCss ? { background: flyer.bgColorClass } : undefined}
+        >
           <div className="flex-1 overflow-hidden min-w-0 pr-10">
             <div className="marquee-anim flex gap-8 font-semibold tracking-wide text-sm md:text-base whitespace-nowrap hover:opacity-90 transition-opacity">
               {Array(2)
@@ -244,7 +256,10 @@ export default function StatusBanner() {
                           key={`${blockIdx}-${idx}`}
                           className="flex items-center gap-8"
                         >
-                          <span className={msg.colorClass}>{msg.text}</span>
+                          <span
+                            className={isCssColor(msg.colorClass) ? "" : msg.colorClass}
+                            style={isCssColor(msg.colorClass) ? { color: msg.colorClass } : undefined}
+                          >{msg.text}</span>
                           <span className="inline-block w-1.5 h-1.5 rounded-full bg-white/40 flex-shrink-0" />
                         </span>
                       ))}
@@ -264,7 +279,8 @@ export default function StatusBanner() {
             <X className="w-5 h-5 text-white/90" />
           </button>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

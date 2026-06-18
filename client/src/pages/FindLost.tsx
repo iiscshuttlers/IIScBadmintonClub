@@ -19,6 +19,10 @@ import {
   Edit2,
   Trash2,
   ImageIcon,
+  ZoomIn,
+  ZoomOut,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -33,6 +37,7 @@ interface Post {
   location?: string;
   contact?: string;
   image_url?: string;
+  image_urls?: string[];
   resolved: boolean;
   claimed_by_id?: string;
   claimed_by_name?: string;
@@ -66,21 +71,41 @@ export default function FindLost() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const [form, setForm] = useState({ type: "lost" as PostType, title: "", description: "", location: "", contact: "", image_url: "" });
+  const [form, setForm] = useState({ type: "lost" as PostType, title: "", description: "", location: "", contact: "", images: [] as string[] });
   const [submitting, setSubmitting] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
 
+  const MAX_IMAGES = 5;
+
+  // Lightbox (enlarge + zoom) state
+  const [lightbox, setLightbox] = useState<{ images: string[]; index: number } | null>(null);
+  const [zoom, setZoom] = useState(1);
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const remaining = MAX_IMAGES - form.images.length;
+    if (remaining <= 0) {
+      toast.error(`You can upload a maximum of ${MAX_IMAGES} images`);
+      e.target.value = "";
+      return;
+    }
+    const toUpload = files.slice(0, remaining);
+    if (files.length > remaining) {
+      toast.info(`Only ${remaining} more image(s) can be added (max ${MAX_IMAGES})`);
+    }
     setUploadingImage(true);
     try {
-      const fileName = `findlost_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
-      const { error } = await supabase.storage.from("find-lost").upload(fileName, file);
-      if (error) throw error;
-      const { data } = supabase.storage.from("find-lost").getPublicUrl(fileName);
-      setForm((prev) => ({ ...prev, image_url: data.publicUrl }));
-      toast.success("Image uploaded!");
+      const uploaded: string[] = [];
+      for (const file of toUpload) {
+        const fileName = `findlost_${Date.now()}_${Math.random().toString(36).slice(2, 7)}_${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
+        const { error } = await supabase.storage.from("find-lost").upload(fileName, file);
+        if (error) throw error;
+        const { data } = supabase.storage.from("find-lost").getPublicUrl(fileName);
+        uploaded.push(data.publicUrl);
+      }
+      setForm((prev) => ({ ...prev, images: [...prev.images, ...uploaded] }));
+      toast.success(`${uploaded.length} image(s) uploaded!`);
     } catch (err: any) {
       toast.error(`Upload failed: ${err.message}`);
     } finally {
@@ -89,21 +114,38 @@ export default function FindLost() {
     }
   };
 
+  const removeImage = (url: string) => {
+    setForm((prev) => ({ ...prev, images: prev.images.filter((u) => u !== url) }));
+  };
+
+  // Normalise a post's images (new array column with legacy single-url fallback)
+  const postImages = (post: Post): string[] =>
+    post.image_urls && post.image_urls.length > 0
+      ? post.image_urls
+      : post.image_url
+        ? [post.image_url]
+        : [];
+
+  const openLightbox = (images: string[], index: number) => {
+    setZoom(1);
+    setLightbox({ images, index });
+  };
+
   const openNewPost = () => {
     setEditingId(null);
-    setForm({ type: "lost", title: "", description: "", location: "", contact: "", image_url: "" });
+    setForm({ type: "lost", title: "", description: "", location: "", contact: "", images: [] });
     setShowForm(true);
   };
 
   const editPost = (post: Post) => {
     setEditingId(post.id);
-    setForm({ 
-      type: post.type, 
-      title: post.title, 
-      description: post.description || "", 
-      location: post.location || "", 
+    setForm({
+      type: post.type,
+      title: post.title,
+      description: post.description || "",
+      location: post.location || "",
       contact: post.contact || "",
-      image_url: post.image_url || ""
+      images: postImages(post)
     });
     setShowForm(true);
   };
@@ -124,6 +166,18 @@ export default function FindLost() {
   }, [filter, showResolved]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Keyboard navigation for the lightbox
+  useEffect(() => {
+    if (!lightbox) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLightbox(null);
+      if (e.key === "ArrowLeft") { setZoom(1); setLightbox((lb) => lb ? { ...lb, index: (lb.index - 1 + lb.images.length) % lb.images.length } : lb); }
+      if (e.key === "ArrowRight") { setZoom(1); setLightbox((lb) => lb ? { ...lb, index: (lb.index + 1) % lb.images.length } : lb); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lightbox]);
 
   // Real-time subscription for new posts → triggers push notification badge
   useEffect(() => {
@@ -147,7 +201,8 @@ export default function FindLost() {
         description: form.description.trim() || null,
         location: form.location.trim() || null,
         contact: form.contact.trim() || null,
-        image_url: form.image_url || null,
+        image_url: form.images[0] || null,
+        image_urls: form.images.length > 0 ? form.images : null,
       };
 
       let error;
@@ -159,7 +214,19 @@ export default function FindLost() {
       
       if (error) throw error;
       toast.success(editingId ? "Post updated!" : "Post published!");
-      setForm({ type: "lost", title: "", description: "", location: "", contact: "", image_url: "" });
+
+      if (!editingId) {
+        void supabase.functions.invoke("notify-find-lost", {
+          body: {
+            type: form.type,
+            title: form.title.trim(),
+            author_name: profile.full_name || "A user",
+            author_id: profile.id,
+          },
+        }).catch((err) => console.error("Failed to broadcast Find & Lost notification:", err));
+      }
+
+      setForm({ type: "lost", title: "", description: "", location: "", contact: "", images: [] });
       setEditingId(null);
       setShowForm(false);
       load();
@@ -198,15 +265,32 @@ export default function FindLost() {
     }
   };
 
+  // Extract the storage object path (part after ".../find-lost/") from a public URL
+  const storagePathFromUrl = (url: string): string | null => {
+    const marker = "/find-lost/";
+    const idx = url.indexOf(marker);
+    return idx === -1 ? null : decodeURIComponent(url.slice(idx + marker.length).split("?")[0]);
+  };
+
   const deletePost = async (post: Post) => {
     if (!confirm("Are you sure you want to permanently delete this post?")) return;
     const { error } = await supabase.from("find_lost_posts").delete().eq("id", post.id);
-    if (!error) {
-      toast.success("Post deleted");
-      load();
-    } else {
+    if (error) {
       toast.error(error.message || "Failed to delete post");
+      return;
     }
+
+    // Clean up associated images from the storage bucket (best-effort)
+    const paths = postImages(post)
+      .map(storagePathFromUrl)
+      .filter((p): p is string => !!p);
+    if (paths.length > 0) {
+      const { error: storageErr } = await supabase.storage.from("find-lost").remove(paths);
+      if (storageErr) console.error("Failed to delete post images from storage:", storageErr);
+    }
+
+    toast.success("Post deleted");
+    load();
   };
 
   const inputCls = "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500 transition";
@@ -289,20 +373,37 @@ export default function FindLost() {
                   />
                 </div>
                 <div>
-                  <label className={labelCls}>Image (Optional)</label>
-                  <div className="flex items-center gap-4">
-                    {form.image_url && (
-                      <img src={form.image_url} alt="Item" className="w-16 h-16 rounded-xl object-cover border border-slate-200 dark:border-slate-700" />
-                    )}
-                    <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-sm rounded-xl transition">
-                      {uploadingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />}
-                      {form.image_url ? "Change Image" : "Upload Image"}
-                      <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploadingImage} />
-                    </label>
-                    {form.image_url && (
-                      <button onClick={() => setForm(f => ({ ...f, image_url: "" }))} className="text-rose-500 hover:text-rose-600 text-sm font-bold">Remove</button>
+                  <label className={labelCls}>Images (Optional · up to {MAX_IMAGES})</label>
+                  <div className="flex flex-wrap items-center gap-3">
+                    {form.images.map((url) => (
+                      <div key={url} className="relative group">
+                        <img
+                          src={url}
+                          alt="Item"
+                          onClick={() => openLightbox(form.images, form.images.indexOf(url))}
+                          className="w-16 h-16 rounded-xl object-cover border border-slate-200 dark:border-slate-700 cursor-zoom-in"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(url)}
+                          className="absolute -top-2 -right-2 bg-rose-500 hover:bg-rose-600 text-white rounded-full p-0.5 shadow"
+                          aria-label="Remove image"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                    {form.images.length < MAX_IMAGES && (
+                      <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-sm rounded-xl transition">
+                        {uploadingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />}
+                        {form.images.length > 0 ? "Add More" : "Upload Images"}
+                        <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} disabled={uploadingImage} />
+                      </label>
                     )}
                   </div>
+                  {form.images.length > 0 && (
+                    <p className="mt-1.5 text-xs text-slate-400">{form.images.length} / {MAX_IMAGES} images · click a thumbnail to preview</p>
+                  )}
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -377,6 +478,7 @@ export default function FindLost() {
               const style = TYPE_STYLES[post.type];
               const Icon = style.icon;
               const isOwn = profile?.id === post.author_id;
+              const images = postImages(post);
 
               return (
                 <motion.div
@@ -405,19 +507,28 @@ export default function FindLost() {
                         <p className="text-sm text-slate-600 dark:text-slate-300 mb-2">{post.description}</p>
                       )}
                       
-                      {post.image_url && (
-                        <div className="mb-3">
-                          <img src={post.image_url} alt={post.title} className="w-full max-w-sm rounded-xl object-cover border border-slate-200 dark:border-slate-800" />
+                      {images.length > 0 && (
+                        <div className="mb-3 flex flex-wrap gap-2">
+                          {images.map((url, i) => (
+                            <button
+                              key={url}
+                              type="button"
+                              onClick={() => openLightbox(images, i)}
+                              className="relative group rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            >
+                              <img
+                                src={url}
+                                alt={`${post.title} ${i + 1}`}
+                                className={`object-cover cursor-zoom-in transition group-hover:opacity-90 ${images.length === 1 ? "w-full max-w-sm max-h-72" : "w-24 h-24"}`}
+                              />
+                              <span className="absolute bottom-1 right-1 bg-black/55 text-white rounded-md p-1 opacity-0 group-hover:opacity-100 transition">
+                                <ZoomIn className="w-3.5 h-3.5" />
+                              </span>
+                            </button>
+                          ))}
                         </div>
                       )}
                       
-                      {post.resolved && post.claimed_by_name && (
-                        <div className="mb-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-lg text-xs font-bold border border-indigo-100 dark:border-indigo-800">
-                          <CheckCircle className="w-3.5 h-3.5" />
-                          Claimed / Handed over to: {post.claimed_by_name}
-                        </div>
-                      )}
-
                       <div className="flex flex-wrap gap-3 text-xs text-slate-400">
                         {post.location && (
                           <span className="flex items-center gap-1">
@@ -431,7 +542,7 @@ export default function FindLost() {
                         )}
                         <span className="flex items-center gap-1">
                           <Clock className="w-3.5 h-3.5" />
-                          {new Date(post.created_at).toLocaleDateString()}
+                          {new Date(post.created_at).toLocaleString([], { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                         </span>
                         {post.author && (
                           <span className="flex items-center gap-1">
@@ -442,25 +553,59 @@ export default function FindLost() {
                     </div>
 
                     <div className="flex flex-col gap-2 shrink-0 ml-3">
-                      {(isOwn || isAdmin) && !post.resolved && (
+                      {post.resolved ? (
                         <>
-                          <button
-                            onClick={() => resolve(post)}
-                            title="Mark as resolved"
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/60 transition"
+                          {/* Resolved status (replaces the "Mark as Resolved" action) */}
+                          <span
+                            title="This post has been resolved"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 cursor-default"
                           >
-                            <CheckCircle className="w-4 h-4" /> Resolve
-                          </button>
-                          <button
-                            onClick={() => editPost(post)}
-                            title="Edit post"
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/60 transition"
-                          >
-                            <Edit2 className="w-4 h-4" /> Edit
-                          </button>
+                            <CheckCircle className="w-4 h-4" /> Resolved
+                          </span>
+                          {/* Claim status (replaces the "Claim" action) */}
+                          {post.claimed_by_name && (
+                            <span
+                              title={`Claimed by ${post.claimed_by_name}`}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 cursor-default max-w-[12rem]"
+                            >
+                              <CheckCircle className="w-4 h-4 shrink-0" />
+                              <span className="truncate">Claimed by {post.claimed_by_name}</span>
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          {(isOwn || isAdmin) && (
+                            <>
+                              <button
+                                onClick={() => resolve(post)}
+                                title="Mark as resolved"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/60 transition"
+                              >
+                                <CheckCircle className="w-4 h-4" /> Mark as Resolved
+                              </button>
+                              <button
+                                onClick={() => editPost(post)}
+                                title="Edit post"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/60 transition"
+                              >
+                                <Edit2 className="w-4 h-4" /> Edit
+                              </button>
+                            </>
+                          )}
+                          {!isOwn && session && (
+                            <button
+                              onClick={() => claimItem(post)}
+                              title="Claim this item"
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-900/60 transition"
+                            >
+                              <CheckCircle className="w-4 h-4" /> Claim
+                            </button>
+                          )}
                         </>
                       )}
-                      
+
+                      {/* Delete is always available to author/admin */}
                       {(isOwn || isAdmin) && (
                         <button
                           onClick={() => deletePost(post)}
@@ -468,16 +613,6 @@ export default function FindLost() {
                           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400 hover:bg-rose-200 dark:hover:bg-rose-900/60 transition"
                         >
                           <Trash2 className="w-4 h-4" /> Delete
-                        </button>
-                      )}
-                      
-                      {!isOwn && !post.resolved && session && (
-                        <button
-                          onClick={() => claimItem(post)}
-                          title="Claim this item"
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-900/60 transition"
-                        >
-                          <CheckCircle className="w-4 h-4" /> Claim
                         </button>
                       )}
                     </div>
@@ -495,6 +630,85 @@ export default function FindLost() {
           </div>
         )}
       </div>
+
+      {/* Image Lightbox (enlarge + zoom) */}
+      <AnimatePresence>
+        {lightbox && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center"
+            onClick={() => setLightbox(null)}
+          >
+            {/* Counter */}
+            {lightbox.images.length > 1 && (
+              <div className="absolute top-5 left-1/2 -translate-x-1/2 text-white/70 text-sm font-medium select-none">
+                {lightbox.index + 1} / {lightbox.images.length}
+              </div>
+            )}
+
+            {/* Controls */}
+            <div className="absolute top-4 right-3 z-50 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={() => setZoom((z) => Math.max(1, +(z - 0.5).toFixed(2)))}
+                disabled={zoom <= 1}
+                className="text-white hover:text-emerald-400 disabled:opacity-30 transition p-2"
+                aria-label="Zoom out"
+              >
+                <ZoomOut className="w-7 h-7" />
+              </button>
+              <button
+                onClick={() => setZoom((z) => Math.min(4, +(z + 0.5).toFixed(2)))}
+                disabled={zoom >= 4}
+                className="text-white hover:text-emerald-400 disabled:opacity-30 transition p-2"
+                aria-label="Zoom in"
+              >
+                <ZoomIn className="w-7 h-7" />
+              </button>
+              <button
+                onClick={() => setLightbox(null)}
+                className="text-white hover:text-rose-400 transition p-2"
+                aria-label="Close"
+              >
+                <X className="w-7 h-7" />
+              </button>
+            </div>
+
+            {/* Prev */}
+            {lightbox.images.length > 1 && (
+              <button
+                onClick={(e) => { e.stopPropagation(); setZoom(1); setLightbox((lb) => lb ? { ...lb, index: (lb.index - 1 + lb.images.length) % lb.images.length } : lb); }}
+                className="absolute left-1 md:left-3 top-1/2 -translate-y-1/2 text-white hover:text-emerald-400 transition p-2 z-50"
+                aria-label="Previous"
+              >
+                <ChevronLeft className="w-9 h-9 md:w-10 md:h-10" />
+              </button>
+            )}
+
+            <div className="max-h-[90vh] max-w-[95vw] overflow-auto flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+              <img
+                src={lightbox.images[lightbox.index]}
+                alt="Preview"
+                onClick={() => setZoom((z) => (z >= 4 ? 1 : +(z + 0.5).toFixed(2)))}
+                style={{ transform: `scale(${zoom})` }}
+                className={`max-h-[90vh] max-w-[95vw] object-contain rounded-lg shadow-2xl transition-transform duration-200 ${zoom > 1 ? "cursor-zoom-out" : "cursor-zoom-in"}`}
+              />
+            </div>
+
+            {/* Next */}
+            {lightbox.images.length > 1 && (
+              <button
+                onClick={(e) => { e.stopPropagation(); setZoom(1); setLightbox((lb) => lb ? { ...lb, index: (lb.index + 1) % lb.images.length } : lb); }}
+                className="absolute right-1 md:right-3 top-1/2 -translate-y-1/2 text-white hover:text-emerald-400 transition p-2 z-50"
+                aria-label="Next"
+              >
+                <ChevronRight className="w-9 h-9 md:w-10 md:h-10" />
+              </button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

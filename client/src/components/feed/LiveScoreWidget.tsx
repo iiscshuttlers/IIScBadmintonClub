@@ -3,17 +3,21 @@
  * Scoreboard showing live matches with real-time Supabase subscription.
  * Players with the app open can watch live scores update in real time.
  * Supports Singles and Doubles.
+ * When a match finishes, the scorer is asked if they want to submit it
+ * as a friendly match for ELO calculation.
  */
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { Zap, Circle, Plus, Minus, X, Users } from "lucide-react";
+import { Zap, Circle, Plus, Minus, X, Users, Trophy, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface LiveMatch {
   id: string;
   player1_id: string;
   player2_id: string;
+  partner1_id?: string | null;
+  partner2_id?: string | null;
   scorer_id: string;
   score_p1: number;
   score_p2: number;
@@ -28,6 +32,13 @@ interface LiveMatch {
   partner2?: { full_name: string; avatar_url?: string };
 }
 
+// State for the post-match ELO submission prompt
+interface EloPrompt {
+  match: LiveMatch;
+  winnerId: string;
+  scoreStr: string; // e.g. "21-15, 18-21, 21-19"
+}
+
 interface Props {
   onClose?: () => void;
 }
@@ -36,6 +47,11 @@ export function LiveScoreWidget({ onClose }: Props) {
   const { profile } = useAuth();
   const [liveMatches, setLiveMatches] = useState<LiveMatch[]>([]);
   const [scoring, setScoring] = useState<string | null>(null);
+  const [eloPrompt, setEloPrompt] = useState<EloPrompt | null>(null);
+  const [submittingElo, setSubmittingElo] = useState(false);
+
+  // Per-match set score history so we can build a score string (e.g. "21-15, 18-21")
+  const [setScores, setSetScores] = useState<Record<string, { p1: number; p2: number }[]>>({});
 
   useEffect(() => {
     const fetchLive = async () => {
@@ -82,11 +98,23 @@ export function LiveScoreWidget({ onClose }: Props) {
     const setWon = (a: number, b: number) =>
       (a >= 21 && a - b >= 2) || (a === 30 && b === 29);
 
-    if (setWon(newP1, newP2)) {
+    const p1WonSet = setWon(newP1, newP2);
+    const p2WonSet = setWon(newP2, newP1);
+
+    if (p1WonSet) {
+      // Record completed set score
+      setSetScores((prev) => ({
+        ...prev,
+        [matchId]: [...(prev[matchId] ?? []), { p1: newP1, p2: newP2 }],
+      }));
       sets_p1++;
       scoreP1 = 0; scoreP2 = 0;
       setNumber++;
-    } else if (setWon(newP2, newP1)) {
+    } else if (p2WonSet) {
+      setSetScores((prev) => ({
+        ...prev,
+        [matchId]: [...(prev[matchId] ?? []), { p1: newP1, p2: newP2 }],
+      }));
       sets_p2++;
       scoreP1 = 0; scoreP2 = 0;
       setNumber++;
@@ -108,17 +136,54 @@ export function LiveScoreWidget({ onClose }: Props) {
       .eq("id", matchId);
 
     if (matchDone) {
+      const winnerId = sets_p1 > sets_p2 ? match.player1_id : match.player2_id;
       const winner = sets_p1 > sets_p2
         ? (match.player1 as any)?.full_name ?? "Team 1"
         : (match.player2 as any)?.full_name ?? "Team 2";
       toast.success(`Match over! ${winner}'s team wins!`);
       setScoring(null);
+
+      // Build score string from recorded set scores
+      const completedSets = setSetScores[matchId] ?? [];
+      const scoreStr = completedSets.map((s) => `${s.p1}-${s.p2}`).join(", ") || `${sets_p1}-${sets_p2} sets`;
+
+      // Only the scorer gets the ELO prompt
+      if (profile?.id === match.scorer_id) {
+        setEloPrompt({ match, winnerId, scoreStr });
+      }
     }
   };
 
-  if (liveMatches.length === 0) return null;
+  const submitForElo = async () => {
+    if (!eloPrompt || !profile?.id) return;
+    const { match, winnerId, scoreStr } = eloPrompt;
+    const isDoubles = !!(match.partner1_id || match.partner2_id);
+
+    setSubmittingElo(true);
+    try {
+      const { error } = await supabase.rpc("submit_friendly_match", {
+        submitter_id: match.scorer_id,
+        opponent_id: match.player2_id,
+        match_winner_id: winnerId,
+        match_score: scoreStr,
+        submitter_partner_id: isDoubles ? match.partner1_id ?? null : null,
+        opponent_partner_id: isDoubles ? match.partner2_id ?? null : null,
+      });
+      if (error) throw error;
+      toast.success("Match submitted for ELO! The opponent needs to confirm it.");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to submit for ELO");
+    } finally {
+      setSubmittingElo(false);
+      setEloPrompt(null);
+    }
+  };
+
+  if (liveMatches.length === 0 && !eloPrompt) return null;
 
   return (
+    <>
+    {liveMatches.length > 0 && (
     <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl border border-emerald-800/40 shadow-xl overflow-hidden mb-6">
       <div className="px-5 py-4 border-b border-slate-700 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -204,6 +269,61 @@ export function LiveScoreWidget({ onClose }: Props) {
         })}
       </div>
     </div>
+    )}
+
+      {/* ELO Submission Prompt — shown to scorer when match finishes */}
+      {eloPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-6 max-w-sm w-full space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-2xl bg-amber-100 dark:bg-amber-900/30">
+                <Trophy className="w-6 h-6 text-amber-500" />
+              </div>
+              <div>
+                <h3 className="font-black text-slate-900 dark:text-white text-lg">Submit for ELO?</h3>
+                <p className="text-xs text-slate-400">This will log it as a friendly match</p>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl px-4 py-3 space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Winner</span>
+                <span className="font-black text-slate-800 dark:text-white">
+                  {eloPrompt.winnerId === eloPrompt.match.player1_id
+                    ? (eloPrompt.match.player1 as any)?.full_name ?? "Player 1"
+                    : (eloPrompt.match.player2 as any)?.full_name ?? "Player 2"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Score</span>
+                <span className="font-bold text-slate-700 dark:text-slate-300">{eloPrompt.scoreStr}</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-400 text-center">
+              The opponent will need to confirm the match before ELO updates.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setEloPrompt(null)}
+                className="flex-1 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+              >
+                No thanks
+              </button>
+              <button
+                onClick={submitForElo}
+                disabled={submittingElo}
+                className="flex-1 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-black text-sm transition flex items-center justify-center gap-2"
+              >
+                {submittingElo ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trophy className="w-4 h-4" />}
+                {submittingElo ? "Submitting…" : "Yes, submit!"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

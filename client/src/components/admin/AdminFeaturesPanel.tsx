@@ -11,7 +11,6 @@ import {
   BarChart3, Users, Trophy, Target, Coins
 } from "lucide-react";
 import { toast } from "sonner";
-import { LiveScoreWidget, StartLiveScoringButton } from "@/components/feed/LiveScoreWidget";
 import { WeeklyChallenges } from "@/components/feed/WeeklyChallenges";
 
 const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm";
@@ -121,9 +120,6 @@ function LiveMatchesPanel() {
   return (
     <div className={cardCls}>
       {sectionTitle(<Circle className="w-4 h-4 fill-red-500 text-red-500" />, "Live Matches")}
-      <div className="mb-3">
-        <StartLiveScoringButton />
-      </div>
       {loading ? <Loader2 className="w-5 h-5 animate-spin text-emerald-500" /> : matches.length === 0 ? (
         <p className="text-sm text-slate-400">No live or recent matches.</p>
       ) : (
@@ -436,8 +432,8 @@ export function AdminFeaturesPanel() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <LiveMatchesPanel />
           <div className={cardCls}>
-            {sectionTitle(<Circle className="w-4 h-4 fill-red-500 text-red-500" />, "Live Feed Preview")}
-            <LiveScoreWidget />
+            {sectionTitle(<Circle className="w-4 h-4 fill-red-500 text-red-500" />, "Live Feed")}
+            <p className="text-sm text-slate-400">Live matches are broadcast via the Umpire tab.</p>
           </div>
         </div>
       )}

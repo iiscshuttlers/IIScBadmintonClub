@@ -17,7 +17,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { ADMIN_EMAILS } from "@/lib/admin";
 import { toast } from "sonner";
 
 
@@ -79,7 +78,13 @@ export default function Join() {
       return;
 
     if (profile) {
-      setLocation("/");
+      const returnUrl = sessionStorage.getItem("return_url");
+      if (returnUrl) {
+        sessionStorage.removeItem("return_url");
+        setLocation(returnUrl);
+      } else {
+        setLocation("/");
+      }
     } else {
       // Only show toast when arriving via email verification link (Supabase sets type=signup in hash)
       const hashParams = new URLSearchParams(window.location.hash.slice(1));

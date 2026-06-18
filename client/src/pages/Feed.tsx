@@ -37,7 +37,6 @@ import { ChallengeHubTab } from "@/components/feed/ChallengeHubTab";
 import { PollsSection } from "@/components/feed/PollsSection";
 import { RivalryCards } from "@/components/feed/RivalryCards";
 import { WeeklyChallenges } from "@/components/feed/WeeklyChallenges";
-import { LiveScoreWidget, StartLiveScoringButton } from "@/components/feed/LiveScoreWidget";
 import { MatchPredictions } from "@/components/feed/MatchPredictions";
 
 export default function Feed() {
@@ -80,36 +79,35 @@ export default function Feed() {
   const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [liveMatchIds, setLiveMatchIds] = useState<Set<string>>(new Set());
+  const [hasLiveMatches, setHasLiveMatches] = useState(false);
 
   const [limitCount, setLimitCount] = useState(100);
 
-  // Subscribe to live tournament broadcasts and track which player-pairs are live
+  // Subscribe to live broadcasts: track tournament player IDs (for match card badges) and any active match
   useEffect(() => {
-    const fetchLive = async () => {
-      const { data } = await supabase.from("site_data").select("value").eq("key", "live_matches").single();
-      if (data?.value) {
-        const ids = new Set<string>();
-        Object.values(data.value as Record<string, any>).forEach((m: any) => {
-          if (!m.isFriendly && m.status === "playing") {
+    const parseLiveData = (val: Record<string, any>) => {
+      const ids = new Set<string>();
+      let anyLive = false;
+      Object.values(val).forEach((m: any) => {
+        if (m.status === "playing") {
+          anyLive = true;
+          if (!m.isFriendly) {
             [m.t1?.p1Id, m.t1?.p2Id, m.t2?.p1Id, m.t2?.p2Id].filter(Boolean).forEach((id: string) => ids.add(id));
           }
-        });
-        setLiveMatchIds(ids);
-      }
+        }
+      });
+      setLiveMatchIds(ids);
+      setHasLiveMatches(anyLive);
+    };
+
+    const fetchLive = async () => {
+      const { data } = await supabase.from("site_data").select("value").eq("key", "live_matches").single();
+      if (data?.value) parseLiveData(data.value as Record<string, any>);
     };
     fetchLive();
     const sub = supabase.channel("feed_live_matches")
       .on("postgres_changes", { event: "*", schema: "public", table: "site_data", filter: "key=eq.live_matches" },
-        (payload) => {
-          const val = (payload.new as any)?.value || {};
-          const ids = new Set<string>();
-          Object.values(val).forEach((m: any) => {
-            if (!m.isFriendly && m.status === "playing") {
-              [m.t1?.p1Id, m.t1?.p2Id, m.t2?.p1Id, m.t2?.p2Id].filter(Boolean).forEach((id: string) => ids.add(id));
-            }
-          });
-          setLiveMatchIds(ids);
-        })
+        (payload) => parseLiveData((payload.new as any)?.value || {}))
       .subscribe();
     return () => { supabase.removeChannel(sub); };
   }, []);
@@ -423,13 +421,7 @@ export default function Feed() {
           </>
         ) : (
           <>
-            {!loading && session && (
-              <div className="flex justify-end mb-4">
-                <StartLiveScoringButton />
-              </div>
-            )}
-            {!loading && <LiveScoreWidget />}
-            {!loading && session && <MatchPredictions />}
+            {!loading && session && hasLiveMatches && <MatchPredictions />}
 
             {!loading && displayMatches.length > 0 && (
               <>

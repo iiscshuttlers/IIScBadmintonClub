@@ -65,6 +65,7 @@ import { AdminActivityLog } from "@/components/admin/AdminActivityLog";
 import { EloAuditPanel } from "@/components/admin/EloAuditPanel";
 import { AdminFeaturesPanel } from "@/components/admin/AdminFeaturesPanel";
 import { AdminAllFeaturesPanel } from "@/components/admin/AdminAllFeaturesPanel";
+import { TournamentEditor } from "@/components/admin/TournamentEditor";
 import { Paintbrush, ClipboardList, Settings, BarChart2, Zap, Sparkles, ChevronUp } from "lucide-react";
 
 /* ── Types ──────────────────────────────────────────────────────── */
@@ -113,6 +114,7 @@ type TabId =
   | "holidays"
   | "announcements"
   | "events"
+  | "tournament"
   | "videos"
   | "players"
   | "umpire"
@@ -149,6 +151,7 @@ const TAB_GROUPS: TabGroup[] = [
       { id: "announcements", label: "Announcements", icon: Megaphone },
       { id: "holidays", label: "Holidays", icon: Calendar },
       { id: "events", label: "Events", icon: CalendarDays },
+      { id: "tournament", label: "Tournament", icon: Trophy },
       { id: "videos", label: "Videos", icon: Video },
     ],
   },
@@ -538,14 +541,26 @@ export default function SiteAdmin() {
             Admin Access Required
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mb-6">
-            You need to be signed in with an admin account.
+            {session ? "Your account does not have admin privileges." : "You need to be signed in with an admin account."}
           </p>
-          <button
-            onClick={() => setLocation("/join")}
-            className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition shadow-lg shadow-emerald-500/20"
-          >
-            Sign In
-          </button>
+          {!session ? (
+            <button
+              onClick={() => {
+                sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
+                setLocation("/join");
+              }}
+              className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition shadow-lg shadow-emerald-500/20"
+            >
+              Sign In
+            </button>
+          ) : (
+            <button
+              onClick={() => setLocation("/")}
+              className="px-6 py-3 bg-slate-600 hover:bg-slate-700 text-white font-bold rounded-xl transition shadow-lg shadow-slate-500/20"
+            >
+              Back to Home
+            </button>
+          )}
         </div>
       </div>
     );
@@ -565,6 +580,7 @@ export default function SiteAdmin() {
     holidays: holidays.length,
     announcements: announcements.length,
     events: events.length,
+    tournament: null,
     videos: videos.length,
     players: null,
     matches: null,
@@ -712,6 +728,7 @@ export default function SiteAdmin() {
             {activeTab === "events" && (
               <EventEditor data={events} onChange={setE} />
             )}
+            {activeTab === "tournament" && <TournamentEditor />}
             {activeTab === "videos" && (
               <VideoEditor data={videos} onChange={setV} />
             )}
@@ -735,7 +752,7 @@ export default function SiteAdmin() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="sticky bottom-6 mt-8 mx-auto w-max z-50 flex items-center gap-3 px-6 py-3 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-2xl border border-slate-700 dark:border-slate-300"
+              className="sticky bottom-[88px] lg:bottom-6 mt-8 mx-auto w-max z-[9998] flex items-center gap-3 px-6 py-3 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-2xl border border-slate-700 dark:border-slate-300"
             >
               <AlertTriangle className="w-4 h-4 text-amber-400 dark:text-amber-600" />
               <span className="text-sm font-bold">Unsaved changes</span>

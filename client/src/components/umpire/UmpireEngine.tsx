@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Trophy, Activity, Plus, Minus, X, Settings, Save, Timer,
-  AlertTriangle, BookOpen, ArrowLeftRight, Flag, ChevronDown, ChevronUp,
+  AlertTriangle, BookOpen, ArrowLeftRight, Flag, ChevronDown, ChevronUp, Repeat,
 } from "lucide-react";
 import { toast } from "sonner";
 import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
@@ -143,7 +143,7 @@ function CourtVisual({
   };
 
   return (
-    <div className="relative w-52 h-32 select-none" title="Court — tap server name to switch">
+    <div className="relative w-52 h-32 md:w-64 md:h-40 select-none" title="Court">
       <svg viewBox="0 0 208 128" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect x="4" y="4" width="200" height="120" rx="2" stroke="#334155" strokeWidth="2" fill="#0f172a" />
         <line x1="104" y1="4" x2="104" y2="124" stroke="#64748b" strokeWidth="2" strokeDasharray="4 3" />
@@ -167,9 +167,9 @@ function CourtVisual({
         {/* Left side */}
         <div className="relative flex flex-col h-full w-[44%]">
           <div
-            className={`absolute w-full truncate text-[9px] font-black uppercase ${nameColor("left", 0)} ${leftIsServer ? "pointer-events-auto cursor-pointer" : ""}`}
+            className={`absolute w-full truncate text-[9px] md:text-[11px] font-black uppercase ${nameColor("left", 0)} ${onSwitchServer && leftIsServer ? "pointer-events-auto cursor-pointer" : ""}`}
             style={{ top: topPct("left", 0) }}
-            onClick={leftIsServer ? onSwitchServer : undefined}
+            onClick={onSwitchServer && leftIsServer ? onSwitchServer : undefined}
           >
             {leftP1Name || "T1"}
             {leftIsServer && serverPlayerIndex === 0 && <span className="block text-[7px] text-emerald-500">SERVER</span>}
@@ -177,9 +177,9 @@ function CourtVisual({
           </div>
           {isDoubles && leftP2Name && (
             <div
-              className={`absolute w-full truncate text-[9px] font-black uppercase ${nameColor("left", 1)} ${leftIsServer ? "pointer-events-auto cursor-pointer" : ""}`}
+              className={`absolute w-full truncate text-[9px] md:text-[11px] font-black uppercase ${nameColor("left", 1)} ${onSwitchServer && leftIsServer ? "pointer-events-auto cursor-pointer" : ""}`}
               style={{ top: topPct("left", 1) }}
-              onClick={leftIsServer ? onSwitchServer : undefined}
+              onClick={onSwitchServer && leftIsServer ? onSwitchServer : undefined}
             >
               {leftP2Name}
               {leftIsServer && serverPlayerIndex === 1 && <span className="block text-[7px] text-emerald-500">SERVER</span>}
@@ -190,9 +190,9 @@ function CourtVisual({
         {/* Right side */}
         <div className="relative flex flex-col h-full w-[44%] text-right items-end">
           <div
-            className={`absolute w-full truncate text-[9px] font-black uppercase ${nameColor("right", 0)} ${!leftIsServer ? "pointer-events-auto cursor-pointer" : ""}`}
+            className={`absolute w-full truncate text-[9px] md:text-[11px] font-black uppercase ${nameColor("right", 0)} ${onSwitchServer && !leftIsServer ? "pointer-events-auto cursor-pointer" : ""}`}
             style={{ top: topPct("right", 0) }}
-            onClick={!leftIsServer ? onSwitchServer : undefined}
+            onClick={onSwitchServer && !leftIsServer ? onSwitchServer : undefined}
           >
             {rightP1Name || "T2"}
             {!leftIsServer && serverPlayerIndex === 0 && <span className="block text-[7px] text-emerald-500">SERVER</span>}
@@ -200,9 +200,9 @@ function CourtVisual({
           </div>
           {isDoubles && rightP2Name && (
             <div
-              className={`absolute w-full truncate text-[9px] font-black uppercase ${nameColor("right", 1)} ${!leftIsServer ? "pointer-events-auto cursor-pointer" : ""}`}
+              className={`absolute w-full truncate text-[9px] md:text-[11px] font-black uppercase ${nameColor("right", 1)} ${onSwitchServer && !leftIsServer ? "pointer-events-auto cursor-pointer" : ""}`}
               style={{ top: topPct("right", 1) }}
-              onClick={!leftIsServer ? onSwitchServer : undefined}
+              onClick={onSwitchServer && !leftIsServer ? onSwitchServer : undefined}
             >
               {rightP2Name}
               {!leftIsServer && serverPlayerIndex === 1 && <span className="block text-[7px] text-emerald-500">SERVER</span>}
@@ -360,6 +360,8 @@ export function UmpireEngine({
 }) {
   const isAdmin = isAdminEmail(userEmail);
   const canRunTournament = isAdmin || isTournamentUmpire;
+  // Regular users (non-admin, non-umpire) can only run friendly matches
+  const friendlyOnly = !canRunTournament;
 
   const [players, setPlayers] = useState<Player[]>([]);
   const [match, setMatch] = useState<BwfMatchState>(() => {
@@ -395,6 +397,15 @@ export function UmpireEngine({
         status: "finished",
         winner: isP1Winner ? 1 : 2,
         setsHistory: setsHistory,
+      } as BwfMatchState;
+    }
+    // Resume / take over a full live match (BwfMatchState saved in site_data).
+    // Keep its own `id` (the persistence key) so updates write back to the same broadcast.
+    if (initialMatchState && initialMatchState.status && initialMatchState.t1) {
+      return {
+        ...initialMatchState,
+        id: initialMatchState.id || userId,
+        umpireName: initialMatchState.umpireName || userName,
       } as BwfMatchState;
     }
     return {
@@ -437,10 +448,24 @@ export function UmpireEngine({
 
   const [showRetireModal, setShowRetireModal] = useState(false);
   const [isEditSetupOpen, setIsEditSetupOpen] = useState(false);
+  const [showToolsMenu, setShowToolsMenu] = useState(false);
 
   const [isDirectScoreOpen, setIsDirectScoreOpen] = useState(false);
   const [directSetsText, setDirectSetsText] = useState("");
   const [directWinner, setDirectWinner] = useState<1 | 2 | null>(null);
+
+  // Buddy check for regular users: load own buddies list once
+  const [myBuddies, setMyBuddies] = useState<string[]>([]);
+  useEffect(() => {
+    if (isAdmin || isTournamentUmpire) return; // admins/umpires are exempt
+    supabase.from("players").select("buddies").eq("id", userId).maybeSingle()
+      .then(({ data }) => setMyBuddies(data?.buddies ?? []));
+  }, [userId, isAdmin, isTournamentUmpire]);
+
+  const selectedPlayerIds = [match.t1.p1Id, match.t1.p2Id, match.t2.p1Id, match.t2.p2Id].filter(Boolean) as string[];
+  const buddyCheckPassed = isAdmin || isTournamentUmpire
+    || selectedPlayerIds.length === 0
+    || selectedPlayerIds.some(id => myBuddies.includes(id));
 
   // Break timer
   const [breakSecondsLeft, setBreakSecondsLeft] = useState<number | null>(null);
@@ -594,14 +619,9 @@ export function UmpireEngine({
       toast.error("Please fill in Player 1 for both teams");
       return;
     }
-    if (match.isFriendly && !isAdmin) {
-      const { data: ump } = await supabase.from("players").select("buddies").eq("id", userId).maybeSingle();
-      const buddies: string[] = ump?.buddies || [];
-      const ids = [match.t1.p1Id, match.t1.p2Id, match.t2.p1Id, match.t2.p2Id].filter(Boolean) as string[];
-      if (!ids.some(id => buddies.includes(id))) {
-        toast.error("You must be a buddy of at least one player to umpire a friendly match.");
-        return;
-      }
+    if (!buddyCheckPassed) {
+      toast.error("You must be a buddy of at least one player.");
+      return;
     }
     const cat = deduceCategory();
     if (cat === "Hybrid") {
@@ -999,207 +1019,306 @@ export function UmpireEngine({
 
   // ── SETUP SCREEN ───────────────────────────────────────────────────────────
   const renderSetupContent = () => {
+    const t1p1Name = match.t1.p1Id ? getName(match.t1.p1Id) : "";
+    const t1p2Name = match.t1.p2Id ? getName(match.t1.p2Id) : "";
+    const t2p1Name = match.t2.p1Id ? getName(match.t2.p1Id) : "";
+    const t2p2Name = match.t2.p2Id ? getName(match.t2.p2Id) : "";
+
+    const teamLabel = (p1: string, p2: string, fallback: string) =>
+      p1 ? (p2 ? `${p1.split(" ")[0]} & ${p2.split(" ")[0]}` : p1) : fallback;
+
+    const t1Label = teamLabel(t1p1Name, t1p2Name, "Team 1");
+    const t2Label = teamLabel(t2p1Name, t2p2Name, "Team 2");
+    const playersReady = !!(match.t1.p1Id && match.t2.p1Id);
+    const isDoubles = !!(match.t1.p2Id || match.t2.p2Id);
+
+    // initials avatar helper
+    const initials = (name: string) => name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+
     return (
-      <div className="bg-slate-900 border border-slate-800 rounded-4xl p-6 text-white max-w-xl mx-auto shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 inset-x-0 h-1 bg-linear-to-r from-emerald-500 to-teal-500" />
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-black uppercase tracking-wider flex items-center gap-2">
-            <Settings className="w-5 h-5 text-emerald-400" /> {isEditSetupOpen ? "Edit Match Setup" : "Match Setup"}
-          </h2>
-          <button onClick={() => {
-            if (isEditSetupOpen) setIsEditSetupOpen(false);
-            else handleClose();
-          }} className="p-2 hover:bg-slate-800 rounded-full text-slate-400">
-            <X className="w-5 h-5" />
-          </button>
+      <div className="bg-slate-900 rounded-3xl text-white max-w-lg mx-auto shadow-2xl overflow-hidden">
+
+        {/* ── Header ── */}
+        <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 px-6 pt-6 pb-5">
+          <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500" />
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400 mb-0.5">
+                {isEditSetupOpen ? "Edit Setup" : "Umpire Station"}
+              </p>
+              <h2 className="text-xl font-black text-white">Match Setup</h2>
+            </div>
+            <button
+              onClick={() => { if (isEditSetupOpen) setIsEditSetupOpen(false); else handleClose(); }}
+              className="p-2 hover:bg-slate-700 rounded-full text-slate-400 transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Match type badge */}
+          <div className="mt-4">
+            {friendlyOnly ? (
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-black">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Friendly Match Only
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setMatch({ ...match, isFriendly: true })}
+                  className={`px-4 py-1.5 rounded-full text-xs font-black border transition ${match.isFriendly ? "bg-emerald-500/20 border-emerald-500 text-emerald-400" : "bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500"}`}
+                >Friendly</button>
+                <button
+                  onClick={() => setMatch({ ...match, isFriendly: false })}
+                  className={`px-4 py-1.5 rounded-full text-xs font-black border transition ${!match.isFriendly ? "bg-amber-500/20 border-amber-500 text-amber-400" : "bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500"}`}
+                >Tournament</button>
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="space-y-5">
-          {canRunTournament && (
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => setMatch({ ...match, isFriendly: true })}
-                className={`py-3 rounded-xl font-bold text-sm border ${match.isFriendly ? "bg-emerald-500/20 border-emerald-500 text-emerald-400" : "bg-slate-800 border-slate-700 text-slate-400"}`}
-              >Friendly Match</button>
-              <button
-                onClick={() => setMatch({ ...match, isFriendly: false })}
-                className={`py-3 rounded-xl font-bold text-sm border ${!match.isFriendly ? "bg-amber-500/20 border-amber-500 text-amber-400" : "bg-slate-800 border-slate-700 text-slate-400"}`}
-              >Tournament Match</button>
-            </div>
-          )}
+        <div className="px-6 pb-6 space-y-5 mt-5">
 
+          {/* ── Match number (tournament only) ── */}
           {!match.isFriendly && (
             <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Match Number</label>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Match Number</label>
               <input
                 value={match.matchNumber}
                 onChange={(e) => setMatch({ ...match, matchNumber: e.target.value })}
                 placeholder="e.g. MS-14"
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white outline-none focus:border-emerald-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-emerald-500 transition"
               />
             </div>
           )}
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Points to Win</label>
-              <div className="flex flex-wrap gap-2">
-                {[11, 15, 21, 30].map(pts => (
-                  <button key={pts} 
-                    onClick={() => setMatch({ ...match, pointsToWin: pts, goldenPoint: pts === 21 ? 30 : pts === 15 ? 21 : pts === 11 ? 15 : 30 })}
-                    className={`flex-1 min-w-[3rem] py-2.5 rounded-xl font-bold text-sm border transition-colors ${match.pointsToWin === pts ? "bg-emerald-500/20 border-emerald-500 text-emerald-400" : "bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500"}`}
-                  >
-                    {pts}
-                  </button>
-                ))}
-                <input 
-                  type="number" 
-                  placeholder="Custom"
-                  value={[11, 15, 21, 30].includes(match.pointsToWin) ? "" : match.pointsToWin}
-                  onChange={(e) => {
-                    const pts = parseInt(e.target.value) || 0;
-                    setMatch({ ...match, pointsToWin: pts, goldenPoint: pts + 2 });
-                  }}
-                  className={`flex-1 min-w-[4rem] bg-slate-800 border rounded-xl p-2.5 text-center text-sm font-bold outline-none transition-colors ${![11, 15, 21, 30].includes(match.pointsToWin) && match.pointsToWin > 0 ? "border-emerald-500 text-emerald-400 bg-emerald-500/20" : "border-slate-700 text-slate-400 focus:border-slate-500"}`}
-                />
-              </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Best of Sets</label>
-                <div className="flex gap-2">
-                  {[1, 3, 5].map(sets => (
-                    <button key={sets} 
-                      onClick={() => setMatch({ ...match, bestOfSets: sets })}
-                      className={`flex-1 py-2.5 rounded-xl font-bold text-sm border transition-colors ${match.bestOfSets === sets ? "bg-sky-500/20 border-sky-500 text-sky-400" : "bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500"}`}
-                    >
-                      BO{sets}
-                    </button>
-                  ))}
+          {/* ── Format row ── */}
+          <div className="bg-slate-800/60 rounded-2xl p-4 space-y-3">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Match Format</p>
+            <div className="flex gap-2">
+              {[1, 3, 5].map(sets => (
+                <button key={sets}
+                  onClick={() => setMatch({ ...match, bestOfSets: sets })}
+                  className={`flex-1 py-2 rounded-xl font-black text-sm border transition ${match.bestOfSets === sets ? "bg-sky-500/20 border-sky-500 text-sky-400" : "bg-slate-700/50 border-slate-700 text-slate-400 hover:border-slate-500"}`}
+                >BO{sets}</button>
+              ))}
+              <div className="w-px bg-slate-700 self-stretch mx-1" />
+              {[11, 15, 21].map(pts => (
+                <button key={pts}
+                  onClick={() => setMatch({ ...match, pointsToWin: pts, goldenPoint: pts === 21 ? 30 : pts === 15 ? 21 : 15 })}
+                  className={`flex-1 py-2 rounded-xl font-black text-sm border transition ${match.pointsToWin === pts ? "bg-emerald-500/20 border-emerald-500 text-emerald-400" : "bg-slate-700/50 border-slate-700 text-slate-400 hover:border-slate-500"}`}
+                >{pts}pts</button>
+              ))}
+            </div>
+            <div className="flex items-center gap-3 pt-1">
+              <span className="text-xs text-slate-500 shrink-0">Golden point cap:</span>
+              <input
+                type="number"
+                value={match.goldenPoint}
+                onChange={(e) => setMatch({ ...match, goldenPoint: parseInt(e.target.value) || 0 })}
+                className="w-16 bg-slate-700 border border-slate-600 rounded-lg px-2 py-1 text-center text-sm font-bold text-amber-400 outline-none focus:border-amber-500 transition"
+              />
+              <span className="text-xs text-slate-500">pts</span>
+            </div>
+          </div>
+
+          {/* ── Players ── */}
+          <div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Players</p>
+
+            {/* Court layout */}
+            <div className="grid grid-cols-[1fr_auto_1fr] gap-2 items-start">
+
+              {/* Team 1 */}
+              <div className="bg-slate-800/60 rounded-2xl p-3 space-y-2 border border-slate-700/50">
+                {/* Name display */}
+                <div className="flex items-center gap-2 min-h-[2rem]">
+                  {t1p1Name ? (
+                    <>
+                      <div className="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-[10px] font-black text-emerald-400 shrink-0">
+                        {initials(t1p1Name)}
+                      </div>
+                      <span className="text-sm font-black text-white truncate">{t1p1Name}</span>
+                    </>
+                  ) : (
+                    <span className="text-xs text-slate-500 italic">Team 1</span>
+                  )}
+                </div>
+                {t1p2Name && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-[10px] font-black text-emerald-500 shrink-0">
+                      {initials(t1p2Name)}
+                    </div>
+                    <span className="text-sm font-black text-white truncate">{t1p2Name}</span>
+                  </div>
+                )}
+                <div className="space-y-1.5 pt-1 border-t border-slate-700/50">
+                  <PlayerSelect
+                    value={match.t1.p1Id}
+                    onChange={(v) => setMatch({ ...match, t1: { ...match.t1, p1Id: v } })}
+                    players={players.filter(p => ![match.t1.p2Id, match.t2.p1Id, match.t2.p2Id].includes(p.id))}
+                    placeholder="Select player 1"
+                  />
+                  <PlayerSelect
+                    value={match.t1.p2Id || ""}
+                    onChange={(v) => setMatch({ ...match, t1: { ...match.t1, p2Id: v } })}
+                    players={players.filter(p => ![match.t1.p1Id, match.t2.p1Id, match.t2.p2Id].includes(p.id))}
+                    placeholder="+ doubles partner"
+                  />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Cap (Golden Pt)</label>
-                <input
-                  type="number"
-                  value={match.goldenPoint}
-                  onChange={(e) => setMatch({ ...match, goldenPoint: parseInt(e.target.value) || 0 })}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-center font-bold text-slate-300 outline-none focus:border-amber-500 focus:bg-amber-500/10 transition-colors"
-                />
+              {/* VS divider */}
+              <div className="flex flex-col items-center justify-center gap-1 pt-3">
+                <div className="w-px h-6 bg-slate-700" />
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">vs</span>
+                <div className="w-px h-6 bg-slate-700" />
+              </div>
+
+              {/* Team 2 */}
+              <div className="bg-slate-800/60 rounded-2xl p-3 space-y-2 border border-slate-700/50">
+                <div className="flex items-center gap-2 min-h-[2rem]">
+                  {t2p1Name ? (
+                    <>
+                      <div className="w-7 h-7 rounded-full bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-[10px] font-black text-sky-400 shrink-0">
+                        {initials(t2p1Name)}
+                      </div>
+                      <span className="text-sm font-black text-white truncate">{t2p1Name}</span>
+                    </>
+                  ) : (
+                    <span className="text-xs text-slate-500 italic">Team 2</span>
+                  )}
+                </div>
+                {t2p2Name && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-[10px] font-black text-sky-500 shrink-0">
+                      {initials(t2p2Name)}
+                    </div>
+                    <span className="text-sm font-black text-white truncate">{t2p2Name}</span>
+                  </div>
+                )}
+                <div className="space-y-1.5 pt-1 border-t border-slate-700/50">
+                  <PlayerSelect
+                    value={match.t2.p1Id}
+                    onChange={(v) => setMatch({ ...match, t2: { ...match.t2, p1Id: v } })}
+                    players={players.filter(p => ![match.t1.p1Id, match.t1.p2Id, match.t2.p2Id].includes(p.id))}
+                    placeholder="Select player 1"
+                  />
+                  <PlayerSelect
+                    value={match.t2.p2Id || ""}
+                    onChange={(v) => setMatch({ ...match, t2: { ...match.t2, p2Id: v } })}
+                    players={players.filter(p => ![match.t1.p1Id, match.t1.p2Id, match.t2.p1Id].includes(p.id))}
+                    placeholder="+ doubles partner"
+                  />
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="space-y-4 pt-4 border-t border-slate-800">
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Team 1</label>
-              <div className="space-y-2">
-                <PlayerSelect value={match.t1.p1Id} onChange={(v) => setMatch({ ...match, t1: { ...match.t1, p1Id: v } })} players={players.filter(p => ![match.t1.p2Id, match.t2.p1Id, match.t2.p2Id].includes(p.id))} placeholder="Player 1" />
-                <PlayerSelect value={match.t1.p2Id || ""} onChange={(v) => setMatch({ ...match, t1: { ...match.t1, p2Id: v } })} players={players.filter(p => ![match.t1.p1Id, match.t2.p1Id, match.t2.p2Id].includes(p.id))} placeholder="Player 2 (optional — doubles)" />
+          {/* ── Category (auto-detected) ── */}
+          {playersReady && (
+            <div className="flex items-center gap-3 bg-slate-800/40 rounded-xl px-4 py-3 border border-slate-700/40">
+              <div className="flex-1">
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Detected Category</p>
+                <p className="text-sm font-black text-emerald-400">{match.customCategory || deduceCategory()}</p>
               </div>
-            </div>
-            <div className="text-center text-slate-500 font-black italic">VS</div>
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Team 2</label>
-              <div className="space-y-2">
-                <PlayerSelect value={match.t2.p1Id} onChange={(v) => setMatch({ ...match, t2: { ...match.t2, p1Id: v } })} players={players.filter(p => ![match.t1.p1Id, match.t1.p2Id, match.t2.p2Id].includes(p.id))} placeholder="Player 1" />
-                <PlayerSelect value={match.t2.p2Id || ""} onChange={(v) => setMatch({ ...match, t2: { ...match.t2, p2Id: v } })} players={players.filter(p => ![match.t1.p1Id, match.t1.p2Id, match.t2.p1Id].includes(p.id))} placeholder="Player 2 (optional — doubles)" />
-              </div>
-            </div>
-          </div>
-
-          {match.t1.p1Id && match.t2.p1Id && (
-            <div className="bg-slate-800/50 p-4 rounded-2xl mb-4 border border-emerald-500/20 mt-4">
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-xs font-bold text-slate-400 uppercase">Detected Category</span>
-                <span className="text-emerald-400 font-bold text-sm bg-emerald-500/10 px-3 py-1 rounded-lg border border-emerald-500/20">{deduceCategory()}</span>
-              </div>
-              <div className="pt-3 border-t border-slate-700/50">
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2">Override Category (Optional)</label>
-                <input
-                  value={match.customCategory || ""}
-                  onChange={(e) => setMatch({ ...match, customCategory: e.target.value })}
-                  placeholder="e.g. Mixed Doubles"
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white text-sm outline-none focus:border-emerald-500"
-                />
-              </div>
+              <input
+                value={match.customCategory || ""}
+                onChange={(e) => setMatch({ ...match, customCategory: e.target.value })}
+                placeholder="Override…"
+                className="w-32 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white text-xs outline-none focus:border-emerald-500 transition"
+              />
             </div>
           )}
 
-          <div className="pt-4 border-t border-slate-800">
-            <label className="block text-xs font-bold text-slate-400 uppercase mb-2">First Serve</label>
-            <div className="flex gap-2 mb-2">
-              {([1, 2] as const).map(t => {
-                const teamData = t === 1 ? match.t1 : match.t2;
-                const p1Str = teamData.p1Id ? getName(teamData.p1Id).split(" ")[0] : `Team ${t}`;
-                const p2Str = teamData.p2Id ? getName(teamData.p2Id).split(" ")[0] : "";
-                const teamLabel = p2Str ? `${p1Str} & ${p2Str}` : p1Str;
-                return (
-                  <button key={t}
-                    onClick={() => setMatch({ ...match, serverTeam: t })}
-                    className={`flex-1 py-2 rounded-lg font-bold text-xs border truncate ${match.serverTeam === t ? "bg-emerald-500/20 border-emerald-500 text-emerald-400" : "bg-slate-800 border-slate-700 text-slate-400"}`}
-                  >{teamLabel} Serve{teamLabel === p1Str ? "s" : ""}</button>
-                );
-              })}
+          {/* ── First Serve (only once players are set) ── */}
+          {playersReady && (
+            <div className="space-y-2">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">First Serve</p>
+              <div className="grid grid-cols-2 gap-2">
+                {([1, 2] as const).map(t => {
+                  const label = t === 1 ? t1Label : t2Label;
+                  return (
+                    <button key={t}
+                      onClick={() => setMatch({ ...match, serverTeam: t })}
+                      className={`py-2.5 rounded-xl font-bold text-sm border transition truncate ${match.serverTeam === t ? "bg-emerald-500/20 border-emerald-500 text-emerald-400" : "bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500"}`}
+                    >{label} serves</button>
+                  );
+                })}
+              </div>
+
+              {/* Doubles: who serves first in the serving team */}
+              {isDoubles && (
+                <>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest pt-1">Server within team</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {([0, 1] as const).map(i => {
+                      const servingTeam = match.serverTeam === 1 ? match.t1 : match.t2;
+                      const pName = i === 0
+                        ? (servingTeam.p1Id ? getName(servingTeam.p1Id).split(" ")[0] : "P1")
+                        : (servingTeam.p2Id ? getName(servingTeam.p2Id).split(" ")[0] : "P2");
+                      if (i === 1 && !servingTeam.p2Id) return null;
+                      return (
+                        <button key={i}
+                          onClick={() => setMatch({ ...match, serverPlayerIndex: i })}
+                          className={`py-2 rounded-xl font-bold text-xs border transition truncate ${match.serverPlayerIndex === i ? "bg-emerald-500/20 border-emerald-500 text-emerald-400" : "bg-slate-800 border-slate-700 text-slate-400"}`}
+                        >{pName} serves first</button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest pt-1">
+                    First Receiver <span className="normal-case text-slate-600">(BWF 9.4)</span>
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {([0, 1] as const).map(i => {
+                      const receivingTeam = match.serverTeam === 1 ? match.t2 : match.t1;
+                      const pName = i === 0
+                        ? (receivingTeam.p1Id ? getName(receivingTeam.p1Id).split(" ")[0] : "P1")
+                        : (receivingTeam.p2Id ? getName(receivingTeam.p2Id).split(" ")[0] : "P2");
+                      if (i === 1 && !receivingTeam.p2Id) return null;
+                      return (
+                        <button key={i}
+                          onClick={() => setMatch({ ...match, receiverPlayerIndex: i })}
+                          className={`py-2 rounded-xl font-bold text-xs border transition truncate ${match.receiverPlayerIndex === i ? "bg-amber-500/20 border-amber-500 text-amber-400" : "bg-slate-800 border-slate-700 text-slate-400"}`}
+                        >{pName} receives</button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </div>
-            {(match.t1.p2Id || match.t2.p2Id) && (
-              <>
-                <div className="flex gap-2 mb-3">
-                  {([0, 1] as const).map(i => {
-                    const servingTeam = match.serverTeam === 1 ? match.t1 : match.t2;
-                    const pName = i === 0 
-                      ? (servingTeam.p1Id ? getName(servingTeam.p1Id).split(" ")[0] : "P1") 
-                      : (servingTeam.p2Id ? getName(servingTeam.p2Id).split(" ")[0] : "P2");
-                    
-                    if (i === 1 && !servingTeam.p2Id) return null;
+          )}
 
-                    return (
-                      <button key={i}
-                        onClick={() => setMatch({ ...match, serverPlayerIndex: i })}
-                        className={`flex-1 py-2 rounded-lg font-bold text-xs border truncate ${match.serverPlayerIndex === i ? "bg-emerald-500/20 border-emerald-500 text-emerald-400" : "bg-slate-800 border-slate-700 text-slate-400"}`}
-                      >{pName} Serves First</button>
-                    );
-                  })}
-                </div>
-                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
-                  First Receiver <span className="text-slate-600 normal-case">(BWF Law 9.4 — receiving side chooses)</span>
-                </label>
-                <div className="flex gap-2">
-                  {([0, 1] as const).map(i => {
-                    const receivingTeam = match.serverTeam === 1 ? match.t2 : match.t1;
-                    const pName = i === 0 
-                      ? (receivingTeam.p1Id ? getName(receivingTeam.p1Id).split(" ")[0] : "P1") 
-                      : (receivingTeam.p2Id ? getName(receivingTeam.p2Id).split(" ")[0] : "P2");
-                    
-                    if (i === 1 && !receivingTeam.p2Id) return null;
+          {/* ── Buddy gate ── */}
+          {!isEditSetupOpen && !buddyCheckPassed && selectedPlayerIds.length > 0 && (
+            <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-sm">
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>
+                You must be a <strong>buddy</strong> of at least one player to umpire a friendly match.
+                Add them as a buddy from their player profile first.
+              </span>
+            </div>
+          )}
 
-                    return (
-                      <button key={i}
-                        onClick={() => setMatch({ ...match, receiverPlayerIndex: i })}
-                        className={`flex-1 py-2 rounded-lg font-bold text-xs border truncate ${match.receiverPlayerIndex === i ? "bg-amber-500/20 border-amber-500 text-amber-400" : "bg-slate-800 border-slate-700 text-slate-400"}`}
-                      >{pName} Receives</button>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-          </div>
-
-          <button onClick={() => {
-            if (isEditSetupOpen) {
-              setIsEditSetupOpen(false);
-              updateMatch({
-                inferredCategory: match.customCategory || deduceCategory(),
-                t1: { ...match.t1, p1Name: getName(match.t1.p1Id), p2Name: match.t1.p2Id ? getName(match.t1.p2Id) : undefined },
-                t2: { ...match.t2, p1Name: getName(match.t2.p1Id), p2Name: match.t2.p2Id ? getName(match.t2.p2Id) : undefined }
-              });
-            } else {
-              startMatch();
-            }
-          }} className="w-full py-4 mt-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black uppercase tracking-widest shadow-[0_0_20px_rgba(16,185,129,0.3)] transition">
-            {isEditSetupOpen ? "Save Changes" : (match.pointLog.length > 0 ? "Resume Broadcasting" : "Start Broadcasting")}
+          {/* ── Start button ── */}
+          <button
+            disabled={!isEditSetupOpen && !buddyCheckPassed && selectedPlayerIds.length > 0}
+            onClick={() => {
+              if (isEditSetupOpen) {
+                setIsEditSetupOpen(false);
+                updateMatch({
+                  inferredCategory: match.customCategory || deduceCategory(),
+                  t1: { ...match.t1, p1Name: getName(match.t1.p1Id), p2Name: match.t1.p2Id ? getName(match.t1.p2Id) : undefined },
+                  t2: { ...match.t2, p1Name: getName(match.t2.p1Id), p2Name: match.t2.p2Id ? getName(match.t2.p2Id) : undefined },
+                });
+              } else {
+                startMatch();
+              }
+            }}
+            className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-2xl font-black uppercase tracking-widest shadow-[0_4px_24px_rgba(16,185,129,0.35)] transition-all"
+          >
+            {isEditSetupOpen ? "Save Changes" : (match.pointLog.length > 0 ? "▶ Resume Broadcasting" : "▶ Start Broadcasting")}
           </button>
         </div>
       </div>
@@ -1226,7 +1345,7 @@ export function UmpireEngine({
 
   // ── PLAYING / FINISHED SCREEN ──────────────────────────────────────────────
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-4xl p-4 sm:p-8 text-white max-w-4xl mx-auto shadow-2xl relative overflow-hidden">
+    <div className="bg-slate-900 border border-slate-800 rounded-4xl p-4 sm:p-8 text-white max-w-4xl lg:max-w-5xl mx-auto shadow-2xl relative overflow-hidden">
       <div className="absolute top-0 inset-x-0 h-1.5 bg-linear-to-r from-emerald-500 to-sky-500" />
       {renderSetupOverlay()}
       {/* ── Change Ends Overlay ── */}
@@ -1355,24 +1474,52 @@ export function UmpireEngine({
       )}
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <div className="flex items-center gap-2 text-emerald-400 font-black uppercase tracking-widest text-sm mb-1">
-            <Activity className="w-5 h-5 animate-pulse" /> Live Umpire
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5 text-emerald-400 font-black uppercase tracking-widest text-xs mb-0.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Live Umpire
           </div>
-          <div className="text-slate-400 text-xs font-bold">
+          <div className="text-slate-400 text-[11px] font-bold truncate">
             {match.isFriendly ? "Friendly" : `Tournament • ${match.matchNumber || "—"}`} • {match.inferredCategory || match.category} • BO{match.bestOfSets} ({match.pointsToWin}pts) • Game {currentGameNum}
           </div>
         </div>
-        <div className="flex flex-wrap gap-2 justify-end">
-          {match.status === "playing" && (
+        <div className="relative shrink-0">
+          <button
+            onClick={() => setShowToolsMenu(v => !v)}
+            className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl flex items-center gap-1.5 border border-slate-700"
+          >
+            <Settings className="w-4 h-4" /> Tools
+            {showToolsMenu ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
+          {showToolsMenu && (
             <>
-              <button onClick={() => updateMatch({ endsSwapped: !match.endsSwapped })} className="px-3 py-1.5 bg-slate-800 text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-700">Swap Ends</button>
-              <button onClick={() => setIsDirectScoreOpen(true)} className="px-3 py-1.5 bg-slate-800 text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-700">Direct Score</button>
-              <button onClick={() => setIsEditSetupOpen(true)} className="px-3 py-1.5 bg-slate-800 text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-700">Edit Setup</button>
+              <div className="fixed inset-0 z-40" onClick={() => setShowToolsMenu(false)} />
+              <div className="absolute right-0 mt-2 w-48 bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl z-50 overflow-hidden py-1">
+                {match.status === "playing" && (
+                  <>
+                    <button onClick={() => { updateMatch({ endsSwapped: !match.endsSwapped }); setShowToolsMenu(false); }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-bold text-slate-200 hover:bg-slate-700 transition">
+                      <ArrowLeftRight className="w-4 h-4 text-slate-400" /> Swap Ends
+                    </button>
+                    {match.t1.p2Id && (
+                      <button onClick={() => { updateMatch({ serverPlayerIndex: match.serverPlayerIndex === 0 ? 1 : 0 }); setShowToolsMenu(false); }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-bold text-slate-200 hover:bg-slate-700 transition">
+                        <Repeat className="w-4 h-4 text-slate-400" /> Switch Server
+                      </button>
+                    )}
+                    <button onClick={() => { setIsDirectScoreOpen(true); setShowToolsMenu(false); }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-bold text-slate-200 hover:bg-slate-700 transition">
+                      <Flag className="w-4 h-4 text-slate-400" /> Direct Score
+                    </button>
+                    <button onClick={() => { setIsEditSetupOpen(true); setShowToolsMenu(false); }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-bold text-slate-200 hover:bg-slate-700 transition">
+                      <Settings className="w-4 h-4 text-slate-400" /> Edit Setup
+                    </button>
+                    <div className="h-px bg-slate-700 my-1" />
+                  </>
+                )}
+                <button onClick={() => { handleClose(); setShowToolsMenu(false); }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-bold text-rose-400 hover:bg-rose-500/10 transition">
+                  <X className="w-4 h-4" /> Abort Match
+                </button>
+              </div>
             </>
           )}
-          <button onClick={handleClose} className="px-3 py-1.5 bg-rose-500/20 text-rose-400 font-bold text-xs rounded-xl hover:bg-rose-500/30">Abort</button>
         </div>
       </div>
 
@@ -1398,36 +1545,107 @@ export function UmpireEngine({
             Wait, add a set / resume match
           </button>
         </div>
+      ) : breakSecondsLeft !== null ? (
+        /* ── Break Timer (full-focus) ── */
+        <div className="flex flex-col items-center justify-center py-12 gap-4">
+          <Timer className="w-12 h-12 text-amber-400 animate-pulse" />
+          <div className="text-8xl font-black tabular-nums text-amber-400 drop-shadow-[0_0_20px_rgba(251,191,36,0.4)]">
+            {Math.floor(breakSecondsLeft / 60).toString().padStart(2, "0")}:{(breakSecondsLeft % 60).toString().padStart(2, "0")}
+          </div>
+          {breakLabel && <p className="text-slate-400 font-bold text-xs uppercase tracking-widest text-center max-w-xs">{breakLabel}</p>}
+          <button onClick={endBreak} className="px-8 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-2xl font-bold text-sm">End Break</button>
+        </div>
       ) : (
         <>
-          {/* ── Break Timer ── */}
-          {breakSecondsLeft !== null ? (
-            <div className="flex flex-col items-center justify-center py-8 gap-4">
-              <Timer className="w-10 h-10 text-amber-400 animate-pulse" />
-              <div className="text-7xl font-black tabular-nums text-amber-400">
-                {Math.floor(breakSecondsLeft / 60).toString().padStart(2, "0")}:{(breakSecondsLeft % 60).toString().padStart(2, "0")}
-              </div>
-              {breakLabel && <p className="text-slate-400 font-bold text-xs uppercase tracking-widest text-center max-w-xs">{breakLabel}</p>}
-              <button onClick={endBreak} className="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold text-sm">End Break</button>
-            </div>
-          ) : (
-            <div className="flex gap-2 justify-center mb-5 flex-wrap">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest self-center">Break:</span>
-              {[["30s", 30, "Short Break"], ["1 min", 60, "1-min Interval"], ["90s", 90, "Set 1→2 Interval"], ["2 min", 120, "Set 2→3 Interval"]] .map(([label, secs, lbl]) => (
-                <button key={label as string} onClick={() => startBreak(secs as number, lbl as string)}
-                  className={`px-3 py-1.5 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 ${
-                    label === "1 min" 
-                      ? "bg-amber-500/20 border border-amber-500/50 text-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.2)]" 
-                      : "bg-slate-800 hover:bg-amber-500/20 border border-slate-700 hover:border-amber-500/50 text-slate-300 hover:text-amber-300"
-                  }`}>
-                  <Timer className="w-3 h-3" />{label as string}
-                </button>
-              ))}
-            </div>
-          )}
+          {/* ── Score Cards (HERO — tap card to add a point) ── */}
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-4 md:gap-6">
+            {([1, 2] as const).map((team) => {
+              const t = team === 1 ? match.t1 : match.t2;
+              const isServing = match.serverTeam === team;
+              const scoreColor = team === 1 ? "text-emerald-300" : "text-sky-300";
+              const servingText = team === 1 ? "text-emerald-400" : "text-sky-400";
+              const servingDot = team === 1 ? "bg-emerald-400" : "bg-sky-400";
+              const order = team === 1 ? (match.endsSwapped ? 2 : 1) : (match.endsSwapped ? 1 : 2);
+              return (
+                <div
+                  key={team}
+                  onClick={() => addPoint(team)}
+                  style={{ order }}
+                  className={`relative cursor-pointer select-none active:scale-[0.97] rounded-3xl border-2 p-3 sm:p-5 md:p-7 flex flex-col items-center transition-all ${
+                    isServing
+                      ? team === 1
+                        ? "bg-emerald-500/10 border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.25)]"
+                        : "bg-sky-500/10 border-sky-500 shadow-[0_0_30px_rgba(14,165,233,0.25)]"
+                      : "bg-slate-800/40 border-slate-700/70"
+                  }`}
+                >
+                  {/* Minus (corner) */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); deductPoint(team); }}
+                    className="absolute top-2 left-2 w-9 h-9 rounded-xl bg-slate-900/70 hover:bg-slate-700 flex items-center justify-center border border-slate-700 z-10"
+                    aria-label="Deduct point"
+                  >
+                    <Minus className="w-4 h-4 text-slate-400" />
+                  </button>
+
+                  {/* Names */}
+                  <div className="text-center px-7 w-full">
+                    <h3 className="text-sm sm:text-lg md:text-2xl font-black truncate leading-tight">
+                      {t.p1Name}{cardBadge(team === 1 ? "t1p1" : "t2p1")}
+                    </h3>
+                    {t.p2Name && (
+                      <h3 className="text-sm sm:text-lg md:text-2xl font-black truncate leading-tight">
+                        {t.p2Name}{cardBadge(team === 1 ? "t1p2" : "t2p2")}
+                      </h3>
+                    )}
+                  </div>
+
+                  {/* S / R indicator */}
+                  <div className="h-4 md:h-5 mt-0.5 mb-1 flex items-center justify-center">
+                    {isServing ? (
+                      <span className={`flex items-center gap-1 ${servingText} text-[11px] md:text-sm font-black uppercase tracking-wide`}>
+                        <span className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${servingDot} animate-pulse`} /> S · Serving
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-amber-400 text-[11px] md:text-sm font-black uppercase tracking-wide">
+                        <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-amber-400" /> R · Receiving
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Score */}
+                  <div className={`text-[4.5rem] sm:text-[7rem] md:text-[9rem] leading-none font-black tracking-tighter tabular-nums drop-shadow-md ${scoreColor}`}>
+                    {t.score}
+                  </div>
+
+                  {/* Games won */}
+                  <div className="mt-2 flex justify-center gap-1.5">
+                    {Array.from({ length: Math.ceil(match.bestOfSets / 2) }).map((_, i) => (
+                      <div key={i} className={`w-3 h-3 rounded-full ${i < t.games ? "bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.5)]" : "bg-slate-700"}`} />
+                    ))}
+                  </div>
+
+                  {/* Tap hint */}
+                  <div className="mt-1.5 text-[9px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-1">
+                    <Plus className="w-2.5 h-2.5" /> Tap to score
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* ── Score Announcement (server-first, BWF style) ── */}
+          <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 mt-4 text-[11px] font-black uppercase tracking-widest">
+            <span className="text-emerald-400">{serverName}</span>
+            <span className="text-emerald-400 text-base tabular-nums">{serverScore}</span>
+            <span className="text-slate-600">—</span>
+            <span className="text-slate-300 text-base tabular-nums">{receiverScore}</span>
+            <span className="text-slate-500">{receiverName}</span>
+            <span className="text-[10px] font-bold text-slate-600 ml-1">({match.setsHistory.length > 0 ? match.setsHistory.join(", ") + " | " : ""}G{currentGameNum})</span>
+          </div>
 
           {/* ── Court Visual ── */}
-          <div className="flex justify-center mb-4" style={breakSecondsLeft !== null ? { opacity: 0.3 } : {}}>
+          <div className="flex justify-center mt-3">
             <CourtVisual
               serverTeam={match.serverTeam}
               serverPlayerIndex={match.serverPlayerIndex}
@@ -1440,115 +1658,48 @@ export function UmpireEngine({
               t2Score={match.t2.score}
               isDoubles={!!match.t1.p2Id}
               endsSwapped={match.endsSwapped}
-              onSwitchServer={() => updateMatch({ serverPlayerIndex: match.serverPlayerIndex === 0 ? 1 : 0 })}
             />
           </div>
 
-          {/* ── Score Announcement (server-first, BWF style) ── */}
-          <div className="flex items-center justify-center gap-3 mb-5 text-xs font-black uppercase tracking-widest" style={breakSecondsLeft !== null ? { opacity: 0.3 } : {}}>
-            <span className="text-emerald-400">{serverName}</span>
-            <span className="text-emerald-400 text-lg tabular-nums">{serverScore}</span>
-            <span className="text-slate-600">—</span>
-            <span className="text-slate-300 text-lg tabular-nums">{receiverScore}</span>
-            <span className="text-slate-500">{receiverName}</span>
-            <span className="text-[10px] font-bold text-slate-600 ml-1">({match.setsHistory.length > 0 ? match.setsHistory.join(", ") + " | " : ""}Game {currentGameNum})</span>
-          </div>
-
-          {/* ── Score Cards ── */}
-          <div className="flex flex-col md:flex-row justify-center items-center gap-6 w-full" style={breakSecondsLeft !== null ? { opacity: 0.3, pointerEvents: "none" } : {}}>
-            {/* Team 1 */}
-            <div className={`p-6 rounded-3xl border-2 transition-all flex-1 w-full max-w-[400px] ${match.serverTeam === 1 ? "bg-emerald-900/20 border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.15)]" : "bg-slate-800/50 border-slate-700/50"}`} style={{ order: match.endsSwapped ? 3 : 1 }}>
-              <div className="text-center mb-4">
-                <h3 className="text-xl font-bold truncate">
-                  {match.t1.p1Name}{cardBadge("t1p1")}
-                </h3>
-                {match.t1.p2Name && (
-                  <h3 className="text-xl font-bold truncate">
-                    {match.t1.p2Name}{cardBadge("t1p2")}
-                  </h3>
-                )}
-                <div className="text-emerald-400 font-black text-sm mt-1 flex items-center justify-center gap-1 min-h-4.5">
-                  {match.serverTeam === 1 && <><div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Serving</>}
-                </div>
-              </div>
-              <div className="flex justify-center mb-4">
-                <div className="text-[7rem] leading-none font-black tracking-tighter tabular-nums drop-shadow-md">{match.t1.score}</div>
-              </div>
-              <div className="flex justify-center gap-3">
-                <button onClick={() => deductPoint(1)} className="w-14 h-14 rounded-2xl bg-slate-800 hover:bg-slate-700 flex items-center justify-center border border-slate-700">
-                  <Minus className="w-6 h-6 text-slate-400" />
-                </button>
-                <button onClick={() => addPoint(1)} className="w-24 h-14 rounded-2xl bg-emerald-500 hover:bg-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                  <Plus className="w-8 h-8 text-emerald-950" />
-                </button>
-              </div>
-              <div className="mt-5 flex justify-center gap-2">
-                {Array.from({ length: Math.ceil(match.bestOfSets / 2) }).map((_, i) => (
-                  <div key={i} className={`w-4 h-4 rounded-full ${i < match.t1.games ? "bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.5)]" : "bg-slate-700"}`} />
-                ))}
-              </div>
-            </div>
-
-            <div className="text-4xl font-black italic text-slate-700 text-center py-4" style={{ order: 2 }}>VS</div>
-
-            {/* Team 2 */}
-            <div className={`p-6 rounded-3xl border-2 transition-all flex-1 w-full max-w-[400px] ${match.serverTeam === 2 ? "bg-emerald-900/20 border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.15)]" : "bg-slate-800/50 border-slate-700/50"}`} style={{ order: match.endsSwapped ? 1 : 3 }}>
-              <div className="text-center mb-4">
-                <h3 className="text-xl font-bold truncate">
-                  {match.t2.p1Name}{cardBadge("t2p1")}
-                </h3>
-                {match.t2.p2Name && (
-                  <h3 className="text-xl font-bold truncate">
-                    {match.t2.p2Name}{cardBadge("t2p2")}
-                  </h3>
-                )}
-                <div className="text-emerald-400 font-black text-sm mt-1 flex items-center justify-center gap-1 min-h-4.5">
-                  {match.serverTeam === 2 && <><div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Serving</>}
-                </div>
-              </div>
-              <div className="flex justify-center mb-4">
-                <div className="text-[7rem] leading-none font-black tracking-tighter tabular-nums drop-shadow-md">{match.t2.score}</div>
-              </div>
-              <div className="flex justify-center gap-3">
-                <button onClick={() => deductPoint(2)} className="w-14 h-14 rounded-2xl bg-slate-800 hover:bg-slate-700 flex items-center justify-center border border-slate-700">
-                  <Minus className="w-6 h-6 text-slate-400" />
-                </button>
-                <button onClick={() => addPoint(2)} className="w-24 h-14 rounded-2xl bg-emerald-500 hover:bg-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                  <Plus className="w-8 h-8 text-emerald-950" />
-                </button>
-              </div>
-              <div className="mt-5 flex justify-center gap-2">
-                {Array.from({ length: Math.ceil(match.bestOfSets / 2) }).map((_, i) => (
-                  <div key={i} className={`w-4 h-4 rounded-full ${i < match.t2.games ? "bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.5)]" : "bg-slate-700"}`} />
-                ))}
-              </div>
-            </div>
+          {/* ── Break shortcuts ── */}
+          <div className="flex gap-2 justify-center mt-5 flex-wrap">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest self-center">Break:</span>
+            {[["30s", 30, "Short Break"], ["1 min", 60, "1-min Interval"], ["90s", 90, "Set 1→2 Interval"], ["2 min", 120, "Set 2→3 Interval"]].map(([label, secs, lbl]) => (
+              <button key={label as string} onClick={() => startBreak(secs as number, lbl as string)}
+                className={`px-2.5 py-1.5 font-bold text-xs rounded-xl transition-all flex items-center gap-1 ${
+                  label === "1 min"
+                    ? "bg-amber-500/20 border border-amber-500/50 text-amber-300"
+                    : "bg-slate-800 hover:bg-amber-500/20 border border-slate-700 hover:border-amber-500/50 text-slate-300 hover:text-amber-300"
+                }`}>
+                <Timer className="w-3 h-3" />{label as string}
+              </button>
+            ))}
           </div>
 
           {/* ── Action Bar ── */}
-          <div className="mt-6 flex flex-wrap justify-center gap-2" style={breakSecondsLeft !== null ? { opacity: 0.3, pointerEvents: "none" } : {}}>
+          <div className="mt-3 flex flex-wrap justify-center gap-2">
             <button onClick={forceEndSet}
-              className="px-4 py-2.5 bg-slate-800 hover:bg-emerald-500/20 border border-slate-700 hover:border-emerald-500/50 text-slate-300 hover:text-emerald-300 font-bold text-xs rounded-xl transition flex items-center gap-1.5">
+              className="px-3.5 py-2 bg-slate-800 hover:bg-emerald-500/20 border border-slate-700 hover:border-emerald-500/50 text-slate-300 hover:text-emerald-300 font-bold text-xs rounded-xl transition flex items-center gap-1.5">
               <Plus className="w-4 h-4" /> Add Set
             </button>
             <button onClick={callLet}
-              className="px-4 py-2.5 bg-slate-800 hover:bg-blue-500/20 border border-slate-700 hover:border-blue-500/50 text-slate-300 hover:text-blue-300 font-bold text-xs rounded-xl transition flex items-center gap-1.5">
+              className="px-3.5 py-2 bg-slate-800 hover:bg-blue-500/20 border border-slate-700 hover:border-blue-500/50 text-slate-300 hover:text-blue-300 font-bold text-xs rounded-xl transition flex items-center gap-1.5">
               ↩ Let
             </button>
             <button onClick={() => callServiceFault(match.serverTeam)}
-              className="px-4 py-2.5 bg-slate-800 hover:bg-orange-500/20 border border-slate-700 hover:border-orange-500/50 text-slate-300 hover:text-orange-300 font-bold text-xs rounded-xl transition flex items-center gap-1.5">
+              className="px-3.5 py-2 bg-slate-800 hover:bg-orange-500/20 border border-slate-700 hover:border-orange-500/50 text-slate-300 hover:text-orange-300 font-bold text-xs rounded-xl transition flex items-center gap-1.5">
               ✗ Service Fault
             </button>
             <button onClick={() => { setShowCardPanel(true); setCardTarget(null); }}
-              className="px-4 py-2.5 bg-slate-800 hover:bg-yellow-500/20 border border-slate-700 hover:border-yellow-500/50 text-slate-300 hover:text-yellow-300 font-bold text-xs rounded-xl transition flex items-center gap-1.5">
+              className="px-3.5 py-2 bg-slate-800 hover:bg-yellow-500/20 border border-slate-700 hover:border-yellow-500/50 text-slate-300 hover:text-yellow-300 font-bold text-xs rounded-xl transition flex items-center gap-1.5">
               <Flag className="w-3.5 h-3.5" /> Cards
             </button>
             <button onClick={() => setShowRetireModal(true)}
-              className="px-4 py-2.5 bg-slate-800 hover:bg-rose-500/20 border border-slate-700 hover:border-rose-500/50 text-slate-300 hover:text-rose-300 font-bold text-xs rounded-xl transition flex items-center gap-1.5">
+              className="px-3.5 py-2 bg-slate-800 hover:bg-rose-500/20 border border-slate-700 hover:border-rose-500/50 text-slate-300 hover:text-rose-300 font-bold text-xs rounded-xl transition flex items-center gap-1.5">
               <AlertTriangle className="w-3.5 h-3.5" /> Retire
             </button>
             <button onClick={() => setShowLog(!showLog)}
-              className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-bold text-xs rounded-xl transition flex items-center gap-1.5">
+              className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-bold text-xs rounded-xl transition flex items-center gap-1.5">
               <BookOpen className="w-3.5 h-3.5" /> Log ({match.pointLog.length})
               {showLog ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
             </button>
@@ -1571,28 +1722,28 @@ export function UmpireEngine({
                     <th className="px-4 py-2 border-b border-slate-700 bg-slate-800/50"></th>
                     <th className="px-4 py-2 border-b border-slate-700 bg-slate-800/50">
                       <div className="flex flex-col items-center gap-1.5">
-                        <img src={players.find(p => p.id === match.t1.p1Id)?.avatar_url || ""} className="w-8 h-8 rounded-full object-cover shadow-sm bg-slate-700" />
+                        <img src={players.find(p => p.id === match.t1.p1Id)?.avatar_url || undefined} className="w-8 h-8 rounded-full object-cover shadow-sm bg-slate-700" />
                         <span>{match.t1.p1Name}</span>
                       </div>
                     </th>
                     {match.t1.p2Id && (
                       <th className="px-4 py-2 border-b border-slate-700 bg-slate-800/50">
                         <div className="flex flex-col items-center gap-1.5">
-                          <img src={players.find(p => p.id === match.t1.p2Id)?.avatar_url || ""} className="w-8 h-8 rounded-full object-cover shadow-sm bg-slate-700" />
+                          <img src={players.find(p => p.id === match.t1.p2Id)?.avatar_url || undefined} className="w-8 h-8 rounded-full object-cover shadow-sm bg-slate-700" />
                           <span>{match.t1.p2Name}</span>
                         </div>
                       </th>
                     )}
                     <th className="px-4 py-2 border-b border-slate-700 bg-slate-800/50">
                       <div className="flex flex-col items-center gap-1.5">
-                        <img src={players.find(p => p.id === match.t2.p1Id)?.avatar_url || ""} className="w-8 h-8 rounded-full object-cover shadow-sm bg-slate-700" />
+                        <img src={players.find(p => p.id === match.t2.p1Id)?.avatar_url || undefined} className="w-8 h-8 rounded-full object-cover shadow-sm bg-slate-700" />
                         <span>{match.t2.p1Name}</span>
                       </div>
                     </th>
                     {match.t2.p2Id && (
                       <th className="px-4 py-2 border-b border-slate-700 bg-slate-800/50">
                         <div className="flex flex-col items-center gap-1.5">
-                          <img src={players.find(p => p.id === match.t2.p2Id)?.avatar_url || ""} className="w-8 h-8 rounded-full object-cover shadow-sm bg-slate-700" />
+                          <img src={players.find(p => p.id === match.t2.p2Id)?.avatar_url || undefined} className="w-8 h-8 rounded-full object-cover shadow-sm bg-slate-700" />
                           <span>{match.t2.p2Name}</span>
                         </div>
                       </th>

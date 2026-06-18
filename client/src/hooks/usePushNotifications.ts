@@ -94,12 +94,29 @@ export function usePushNotifications(userId: string | undefined) {
           "pushNotificationActionPerformed",
           (notification) => {
             console.log("Push action performed: " + JSON.stringify(notification));
-            const data =
-              notification.notification.data || (notification as any).data;
-            const matchId = data?.matchId;
+            const data = notification.notification.data || (notification as any).data;
+            const baseUrl = (import.meta.env.BASE_URL || "/").replace(/\/$/, "");
 
-            if (userId) {
-              window.location.href = `${import.meta.env.BASE_URL || "/"}matches${matchId ? `?highlight=${matchId}` : ""}`;
+            if (userId && data) {
+              const type = data.type;
+              const action = data.action;
+              const matchId = data.matchId || data.match_id;
+
+              if (type === "player_profile" && data.player_id) {
+                window.location.href = `${baseUrl}/player/${data.player_id}`;
+              } else if (action === "view_match" || type === "match_confirmation") {
+                window.location.href = `${baseUrl}/feed/my-matches${matchId ? `?highlight=${matchId}` : ""}`;
+              } else if (type === "kudos") {
+                window.location.href = `${baseUrl}/feed/activity${matchId ? `?highlight=${matchId}` : ""}`;
+              } else if (type === "challenge_expiry" || data.tab === "challenges") {
+                window.location.href = `${baseUrl}/feed/challenges`;
+              } else if (action === "view_announcements") {
+                window.location.href = `${baseUrl}/feed/announcements`;
+              } else if (matchId) {
+                window.location.href = `${baseUrl}/feed/my-matches?highlight=${matchId}`;
+              } else {
+                window.location.href = `${baseUrl}/feed`;
+              }
             }
           },
         );

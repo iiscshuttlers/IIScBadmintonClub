@@ -68,16 +68,7 @@ export function AppUpdatePrompt({ updateInfo, onDismiss }: Props) {
                   is now available.
                 </p>
 
-                {updateInfo.changelog && (
-                  <div className="mt-3 bg-slate-800/60 rounded-xl p-3 max-h-32 overflow-y-auto">
-                    <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
-                      What's new
-                    </p>
-                    <p className="text-slate-300 text-xs whitespace-pre-line leading-relaxed">
-                      {updateInfo.changelog}
-                    </p>
-                  </div>
-                )}
+
 
                 <div className="flex gap-3 mt-4">
                   <button
