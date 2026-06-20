@@ -1,5 +1,18 @@
 [
   {
+    "versionCode": 147,
+    "versionName": "1.147",
+    "date": "2026-06-20T16:36:58.589Z",
+    "changes": [
+      "- chore: release v1.146 (build 146)",
+      "- chore: release v1.146 (build 146)",
+      "- chore: release v1.145 (build 145)",
+      "- chore: release v1.144 (build 144)",
+      "- updates",
+      "- chore: release v1.143 (build 143)"
+    ]
+  },
+  {
     "versionCode": 146,
     "versionName": "1.146",
     "date": "2026-06-20T14:54:39.944Z",
