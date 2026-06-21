@@ -1,18 +1,18 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { UmpireEngine } from "./UmpireEngine";
-import { Play, Tv2, Activity, AlertTriangle } from "lucide-react";
+import { UmpireEngine, BwfMatchState, MatchEditState } from "./UmpireEngine";
+import { Play, Tv2, AlertTriangle } from "lucide-react";
 import { fetchSiteData } from "@/lib/siteData";
 
 export function UmpireTab() {
   const { session, isUmpire } = useAuth();
   const [isUmpiring, setIsUmpiring] = useState(false);
-  const [myLiveMatch, setMyLiveMatch] = useState<any>(null);
+  const [myLiveMatch, setMyLiveMatch] = useState<BwfMatchState | MatchEditState | null>(null);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   // Admin "take over" of another umpire's broadcast (key = original umpire's id)
   const [takeoverKey, setTakeoverKey] = useState<string | null>(null);
-  const [takeoverMatch, setTakeoverMatch] = useState<any>(null);
+  const [takeoverMatch, setTakeoverMatch] = useState<BwfMatchState | null>(null);
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -25,7 +25,7 @@ export function UmpireTab() {
       .eq("key", "live_matches")
       .single()
       .then(({ data }) => {
-        const m = data?.value?.[key];
+        const m = data?.value?.[key] as BwfMatchState | undefined;
         if (m && m.status && m.status !== "setup") {
           setTakeoverKey(key);
           setTakeoverMatch(m);
@@ -43,11 +43,11 @@ export function UmpireTab() {
       .single()
       .then(({ data }) => {
         if (data?.value && data.value[session.user.id]) {
-          setMyLiveMatch(data.value[session.user.id]);
+          setMyLiveMatch(data.value[session.user.id] as BwfMatchState);
         }
       });
 
-    fetchSiteData<any>("club_settings", "settings.json").then(data => {
+    fetchSiteData<{ maintenanceMode?: boolean }>("club_settings", "settings.json").then(data => {
       if (data?.maintenanceMode) {
         setMaintenanceMode(true);
       }
@@ -64,8 +64,9 @@ export function UmpireTab() {
           filter: "key=eq.live_matches",
         },
         (payload) => {
-          if (payload.new && (payload.new as any).value) {
-            setMyLiveMatch((payload.new as any).value[session.user.id] || null);
+          const newValue = (payload.new as any)?.value;
+          if (newValue) {
+            setMyLiveMatch((newValue[session.user.id] as BwfMatchState) || null);
           }
         },
       )
@@ -157,9 +158,28 @@ export function UmpireTab() {
   );
 }
 
-function RecentUmpireMatches({ onEdit }: { onEdit: (m: any) => void }) {
+type RecentMatch = {
+  id: string;
+  player1_id: string | null;
+  player2_id: string | null;
+  team1_partner_id: string | null;
+  team2_partner_id: string | null;
+  winner_id: string | null;
+  score: string;
+  sets_history: string[] | null;
+  round: string;
+  is_friendly: boolean | null;
+  category: string;
+  created_at: string;
+  player1: { full_name: string } | null;
+  player2: { full_name: string } | null;
+  partner1: { full_name: string } | null;
+  partner2: { full_name: string } | null;
+};
+
+function RecentUmpireMatches({ onEdit }: { onEdit: (m: MatchEditState) => void }) {
   const { profile, isAdmin } = useAuth();
-  const [recent, setRecent] = useState<any[]>([]);
+  const [recent, setRecent] = useState<RecentMatch[]>([]);
 
   useEffect(() => {
     if (!profile?.id) return;
@@ -194,10 +214,10 @@ function RecentUmpireMatches({ onEdit }: { onEdit: (m: any) => void }) {
               <p className="text-slate-300 font-bold text-sm">
                 {m.player1?.full_name} vs {m.player2?.full_name}
               </p>
-              <p className="text-emerald-400 font-bold text-xs">{m.score || m.match_score}</p>
+              <p className="text-emerald-400 font-bold text-xs">{m.score}</p>
             </div>
             <button 
-              onClick={() => onEdit({ ...m, is_edit_mode: true })}
+              onClick={() => onEdit({ ...m, is_edit_mode: true } as MatchEditState)}
               className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold rounded-lg transition-colors shrink-0"
             >
               Edit Score

@@ -2,8 +2,11 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { Trophy, Swords, Sparkles, TrendingUp, Heart, Share2, Video, Edit2, BarChart2 } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
 import { EditVideoModal } from "./EditVideoModal";
 import { MatchScorecardModal } from "./MatchScorecardModal";
+
+const isApp = Capacitor.isNativePlatform();
 
 interface MatchCardProps {
   match: any;
@@ -36,7 +39,7 @@ export function MatchCard({
 }: MatchCardProps) {
   const p1 = match.player1;
   const p2 = match.player2;
-  const isP1Winner = match.winner_id === p1?.id;
+  const isP1Winner = match.winner_id === p1?.id || match.winner_id === match.partner1?.id;
 
   const [currentVideoUrl, setCurrentVideoUrl] = useState(match.video_url || null);
   const [isEditVideoOpen, setIsEditVideoOpen] = useState(false);
@@ -52,11 +55,134 @@ export function MatchCard({
     if (!highlightUrl) highlightUrl = parts[1];
   }
 
+  // Strip team annotation appended by umpire_submit_match (e.g. "21-15 [Mixed Doubles: ...]")
+  displayScore = displayScore.replace(/\s*\[.*$/, "").trim();
+
+  const getDisplayCategory = () => {
+    const cat = match.category || "";
+    // Already has a full label (from umpire submissions)
+    if (cat.includes("Mixed") || cat.includes("Men's") || cat.includes("Women's")) return cat;
+
+    const g1 = p1?.gender;
+    const g2 = p2?.gender;
+    const g3 = match.partner1?.gender;
+    const g4 = match.partner2?.gender;
+
+    if (cat === "Doubles" || cat === "doubles") {
+      const allMale = [g1, g3].every(g => g === "Male");
+      const allFemale = [g1, g3].every(g => g === "Female");
+      if (allMale) return "Men's Doubles";
+      if (allFemale) return "Women's Doubles";
+      if (g1 && g3) return "Mixed Doubles";
+      return "Doubles";
+    }
+    if (cat === "Singles" || cat === "singles") {
+      if (g1 === "Male" && g2 === "Male") return "Men's Singles";
+      if (g1 === "Female" && g2 === "Female") return "Women's Singles";
+      if (g1 && g2) return "Mixed Singles";
+      return "Singles";
+    }
+    return cat;
+  };
+
+  const getCategoryElo = (player: any) => {
+    if (!player) return null;
+    const label = getDisplayCategory().toLowerCase();
+    if (label.includes("mixed")) return player.mixed_elo;
+    if (label.includes("doubles")) return player.doubles_elo;
+    if (label.includes("singles")) return player.singles_elo;
+    return player.elo_rating;
+  };
+
   const isPlayerInMatch = currentUser && (
     match.player1_id === currentUser.id ||
     match.player2_id === currentUser.id ||
     match.team1_partner_id === currentUser.id ||
     match.team2_partner_id === currentUser.id
+  );
+
+  // Parse set scores from "15-21, 22-20, 19-21" into per-side points
+  const parsedSets = displayScore
+    .split(",")
+    .map((s: string) => s.trim())
+    .filter(Boolean)
+    .map((s: string) => {
+      const [a, b] = s.split("-").map((n: string) => parseInt(n.trim(), 10));
+      if (Number.isNaN(a) || Number.isNaN(b)) return null;
+      return { p1: a, p2: b };
+    })
+    .filter(Boolean) as { p1: number; p2: number }[];
+
+  const setsWonP1 = parsedSets.filter((s) => s.p1 > s.p2).length;
+  const setsWonP2 = parsedSets.filter((s) => s.p2 > s.p1).length;
+
+  const hasWinner = !!match.winner_id;
+  const team1Win = hasWinner && isP1Winner;
+  const team2Win = hasWinner && !isP1Winner;
+
+  const team1 = [
+    { player: p1, eloChange: match.elo_change_p1 },
+    ...(match.partner1 ? [{ player: match.partner1, eloChange: match.elo_change_p3 }] : []),
+  ].filter((m) => m.player);
+  const team2 = [
+    { player: p2, eloChange: match.elo_change_p2 },
+    ...(match.partner2 ? [{ player: match.partner2, eloChange: match.elo_change_p4 }] : []),
+  ].filter((m) => m.player);
+
+  // Natural-language recap of the result (only when there's a winner)
+  const winnerMembers = team1Win ? team1 : team2Win ? team2 : null;
+  const loserMembers = team1Win ? team2 : team2Win ? team1 : null;
+  const winnerSetCount = team1Win ? setsWonP1 : setsWonP2;
+  const loserSetCount = team1Win ? setsWonP2 : setsWonP1;
+  const joinNames = (members: { player: any }[]) =>
+    members.map((m) => m.player?.full_name?.split(" ")[0]).filter(Boolean).join(" & ");
+
+  // Renders a team's players as stacked avatar + name rows (singles = one row)
+  const renderTeam = (
+    members: { player: any; eloChange?: number | null }[],
+    win: boolean,
+    dim: boolean,
+    align: "left" | "right"
+  ) => (
+    <div className="flex flex-col gap-1.5">
+      {members.map(({ player, eloChange }, i) => {
+        const nameEl = (
+          <div className="flex-1 min-w-0">
+            <span className={`font-bold text-xs block group-hover/p:underline ${isApp ? "line-clamp-2 whitespace-normal leading-tight" : "truncate"} ${win ? "text-emerald-700 dark:text-emerald-400" : "text-slate-700 dark:text-slate-300"}`}>
+              {player.full_name}
+            </span>
+            {eloChange != null ? (
+              <span className={`block text-[10px] font-bold ${eloChange > 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                {eloChange > 0 ? "+" : ""}{eloChange} ELO
+              </span>
+            ) : getCategoryElo(player) ? (
+              <span className="block text-[10px] font-bold text-slate-400 dark:text-slate-500">
+                {getCategoryElo(player)} ELO
+              </span>
+            ) : null}
+          </div>
+        );
+        const avatarEl = (
+          <div className="relative shrink-0">
+            <img
+              src={player.avatar_url || ""}
+              loading="lazy"
+              className={`w-7 h-7 rounded-full object-cover shadow-sm ${win ? "ring-2 ring-emerald-500 ring-offset-1 dark:ring-offset-slate-900" : dim ? "grayscale opacity-70" : ""}`}
+            />
+            {win && (
+              <div className="absolute -bottom-1 -right-1 bg-emerald-500 text-white rounded-full p-0.5 border border-white dark:border-slate-900 shadow-sm">
+                <Trophy className="w-2 h-2" />
+              </div>
+            )}
+          </div>
+        );
+        return (
+          <Link key={i} href={`/player/${player.id}`} className="flex items-center gap-1.5 group/p">
+            {align === "right" ? (<>{nameEl}{avatarEl}</>) : (<>{avatarEl}{nameEl}</>)}
+          </Link>
+        );
+      })}
+    </div>
   );
 
   return (
@@ -103,183 +229,104 @@ export function MatchCard({
         </div>
       )}
 
-      <div className="text-center text-xs font-bold text-slate-400 dark:text-slate-500 mb-3 flex items-center justify-center gap-1 mt-2 md:mt-0">
-        <Swords className="w-3.5 h-3.5" />
-        {match.round || (match.is_friendly === false ? "Tournament Match" : "Friendly Match")}
-        {match.status === "pending" && (
-           <span className="ml-2 text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full text-[10px]">PENDING</span>
+      <div className="flex items-center justify-center gap-2 mb-3 mt-2 md:mt-0 flex-wrap">
+        <span className="flex items-center gap-1 text-xs font-bold text-slate-400 dark:text-slate-500">
+          <Swords className="w-3.5 h-3.5" />
+          {match.is_friendly === false ? "Tournament" : "Friendly"}
+        </span>
+        {match.category && (
+          <span className="text-xs font-black text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+            {getDisplayCategory()}
+          </span>
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-4">
-        {/* Player 1 (and Partner 1) */}
-        <div
-          className={`flex-1 flex flex-col sm:flex-row items-center gap-3 p-3 rounded-2xl transition-colors ${
-            isP1Winner ? "bg-emerald-50 dark:bg-emerald-900/10" : "hover:bg-slate-50 dark:hover:bg-slate-800/50"
-          }`}
-        >
-          <div className="relative flex">
-            {p1 && (
-              <Link href={`/player/${p1.id}`}>
-                <img
-                  src={p1.avatar_url || ""}
-                  loading="lazy"
-                  className={`w-12 h-12 rounded-full object-cover shadow-sm relative z-10 ${
-                    isP1Winner ? "ring-2 ring-emerald-500 ring-offset-2 dark:ring-offset-slate-900" : "grayscale opacity-80"
-                  }`}
-                />
-              </Link>
-            )}
-            {match.partner1 && (
-              <Link href={`/player/${match.partner1.id}`}>
-                <img
-                  loading="lazy"
-                  src={match.partner1.avatar_url || ""}
-                  className={`w-12 h-12 rounded-full object-cover shadow-sm -ml-4 relative z-0 ${
-                    isP1Winner ? "ring-2 ring-emerald-500 ring-offset-2 dark:ring-offset-slate-900" : "grayscale opacity-80"
-                  }`}
-                />
-              </Link>
-            )}
-            {isP1Winner && (
-              <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white rounded-full p-1 border-2 border-white dark:border-slate-900 shadow-sm z-20">
-                <Trophy className="w-3 h-3" />
-              </div>
-            )}
+      {/* Date */}
+      <div className="text-[11px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest text-center mb-3">
+        {new Date(match.created_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
+      </div>
+
+      {/* Scoreboard */}
+      <div className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 p-3">
+        {/* Teams */}
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 mb-3">
+          {renderTeam(team1, team1Win, hasWinner && !team1Win, "left")}
+          <div className="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest text-center px-1">
+            vs
           </div>
-          <div className="text-center sm:text-left">
-            <div
-              className={`font-black text-sm ${
-                isP1Winner ? "text-emerald-700 dark:text-emerald-400" : "text-slate-700 dark:text-slate-300"
-              }`}
-            >
-              {p1 && (
-                <Link href={`/player/${p1.id}`} className="hover:underline">
-                  {p1.full_name}
-                </Link>
-              )}
-              {match.partner1 && (
-                <>
-                  <br />
-                  <Link href={`/player/${match.partner1.id}`} className="hover:underline">
-                    {match.partner1.full_name}
-                  </Link>
-                </>
-              )}
-            </div>
-            {match.elo_change_p1 && (
-              <div
-                className={`text-xs font-bold ${
-                  match.elo_change_p1 > 0 ? "text-emerald-500" : "text-rose-500"
-                }`}
-              >
-                {match.elo_change_p1 > 0 ? "+" : ""}
-                {match.elo_change_p1} ELO
-              </div>
-            )}
-          </div>
+          {renderTeam(team2, team2Win, hasWinner && !team2Win, "right")}
         </div>
 
-        {/* Score */}
-        <div className="shrink-0 flex flex-col items-center">
-          <div className="flex flex-col gap-1 items-center bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner text-center min-w-[80px]">
-            {displayScore.split(",").map((setScore: string, idx: number, arr: string[]) => (
-              <div
-                key={idx}
-                className={`font-black tracking-tight text-slate-800 dark:text-slate-100 ${
-                  arr.length > 1 ? "text-lg leading-none" : "text-2xl"
-                }`}
-              >
-                {setScore.trim()}
+        {/* Sets-won headline */}
+        {parsedSets.length > 0 && (
+          <div className="text-center border-t border-slate-200 dark:border-slate-700/60 pt-4 mb-4 relative">
+            <div className="flex items-center justify-center gap-4">
+              <div className={`flex items-center relative transition-all ${team1Win ? "scale-110" : team2Win ? "opacity-60 grayscale" : ""}`}>
+                <span className={`text-4xl sm:text-5xl font-black tracking-tighter leading-none ${team1Win ? "bg-gradient-to-br from-emerald-400 to-teal-600 bg-clip-text text-transparent drop-shadow-md" : "text-slate-400 dark:text-slate-500"}`}>
+                  {setsWonP1}
+                </span>
               </div>
-            ))}
+              
+              <div className="flex flex-col items-center justify-center">
+                <span className="text-slate-300 dark:text-slate-600 text-4xl sm:text-5xl font-black tracking-tighter leading-none mx-2">–</span>
+              </div>
+
+              <div className={`flex items-center relative transition-all ${team2Win ? "scale-110" : team1Win ? "opacity-60 grayscale" : ""}`}>
+                <span className={`text-4xl sm:text-5xl font-black tracking-tighter leading-none ${team2Win ? "bg-gradient-to-br from-emerald-400 to-teal-600 bg-clip-text text-transparent drop-shadow-md" : "text-slate-400 dark:text-slate-500"}`}>
+                  {setsWonP2}
+                </span>
+              </div>
+            </div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mt-2">sets</div>
           </div>
-          <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2">
-            {new Date(match.created_at).toLocaleDateString(undefined, {
-              month: "short",
-              day: "numeric",
+        )}
+
+        {/* Set-by-set */}
+        {parsedSets.length > 0 ? (
+          <div className="space-y-2">
+            {parsedSets.map((s, i) => {
+              const p1Won = s.p1 > s.p2;
+              return (
+                <div key={i} className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                  <span className={`text-2xl text-center tabular-nums tracking-tight ${p1Won ? "font-black text-emerald-600 dark:text-emerald-400" : "font-bold text-slate-400 dark:text-slate-500"}`}>{s.p1}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-800 rounded-full px-2.5 py-0.5 border border-slate-200 dark:border-slate-700 whitespace-nowrap">Set {i + 1}</span>
+                  <span className={`text-2xl text-center tabular-nums tracking-tight ${!p1Won ? "font-black text-emerald-600 dark:text-emerald-400" : "font-bold text-slate-400 dark:text-slate-500"}`}>{s.p2}</span>
+                </div>
+              );
             })}
           </div>
-          {highlightUrl && (
+        ) : (
+          <div className="border-t border-slate-200 dark:border-slate-700/60 pt-3 text-center text-2xl font-black tracking-tight text-slate-800 dark:text-slate-100">
+            {displayScore || "—"}
+          </div>
+        )}
+
+        {/* Highlights */}
+        {highlightUrl && (
+          <div className="flex justify-center mt-3">
             <a
               href={highlightUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-2 text-[10px] font-bold bg-rose-50 dark:bg-rose-900/30 text-rose-500 px-2 py-1 rounded-full border border-rose-200 dark:border-rose-800 flex items-center gap-1 hover:scale-105 transition"
+              className="text-[10px] font-bold bg-rose-50 dark:bg-rose-900/30 text-rose-500 px-2 py-1 rounded-full border border-rose-200 dark:border-rose-800 flex items-center gap-1 hover:scale-105 transition"
             >
               <Video className="w-3 h-3" /> Highlights
             </a>
-          )}
-        </div>
-
-        {/* Player 2 (and Partner 2) */}
-        <div
-          className={`flex-1 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 p-3 rounded-2xl transition-colors ${
-            !isP1Winner ? "bg-emerald-50 dark:bg-emerald-900/10" : "hover:bg-slate-50 dark:hover:bg-slate-800/50"
-          }`}
-        >
-          <div className="text-center sm:text-right">
-            <div
-              className={`font-black text-sm ${
-                !isP1Winner ? "text-emerald-700 dark:text-emerald-400" : "text-slate-700 dark:text-slate-300"
-              }`}
-            >
-              {p2 && (
-                <Link href={`/player/${p2.id}`} className="hover:underline">
-                  {p2.full_name}
-                </Link>
-              )}
-              {match.partner2 && (
-                <>
-                  <br />
-                  <Link href={`/player/${match.partner2.id}`} className="hover:underline">
-                    {match.partner2.full_name}
-                  </Link>
-                </>
-              )}
-            </div>
-            {match.elo_change_p2 && (
-              <div
-                className={`text-xs font-bold ${
-                  match.elo_change_p2 > 0 ? "text-emerald-500" : "text-rose-500"
-                }`}
-              >
-                {match.elo_change_p2 > 0 ? "+" : ""}
-                {match.elo_change_p2} ELO
-              </div>
-            )}
           </div>
-          <div className="relative flex flex-row-reverse">
-            {p2 && (
-              <Link href={`/player/${p2.id}`}>
-                <img
-                  loading="lazy"
-                  src={p2.avatar_url || ""}
-                  className={`w-12 h-12 rounded-full object-cover shadow-sm relative z-10 ${
-                    !isP1Winner ? "ring-2 ring-emerald-500 ring-offset-2 dark:ring-offset-slate-900" : "grayscale opacity-80"
-                  }`}
-                />
-              </Link>
-            )}
-            {match.partner2 && (
-              <Link href={`/player/${match.partner2.id}`}>
-                <img
-                  loading="lazy"
-                  src={match.partner2.avatar_url || ""}
-                  className={`w-12 h-12 rounded-full object-cover shadow-sm -mr-4 relative z-0 ${
-                    !isP1Winner ? "ring-2 ring-emerald-500 ring-offset-2 dark:ring-offset-slate-900" : "grayscale opacity-80"
-                  }`}
-                />
-              </Link>
-            )}
-            {!isP1Winner && (
-              <div className="absolute -bottom-2 -left-2 sm:-left-2 sm:right-auto bg-emerald-500 text-white rounded-full p-1 border-2 border-white dark:border-slate-900 shadow-sm z-20">
-                <Trophy className="w-3 h-3" />
-              </div>
-            )}
-          </div>
-        </div>
+        )}
       </div>
+
+      {/* Result recap */}
+      {hasWinner && winnerMembers && loserMembers && (
+        <div className="text-center text-[11px] text-slate-500 dark:text-slate-400 mt-3 px-2 leading-snug">
+          <span className={isApp ? "block" : undefined}>
+            <span className="font-bold text-slate-700 dark:text-slate-200">{joinNames(winnerMembers)}</span> defeated{" "}
+            <span className="font-bold text-slate-700 dark:text-slate-200">{joinNames(loserMembers)}</span>
+          </span>{" "}
+          <span className={isApp ? "block font-bold text-slate-700 dark:text-slate-200 mt-0.5" : undefined}>{winnerSetCount}–{loserSetCount}</span>{" "}
+          {displayScore && <span className={isApp ? "block" : undefined}>({displayScore})</span>}
+        </div>
+      )}
 
       <EditVideoModal
         isOpen={isEditVideoOpen}
@@ -301,17 +348,9 @@ export function MatchCard({
 
       {/* Reaction Kudos & Edit */}
       {!hideActions && (
-      <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/50 flex justify-between items-center">
-        <div>
-          {isPlayerInMatch && (
-            <button
-              onClick={() => setIsEditVideoOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
-            >
-              <Edit2 className="w-3.5 h-3.5" />
-              {highlightUrl ? "Edit Video" : "Add Video"}
-            </button>
-          )}
+      <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/50 flex flex-col gap-2 relative z-50">
+        {/* Scorecard — centered */}
+        <div className="flex justify-center">
           <button
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsScorecardOpen(true); }}
@@ -320,36 +359,51 @@ export function MatchCard({
             <BarChart2 className="w-3.5 h-3.5" /> Scorecard
           </button>
         </div>
-        <div className="flex justify-end relative z-50">
-          <button
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (onKudos) onKudos();
-          }}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${
-            isKudosed
-              ? "text-rose-500 bg-rose-50 dark:bg-rose-500/20"
-              : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-          }`}
-        >
-          <Heart className="w-4 h-4" fill={isKudosed ? "currentColor" : "none"} stroke="currentColor" />
-          Like <span className="kudos-count font-medium ml-1">{kudosCount}</span>
-        </button>
 
-        <button
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (onShare) onShare();
-          }}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 ml-2"
-        >
-          <Share2 className="w-4 h-4" /> Share
-        </button>
+        {/* Like / Share */}
+        <div className="flex justify-between items-center">
+          <button
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (onKudos) onKudos();
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${
+              isKudosed
+                ? "text-rose-500 bg-rose-50 dark:bg-rose-500/20"
+                : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+            }`}
+          >
+            <Heart className="w-4 h-4" fill={isKudosed ? "currentColor" : "none"} stroke="currentColor" />
+            Like <span className="kudos-count font-medium ml-1">{kudosCount}</span>
+          </button>
+
+          <button
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (onShare) onShare();
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
+          >
+            <Share2 className="w-4 h-4" /> Share
+          </button>
         </div>
+
+        {/* Add Video — last, centered, only for players involved in this match */}
+        {isPlayerInMatch && (
+          <div className="flex justify-center">
+            <button
+              onClick={() => setIsEditVideoOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
+            >
+              <Edit2 className="w-3.5 h-3.5" />
+              {highlightUrl ? "Edit Video" : "Add Video"}
+            </button>
+          </div>
+        )}
       </div>
       )}
     </motion.div>

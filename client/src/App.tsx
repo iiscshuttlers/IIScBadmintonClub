@@ -17,7 +17,7 @@ import Navigation from "./components/Navigation";
 import Footer from "./components/Footer";
 import MatchAlert from "./components/MatchAlert";
 import LogMatchModal from "./components/LogMatchModal";
-import { useAppUpdate, type AppUpdateInfo } from "./hooks/useAppUpdate";
+import { useAppUpdate, AppUpdateProvider, type AppUpdateInfo } from "./hooks/useAppUpdate";
 import { useInactivityLogout } from "./hooks/useInactivityLogout";
 import { useNativeBackButton } from "./hooks/useNativeBackButton";
 import { usePullToRefresh } from "./hooks/usePullToRefresh";
@@ -308,7 +308,7 @@ function GlobalAuthHooks() {
 }
 
 function AppContent() {
-  const { updateInfo, dismissUpdate } = useAppUpdate();
+  const { updateInfo, isDialogOpen, dismissUpdate } = useAppUpdate();
   const [isLogMatchOpen, setIsLogMatchOpen] = useState(false);
   const [defaultOpponentId, setDefaultOpponentId] = useState<string | undefined>(undefined);
   const [otherPlayers, setOtherPlayers] = useState<any[]>([]);
@@ -428,7 +428,7 @@ function AppContent() {
             )}
             <GlobalAuthHooks />
             <OnboardingTour />
-            {updateInfo && (
+            {isDialogOpen && updateInfo && (
               <UpdateDialog info={updateInfo} onDismiss={dismissUpdate} />
             )}
           </TooltipProvider>
@@ -440,7 +440,9 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light" switchable>
         <AuthProvider>
-          <AppContent />
+          <AppUpdateProvider>
+            <AppContent />
+          </AppUpdateProvider>
         </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>

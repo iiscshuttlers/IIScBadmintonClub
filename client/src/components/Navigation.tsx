@@ -24,6 +24,7 @@ import {
   Activity,
   Users,
   Shield,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,6 +40,7 @@ import { toast } from "sonner";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useNavigationAuth } from "@/hooks/useNavigationAuth";
 import { useAuth, type ViewAsRole } from "@/contexts/AuthContext";
+import { useAppUpdate } from "@/hooks/useAppUpdate";
 import { QuickSettingsContent } from "@/components/QuickSettings";
 import { GlobalSearch } from "@/components/GlobalSearch";
 
@@ -74,6 +76,7 @@ export default function Navigation() {
   } = useNavigationAuth();
   const { theme, toggleTheme } = useTheme();
   const { viewAsRole, setViewAsRole, isMasterAdmin: isTrulyMainAdmin } = useAuth();
+  const { updateInfo, openUpdateDialog } = useAppUpdate();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -379,6 +382,18 @@ export default function Navigation() {
                     <Moon className="w-4 h-4" /> Dark
                   </button>
                 </div>
+
+                {updateInfo && (
+                  <button
+                    onClick={() => { openUpdateDialog(); setIsOpen(false); }}
+                    className="w-full flex items-center justify-between px-4 py-3 mb-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 hover:bg-emerald-100 dark:hover:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 font-bold text-sm transition-colors cursor-pointer border border-emerald-200/60 dark:border-emerald-900/50"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Download className="h-4 w-4" /> Update Available
+                    </span>
+                    <span className="text-[11px] font-semibold opacity-80">v{updateInfo.versionName}</span>
+                  </button>
+                )}
 
                 {authLoading ? (
                   <div className="h-10 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />

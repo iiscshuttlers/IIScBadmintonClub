@@ -101,7 +101,11 @@ export function AdminActivityLog() {
                   </td>
                   <td className="px-4 py-3">
                     <span className={`font-semibold text-xs ${getActionColor(log.action)}`}>{log.action}</span>
-                    {log.details && <p className="text-[10px] text-slate-400 mt-0.5">{log.details}</p>}
+                    {log.details && (
+                      <p className="text-[10px] text-slate-400 mt-0.5 break-words">
+                        {typeof log.details === "object" ? JSON.stringify(log.details) : log.details}
+                      </p>
+                    )}
                   </td>
                 </tr>
               ))}

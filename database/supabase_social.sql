@@ -35,7 +35,7 @@ BEGIN
       'New Follower',
       v_follower_name || ' started following you.',
       'new_follower',
-      '/player/' || v_user_id
+      '/players#network'
     );
   END IF;
 END;

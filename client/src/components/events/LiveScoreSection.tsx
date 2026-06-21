@@ -192,16 +192,19 @@ export function LiveScoreSection() {
     navigate("/feed/umpire");
   };
 
-  useEffect(() => {
-    supabase
+  const fetchLiveMatches = async () => {
+    const { data } = await supabase
       .from("site_data")
       .select("value")
       .eq("key", "live_matches")
-      .single()
-      .then(({ data }) => {
-        if (data?.value) setLiveMatches(data.value);
-      });
+      .single();
+    if (data?.value) setLiveMatches(data.value);
+  };
 
+  useEffect(() => {
+    fetchLiveMatches();
+
+    // Realtime subscription for immediate updates
     const sub = supabase
       .channel("live_matches_channel")
       .on(
@@ -220,8 +223,12 @@ export function LiveScoreSection() {
       )
       .subscribe();
 
+    // Polling fallback every 10s in case realtime subscription lags
+    const poll = setInterval(fetchLiveMatches, 10_000);
+
     return () => {
       supabase.removeChannel(sub);
+      clearInterval(poll);
     };
   }, []);
 

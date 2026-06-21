@@ -22,12 +22,16 @@ export function initSounds() {
   const unlock = () => {
     _gestureReceived = true;
     createCtx();
-    if (_ctx?.state === "suspended") _ctx.resume().catch(() => {});
-    document.removeEventListener("touchstart", unlock, true);
-    document.removeEventListener("click", unlock, true);
+    if (_ctx?.state === "suspended") {
+      _ctx.resume().catch(() => {});
+    }
+    ["pointerdown", "touchstart", "click", "keydown"].forEach((e) =>
+      document.removeEventListener(e, unlock)
+    );
   };
-  document.addEventListener("touchstart", unlock, true);
-  document.addEventListener("click", unlock, true);
+  ["pointerdown", "touchstart", "click", "keydown"].forEach((e) =>
+    document.addEventListener(e, unlock)
+  );
 }
 
 function noiseBuffer(ctx: AudioContext, duration: number): AudioBuffer {

@@ -98,6 +98,7 @@ interface PlayerCardProps {
   hasReceivedRequest?: boolean;
   isFollowing?: boolean;
   currentUserName?: string;
+  currentUserId?: string;
 }
 
 export function PlayerCard({
@@ -114,6 +115,7 @@ export function PlayerCard({
   hasReceivedRequest = false,
   isFollowing = false,
   currentUserName,
+  currentUserId,
 }: PlayerCardProps) {
   // Calibration Phase
   const totalMatches = (() => {
@@ -146,7 +148,7 @@ export function PlayerCard({
     } else {
       setIsPinged(true);
       
-      // Broadcast the ping to all listening clients
+      // Broadcast the ping to all listening clients (real-time, only works if app is open)
       supabase.channel("pings").send({
         type: "broadcast",
         event: "ping",
@@ -154,6 +156,14 @@ export function PlayerCard({
           target_id: player.id,
           sender_name: currentUserName || "A player",
         },
+      });
+
+      // Also persist a notification so it appears in the notification panel
+      supabase.rpc("send_ping_notification", {
+        p_target_id: player.id,
+        p_sender_name: currentUserName || "A player",
+      }).then(({ error }) => {
+        if (error) console.warn("Failed to persist ping notification:", error.message);
       });
 
       toast.success(

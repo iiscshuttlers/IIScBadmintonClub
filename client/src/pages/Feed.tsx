@@ -23,11 +23,7 @@ import { usePageMeta } from "@/hooks/usePageMeta";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { toast } from "sonner";
-import { Capacitor } from "@capacitor/core";
-import { Share } from "@capacitor/share";
-import { Filesystem, Directory } from "@capacitor/filesystem";
-import { getBaseShareUrl } from "@/lib/utils";
-import { renderMatchShareCard } from "@/lib/matchShareCard";
+import { shareMatch } from "@/lib/shareMatch";
 import { AnnouncementsSection } from "@/components/feed/AnnouncementsSection";
 import { LiveScoreSection } from "@/components/events/LiveScoreSection";
 import { UmpireTab } from "@/components/umpire/UmpireTab";
@@ -121,10 +117,10 @@ export default function Feed() {
           .select(
             `
           *,
-          player1:players!player1_id(id, full_name, avatar_url, elo_rating),
-          player2:players!player2_id(id, full_name, avatar_url, elo_rating),
-          partner1:players!team1_partner_id(id, full_name, avatar_url),
-          partner2:players!team2_partner_id(id, full_name, avatar_url)
+          player1:players!player1_id(id, full_name, avatar_url, elo_rating, singles_elo, doubles_elo, mixed_elo, gender),
+          player2:players!player2_id(id, full_name, avatar_url, elo_rating, singles_elo, doubles_elo, mixed_elo, gender),
+          partner1:players!team1_partner_id(id, full_name, avatar_url, singles_elo, doubles_elo, mixed_elo, gender),
+          partner2:players!team2_partner_id(id, full_name, avatar_url, singles_elo, doubles_elo, mixed_elo, gender)
         `,
           )
           .eq("status", "confirmed")
@@ -672,178 +668,7 @@ export default function Feed() {
                     }
                   };
 
-                  const handleShare = async (match: any) => {
-                    const p1 = match.player1;
-                    const p2 = match.player2;
-                    const p1Name = p1?.full_name || "Player 1";
-                    const p2Name = p2?.full_name || "Player 2";
-                    const isP1Winner = match.winner_id === match.player1_id;
-                    const winnerName = isP1Winner ? p1Name : p2Name;
-                    const loserName = isP1Winner ? p2Name : p1Name;
-                    const winnerAvatar = isP1Winner
-                      ? p1?.avatar_url
-                      : p2?.avatar_url;
-                    const loserAvatar = isP1Winner
-                      ? p2?.avatar_url
-                      : p1?.avatar_url;
-                    const eloChange = isP1Winner
-                      ? match.elo_change_p1
-                        ? `+${match.elo_change_p1}`
-                        : ""
-                      : match.elo_change_p2
-                        ? `+${match.elo_change_p2}`
-                        : "";
-
-                    // Score: strip out video URL suffix if present
-                    let displayScore = match.score
-                      ? match.score.split(" | ")[0]
-                      : "N/A";
-
-                    const shareUrl = `${getBaseShareUrl()}/feed?match=${match.id}`;
-                    const text = `🏸 Match Result: ${winnerName} def. ${loserName} (${displayScore})! Check it out on IISc Badminton Club.`;
-
-                    // Helper to load an image via canvas (bypasses CORS for cross-origin avatars)
-                    const loadImg = (
-                      url: string,
-                    ): Promise<HTMLImageElement | null> =>
-                      new Promise((resolve) => {
-                        if (!url) return resolve(null);
-                        const img = new Image();
-                        img.crossOrigin = "anonymous";
-                        img.onload = () => resolve(img);
-                        img.onerror = () => resolve(null);
-                        img.src = url;
-                      });
-
-                    // Draw a circle-clipped avatar at (cx, cy) with radius r
-                    const drawCircleAvatar = (
-                      ctx: CanvasRenderingContext2D,
-                      img: HTMLImageElement | null,
-                      cx: number,
-                      cy: number,
-                      r: number,
-                      initial: string,
-                      bgColor: string,
-                    ) => {
-                      ctx.save();
-                      ctx.beginPath();
-                      ctx.arc(cx, cy, r, 0, Math.PI * 2);
-                      ctx.clip();
-                      if (img) {
-                        ctx.drawImage(img, cx - r, cy - r, r * 2, r * 2);
-                      } else {
-                        ctx.fillStyle = bgColor;
-                        ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
-                        ctx.fillStyle = "#ffffff";
-                        ctx.font = `bold ${r}px sans-serif`;
-                        ctx.textAlign = "center";
-                        ctx.textBaseline = "middle";
-                        ctx.fillText(initial.toUpperCase(), cx, cy);
-                      }
-                      ctx.restore();
-                      // Ring
-                      ctx.beginPath();
-                      ctx.arc(cx, cy, r, 0, Math.PI * 2);
-                      ctx.strokeStyle = bgColor;
-                      ctx.lineWidth = 6;
-                      ctx.stroke();
-                    };
-
-                    // Truncate long names to fit canvas
-                    const truncate = (
-                      ctx: CanvasRenderingContext2D,
-                      name: string,
-                      maxW: number,
-                    ) => {
-                      if (ctx.measureText(name).width <= maxW) return name;
-                      let n = name;
-                      while (ctx.measureText(n + "…").width > maxW && n.length > 1)
-                        n = n.slice(0, -1);
-                      return n + "…";
-                    };
-
-                    const fallbackShare = () => {
-                      if (Capacitor.isNativePlatform()) {
-                        Share.share({
-                          title: "IISc Badminton Club Match",
-                          text,
-                          url: shareUrl,
-                          dialogTitle: "Share Match Result",
-                        });
-                      } else if (navigator.share) {
-                        navigator.share({
-                          title: "IISc Badminton Club Match",
-                          text,
-                          url: shareUrl,
-                        });
-                      } else {
-                        navigator.clipboard.writeText(`${text}\n${shareUrl}`);
-                        toast.success("Match result copied to clipboard!");
-                      }
-                    };
-
-                    try {
-                      const canvas = await renderMatchShareCard({
-                        winnerName,
-                        loserName,
-                        winnerAvatar: winnerAvatar || "",
-                        loserAvatar: loserAvatar || "",
-                        displayScore,
-                        winnerEloChange: isP1Winner
-                          ? match.elo_change_p1
-                          : match.elo_change_p2,
-                        loserEloChange: isP1Winner
-                          ? match.elo_change_p2
-                          : match.elo_change_p1,
-                        matchType:
-                          match.is_friendly !== false ? "Friendly" : "Tournament",
-                        matchDate: new Date(match.created_at),
-                        category: match.category,
-                      });
-
-                      if (!canvas) {
-                        fallbackShare();
-                        return;
-                      }
-
-                      if (Capacitor.isNativePlatform()) {
-                        const base64 = canvas.toDataURL("image/png").split(",")[1];
-                        const { uri } = await Filesystem.writeFile({
-                          path: "match-share.png",
-                          data: base64,
-                          directory: Directory.Cache,
-                        });
-                        await Share.share({
-                          title: "IISc Badminton Club Match",
-                          text,
-                          files: [uri],
-                          dialogTitle: "Share Match Result",
-                        });
-                        toast.success("Match Recap shared!");
-                      } else {
-                        canvas.toBlob(async (blob) => {
-                          if (blob) {
-                            const file = new File([blob], "match-recap.png", {
-                              type: "image/png",
-                            });
-                            if (navigator.canShare?.({ files: [file] })) {
-                              await navigator.share({
-                                title: "IISc Badminton Club Match",
-                                text,
-                                url: shareUrl,
-                                files: [file],
-                              });
-                              toast.success("Match Recap shared!");
-                              return;
-                            }
-                          }
-                          fallbackShare();
-                        }, "image/png");
-                      }
-                    } catch (err: any) {
-                      if (!err.message?.includes("cancel")) fallbackShare();
-                    }
-                  };
+                  const handleShare = (match: any) => shareMatch(match);
                   return (
                     <MatchCard
                       key={match.id}

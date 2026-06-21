@@ -17,6 +17,27 @@ export interface Player {
   gender?: string;
 }
 
+// Shape of a DB match row passed into edit mode (distinct from BwfMatchState)
+export type MatchEditState = {
+  is_edit_mode: true;
+  id: string;
+  player1_id: string;
+  player2_id: string;
+  team1_partner_id?: string | null;
+  team2_partner_id?: string | null;
+  winner_id?: string | null;
+  score?: string | null;
+  match_score?: string | null;
+  round?: string | null;
+  is_friendly?: boolean | null;
+  category?: string;
+  sets_history?: string[] | null;
+  player1?: { full_name: string } | null;
+  player2?: { full_name: string } | null;
+  partner1?: { full_name: string } | null;
+  partner2?: { full_name: string } | null;
+};
+
 export type PointLogEntry = {
   gameNum: number;
   team: 1 | 2 | "let" | "fault";
@@ -356,7 +377,7 @@ export function UmpireEngine({
   userName: string;
   isTournamentUmpire?: boolean;
   onClose: () => void;
-  initialMatchState?: any;
+  initialMatchState?: BwfMatchState | MatchEditState | null;
 }) {
   const isAdmin = isAdminEmail(userEmail);
   const canRunTournament = isAdmin || isTournamentUmpire;
@@ -365,14 +386,18 @@ export function UmpireEngine({
 
   const [players, setPlayers] = useState<Player[]>([]);
   const [match, setMatch] = useState<BwfMatchState>(() => {
-    if (initialMatchState?.is_edit_mode) {
-      const isP1Winner = initialMatchState.winner_id === initialMatchState.player1_id;
-      // parse setsHistory carefully to handle possible retired strings
-      const rawScore = initialMatchState.score || initialMatchState.match_score || "";
-      // Match score format: "21-13, 21-12 [Names]" or "21-13 (T1 Retired)"
-      // Let's extract just the sets part
-      const setsPartMatch = rawScore.match(/^([\d-]+(?:, [\d-]+)*)/);
-      const setsHistory = setsPartMatch ? setsPartMatch[1].split(", ") : [];
+    if (initialMatchState && 'is_edit_mode' in initialMatchState && initialMatchState.is_edit_mode) {
+      const editState = initialMatchState as MatchEditState;
+      // Prefer structured sets_history stored in DB; fall back to parsing the
+      // display string only for matches saved before this column existed.
+      let setsHistory: string[];
+      if (editState.sets_history && editState.sets_history.length > 0) {
+        setsHistory = editState.sets_history;
+      } else {
+        const rawScore = editState.score || editState.match_score || "";
+        const setsPartMatch = rawScore.match(/^([\d-]+(?:, [\d-]+)*)/);
+        setsHistory = setsPartMatch ? setsPartMatch[1].split(", ") : [];
+      }
 
       // Count actual set wins from setsHistory rather than hardcoding 2
       const t1GamesWon = setsHistory.filter(s => {
@@ -386,16 +411,16 @@ export function UmpireEngine({
 
       return {
         id: userId,
-        dbId: initialMatchState.id,
+        dbId: editState.id,
         umpireName: userName,
-        isFriendly: initialMatchState.is_friendly,
-        matchNumber: initialMatchState.round,
-        category: initialMatchState.category,
-        pointsToWin: initialMatchState.points_to_win || 21,
-        bestOfSets: initialMatchState.best_of_sets || 3,
+        isFriendly: editState.is_friendly ?? true,
+        matchNumber: editState.round ?? "",
+        category: editState.category ?? "Singles",
+        pointsToWin: 21,
+        bestOfSets: 3,
         goldenPoint: 30,
-        t1: { p1Id: initialMatchState.player1_id, p1Name: initialMatchState.player1?.full_name || "", p2Id: initialMatchState.team1_partner_id, p2Name: initialMatchState.partner1?.full_name || "", score: 0, games: t1GamesWon },
-        t2: { p1Id: initialMatchState.player2_id, p1Name: initialMatchState.player2?.full_name || "", p2Id: initialMatchState.team2_partner_id, p2Name: initialMatchState.partner2?.full_name || "", score: 0, games: t2GamesWon },
+        t1: { p1Id: editState.player1_id, p1Name: editState.player1?.full_name ?? "", p2Id: editState.team1_partner_id ?? undefined, p2Name: editState.partner1?.full_name ?? "", score: 0, games: t1GamesWon },
+        t2: { p1Id: editState.player2_id, p1Name: editState.player2?.full_name ?? "", p2Id: editState.team2_partner_id ?? undefined, p2Name: editState.partner2?.full_name ?? "", score: 0, games: t2GamesWon },
         serverTeam: 1,
         serverPlayerIndex: 0,
         receiverPlayerIndex: 0,
@@ -411,11 +436,12 @@ export function UmpireEngine({
     }
     // Resume / take over a full live match (BwfMatchState saved in site_data).
     // Keep its own `id` (the persistence key) so updates write back to the same broadcast.
-    if (initialMatchState && initialMatchState.status && initialMatchState.t1) {
+    if (initialMatchState && 'status' in initialMatchState && initialMatchState.status && 't1' in initialMatchState) {
+      const liveState = initialMatchState as BwfMatchState;
       return {
-        ...initialMatchState,
-        id: initialMatchState.id || userId,
-        umpireName: initialMatchState.umpireName || userName,
+        ...liveState,
+        id: liveState.id || userId,
+        umpireName: liveState.umpireName || userName,
       } as BwfMatchState;
     }
     return {
@@ -593,10 +619,11 @@ export function UmpireEngine({
     const next = { ...match, ...updates };
     next.inferredCategory = getInferredCategory(next.category, next.t1, next.t2);
     setMatch(next);
-    const { data } = await supabase.from("site_data").select("value").eq("key", "live_matches").single();
-    const liveMatches = data?.value || {};
-    liveMatches[userId] = next;
-    await supabase.from("site_data").upsert({ key: "live_matches", value: liveMatches });
+    const { error } = await supabase.rpc("upsert_live_match", {
+      umpire_user_id: userId,
+      match_state: next as unknown as Record<string, unknown>,
+    });
+    if (error) toast.error("Broadcast sync failed — check your connection");
   };
 
   const getName = (idOrName: string) =>
@@ -934,14 +961,18 @@ export function UmpireEngine({
   // ── Save match ─────────────────────────────────────────────────────────────
   const saveMatchToProfile = async () => {
     if (match.status !== "finished") return;
-    const isT1P1Real = players.some(p => p.id === match.t1.p1Id);
-    if (!isT1P1Real) {
-      toast.info("Match ended. Cannot log — players are guests.");
+    const realIds = new Set(players.map(p => p.id));
+    const toRealId = (id?: string) => (id && realIds.has(id) ? id : "");
+    const hasAnyRealPlayer = [match.t1.p1Id, match.t1.p2Id, match.t2.p1Id, match.t2.p2Id]
+      .some(id => id && realIds.has(id));
+    if (!hasAnyRealPlayer) {
+      toast.info("Match ended. Cannot log — all players are guests.");
       handleClose();
       return;
     }
     const t1IsWinner = match.winner === 1;
-    const winnerId = t1IsWinner ? match.t1.p1Id : match.t2.p1Id;
+    const winnerTeam = t1IsWinner ? match.t1 : match.t2;
+    const winnerId = toRealId(winnerTeam.p1Id) || toRealId(winnerTeam.p2Id);
     let finalScoreStr = match.retiredTeam
       ? match.setsHistory.join(", ") + ` (T${match.retiredTeam} Retired)`
       : match.setsHistory.join(", ");
@@ -954,18 +985,19 @@ export function UmpireEngine({
       const durationMinutes = Math.max(1, Math.round((matchEndTs - matchStartTs) / 60000));
       const roundLabel = `${match.matchNumber || (match.isFriendly ? "Friendly" : "Tournament")} • ${durationMinutes}m`;
 
-      const umpirePlayerId = players.find(p => p.id === userId)?.id || "";
+      const umpirePlayerId = toRealId(userId);
       const payload = {
         umpire_id:          umpirePlayerId,
-        player1_id:         match.t1.p1Id,
-        player2_id:         match.t2.p1Id,
-        team1_partner_id:   match.t1.p2Id || "",
-        team2_partner_id:   match.t2.p2Id || "",
+        player1_id:         toRealId(match.t1.p1Id),
+        player2_id:         toRealId(match.t2.p1Id),
+        team1_partner_id:   toRealId(match.t1.p2Id),
+        team2_partner_id:   toRealId(match.t2.p2Id),
         winner_id:          winnerId,
         match_score:        finalScoreStr,
         match_category:     match.category,
         match_round:        roundLabel,
-        is_friendly:        match.isFriendly
+        is_friendly:        match.isFriendly,
+        sets_history:       match.setsHistory,
       };
       
       let newMatchId = "";
@@ -995,7 +1027,9 @@ export function UmpireEngine({
 
       const notifMsg = `🏆 ${match.isFriendly ? "Friendly" : "Tournament"} Match: ${match.t1.p1Name}${match.t1.p2Name ? ` & ${match.t1.p2Name}` : ""} vs ${match.t2.p1Name}${match.t2.p2Name ? ` & ${match.t2.p2Name}` : ""} — ${match.setsHistory.join(", ")}`;
       await supabase.from("site_data").upsert({ key: "match_alert", value: { message: notifMsg, time: Date.now() } });
-      toast.success("Match saved to profiles!");
+      const hasGuests = [match.t1.p1Id, match.t1.p2Id, match.t2.p1Id, match.t2.p2Id]
+        .some(id => id && !realIds.has(id));
+      toast.success(hasGuests ? "Match saved! Guest players are not credited to any profile." : "Match saved to profiles!");
       handleClose();
     } catch (err: any) {
       toast.error("Failed to save: " + err.message);
@@ -1003,10 +1037,7 @@ export function UmpireEngine({
   };
 
   const handleClose = async () => {
-    const { data } = await supabase.from("site_data").select("value").eq("key", "live_matches").single();
-    const liveMatches = data?.value || {};
-    delete liveMatches[userId];
-    await supabase.from("site_data").upsert({ key: "live_matches", value: liveMatches });
+    await supabase.rpc("remove_live_match", { umpire_user_id: userId });
     onClose();
   };
 

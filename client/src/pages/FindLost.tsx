@@ -74,6 +74,7 @@ export default function FindLost() {
   const [form, setForm] = useState({ type: "lost" as PostType, title: "", description: "", location: "", contact: "", images: [] as string[] });
   const [submitting, setSubmitting] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
 
   const MAX_IMAGES = 5;
 
@@ -249,7 +250,6 @@ export default function FindLost() {
 
   const claimItem = async (post: Post) => {
     if (!profile?.id) return;
-    if (!confirm(`Are you sure you want to claim this ${post.type === "lost" ? "found" : "lost"} item?`)) return;
     
     const { error } = await supabase.rpc("claim_find_lost_item", {
       post_uuid: post.id,
@@ -273,7 +273,11 @@ export default function FindLost() {
   };
 
   const deletePost = async (post: Post) => {
-    if (!confirm("Are you sure you want to permanently delete this post?")) return;
+    if (pendingDelete !== post.id) {
+      setPendingDelete(post.id);
+      return;
+    }
+    setPendingDelete(null);
     const { error } = await supabase.from("find_lost_posts").delete().eq("id", post.id);
     if (error) {
       toast.error(error.message || "Failed to delete post");
@@ -607,13 +611,32 @@ export default function FindLost() {
 
                       {/* Delete is always available to author/admin */}
                       {(isOwn || isAdmin) && (
-                        <button
-                          onClick={() => deletePost(post)}
-                          title="Delete post"
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400 hover:bg-rose-200 dark:hover:bg-rose-900/60 transition"
-                        >
-                          <Trash2 className="w-4 h-4" /> Delete
-                        </button>
+                        pendingDelete === post.id ? (
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => deletePost(post)}
+                              title="Confirm delete"
+                              className="flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs font-bold bg-rose-500 text-white hover:bg-rose-600 transition"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" /> Confirm
+                            </button>
+                            <button
+                              onClick={() => setPendingDelete(null)}
+                              title="Cancel"
+                              className="px-2 py-1.5 rounded-xl text-xs font-bold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => deletePost(post)}
+                            title="Delete post"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400 hover:bg-rose-200 dark:hover:bg-rose-900/60 transition"
+                          >
+                            <Trash2 className="w-4 h-4" /> Delete
+                          </button>
+                        )
                       )}
                     </div>
                   </div>

@@ -1123,6 +1123,7 @@ export default function PlayersDirectory() {
                         isFollowing={followingIds.has(player.id)}
                         onToggleFollow={ownProfile ? handleToggleFollow : undefined}
                         currentUserName={ownProfile?.full_name}
+                        currentUserId={ownProfile?.id}
                       />
                     ))}
                   </div>
@@ -1482,6 +1483,7 @@ export default function PlayersDirectory() {
                           isFollowing={followingIds.has(player.id)}
                           onToggleFollow={ownProfile ? handleToggleFollow : undefined}
                           currentUserName={ownProfile?.full_name}
+                        currentUserId={ownProfile?.id}
                         />
                         </div>
                       ))}
@@ -1573,6 +1575,7 @@ export default function PlayersDirectory() {
                         isFollowing={followingIds.has(player.id)}
                         onToggleFollow={ownProfile ? handleToggleFollow : undefined}
                         currentUserName={ownProfile?.full_name}
+                        currentUserId={ownProfile?.id}
                       />
                     </motion.div>
                   ))}

@@ -76,7 +76,7 @@ BEGIN
     'New Challenge!',
     challenger_name || ' challenged you to a ' || NEW.format || ' match.',
     'challenge_received',
-    '/player/' || NEW.challenged_id
+    '/feed/challenges'
   );
   RETURN NEW;
 END;

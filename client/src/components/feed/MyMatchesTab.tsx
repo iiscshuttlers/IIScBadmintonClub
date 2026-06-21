@@ -6,6 +6,7 @@ import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { Link, useLocation } from "wouter";
 import { MatchCard } from "./MatchCard";
+import { shareMatch } from "@/lib/shareMatch";
 import { Capacitor } from "@capacitor/core";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import confetti from "canvas-confetti";
@@ -33,10 +34,10 @@ export function MyMatchesTab() {
         .from("matches")
         .select(`
           *,
-          player1:players!player1_id(id, full_name, avatar_url),
-          player2:players!player2_id(id, full_name, avatar_url),
-          partner1:players!team1_partner_id(id, full_name, avatar_url),
-          partner2:players!team2_partner_id(id, full_name, avatar_url),
+          player1:players!player1_id(id, full_name, avatar_url, elo_rating, singles_elo, doubles_elo, mixed_elo, gender),
+          player2:players!player2_id(id, full_name, avatar_url, elo_rating, singles_elo, doubles_elo, mixed_elo, gender),
+          partner1:players!team1_partner_id(id, full_name, avatar_url, elo_rating, singles_elo, doubles_elo, mixed_elo, gender),
+          partner2:players!team2_partner_id(id, full_name, avatar_url, elo_rating, singles_elo, doubles_elo, mixed_elo, gender),
           submitter:players!submitted_by(id, full_name)
         `)
         .or(`player1_id.eq.${profile.id},player2_id.eq.${profile.id},team1_partner_id.eq.${profile.id},team2_partner_id.eq.${profile.id},submitted_by.eq.${profile.id}`)
@@ -128,9 +129,12 @@ export function MyMatchesTab() {
     }
     
     if (action === "confirm") {
-      const { error } = await supabase.rpc("confirm_friendly_match", { match_uuid: matchId });
-      if (error) toast.error("Failed to confirm: " + error.message);
-      else {
+      const { data, error } = await supabase.rpc("accept_friendly_match", { match_uuid: matchId, confirmer_id: profile.id });
+      if (error) toast.error("Failed to accept: " + error.message);
+      else if (data && data.confirmed === false) {
+        // Recorded, but the match still needs more players to accept (doubles)
+        toast.success(`Accepted! ${data.accepted} of ${data.required} players have agreed.`);
+      } else {
         toast.success("Match confirmed!");
         confetti({
           particleCount: 100,
@@ -260,7 +264,12 @@ export function MyMatchesTab() {
           {filteredMatches.map(match => {
             const isPending = match.status === "pending";
             const iAmSubmitter = match.submitted_by === profile.id;
-            const needsMyAction = isPending && !iAmSubmitter;
+            const isDoubles = !!(match.team1_partner_id || match.team2_partner_id);
+            const requiredAccepts = isDoubles ? 3 : 2;
+            const acceptedCount = 1 + (Array.isArray(match.confirmed_by) ? match.confirmed_by.length : 0);
+            const iAmParticipant = [match.player1_id, match.player2_id, match.team1_partner_id, match.team2_partner_id].includes(profile.id);
+            const iAlreadyAccepted = Array.isArray(match.confirmed_by) && match.confirmed_by.includes(profile.id);
+            const needsMyAction = isPending && iAmParticipant && !iAmSubmitter && !iAlreadyAccepted;
 
             return (
               <MatchCard
@@ -279,46 +288,47 @@ export function MyMatchesTab() {
                     : (match.kudos_count || 0) + (kudosState[match.id] === true ? 1 : 0)
                 }
                 onKudos={() => handleKudos(match)}
+                onShare={() => shareMatch(match)}
                 index={0}
               >
                 {/* Actions Row */}
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-2">
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2">
-                      {isPending ? (
-                        <span className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-black uppercase tracking-wider rounded-lg">
-                          <Clock className="w-3.5 h-3.5" /> Pending
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-black uppercase tracking-wider rounded-lg">
-                          <CheckCircle2 className="w-3.5 h-3.5" /> Accepted
-                        </span>
-                      )}
-                    </div>
-                    {isAdmin && (
-                      <div className="flex flex-col gap-0.5 mt-1">
-                        {match.submitter?.full_name && (
-                          <span className="flex items-center gap-1 text-[10px] text-slate-400 dark:text-slate-500">
-                            <Send className="w-3 h-3 shrink-0" /> Submitted by: <span className="font-bold text-slate-600 dark:text-slate-300">{match.submitter.full_name}</span>
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                <div className="flex flex-col items-center gap-2 mt-2 text-center">
+                  {isPending ? (
+                    <span className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-black uppercase tracking-wider rounded-lg">
+                      <Clock className="w-3.5 h-3.5" /> Pending
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-black uppercase tracking-wider rounded-lg">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Accepted
+                    </span>
+                  )}
+
+                  {isAdmin && match.submitter?.full_name && (
+                    <span className="flex items-center gap-1 text-[10px] text-slate-400 dark:text-slate-500">
+                      <Send className="w-3 h-3 shrink-0" /> Submitted by: <span className="font-bold text-slate-600 dark:text-slate-300">{match.submitter.full_name}</span>
+                    </span>
+                  )}
 
                   {needsMyAction && (
-                    <div className="flex gap-2 w-full sm:w-auto">
-                      <button onClick={() => handleAction(match.id, "reject")} className="flex-1 sm:flex-none px-4 py-2 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-sm font-bold rounded-xl transition-colors">
-                        Reject
-                      </button>
-                      <button onClick={() => handleAction(match.id, "confirm")} className="flex-1 sm:flex-none px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-colors">
-                        Accept Match
-                      </button>
+                    <div className="flex flex-col items-center gap-1.5 w-full sm:w-auto">
+                      {isDoubles && (
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                          {acceptedCount}/{requiredAccepts} accepted
+                        </p>
+                      )}
+                      <div className="flex gap-2 w-full sm:w-auto justify-center">
+                        <button onClick={() => handleAction(match.id, "reject")} className="flex-1 sm:flex-none px-4 py-2 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-sm font-bold rounded-xl transition-colors">
+                          Reject
+                        </button>
+                        <button onClick={() => handleAction(match.id, "confirm")} className="flex-1 sm:flex-none px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-colors">
+                          Accept Match
+                        </button>
+                      </div>
                     </div>
                   )}
-                  {isPending && iAmSubmitter && (
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest text-right">
-                      Waiting for opponent
+                  {isPending && !needsMyAction && (iAmSubmitter || iAlreadyAccepted) && (
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest text-center">
+                      {isDoubles ? `Waiting for players — ${acceptedCount}/${requiredAccepts} accepted` : "Waiting for opponent"}
                     </p>
                   )}
                 </div>

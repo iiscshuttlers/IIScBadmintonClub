@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Bell, Swords, UserPlus, Info, CheckCircle2, Sword, X, Trash2 } from "lucide-react";
+import { Bell, Swords, UserPlus, Info, CheckCircle2, Sword, X, Trash2, BellRing, PackageSearch, Users, Trophy } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import {
   DropdownMenu,
@@ -104,9 +104,20 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
       case "challenge_received":
         return <Swords className="w-5 h-5 text-orange-500" />;
       case "match_logged":
+      case "match_confirmation":
         return <Sword className="w-5 h-5 text-emerald-500" />;
       case "buddy_request":
+      case "buddy_acceptance":
         return <UserPlus className="w-5 h-5 text-violet-500" />;
+      case "new_follower":
+        return <Users className="w-5 h-5 text-sky-500" />;
+      case "ping":
+        return <BellRing className="w-5 h-5 text-amber-500" />;
+      case "find_lost":
+        return <PackageSearch className="w-5 h-5 text-indigo-500" />;
+      case "achievement":
+      case "milestone":
+        return <Trophy className="w-5 h-5 text-amber-400" />;
       default:
         return <Info className="w-5 h-5 text-blue-500" />;
     }

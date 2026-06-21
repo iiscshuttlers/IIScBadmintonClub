@@ -439,6 +439,7 @@ export type Database = {
           player2_id: string | null
           round: string
           score: string
+          sets_history: string[] | null
           status: string | null
           submitted_by: string | null
           team1_partner_id: string | null
@@ -463,6 +464,7 @@ export type Database = {
           player2_id?: string | null
           round: string
           score: string
+          sets_history?: string[] | null
           status?: string | null
           submitted_by?: string | null
           team1_partner_id?: string | null
@@ -487,6 +489,7 @@ export type Database = {
           player2_id?: string | null
           round?: string
           score?: string
+          sets_history?: string[] | null
           status?: string | null
           submitted_by?: string | null
           team1_partner_id?: string | null
@@ -1088,6 +1091,14 @@ export type Database = {
       }
       toggle_follow: { Args: { p_target_id: string }; Returns: undefined }
       toggle_match_kudos: { Args: { p_match_id: string }; Returns: undefined }
+      remove_live_match: {
+        Args: { umpire_user_id: string }
+        Returns: undefined
+      }
+      upsert_live_match: {
+        Args: { umpire_user_id: string; match_state: Json }
+        Returns: undefined
+      }
       umpire_submit_match: {
         Args: {
           is_friendly: boolean
@@ -1096,6 +1107,7 @@ export type Database = {
           match_score: string
           player1_id: string
           player2_id: string
+          sets_history?: string[]
           team1_partner_id: string
           team2_partner_id: string
           umpire_id: string

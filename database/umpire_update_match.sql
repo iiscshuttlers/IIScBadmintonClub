@@ -9,8 +9,9 @@ BEGIN
   UPDATE matches
   SET
     winner_id = umpire_update_match.winner_id,
-    match_score = umpire_update_match.match_score,
-    category = umpire_update_match.match_category
+    score = umpire_update_match.match_score,
+    category = umpire_update_match.match_category,
+    sets_history = umpire_update_match.sets_history
   WHERE id = umpire_update_match.match_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

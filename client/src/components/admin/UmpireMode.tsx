@@ -77,9 +77,19 @@ export function UmpireMode() {
   // Firebase data listener
   useEffect(() => {
     if (!fbUser) return;
-    const unsub = onSnapshot(doc(db, "live_data", "tournament"), (snap) => {
-      if (snap.exists()) setData(snap.data());
-    });
+    const unsub = onSnapshot(
+      doc(db, "live_data", "tournament"),
+      (snap) => {
+        if (snap.exists()) setData(snap.data());
+      },
+      (err) => {
+        // Silently handle permission errors — Firestore rules may not allow
+        // access outside of an active tournament; this is expected behaviour.
+        console.warn("Firestore live_data read blocked:", err.code);
+        // Set empty data structure so the UI doesn't stay in loading state
+        setData({ formats: [], matches: {} });
+      }
+    );
     return () => unsub();
   }, [fbUser]);
 
@@ -245,6 +255,18 @@ export function UmpireMode() {
       <div className="flex items-center justify-center py-16">
         <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 font-bold animate-pulse">
           <Loader2 className="w-5 h-5 animate-spin" /> Loading live data...
+        </div>
+      </div>
+    );
+
+  // No active tournament data
+  if (!data.formats || data.formats.length === 0)
+    return (
+      <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
+        <Activity className="w-10 h-10 text-slate-300 dark:text-slate-600" />
+        <div>
+          <p className="font-black text-slate-700 dark:text-slate-200">No Active Tournament</p>
+          <p className="text-sm text-slate-400 mt-1">Live data will appear here when a tournament is in progress.</p>
         </div>
       </div>
     );

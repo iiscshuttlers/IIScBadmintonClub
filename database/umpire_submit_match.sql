@@ -8,7 +8,8 @@ CREATE OR REPLACE FUNCTION umpire_submit_match(
   match_score TEXT,
   match_category TEXT,
   match_round TEXT,
-  is_friendly BOOLEAN
+  is_friendly BOOLEAN,
+  sets_history TEXT[] DEFAULT '{}'
 ) RETURNS UUID AS $$
 DECLARE
   new_match_id UUID;
@@ -31,6 +32,7 @@ BEGIN
     team2_partner_id,
     winner_id,
     score,
+    sets_history,
     date,
     is_friendly,
     status,
@@ -44,12 +46,13 @@ BEGIN
     NULLIF(team2_partner_id, ''),
     NULLIF(winner_id, ''),
     match_score,
+    sets_history,
     CURRENT_DATE,
     is_friendly,
     'pending',
     NULLIF(umpire_id, '')
   ) RETURNING id INTO new_match_id;
-  
+
   RETURN new_match_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

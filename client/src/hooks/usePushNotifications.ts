@@ -5,6 +5,13 @@ import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/lib/supabase";
 import { getFirebaseMessaging } from "@/lib/firebase";
 import { getToken, onMessage } from "firebase/messaging";
+import {
+  playSmashSound,
+  playPointSound,
+  playServeSound,
+  playWhistleSound,
+  playVictorySound,
+} from "@/lib/sounds";
 
 /**
  * Registers for push notifications on native (Android/iOS via FCM)
@@ -67,6 +74,13 @@ export function usePushNotifications(userId: string | undefined) {
             const title = notification.notification?.title || "New notification";
             const body = notification.notification?.body || "";
             const channelId = (notification.notification as any)?.channelId || "notify_whistle";
+
+            // Play the corresponding foreground sound
+            if (channelId === "notify_smash") playSmashSound();
+            else if (channelId === "notify_point") playPointSound();
+            else if (channelId === "notify_serve") playServeSound();
+            else if (channelId === "notify_victory") playVictorySound();
+            else playWhistleSound();
 
             if (Capacitor.getPlatform() === 'android' || Capacitor.getPlatform() === 'ios') {
               try {
@@ -188,12 +202,27 @@ export function usePushNotifications(userId: string | undefined) {
               console.log("[WebPush] Message received in foreground:", payload);
               const title = payload.notification?.title || "New Match Update";
               const body = payload.notification?.body || "Check out the latest action!";
+              
+              // Guess the right sound based on type/data if available
+              const data = payload.data || {};
+              const type = data.type || "";
+              
+              if (type === "match_confirmation") playPointSound();
+              else if (type === "new_match") playSmashSound();
+              else if (type === "serve" || type === "kudos") playServeSound();
+              else if (type === "elo_milestone" || type === "top10") playVictorySound();
+              else playWhistleSound();
+
               showWebNotification(title, body);
             });
           }
         }
-      } catch (err) {
-        console.warn("[WebPush] Failed to register web push:", err);
+      } catch (err: any) {
+        if (err.name === "AbortError" || err.message?.includes("push service error")) {
+          console.debug("[WebPush] Push service not available in this browser/mode.");
+        } else {
+          console.warn("[WebPush] Failed to register web push:", err);
+        }
       }
     };
 

@@ -49,7 +49,7 @@ BEGIN
     'Buddy Request',
     sender_name || ' sent you a buddy request.',
     'buddy_request',
-    '/player/' || NEW.sender_id
+    '/players#network'
   );
   RETURN NEW;
 END;
