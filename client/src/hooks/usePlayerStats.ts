@@ -17,11 +17,11 @@ export function usePlayerStats(
       !!player.nationality,
       !!player.height,
       !!player.coach,
-      player.years_playing != null,
-      player.racket_details && (player.racket_details as any[]).length > 0,
-      !!(player.shoes_list?.length || player.shoes),
-      !!(player.social as any)?.instagram,
-      !!(player.stats as any)?.media?.length,
+      (player as any).years_playing != null,
+      player.racket_details && ((player as any).racket_details as any[]).length > 0,
+      !!((player as any).shoes_list?.length || (player as any).shoes),
+      !!((player as any).social as any)?.instagram,
+      !!((player as any).stats as any)?.media?.length,
       validAchievements.length > 0,
     ];
     return Math.round((checks.filter(Boolean).length / checks.length) * 100);

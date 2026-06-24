@@ -7,6 +7,8 @@ import { fetchPlayerMatches } from "@/services/matchService";
 import { Card } from "@/components/ui/card";
 import { Link } from "wouter";
 import { MATCH_SELECT_WITH_PLAYERS } from "@/types";
+import type { PlayerRow } from "@/types/player";
+import type { MatchWithPlayers } from "@/types/match";
 import { ChevronLeft, Swords, Trophy, TrendingUp, Flame, Calendar, MapPin, User, Activity, Ruler, ChevronDown } from "lucide-react";
 import { getEloTier } from "@/lib/tiers";
 import {
@@ -30,10 +32,10 @@ export default function ComparePlayers() {
   const [, setLocation] = useLocation();
   const { session } = useAuth();
   
-  const [player1, setPlayer1] = useState<any>(null);
-  const [player2, setPlayer2] = useState<any>(null);
-  const [allPlayers, setAllPlayers] = useState<any[]>([]);
-  const [matches, setMatches] = useState<any[]>([]);
+  const [player1, setPlayer1] = useState<PlayerRow | null>(null);
+  const [player2, setPlayer2] = useState<PlayerRow | null>(null);
+  const [allPlayers, setAllPlayers] = useState<PlayerRow[]>([]);
+  const [matches, setMatches] = useState<MatchWithPlayers[]>([]);
   const [loading, setLoading] = useState(true);
 
   usePageMeta({ title: "Player Comparison" });

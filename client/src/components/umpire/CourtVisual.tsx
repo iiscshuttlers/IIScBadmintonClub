@@ -1,5 +1,3 @@
-import React from "react";
-
 export function CourtVisual({
   serverTeam,
   serverPlayerIndex = 0,
@@ -156,4 +154,4 @@ export function CourtVisual({
     </div>
   );
 }
-
+

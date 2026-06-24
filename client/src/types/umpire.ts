@@ -1,0 +1,71 @@
+import type { PlayerSlim as Player } from "@/types";
+
+// Shape of a DB match row passed into edit mode (distinct from BwfMatchState)
+export type MatchEditState = {
+  is_edit_mode: true;
+  id: string;
+  player1_id: string;
+  player2_id: string;
+  team1_partner_id?: string | null;
+  team2_partner_id?: string | null;
+  winner_id?: string | null;
+  score?: string | null;
+  match_score?: string | null;
+  round?: string | null;
+  is_friendly?: boolean | null;
+  category?: string;
+  sets_history?: string[] | null;
+  player1?: { full_name: string } | null;
+  player2?: { full_name: string } | null;
+  partner1?: { full_name: string } | null;
+  partner2?: { full_name: string } | null;
+};
+
+export type PointLogEntry = {
+  gameNum: number;
+  team: 1 | 2 | "let" | "fault";
+  t1Score: number;
+  t2Score: number;
+  serverTeam: 1 | 2;
+  note?: string;
+  ts: number;
+};
+
+export type BwfMatchState = {
+  id: string;
+  umpireName: string;
+  isFriendly: boolean;
+  matchNumber?: string;
+  category: string;
+  inferredCategory?: string;
+  customCategory?: string;
+  dbId?: string;
+  pointsToWin: number;
+  bestOfSets: number;
+  goldenPoint: number;
+  t1: { p1Id: string; p1Name: string; p2Id?: string; p2Name?: string; score: number; games: number };
+  t2: { p1Id: string; p1Name: string; p2Id?: string; p2Name?: string; score: number; games: number };
+  serverTeam: 1 | 2;
+  serverPlayerIndex: 0 | 1;
+  receiverPlayerIndex: 0 | 1;
+  receiverP0AtTop: boolean;
+  t1LastServedBy: 0 | 1;
+  t2LastServedBy: 0 | 1;
+  endsSwapped: boolean;
+  pointLog: PointLogEntry[];
+  status: "setup" | "playing" | "finished";
+  winner?: 1 | 2;
+  retiredTeam?: 1 | 2;
+  setsHistory: string[];
+};
+
+export type CardType = "yellow" | "red" | "black";
+export type CardTarget = "t1p1" | "t1p2" | "t2p1" | "t2p2";
+
+// ── Court Visual ──────────────────────────────────────────────────────────────
+
+// ── Player Select ─────────────────────────────────────────────────────────────
+
+
+// ── UmpireEngine ──────────────────────────────────────────────────────────────
+

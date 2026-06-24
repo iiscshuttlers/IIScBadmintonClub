@@ -11,6 +11,7 @@ import StatusBanner from "@/components/StatusBanner";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { PwaInstallPrompt } from "./components/pwa/PwaInstallPrompt";
@@ -253,24 +254,24 @@ function AppRoutes() {
           <Route path="/about" component={About} />
           <Route path="/hall-of-fame" component={HallOfFame} />
           <Route path="/gallery" component={Gallery} />
-
-          <Route path="/admin" component={SiteAdmin} />
           <Route path="/events/:slug" component={TournamentDetail} />
           <Route path="/events" component={Events} />
           <Route path="/join" component={Join} />
-          <Route path="/profile/setup" component={ProfileSetup} />
-          <Route path="/players" component={PlayersDirectory} />
-          <Route path="/player/:id/edit" component={ProfileSetup} />
           <Route path="/player/:id" component={PlayerProfile} />
           <Route path="/compare/:p1/:p2" component={ComparePlayers} />
-          <Route path="/profile/password" component={ChangePassword} />
-          <Route path="/find-lost" component={Marketplace} />
-          <Route path="/delete-account" component={DeleteAccount} />
           <Route path="/doubles/:p1/:p2" component={DoublesPairProfile} />
           <Route path="/exchange" component={Marketplace} />
           <Route path="/marketplace" component={Marketplace} /> {/* Keep legacy for a bit just in case */}
           <Route path="/privacy" component={PrivacyPolicy} />
           <Route path="/terms" component={TermsOfService} />
+
+          <Route path="/admin"><ProtectedRoute><SiteAdmin /></ProtectedRoute></Route>
+          <Route path="/profile/setup"><ProtectedRoute><ProfileSetup /></ProtectedRoute></Route>
+          <Route path="/players"><ProtectedRoute><PlayersDirectory /></ProtectedRoute></Route>
+          <Route path="/player/:id/edit"><ProtectedRoute><ProfileSetup /></ProtectedRoute></Route>
+          <Route path="/profile/password"><ProtectedRoute><ChangePassword /></ProtectedRoute></Route>
+          <Route path="/find-lost"><ProtectedRoute><Marketplace /></ProtectedRoute></Route>
+          <Route path="/delete-account"><ProtectedRoute><DeleteAccount /></ProtectedRoute></Route>
 
           <Route path="/404" component={NotFound} />
           <Route component={NotFound} />

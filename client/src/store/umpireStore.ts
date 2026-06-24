@@ -1,0 +1,106 @@
+import { create } from "zustand";
+import type { BwfMatchState, CardTarget, CardType } from "@/types/umpire";
+
+interface UmpireStoreState {
+  match: BwfMatchState | null;
+  cards: Record<CardTarget, CardType[]>;
+  
+  // Modals & Overlays
+  showLog: boolean;
+  showChangeEnds: boolean;
+  changeEndsReason: string;
+  pendingBreakAfterEnds: number | null;
+  showCardPanel: boolean;
+  cardTarget: CardTarget | null;
+  showRetireModal: boolean;
+  isEditSetupOpen: boolean;
+  showToolsMenu: boolean;
+  isDirectScoreOpen: boolean;
+  
+  // Timer State
+  showFullTimer: boolean;
+  breakSecondsLeft: number | null;
+  breakLabel: string;
+  
+  // Direct Score edits
+  directSetsText: string;
+  directWinner: 1 | 2 | null;
+
+  // Actions
+  setMatch: (match: BwfMatchState | null) => void;
+  updateMatch: (updates: Partial<BwfMatchState>) => void;
+  setCards: (cards: Record<CardTarget, CardType[]>) => void;
+  
+  setShowLog: (show: boolean) => void;
+  setShowChangeEnds: (show: boolean) => void;
+  setChangeEndsReason: (reason: string) => void;
+  setPendingBreakAfterEnds: (seconds: number | null) => void;
+  setShowCardPanel: (show: boolean) => void;
+  setCardTarget: (target: CardTarget | null) => void;
+  setShowRetireModal: (show: boolean) => void;
+  setIsEditSetupOpen: (show: boolean) => void;
+  setShowToolsMenu: (show: boolean) => void;
+  setIsDirectScoreOpen: (show: boolean) => void;
+  
+  setShowFullTimer: (show: boolean) => void;
+  setBreakSecondsLeft: (seconds: number | null) => void;
+  setBreakLabel: (label: string) => void;
+  
+  setDirectSetsText: (text: string) => void;
+  setDirectWinner: (winner: 1 | 2 | null) => void;
+  
+  reset: () => void;
+}
+
+const initialState = {
+  match: null,
+  cards: { t1p1: [], t1p2: [], t2p1: [], t2p2: [] } as Record<CardTarget, CardType[]>,
+  
+  showLog: false,
+  showChangeEnds: false,
+  changeEndsReason: "",
+  pendingBreakAfterEnds: null,
+  showCardPanel: false,
+  cardTarget: null,
+  showRetireModal: false,
+  isEditSetupOpen: false,
+  showToolsMenu: false,
+  isDirectScoreOpen: false,
+  
+  showFullTimer: false,
+  breakSecondsLeft: null,
+  breakLabel: "",
+  
+  directSetsText: "",
+  directWinner: null,
+};
+
+export const useUmpireStore = create<UmpireStoreState>((set) => ({
+  ...initialState,
+  
+  setMatch: (match) => set({ match }),
+  updateMatch: (updates) => set((state) => ({ 
+    match: state.match ? { ...state.match, ...updates } : null 
+  })),
+  setCards: (cards) => set({ cards }),
+  
+  setShowLog: (showLog) => set({ showLog }),
+  setShowChangeEnds: (showChangeEnds) => set({ showChangeEnds }),
+  setChangeEndsReason: (changeEndsReason) => set({ changeEndsReason }),
+  setPendingBreakAfterEnds: (pendingBreakAfterEnds) => set({ pendingBreakAfterEnds }),
+  setShowCardPanel: (showCardPanel) => set({ showCardPanel }),
+  setCardTarget: (cardTarget) => set({ cardTarget }),
+  setShowRetireModal: (showRetireModal) => set({ showRetireModal }),
+  setIsEditSetupOpen: (isEditSetupOpen) => set({ isEditSetupOpen }),
+  setShowToolsMenu: (showToolsMenu) => set({ showToolsMenu }),
+  setIsDirectScoreOpen: (isDirectScoreOpen) => set({ isDirectScoreOpen }),
+  
+  setShowFullTimer: (showFullTimer) => set({ showFullTimer }),
+  setBreakSecondsLeft: (breakSecondsLeft) => set({ breakSecondsLeft }),
+  setBreakLabel: (breakLabel) => set({ breakLabel }),
+  
+  setDirectSetsText: (directSetsText) => set({ directSetsText }),
+  setDirectWinner: (directWinner) => set({ directWinner }),
+  
+  reset: () => set(initialState),
+}));

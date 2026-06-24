@@ -43,3 +43,48 @@ export async function confirmMatch(matchId: string, confirmerId: string) {
   if (error) throw error;
   return data;
 }
+
+import type { BwfMatchState } from "@/types/umpire";
+
+export class MatchService {
+  static async updateMatch(
+    matchUuid: string,
+    winnerId: string | undefined,
+    matchScore: string,
+    matchCategory: string,
+    setsHistory: string[]
+  ) {
+    const { error } = await supabase.rpc("umpire_update_match", {
+      match_uuid: matchUuid,
+      winner_id: winnerId,
+      match_score: matchScore,
+      match_category: matchCategory,
+      sets_history: setsHistory
+    });
+    if (error) throw error;
+  }
+
+  static async submitMatch(payload: any) {
+    const { data: submitId, error: submitError } = await supabase.rpc("umpire_submit_match", payload);
+    if (submitError) throw submitError;
+    return submitId;
+  }
+
+  static async confirmFriendlyMatch(matchUuid: string) {
+    const { error } = await supabase.rpc("confirm_friendly_match", { match_uuid: matchUuid });
+    if (error) throw error;
+  }
+
+  static async upsertLiveMatch(umpireUserId: string, matchState: BwfMatchState) {
+    const { error } = await supabase.rpc("upsert_live_match", {
+      umpire_user_id: umpireUserId,
+      match_state: matchState as unknown as Record<string, unknown>,
+    });
+    if (error) throw error;
+  }
+
+  static async removeLiveMatch(umpireUserId: string) {
+    const { error } = await supabase.rpc("remove_live_match", { umpire_user_id: umpireUserId });
+    if (error) throw error;
+  }
+}

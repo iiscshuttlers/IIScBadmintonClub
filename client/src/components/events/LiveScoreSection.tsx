@@ -4,7 +4,7 @@ import { Trophy, Activity, Tv2, Trash2, Save, ShieldCheck, X, MonitorPlay } from
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
-import type { BwfMatchState } from "../umpire/UmpireEngine";
+import type { BwfMatchState } from "@/types/umpire";
 
 function MatchBroadcastCard({
   match,

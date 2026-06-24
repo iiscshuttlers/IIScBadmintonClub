@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { TrendingUp, Check } from "lucide-react";
-import type { BwfMatchState } from "@/components/umpire/UmpireEngine";
+import type { BwfMatchState } from "@/types/umpire";
 
 type VoteTally = { t1: number; t2: number };
 type StatProb = { t1: number; t2: number } | null;

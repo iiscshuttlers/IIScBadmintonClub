@@ -2,7 +2,7 @@ import React from 'react';
 import { X, AlertTriangle } from 'lucide-react';
 import { PlayerSelect } from './PlayerSelect';
 import type { PlayerSlim as Player } from '@/types';
-import type { BwfMatchState } from './UmpireEngine';
+import type { BwfMatchState } from '@/types/umpire';
 
 interface UmpireSetupFlowProps {
   match: BwfMatchState;

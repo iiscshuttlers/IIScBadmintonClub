@@ -48,7 +48,7 @@ function getLatestHighlight() {
 }
 
 export default function Home() {
-  const [config, setConfig] = useState<any>(null);
+  const [config, setConfig] = useState<Record<string, any> | null>(null);
 
   useEffect(() => {
     fetchSiteData("site_config", "site_config.json")

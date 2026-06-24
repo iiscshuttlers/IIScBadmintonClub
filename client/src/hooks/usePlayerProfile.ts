@@ -65,7 +65,7 @@ export function usePlayerProfile(targetPlayerId: string | undefined, isMatchesOn
         setPlayer(null);
       } else if (playerRes.data) {
         // Just set raw data for now, the UI formats it or we can map it
-        setPlayer(formatPlayerData(playerRes.data));
+        setPlayer(formatPlayerData(playerRes.data) as any);
       }
 
       setRawMatches(matchesRes || []);

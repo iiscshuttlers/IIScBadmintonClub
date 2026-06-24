@@ -332,7 +332,7 @@ function PublicApiPanel() {
 
 /* ── DB Health ───────────────────────────────────────────────────── */
 function DbHealthPanel() {
-  const [health, setHealth] = useState<any>(null);
+  const [health, setHealth] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
 
   const run = async () => {

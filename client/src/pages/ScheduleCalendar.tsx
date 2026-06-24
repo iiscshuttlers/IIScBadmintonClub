@@ -136,7 +136,7 @@ export default function ScheduleCalendar() {
     new Date(),
   );
   const [loading, setLoading] = useState(true);
-  const [tournamentData, setTournamentData] = useState<any>(null);
+  const [tournamentData, setTournamentData] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
     async function loadEvents() {

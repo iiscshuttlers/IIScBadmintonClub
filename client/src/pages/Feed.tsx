@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { useAuth } from "@/contexts/AuthContext";
-import { useAutoRefresh } from "@/hooks/useAutoRefresh";
+
 import { toast } from "sonner";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { shareMatch } from "@/lib/shareMatch";
@@ -141,7 +141,7 @@ export default function Feed() {
     return () => clearTimeout(t);
   }, [loading, matches.length, fetchFeed]);
 
-  useAutoRefresh(() => fetchFeed(true), 30_000, !loading);
+  
   usePullToRefresh();
 
   const [feedFilter, setFeedFilter] = useState<"global" | "following" | "buddies">(

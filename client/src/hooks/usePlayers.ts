@@ -10,6 +10,23 @@ export function usePlayers() {
   });
 }
 
+export function useOtherPlayersSlim(currentUserId?: string) {
+  return useQuery({
+    queryKey: ["players", "other_slim", currentUserId],
+    queryFn: () => currentUserId ? playerService.getOtherPlayersSlim(currentUserId) : Promise.resolve([]),
+    enabled: !!currentUserId,
+    staleTime: 1000 * 60 * 15,
+  });
+}
+
+export function usePlayerBuddies(profileId: string, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ["players", "buddies", profileId],
+    queryFn: () => playerService.getBuddies(profileId),
+    enabled: options?.enabled ?? !!profileId,
+  });
+}
+
 export function useFollowers(profileId?: string) {
   return useQuery({
     queryKey: ["players", "followers", profileId],

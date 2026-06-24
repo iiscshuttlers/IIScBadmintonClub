@@ -1,109 +1,70 @@
-const ts = require('typescript');
 const fs = require('fs');
+const path = require('path');
 
-const fileName = 'client/src/pages/PlayerProfile.tsx';
-let sourceText = fs.readFileSync(fileName, 'utf8');
+const filePath = path.join(__dirname, 'client/src/hooks/useUmpireState.tsx');
+let content = fs.readFileSync(filePath, 'utf8');
 
-const sourceFile = ts.createSourceFile(
-  fileName,
-  sourceText,
-  ts.ScriptTarget.Latest,
-  true,
-  ts.ScriptKind.TSX
-);
-
-const replacements = [];
-
-function findUseMemoDeclaration(node, varName) {
-  let foundNode = null;
-  function visit(n) {
-    if (ts.isVariableDeclaration(n) && n.name.getText() === varName) {
-      if (n.initializer && ts.isCallExpression(n.initializer)) {
-        if (n.initializer.expression.getText() === 'useMemo' || n.initializer.expression.getText() === 'React.useMemo') {
-          foundNode = n.parent.parent; 
-        }
-      }
-    }
-    ts.forEachChild(n, visit);
-  }
-  visit(node);
-  return foundNode;
+// 1. Add import for useUmpireStore
+if (!content.includes('import { useUmpireStore }')) {
+  content = content.replace(
+    'import { useState, useEffect, useRef, useCallback, useMemo } from "react";',
+    'import { useState, useEffect, useRef, useCallback, useMemo } from "react";\nimport { useUmpireStore } from "@/store/umpireStore";'
+  );
 }
 
-function findMatchHandlers(node) {
-  let nodes = [];
-  function visit(n) {
-    if (ts.isVariableDeclaration(n)) {
-      const name = n.name.getText();
-      if (['handleConfirmMatch', 'handleRejectMatch', 'handleResendRequest', 'handleWithdrawMatch'].includes(name)) {
-        nodes.push(n.parent.parent); 
-      }
-    }
-    ts.forEachChild(n, visit);
-  }
-  visit(node);
-  return nodes;
-}
+// 2. We need to initialize the store state ONCE per match based on initialMatchState.
+// We can use an effect for that, but we have to replace the local state variables.
 
-const toRemove = [
-  'dynamicBadges',
-  'profileCompleteness',
-  'splitStats',
-  'validAchievements',
-  'winPct',
-  'totalMatches',
-  'streakStats',
-  'totalPlayedGames'
+const statesToReplace = [
+  'cards', 'showLog', 'showChangeEnds', 'changeEndsReason', 'pendingBreakAfterEnds',
+  'showCardPanel', 'cardTarget', 'showRetireModal', 'isEditSetupOpen', 'showToolsMenu',
+  'isDirectScoreOpen', 'showFullTimer', 'directSetsText', 'directWinner',
+  'breakSecondsLeft', 'breakLabel'
 ];
 
-toRemove.forEach(varName => {
-  const node = findUseMemoDeclaration(sourceFile, varName);
-  if (node) {
-    replacements.push({ start: node.getFullStart(), end: node.getEnd(), text: '' });
-  }
-});
+let storeDestructure = `  const {
+    match: storeMatch, setMatch, updateMatch,
+    ${statesToReplace.map(s => `${s}, set${s.charAt(0).toUpperCase() + s.slice(1)}`).join(',\n    ')}
+  } = useUmpireStore();\n\n`;
 
-const handlerNodes = findMatchHandlers(sourceFile);
-handlerNodes.forEach(n => {
-  replacements.push({ start: n.getFullStart(), end: n.getEnd(), text: '' });
-});
+// Replace `const [match, setMatch] = useState...` with store logic
+// We'll rename local match to `_initialMatch` just for the first run, and use `storeMatch` as the real one.
+content = content.replace(
+  /const\s+\[match,\s*setMatch\]\s*=\s*useState<BwfMatchState>\(\(\)\s*=>\s*\{([\s\S]*?)\}\);/,
+  `// Use Zustand store instead
+${storeDestructure}
+  const match = storeMatch || (() => {
+    $1
+  })();
 
-replacements.sort((a, b) => b.start - a.start);
+  useEffect(() => {
+    if (!storeMatch) {
+      setMatch(match);
+    }
+  }, [storeMatch, setMatch, match]);
+`
+);
 
-let newSource = sourceText;
-for (const r of replacements) {
-  newSource = newSource.substring(0, r.start) + r.text + newSource.substring(r.end);
+// Replace `const [state, setState] = useState...` for the rest
+for (const state of statesToReplace) {
+  const cap = state.charAt(0).toUpperCase() + state.slice(1);
+  const regex = new RegExp(`const\\s+\\[${state},\\s*set${cap}\\]\\s*=\\s*useState.*?;`, 'g');
+  content = content.replace(regex, `// ${state} now in Zustand`);
 }
 
-// Inject hooks
-const hookCalls = `
-  const validAchievements = useMemo(
-    () =>
-      player ? player.achievements.filter((a) => a && a.trim() !== "") : [],
-    [player],
+// Replace startBreak logic and endBreak logic to use umpireEffects
+if (!content.includes('import { playTimerEndEffect }')) {
+  content = content.replace(
+    'import { useState',
+    'import { playTimerEndEffect } from "@/lib/umpire/umpireEffects";\nimport { useState'
   );
+}
 
-  const {
-    profileCompleteness,
-    dynamicBadges,
-    winPct,
-    totalMatches,
-    splitStats,
-    streakStats,
-    totalPlayedGames
-  } = usePlayerStats(player, liveMatches, validAchievements);
+// Inside startBreak, replace the audio/haptics try/catch block with a call to playTimerEndEffect()
+content = content.replace(
+  /try\s*\{\s*if\s*\(typeof\s*window[\s\S]*?catch\(e\)\s*\{\}/g,
+  'playTimerEndEffect();'
+);
 
-  const {
-    handleConfirmMatch,
-    handleRejectMatch,
-    handleResendRequest,
-    handleWithdrawMatch
-  } = useMatchActions(ownPlayerProfile, refreshProfile, () => {});
-`;
-
-newSource = newSource.replace(/const isUnranked = false;/, hookCalls + '\n  const isUnranked = false;');
-newSource = newSource.replace(/import \{ isMasterAdminEmail as isAdminEmail \} from "@\/lib\/admin";/, 
-`import { usePlayerStats } from "@/hooks/usePlayerStats";\nimport { useMatchActions } from "@/hooks/useMatchActions";\nimport { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";`);
-
-fs.writeFileSync(fileName, newSource);
-console.log('Successfully refactored PlayerProfile.tsx');
+fs.writeFileSync(filePath, content, 'utf8');
+console.log('Successfully refactored useUmpireState.tsx to use Zustand!');

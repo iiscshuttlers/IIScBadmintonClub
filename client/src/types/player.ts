@@ -106,3 +106,65 @@ export interface PlayerSlim {
 export interface PlayerRanked extends PlayerRow {
   // Any computed fields for ranking
 }
+
+export interface Partner {
+  name: string;
+  id?: string;
+  matchesTogether?: number;
+  winRate?: number;
+}
+
+export interface PlayerProfileType {
+  id: string;
+  fullName: string;
+  nickname?: string;
+  avatar: string;
+  department: string;
+  joinedYear: number;
+  playingLevel: string;
+  dominantHand: string;
+  playingStyle: string;
+  gender?: string;
+  favoriteShot: string;
+  favoriteIdol: string;
+  favoriteFormat: string;
+  quote?: string;
+  currentRacket: string;
+  racketDetails: { name: string; string: string; tension: string }[];
+  tournamentHistory: string[];
+  achievements: string[];
+  winLossRecord: string;
+
+  // New optional fields
+  nationality?: string;
+  homeState?: string;
+  height?: string;
+  yearsPlaying?: number;
+  coach?: string;
+  bio?: string;
+  currentRanking?: number;
+  highestRanking?: number;
+  stats?: PlayerStats;
+  recentForm?: ("W" | "L")[];
+  recentMatches?: any[];
+  frequentPartners?: Partner[];
+  careerHighlights?: CareerHighlight[];
+  shoes?: string;
+  shoesList?: { name: string; primary: boolean }[];
+  apparel?: string;
+  social?: { instagram?: string; email?: string };
+  userId?: string;
+  following?: string[];
+  followers?: string[];
+  elo_rating?: number;
+  singles_elo?: number;
+  doubles_elo?: number;
+  mixed_elo?: number;
+  isApproved?: boolean;
+  role?: 'master_admin' | 'admin' | 'umpire' | 'player';
+  buddies?: string[];
+  buddyRequests?: string[];
+  singles_record?: string;
+  doubles_record?: string;
+  mixed_record?: string;
+}

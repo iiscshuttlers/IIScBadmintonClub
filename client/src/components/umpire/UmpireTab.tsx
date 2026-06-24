@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
+import { useLiveSiteData } from "@/hooks/useMatches";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { UmpireEngine, BwfMatchState, MatchEditState } from "./UmpireEngine";
+import { UmpireEngine } from "./UmpireEngine";
+import { BwfMatchState, MatchEditState } from "@/types/umpire";
 import { Play, Tv2, AlertTriangle } from "lucide-react";
 import { fetchSiteData } from "@/lib/siteData";
 import { BeautifulScoreDisplay } from "@/components/feed/BeautifulScoreDisplay";

@@ -59,7 +59,7 @@ export function TournamentSection() {
     ["notices", "schedule", "broadcast", "brackets", "umpire"] as const,
     "notices",
   );
-  const [tournamentData, setTournamentData] = useState<any>(null);
+  const [tournamentData, setTournamentData] = useState<Record<string, unknown> | null>(null);
   const mountedRef = useRef(true);
 
   useEffect(() => {

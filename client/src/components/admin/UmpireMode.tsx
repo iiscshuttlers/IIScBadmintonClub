@@ -43,7 +43,7 @@ function parsePairNames(name: string): string[] {
 
 export function UmpireMode() {
   const [fbUser, setFbUser] = useState<FirebaseUser | null>(null);
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<Record<string, any> | null>(null);
   const [selectedFormat, setFormat] = useState("MS");
   const [selectedMatchId, setMatchId] = useState("");
   const [status, setStatus] = useState("in-progress");
