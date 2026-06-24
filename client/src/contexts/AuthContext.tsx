@@ -11,47 +11,12 @@ import { isMasterAdminEmail } from "@/lib/admin";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { toast } from "sonner";
-import { Capacitor } from "@capacitor/core";
-import { PushNotifications } from "@capacitor/push-notifications";
 import { Badge } from "@capawesome/capacitor-badge";
+import { useMatchNotifications } from "@/hooks/useMatchNotifications";
 
-export interface PlayerProfile {
-  id: string;
-  full_name: string;
-  nickname: string | null;
-  iisc_email: string | null;
-  contact_number: string | null;
-  department: string;
-  joined_year: number | null;
-  playing_level: string;
-  playing_style: string;
-  dominant_hand: string | null;
-  favorite_shot: string | null;
-  favorite_idol: string | null;
-  quote: string | null;
-  avatar_url: string;
-  current_racket: string;
-  racket_details: any;
-  shoes: any;
-  stats: any;
-  nationality: string | null;
-  home_state: string | null;
-  height: string | null;
-  years_playing: number | null;
-  coach: string | null;
-  bio: string | null;
-  apparel: string | null;
-  instagram: string | null;
-  achievements: string[] | null;
-  tournament_history: string[] | null;
-  elo_rating?: number;
-  status?: string;
-  role?: 'master_admin' | 'admin' | 'umpire' | 'player';
-  followers?: string[];
-  following?: string[];
-  buddies?: string[];
-  buddy_requests?: string[];
-}
+import type { PlayerRow } from "@/types";
+
+export type PlayerProfile = PlayerRow;
 
 export type ViewAsRole = 'master_admin' | 'admin' | 'umpire' | 'player';
 
@@ -135,116 +100,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
 
-  // Global App Badge logic for pending matches
-  useEffect(() => {
-    if (!profile?.id) return;
-
-    const fetchPendingCount = async () => {
-      try {
-        const { count, error } = await supabase
-          .from("matches")
-          .select("id", { count: "exact", head: true })
-          .eq("status", "pending")
-          .neq("submitted_by", profile.id)
-          .or(`player1_id.eq.${profile.id},player2_id.eq.${profile.id},team1_partner_id.eq.${profile.id},team2_partner_id.eq.${profile.id}`);
-
-        if (!error && count !== null && Capacitor.isNativePlatform()) {
-          try {
-            if (count > 0) {
-              await Badge.set({ count });
-            } else {
-              await Badge.clear();
-            }
-          } catch (e) {
-            console.warn("Failed to set app badge", e);
-          }
-        }
-      } catch (err) {
-        // ignore
-      }
-    };
-
-    fetchPendingCount();
-
-    const channel = supabase
-      .channel("realtime_matches")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "matches",
-          filter: `player2_id=eq.${profile.id}`,
-        },
-        async (payload) => {
-          if (payload.new.status === "pending") {
-            fetchPendingCount();
-            try {
-              // Fetch the opponent's name for a better notification
-              const { data } = await supabase
-                .from("players")
-                .select("full_name")
-                .eq("id", payload.new.player1_id)
-                .single();
-              const challengerName = data?.full_name || "Someone";
-              
-              let description = `${challengerName} just logged a match against you!`;
-              let title = "🏸 New Match Request";
-
-              if (payload.new.submitted_by && payload.new.submitted_by !== payload.new.player1_id && payload.new.submitted_by !== payload.new.player2_id) {
-                 const { data: umpireData } = await supabase.from("players").select("full_name").eq("id", payload.new.submitted_by).single();
-                 if (umpireData) {
-                     title = "📺 Match Logged by Umpire";
-                     description = `Umpire ${umpireData.full_name} logged your match: ${payload.new.match_score}`;
-                 }
-              }
-
-              toast.info(title, {
-                description,
-                action: {
-                  label: "View",
-                  onClick: () =>
-                    (window.location.href = `${import.meta.env.BASE_URL}feed/my-matches`),
-                },
-                duration: 10000,
-              });
-            } catch (err) {
-              // Fallback
-              toast.info("🏸 New Match Request", {
-                description: "Someone just logged a match against you!",
-              });
-            }
-          }
-        },
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "matches",
-        },
-        (payload) => {
-           fetchPendingCount();
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "DELETE",
-          schema: "public",
-          table: "matches",
-        },
-        (payload) => {
-           fetchPendingCount();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [profile?.id]);
+  // Global App Badge & Realtime Notifications for pending matches
+  useMatchNotifications(profile?.id);
 
   const isInitializing = sessionLoading || (!!session && profileLoading);
 

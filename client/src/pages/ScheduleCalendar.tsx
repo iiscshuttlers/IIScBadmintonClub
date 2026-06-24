@@ -144,10 +144,12 @@ export default function ScheduleCalendar() {
         const [eventsData, holidaysData, tourneySnap, tourneyCfg] = await Promise.all([
           fetchSiteData<CalendarEvent[]>("events", "events.json").catch(() => []),
           fetchSiteData<Holiday[]>("holidays", "holidays.json").catch(() => []),
-          getDoc(doc(db, "live_data", "tournament")).catch((err) => {
-            console.error("Firebase tourney fetch failed:", err);
-            return null;
-          }),
+          db
+            ? getDoc(doc(db, "live_data", "tournament")).catch((err) => {
+                console.error("Firebase tourney fetch failed:", err);
+                return null;
+              })
+            : Promise.resolve(null),
           fetchTournamentConfig().catch(() => null),
         ]);
 

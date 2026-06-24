@@ -9,12 +9,7 @@ import { supabase } from "@/lib/supabase";
 import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
 import { toast } from "sonner";
 
-interface Player {
-  id: string;
-  full_name: string;
-  avatar_url?: string;
-  gender?: string;
-}
+import type { PlayerSlim as Player } from "@/types";
 
 interface LogMatchModalProps {
   isOpen: boolean;
@@ -83,9 +78,14 @@ function PlayerSelect({
               <div
                 key={p.id}
                 onClick={() => { onChange(p.id); setSearch(p.full_name); setIsOpen(false); }}
-                className="p-2 text-xs font-bold hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer text-slate-700 dark:text-slate-200"
+                className="p-2 text-xs font-bold hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer text-slate-700 dark:text-slate-200 flex items-center justify-between gap-2"
               >
-                {p.full_name}
+                <span className="truncate">{p.full_name}</span>
+                {p.is_guest && (
+                  <span className="shrink-0 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-300">
+                    Guest
+                  </span>
+                )}
               </div>
             ))
           )}
@@ -374,11 +374,17 @@ export default function LogMatchModal({
           await supabase.from("matches").update({ is_friendly: false, round: "Tournament" }).eq("id", latestMatches[0].id);
       }
 
+      const involvesGuest = [opponentId, partnerId, opponentPartnerId]
+        .filter(Boolean)
+        .some((id) => otherPlayers.find((p) => p.id === id)?.is_guest);
+
       if (myTeamWon) toast.success("Incredible victory!");
       toast.success(
-        matchCategory === "friendly"
-          ? "Match submitted! Waiting for opponent to confirm."
-          : "Tournament match logged! Waiting for opponent to confirm.",
+        involvesGuest
+          ? "Match submitted! A guest is involved — waiting for an admin to approve."
+          : matchCategory === "friendly"
+            ? "Match submitted! Waiting for opponent to confirm."
+            : "Tournament match logged! Waiting for opponent to confirm.",
       );
       onSuccess(); onClose();
     } catch (err: any) {

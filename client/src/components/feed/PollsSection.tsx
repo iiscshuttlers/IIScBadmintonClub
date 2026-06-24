@@ -5,35 +5,74 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
-interface PollOption {
+export interface PollOption {
   id: string;
   text: string;
   votes: string[]; // array of user IDs who voted
 }
 
-interface Poll {
+export interface Poll {
   id: string;
   question: string;
   options: PollOption[];
   created_at: string;
   created_by?: string;
   is_active: boolean;
+  is_archived?: boolean;
+  start_date?: string;
+  end_date?: string;
 }
 
-function PollCard({ poll, onVote, currentUserId }: { poll: Poll; onVote: (pollId: string, optionId: string) => void; currentUserId?: string }) {
+
+export const isPollVisible = (poll: Poll) => {
+  if (poll.is_archived) return false;
+  if (!poll.is_active) return false;
+  const now = Date.now();
+  if (poll.start_date && now < new Date(poll.start_date).getTime()) return false;
+  if (poll.end_date && now > new Date(poll.end_date).getTime()) return false;
+  return true;
+};
+function PollCard({ poll, onVote, onArchive, onDelete, currentUserId, isAdmin }: { poll: Poll; onVote: (pollId: string, optionId: string) => void; onArchive?: (pollId: string, archive: boolean) => void; onDelete?: (pollId: string) => void; currentUserId?: string; isAdmin?: boolean }) {
   const totalVotes = poll.options.reduce((sum, o) => sum + (o.votes?.length || 0), 0);
   const userVotedId = currentUserId
     ? poll.options.find(o => o.votes?.includes(currentUserId))?.id
     : null;
-  const hasVoted = !!userVotedId;
+  const hasVoted = !!userVotedId || !!poll.is_archived;
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 p-5 shadow-sm">
-      <div className="flex items-center gap-2 mb-4">
-        <BarChart2 className="w-4 h-4 text-violet-500" />
-        <span className="text-xs font-black uppercase tracking-widest text-violet-500">Community Poll</span>
+    <div className={`bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 relative ${poll.is_archived ? "opacity-75" : ""}`}>
+      <div className="flex items-center gap-3 mb-4">
+        <div className={`p-2 rounded-xl ${poll.is_archived ? "bg-slate-100 dark:bg-slate-800" : "bg-violet-100 dark:bg-violet-900/50"}`}>
+          <BarChart2 className={`w-5 h-5 ${poll.is_archived ? "text-slate-500" : "text-violet-600 dark:text-violet-400"}`} />
+        </div>
+        <span className={`text-xs font-black uppercase tracking-widest ${poll.is_archived ? "text-slate-500" : "text-violet-500"}`}>
+          {poll.is_archived ? "Archived Poll" : "Community Poll"}
+        </span>
       </div>
-      <h3 className="font-black text-slate-800 dark:text-white text-base mb-4">{poll.question}</h3>
+      {isAdmin && (
+        <div className="absolute top-6 right-6 flex items-center gap-2">
+          {onArchive && (
+            <button
+              onClick={() => onArchive(poll.id, !poll.is_archived)}
+              className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-amber-500 transition-colors flex items-center gap-1"
+            >
+              {poll.is_archived ? "Unarchive" : "Archive"}
+            </button>
+          )}
+          {onDelete && (
+            <button
+              onClick={() => onDelete(poll.id)}
+              className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-rose-500 transition-colors flex items-center gap-1"
+            >
+              Delete
+            </button>
+          )}
+          <a href="/admin#polls" className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-violet-500 transition-colors flex items-center gap-1 border-l border-slate-200 dark:border-slate-700 pl-2 ml-1">
+            Manage
+          </a>
+        </div>
+      )}
+      <h3 className="font-black text-slate-800 dark:text-white text-base mb-4 mt-2 pr-24">{poll.question}</h3>
       <div className="space-y-2.5">
         {poll.options.map((option) => {
           const voteCount = option.votes?.length || 0;
@@ -216,8 +255,23 @@ export function PollsSection() {
     await supabase.from("site_data").upsert({ key: "polls", value: { polls: updated } }, { onConflict: "key" });
   };
 
+  const handleArchive = async (pollId: string, archive: boolean) => {
+    const updated = polls.map(p => p.id === pollId ? { ...p, is_archived: archive } : p);
+    setPolls(updated);
+    await supabase.from("site_data").upsert({ key: "polls", value: { polls: updated } }, { onConflict: "key" });
+    toast.success(archive ? "Poll archived" : "Poll restored");
+  };
+
+  const handleDelete = async (pollId: string) => {
+    if (!confirm("Are you sure you want to delete this poll?")) return;
+    const updated = polls.filter(p => p.id !== pollId);
+    setPolls(updated);
+    await supabase.from("site_data").upsert({ key: "polls", value: { polls: updated } }, { onConflict: "key" });
+    toast.success("Poll deleted");
+  };
+
   if (loading) return null;
-  if (!isAdmin && polls.filter(p => p.is_active).length === 0) return null;
+  if (!isAdmin && polls.filter(isPollVisible).length === 0) return null;
 
   return (
     <div className="space-y-4">
@@ -242,11 +296,25 @@ export function PollsSection() {
         )}
       </AnimatePresence>
 
-      {polls.filter(p => p.is_active).map((poll) => (
+      {polls.filter(isPollVisible).map((poll) => (
         <motion.div key={poll.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <PollCard poll={poll} onVote={handleVote} currentUserId={profile?.id} />
+          <PollCard poll={poll} onVote={handleVote} onArchive={isAdmin ? handleArchive : undefined} onDelete={isAdmin ? handleDelete : undefined} currentUserId={profile?.id} isAdmin={isAdmin} />
         </motion.div>
       ))}
+
+      {polls.filter(p => p.is_archived).length > 0 && (
+        <div className="mt-8">
+          <div className="flex items-center gap-2 mb-4 px-2">
+            <h3 className="text-sm font-black uppercase tracking-widest text-slate-500">Archived Polls</h3>
+            <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800"></div>
+          </div>
+          <div className="space-y-4">
+            {polls.filter(p => p.is_archived).map(poll => (
+              <PollCard key={poll.id} poll={poll} onVote={handleVote} onArchive={isAdmin ? handleArchive : undefined} onDelete={isAdmin ? handleDelete : undefined} currentUserId={profile?.id} isAdmin={isAdmin} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

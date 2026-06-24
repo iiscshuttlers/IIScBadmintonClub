@@ -79,86 +79,184 @@ export function EquipmentArsenalSection({
       </div>
 
       {/* The Animated Kitbag */}
-      <div className="relative z-20 flex flex-col items-center mb-6 gap-3">
-        <motion.div
-           animate={isInView ? (isOpen ? "open" : "shake") : "closed"}
-           variants={{
-             closed: { scale: 1, rotate: 0 },
-             shake: {
-               rotate: [0, -3, 3, -4, 4, -2, 2, 0],
-               y: [0, -5, 0, -5, 0],
-               transition: { duration: 0.6 }
-             },
-             open: { scale: 0.9, y: 15, transition: { type: "spring", bounce: 0.6 } }
-           }}
-           onClick={handleBagClick}
-           className="relative w-72 h-36 cursor-pointer select-none"
-           title="Tap to replay"
+      <div className="relative z-20 flex flex-col items-center mb-6 gap-4">
+
+        {/* Tagline — ABOVE the bag, always visible after first view */}
+        <motion.button
+          onClick={(e) => { e.stopPropagation(); setIsOpen(prev => !prev); }}
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : -6 }}
+          transition={{ delay: 0.8, duration: 0.4 }}
+          className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-violet-500/40 bg-violet-500/10 hover:bg-violet-500/20 transition-colors"
         >
-          {/* Bag shadow */}
-          <div className="absolute -bottom-8 left-10 right-10 h-8 bg-black/40 blur-xl rounded-full transition-all duration-500" />
-          
-          {/* Handles */}
-          <motion.div 
-            variants={{
-              closed: { y: 0, scaleY: 1 },
-              open: { y: 15, scaleY: 0.5 }
-            }}
-            className="absolute -top-10 left-1/2 -translate-x-1/2 w-28 h-20 border-[6px] border-slate-300 dark:border-white/10 rounded-t-[2.5rem] -z-10"
+          <span className="text-violet-400 text-xs">↺</span>
+          <span className="text-violet-300 font-bold text-[11px] tracking-widest uppercase">
+            {isOpen ? "tap to zip up" : "tap to unzip"}
+          </span>
+          <span className="text-violet-400 text-xs">↺</span>
+        </motion.button>
+
+        <motion.div
+          animate={isInView ? (isOpen ? "open" : "shake") : "closed"}
+          variants={{
+            closed: { scale: 1, rotate: 0 },
+            shake: {
+              rotate: [0, -2, 2, -3, 3, -1, 1, 0],
+              y: [0, -5, 0, -5, 0],
+              transition: { duration: 0.65 }
+            },
+            open: { scale: 0.9, y: 14, transition: { type: "spring", bounce: 0.5 } }
+          }}
+          onClick={handleBagClick}
+          className="relative cursor-pointer select-none"
+          style={{ width: 280, height: 140 }}
+          title="Tap to unpack"
+        >
+          {/* Drop shadow */}
+          <motion.div
+            animate={isOpen ? { scaleX: 1.1, opacity: 0.3 } : { scaleX: 1, opacity: 0.45 }}
+            transition={{ duration: 0.5 }}
+            className="absolute -bottom-5 left-10 right-10 h-5 bg-black blur-xl rounded-full"
           />
 
-          {/* Bag body */}
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-black rounded-[3.5rem] border-[6px] border-slate-800 shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col items-center justify-center overflow-hidden">
-            
-            {/* Texture overlay */}
-            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.8)_1px,transparent_1px)]" style={{ backgroundSize: '8px 8px' }} />
+          {/* ── Single arched carry handle ── */}
+          <motion.div
+            variants={{
+              closed: { y: 0, scaleY: 1, opacity: 1 },
+              open:   { y: 10, scaleY: 0.35, opacity: 0.5 }
+            }}
+            className="absolute left-1/2 -translate-x-1/2"
+            style={{ top: -28, width: 72, height: 30,
+                     border: '4px solid #64748b', borderBottom: 'none',
+                     borderRadius: '36px 36px 0 0',
+                     boxShadow: 'inset 0 3px 6px rgba(0,0,0,0.5), 0 -2px 4px rgba(0,0,0,0.3)' }}
+          />
 
-            {/* Zipper track */}
-            <div className="absolute top-12 left-6 right-6 h-2.5 bg-black/90 rounded-full overflow-hidden shadow-inner flex items-center justify-center border border-slate-200 dark:border-white/5">
-               {/* Zipper glow opening */}
-               <motion.div 
-                 variants={{
-                   closed: { width: "0%", opacity: 0 },
-                   open: { width: "100%", opacity: 1, transition: { duration: 0.7, ease: "easeInOut" } }
-                 }}
-                 className="h-full bg-violet-400 shadow-[0_0_20px_6px_rgba(167,139,250,0.9)]"
-               />
-               {/* Zipper pull */}
-               <motion.div 
-                 variants={{
-                   closed: { x: "-110px", opacity: 1 },
-                   open: { x: "110px", opacity: 0, transition: { duration: 0.7, ease: "easeInOut" } }
-                 }}
-                 className="absolute w-6 h-4 bg-gradient-to-b from-slate-200 to-slate-400 rounded-sm shadow-md flex items-center justify-center"
-               >
-                 <div className="w-1 h-2 bg-slate-500 rounded-full" />
-               </motion.div>
+          {/* ── Bag body ── */}
+          <div className="absolute inset-0 rounded-3xl overflow-hidden"
+               style={{ background: 'linear-gradient(155deg,#1e2438 0%,#141926 50%,#0c1018 100%)',
+                        boxShadow: '0 16px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)' }}>
+
+            {/* Fabric weave texture */}
+            <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
+                 style={{ backgroundImage: 'repeating-linear-gradient(0deg,#fff 0,#fff 1px,transparent 1px,transparent 5px),repeating-linear-gradient(90deg,#fff 0,#fff 1px,transparent 1px,transparent 5px)' }} />
+
+            {/* Top highlight rim */}
+            <div className="absolute top-0 left-6 right-6 h-px"
+                 style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent)' }} />
+
+            {/* Violet top accent stripe */}
+            <div className="absolute top-0 left-0 right-0 h-[3px] rounded-t-3xl"
+                 style={{ background: 'linear-gradient(90deg,#6d28d9,#a855f7,#ec4899,#a855f7,#6d28d9)' }} />
+
+            {/* Upper panel (above zipper) */}
+            <div className="absolute left-0 right-0 top-[3px]" style={{ height: 40,
+                 background: 'linear-gradient(180deg,#1b2135 0%,#131825 100%)',
+                 borderBottom: '1px dashed rgba(255,255,255,0.07)' }} />
+
+            {/* ── Zipper ── */}
+            <div className="absolute left-4 right-4" style={{ top: 40 }}>
+              {/* Track */}
+              <div className="relative h-[11px] rounded-full overflow-hidden"
+                   style={{ background: '#0a0d14', border: '1px solid rgba(100,116,139,0.3)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6)' }}>
+                {/* Teeth */}
+                <div className="absolute inset-0 flex items-center px-1 gap-[3px]">
+                  {Array.from({ length: 30 }).map((_, i) => (
+                    <div key={i} className="flex-shrink-0 rounded-[1px]"
+                         style={{ width: 5, height: 7, background: i % 2 === 0 ? '#2d3748' : '#1a202c' }} />
+                  ))}
+                </div>
+                {/* Glow fill */}
+                <motion.div
+                  variants={{
+                    closed: { width: '0%', opacity: 0 },
+                    open:   { width: '100%', opacity: 1, transition: { duration: 0.6, ease: 'easeInOut' } }
+                  }}
+                  className="absolute inset-0"
+                  style={{ background: 'linear-gradient(90deg,#7c3aed,#c026d3,#7c3aed)',
+                           boxShadow: '0 0 14px 3px rgba(167,139,250,0.7)' }}
+                />
+              </div>
+              {/* Zipper slider */}
+              <motion.div
+                variants={{
+                  closed: { x: -95, opacity: 1 },
+                  open:   { x: 100, opacity: 0, transition: { duration: 0.6, ease: 'easeInOut' } }
+                }}
+                className="absolute -top-[1px]"
+                style={{ width: 20, height: 13, borderRadius: 3,
+                         background: 'linear-gradient(135deg,#94a3b8,#64748b)',
+                         boxShadow: '0 2px 5px rgba(0,0,0,0.7)' }}
+              >
+                {/* Pull tab */}
+                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2"
+                     style={{ width: 8, height: 8, background: '#94a3b8',
+                              borderRadius: '0 0 3px 3px', border: '1px solid #475569' }} />
+              </motion.div>
             </div>
-            
-            {/* Brand Logo */}
-            <motion.div 
-              variants={{
-                closed: { opacity: 1, y: 0 },
-                open: { opacity: 0.2, y: 5 }
-              }}
-              className="mt-8 text-violet-400 font-black tracking-[0.4em] uppercase text-xl flex items-center gap-2 drop-shadow-[0_0_8px_rgba(139,92,246,0.6)]"
-            >
-              PRO GEAR
-            </motion.div>
+
+            {/* ── Lower body ── */}
+            <div className="absolute left-0 right-0 bottom-0" style={{ top: 53 }}>
+
+              {/* Left front pocket */}
+              <div className="absolute left-3 top-3 bottom-3"
+                   style={{ width: 52, borderRadius: 10,
+                            background: 'linear-gradient(135deg,#161d2b,#0f1520)',
+                            border: '1px solid rgba(255,255,255,0.07)',
+                            boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.5)' }}>
+                {/* Pocket zipper */}
+                <div className="absolute top-2 left-2 right-2 h-1.5 rounded-full"
+                     style={{ background: '#0a0d14', border: '0.5px solid rgba(100,116,139,0.2)' }} />
+                {/* Pocket pull */}
+                <div className="absolute top-1 left-1/2 -translate-x-1/2 w-3 h-2 rounded-sm"
+                     style={{ background: '#475569' }} />
+              </div>
+
+              {/* Right front pocket */}
+              <div className="absolute right-3 top-3 bottom-3"
+                   style={{ width: 52, borderRadius: 10,
+                            background: 'linear-gradient(225deg,#161d2b,#0f1520)',
+                            border: '1px solid rgba(255,255,255,0.07)',
+                            boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.5)' }}>
+                <div className="absolute top-2 left-2 right-2 h-1.5 rounded-full"
+                     style={{ background: '#0a0d14', border: '0.5px solid rgba(100,116,139,0.2)' }} />
+                <div className="absolute top-1 left-1/2 -translate-x-1/2 w-3 h-2 rounded-sm"
+                     style={{ background: '#475569' }} />
+              </div>
+
+              {/* Centre brand area */}
+              <motion.div
+                variants={{
+                  closed: { opacity: 1 },
+                  open:   { opacity: 0.12 }
+                }}
+                className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 pointer-events-none"
+              >
+                <svg width="22" height="26" viewBox="0 0 22 26" fill="none" opacity="0.35">
+                  <ellipse cx="11" cy="9" rx="7" ry="8.5" stroke="#a78bfa" strokeWidth="1.4"/>
+                  <line x1="11" y1="0.5" x2="11" y2="17.5" stroke="#a78bfa" strokeWidth="0.7" opacity="0.6"/>
+                  <line x1="4" y1="9" x2="18" y2="9" stroke="#a78bfa" strokeWidth="0.7" opacity="0.6"/>
+                  <line x1="7.5" y1="3" x2="14.5" y2="15" stroke="#a78bfa" strokeWidth="0.5" opacity="0.3"/>
+                  <line x1="14.5" y1="3" x2="7.5" y2="15" stroke="#a78bfa" strokeWidth="0.5" opacity="0.3"/>
+                  <line x1="11" y1="17.5" x2="11" y2="26" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+                <span className="text-violet-400/80 font-black tracking-[0.4em] text-[11px] uppercase"
+                      style={{ textShadow: '0 0 12px rgba(139,92,246,0.8)' }}>
+                  PRO GEAR
+                </span>
+              </motion.div>
+
+              {/* Bottom accent stripe */}
+              <div className="absolute bottom-0 left-0 right-0 h-[3px] rounded-b-3xl"
+                   style={{ background: 'linear-gradient(90deg,#6d28d9,#a855f7,#6d28d9)', opacity: 0.6 }} />
+            </div>
           </div>
         </motion.div>
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: isOpen ? 1 : 0 }}
-          transition={{ delay: 1.2, duration: 0.4 }}
-          className="text-[10px] text-slate-400 dark:text-white/25 font-medium tracking-widest uppercase pointer-events-none"
-        >
-          tap bag to replay
-        </motion.p>
+
       </div>
 
       {/* Equipment Cards — arc out of the bag */}
-      <div className="relative z-10 max-w-3xl mx-auto space-y-4 px-4 -mt-12">
+      <div className="relative z-10 max-w-3xl mx-auto space-y-4 px-4 mt-4">
         {items.map((item, idx) => {
           // Each item arcs from a slightly different angle for a "pulled out and placed" feel
           const arcX = idx % 2 === 0 ? -18 : 18;

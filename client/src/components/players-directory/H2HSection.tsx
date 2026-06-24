@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { Swords, Trophy, Activity, ArrowLeft, BarChart3 } from "lucide-react";
 import { Link } from "wouter";
+import { BeautifulScoreDisplay } from "@/components/feed/BeautifulScoreDisplay";
 
 export function H2HSection() {
   const [players, setPlayers] = useState<any[]>([]);
@@ -301,29 +302,73 @@ export function H2HSection() {
             <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 mb-4">
               Match History
             </h3>
-            {h2hMatches.map((m, i) => (
-              <div
-                key={i}
-                className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl gap-4"
-              >
-                <div className="text-sm font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
-                  {new Date(m.created_at).toLocaleDateString()}
-                </div>
-                <div className="flex flex-wrap gap-1.5 justify-start sm:justify-center flex-1">
-                  {m.score.split(" | ")[0].split(",").map((s: string, idx: number) => (
-                    <div key={idx} className="text-sm sm:text-base font-black bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 px-2.5 py-1 rounded-lg whitespace-nowrap">
-                      {s.trim()}
-                    </div>
-                  ))}
-                </div>
+            {h2hMatches.map((m, i) => {
+              const mp1 = players.find(p => p.id === m.player1_id);
+              const mp2 = players.find(p => p.id === m.player2_id);
+              const mp3 = players.find(p => p.id === m.team1_partner_id);
+              const mp4 = players.find(p => p.id === m.team2_partner_id);
+              
+              const p1g = mp1?.gender?.toLowerCase();
+              const p2g = mp2?.gender?.toLowerCase();
+              const p3g = mp3?.gender?.toLowerCase();
+              const p4g = mp4?.gender?.toLowerCase();
+              
+              let matchFormat = m.category;
+              if (m.category === "Doubles") {
+                const t1HasM = p1g === "male" || p3g === "male";
+                const t1HasF = p1g === "female" || p3g === "female";
+                const t2HasM = p2g === "male" || p4g === "male";
+                const t2HasF = p2g === "female" || p4g === "female";
+                
+                if (t1HasM && t1HasF && t2HasM && t2HasF) matchFormat = "XD";
+                else if (p1g === "male" && p3g === "male" && p2g === "male" && p4g === "male") matchFormat = "MD";
+                else if (p1g === "female" && p3g === "female" && p2g === "female" && p4g === "female") matchFormat = "WD";
+              } else if (m.category === "Singles") {
+                if (p1g === "male" && p2g === "male") matchFormat = "MS";
+                else if (p1g === "female" && p2g === "female") matchFormat = "WS";
+              }
+
+              const team1Won = m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id;
+
+              return (
                 <div
-                  className={`text-sm font-bold flex items-center gap-1.5 whitespace-nowrap ${m.winner_id === p1Id ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"}`}
+                  key={i}
+                  className="flex flex-col p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl gap-3"
                 >
-                  {m.winner_id === p1Id ? <Trophy className="w-4 h-4 text-amber-500" /> : ""}{" "}
-                  {m.winner_id === p1Id ? p1?.full_name : p2?.full_name} Won
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="text-sm font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                      {new Date(m.created_at).toLocaleDateString()}
+                    </div>
+                    {matchFormat && (
+                      <span className="text-[10px] font-black uppercase tracking-widest bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-800/50">
+                        {matchFormat}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div className="flex flex-col gap-1">
+                      <p className="text-sm font-bold text-slate-800 dark:text-slate-300 flex items-center gap-2 flex-wrap">
+                        <span className={team1Won ? "text-emerald-600 dark:text-emerald-400" : ""}>
+                          {mp1?.full_name} {mp3 ? `& ${mp3.full_name}` : ""}
+                        </span>
+                        <span className="text-[10px] font-black uppercase text-rose-500 shrink-0">vs</span>
+                        <span className={!team1Won ? "text-emerald-600 dark:text-emerald-400" : ""}>
+                          {mp2?.full_name} {mp4 ? `& ${mp4.full_name}` : ""}
+                        </span>
+                        {team1Won ? (
+                          <Trophy className="w-4 h-4 text-emerald-500 ml-1" />
+                        ) : (
+                          <Trophy className="w-4 h-4 text-emerald-500 ml-1 order-last sm:order-none" />
+                        )}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 justify-start sm:justify-center">
+                      <BeautifulScoreDisplay score={m.score.split(" | ")[0]} />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 

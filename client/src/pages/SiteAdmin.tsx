@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar,
   Megaphone,
+  Ghost,
   Video,
   CalendarDays,
   Plus,
@@ -46,6 +47,7 @@ import { advanceWinners } from "@/lib/tournamentProgression";
 import {
   HolidayEditor,
   AnnouncementEditor,
+  PollEditor,
   EventEditor,
   VideoEditor,
   PlayersManager,
@@ -67,6 +69,7 @@ import { AdminFeaturesPanel } from "@/components/admin/AdminFeaturesPanel";
 import { AdminAllFeaturesPanel } from "@/components/admin/AdminAllFeaturesPanel";
 import { TournamentEditor } from "@/components/admin/TournamentEditor";
 import { RecycleBin } from "@/components/admin/RecycleBin";
+import { GuestPlayersPanel } from "@/components/admin/GuestPlayersPanel";
 import { AdminHistoryProvider, useAdminHistory } from "@/contexts/AdminHistoryContext";
 import { Paintbrush, ClipboardList, Settings, BarChart2, Zap, Sparkles, ChevronUp, Undo2, Redo2 } from "lucide-react";
 
@@ -115,10 +118,12 @@ type TabId =
   | "flyers"
   | "holidays"
   | "announcements"
+  | "polls"
   | "events"
   | "tournament"
   | "videos"
   | "players"
+  | "guests"
   | "umpire"
   | "registrations"
   | "matches"
@@ -152,6 +157,7 @@ const TAB_GROUPS: TabGroup[] = [
       { id: "config", label: "Landing Pages", icon: Paintbrush },
       { id: "flyers", label: "Flyers", icon: Megaphone },
       { id: "announcements", label: "Announcements", icon: Megaphone },
+      { id: "polls", label: "Community Polls", icon: Megaphone },
       { id: "holidays", label: "Holidays", icon: Calendar },
       { id: "events", label: "Events", icon: CalendarDays },
       { id: "tournament", label: "Tournament", icon: Trophy },
@@ -163,6 +169,7 @@ const TAB_GROUPS: TabGroup[] = [
     description: "Manage players, matches, umpiring, and disputes",
     tabs: [
       { id: "players", label: "Players", icon: Users },
+      { id: "guests", label: "Guests", icon: Ghost },
       { id: "matches", label: "Matches", icon: Trophy },
       { id: "umpire", label: "Umpire Mode", icon: Activity },
       { id: "disputes", label: "Disputes", icon: AlertTriangle },
@@ -252,7 +259,7 @@ function SiteAdminInner() {
   const [activeTab, setActiveTab] = useState<TabId>(() => {
     const hash = window.location.hash.replace("#", "");
     if ([
-      "overview", "config", "flyers", "holidays", "announcements", "events", "videos",
+      "overview", "config", "flyers", "holidays", "announcements", "polls", "events", "videos",
       "players", "umpire", "registrations", "matches", "changelog",
       "disputes", "elo_audit", "settings", "activity_log", "features", "recycle_bin"
     ].includes(hash)) {
@@ -265,7 +272,7 @@ function SiteAdminInner() {
     const handleHashChange = () => {
       const hash = window.location.hash.replace("#", "");
       if ([
-        "overview", "config", "flyers", "holidays", "announcements", "events", "videos",
+        "overview", "config", "flyers", "holidays", "announcements", "polls", "events", "videos",
         "players", "umpire", "registrations", "matches", "changelog",
         "disputes", "elo_audit", "settings", "activity_log", "features", "all_features", "recycle_bin"
       ].includes(hash)) {
@@ -295,6 +302,7 @@ function SiteAdminInner() {
     flyers: [] as DynamicFlyer[],
     holidays: [] as Holiday[],
     announcements: [] as Announcement[],
+      polls: [] as any[],
     events: [] as EventItem[],
     videos: [] as VideoItem[],
     config: null as SiteConfig | null,
@@ -303,6 +311,7 @@ function SiteAdminInner() {
   const [flyers, setFlyersRaw] = useState<DynamicFlyer[]>([]);
   const [holidays, setHolidaysRaw] = useState<Holiday[]>([]);
   const [announcements, setAnnouncementsRaw] = useState<Announcement[]>([]);
+  const [polls, setPollsRaw] = useState<any[]>([]);
   const [events, setEventsRaw] = useState<EventItem[]>([]);
   const [videos, setVideosRaw] = useState<VideoItem[]>([]);
   const [config, setConfigRaw] = useState<SiteConfig | null>(null);
@@ -334,14 +343,20 @@ function SiteAdminInner() {
   const loadAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [f, h, a, e, v, c] = await Promise.all([
+      const [f, h, a, e, v, c, p] = await Promise.all([
         loadKey<DynamicFlyer[]>("flyers"),
         loadKey<Holiday[]>("holidays"),
         loadKey<{ recent: Announcement[] }>("announcements"),
         loadKey<EventItem[]>("events"),
         loadKey<VideoItem[]>("videos"),
         loadKey<SiteConfig>("site_config"),
+        loadKey<{ polls: any[] }>("polls"),
       ]);
+
+        if (p?.polls) {
+          setPollsRaw(p.polls);
+          originals.current.polls = JSON.parse(JSON.stringify(p.polls));
+        }
       if (f) {
         setFlyersRaw(f);
         originals.current.flyers = JSON.parse(JSON.stringify(f));
@@ -396,6 +411,10 @@ function SiteAdminInner() {
     setAnnouncementsRaw(d);
     setDirty(true);
   };
+  const setP = (d: any[]) => {
+    setPollsRaw(d);
+    setDirty(true);
+  };
   const setE = (d: EventItem[]) => {
     setEventsRaw(d);
     setDirty(true);
@@ -424,6 +443,9 @@ function SiteAdminInner() {
         setAnnouncementsRaw(
           JSON.parse(JSON.stringify(originals.current.announcements)),
         );
+        break;
+      case "polls":
+        setPollsRaw(JSON.parse(JSON.stringify(originals.current.polls)));
         break;
       case "events":
         setEventsRaw(JSON.parse(JSON.stringify(originals.current.events)));
@@ -454,6 +476,10 @@ function SiteAdminInner() {
       case "announcements":
         oldObj = originals.current.announcements;
         newObj = announcements;
+        break;
+      case "polls":
+        oldObj = originals.current.polls;
+        newObj = polls;
         break;
       case "events":
         oldObj = originals.current.events;
@@ -528,6 +554,13 @@ function SiteAdminInner() {
           originals.current.announcements = JSON.parse(
             JSON.stringify(announcements),
           );
+          break;
+        case "polls":
+          historyKey = "polls";
+          beforeState = originals.current.polls;
+          afterState = { polls };
+          await saveKey("polls", afterState);
+          originals.current.polls = JSON.parse(JSON.stringify(polls));
           break;
         case "events":
           historyKey = "events";
@@ -616,6 +649,7 @@ function SiteAdminInner() {
     "flyers",
     "holidays",
     "announcements",
+    "polls",
     "events",
     "videos",
   ];
@@ -625,10 +659,12 @@ function SiteAdminInner() {
     flyers: flyers.length,
     holidays: holidays.length,
     announcements: announcements.length,
+      polls: polls.length,
     events: events.length,
     tournament: null,
     videos: videos.length,
     players: null,
+    guests: null,
     matches: null,
     umpire: null,
     changelog: null,
@@ -642,7 +678,7 @@ function SiteAdminInner() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-safe pb-24 lg:pb-8">
       {/* Header */}
       <section className="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-900 text-white py-10">
         <div className="container mx-auto px-4">
@@ -792,6 +828,9 @@ function SiteAdminInner() {
             {activeTab === "announcements" && (
               <AnnouncementEditor data={announcements} onChange={setA} />
             )}
+            {activeTab === "polls" && (
+              <PollEditor data={polls} onChange={setP} />
+            )}
             {activeTab === "events" && (
               <EventEditor data={events} onChange={setE} />
             )}
@@ -800,6 +839,7 @@ function SiteAdminInner() {
               <VideoEditor data={videos} onChange={setV} />
             )}
             {activeTab === "players" && <PlayersManager />}
+            {activeTab === "guests" && <GuestPlayersPanel />}
             {activeTab === "matches" && <MatchesManager />}
             {activeTab === "disputes" && <DisputePanel />}
             {activeTab === "elo_audit" && <EloAuditPanel />}

@@ -76,7 +76,7 @@ export function UmpireMode() {
 
   // Firebase data listener
   useEffect(() => {
-    if (!fbUser) return;
+    if (!fbUser || !db) return;
     const unsub = onSnapshot(
       doc(db, "live_data", "tournament"),
       (snap) => {
@@ -191,7 +191,7 @@ export function UmpireMode() {
   const serverSide = server.startsWith("p1") ? "p1" : "p2";
 
   const pushUpdate = async () => {
-    if (!data || !selectedMatchId) return;
+    if (!data || !selectedMatchId || !db) return;
     const updatedMatches = [...data.matches[selectedFormat]];
     const idx = updatedMatches.findIndex(
       (m: any) => m.Match_ID === selectedMatchId,

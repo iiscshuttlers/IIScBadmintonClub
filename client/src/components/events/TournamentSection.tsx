@@ -67,6 +67,7 @@ export function TournamentSection() {
   }, []);
 
   useEffect(() => {
+    if (!db) return;
     const unsubscribe = onSnapshot(
       doc(db, "live_data", "tournament"),
       (docSnap) => {

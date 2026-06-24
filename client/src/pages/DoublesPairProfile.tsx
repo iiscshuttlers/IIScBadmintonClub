@@ -4,12 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { Trophy, Users, TrendingUp, Swords, ArrowLeft, Loader2 } from "lucide-react";
 
-interface Player {
-  id: string;
-  full_name: string;
-  avatar_url?: string;
-  elo_rating?: number;
-}
+import type { PlayerRow as Player } from "@/types";
 
 interface Match {
   id: string;
@@ -56,8 +51,8 @@ export default function DoublesPairProfile() {
           .order("created_at", { ascending: false })
           .limit(50),
       ]);
-      if (r1.data) setPlayer1(r1.data);
-      if (r2.data) setPlayer2(r2.data);
+      if (r1.data) setPlayer1(r1.data as any);
+      if (r2.data) setPlayer2(r2.data as any);
       if (matchRes.data) setPairMatches(matchRes.data);
       setLoading(false);
     };

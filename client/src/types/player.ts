@@ -1,0 +1,108 @@
+export interface PlayerRow {
+  id: string;
+  full_name: string;
+  nickname: string | null;
+  email: string | null;
+  iisc_email: string | null;
+  contact_number: string | null;
+  department: string;
+  joined_year: number | null;
+  playing_level: string;
+  playing_style: string;
+  dominant_hand: string | null;
+  favorite_shot: string | null;
+  favorite_idol: string | null;
+  favorite_format: string | null;
+  quote: string | null;
+  avatar_url: string;
+  current_racket: string;
+  racket_details: RacketDetail[] | null;
+  shoes: string | null;  // JSON string
+  stats: PlayerStats | null;
+  nationality: string | null;
+  home_state: string | null;
+  height: string | null;
+  years_playing: number | null;
+  coach: string | null;
+  bio: string | null;
+  apparel: string | null;
+  instagram: string | null;
+  achievements: string[] | null;
+  tournament_history: string[] | null;
+  career_highlights: CareerHighlight[] | null;
+  elo_rating: number;
+  singles_elo: number | null;
+  doubles_elo: number | null;
+  mixed_elo: number | null;
+  win_loss_record: string | null;
+  singles_record: string | null;
+  doubles_record: string | null;
+  mixed_record: string | null;
+  recent_form: string | null;
+  status: string | null;
+  is_looking_to_play: boolean | null;
+  role: 'master_admin' | 'admin' | 'umpire' | 'player';
+  gender: string | null;
+  buddies: string[] | null;
+  buddy_requests: string[] | null;
+  following: string[] | null;
+  followers: string[] | null;
+  is_guest: boolean | null;
+  deleted_at: string | null;
+}
+
+export interface RacketDetail {
+  name: string;
+  string: string;
+  tension: string;
+  primary?: boolean;
+}
+
+export interface ShoeItem {
+  name: string;
+  primary?: boolean;
+}
+
+export interface PlayerStats {
+  wins?: number;
+  losses?: number;
+  winPercentage?: number;
+  totalMatches?: number;
+  currentStreak?: string;
+  longestWinStreak?: number;
+  titlesWon?: number;
+  runnerUp?: number;
+  semifinals?: number;
+  categoryStats?: {
+    singles?: { wins: number; losses: number };
+    doubles?: { wins: number; losses: number };
+    mixed?: { wins: number; losses: number };
+  };
+  media?: MediaItem[];
+}
+
+export interface MediaItem {
+  type: 'image' | 'video';
+  url: string;
+  caption?: string;
+}
+
+export interface CareerHighlight {
+  year: number | string;
+  title: string;
+  description?: string;
+}
+
+// === Slim version for lists/search (only what's needed for cards) ===
+export interface PlayerSlim {
+  id: string;
+  full_name: string;
+  avatar_url: string;
+  gender?: string | null;
+  is_guest?: boolean | null;
+}
+
+// === For leaderboard views ===
+export interface PlayerRanked extends PlayerRow {
+  // Any computed fields for ranking
+}

@@ -93,33 +93,33 @@
   --primary-foreground: #f0f4f8;
   --sidebar-primary: #0f766e;
   --sidebar-primary-foreground: #f0f4f8;
-  --background: #0f172a;
+  --background: #000000;
   --foreground: #f0f4f8;
-  --card: #1e293b;
+  --card: #0a0a0a;
   --card-foreground: #f0f4f8;
-  --popover: #1e293b;
+  --popover: #0a0a0a;
   --popover-foreground: #f0f4f8;
   --secondary: #ff6b35;
   --secondary-foreground: #ffffff;
-  --muted: #334155;
+  --muted: #1a1a1a;
   --muted-foreground: #cbd5e1;
   --accent: #10b981;
   --accent-foreground: #0f172a;
   --destructive: #f87171;
   --destructive-foreground: #0f172a;
-  --border: #334155;
-  --input: #1e293b;
+  --border: #1a1a1a;
+  --input: #0a0a0a;
   --ring: #10b981;
   --chart-1: #10b981;
   --chart-2: #ff6b35;
   --chart-3: #0891b2;
   --chart-4: #7c3aed;
   --chart-5: #ec4899;
-  --sidebar: #1e293b;
+  --sidebar: #0a0a0a;
   --sidebar-foreground: #f0f4f8;
   --sidebar-accent: #10b981;
   --sidebar-accent-foreground: #0f172a;
-  --sidebar-border: #334155;
+  --sidebar-border: #1a1a1a;
   --sidebar-ring: #10b981;
 }
 
@@ -528,4 +528,39 @@
   .shimmer {
     animation: none !important;
   }
+}
+
+/* Mobile Safe Areas */
+@utility pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 1.5rem);
+}
+@utility pt-safe {
+  padding-top: max(env(safe-area-inset-top), 1rem);
+}
+.racket-anim { transform-origin: 50px 170px; animation: swing 1.5s infinite ease-in-out; }
+@keyframes swing {
+  0%, 100% { transform: rotate(-15deg); }
+  35% { transform: rotate(-50deg); }
+  47% { transform: rotate(-50deg); }
+  50% { transform: rotate(20deg); }
+  58% { transform: rotate(55deg); }
+  75% { transform: rotate(-15deg); }
+}
+.shuttle-anim { transform-origin: 30px 30px; animation: fly 1.5s infinite linear; }
+@keyframes fly {
+  0% { transform: translate(-180px, -120px) rotate(135deg); opacity: 0; }
+  10% { opacity: 1; }
+  47% { transform: translate(25px, -5px) rotate(135deg); }
+  50% { transform: translate(40px, 10px) rotate(45deg) scale(0.6, 0.9); }
+  52% { transform: translate(55px, -5px) rotate(45deg) scale(1, 1); }
+  80% { transform: translate(200px, -150px) rotate(45deg); opacity: 1; }
+  90% { transform: translate(250px, -200px) rotate(45deg); opacity: 0; }
+  100% { transform: translate(250px, -200px) rotate(45deg); opacity: 0; }
+}
+.spark-anim { transform-origin: center; animation: spark 1.5s infinite; }
+@keyframes spark {
+  0%, 48% { opacity: 0; transform: scale(0) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.2) rotate(45deg); }
+  54% { opacity: 0; transform: scale(1.8) rotate(90deg); }
+  100% { opacity: 0; }
 }

@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { UmpireEngine, BwfMatchState, MatchEditState } from "./UmpireEngine";
 import { Play, Tv2, AlertTriangle } from "lucide-react";
 import { fetchSiteData } from "@/lib/siteData";
+import { BeautifulScoreDisplay } from "@/components/feed/BeautifulScoreDisplay";
 
 export function UmpireTab() {
   const { session, isUmpire } = useAuth();
@@ -171,10 +172,10 @@ type RecentMatch = {
   is_friendly: boolean | null;
   category: string;
   created_at: string;
-  player1: { full_name: string } | null;
-  player2: { full_name: string } | null;
-  partner1: { full_name: string } | null;
-  partner2: { full_name: string } | null;
+  player1: { full_name: string; gender?: string | null } | null;
+  player2: { full_name: string; gender?: string | null } | null;
+  partner1: { full_name: string; gender?: string | null } | null;
+  partner2: { full_name: string; gender?: string | null } | null;
 };
 
 function RecentUmpireMatches({ onEdit }: { onEdit: (m: MatchEditState) => void }) {
@@ -186,7 +187,7 @@ function RecentUmpireMatches({ onEdit }: { onEdit: (m: MatchEditState) => void }
     const fetchRecent = async () => {
       let query = supabase
         .from("matches")
-        .select("*, player1:players!player1_id(full_name), player2:players!player2_id(full_name), partner1:players!team1_partner_id(full_name), partner2:players!team2_partner_id(full_name)")
+        .select("*, player1:players!player1_id(full_name, gender), player2:players!player2_id(full_name, gender), partner1:players!team1_partner_id(full_name, gender), partner2:players!team2_partner_id(full_name, gender)")
         .order("created_at", { ascending: false });
       if (isAdmin) {
         query = query.limit(50);
@@ -208,22 +209,60 @@ function RecentUmpireMatches({ onEdit }: { onEdit: (m: MatchEditState) => void }
     <div className="bg-slate-900 rounded-[2rem] p-8 shadow-xl border border-slate-800">
       <h3 className="text-xl font-black text-white mb-4">Recent Submissions (Editable for 15m)</h3>
       <div className="space-y-3">
-        {recent.map(m => (
-          <div key={m.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-800 rounded-xl gap-4">
-            <div>
-              <p className="text-slate-300 font-bold text-sm">
-                {m.player1?.full_name} vs {m.player2?.full_name}
-              </p>
-              <p className="text-emerald-400 font-bold text-xs">{m.score}</p>
+        {recent.map(m => {
+          const team1Won = m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id;
+          const team2Won = m.winner_id === m.player2_id || m.winner_id === m.team2_partner_id;
+          
+          const p1g = m.player1?.gender?.toLowerCase();
+          const p2g = m.player2?.gender?.toLowerCase();
+          const p3g = m.partner1?.gender?.toLowerCase();
+          const p4g = m.partner2?.gender?.toLowerCase();
+
+          let matchFormat = m.category;
+          if (m.category === "Doubles") {
+            const t1HasM = p1g === "male" || p3g === "male";
+            const t1HasF = p1g === "female" || p3g === "female";
+            const t2HasM = p2g === "male" || p4g === "male";
+            const t2HasF = p2g === "female" || p4g === "female";
+            
+            if (t1HasM && t1HasF && t2HasM && t2HasF) matchFormat = "XD";
+            else if (p1g === "male" && p3g === "male" && p2g === "male" && p4g === "male") matchFormat = "MD";
+            else if (p1g === "female" && p3g === "female" && p2g === "female" && p4g === "female") matchFormat = "WD";
+          } else if (m.category === "Singles") {
+            if (p1g === "male" && p2g === "male") matchFormat = "MS";
+            else if (p1g === "female" && p2g === "female") matchFormat = "WS";
+          }
+
+          return (
+            <div key={m.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-800 rounded-xl gap-4">
+              <div className="flex flex-col gap-1">
+                <p className="text-slate-300 font-bold text-sm flex items-center gap-2 flex-wrap">
+                  <span className={team1Won ? "text-amber-400" : ""}>
+                    {m.player1?.full_name} {m.partner1 ? `& ${m.partner1.full_name}` : ""}
+                  </span>
+                  <span className="text-[10px] font-black uppercase text-rose-500 shrink-0">vs</span>
+                  <span className={team2Won ? "text-amber-400" : ""}>
+                    {m.player2?.full_name} {m.partner2 ? `& ${m.partner2.full_name}` : ""}
+                  </span>
+                </p>
+                <div className="flex flex-wrap items-center gap-2 mt-1">
+                  {matchFormat && (
+                    <span className="text-[10px] font-black uppercase tracking-widest bg-indigo-900/50 text-indigo-300 px-2 py-0.5 rounded-md border border-indigo-800/50">
+                      {matchFormat}
+                    </span>
+                  )}
+                  <BeautifulScoreDisplay score={m.score} />
+                </div>
+              </div>
+              <button 
+                onClick={() => onEdit({ ...m, is_edit_mode: true } as MatchEditState)}
+                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold rounded-lg transition-colors shrink-0"
+              >
+                Edit Score
+              </button>
             </div>
-            <button 
-              onClick={() => onEdit({ ...m, is_edit_mode: true } as MatchEditState)}
-              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold rounded-lg transition-colors shrink-0"
-            >
-              Edit Score
-            </button>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

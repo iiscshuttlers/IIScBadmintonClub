@@ -211,11 +211,10 @@ export default defineConfig(() => {
         external: ["capacitor-native-biometric"],
         output: {
           manualChunks: {
-            vendor: ["react", "react-dom", "wouter", "framer-motion"],
-            ui: [
-              "@radix-ui/react-dialog",
-              "lucide-react",
-            ],
+            vendor: ["react", "react-dom", "wouter"],
+            motion: ["framer-motion"],
+            icons: ["lucide-react"],
+            ui: ["@radix-ui/react-dialog"],
             supabase: ["@supabase/supabase-js"],
             firebase: ["firebase/app", "firebase/messaging"],
           },

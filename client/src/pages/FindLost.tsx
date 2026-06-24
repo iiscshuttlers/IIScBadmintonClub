@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -166,6 +167,8 @@ export default function FindLost() {
     setLoading(false);
   }, [filter, showResolved]);
 
+  usePullToRefresh();
+
   useEffect(() => { load(); }, [load]);
 
   // Keyboard navigation for the lightbox
@@ -301,7 +304,7 @@ export default function FindLost() {
   const labelCls = "block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5";
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 lg:pb-8">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-safe pb-24 lg:pb-8">
       {/* Hero */}
       <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white py-12 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(99,102,241,0.15),transparent)] pointer-events-none" />

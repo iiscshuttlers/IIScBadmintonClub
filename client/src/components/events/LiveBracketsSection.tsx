@@ -21,6 +21,11 @@ export function LiveBracketsSection() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    if (!db) {
+      setError("Firebase is unavailable.");
+      setLoading(false);
+      return;
+    }
     const unsubscribe = onSnapshot(
       doc(db, "live_data", "tournament"),
       (docSnap) => {

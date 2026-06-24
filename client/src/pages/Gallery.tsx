@@ -17,7 +17,8 @@ import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { fetchSiteData } from "@/lib/siteData";
 import { supabase } from "@/lib/supabase";
 import { SocialCTA } from "@/components/SocialCTA";
-import { VideoPlayerModal } from "@/components/VideoPlayerModal";
+import { lazy, Suspense } from "react";
+const VideoPlayerModal = lazy(() => import("@/components/VideoPlayerModal").then(mod => ({ default: mod.VideoPlayerModal })));
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation } from "wouter";
 
@@ -793,11 +794,14 @@ export default function Gallery() {
 
       {/* Video player modal */}
       {activeVideo && (
-        <VideoPlayerModal
-          video={activeVideo}
-          onClose={() => setActiveVideo(null)}
-        />
+        <Suspense fallback={null}>
+          <VideoPlayerModal
+            video={activeVideo}
+            onClose={() => setActiveVideo(null)}
+          />
+        </Suspense>
       )}
     </div>
   );
 }
+

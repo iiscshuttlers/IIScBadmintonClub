@@ -2,56 +2,8 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, ChevronRight, Swords, Share2 } from "lucide-react";
 import { useLocation } from "wouter";
-import { Share } from "@capacitor/share";
-import { Filesystem, Directory } from "@capacitor/filesystem";
-import { Capacitor } from "@capacitor/core";
-import { toast } from "sonner";
-import { getBaseShareUrl } from "@/lib/utils";
-import { renderMatchShareCard } from "@/lib/matchShareCard";
-
-function drawCircleAvatar(
-  ctx: CanvasRenderingContext2D,
-  img: HTMLImageElement | null,
-  cx: number,
-  cy: number,
-  r: number,
-  initial: string,
-  ringColor: string,
-) {
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.clip();
-  if (img) {
-    ctx.drawImage(img, cx - r, cy - r, r * 2, r * 2);
-  } else {
-    ctx.fillStyle = ringColor;
-    ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
-    ctx.fillStyle = "#ffffff";
-    ctx.font = `bold ${r}px sans-serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(initial.toUpperCase(), cx, cy);
-  }
-  ctx.restore();
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.strokeStyle = ringColor;
-  ctx.lineWidth = 6;
-  ctx.stroke();
-}
-
-function truncateText(
-  ctx: CanvasRenderingContext2D,
-  name: string,
-  maxW: number,
-) {
-  if (ctx.measureText(name).width <= maxW) return name;
-  let n = name;
-  while (ctx.measureText(n + "…").width > maxW && n.length > 1)
-    n = n.slice(0, -1);
-  return n + "…";
-}
+import { shareMatch } from "@/lib/shareMatch";
+import { BeautifulScoreDisplay } from "@/components/feed/BeautifulScoreDisplay";
 
 // Duplicate the small helper function for encapsulation
 function matchParticipantIds(match: any): string[] {
@@ -112,6 +64,13 @@ export function MatchHistorySection({
     );
   if (confirmedMatches.length === 0 && pendingMatchesList.length === 0)
     return null;
+
+  const getGenderColor = (gender?: string | null) => {
+    const g = gender?.toLowerCase() || '';
+    if (g === 'female') return 'text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300';
+    if (g === 'male') return 'text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300';
+    return 'text-slate-800 dark:text-slate-100 hover:text-emerald-600 dark:hover:text-emerald-400';
+  };
 
   const filteredMatches =
     matchHistoryFilter === "all"
@@ -252,8 +211,52 @@ export function MatchHistorySection({
                   </div>
                   <div className="space-y-2">
                     {pendingMatchesList.map((m, idx) => {
-                      const isP1 = m.player1_id === id;
-                      const opponent = isP1 ? m.player2 : m.player1;
+                      const isTeam1 = m.player1_id === id || m.team1_partner_id === id;
+                      let partner = null;
+                      let me = null;
+                      if (isTeam1 && (m.team1_partner_id || m.partner1)) {
+                        partner = m.player1_id === id ? m.partner1 : m.player1;
+                        me = m.player1_id === id ? m.player1 : m.partner1;
+                      } else if (!isTeam1 && (m.team2_partner_id || m.partner2)) {
+                        partner = m.player2_id === id ? m.partner2 : m.player2;
+                        me = m.player2_id === id ? m.player2 : m.partner2;
+                      } else {
+                        me = isTeam1 ? m.player1 : m.player2;
+                      }
+
+                      let opponents: any[] = [];
+                      if (isTeam1) {
+                        if (m.player2) opponents.push(m.player2);
+                        if (m.partner2) opponents.push(m.partner2);
+                      } else {
+                        if (m.player1) opponents.push(m.player1);
+                        if (m.partner1) opponents.push(m.partner1);
+                      }
+
+                      // Dynamic format label
+                      let formatLabel = "S";
+                      const allGenders = [me?.gender, partner?.gender, ...opponents.map(o => o?.gender)]
+                        .map(g => (g || '').toLowerCase())
+                        .filter(Boolean);
+                        
+                      if (partner || opponents.length > 1) {
+                        const hasMale = allGenders.includes('male');
+                        const hasFemale = allGenders.includes('female');
+                        if (hasMale && hasFemale) {
+                          formatLabel = "XD";
+                        } else if (hasFemale) {
+                          formatLabel = "WD";
+                        } else {
+                          formatLabel = "MD";
+                        }
+                      } else {
+                        if (me?.gender?.toLowerCase() === 'female' || opponents[0]?.gender?.toLowerCase() === 'female') {
+                          formatLabel = "WS";
+                        } else {
+                          formatLabel = "MS";
+                        }
+                      }
+
                       const isSubmitter =
                         ownPlayerProfile &&
                         m.submitted_by === ownPlayerProfile.id;
@@ -270,17 +273,32 @@ export function MatchHistorySection({
                             <div className="w-8 h-8 rounded-lg bg-amber-200 dark:bg-amber-800/40 flex items-center justify-center text-xs font-black text-amber-700 dark:text-amber-400 shrink-0">
                               ?
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <span className="text-slate-600 dark:text-slate-300">
-                                vs{" "}
-                              </span>
-                              <span className="font-bold text-slate-800 dark:text-slate-200">
-                                {opponent?.full_name ?? "Unknown"}
-                              </span>
-                              <span className="text-slate-400 mx-1">·</span>
-                              <span className="font-mono text-xs font-bold text-slate-600 dark:text-slate-400">
-                                {m.match_score || m.score}
-                              </span>
+                            <div className="flex-1 min-w-0 py-1">
+                              <div className="flex flex-col gap-1.5">
+                                {partner && (
+                                  <div className="flex items-center gap-2 mb-0.5 leading-none">
+                                    <span className="text-[10px] font-black text-blue-500 dark:text-blue-400 w-6 text-right">with</span>
+                                    <span className={`text-xs font-bold truncate ${getGenderColor(partner.gender)}`}>
+                                      {partner.full_name}
+                                    </span>
+                                  </div>
+                                )}
+                                {opponents.map((opp, i) => (
+                                  <div key={i} className="flex items-center gap-2 leading-none">
+                                    {i === 0 ? (
+                                      <span className="text-[10px] font-black text-rose-500 dark:text-rose-400 uppercase w-6 text-right">vs</span>
+                                    ) : (
+                                      <span className="text-[10px] font-black text-rose-400/80 dark:text-rose-500/80 uppercase w-6 text-right">&</span>
+                                    )}
+                                    <span className={`font-black truncate ${getGenderColor(opp?.gender)}`}>
+                                      {opp?.full_name ?? "Unknown"}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="mt-2 flex flex-col gap-1 items-start">
+                                <BeautifulScoreDisplay score={m.match_score || m.score} />
+                              </div>
                             </div>
                             <div className="text-[10px] text-slate-400 shrink-0">
                               {new Date(m.created_at).toLocaleDateString(
@@ -345,7 +363,8 @@ export function MatchHistorySection({
                 <div className="hidden sm:grid grid-cols-12 gap-2 px-5 py-3 bg-slate-50 dark:bg-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-700/50">
                   <div className="col-span-1 text-center">Result</div>
                   <div className="col-span-1">Type</div>
-                  <div className="col-span-4">Opponent</div>
+                  <div className="col-span-1 text-center">Format</div>
+                  <div className="col-span-3">Opponent</div>
                   <div className="col-span-3">Score</div>
                   <div className="col-span-3 text-right">Date & Time</div>
                 </div>
@@ -353,11 +372,62 @@ export function MatchHistorySection({
                 <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
                   {filteredMatches.length > 0 ? (
                     filteredMatches.map((m, idx) => {
-                      const isP1 = m.player1_id === id;
-                      const opponent = isP1 ? m.player2 : m.player1;
-                      const won = m.winner_id === id;
+                      const isTeam1 = m.player1_id === id || m.team1_partner_id === id;
+                      
+                      let partner = null;
+                      let me = null;
+                      if (isTeam1 && (m.team1_partner_id || m.partner1)) {
+                        partner = m.player1_id === id ? m.partner1 : m.player1;
+                        me = m.player1_id === id ? m.player1 : m.partner1;
+                      } else if (!isTeam1 && (m.team2_partner_id || m.partner2)) {
+                        partner = m.player2_id === id ? m.partner2 : m.player2;
+                        me = m.player2_id === id ? m.player2 : m.partner2;
+                      } else {
+                        me = isTeam1 ? m.player1 : m.player2;
+                      }
+
+                      let opponents: any[] = [];
+                      if (isTeam1) {
+                        if (m.player2) opponents.push(m.player2);
+                        if (m.partner2) opponents.push(m.partner2);
+                      } else {
+                        if (m.player1) opponents.push(m.player1);
+                        if (m.partner1) opponents.push(m.partner1);
+                      }
+
+                      const won = isTeam1 ? m.winner_id === m.player1_id : m.winner_id === m.player2_id;
                       const matchDate = new Date(m.created_at);
                       const isFriendly = m.is_friendly !== false;
+
+                      // Dynamic format label
+                      let formatLabel = "S";
+                      const allGenders = [me?.gender, partner?.gender, ...opponents.map(o => o?.gender)]
+                        .map(g => (g || '').toLowerCase())
+                        .filter(Boolean);
+                        
+                      if (partner || opponents.length > 1) {
+                        // Doubles
+                        const hasMale = allGenders.includes('male');
+                        const hasFemale = allGenders.includes('female');
+                        if (hasMale && hasFemale) {
+                          formatLabel = "XD";
+                        } else if (hasFemale) {
+                          formatLabel = "WD";
+                        } else {
+                          formatLabel = "MD";
+                        }
+                      } else {
+                        // Singles
+                        if (me?.gender?.toLowerCase() === 'female' || opponents[0]?.gender?.toLowerCase() === 'female') {
+                          formatLabel = "WS";
+                        } else {
+                          formatLabel = "MS";
+                        }
+                      }
+
+                      const scoreBg = won 
+                        ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/40" 
+                        : "bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800/40";
 
                       return (
                         <div
@@ -391,22 +461,45 @@ export function MatchHistorySection({
                             </span>
                           </div>
 
+                          {/* Format */}
+                          <div className="col-span-1 flex sm:justify-center">
+                            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">
+                              {formatLabel}
+                            </span>
+                          </div>
+
                           {/* Opponent */}
-                          <div className="col-span-4">
-                            <div className="text-sm text-slate-600 dark:text-slate-300">
-                              <span className="text-slate-400 mr-1">vs</span>
-                              <button
-                                onClick={() =>
-                                  opponent?.id &&
-                                  setLocation(`/player/${opponent.id}`)
-                                }
-                                className="font-bold text-slate-800 dark:text-slate-100 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
-                              >
-                                {opponent?.full_name ?? "Unknown"}
-                              </button>
+                          <div className="col-span-3">
+                            <div className="flex flex-col gap-1.5">
+                              {partner && (
+                                <div className="flex items-center gap-2 mb-0.5 leading-none">
+                                  <span className="text-[10px] font-black text-blue-500 dark:text-blue-400 w-6 text-right">with</span>
+                                  <button 
+                                    onClick={(e) => { e.stopPropagation(); partner.id && setLocation(`/player/${partner.id}`); }} 
+                                    className={`text-xs font-bold transition-colors text-left truncate ${getGenderColor(partner.gender)}`}
+                                  >
+                                    {partner.full_name}
+                                  </button>
+                                </div>
+                              )}
+                              {opponents.map((opp, i) => (
+                                <div key={i} className="flex items-center gap-2 leading-none">
+                                  {i === 0 ? (
+                                    <span className="text-[10px] font-black text-rose-500 dark:text-rose-400 uppercase w-6 text-right">vs</span>
+                                  ) : (
+                                    <span className="text-[10px] font-black text-rose-400/80 dark:text-rose-500/80 uppercase w-6 text-right">&</span>
+                                  )}
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); opp?.id && setLocation(`/player/${opp.id}`); }}
+                                    className={`font-black transition-colors text-left truncate text-sm ${getGenderColor(opp?.gender)}`}
+                                  >
+                                    {opp?.full_name ?? "Unknown"}
+                                  </button>
+                                </div>
+                              ))}
                             </div>
-                            {m.round && m.round !== "Tournament" && (
-                              <div className="text-[10px] text-slate-400 font-medium mt-0.5">
+                            {m.round && m.round !== "Tournament" && m.round !== "Friendly" && (
+                              <div className="text-[10px] text-slate-400 font-medium mt-1">
                                 {m.round}
                               </div>
                             )}
@@ -414,11 +507,8 @@ export function MatchHistorySection({
 
                           {/* Score */}
                           <div className="col-span-3">
-                            <div className="font-mono text-sm font-black text-slate-700 dark:text-slate-200 tracking-tight">
-                              {(m.match_score || m.score)?.replace(
-                                /\s*\[.*\]/,
-                                "",
-                              ) || "—"}
+                            <div className="flex flex-col gap-1 items-start">
+                              <BeautifulScoreDisplay score={m.match_score || m.score} />
                             </div>
                           </div>
 
@@ -443,152 +533,7 @@ export function MatchHistorySection({
                             <button
                               onClick={async (e) => {
                                 e.stopPropagation();
-
-                                const viewedPlayer = isP1
-                                  ? m.player1
-                                  : m.player2;
-                                const displayScore =
-                                  (m.match_score || m.score)?.replace(
-                                    /\s*\[.*\]/,
-                                    "",
-                                  ) || "—";
-                                const shareUrl = `${getBaseShareUrl()}/player/${id}`;
-                                const winnerName = won
-                                  ? viewedPlayer?.full_name || "Player"
-                                  : opponent?.full_name || "Player";
-                                const loserName = won
-                                  ? opponent?.full_name || "Player"
-                                  : viewedPlayer?.full_name || "Player";
-                                const winnerAvatar = won
-                                  ? viewedPlayer?.avatar_url
-                                  : opponent?.avatar_url;
-                                const loserAvatar = won
-                                  ? opponent?.avatar_url
-                                  : viewedPlayer?.avatar_url;
-                                const shareText = `🏸 Match Result: ${winnerName} def. ${loserName} (${displayScore})!`;
-
-                                const fallback = async () => {
-                                  try {
-                                    if (Capacitor.isNativePlatform()) {
-                                      await Share.share({
-                                        title: "IISc Badminton Club Match",
-                                        text: shareText,
-                                        url: shareUrl,
-                                        dialogTitle: "Share Match Result",
-                                      });
-                                    } else if (navigator.share) {
-                                      await navigator.share({
-                                        title: "IISc Badminton Club Match",
-                                        text: shareText,
-                                        url: shareUrl,
-                                      });
-                                    } else {
-                                      await navigator.clipboard.writeText(
-                                        `${shareText}\n${shareUrl}`,
-                                      );
-                                      toast.success("Match result copied!");
-                                    }
-                                  } catch (err: any) {
-                                    if (
-                                      err.message &&
-                                      !err.message.includes("cancel")
-                                    ) {
-                                      navigator.clipboard
-                                        .writeText(`${shareText}\n${shareUrl}`)
-                                        .catch(() => {});
-                                      toast.success("Match result copied!");
-                                    }
-                                  }
-                                };
-
-                                try {
-                                  const canvas = await renderMatchShareCard({
-                                    winnerName: won
-                                      ? viewedPlayer?.full_name || "Player"
-                                      : opponent?.full_name || "Player",
-                                    loserName: won
-                                      ? opponent?.full_name || "Player"
-                                      : viewedPlayer?.full_name || "Player",
-                                    winnerAvatar: won
-                                      ? viewedPlayer?.avatar_url || ""
-                                      : opponent?.avatar_url || "",
-                                    loserAvatar: won
-                                      ? opponent?.avatar_url || ""
-                                      : viewedPlayer?.avatar_url || "",
-                                    displayScore,
-                                    winnerEloChange: won
-                                      ? (isP1
-                                          ? m.elo_change_p1
-                                          : m.elo_change_p2)
-                                      : (isP1
-                                          ? m.elo_change_p2
-                                          : m.elo_change_p1),
-                                    loserEloChange: won
-                                      ? (isP1
-                                          ? m.elo_change_p2
-                                          : m.elo_change_p1)
-                                      : (isP1
-                                          ? m.elo_change_p1
-                                          : m.elo_change_p2),
-                                    matchType:
-                                      m.is_friendly !== false
-                                        ? "Friendly"
-                                        : "Tournament",
-                                    matchDate: new Date(m.created_at),
-                                    category: m.category,
-                                  });
-
-                                  if (!canvas) {
-                                    await fallback();
-                                    return;
-                                  }
-
-                                  if (Capacitor.isNativePlatform()) {
-                                    const base64 = canvas
-                                      .toDataURL("image/png")
-                                      .split(",")[1];
-                                    const { uri } = await Filesystem.writeFile({
-                                      path: "match-share.png",
-                                      data: base64,
-                                      directory: Directory.Cache,
-                                    });
-                                    await Share.share({
-                                      title: "IISc Badminton Club Match",
-                                      text: shareText,
-                                      files: [uri],
-                                      dialogTitle: "Share Match Result",
-                                    });
-                                    toast.success("Match Recap shared!");
-                                  } else {
-                                    canvas.toBlob(async (blob) => {
-                                      if (blob) {
-                                        const file = new File(
-                                          [blob],
-                                          "match-recap.png",
-                                          { type: "image/png" },
-                                        );
-                                        if (
-                                          navigator.canShare?.({
-                                            files: [file],
-                                          })
-                                        ) {
-                                          await navigator.share({
-                                            title: "IISc Badminton Club Match",
-                                            text: shareText,
-                                            url: shareUrl,
-                                            files: [file],
-                                          });
-                                          toast.success("Match Recap shared!");
-                                          return;
-                                        }
-                                      }
-                                      await fallback();
-                                    }, "image/png");
-                                  }
-                                } catch (err: any) {
-                                  if (!err.message?.includes("cancel"))
-                                    await fallback();
-                                }
+                                await shareMatch(m);
                               }}
                               className="p-1.5 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/20 rounded-lg transition-colors"
                               title="Share Match Result"

@@ -60,6 +60,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
           .select("id, full_name, avatar_url, department, elo_rating")
           .ilike("full_name", `%${q}%`)
           .is("deleted_at", null)
+          .eq("is_guest", false)
           .limit(5),
         supabase
           .from("matches")

@@ -9,28 +9,9 @@ import { Share } from "@capacitor/share";
 import { getBaseShareUrl } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 
-export interface Player {
-  id: string;
-  full_name: string;
-  nickname?: string;
-  department: string;
-  joined_year: number;
-  playing_level: string;
-  playing_style: string;
-  dominant_hand: string;
-  avatar_url: string;
-  current_racket?: string;
-  elo_rating?: number;
-  singles_elo?: number;
-  doubles_elo?: number;
-  mixed_elo?: number;
-  win_loss_record?: string;
-  recent_form?: string[];
-  is_approved?: boolean;
-  is_looking_to_play?: boolean;
-  status?: string;
-  gender?: string;
-}
+import type { PlayerRow } from "@/types";
+
+export type Player = PlayerRow;
 
 const AVATAR_GRADIENTS = [
   "from-emerald-400 to-teal-500",

@@ -19,7 +19,7 @@ import { usePageMeta } from "@/hooks/usePageMeta";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { InfoModal } from "@/components/InfoModal";
-import { getEloTier } from "@/lib/utils";
+import { getEloTier } from "@/lib/tiers";
 import { useHashTab } from "@/hooks/useHashTab";
 
 interface PlayerRank {
@@ -113,7 +113,13 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
         .limit(200);
 
       if (categoryFilter !== "ALL") {
-        query = query.eq("category", categoryFilter);
+        // Umpire submits all doubles as 'Doubles' (XD detected by gender in ELO trigger).
+        // Map display category codes to what's actually stored in matches.category.
+        const dbCategory =
+          categoryFilter === "MS" || categoryFilter === "WS" ? "Singles" :
+          categoryFilter === "MD" || categoryFilter === "WD" || categoryFilter === "XD" ? "Doubles" :
+          categoryFilter;
+        query = query.eq("category", dbCategory);
       }
 
       query.then(({ data }) => {

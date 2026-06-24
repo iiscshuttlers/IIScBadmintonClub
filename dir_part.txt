@@ -1,0 +1,410 @@
+const LogMatchModal = lazy(() => import("@/components/LogMatchModal"));
+import { DirectoryFilters } from "@/components/players-directory/DirectoryFilters";
+import { LeaderboardSection } from "@/components/players-directory/LeaderboardSection";
+import { H2HSection } from "@/components/players-directory/H2HSection";
+import { useHashTab } from "@/hooks/useHashTab";
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.05 } },
+};
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 15 },
+  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } },
+};
+
+const PLAYER_SELECT =
+  "id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, elo_rating, singles_elo, doubles_elo, mixed_elo, win_loss_record, singles_record, doubles_record, mixed_record, recent_form, is_looking_to_play, status, buddies, following, buddy_requests, gender";
+const PLAYERS_CACHE_KEY = "iisc_players_directory_cache_v4";
+const REQUEST_TIMEOUT_MS = 15_000;
+const MAX_FETCH_RETRIES = 1;
+
+function readCachedPlayers(): Player[] {
+  try {
+    const raw = window.localStorage.getItem(PLAYERS_CACHE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed?.players) ? parsed.players : [];
+  } catch {
+    return [];
+  }
+}
+
+function cachePlayers(players: Player[]) {
+  try {
+    window.localStorage.setItem(
+      PLAYERS_CACHE_KEY,
+      JSON.stringify({ players, savedAt: Date.now() }),
+    );
+  } catch {}
+}
+/* ── Main page ──────────────────────────────────────────────────────── */
+export default function PlayersDirectory() {
+  usePageMeta({
+    title: "Player Directory",
+    description:
+      "Search and discover member profiles, styles, playing levels, and equipment within IISc Badminton Club.",
+  });
+
+  const [, setLocation] = useLocation();
+  const isMountedRef = useRef(true);
+  const fetchRequestIdRef = useRef(0);
+
+  /* Auth + own-profile state */
+  const [session, setSession] = useState<any>(null);
+  const [ownProfile, setOwnProfile] = useState<Player | null>(null);
+  const [isLogMatchOpen, setIsLogMatchOpen] = useState(false);
+  const [selectedOpponentId, setSelectedOpponentId] = useState<string | null>(
+    null,
+  );
+  const [pendingMatches, setPendingMatches] = useState<any[]>([]);
+
+  /* Directory state */
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [levelFilter, setLevelFilter] = useState("All");
+  const [departmentFilter, setDepartmentFilter] = useState("All");
+  const [showFilters, setShowFilters] = useState(false);
+  const [sortBy, setSortBy] = useState<
+    "elo" | "winpct" | "name" | "department" | "level"
+  >("name");
+  const LEADERBOARD_SUB_TABS = ["elo", "ironman"];
+  const [activeTab, setActiveTab] = useHashTab(
+    ["directory", "leaderboard", "network", "h2h", ...LEADERBOARD_SUB_TABS] as const,
+    "directory"
+  );
+  const effectiveTab = LEADERBOARD_SUB_TABS.includes(activeTab as string)
+    ? "leaderboard"
+    : activeTab as "directory" | "leaderboard" | "network" | "h2h";
+
+
+  const [followers, setFollowers] = useState<any[]>([]);
+  const [visibleCount, setVisibleCount] = useState(24);
+  const [buddyRequests, setBuddyRequests] = useState<Map<string, {id: string; status: string; senderId: string}>>(new Map());
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      fetchRequestIdRef.current += 1;
+    };
+  }, []);
+
+  // Debounce search input by 150ms
+  useEffect(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 150);
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, [searchQuery]);
+
+  /* 1. Check auth session + own profile */
+  const {
+    session: authSession,
+    isInitializing: authLoading,
+    profile,
+    refreshProfile,
+    isAdmin: authIsAdmin,
+  } = useAuth();
+  const isAdmin = authIsAdmin;
+  useEffect(() => {
+    let isMounted = true;
+
+    const applySession = async (session: any) => {
+      if (!session) {
+        if (isMounted) {
+          setSession(null);
+          setOwnProfile(null);
+        }
+        return;
+      }
+
+      const { data: userData, error: userError } =
+        await supabase.auth.getUser();
+      if (!isMounted) return;
+      if (userError || !userData.user || userData.user.id !== session.user.id) {
+        setSession(null);
+        setOwnProfile(null);
+        await supabase.auth.signOut();
+        return;
+      }
+
+      setSession(session);
+
+      if (session) {
+        try {
+          const { data } = await supabase
+            .from("players")
+            .select(PLAYER_SELECT)
+            .eq("id", userData.user.id)
+            .maybeSingle();
+          if (isMounted) {
+            setOwnProfile(data ?? null);
+            if (data) {
+              fetchPendingMatches(data.id);
+              fetchFollowers(data.id);
+              fetchBuddyRequests(data.id);
+            }
+          }
+        } catch (e) {
+          console.warn("Error fetching own profile:", e);
+        }
+      }
+    };
+
+    applySession(authSession).catch((err) =>
+      console.error("Auth apply error:", err),
+    );
+
+    return () => {
+      isMounted = false;
+    };
+  }, [authSession]);
+
+  /* 2. Fetch all players — stale-while-revalidate.
+        If we have cached data, show it instantly and refresh in the background.
+        The loading spinner only appears on the very first visit (empty cache). */
+  const fetchPlayers = useCallback(
+    async ({ silent = false }: { silent?: boolean } = {}) => {
+      const requestId = ++fetchRequestIdRef.current;
+
+      if (!silent) {
+        setFetchError(false);
+
+        const cachedPlayers = readCachedPlayers();
+        if (cachedPlayers.length > 0) {
+          // Show stale data instantly — no spinner
+          setPlayers(cachedPlayers);
+          setLoading(false);
+          // From here on, treat this as a silent background refresh
+          silent = true;
+        } else {
+          // No cache at all — first visit, show spinner
+          setLoading(true);
+        }
+      }
+
+      if (!isSupabaseConfigured) {
+        if (!isMountedRef.current || requestId !== fetchRequestIdRef.current)
+          return;
+
+        const cachedPlayers = readCachedPlayers();
+        if (cachedPlayers.length > 0) {
+          setPlayers(cachedPlayers);
+        } else if (!silent) {
+          setFetchError(true);
+        }
+        setLoading(false);
+        return;
+      }
+
+      for (let attempt = 0; attempt <= MAX_FETCH_RETRIES; attempt += 1) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(
+          () => controller.abort(),
+          REQUEST_TIMEOUT_MS,
+        );
+
+        try {
+          const response = await supabase
+            .from("players")
+            .select(PLAYER_SELECT)
+            .is("deleted_at", null)
+            .order("elo_rating", { ascending: false })
+            .abortSignal(controller.signal);
+
+          clearTimeout(timeoutId);
+
+          if (!isMountedRef.current || requestId !== fetchRequestIdRef.current)
+            return;
+
+          if (response.error) {
+            throw response.error;
+          }
+
+          const nextPlayers = response.data || [];
+          setPlayers(nextPlayers as any as PlayerRow[]);
+          cachePlayers(nextPlayers as any as PlayerRow[]);
+          setFetchError(false);
+          setLoading(false);
+          return;
+        } catch (err: any) {
+          clearTimeout(timeoutId);
+          if (requestId !== fetchRequestIdRef.current) return;
+
+          console.warn(
+            `Player directory fetch failed (attempt ${attempt + 1}):`,
+            err?.message ?? err,
+          );
+
+          if (attempt < MAX_FETCH_RETRIES) {
+            await new Promise((resolve) =>
+              setTimeout(resolve, 750 * (attempt + 1)),
+            );
+            if (
+              !isMountedRef.current ||
+              requestId !== fetchRequestIdRef.current
+            )
+              return;
+            continue;
+          }
+
+          if (!isMountedRef.current) return;
+
+          const cachedPlayers = readCachedPlayers();
+          if (cachedPlayers.length > 0) {
+            setPlayers(cachedPlayers);
+            setFetchError(false);
+          } else if (!silent) {
+            setFetchError(true);
+          }
+          setLoading(false);
+        }
+      }
+    },
+    [],
+  );
+
+  const fetchFollowers = useCallback(async (profileId: string) => {
+    try {
+      const { data } = await supabase
+        .from("players")
+        .select("id, full_name, avatar_url, department, elo_rating, is_looking_to_play, playing_level")
+        .contains("following", [profileId])
+        .is("deleted_at", null);
+      if (data) setFollowers(data);
+    } catch {
+      // ignore — followers list is non-critical
+    }
+  }, []);
+
+  const fetchBuddyRequests = useCallback(async (profileId: string) => {
+    try {
+      const { data } = await supabase
+        .from("buddy_requests")
+        .select("id, status, sender_id, receiver_id")
+        .or(`sender_id.eq.${profileId},receiver_id.eq.${profileId}`);
+      if (data) {
+        const map = new Map();
+        data.forEach(req => {
+          const otherPlayerId = req.sender_id === profileId ? req.receiver_id : req.sender_id;
+          map.set(otherPlayerId, { id: req.id, status: req.status, senderId: req.sender_id });
+        });
+        setBuddyRequests(map);
+      }
+    } catch {
+      console.error("Error fetching buddy requests");
+    }
+  }, []);
+
+  const fetchPendingMatches = useCallback(async (profileId: string) => {
+    const fullRes = await supabase
+      .from("matches")
+      .select(
+        "*, player1:players!player1_id(full_name), player2:players!player2_id(full_name)",
+      )
+      .eq("status", "pending")
+      .neq("submitted_by", profileId)
+      .or(
+        `player1_id.eq.${profileId},player2_id.eq.${profileId},team1_partner_id.eq.${profileId},team2_partner_id.eq.${profileId}`,
+      );
+    const res = fullRes.error
+      ? await supabase
+          .from("matches")
+          .select(
+            "*, player1:players!player1_id(full_name), player2:players!player2_id(full_name)",
+          )
+          .eq("status", "pending")
+          .neq("submitted_by", profileId)
+          .or(`player1_id.eq.${profileId},player2_id.eq.${profileId}`)
+      : fullRes;
+    setPendingMatches(res.data || []);
+  }, []);
+
+  useEffect(() => {
+    fetchPlayers();
+  }, [fetchPlayers]);
+
+  useEffect(() => {
+    if (!loading) return;
+
+    const stuckLoaderTimeout = setTimeout(
+      () => {
+        if (!isMountedRef.current) return;
+
+        const cachedPlayers = readCachedPlayers();
+        if (cachedPlayers.length > 0) {
+          setPlayers(cachedPlayers);
+          setFetchError(false);
+        } else {
+          setFetchError(true);
+        }
+        setLoading(false);
+      },
+      REQUEST_TIMEOUT_MS * (MAX_FETCH_RETRIES + 2),
+    );
+
+    return () => clearTimeout(stuckLoaderTimeout);
+  }, [loading]);
+
+  // Sync ownProfile with auth context when it refreshes
+  useEffect(() => {
+    if (profile && ownProfile?.id === (profile as any).id) {
+      setOwnProfile((prev: any) => prev ? { ...prev, ...(profile as any) } : prev);
+    }
+  }, [profile]);
+
+  // Auto-refresh player list every 60s (silently, scroll preserved)
+  const silentRefresh = useCallback(async () => {
+    await fetchPlayers({ silent: true });
+    if (ownProfile?.id) {
+      fetchPendingMatches(ownProfile.id);
+      fetchBuddyRequests(ownProfile.id);
+      fetchFollowers(ownProfile.id);
+    }
+  }, [fetchPlayers, ownProfile?.id, fetchPendingMatches, fetchBuddyRequests, fetchFollowers]);
+  useAutoRefresh(silentRefresh, 60_000, !loading);
+
+  /* Filter + sort logic */
+  const otherPlayers = players.filter((p) => p.id !== session?.user?.id);
+  const allDepartments = Array.from(
+    new Set(players.map((p) => p.department).filter(Boolean)),
+  ).sort();
+
+  const followingIds = new Set<string>((ownProfile as any)?.following || []);
+
+  // Derive buddy/request sets from the buddy_requests table map
+  const myBuddyRequests = useMemo(() => {
+    const accepted = new Set<string>();
+    const received = new Set<string>();
+    const sent = new Set<string>();
+    buddyRequests.forEach((req, playerId) => {
+      if (req.status === "accepted") accepted.add(playerId);
+      else if (req.senderId === ownProfile?.id) sent.add(playerId);
+      else received.add(playerId);
+    });
+    return { accepted, received, sent };
+  }, [buddyRequests, ownProfile?.id]);
+
+  // IDs of own buddies for hoisting — derived from accepted buddy_requests
+  const myBuddyIds = myBuddyRequests.accepted;
+
+  // Fuzzy score: returns 0 if no match, higher = better match
+  const fuzzyScore = (text: string, query: string): number => {
+    if (!query) return 1;
+    const t = text.toLowerCase();
+    const q = query.toLowerCase();
+    if (t === q) return 100;
+    if (t.startsWith(q)) return 80;
+    if (t.includes(` ${q}`)) return 70; // word boundary
+    if (t.includes(q)) return 50;
+    // Check if all chars of query appear in order in text
+    let qi = 0;
+    for (let ti = 0; ti < t.length && qi < q.length; ti++) {

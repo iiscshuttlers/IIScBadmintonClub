@@ -223,8 +223,8 @@ export function LiveScoreSection() {
       )
       .subscribe();
 
-    // Polling fallback every 10s in case realtime subscription lags
-    const poll = setInterval(fetchLiveMatches, 10_000);
+    // Polling fallback every 5s in case realtime subscription lags
+    const poll = setInterval(fetchLiveMatches, 5_000);
 
     return () => {
       supabase.removeChannel(sub);

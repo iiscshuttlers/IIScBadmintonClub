@@ -14,6 +14,7 @@ import { doc, updateDoc, getDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
 
 export async function advanceWinners(format: string, completedMatchId: string) {
+  if (!db) throw new Error("Firebase is unavailable.");
   try {
     const tournamentRef = doc(db, "live_data", "tournament");
     const snap = await getDoc(tournamentRef);
@@ -64,6 +65,7 @@ export async function advanceWinners(format: string, completedMatchId: string) {
 }
 
 export async function batchAdvanceAllWinners() {
+  if (!db) throw new Error("Firebase is unavailable.");
   try {
     const tournamentRef = doc(db, "live_data", "tournament");
     const snap = await getDoc(tournamentRef);

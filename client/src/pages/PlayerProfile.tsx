@@ -62,6 +62,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
+import { usePlayerStats } from "@/hooks/usePlayerStats";
+import { useMatchActions } from "@/hooks/useMatchActions";
 import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
 import { MatchHistorySection } from "@/components/player-profile/MatchHistorySection";
 import {
@@ -351,13 +353,8 @@ export default function PlayerProfile({
   const id = isSlug ? undefined : rawId;
 
   const [player, setPlayer] = useState<Player | null>(null);
+  
 
-  // Calibration Phase Logic
-  const totalPlayedGames = useMemo(() => {
-    if (!(player as any)?.win_loss_record) return 0;
-    const [w, l] = (player as any).win_loss_record.split("-").map(Number);
-    return (w || 0) + (l || 0);
-  }, [(player as any)?.win_loss_record]);
   const isUnranked = false;
 
   const [loading, setLoading] = useState(true);
@@ -394,6 +391,29 @@ export default function PlayerProfile({
   const [isChallengeModalOpen, setIsChallengeModalOpen] = useState(false);
   const [introPhase, setIntroPhase] = useState(0);
   const profileLoadRetried = useRef(false);
+  const validAchievements = useMemo(
+    () =>
+      player ? player.achievements.filter((a) => a && a.trim() !== "") : [],
+    [player],
+  );
+
+  const {
+    profileCompleteness,
+    dynamicBadges,
+    winPct,
+    totalMatches,
+    splitStats,
+    streakStats,
+    totalPlayedGames
+  } = usePlayerStats(player as any as import("@/types").PlayerRow, liveMatches, validAchievements);
+
+  const {
+    handleConfirmMatch,
+    handleRejectMatch,
+    handleResendRequest,
+    handleWithdrawMatch
+  } = useMatchActions(ownPlayerProfile, refreshProfile, () => {}, pendingMatches);
+
 
   useEffect(() => {
     if (ownPlayerProfile && player?.id) {
@@ -682,97 +702,6 @@ export default function PlayerProfile({
     }
   }, []);
 
-  /* ── Match action handlers ─────────────────────────────────────── */
-  const handleConfirmMatch = async (matchId: string) => {
-    try {
-      const { data, error } = await supabase.rpc("confirm_friendly_match", {
-        match_uuid: matchId,
-        confirmer_id: ownPlayerProfile?.id,
-      });
-      if (error) throw error;
-      let myEloChange = data.p1_elo_change;
-      const targetMatch = pendingMatches.find(m => m.id === matchId);
-      if (targetMatch) {
-        if (targetMatch.player2_id === ownPlayerProfile?.id) myEloChange = data.p2_elo_change;
-        if (targetMatch.team1_partner_id === ownPlayerProfile?.id) myEloChange = data.p3_elo_change;
-        if (targetMatch.team2_partner_id === ownPlayerProfile?.id) myEloChange = data.p4_elo_change;
-      }
-
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ["#10b981", "#3b82f6", "#f59e0b"]
-      });
-
-      toast.success("Match Confirmed!", {
-        description: `Elo Ratings Updated. Your Elo Change: ${myEloChange || 0}`,
-      });
-      if (ownPlayerProfile) fetchPendingMatches(ownPlayerProfile.id);
-    } catch (e: any) {
-      toast.error("Error confirming match", { description: e.message });
-    }
-  };
-
-  const handleRejectMatch = async (matchId: string) => {
-    try {
-      const { error } = await supabase.rpc("reject_friendly_match", {
-        match_uuid: matchId,
-        rejecter_id: ownPlayerProfile?.id,
-      });
-      if (error) throw error;
-      toast.success("Match Rejected", {
-        description: "The match request has been dismissed.",
-      });
-      if (ownPlayerProfile) fetchPendingMatches(ownPlayerProfile.id);
-    } catch (e: any) {
-      toast.error("Error rejecting match", { description: e.message });
-    }
-  };
-
-  const handleResendRequest = async (match: any) => {
-    try {
-      const { error } = await supabase.functions.invoke("notify-match", {
-        body: { type: "INSERT", table: "matches", record: match },
-      });
-      if (error) throw error;
-      toast.success("Request resent to opponent(s)");
-    } catch (e: any) {
-      toast.error("Failed to resend request", { description: e.message });
-    }
-  };
-
-  const handleWithdrawMatch = async (matchId: string) => {
-    toast("Withdraw this match?", {
-      description:
-        "Are you sure you want to withdraw this pending match log? It will be deleted permanently.",
-      action: {
-        label: "Withdraw",
-        onClick: async () => {
-          try {
-            const { data, error } = await supabase
-              .from("matches")
-              .delete()
-              .eq("id", matchId)
-              .select("id");
-            if (error) throw error;
-            if (!data || data.length === 0) {
-              throw new Error(
-                "Delete was denied by the server. You may not have permission to withdraw this match.",
-              );
-            }
-            toast.success("Match withdrawn successfully.");
-            setRawMatches((prev) => prev.filter((m) => m.id !== matchId));
-            if (ownPlayerProfile) fetchPendingMatches(ownPlayerProfile.id);
-          } catch (e: any) {
-            toast.error("Error withdrawing match", { description: e.message });
-          }
-        },
-      },
-      cancel: { label: "Cancel", onClick: () => { } },
-    });
-  };
-
   /* ══════════════════════════════════════════════════════════════════
      EFFECT 1: Load page data (player profile, matches, ELO rank).
      ══════════════════════════════════════════════════════════════════ */
@@ -965,206 +894,6 @@ export default function PlayerProfile({
     const losses = h2h.filter((m) => m.winner_id === id).length;
     setH2hRecord({ wins, losses });
   }, [liveMatches, ownPlayerProfile, id]);
-
-  const validAchievements = useMemo(
-    () =>
-      player ? player.achievements.filter((a) => a && a.trim() !== "") : [],
-    [player],
-  );
-
-  const dynamicBadges = useMemo(() => {
-    if (!player) return [];
-    const _badges: {
-      id: string;
-      label: string;
-      icon: string;
-      description: string;
-      color: string;
-    }[] = [];
-
-    // Centurion Badge
-    let totalMatches = 0;
-    if (player.winLossRecord) {
-      const match = player.winLossRecord.match(/(\d+)W\s*-\s*(\d+)L/);
-      if (match) totalMatches = parseInt(match[1]) + parseInt(match[2]);
-    } else if (player.stats?.totalMatches) {
-      totalMatches = player.stats.totalMatches;
-    }
-
-    if (totalMatches >= 100) {
-      _badges.push({
-        id: "centurion",
-        label: "Centurion",
-        icon: "💯",
-        description: "Played 100+ matches",
-        color:
-          "bg-amber-500/15 text-amber-400 border-amber-500/30 ring-amber-500/20",
-      });
-    } else if (totalMatches >= 50) {
-      _badges.push({
-        id: "veteran",
-        label: "Veteran",
-        icon: "⚔️",
-        description: "Played 50+ matches",
-        color:
-          "bg-slate-500/15 text-slate-400 border-slate-500/30 ring-slate-500/20",
-      });
-    }
-
-    // Win Streak Badge
-    const streak = player.stats?.currentStreak;
-    if (streak && streak.startsWith("W")) {
-      const streakCount = parseInt(streak.replace("W", "")) || 0;
-      if (streakCount >= 5) {
-        _badges.push({
-          id: "unstoppable",
-          label: "Unstoppable",
-          icon: "⚡",
-          description: "5+ Match Win Streak",
-          color:
-            "bg-indigo-500/15 text-indigo-400 border-indigo-500/30 ring-indigo-500/20",
-        });
-      } else if (streakCount >= 3) {
-        _badges.push({
-          id: "on_fire",
-          label: "On Fire",
-          icon: "🔥",
-          description: "3 Match Win Streak",
-          color:
-            "bg-orange-500/15 text-orange-400 border-orange-500/30 ring-orange-500/20",
-        });
-      }
-    }
-
-    // Giant Slayer Badge
-    const hasGiantSlayer = validAchievements.some(
-      (a) =>
-        a.toLowerCase().includes("giant slayer") ||
-        a.toLowerCase().includes("upset"),
-    );
-    if (hasGiantSlayer) {
-      _badges.push({
-        id: "giant_slayer",
-        label: "Giant Slayer",
-        icon: "🗡️",
-        description: "Defeated a much higher ranked opponent",
-        color:
-          "bg-rose-500/15 text-rose-400 border-rose-500/30 ring-rose-500/20",
-      });
-    }
-
-    return _badges;
-  }, [player, validAchievements]);
-
-  const profileCompleteness = useMemo(() => {
-    if (!player) return 0;
-    const checks = [
-      !!player.avatar,
-      !!player.bio,
-      !!player.quote,
-      !!player.nationality,
-      !!player.height,
-      !!player.coach,
-      player.yearsPlaying != null,
-      player.racketDetails.length > 0,
-      !!(player.shoesList?.length || player.shoes),
-      !!player.social?.instagram,
-      !!player.stats?.media?.length,
-      validAchievements.length > 0,
-    ];
-    return Math.round((checks.filter(Boolean).length / checks.length) * 100);
-  }, [player, validAchievements]);
-
-  const winPct = useMemo(() => {
-    if (!player) return 0;
-    if (player.stats?.winPercentage != null) return player.stats.winPercentage;
-    const w = player.stats?.wins ?? 0;
-    const l = player.stats?.losses ?? 0;
-    if (w + l === 0) {
-      const m = player.winLossRecord?.match(/(\d+)\s*W\s*-\s*(\d+)\s*L/i);
-      if (m) {
-        const ww = +m[1],
-          ll = +m[2];
-        return ww + ll ? (ww / (ww + ll)) * 100 : 0;
-      }
-      return 0;
-    }
-    return (w / (w + l)) * 100;
-  }, [player]);
-
-  const totalMatches = useMemo(() => {
-    if (!player) return 0;
-    if (player.stats?.totalMatches != null) return player.stats.totalMatches;
-    const m = player.winLossRecord?.match(/(\d+)\s*W\s*-\s*(\d+)\s*L/i);
-    if (m) return +m[1] + +m[2];
-    return (player.stats?.wins ?? 0) + (player.stats?.losses ?? 0);
-  }, [player]);
-
-  // BWF-style Split Stats
-  const splitStats = useMemo(() => {
-    if (!id) return null;
-    const confirmed = liveMatches.filter((m) => m.status === "confirmed");
-    const friendly = confirmed.filter((m) => m.is_friendly !== false);
-    const tournament = confirmed.filter((m) => m.is_friendly === false);
-
-    const computeStats = (matches: any[]) => {
-      const wins = matches.filter((m) => m.winner_id === id).length;
-      const losses = matches.length - wins;
-      const winPct =
-        matches.length > 0 ? Math.round((wins / matches.length) * 100) : 0;
-      const recentForm = matches
-        .slice(0, 5)
-        .map((m) => (m.winner_id === id ? "W" : "L")) as ("W" | "L")[];
-      let streak = "";
-      if (matches.length > 0) {
-        const firstResult = matches[0].winner_id === id ? "W" : "L";
-        let count = 0;
-        for (const m of matches) {
-          const r = m.winner_id === id ? "W" : "L";
-          if (r === firstResult) count++;
-          else break;
-        }
-        streak = `${firstResult}${count}`;
-      }
-      return {
-        wins,
-        losses,
-        total: matches.length,
-        winPct,
-        recentForm,
-        streak,
-      };
-    };
-
-    const singles = confirmed.filter((m) => m.category === "MS" || m.category === "WS");
-    const doubles = confirmed.filter((m) => m.category === "MD" || m.category === "WD");
-    const mixed = confirmed.filter((m) => m.category === "XD");
-
-    return {
-      all: computeStats(confirmed),
-      friendly: computeStats(friendly),
-      tournament: computeStats(tournament),
-      singles: computeStats(singles),
-      doubles: computeStats(doubles),
-      mixed: computeStats(mixed),
-    };
-  }, [liveMatches, id]);
-
-  const streakStats = useMemo(() => {
-    if (!id || liveMatches.length === 0) return { current: 0, max: 0 };
-    const confirmed = liveMatches.filter(m => m.status === "confirmed").sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-    let current = 0;
-    let max = 0;
-    confirmed.forEach(m => {
-      if (m.winner_id === id) {
-        current++;
-        max = Math.max(max, current);
-      } else {
-        current = 0;
-      }
-    });
-    return { current, max };
-  }, [liveMatches, id]);
 
   const recentOpponents = useMemo(() => {
     if (!id || liveMatches.length === 0) return [];

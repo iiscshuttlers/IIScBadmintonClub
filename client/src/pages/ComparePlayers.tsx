@@ -2,10 +2,13 @@ import { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { supabase } from "@/lib/supabase";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { fetchPlayer, fetchPlayerList } from "@/services/playerService";
+import { fetchPlayerMatches } from "@/services/matchService";
 import { Card } from "@/components/ui/card";
 import { Link } from "wouter";
+import { MATCH_SELECT_WITH_PLAYERS } from "@/types";
 import { ChevronLeft, Swords, Trophy, TrendingUp, Flame, Calendar, MapPin, User, Activity, Ruler, ChevronDown } from "lucide-react";
-import { getEloTier } from "@/lib/utils";
+import { getEloTier } from "@/lib/tiers";
 import {
   LineChart,
   Line,
@@ -36,7 +39,7 @@ export default function ComparePlayers() {
   usePageMeta({ title: "Player Comparison" });
 
   useEffect(() => {
-    supabase.from("players").select("id, full_name").is("deleted_at", null).order("full_name").then(({ data }) => setAllPlayers(data || []));
+    fetchPlayerList().then((data) => setAllPlayers(data || []));
   }, []);
 
   useEffect(() => {
@@ -46,24 +49,21 @@ export default function ComparePlayers() {
       if (!p1 || !p2) return;
       setLoading(true);
       // Fetch players
-      const [p1Res, p2Res] = await Promise.all([
-        supabase.from("players").select("*").eq("id", p1).single(),
-        supabase.from("players").select("*").eq("id", p2).single()
+      const [p1Data, p2Data] = await Promise.all([
+        fetchPlayer(p1),
+        fetchPlayer(p2)
       ]);
-      setPlayer1(p1Res.data);
-      setPlayer2(p2Res.data);
+      setPlayer1(p1Data);
+      setPlayer2(p2Data);
 
       // Fetch head to head matches
-      const { data: matchesData } = await supabase
-        .from("matches")
-        .select("*, player1:players!player1_id(*), player2:players!player2_id(*), partner1:players!team1_partner_id(*), partner2:players!team2_partner_id(*)")
-        .eq("status", "confirmed")
-        .or(`player1_id.eq.${p1},player2_id.eq.${p1},team1_partner_id.eq.${p1},team2_partner_id.eq.${p1}`)
-        .order("created_at", { ascending: true });
+      const matchesData = await fetchPlayerMatches(p1, 200);
 
       if (matchesData) {
+        // Reverse because we need ascending order for trend charts
+        const ascMatches = [...matchesData].reverse();
         // Filter specifically for head to head (they are on opposing teams)
-        const h2h = matchesData.filter(m => {
+        const h2h = ascMatches.filter(m => {
           const p1Team = m.player1_id === p1 || m.team1_partner_id === p1 ? 1 : (m.player2_id === p1 || m.team2_partner_id === p1 ? 2 : 0);
           const p2Team = m.player1_id === p2 || m.team1_partner_id === p2 ? 1 : (m.player2_id === p2 || m.team2_partner_id === p2 ? 2 : 0);
           return p1Team !== 0 && p2Team !== 0 && p1Team !== p2Team;

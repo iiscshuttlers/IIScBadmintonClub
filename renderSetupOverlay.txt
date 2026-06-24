@@ -1,0 +1,104 @@
+    return (
+      <div 
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto"
+        onClick={() => setIsEditSetupOpen(false)}
+      >
+        <div className="w-full max-w-xl my-8" onClick={e => e.stopPropagation()}>
+          {renderSetupContent()}
+        </div>
+      </div>
+    );
+  };
+
+  // ── PLAYING / FINISHED SCREEN ──────────────────────────────────────────────
+  return (
+    <div className="bg-slate-900 border border-slate-800 rounded-4xl p-4 sm:p-8 text-white max-w-4xl lg:max-w-5xl mx-auto shadow-2xl relative overflow-hidden">
+      <div className="absolute top-0 inset-x-0 h-1.5 bg-linear-to-r from-emerald-500 to-sky-500" />
+      {renderSetupOverlay()}
+      {/* ── Change Ends Overlay ── */}
+      {showChangeEnds && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur-sm rounded-4xl gap-5 p-8 text-center">
+          <ArrowLeftRight className="w-14 h-14 text-amber-400" />
+          <h2 className="text-2xl font-black text-white uppercase tracking-wider">Change Ends</h2>
+          <p className="text-slate-400 font-bold text-sm max-w-xs">{changeEndsReason}</p>
+          <div className="flex items-center gap-2 text-amber-400 text-sm font-bold">
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+            Players change sides of the court now
+          </div>
+          <button
+            onClick={confirmChangeEnds}
+            className="mt-2 px-10 py-4 bg-amber-500 hover:bg-amber-400 text-amber-950 rounded-2xl font-black uppercase tracking-widest shadow-xl transition"
+          >
+            Ends Changed ✓
+          </button>
+        </div>
+      )}
+
+      {/* ── Cards Panel Overlay ── */}
+      {showCardPanel && (
+        <div className="absolute inset-0 z-50 flex flex-col items-start justify-start bg-slate-950/95 backdrop-blur-sm rounded-4xl p-6 overflow-auto">
+          <div className="flex items-center justify-between w-full mb-6">
+            <h2 className="text-lg font-black uppercase tracking-wider flex items-center gap-2">
+              <Flag className="w-5 h-5 text-amber-400" /> Issue Discipline Card
+            </h2>
+            <button onClick={() => { setShowCardPanel(false); setCardTarget(null); }} className="p-2 hover:bg-slate-800 rounded-full text-slate-400">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Player selection */}
+          <div className="w-full grid grid-cols-2 gap-3 mb-6">
+            {([
+              { key: "t1p1" as CardTarget, label: match.t1.p1Name || "T1 P1" },
+              ...(match.t1.p2Name ? [{ key: "t1p2" as CardTarget, label: match.t1.p2Name }] : []),
+              { key: "t2p1" as CardTarget, label: match.t2.p1Name || "T2 P1" },
+              ...(match.t2.p2Name ? [{ key: "t2p2" as CardTarget, label: match.t2.p2Name }] : []),
+            ]).map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setCardTarget(key)}
+                className={`py-3 px-4 rounded-xl font-bold text-sm border text-left transition ${cardTarget === key ? "bg-amber-500/20 border-amber-500 text-amber-400" : "bg-slate-800 border-slate-700 text-slate-300"}`}
+              >
+                {label}
+                {cards[key].map((c, i) => (
+                  <span key={i} className={`inline-block w-2.5 h-2.5 rounded-sm ml-1 ${c === "yellow" ? "bg-yellow-400" : c === "red" ? "bg-red-500" : "bg-white border border-slate-400"}`} />
+                ))}
+              </button>
+            ))}
+          </div>
+
+          {/* Card type buttons */}
+          {cardTarget && (
+            <div className="w-full space-y-3">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Select card for: <span className="text-white">{
+                cardTarget === "t1p1" ? match.t1.p1Name
+                : cardTarget === "t1p2" ? match.t1.p2Name
+                : cardTarget === "t2p1" ? match.t2.p1Name
+                : match.t2.p2Name
+              }</span></p>
+              <div className="grid grid-cols-3 gap-3">
+                <button onClick={() => issueCard(cardTarget, "yellow")} className="py-4 rounded-2xl font-black text-sm bg-yellow-400/20 border border-yellow-400 text-yellow-300 hover:bg-yellow-400/30 transition">
+                  ⚠️ Yellow<br/><span className="text-xs font-normal opacity-70">Warning</span>
+                </button>
+                <button onClick={() => issueCard(cardTarget, "red")} className="py-4 rounded-2xl font-black text-sm bg-red-500/20 border border-red-500 text-red-400 hover:bg-red-500/30 transition">
+                  🟥 Red<br/><span className="text-xs font-normal opacity-70">+1 pt opponent</span>
+                </button>
+                <button onClick={() => issueCard(cardTarget, "black")} className="py-4 rounded-2xl font-black text-sm bg-slate-700/80 border border-slate-400 text-white hover:bg-slate-600 transition">
+                  ⬛ Black<br/><span className="text-xs font-normal opacity-70">Disqualify</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Retirement Modal ── */}
+      {showRetireModal && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur-sm rounded-4xl p-8 text-center gap-5">
+          <AlertTriangle className="w-12 h-12 text-rose-400" />
+          <h2 className="text-xl font-black text-white uppercase tracking-wider">Match Retirement</h2>
+          <p className="text-slate-400 text-sm">Which team is retiring from the match?</p>
+          <div className="flex gap-3 w-full max-w-xs">
+            <button onClick={() => retireTeam(1)} className="flex-1 py-3 bg-rose-500/20 border border-rose-500 text-rose-400 rounded-xl font-bold text-sm hover:bg-rose-500/30 transition">
+              Team 1 Retires
+            </button>

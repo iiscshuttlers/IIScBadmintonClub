@@ -25,6 +25,7 @@ import {
   Settings,
   Smartphone
 } from "lucide-react";
+import { useVideoGestures } from "@/hooks/useVideoGestures";
 
 declare global {
   interface Window {
@@ -122,17 +123,7 @@ export const YoutubePlayer = forwardRef<YoutubePlayerHandle, Props>(
     // ── Gestures ─────────────────────────────────────────────────────────────────
     const [brightness, setBrightness] = useState(1);
     const [showGestureHint, setShowGestureHint] = useState<{ text: string } | null>(null);
-    const touchStartRef = useRef<{ x: number; y: number; time: number; angle?: number; speed?: number; dist?: number; startScale?: number } | null>(null);
-    const lastTapRef = useRef<{ time: number; x: number } | null>(null);
-    const lastTwoFingerTapRef = useRef<number | null>(null);
-    const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const isHoldingRef = useRef(false);
-    const preventClickRef = useRef(false);
-    const initialVolRef = useRef<number>(100);
-    const initialBrightRef = useRef<number>(1);
-    const holdPrevSpeedRef = useRef<number>(1);
 
     const [zoomParams, setZoomParams] = useState({ scale: 1, x: 0, y: 0 });
     const [scrubDelta, setScrubDelta] = useState<number | null>(null);
@@ -364,242 +355,44 @@ export const YoutubePlayer = forwardRef<YoutubePlayerHandle, Props>(
       hintTimerRef.current = setTimeout(() => setShowGestureHint(null), 1000);
     }, []);
 
-    const handleTouchStart = (e: React.TouchEvent) => {
-      if (isLocked) return;
-      const now = Date.now();
-      preventClickRef.current = false;
-
-      if (e.touches.length === 1) {
-        if (isDrawMode) {
-           const touch = e.touches[0];
-           const rect = e.currentTarget.getBoundingClientRect();
-           const x = touch.clientX - rect.left;
-           const y = touch.clientY - rect.top;
-           setCurrentLine([{x, y}]);
-           preventClickRef.current = true;
-           return;
-        }
-
-        const touch = e.touches[0];
-        const x = touch.clientX;
-        const y = touch.clientY;
-
-        if (lastTapRef.current && now - lastTapRef.current.time < 300) {
-          if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
-          clickTimerRef.current = null;
-          
-          const { width } = e.currentTarget.getBoundingClientRect();
-          
-          if (x > width * 0.35 && x < width * 0.65) {
-            toggleFullscreen();
-            showHint("🔲 Fullscreen");
-          } else if (x < width / 2) {
-            skip(-10);
-            showHint("⏪ 10s");
-          } else {
-            skip(10);
-            showHint("10s ⏩");
-          }
-          
-          lastTapRef.current = null;
-          preventClickRef.current = true;
-          if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
-          return;
-        }
-        
-        lastTapRef.current = { time: now, x };
-        touchStartRef.current = { x, y, time: now };
-        if (playerRef.current) {
-          try { initialVolRef.current = playerRef.current.getVolume(); } catch {}
-        }
-        initialBrightRef.current = brightness;
-      } else if (e.touches.length === 2) {
-        if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
-        preventClickRef.current = true;
-        
-        if (lastTwoFingerTapRef.current && now - lastTwoFingerTapRef.current < 300) {
-           if (abLoop) {
-             setAbLoop(null);
-             showHint("🔁 Loop Cleared");
-           } else {
-             const end = playerRef.current?.getCurrentTime() || 0;
-             const start = Math.max(0, end - 10);
-             setAbLoop({ start, end });
-             showHint("🔁 A-B Loop Set (10s)");
-           }
-           lastTwoFingerTapRef.current = null;
-           return;
-        }
-        lastTwoFingerTapRef.current = now;
-
-        holdTimerRef.current = setTimeout(() => {
-           setIsDrawMode(true);
-           if (playing) togglePlay();
-           showHint("🖌️ Draw Mode");
-        }, 500);
-
-        const t1 = e.touches[0];
-        const t2 = e.touches[1];
-        const angle = Math.atan2(t2.clientY - t1.clientY, t2.clientX - t1.clientX);
-        const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
-        touchStartRef.current = { x: 0, y: 0, time: now, angle, speed: speed, dist, startScale: zoomParams.scale };
-      } else if (e.touches.length === 3) {
-        if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
-        preventClickRef.current = true;
-        touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, time: now };
-      }
-    };
-
-    const handleTouchMove = (e: React.TouchEvent) => {
-      if (isLocked || !touchStartRef.current) return;
-
-      if (e.touches.length === 3) {
-         const dy = e.touches[0].clientY - touchStartRef.current.y;
-         if (dy > 80) {
-            if (!muted) toggleMute();
-            setBrightness(0.2);
-            showHint("Boss Mode 🤫");
-            touchStartRef.current.y = e.touches[0].clientY; 
-         }
-         return;
-      }
-
-      if (e.touches.length === 2 && touchStartRef.current.angle !== undefined && touchStartRef.current.speed !== undefined) {
-         if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
-         
-         const t1 = e.touches[0];
-         const t2 = e.touches[1];
-         
-         if (touchStartRef.current.dist !== undefined && touchStartRef.current.startScale !== undefined) {
-            const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
-            const scaleRatio = dist / Math.max(1, touchStartRef.current.dist);
-            
-            if (Math.abs(1 - scaleRatio) > 0.05) { 
-               const newScale = Math.max(1, Math.min(4, touchStartRef.current.startScale * scaleRatio));
-               setZoomParams(prev => ({ ...prev, scale: newScale }));
-               if (newScale === 1) setZoomParams({ scale: 1, x: 0, y: 0 }); 
-            }
-         }
-         
-         const newAngle = Math.atan2(t2.clientY - t1.clientY, t2.clientX - t1.clientX);
-         let diff = newAngle - touchStartRef.current.angle;
-         if (diff > Math.PI) diff -= Math.PI * 2;
-         if (diff < -Math.PI) diff += Math.PI * 2;
-         
-         if (Math.abs(diff) > 0.1) {
-           const deltaSpeed = diff / Math.PI; 
-           const newSpeed = Math.max(0.25, Math.min(2, touchStartRef.current.speed + deltaSpeed));
-           const roundedSpeed = Math.round(newSpeed * 4) / 4; 
-           if (roundedSpeed !== speed) {
-             setPlaybackRate(roundedSpeed);
-             showHint(`Speed: ${roundedSpeed}x`);
-           }
-         }
-         return;
-      }
-
-      if (e.touches.length === 1) {
-        if (isDrawMode) {
-           const touch = e.touches[0];
-           const rect = e.currentTarget.getBoundingClientRect();
-           const x = touch.clientX - rect.left;
-           const y = touch.clientY - rect.top;
-           setCurrentLine(prev => [...prev, {x, y}]);
-           return;
-        }
-
-        const touch = e.touches[0];
-        const dx = touch.clientX - touchStartRef.current.x;
-        const dy = touch.clientY - touchStartRef.current.y;
-        
-        if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
-          preventClickRef.current = true;
-        }
-
-        // Close player gesture removed as requested
-
-        if (zoomParams.scale > 1) {
-           setZoomParams(prev => ({
-             ...prev,
-             x: prev.x + dx,
-             y: prev.y + dy
-           }));
-           touchStartRef.current.x = touch.clientX;
-           touchStartRef.current.y = touch.clientY;
-           return;
-        }
-
-        const isHorizontal = Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40; // Increased sensitivity threshold
-        if (isHorizontal) {
-           const seconds = Math.round((dx < 0 ? dx + 40 : dx - 40) / 10);
-           setScrubDelta(seconds);
-           showHint(seconds > 0 ? `+${seconds}s ⏩` : `${seconds}s ⏪`);
-           preventClickRef.current = true;
-           return;
-        }
-
-        // Removed Diagonal Copy and Volume/Brightness edge gestures as requested
-      }
-    };
-
-    const handleTouchEnd = () => {
-      if (isLocked) return;
-      if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
-      
-      if (isDrawMode && currentLine.length > 0) {
-         setDrawLines(prev => [...prev, currentLine]);
-         setCurrentLine([]);
-         return;
-      }
-
-      if (scrubDelta !== null) {
-         skip(scrubDelta);
-         setScrubDelta(null);
-      }
-      
-      if (isHoldingRef.current) {
-        isHoldingRef.current = false;
-        playerRef.current?.setPlaybackRate(holdPrevSpeedRef.current);
-        setSpeed(holdPrevSpeedRef.current);
-        setShowGestureHint(null);
-      }
-    };
-
-    const handleClick = (e: React.MouseEvent) => {
-      if (isLocked) return;
-      if (preventClickRef.current) {
-        preventClickRef.current = false;
-        return;
-      }
-
-      const { width } = e.currentTarget.getBoundingClientRect();
-      const x = e.clientX;
-      
-      // 6. Extreme Edge Taps (Chapter Skipping)
-      if (x < width * 0.05) {
-         if (chapters && chapters.length > 0) {
-            const prev = [...chapters].reverse().find(c => c.time < currentTime - 5);
-            if (prev && duration > 0) { seekTo(prev.time / duration); showHint("⏮️ " + prev.title); return; }
-         }
-      } else if (x > width * 0.95) {
-         if (chapters && chapters.length > 0) {
-            const next = chapters.find(c => c.time > currentTime + 5);
-            if (next && duration > 0) { seekTo(next.time / duration); showHint("⏭️ " + next.title); return; }
-         }
-      }
-
-      if (clickTimerRef.current) {
-        clearTimeout(clickTimerRef.current);
-        clickTimerRef.current = null;
-        return;
-      }
-      clickTimerRef.current = setTimeout(() => {
-        togglePlay();
-        clickTimerRef.current = null;
-      }, 250);
-    };
-
     // ── Auto-hide controls ───────────────────────────────────────────────────────
+    
+    const {
+      handleTouchStart,
+      handleTouchMove,
+      handleTouchEnd,
+      handleClick,
+    } = useVideoGestures({
+      isLocked,
+      isDrawMode,
+      setIsDrawMode,
+      playing,
+      muted,
+      speed,
+      duration,
+      currentTime,
+      chapters,
+      brightness,
+      abLoop,
+      setAbLoop,
+      toggleMute,
+      setBrightness,
+      showHint,
+      setZoomParams,
+      setPlaybackRate: setSpeed,
+      setScrubDelta,
+      setCurrentLine,
+      currentLine,
+      setDrawLines,
+      skip,
+      seekTo,
+      togglePlay,
+      playerRef,
+      setShowGestureHint,
+      scrubDelta,
+      zoomParams
+    });
+
     const revealControls = useCallback(() => {
       setShowControls(true);
       clearTimeout(hideTimer.current);

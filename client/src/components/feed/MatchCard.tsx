@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { Trophy, Swords, Sparkles, TrendingUp, Heart, Share2, Video, Edit2, BarChart2 } from "lucide-react";
+import { Trophy, Swords, Sparkles, TrendingUp, Heart, Share2, Video, Edit2, BarChart2, Trash2 } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 import { EditVideoModal } from "./EditVideoModal";
 import { MatchScorecardModal } from "./MatchScorecardModal";
 
@@ -40,6 +43,7 @@ export function MatchCard({
   const p1 = match.player1;
   const p2 = match.player2;
   const isP1Winner = match.winner_id === p1?.id || match.winner_id === match.partner1?.id;
+  const { isAdmin } = useAuth();
 
   const [currentVideoUrl, setCurrentVideoUrl] = useState(match.video_url || null);
   const [isEditVideoOpen, setIsEditVideoOpen] = useState(false);
@@ -185,6 +189,21 @@ export function MatchCard({
     </div>
   );
 
+  const deleteMatch = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!confirm("Are you sure you want to permanently delete this match?")) return;
+    const { error } = await supabase.from("matches").delete().eq("id", match.id);
+    if (error) {
+      toast.error("Failed to delete match");
+    } else {
+      toast.success("Match deleted");
+      // Ideally trigger a reload or hide locally
+      const el = document.getElementById(`match-card-${match.id}`);
+      if (el) el.style.display = 'none';
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
@@ -213,6 +232,16 @@ export function MatchCard({
           <span className="w-2 h-2 rounded-full bg-white animate-ping inline-block" />
           LIVE NOW
         </div>
+      )}
+
+      {isAdmin && !hideActions && (
+        <button
+          onClick={deleteMatch}
+          title="Delete Match (Admin)"
+          className="absolute top-4 right-4 p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-colors z-20"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
       )}
 
       {/* Match of the Day Badge */}

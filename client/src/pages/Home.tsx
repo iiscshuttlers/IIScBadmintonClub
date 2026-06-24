@@ -665,35 +665,7 @@ function AnimatedLogo() {
         </div>
       </div>
 
-      <style dangerouslySetInnerHTML={{ __html: `
-        .racket-anim { transform-origin: 50px 170px; animation: swing 1.5s infinite ease-in-out; }
-        @keyframes swing {
-          0%, 100% { transform: rotate(-15deg); }
-          35% { transform: rotate(-50deg); }
-          47% { transform: rotate(-50deg); }
-          50% { transform: rotate(20deg); }
-          58% { transform: rotate(55deg); }
-          75% { transform: rotate(-15deg); }
-        }
-        .shuttle-anim { transform-origin: 30px 30px; animation: fly 1.5s infinite linear; }
-        @keyframes fly {
-          0% { transform: translate(-180px, -120px) rotate(135deg); opacity: 0; }
-          10% { opacity: 1; }
-          47% { transform: translate(25px, -5px) rotate(135deg); }
-          50% { transform: translate(40px, 10px) rotate(45deg) scale(0.6, 0.9); }
-          52% { transform: translate(55px, -5px) rotate(45deg) scale(1, 1); }
-          80% { transform: translate(200px, -150px) rotate(45deg); opacity: 1; }
-          90% { transform: translate(250px, -200px) rotate(45deg); opacity: 0; }
-          100% { transform: translate(250px, -200px) rotate(45deg); opacity: 0; }
-        }
-        .spark-anim { transform-origin: center; animation: spark 1.5s infinite; }
-        @keyframes spark {
-          0%, 48% { opacity: 0; transform: scale(0) rotate(0deg); }
-          50% { opacity: 1; transform: scale(1.2) rotate(45deg); }
-          54% { opacity: 0; transform: scale(1.8) rotate(90deg); }
-          100% { opacity: 0; }
-        }
-      ` }} />
+
     </div>
   );
 }

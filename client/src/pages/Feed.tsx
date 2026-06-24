@@ -23,7 +23,9 @@ import { usePageMeta } from "@/hooks/usePageMeta";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { toast } from "sonner";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { shareMatch } from "@/lib/shareMatch";
+import { fetchFeedMatches } from "@/services/matchService";
 import { AnnouncementsSection } from "@/components/feed/AnnouncementsSection";
 import { LiveScoreSection } from "@/components/events/LiveScoreSection";
 import { UmpireTab } from "@/components/umpire/UmpireTab";
@@ -112,22 +114,8 @@ export default function Feed() {
     async (silent = false) => {
       if (!silent) setLoading(true);
       try {
-        const { data, error } = await supabase
-          .from("matches")
-          .select(
-            `
-          *,
-          player1:players!player1_id(id, full_name, avatar_url, elo_rating, singles_elo, doubles_elo, mixed_elo, gender),
-          player2:players!player2_id(id, full_name, avatar_url, elo_rating, singles_elo, doubles_elo, mixed_elo, gender),
-          partner1:players!team1_partner_id(id, full_name, avatar_url, singles_elo, doubles_elo, mixed_elo, gender),
-          partner2:players!team2_partner_id(id, full_name, avatar_url, singles_elo, doubles_elo, mixed_elo, gender)
-        `,
-          )
-          .eq("status", "confirmed")
-          .order("created_at", { ascending: false })
-          .limit(limitCount);
-
-        if (!error && data) {
+        const data = await fetchFeedMatches(limitCount);
+        if (data) {
           setMatches(data);
         }
       } catch (err) {
@@ -154,6 +142,7 @@ export default function Feed() {
   }, [loading, matches.length, fetchFeed]);
 
   useAutoRefresh(() => fetchFeed(true), 30_000, !loading);
+  usePullToRefresh();
 
   const [feedFilter, setFeedFilter] = useState<"global" | "following" | "buddies">(
     "global",
@@ -320,7 +309,7 @@ export default function Feed() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 lg:pb-8 font-sans selection:bg-emerald-500/30">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-safe pb-24 lg:pb-8 font-sans selection:bg-emerald-500/30">
       <div className="bg-gradient-to-r from-blue-900 via-indigo-950 to-emerald-900 text-white py-12 lg:py-16 relative overflow-hidden shrink-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(16,185,129,0.15),transparent)] pointer-events-none" />
         <div className="container mx-auto px-4 max-w-3xl relative z-10 text-center">
@@ -592,7 +581,7 @@ export default function Feed() {
                   const p1 = match.player1;
                   const p2 = match.player2;
                   const isP1Winner = match.winner_id === p1.id;
-                  const isUpset = false; // We can add upset logic if we want based on ELO difference
+
 
                   // Determine Elo difference before match
                   let upsetDiff = 0;

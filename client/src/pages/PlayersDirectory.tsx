@@ -31,13 +31,17 @@ import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
-import LogMatchModal from "@/components/LogMatchModal";
 import {
   PlayerCard,
   type Player,
   parseWinPct,
 } from "@/components/players-directory/PlayerCard";
-import { LeaderboardSection } from "./Leaderboard";
+import { lazy, Suspense } from "react";
+import { usePlayers, usePendingMatches, useBuddyRequests, useFollowers } from "@/hooks/usePlayers";
+
+const LogMatchModal = lazy(() => import("@/components/LogMatchModal"));
+import { DirectoryFilters } from "@/components/players-directory/DirectoryFilters";
+import { LeaderboardSection } from "@/components/players-directory/LeaderboardSection";
 import { H2HSection } from "@/components/players-directory/H2HSection";
 import { useHashTab } from "@/hooks/useHashTab";
 
@@ -50,31 +54,6 @@ const itemVariants: Variants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } },
 };
 
-const PLAYER_SELECT =
-  "id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, elo_rating, singles_elo, doubles_elo, mixed_elo, win_loss_record, singles_record, doubles_record, mixed_record, recent_form, is_looking_to_play, status, buddies, following, buddy_requests, gender";
-const PLAYERS_CACHE_KEY = "iisc_players_directory_cache_v4";
-const REQUEST_TIMEOUT_MS = 15_000;
-const MAX_FETCH_RETRIES = 1;
-
-function readCachedPlayers(): Player[] {
-  try {
-    const raw = window.localStorage.getItem(PLAYERS_CACHE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed?.players) ? parsed.players : [];
-  } catch {
-    return [];
-  }
-}
-
-function cachePlayers(players: Player[]) {
-  try {
-    window.localStorage.setItem(
-      PLAYERS_CACHE_KEY,
-      JSON.stringify({ players, savedAt: Date.now() }),
-    );
-  } catch {}
-}
 /* ── Main page ──────────────────────────────────────────────────────── */
 export default function PlayersDirectory() {
   usePageMeta({
@@ -94,12 +73,11 @@ export default function PlayersDirectory() {
   const [selectedOpponentId, setSelectedOpponentId] = useState<string | null>(
     null,
   );
-  const [pendingMatches, setPendingMatches] = useState<any[]>([]);
+  const { data: pendingMatches = [] } = usePendingMatches(ownProfile?.id);
 
   /* Directory state */
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [fetchError, setFetchError] = useState(false);
+  const { data: rawPlayers, isLoading: loading, isError: fetchError, refetch: fetchPlayers } = usePlayers();
+  const players = rawPlayers || [];
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -119,9 +97,17 @@ export default function PlayersDirectory() {
     : activeTab as "directory" | "leaderboard" | "network" | "h2h";
 
 
-  const [followers, setFollowers] = useState<any[]>([]);
+  const { data: followers = [] } = useFollowers(ownProfile?.id);
   const [visibleCount, setVisibleCount] = useState(24);
-  const [buddyRequests, setBuddyRequests] = useState<Map<string, {id: string; status: string; senderId: string}>>(new Map());
+  const { data: buddyRequestsRaw = [] } = useBuddyRequests(ownProfile?.id);
+  const buddyRequests = useMemo(() => {
+    const map = new Map<string, {id: string; status: string; senderId: string}>();
+    buddyRequestsRaw.forEach((req: any) => {
+      const otherPlayerId = req.sender_id === ownProfile?.id ? req.receiver_id : req.sender_id;
+      map.set(otherPlayerId, { id: req.id, status: req.status, senderId: req.sender_id });
+    });
+    return map;
+  }, [buddyRequestsRaw, ownProfile?.id]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -179,15 +165,13 @@ export default function PlayersDirectory() {
         try {
           const { data } = await supabase
             .from("players")
-            .select(PLAYER_SELECT)
+            .select("*")
             .eq("id", userData.user.id)
             .maybeSingle();
           if (isMounted) {
             setOwnProfile(data ?? null);
             if (data) {
-              fetchPendingMatches(data.id);
-              fetchFollowers(data.id);
-              fetchBuddyRequests(data.id);
+              
             }
           }
         } catch (e) {
@@ -208,188 +192,15 @@ export default function PlayersDirectory() {
   /* 2. Fetch all players — stale-while-revalidate.
         If we have cached data, show it instantly and refresh in the background.
         The loading spinner only appears on the very first visit (empty cache). */
-  const fetchPlayers = useCallback(
-    async ({ silent = false }: { silent?: boolean } = {}) => {
-      const requestId = ++fetchRequestIdRef.current;
+  
 
-      if (!silent) {
-        setFetchError(false);
+  
 
-        const cachedPlayers = readCachedPlayers();
-        if (cachedPlayers.length > 0) {
-          // Show stale data instantly — no spinner
-          setPlayers(cachedPlayers);
-          setLoading(false);
-          // From here on, treat this as a silent background refresh
-          silent = true;
-        } else {
-          // No cache at all — first visit, show spinner
-          setLoading(true);
-        }
-      }
+  
 
-      if (!isSupabaseConfigured) {
-        if (!isMountedRef.current || requestId !== fetchRequestIdRef.current)
-          return;
+  
 
-        const cachedPlayers = readCachedPlayers();
-        if (cachedPlayers.length > 0) {
-          setPlayers(cachedPlayers);
-        } else if (!silent) {
-          setFetchError(true);
-        }
-        setLoading(false);
-        return;
-      }
-
-      for (let attempt = 0; attempt <= MAX_FETCH_RETRIES; attempt += 1) {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(
-          () => controller.abort(),
-          REQUEST_TIMEOUT_MS,
-        );
-
-        try {
-          const response = await supabase
-            .from("players")
-            .select(PLAYER_SELECT)
-            .is("deleted_at", null)
-            .order("elo_rating", { ascending: false })
-            .abortSignal(controller.signal);
-
-          clearTimeout(timeoutId);
-
-          if (!isMountedRef.current || requestId !== fetchRequestIdRef.current)
-            return;
-
-          if (response.error) {
-            throw response.error;
-          }
-
-          const nextPlayers = response.data || [];
-          setPlayers(nextPlayers);
-          cachePlayers(nextPlayers);
-          setFetchError(false);
-          setLoading(false);
-          return;
-        } catch (err: any) {
-          clearTimeout(timeoutId);
-          if (requestId !== fetchRequestIdRef.current) return;
-
-          console.warn(
-            `Player directory fetch failed (attempt ${attempt + 1}):`,
-            err?.message ?? err,
-          );
-
-          if (attempt < MAX_FETCH_RETRIES) {
-            await new Promise((resolve) =>
-              setTimeout(resolve, 750 * (attempt + 1)),
-            );
-            if (
-              !isMountedRef.current ||
-              requestId !== fetchRequestIdRef.current
-            )
-              return;
-            continue;
-          }
-
-          if (!isMountedRef.current) return;
-
-          const cachedPlayers = readCachedPlayers();
-          if (cachedPlayers.length > 0) {
-            setPlayers(cachedPlayers);
-            setFetchError(false);
-          } else if (!silent) {
-            setFetchError(true);
-          }
-          setLoading(false);
-        }
-      }
-    },
-    [],
-  );
-
-  const fetchFollowers = useCallback(async (profileId: string) => {
-    try {
-      const { data } = await supabase
-        .from("players")
-        .select("id, full_name, avatar_url, department, elo_rating, is_looking_to_play, playing_level")
-        .contains("following", [profileId])
-        .is("deleted_at", null);
-      if (data) setFollowers(data);
-    } catch {
-      // ignore — followers list is non-critical
-    }
-  }, []);
-
-  const fetchBuddyRequests = useCallback(async (profileId: string) => {
-    try {
-      const { data } = await supabase
-        .from("buddy_requests")
-        .select("id, status, sender_id, receiver_id")
-        .or(`sender_id.eq.${profileId},receiver_id.eq.${profileId}`);
-      if (data) {
-        const map = new Map();
-        data.forEach(req => {
-          const otherPlayerId = req.sender_id === profileId ? req.receiver_id : req.sender_id;
-          map.set(otherPlayerId, { id: req.id, status: req.status, senderId: req.sender_id });
-        });
-        setBuddyRequests(map);
-      }
-    } catch {
-      console.error("Error fetching buddy requests");
-    }
-  }, []);
-
-  const fetchPendingMatches = useCallback(async (profileId: string) => {
-    const fullRes = await supabase
-      .from("matches")
-      .select(
-        "*, player1:players!player1_id(full_name), player2:players!player2_id(full_name)",
-      )
-      .eq("status", "pending")
-      .neq("submitted_by", profileId)
-      .or(
-        `player1_id.eq.${profileId},player2_id.eq.${profileId},team1_partner_id.eq.${profileId},team2_partner_id.eq.${profileId}`,
-      );
-    const res = fullRes.error
-      ? await supabase
-          .from("matches")
-          .select(
-            "*, player1:players!player1_id(full_name), player2:players!player2_id(full_name)",
-          )
-          .eq("status", "pending")
-          .neq("submitted_by", profileId)
-          .or(`player1_id.eq.${profileId},player2_id.eq.${profileId}`)
-      : fullRes;
-    setPendingMatches(res.data || []);
-  }, []);
-
-  useEffect(() => {
-    fetchPlayers();
-  }, [fetchPlayers]);
-
-  useEffect(() => {
-    if (!loading) return;
-
-    const stuckLoaderTimeout = setTimeout(
-      () => {
-        if (!isMountedRef.current) return;
-
-        const cachedPlayers = readCachedPlayers();
-        if (cachedPlayers.length > 0) {
-          setPlayers(cachedPlayers);
-          setFetchError(false);
-        } else {
-          setFetchError(true);
-        }
-        setLoading(false);
-      },
-      REQUEST_TIMEOUT_MS * (MAX_FETCH_RETRIES + 2),
-    );
-
-    return () => clearTimeout(stuckLoaderTimeout);
-  }, [loading]);
+  
 
   // Sync ownProfile with auth context when it refreshes
   useEffect(() => {
@@ -399,15 +210,7 @@ export default function PlayersDirectory() {
   }, [profile]);
 
   // Auto-refresh player list every 60s (silently, scroll preserved)
-  const silentRefresh = useCallback(async () => {
-    await fetchPlayers({ silent: true });
-    if (ownProfile?.id) {
-      fetchPendingMatches(ownProfile.id);
-      fetchBuddyRequests(ownProfile.id);
-      fetchFollowers(ownProfile.id);
-    }
-  }, [fetchPlayers, ownProfile?.id, fetchPendingMatches, fetchBuddyRequests, fetchFollowers]);
-  useAutoRefresh(silentRefresh, 60_000, !loading);
+  
 
   /* Filter + sort logic */
   const otherPlayers = players.filter((p) => p.id !== session?.user?.id);
@@ -508,7 +311,7 @@ export default function PlayersDirectory() {
         });
         if (error) throw error;
         toast.success(`Buddy request sent!`);
-        fetchBuddyRequests(ownProfile.id);
+        /* React Query auto refetches or we can invalidate */
         // In-app notification record
         void (async () => {
           await supabase.from("notifications").insert({
@@ -536,7 +339,7 @@ export default function PlayersDirectory() {
           .eq("receiver_id", playerId);
         if (error) throw error;
         toast.success(`Buddy request cancelled.`);
-        fetchBuddyRequests(ownProfile.id);
+        /* React Query auto refetches or we can invalidate */
       }
       else if (action === 'accept') {
         const { error } = await supabase.from("buddy_requests")
@@ -545,7 +348,7 @@ export default function PlayersDirectory() {
           .eq("receiver_id", ownProfile.id);
         if (error) throw error;
         toast.success(`You are now buddies!`);
-        fetchBuddyRequests(ownProfile.id);
+        /* React Query auto refetches or we can invalidate */
         refreshProfile();
 
         await supabase.from("site_data").upsert({
@@ -564,7 +367,7 @@ export default function PlayersDirectory() {
           .or(`and(sender_id.eq.${ownProfile.id},receiver_id.eq.${playerId}),and(sender_id.eq.${playerId},receiver_id.eq.${ownProfile.id})`);
         if (error) throw error;
         toast.success(`Removed from buddies.`);
-        fetchBuddyRequests(ownProfile.id);
+        /* React Query auto refetches or we can invalidate */
         refreshProfile();
       }
     } catch (e) {
@@ -658,8 +461,8 @@ export default function PlayersDirectory() {
         colors: ["#10b981", "#3b82f6", "#f59e0b"]
       });
       toast.success("Match Confirmed! Elo Ratings Updated. 🎉");
-      fetchPendingMatches(ownProfile!.id);
-      fetchPlayers(); // To refresh Elo if we displayed it
+      /* React Query auto refetches */
+      /* React Query auto refetches */ // To refresh Elo if we displayed it
     } catch (e: any) {
       toast.error("Error confirming match: " + e.message);
     }
@@ -673,7 +476,7 @@ export default function PlayersDirectory() {
       });
       if (error) throw error;
       alert("Match Rejected.");
-      fetchPendingMatches(ownProfile!.id);
+      /* React Query auto refetches */
     } catch (e: any) {
       alert("Error rejecting match: " + e.message);
     }
@@ -692,7 +495,7 @@ export default function PlayersDirectory() {
         });
         if (error) throw error;
         alert("Player successfully soft-deleted.");
-        fetchPlayers();
+        /* React Query auto refetches */
       } catch (err: any) {
         alert("Delete failed: " + err.message);
       }
@@ -1281,142 +1084,21 @@ export default function PlayersDirectory() {
         ) : effectiveTab === "directory" ? (
           <>
             {/* Search + Filters */}
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 mb-10 space-y-5">
-              <div className="flex flex-col md:flex-row gap-4 items-center">
-                <div className="relative w-full md:flex-1">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <input
-                    id="player-search-input"
-                    type="search"
-                    autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search by name, nickname, or department..."
-                    className="w-full pl-12 pr-10 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm font-semibold"
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery("")}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-
-                <div className="flex gap-2 shrink-0">
-                  {/* Sort selector */}
-                  <div className="relative">
-                    <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                    <select
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value as any)}
-                      className="pl-9 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500 appearance-none cursor-pointer"
-                    >
-                      <option value="elo">By ELO</option>
-                      <option value="winpct">By Win %</option>
-                      <option value="name">By Name</option>
-                      <option value="department">By Department</option>
-                      <option value="level">By Level</option>
-                    </select>
-                  </div>
-
-                  <button
-                    onClick={() => setShowFilters(!showFilters)}
-                    className={`flex items-center gap-2 px-4 py-3 rounded-2xl border text-sm font-bold transition
-                  ${
-                    showFilters
-                      ? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400"
-                      : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600"
-                  }`}
-                  >
-                    <SlidersHorizontal className="w-4 h-4" />
-                    Filters
-                    {(levelFilter !== "All" || departmentFilter !== "All") && (
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Expandable filters */}
-              <AnimatePresence>
-                {showFilters && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
-                      <div>
-                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                          Playing Level
-                        </label>
-                        <select
-                          value={levelFilter}
-                          onChange={(e) => setLevelFilter(e.target.value)}
-                          className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500 font-semibold"
-                        >
-                          <option value="All">All Levels</option>
-                          <option value="Beginner">Beginner</option>
-                          <option value="Intermediate">Intermediate</option>
-                          <option value="Advanced">Advanced</option>
-                          <option value="Professional">Professional</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                          Department
-                        </label>
-                        <select
-                          value={departmentFilter}
-                          onChange={(e) => setDepartmentFilter(e.target.value)}
-                          className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500 font-semibold"
-                        >
-                          <option value="All">All Departments</option>
-                          {allDepartments.map((dept) => (
-                            <option key={dept} value={dept}>
-                              {dept}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      {(levelFilter !== "All" ||
-                        departmentFilter !== "All") && (
-                        <div className="sm:col-span-2 flex justify-end">
-                          <button
-                            onClick={() => {
-                              setLevelFilter("All");
-                              setDepartmentFilter("All");
-                            }}
-                            className="text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition flex items-center gap-1"
-                          >
-                            <X className="w-3.5 h-3.5" /> Clear filters
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Result count */}
-              {(searchQuery ||
-                levelFilter !== "All" ||
-                departmentFilter !== "All") && (
-                <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                  Showing{" "}
-                  <span className="text-emerald-600 dark:text-emerald-400">
-                    {filteredPlayers.length}
-                  </span>{" "}
-                  of {otherPlayers.length} players
-                </p>
-              )}
-            </div>
+            <DirectoryFilters
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+              showFilters={showFilters}
+              setShowFilters={setShowFilters}
+              levelFilter={levelFilter}
+              setLevelFilter={setLevelFilter}
+              departmentFilter={departmentFilter}
+              setDepartmentFilter={setDepartmentFilter}
+              allDepartments={allDepartments}
+              filteredPlayersCount={filteredPlayers.length}
+              otherPlayersCount={otherPlayers.length}
+            />
 
             {/* Recommended Opponents (Matchmaking) */}
             {!loading &&
@@ -1639,3 +1321,4 @@ export default function PlayersDirectory() {
     </div>
   );
 }
+

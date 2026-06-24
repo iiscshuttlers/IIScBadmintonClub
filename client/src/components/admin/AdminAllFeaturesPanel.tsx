@@ -6,7 +6,7 @@
 import { useState } from "react";
 import { FEATURES, getFeatureStats } from "@/data/features";
 import {
-  Search, Filter, CheckCircle, Zap, Clock, Grid, List
+  Search, Filter, CheckCircle, Zap, Clock, Grid, List, Sparkles
 } from "lucide-react";
 
 const iconMap: Record<string, React.ReactNode> = {
@@ -52,6 +52,8 @@ const iconMap: Record<string, React.ReactNode> = {
   "Smartphone": "📱",
 };
 
+import { InfoModal } from "@/components/InfoModal";
+
 export function AdminAllFeaturesPanel() {
   const stats = getFeatureStats();
   const [searchTerm, setSearchTerm] = useState("");
@@ -81,6 +83,18 @@ export function AdminAllFeaturesPanel() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center gap-2">
+        <h2 className="text-xl font-black text-slate-800 dark:text-white">All Features</h2>
+        <InfoModal
+          title="FEATURE TRACKER"
+          mainIcon={<Sparkles className="w-5 h-5" />}
+          items={[
+            { badge: "ACT", title: "Active", desc: "Currently live and stable in production." },
+            { badge: "BETA", title: "Beta", desc: "Available for testing but might have occasional bugs." },
+            { badge: "SOON", title: "Coming Soon", desc: "In active development and scheduled for future release." }
+          ]}
+        />
+      </div>
       {/* Stats Overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-emerald-50 dark:bg-emerald-950/30 rounded-xl p-4 border border-emerald-200 dark:border-emerald-800">

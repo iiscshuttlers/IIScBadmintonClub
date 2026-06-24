@@ -11,6 +11,8 @@ import StatusBanner from "@/components/StatusBanner";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { PwaInstallPrompt } from "./components/pwa/PwaInstallPrompt";
 import { PwaUpdatePrompt } from "./components/pwa/PwaUpdatePrompt";
 import Navigation from "./components/Navigation";
@@ -110,11 +112,13 @@ function UpdateDialog({
   );
 }
 
-// Eagerly loaded (small, always needed)
-import Home from "./pages/Home";
-import Feed from "./pages/Feed";
-import Events from "./pages/Events";
+// NotFound is eagerly loaded (tiny, always needed as fallback)
 import NotFound from "./pages/NotFound";
+
+// All pages lazy-loaded for optimal bundle splitting
+const Home = lazy(() => import("./pages/Home"));
+const Feed = lazy(() => import("./pages/Feed"));
+const Events = lazy(() => import("./pages/Events"));
 const About = lazy(() => import("./pages/About"));
 const Gallery = lazy(() => import("./pages/Gallery"));
 const TournamentDetail = lazy(() => import("./pages/TournamentDetail"));
@@ -129,11 +133,12 @@ const PlayersDirectory = lazy(() => import("./pages/PlayersDirectory"));
 const ComparePlayers = lazy(() => import("./pages/ComparePlayers"));
 const HallOfFame = lazy(() => import("./pages/HallOfFame"));
 const ChangePassword = lazy(() => import("./pages/ChangePassword"));
-const FindLost = lazy(() => import("./pages/FindLost"));
+
 const DeleteAccount = lazy(() => import("./pages/DeleteAccount"));
 const DoublesPairProfile = lazy(() => import("./pages/DoublesPairProfile"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const Marketplace = lazy(() => import("./pages/Marketplace"));
 
 // Save scroll position before navigating away, restore on back-navigation
 const scrollMap = new Map<string, number>();
@@ -259,9 +264,11 @@ function AppRoutes() {
           <Route path="/player/:id" component={PlayerProfile} />
           <Route path="/compare/:p1/:p2" component={ComparePlayers} />
           <Route path="/profile/password" component={ChangePassword} />
-          <Route path="/find-lost" component={FindLost} />
+          <Route path="/find-lost" component={Marketplace} />
           <Route path="/delete-account" component={DeleteAccount} />
           <Route path="/doubles/:p1/:p2" component={DoublesPairProfile} />
+          <Route path="/exchange" component={Marketplace} />
+          <Route path="/marketplace" component={Marketplace} /> {/* Keep legacy for a bit just in case */}
           <Route path="/privacy" component={PrivacyPolicy} />
           <Route path="/terms" component={TermsOfService} />
 
@@ -370,7 +377,7 @@ function AppContent() {
     import("@/lib/supabase").then(({ supabase }) => {
       supabase
         .from("players")
-        .select("id, full_name, avatar_url, gender")
+        .select("id, full_name, avatar_url, gender, is_guest")
         .neq("id", profile.id)
         .is("deleted_at", null)
         .order("full_name")
@@ -435,15 +442,27 @@ function AppContent() {
   );
 }
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+    },
+  },
+});
+
 function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light" switchable>
-        <AuthProvider>
-          <AppUpdateProvider>
-            <AppContent />
-          </AppUpdateProvider>
-        </AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <AppUpdateProvider>
+              <AppContent />
+            </AppUpdateProvider>
+          </AuthProvider>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </QueryClientProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );
