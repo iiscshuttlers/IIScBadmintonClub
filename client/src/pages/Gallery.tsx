@@ -174,7 +174,7 @@ export default function Gallery() {
 
   const [galleryTags, setGalleryTags] = useState<Record<string, TagEntry[]>>({});
   const [pendingTags, setPendingTags] = useState<Record<string, TagEntry[]>>({});
-  const [tagPlayers, setTagPlayers] = useState<{ id: string; full_name: string }[]>([]);
+  const [tagPlayers, setTagPlayers] = useState<{ id: string; full_name: string; user_id: string | null }[]>([]);
 
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
@@ -250,13 +250,13 @@ export default function Gallery() {
     if (selectedIndex !== null && tagPlayers.length === 0) {
       supabase
         .from("players")
-        .select("id, full_name")
+        .select("id, full_name, user_id")
         .order("full_name")
         .then(({ data }) => { if (data) setTagPlayers(data); });
     }
   }, [selectedIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const saveTag = async (photoPath: string, player: { id: string; full_name: string }) => {
+  const saveTag = async (photoPath: string, player: { id: string; full_name: string; user_id: string | null }) => {
     const current = galleryTags[photoPath] || [];
     if (current.some((t) => t.id === player.id)) return;
     const updated = { ...galleryTags, [photoPath]: [...current, { id: player.id, name: player.full_name }] };
