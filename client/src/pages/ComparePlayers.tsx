@@ -9,8 +9,10 @@ import { Link } from "wouter";
 import { MATCH_SELECT_WITH_PLAYERS } from "@/types";
 import type { PlayerRow } from "@/types/player";
 import type { MatchWithPlayers } from "@/types/match";
-import { ChevronLeft, Swords, Trophy, TrendingUp, Flame, Calendar, MapPin, User, Activity, Ruler, ChevronDown } from "lucide-react";
+import { ChevronLeft, Swords, Trophy, TrendingUp, Flame, Calendar, MapPin, User, Activity, Ruler, ChevronDown, Sparkles, Loader2 } from "lucide-react";
 import { getEloTier } from "@/lib/tiers";
+import { generateMatchPrediction, fetchGeminiPunditAnalysis } from "@/lib/aiPredictor";
+import { toast } from "sonner";
 import {
   LineChart,
   Line,
@@ -281,6 +283,9 @@ export default function ComparePlayers() {
         </div>
       )}
 
+      {/* AI Prediction Pundit Card */}
+      <AiPredictionCard player1={player1} player2={player2} p1Wins={p1Wins} p2Wins={p2Wins} matches={matches} />
+
       {/* Tale of the Tape */}
       <Card className="p-6 bg-white dark:bg-slate-900 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 mb-8 overflow-hidden">
         <h3 className="text-sm font-black text-slate-800 dark:text-white mb-6 text-center uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-4">
@@ -387,5 +392,79 @@ export default function ComparePlayers() {
         </div>
       )}
     </div>
+  );
+}
+
+function AiPredictionCard({ player1, player2, p1Wins, p2Wins, matches }: { player1: PlayerRow, player2: PlayerRow, p1Wins: number, p2Wins: number, matches: MatchWithPlayers[] }) {
+  const prediction = generateMatchPrediction(player1, player2, p1Wins, p2Wins, matches);
+  const hasGeminiKey = !!import.meta.env.VITE_GEMINI_API_KEY;
+  
+  const [deepAnalysis, setDeepAnalysis] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleGenerateDeepAnalysis = async () => {
+    setIsLoading(true);
+    try {
+      const result = await fetchGeminiPunditAnalysis(player1, player2, p1Wins, p2Wins);
+      setDeepAnalysis(result);
+      toast.success("Deep AI analysis generated successfully!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to generate analysis.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Card className="p-6 bg-gradient-to-br from-indigo-900 to-violet-900 text-white rounded-3xl shadow-2xl mb-8 relative overflow-hidden border border-indigo-500/30">
+      {/* Decorative background flair */}
+      <div className="absolute -top-12 -right-12 w-32 h-32 bg-violet-500/20 blur-3xl rounded-full pointer-events-none" />
+      <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-indigo-500/20 blur-3xl rounded-full pointer-events-none" />
+
+      <h3 className="text-sm font-black uppercase tracking-widest text-indigo-200 mb-4 flex items-center gap-2">
+        <Activity className="w-4 h-4 text-violet-400" />
+        AI Match Prediction
+      </h3>
+
+      <div className="mb-6 flex items-end justify-between">
+        <div className="text-left">
+          <div className="text-3xl font-black text-emerald-400">{prediction.p1WinProbability}%</div>
+          <div className="text-xs font-bold text-indigo-300 tracking-wider uppercase mt-1">{player1.full_name.split(" ")[0]} Win Prob</div>
+        </div>
+        <div className="text-center text-indigo-400 font-black italic pb-1 px-4">
+          VS
+        </div>
+        <div className="text-right">
+          <div className="text-3xl font-black text-blue-400">{prediction.p2WinProbability}%</div>
+          <div className="text-xs font-bold text-indigo-300 tracking-wider uppercase mt-1">{player2.full_name.split(" ")[0]} Win Prob</div>
+        </div>
+      </div>
+
+      {deepAnalysis ? (
+        <div className="bg-indigo-950/80 backdrop-blur border border-indigo-500/50 rounded-2xl p-5 text-sm leading-relaxed text-indigo-50 shadow-inner">
+          <div className="flex items-center gap-2 mb-3 text-emerald-400 font-bold">
+            <Sparkles className="w-4 h-4" /> Gemini Deep Analysis
+          </div>
+          <div className="whitespace-pre-wrap">{deepAnalysis}</div>
+        </div>
+      ) : (
+        <div className="bg-indigo-950/50 backdrop-blur border border-indigo-800/50 rounded-2xl p-4 text-sm leading-relaxed text-indigo-100 italic shadow-inner">
+          "{prediction.punditCommentary}"
+          
+          {hasGeminiKey && (
+            <div className="mt-4 pt-4 border-t border-indigo-800/50 flex justify-center">
+              <button
+                onClick={handleGenerateDeepAnalysis}
+                disabled={isLoading}
+                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-900/50"
+              >
+                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-amber-300" />}
+                {isLoading ? "Consulting AI..." : "Generate Deep AI Analysis"}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </Card>
   );
 }

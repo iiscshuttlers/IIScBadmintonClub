@@ -17,11 +17,11 @@ export function usePlayerStats(
       !!player.nationality,
       !!player.height,
       !!player.coach,
-      (player as any).years_playing != null,
-      player.racket_details && ((player as any).racket_details as any[]).length > 0,
-      !!((player as any).shoes_list?.length || (player as any).shoes),
-      !!((player as any).social as any)?.instagram,
-      !!((player as any).stats as any)?.media?.length,
+      player.years_playing != null,
+      player.racket_details && player.racket_details.length > 0,
+      !!player.shoes,
+      !!player.instagram,
+      !!(player.stats?.media?.length),
       validAchievements.length > 0,
     ];
     return Math.round((checks.filter(Boolean).length / checks.length) * 100);
@@ -42,8 +42,8 @@ export function usePlayerStats(
     if (player.win_loss_record) {
       const match = player.win_loss_record.match(/(\d+)W\s*-\s*(\d+)L/);
       if (match) totalMatches = parseInt(match[1]) + parseInt(match[2]);
-    } else if ((player.stats as any)?.totalMatches) {
-      totalMatches = (player.stats as any).totalMatches;
+    } else if (player.stats?.totalMatches) {
+      totalMatches = player.stats.totalMatches;
     }
 
     if (totalMatches >= 100) {
@@ -67,7 +67,7 @@ export function usePlayerStats(
     }
 
     // Win Streak Badge
-    const streak = (player.stats as any)?.currentStreak;
+    const streak = player.stats?.currentStreak;
     if (streak && streak.startsWith("W")) {
       const streakCount = parseInt(streak.replace("W", "")) || 0;
       if (streakCount >= 5) {
@@ -113,7 +113,7 @@ export function usePlayerStats(
 
   const winPct = useMemo(() => {
     if (!player) return 0;
-    const stats = player.stats as any;
+    const stats = player.stats;
     if (stats?.winPercentage != null) return stats.winPercentage;
     const w = stats?.wins ?? 0;
     const l = stats?.losses ?? 0;
@@ -131,7 +131,7 @@ export function usePlayerStats(
 
   const totalMatches = useMemo(() => {
     if (!player) return 0;
-    const stats = player.stats as any;
+    const stats = player.stats;
     if (stats?.totalMatches != null) return stats.totalMatches;
     const m = player.win_loss_record?.match(/(\d+)\s*W\s*-\s*(\d+)\s*L/i);
     if (m) return +m[1] + +m[2];

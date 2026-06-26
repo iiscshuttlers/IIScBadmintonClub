@@ -32,7 +32,7 @@ function createNotification(
   }
 
   return {
-    id: `notif-${Date.now()}`,
+    id: `notif-${Date.now()}-${Math.random()}`,
     user_id: userId,
     title,
     body,

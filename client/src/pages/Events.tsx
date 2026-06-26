@@ -23,7 +23,7 @@ import {
   type TournamentStatus,
 } from "@/data/tournamentArchive";
 import { usePageMeta } from "@/hooks/usePageMeta";
-import { useAutoRefresh } from "@/hooks/useAutoRefresh";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import ScheduleCalendar from "./ScheduleCalendar";
 import { TournamentSection } from "@/components/events/TournamentSection";
@@ -193,27 +193,25 @@ export default function Events() {
   const [loading, setLoading] = useState(true);
   const [tournamentCfg, setTournamentCfg] = useState<TournamentConfig>(DEFAULT_TOURNAMENT_CONFIG);
 
-  const loadEvents = useCallback(async () => {
-    try {
+  const { data: queryEvents, isLoading: isEventsLoading } = useQuery({
+    queryKey: ["tournaments"],
+    queryFn: async () => {
       const data = await getTournaments();
-      // Cast status to TournamentStatus since Firebase data is untyped
-      setEvents(
-        data.map((e: any) => ({ ...e, status: e.status as TournamentStatus })),
-      );
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      return data.map((e: any) => ({ ...e, status: e.status as TournamentStatus }));
+    },
+    refetchInterval: 60_000,
+  });
 
   useEffect(() => {
-    loadEvents();
-    fetchTournamentConfig().then(setTournamentCfg).catch(() => {});
-  }, [loadEvents]);
+    if (queryEvents) {
+      setEvents(queryEvents);
+      setLoading(false);
+    }
+  }, [queryEvents]);
 
-  // Auto-refresh every 60s
-  useAutoRefresh(loadEvents, 60_000, !loading);
+  useEffect(() => {
+    fetchTournamentConfig().then(setTournamentCfg).catch(() => {});
+  }, []);
 
   const live = events.filter((e) => e.status === "live");
   const upcoming = events.filter((e) => e.status === "upcoming");

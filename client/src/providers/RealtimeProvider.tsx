@@ -58,7 +58,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
       )
 
       .subscribe((status) => {
-        if (status === "SUBSCRIBED") {
+        if (import.meta.env.DEV && status === "SUBSCRIBED") {
           console.log("🟢 Connected to System Realtime");
         }
       });

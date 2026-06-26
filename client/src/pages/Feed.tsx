@@ -26,6 +26,8 @@ import { toast } from "sonner";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { shareMatch } from "@/lib/shareMatch";
 import { fetchFeedMatches } from "@/services/matchService";
+import { useFeedMatches } from "@/hooks/useFeedMatches";
+import { useLiveMatches } from "@/hooks/useLiveMatches";
 import { AnnouncementsSection } from "@/components/feed/AnnouncementsSection";
 import { LiveScoreSection } from "@/components/events/LiveScoreSection";
 import { UmpireTab } from "@/components/umpire/UmpireTab";
@@ -53,20 +55,18 @@ export default function Feed() {
   useEffect(() => {
     if (match && params) {
       const tab = (params as any).tab;
-      if (tab === "activity") { setActiveTab("matches"); localStorage.setItem("feed_tab", "matches"); }
-      else if (tab === "announcements") { setActiveTab("announcements"); localStorage.setItem("feed_tab", "announcements"); }
-      else if (tab === "umpire") { setActiveTab("umpire"); localStorage.setItem("feed_tab", "umpire"); }
-      else if (tab === "my-matches") { setActiveTab("my_matches"); localStorage.setItem("feed_tab", "my_matches"); }
-      else if (tab === "challenges") { setActiveTab("challenges"); localStorage.setItem("feed_tab", "challenges"); }
+      if (tab === "activity") setActiveTab("matches");
+      else if (tab === "announcements") setActiveTab("announcements");
+      else if (tab === "umpire") setActiveTab("umpire");
+      else if (tab === "my-matches") setActiveTab("my_matches");
+      else if (tab === "challenges") setActiveTab("challenges");
     } else {
-      const saved = localStorage.getItem("feed_tab") || "matches";
-      setActiveTab(saved as any);
+      setActiveTab("matches");
     }
   }, [match, params]);
 
   const handleTabChange = (tabId: "matches" | "announcements" | "umpire" | "my_matches" | "challenges") => {
     setActiveTab(tabId);
-    localStorage.setItem("feed_tab", tabId);
     if (tabId === "matches") setLocation("/feed/activity");
     else if (tabId === "announcements") setLocation("/feed/announcements");
     else if (tabId === "umpire") setLocation("/feed/umpire");
@@ -74,215 +74,24 @@ export default function Feed() {
     else if (tabId === "challenges") setLocation("/feed/challenges");
   };
 
-  const [matches, setMatches] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [liveMatchIds, setLiveMatchIds] = useState<Set<string>>(new Set());
-  const [hasLiveMatches, setHasLiveMatches] = useState(false);
+  const { liveMatchIds, hasLiveMatches } = useLiveMatches();
 
-  const [limitCount, setLimitCount] = useState(100);
+  const {
+    loading,
+    matches,
+    displayMatches,
+    limitCount,
+    setLimitCount,
+    feedFilter,
+    setFeedFilter,
+    courtUtil,
+    matchOfTheDayId,
+    weeklyRecap
+  } = useFeedMatches(ownProfile);
 
-  // Subscribe to live broadcasts: track tournament player IDs (for match card badges) and any active match
-  useEffect(() => {
-    const parseLiveData = (val: Record<string, any>) => {
-      const ids = new Set<string>();
-      let anyLive = false;
-      Object.values(val).forEach((m: any) => {
-        if (m.status === "playing") {
-          anyLive = true;
-          if (!m.isFriendly) {
-            [m.t1?.p1Id, m.t1?.p2Id, m.t2?.p1Id, m.t2?.p2Id].filter(Boolean).forEach((id: string) => ids.add(id));
-          }
-        }
-      });
-      setLiveMatchIds(ids);
-      setHasLiveMatches(anyLive);
-    };
-
-    const fetchLive = async () => {
-      const { data } = await supabase.from("site_data").select("value").eq("key", "live_matches").single();
-      if (data?.value) parseLiveData(data.value as Record<string, any>);
-    };
-    fetchLive();
-    const sub = supabase.channel("feed_live_matches")
-      .on("postgres_changes", { event: "*", schema: "public", table: "site_data", filter: "key=eq.live_matches" },
-        (payload) => parseLiveData((payload.new as any)?.value || {}))
-      .subscribe();
-    return () => { supabase.removeChannel(sub); };
-  }, []);
-
-  const fetchFeed = useCallback(
-    async (silent = false) => {
-      if (!silent) setLoading(true);
-      try {
-        const data = await fetchFeedMatches(limitCount);
-        if (data) {
-          setMatches(data);
-        }
-      } catch (err) {
-        console.warn("Error fetching feed:", err);
-      } finally {
-        if (!silent) setLoading(false);
-      }
-    },
-    [limitCount],
-  );
-
-  useEffect(() => {
-    fetchFeed();
-  }, [fetchFeed]);
-
-  // If the initial fetch completes but returns no data (e.g. Supabase cold start),
-  // retry silently once after 2 s — covers the most common "blank feed on first open" case.
-  const didRetryRef = useRef(false);
-  useEffect(() => {
-    if (loading || matches.length > 0 || didRetryRef.current) return;
-    didRetryRef.current = true;
-    const t = setTimeout(() => fetchFeed(true), 2000);
-    return () => clearTimeout(t);
-  }, [loading, matches.length, fetchFeed]);
-
-  
   usePullToRefresh();
 
-  const [feedFilter, setFeedFilter] = useState<"global" | "following" | "buddies">(
-    "global",
-  );
   const [kudosState, setKudosState] = useState<Record<string, boolean>>({});
-
-  const followingIds = useMemo(() => {
-    const list = Array.isArray(ownProfile?.following) ? ownProfile.following : [];
-    return list.map(String);
-  }, [ownProfile?.following]);
-
-  const buddyIds = useMemo(() => {
-    const list = Array.isArray(ownProfile?.buddies) ? ownProfile.buddies : [];
-    return list.map(String);
-  }, [ownProfile?.buddies]);
-
-  const displayMatches = useMemo(() => {
-    if (feedFilter === "global") return matches;
-    const ids = feedFilter === "buddies" ? buddyIds : followingIds;
-
-    if (ids.length === 0) return [];
-
-    return matches.filter((m: any) => {
-      const matchIds = [
-        m.player1_id,
-        m.player2_id,
-        m.team1_partner_id,
-        m.team2_partner_id,
-        m.player1?.id,
-        m.player2?.id,
-        m.partner1?.id,
-        m.partner2?.id
-      ].filter(Boolean).map(String);
-
-      return ids.some(id => matchIds.includes(id));
-    });
-  }, [matches, feedFilter, followingIds, buddyIds]);
-
-  const courtUtil = useMemo(() => {
-    const hours = new Array(24).fill(0);
-    matches.forEach((m) => {
-      const h = new Date(m.created_at).getHours();
-      hours[h]++;
-    });
-    const morning = hours.slice(5, 12).reduce((a, b) => a + b, 0);
-    const afternoon = hours.slice(12, 17).reduce((a, b) => a + b, 0);
-    const evening =
-      hours.slice(17, 24).reduce((a, b) => a + b, 0) +
-      hours.slice(0, 5).reduce((a, b) => a + b, 0);
-    const total = matches.length || 1;
-    return {
-      morning: (morning / total) * 100,
-      afternoon: (afternoon / total) * 100,
-      evening: (evening / total) * 100,
-      isPeak: Math.max(morning, afternoon, evening),
-    };
-  }, [matches]);
-
-  const matchOfTheDayId = useMemo(() => {
-    if (!matches || matches.length === 0) return null;
-    const recentMatches = matches.filter(
-      (m) =>
-        new Date(m.created_at).getTime() > Date.now() - 48 * 60 * 60 * 1000,
-    );
-    if (recentMatches.length === 0) return matches[0].id;
-    return recentMatches.reduce((best, m) => {
-      const combinedElo =
-        (m.player1?.elo_rating || 0) + (m.player2?.elo_rating || 0);
-      const bestElo =
-        (best.player1?.elo_rating || 0) + (best.player2?.elo_rating || 0);
-      return combinedElo > bestElo ? m : best;
-    }, recentMatches[0]).id;
-  }, [matches]);
-
-  const weeklyRecap = useMemo(() => {
-    if (!matches || matches.length === 0) return null;
-    const lastWeekMatches = matches.filter(
-      (m) =>
-        new Date(m.created_at).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000,
-    );
-    if (lastWeekMatches.length === 0) return null;
-
-    let biggestUpset = null;
-    let maxUpsetDiff = 0;
-    const playerActivity: Record<
-      string,
-      { name: string; matches: number; eloClimb: number }
-    > = {};
-
-    lastWeekMatches.forEach((m) => {
-      // Activity & ELO Climb
-      const addPlayer = (pid: string, name: string, eloChange: number) => {
-        if (!playerActivity[pid])
-          playerActivity[pid] = { name, matches: 0, eloClimb: 0 };
-        playerActivity[pid].matches++;
-        if (eloChange && !isNaN(eloChange))
-          playerActivity[pid].eloClimb += eloChange;
-      };
-
-      if (m.player1)
-        addPlayer(m.player1.id, m.player1.full_name, m.elo_change_p1 || 0);
-      if (m.player2)
-        addPlayer(m.player2.id, m.player2.full_name, m.elo_change_p2 || 0);
-      if (m.partner1)
-        addPlayer(m.partner1.id, m.partner1.full_name, m.elo_change_p3 || 0);
-      if (m.partner2)
-        addPlayer(m.partner2.id, m.partner2.full_name, m.elo_change_p4 || 0);
-
-      // Upset
-      const isP1Winner = m.winner_id === m.player1?.id;
-      if (
-        m.elo_change_p1 !== undefined &&
-        m.elo_change_p2 !== undefined &&
-        m.player1 &&
-        m.player2
-      ) {
-        const eloDiff = m.player1.elo_rating - m.player2.elo_rating;
-        if ((isP1Winner && eloDiff < -50) || (!isP1Winner && eloDiff > 50)) {
-          const diff = Math.abs(eloDiff);
-          if (diff > maxUpsetDiff) {
-            maxUpsetDiff = diff;
-            biggestUpset = m;
-          }
-        }
-      }
-    });
-
-    const mostActive = Object.values(playerActivity).sort(
-      (a, b) => b.matches - a.matches,
-    )[0];
-    const highestClimber = Object.values(playerActivity).sort(
-      (a, b) => b.eloClimb - a.eloClimb,
-    )[0];
-
-    return {
-      biggestUpset,
-      mostActive,
-      highestClimber,
-    };
-  }, [matches]);
 
   const renderSkeleton = () => (
     <div className="space-y-4 max-w-3xl mx-auto">

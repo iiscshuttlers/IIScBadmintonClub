@@ -13,7 +13,7 @@ import {
   Search,
 } from "lucide-react";
 import { usePageMeta } from "@/hooks/usePageMeta";
-import { useAutoRefresh } from "@/hooks/useAutoRefresh";
+import { useQuery } from "@tanstack/react-query";
 import { fetchSiteData } from "@/lib/siteData";
 import { supabase } from "@/lib/supabase";
 import { SocialCTA } from "@/components/SocialCTA";
@@ -139,18 +139,15 @@ export default function Gallery() {
     setLightboxSrc(null);
   }, [selectedCategory, selectedSubfolder]);
 
-  const loadVideos = useCallback(() => {
-    fetchSiteData<any[]>("videos", "videos.json")
-      .then((data) => setVideos(data))
-      .catch((err) => console.error("Error loading videos:", err));
-  }, []);
+  const { data: queryVideos = [] } = useQuery({
+    queryKey: ["gallery-videos"],
+    queryFn: () => fetchSiteData<any[]>("videos", "videos.json").then((d) => d || []),
+    refetchInterval: 120_000,
+  });
 
   useEffect(() => {
-    loadVideos();
-  }, [loadVideos]);
-
-  // Auto-refresh every 2 min
-  useAutoRefresh(loadVideos, 120_000);
+    if (queryVideos.length > 0) setVideos(queryVideos);
+  }, [queryVideos]);
 
   // Load saved tags from site_data on mount
   useEffect(() => {

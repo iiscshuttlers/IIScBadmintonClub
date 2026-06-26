@@ -38,7 +38,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { ChallengeModal } from "@/components/ChallengeModal";
 
 // Extracted Hooks & Components
-import { usePlayerProfileData } from "@/hooks/usePlayerProfileData";
+import { usePlayerProfileQuery } from "@/hooks/queries/usePlayerProfileQuery";
 import { useProfileAnalytics } from "@/hooks/useProfileAnalytics";
 import { PlayerHeroBanner } from "@/components/player-profile/PlayerHeroBanner";
 import { PlayerActionBar } from "@/components/player-profile/PlayerActionBar";
@@ -103,7 +103,7 @@ export default function PlayerProfile() {
 
   // Use Custom Hooks
   const { player, loading, eloRank, liveMatches, eloLogs, isMatchParticipant, silentRefresh } =
-    usePlayerProfileData(id, ownPlayerProfile?.id);
+    usePlayerProfileQuery(id, ownPlayerProfile?.id);
 
   const {
     h2hRecord,

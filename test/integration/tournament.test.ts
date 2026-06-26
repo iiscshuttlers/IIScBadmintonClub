@@ -40,7 +40,7 @@ function createTournament(
   }
 
   return {
-    id: `tournament-${Date.now()}`,
+    id: `tournament-${Date.now()}-${Math.random()}`,
     name,
     format: format as any,
     status: 'draft',
@@ -140,8 +140,8 @@ describe('Tournament Management', () => {
     it('assigns unique tournament ID', () => {
       const now = new Date();
       const endDate = new Date(now.getTime() + 86400000);
-      const t1 = createTournament('T1', 'Single Elimination', now, endDate, 'admin') as Tournament;
-      const t2 = createTournament('T2', 'Single Elimination', now, endDate, 'admin') as Tournament;
+      const t1 = createTournament('Tourney 1', 'Single Elimination', now, endDate, 'admin') as Tournament;
+      const t2 = createTournament('Tourney 2', 'Single Elimination', now, endDate, 'admin') as Tournament;
 
       expect(t1.id).not.toBe(t2.id);
     });
@@ -213,7 +213,7 @@ describe('Tournament Management', () => {
     it('supports single elimination format', () => {
       const now = new Date();
       const endDate = new Date(now.getTime() + 86400000);
-      const t = createTournament('SE', 'Single Elimination', now, endDate, 'admin') as Tournament;
+      const t = createTournament('Single Elim Tournament', 'Single Elimination', now, endDate, 'admin') as Tournament;
 
       expect(t.format).toBe('Single Elimination');
     });
@@ -221,7 +221,7 @@ describe('Tournament Management', () => {
     it('supports round robin format', () => {
       const now = new Date();
       const endDate = new Date(now.getTime() + 86400000);
-      const t = createTournament('RR', 'Round Robin', now, endDate, 'admin') as Tournament;
+      const t = createTournament('Round Robin Tournament', 'Round Robin', now, endDate, 'admin') as Tournament;
 
       expect(t.format).toBe('Round Robin');
     });
@@ -229,7 +229,7 @@ describe('Tournament Management', () => {
     it('supports double elimination format', () => {
       const now = new Date();
       const endDate = new Date(now.getTime() + 86400000);
-      const t = createTournament('DE', 'Double Elimination', now, endDate, 'admin') as Tournament;
+      const t = createTournament('Double Elim Tournament', 'Double Elimination', now, endDate, 'admin') as Tournament;
 
       expect(t.format).toBe('Double Elimination');
     });

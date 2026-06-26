@@ -11,6 +11,7 @@ describe('CSV Export', () => {
     createElementSpy = vi.spyOn(document, 'createElement');
     appendChildSpy = vi.spyOn(document.body, 'appendChild');
     removeChildSpy = vi.spyOn(document.body, 'removeChild');
+    URL.createObjectURL = vi.fn();
     createObjectURLSpy = vi.spyOn(URL, 'createObjectURL');
   });
 

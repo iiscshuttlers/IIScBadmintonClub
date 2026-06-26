@@ -8,6 +8,8 @@ import { SwipeToConfirm } from "@/components/ui/SwipeToConfirm";
 import { supabase } from "@/lib/supabase";
 import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
 import { toast } from "sonner";
+import { useOtherPlayersSlim } from "@/hooks/usePlayers";
+import { useAuth } from "@/contexts/AuthContext";
 
 import type { PlayerSlim as Player } from "@/types";
 
@@ -15,7 +17,6 @@ interface LogMatchModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentUser: Player;
-  otherPlayers: Player[];
   onSuccess: () => void;
   defaultOpponentId?: string;
   userEmail?: string;
@@ -126,8 +127,14 @@ function StepBar({ step }: { step: number }) {
 }
 
 export default function LogMatchModal({
-  isOpen, onClose, currentUser, otherPlayers, onSuccess, defaultOpponentId, userEmail,
+  isOpen, onClose, currentUser, onSuccess, defaultOpponentId, userEmail,
 }: LogMatchModalProps) {
+  // Self-fetch players — only runs when the modal is actually open
+  const { profile } = useAuth();
+  const { data: fetchedPlayers = [] } = useOtherPlayersSlim(
+    profile?.id,
+  );
+  const otherPlayers = fetchedPlayers as Player[];
   const [step, setStep] = useState(0);
   const [matchType, setMatchType] = useState<"singles" | "doubles" | "hybrid">("singles");
   const [matchCategory, setMatchCategory] = useState<"friendly" | "tournament">("friendly");
@@ -387,8 +394,12 @@ export default function LogMatchModal({
             : "Tournament match logged! Waiting for opponent to confirm.",
       );
       onSuccess(); onClose();
-    } catch (err: any) {
-      setError(err.message || "Failed to log match.");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        toast.error("Failed to log match", { description: err.message });
+      } else {
+        toast.error("Failed to log match", { description: "An unknown error occurred" });
+      }
     } finally {
       setLoading(false);
     }

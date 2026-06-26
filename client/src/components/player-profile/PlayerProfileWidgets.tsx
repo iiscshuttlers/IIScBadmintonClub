@@ -3,20 +3,25 @@ import { motion } from "framer-motion";
 import { useEffect, useState, useMemo } from "react";
 import CalendarHeatmap from "react-calendar-heatmap";
 import "react-calendar-heatmap/dist/styles.css";
-import {
-  Radar,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  ResponsiveContainer,
-  Tooltip,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-} from "recharts";
+import { lazy, Suspense } from "react";
+
+const ResponsiveContainer = lazy(() => import("recharts").then(m => ({ default: m.ResponsiveContainer })));
+const LineChart = lazy(() => import("recharts").then(m => ({ default: m.LineChart })));
+const Line = lazy(() => import("recharts").then(m => ({ default: m.Line })));
+const XAxis = lazy(() => import("recharts").then(m => ({ default: m.XAxis })));
+const YAxis = lazy(() => import("recharts").then(m => ({ default: m.YAxis })));
+const CartesianGrid = lazy(() => import("recharts").then(m => ({ default: m.CartesianGrid })));
+const Tooltip = lazy(() => import("recharts").then(m => ({ default: m.Tooltip })));
+const PieChart = lazy(() => import("recharts").then(m => ({ default: m.PieChart })));
+const Pie = lazy(() => import("recharts").then(m => ({ default: m.Pie })));
+const Cell = lazy(() => import("recharts").then(m => ({ default: m.Cell })));
+const Radar = lazy(() => import("recharts").then(m => ({ default: m.Radar })));
+const RadarChart = lazy(() => import("recharts").then(m => ({ default: m.RadarChart })));
+const PolarGrid = lazy(() => import("recharts").then(m => ({ default: m.PolarGrid })));
+const PolarAngleAxis = lazy(() => import("recharts").then(m => ({ default: m.PolarAngleAxis })));
+const PolarRadiusAxis = lazy(() => import("recharts").then(m => ({ default: m.PolarRadiusAxis })));
+const AreaChart = lazy(() => import("recharts").then(m => ({ default: m.AreaChart })));
+const Area = lazy(() => import("recharts").then(m => ({ default: m.Area })));
 
 export const CircularProgress = ({
   value,

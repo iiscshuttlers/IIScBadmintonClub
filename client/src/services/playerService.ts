@@ -15,7 +15,7 @@ export const playerService = {
       .order("elo_rating", { ascending: false });
 
     if (error) throw error;
-    return data as any as PlayerRow[];
+    return (data ?? []) as unknown as PlayerRow[];
   },
 
   async getOtherPlayersSlim(currentUserId: string) {

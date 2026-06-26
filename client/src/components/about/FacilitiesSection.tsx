@@ -8,7 +8,7 @@ import {
   CalendarX,
   ExternalLink,
 } from "lucide-react";
-import { useAutoRefresh } from "@/hooks/useAutoRefresh";
+import { useQuery } from "@tanstack/react-query";
 import { fetchSiteData } from "@/lib/siteData";
 import { motion } from "framer-motion";
 
@@ -31,25 +31,24 @@ export function FacilitiesSection() {
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [nextHoliday, setNextHoliday] = useState<Holiday | null>(null);
 
-  const loadHolidays = useCallback(() => {
-    fetchSiteData<Holiday[]>("holidays", "holidays.json")
-      .then((data) => {
-        const sortedData = [...data].sort((a, b) =>
-          a.date.localeCompare(b.date),
-        );
-        setHolidays(sortedData);
-        const today = new Date().toLocaleDateString("en-CA", {
-          timeZone: "Asia/Kolkata",
-        });
-        setNextHoliday(sortedData.find((h: any) => h.date >= today) || null);
-      })
-      .catch((err) => console.error("Error loading holidays:", err));
-  }, []);
+  const { data: queryHolidays = [] } = useQuery({
+    queryKey: ["holidays"],
+    queryFn: () => fetchSiteData<Holiday[]>("holidays", "holidays.json"),
+    refetchInterval: 300_000,
+  });
 
   useEffect(() => {
-    loadHolidays();
-  }, [loadHolidays]);
-  useAutoRefresh(loadHolidays, 300_000);
+    if (queryHolidays.length > 0) {
+      const sortedData = [...queryHolidays].sort((a, b) =>
+        a.date.localeCompare(b.date),
+      );
+      setHolidays(sortedData);
+      const today = new Date().toLocaleDateString("en-CA", {
+        timeZone: "Asia/Kolkata",
+      });
+      setNextHoliday(sortedData.find((h: any) => h.date >= today) || null);
+    }
+  }, [queryHolidays]);
 
   const courtDetails = [
     "Wooden flooring with synthetic mat overlay",

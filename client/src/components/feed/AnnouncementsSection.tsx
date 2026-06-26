@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Bell, Pin, CalendarDays } from "lucide-react";
-import { useAutoRefresh } from "@/hooks/useAutoRefresh";
+import { useQuery } from "@tanstack/react-query";
 import { fetchSiteData } from "@/lib/siteData";
 import { SocialCTA } from "@/components/SocialCTA";
 import DOMPurify from "dompurify";
@@ -59,36 +59,27 @@ export function AnnouncementsSection() {
     );
   }
 
-  const loadAnnouncements = useCallback(() => {
-    fetchSiteData<{ recent: Announcement[] }>(
-      "announcements",
-      "announcements.json",
-    )
-      .then((data) => {
-        const allAnnouncements = data.recent || [];
-
-        const pinned = allAnnouncements.filter((item: Announcement) => {
-          const status = getStatus(item);
-
-          return status === "ongoing" || status === "upcoming";
-        });
-
-        setPinnedAnnouncements(sortByNewest(pinned));
-        setRecentAnnouncements(sortByNewest(allAnnouncements));
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Announcements load failed:", err);
-        setLoading(false);
-      });
-  }, []);
+  const { data: queryData, isLoading: isQueryLoading } = useQuery({
+    queryKey: ["announcements"],
+    queryFn: () => fetchSiteData<{ recent: Announcement[] }>("announcements", "announcements.json"),
+    refetchInterval: 60_000,
+  });
 
   useEffect(() => {
-    loadAnnouncements();
-  }, [loadAnnouncements]);
+    if (queryData) {
+      const allAnnouncements = queryData.recent || [];
+      const pinned = allAnnouncements.filter((item: Announcement) => {
+        const status = getStatus(item);
+        return status === "ongoing" || status === "upcoming";
+      });
 
-  // Auto-refresh every 60s
-  useAutoRefresh(loadAnnouncements, 60_000, !loading);
+      setPinnedAnnouncements(sortByNewest(pinned));
+      setRecentAnnouncements(sortByNewest(allAnnouncements));
+      setLoading(false);
+    } else if (!isQueryLoading) {
+      setLoading(false);
+    }
+  }, [queryData, isQueryLoading]);
 
   const categories = [
     { id: "all", label: "All", color: "bg-gray-100 text-gray-700", icon: "📋" },

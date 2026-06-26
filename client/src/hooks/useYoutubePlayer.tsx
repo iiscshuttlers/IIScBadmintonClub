@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useVideoGestures } from "@/hooks/useVideoGestures";
+import { useYoutubeDrawing } from "./youtube/useYoutubeDrawing";
+import { useYoutubeScoreTracking } from "./youtube/useYoutubeScoreTracking";
 
 declare global {
   interface Window {
@@ -88,22 +90,24 @@ export function useYoutubePlayer({
   const prevSpeed = useRef<number>(1);
   const preventClickRef = useRef(false);
 
-  const [brightness, setBrightness] = useState(1);
-  const [showGestureHint, setShowGestureHint] = useState<{ text: string } | null>(null);
-  const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const {
+    zoomParams, setZoomParams,
+    isDrawMode, setIsDrawMode,
+    drawLines, setDrawLines,
+    currentLine, setCurrentLine,
+    brightness, setBrightness
+  } = useYoutubeDrawing();
 
-  const [zoomParams, setZoomParams] = useState({ scale: 1, x: 0, y: 0 });
-  const [scrubDelta, setScrubDelta] = useState<number | null>(null);
-  const [abLoop, setAbLoop] = useState<{ start: number; end: number } | null>(null);
-  const [isDrawMode, setIsDrawMode] = useState(false);
-  const [drawLines, setDrawLines] = useState<{ x: number; y: number }[][]>([]);
-  const [currentLine, setCurrentLine] = useState<{ x: number; y: number }[]>([]);
   const [showHelp, setShowHelp] = useState(false);
-  const [autoHighlightsMode, setAutoHighlightsMode] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [showClubControls, setShowClubControls] = useState(false);
 
   const STORAGE_KEY = `yt_pos_${videoId}`;
+
+  const [showGestureHint, setShowGestureHint] = useState<{ text: string } | null>(null);
+  const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [scrubDelta, setScrubDelta] = useState<number | null>(null);
+  const [abLoop, setAbLoop] = useState<{ start: number; end: number } | null>(null);
 
   const showHint = useCallback((text: string) => {
     setShowGestureHint({ text });
@@ -249,58 +253,22 @@ export function useYoutubePlayer({
   }, [playing]);
 
   const currentChapter = chapters.length > 0 ? [...chapters].reverse().find(c => currentTime >= c.time) : null;
-  const currentScore = (() => {
-    if (!scoreLogs || scoreLogs.length === 0) return null;
-    const pastLogs = scoreLogs.filter(log => currentTime >= log.time);
-    if (pastLogs.length === 0) return { time: 0, teamA: 0, teamB: 0 } as ScoreLog;
-    return pastLogs[pastLogs.length - 1];
-  })();
 
-  const highlightRanges = useMemo(() => {
-    if (!scoreLogs || scoreLogs.length === 0) return [];
-    const ranges = scoreLogs.map(log => ({ start: Math.max(0, log.time - 12), end: log.time + 3 }));
-    const merged: { start: number; end: number }[] = [];
-    ranges.forEach(r => {
-      if (merged.length === 0) { merged.push({ ...r }); return; }
-      const last = merged[merged.length - 1];
-      if (r.start <= last.end + 5) last.end = Math.max(last.end, r.end);
-      else merged.push({ ...r });
-    });
-    return merged;
-  }, [scoreLogs]);
-
-  useEffect(() => {
-    if (!autoHighlightsMode || highlightRanges.length === 0 || !playerRef.current) return;
-    const currentIdx = highlightRanges.findIndex(r => currentTime >= r.start && currentTime <= r.end);
-    if (currentIdx === -1) {
-      const nextRange = highlightRanges.find(r => r.start > currentTime);
-      if (nextRange) { seekTo(nextRange.start, false); showHint("Skipping to next highlight ⏭️"); }
-      else { setAutoHighlightsMode(false); playerRef.current.pauseVideo(); setPlaying(false); showHint("End of highlights"); }
-    }
-  }, [currentTime, autoHighlightsMode, highlightRanges, seekTo, showHint]);
-
-  const handleAddPoint = (team: 'A' | 'B', playerIdx?: number) => {
-    if (!onScoreLogsChange) return;
-    const lastLog = scoreLogs.length > 0 ? scoreLogs[scoreLogs.length - 1] : { time: 0, teamA: 0, teamB: 0 } as ScoreLog;
-    const newLog = { time: Math.floor(currentTime), teamA: team === 'A' ? lastLog.teamA + 1 : lastLog.teamA, teamB: team === 'B' ? lastLog.teamB + 1 : lastLog.teamB, serverIdx: playerIdx !== undefined ? playerIdx : lastLog.serverIdx };
-    onScoreLogsChange([...scoreLogs, newLog].sort((a, b) => a.time - b.time));
-    showHint(`${team === 'A' ? teamA[0] : teamB[0]} scored!`);
-  };
-
-  const handleSetServer = (serverIdx: number) => {
-    if (!onScoreLogsChange) return;
-    const lastLog = scoreLogs.length > 0 ? scoreLogs[scoreLogs.length - 1] : { time: 0, teamA: 0, teamB: 0 } as ScoreLog;
-    const newLog = { ...lastLog, time: Math.floor(currentTime), serverIdx };
-    const filtered = scoreLogs.filter(l => l.time !== newLog.time);
-    onScoreLogsChange([...filtered, newLog].sort((a, b) => a.time - b.time));
-    showHint("Server updated!");
-  };
-
-  const handleUndoScore = () => {
-    if (!onScoreLogsChange || scoreLogs.length === 0) return;
-    onScoreLogsChange(scoreLogs.slice(0, -1));
-    showHint("Undo Score");
-  };
+  const {
+    autoHighlightsMode, setAutoHighlightsMode,
+    currentScore,
+    handleAddPoint, handleSetServer, handleUndoScore
+  } = useYoutubeScoreTracking({
+    scoreLogs,
+    onScoreLogsChange,
+    currentTime,
+    showHint,
+    teamA,
+    teamB,
+    playerRef,
+    seekTo,
+    setPlaying
+  });
 
   const gestures = useVideoGestures({
     isLocked, isDrawMode, setIsDrawMode, playing, muted, speed, duration, currentTime,

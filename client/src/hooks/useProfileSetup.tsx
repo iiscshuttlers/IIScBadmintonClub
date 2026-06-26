@@ -7,7 +7,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { optimizeImage } from "@/lib/imageUtils";
 import { withTimeout } from "@/lib/authUtils";
 import { PREDEFINED_DEPARTMENTS } from "@/data/departments";
-import { getYouTubeId } from "@/lib/playerUtils";
+import { useProfileBasicState } from "./profile/useProfileBasicState";
+import { useProfileBadmintonState } from "./profile/useProfileBadmintonState";
+import { useProfileEquipmentState } from "./profile/useProfileEquipmentState";
+import { useProfileHighlightsState } from "./profile/useProfileHighlightsState";
+import { useProfileMediaState } from "./profile/useProfileMediaState";
 
 const PASSWORD_UPDATE_TIMEOUT_MS = 12_000;
 
@@ -31,57 +35,42 @@ export function useProfileSetup() {
     window.history.replaceState(null, "", `#${activeTab}`);
   }, [activeTab]);
 
-  const [fullName, setFullName] = useState("");
-  const [nickname, setNickname] = useState("");
-  const [status, setStatus] = useState("looking");
-  const [iiscEmail, setIiscEmail] = useState("");
-  const [contactNumber, setContactNumber] = useState("");
-  const [department, setDepartment] = useState("");
-  const [customDepartment, setCustomDepartment] = useState("");
-  const [joinedYear, setJoinedYear] = useState("");
-  const [nationality, setNationality] = useState("");
-  const [homeState, setHomeState] = useState("");
-  const [height, setHeight] = useState("");
-  const [instagram, setInstagram] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState("");
-  const [gender, setGender] = useState("");
-  const [isGuest, setIsGuest] = useState(false);
+  const basic = useProfileBasicState();
+  const badminton = useProfileBadmintonState();
+  const equipment = useProfileEquipmentState();
+  const highlights = useProfileHighlightsState();
+  const media = useProfileMediaState();
+  
+  const { 
+    fullName, setFullName, nickname, setNickname, status, setStatus, iiscEmail, setIiscEmail,
+    contactNumber, setContactNumber, department, setDepartment, customDepartment, setCustomDepartment,
+    joinedYear, setJoinedYear, nationality, setNationality, homeState, setHomeState, height, setHeight,
+    instagram, setInstagram, avatarUrl, setAvatarUrl, gender, setGender, isGuest, setIsGuest 
+  } = basic;
 
-  const [playingLevel, setPlayingLevel] = useState("Intermediate");
-  const [playingStyle, setPlayingStyle] = useState("");
-  const [dominantHand, setDominantHand] = useState("Right-handed");
-  const [favoriteShot, setFavoriteShot] = useState("");
-  const [yearsPlaying, setYearsPlaying] = useState("");
-  const [coach, setCoach] = useState("");
-  const [favoriteIdol, setFavoriteIdol] = useState("");
-  const [favoriteFormat, setFavoriteFormat] = useState("");
+  const { 
+    playingLevel, setPlayingLevel, playingStyle, setPlayingStyle, dominantHand, setDominantHand,
+    favoriteShot, setFavoriteShot, yearsPlaying, setYearsPlaying, coach, setCoach,
+    favoriteIdol, setFavoriteIdol, favoriteFormat, setFavoriteFormat 
+  } = badminton;
 
-  const [rackets, setRackets] = useState<{ name: string; string: string; tension: string }[]>([{ name: "", string: "", tension: "" }]);
-  const [primaryRacketIndex, setPrimaryRacketIndex] = useState<number>(0);
+  const { 
+    rackets, setRackets, primaryRacketIndex, setPrimaryRacketIndex,
+    shoesList, setShoesList, primaryShoeIndex, setPrimaryShoeIndex, apparel, setApparel 
+  } = equipment;
 
-  const [shoesList, setShoesList] = useState<{ name: string }[]>([{ name: "" }]);
-  const [primaryShoeIndex, setPrimaryShoeIndex] = useState<number>(0);
+  const { 
+    bio, setBio, quote, setQuote, achievementsRaw, setAchievementsRaw, tournamentsRaw, setTournamentsRaw,
+    tourName, setTourName, tourYear, setTourYear, achMedal, setAchMedal, achCustomMedal, setAchCustomMedal,
+    achTournament, setAchTournament, achCategory, setAchCategory, achEventType, setAchEventType,
+    careerHighlights, setCareerHighlights 
+  } = highlights;
 
-  const [apparel, setApparel] = useState("");
-
-  const [bio, setBio] = useState("");
-  const [quote, setQuote] = useState("");
-  const [achievementsRaw, setAchievementsRaw] = useState("");
-  const [tournamentsRaw, setTournamentsRaw] = useState("");
-  const [tourName, setTourName] = useState("");
-  const [tourYear, setTourYear] = useState("");
-  const [achMedal, setAchMedal] = useState("Gold");
-  const [achCustomMedal, setAchCustomMedal] = useState("");
-  const [achTournament, setAchTournament] = useState("");
-  const [achCategory, setAchCategory] = useState("Men's");
-  const [achEventType, setAchEventType] = useState("Singles");
-
-  const [careerHighlights, setCareerHighlights] = useState<{ year: string; title: string; description: string }[]>([]);
-
-  const [mediaImages, setMediaImages] = useState<{ url: string; caption: string }[]>([]);
-  const [mediaVideos, setMediaVideos] = useState<{ url: string; caption: string }[]>([]);
-  const [imagePreviewStatus, setImagePreviewStatus] = useState<("ok" | "error" | "idle")[]>([]);
-  const [videoPreviewIds, setVideoPreviewIds] = useState<(string | null)[]>([]);
+  const { 
+    mediaImages, setMediaImages, mediaVideos, setMediaVideos,
+    imagePreviewStatus, setImagePreviewStatus, videoPreviewIds, setVideoPreviewIds,
+    handleImageBlur, handleVideoBlur 
+  } = media;
 
   const [newPassword, setNewPassword] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
@@ -90,18 +79,7 @@ export function useProfileSetup() {
   const [playerSlug, setPlayerSlug] = useState("");
   const [originalStats, setOriginalStats] = useState<any>({});
 
-  function handleImageBlur(idx: number, url: string) {
-    if (!url) return;
-    const img = new window.Image();
-    img.onload = () => setImagePreviewStatus((prev) => { const n = [...prev]; n[idx] = "ok"; return n; });
-    img.onerror = () => setImagePreviewStatus((prev) => { const n = [...prev]; n[idx] = "error"; return n; });
-    img.src = url;
-  }
 
-  function handleVideoBlur(idx: number, url: string) {
-    const ytId = getYouTubeId(url);
-    setVideoPreviewIds((prev) => { const n = [...prev]; n[idx] = ytId; return n; });
-  }
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -67,7 +67,7 @@ export function UmpireTab() {
           filter: "key=eq.live_matches",
         },
         (payload) => {
-          const newValue = (payload.new as any)?.value;
+          const newValue = (payload.new as Record<string, unknown>)?.value;
           if (newValue) {
             setMyLiveMatch((newValue[session.user.id] as BwfMatchState) || null);
           }

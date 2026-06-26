@@ -290,7 +290,6 @@ export default function PlayersDirectory() {
             }}
             defaultOpponentId={selectedOpponentId}
             currentUser={ownProfile}
-            otherPlayers={players.filter(p => p.id !== ownProfile.id)}
             onSuccess={() => fetchPlayers()}
             userEmail={session?.user?.email}
           />

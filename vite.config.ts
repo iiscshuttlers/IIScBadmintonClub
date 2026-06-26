@@ -155,7 +155,7 @@ export default defineConfig(() => {
       vitePluginStorageProxy(),
 
       VitePWA({
-        registerType: "autoUpdate",
+        registerType: "prompt",
         workbox: {
           globPatterns: ["**/*.{js,css,html,ico,png,svg,json,webp,woff2}"],
           globIgnores: ["**/profile_banner*.png"],

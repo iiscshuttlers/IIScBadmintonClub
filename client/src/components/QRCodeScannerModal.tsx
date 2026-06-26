@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Html5QrcodeScanner, Html5QrcodeScanType, Html5QrcodeSupportedFormats } from "html5-qrcode";
+import type { Html5QrcodeScanner as Html5QrcodeScannerType } from "html5-qrcode";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, QrCode } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
@@ -34,7 +34,7 @@ export function QRCodeScannerModal({ isOpen, onClose, onScan }: QRCodeScannerMod
   const [scanResult, setScanResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [requestingPermission, setRequestingPermission] = useState(false);
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+  const scannerRef = useRef<Html5QrcodeScannerType | null>(null);
 
   const requestCameraPermission = async () => {
     setRequestingPermission(true);
@@ -58,73 +58,78 @@ export function QRCodeScannerModal({ isOpen, onClose, onScan }: QRCodeScannerMod
     }
   };
 
-  const initializeScanner = () => {
+  const initializeScanner = async () => {
     if (scannerRef.current) return;
 
-    const scanner = new Html5QrcodeScanner(
-      "reader",
-      {
-        fps: 10,
-        qrbox: { width: 250, height: 250 },
-        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
-        formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
-      },
-      false
-    );
+    try {
+      const { Html5QrcodeScanner, Html5QrcodeScanType, Html5QrcodeSupportedFormats } = await import("html5-qrcode");
 
-    scannerRef.current = scanner;
+      const scanner = new Html5QrcodeScanner(
+        "reader",
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+          supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+          formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+        },
+        false
+      );
 
-    scanner.render(
-      (decodedText) => {
-        // Check if this is a website URL that should open in app
-        if (decodedText.includes("iiscbadmintonclub.github.io") || decodedText.startsWith("iiscshuttlers://")) {
-          scanner.clear().catch(console.error);
-          setScanResult(decodedText);
+      scannerRef.current = scanner;
 
-          if (Capacitor.isNativePlatform()) {
-            // On native app, show prompt to open scanned link in app
+      scanner.render(
+        (decodedText) => {
+          // Check if this is a website URL that should open in app
+          if (decodedText.includes("iiscbadmintonclub.github.io") || decodedText.startsWith("iiscshuttlers://")) {
+            scanner.clear().catch(console.error);
+            setScanResult(decodedText);
+
+            if (Capacitor.isNativePlatform()) {
+              // On native app, show prompt to open scanned link in app
+              setTimeout(() => {
+                const appPath = extractAppPath(decodedText);
+                if (appPath) {
+                  // Navigate within app by reopening the modal with the path
+                  onClose();
+                  window.history.pushState(null, "", appPath);
+                  window.dispatchEvent(new PopStateEvent("popstate"));
+                  toast.success("Navigating in app...");
+                }
+              }, 600);
+            } else {
+              // On web, just navigate normally
+              setTimeout(() => {
+                window.location.href = decodedText;
+              }, 600);
+            }
+            return;
+          }
+
+          // Assume decodedText is the player_id or the full player profile URL
+          let playerId = decodedText;
+          if (decodedText.includes("/player/")) {
+            playerId = decodedText.split("/player/")[1].split("?")[0].replace(/\/$/, "");
+          }
+
+          if (playerId && playerId.length > 1 && !scanResult) {
+            setScanResult(playerId);
+            scanner.clear().catch(console.error);
+
+            // Small delay for user to see success UI
             setTimeout(() => {
-              const appPath = extractAppPath(decodedText);
-              if (appPath) {
-                // Navigate within app by reopening the modal with the path
-                onClose();
-                window.history.pushState(null, "", appPath);
-                window.dispatchEvent(new PopStateEvent("popstate"));
-                toast.success("Navigating in app...");
-              }
-            }, 600);
-          } else {
-            // On web, just navigate normally
-            setTimeout(() => {
-              window.location.href = decodedText;
+              onClose();
+              onScan(playerId);
             }, 600);
           }
-          return;
+        },
+        (error) => {
+          // Ignore normal scanning errors
         }
-
-        // Assume decodedText is the player_id or the full player profile URL
-        let playerId = decodedText;
-        if (decodedText.includes("/player/")) {
-          playerId = decodedText.split("/player/")[1].split("?")[0].replace(/\/$/, "");
-        }
-
-        if (playerId && playerId.length > 1 && !scanResult) {
-          setScanResult(playerId);
-          scanner.clear().catch(console.error);
-
-          // Small delay for user to see success UI
-          setTimeout(() => {
-            onClose();
-            onScan(playerId);
-          }, 600);
-        }
-      },
-      (error) => {
-        if (error && error.includes("NotAllowedError")) {
-          setError("Camera permission denied.");
-        }
-      }
-    );
+      );
+    } catch (err) {
+      console.error("Failed to load scanner", err);
+      setError("Failed to load scanner module.");
+    }
   };
 
   useEffect(() => {

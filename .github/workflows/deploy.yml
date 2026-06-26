@@ -33,6 +33,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Typecheck and Test
+        run: |
+          pnpm run check
+          pnpm run test run
+
       - name: Build site
         env:
           GITHUB_PAGES: "true"
@@ -45,6 +50,7 @@ jobs:
           VITE_FIREBASE_MESSAGING_SENDER_ID: "258810088674"
           VITE_FIREBASE_APP_ID: "1:258810088674:web:457a6da843a1712d69a2bb"
           VITE_FIREBASE_VAPID_KEY: "BJLO-mUIwu6w-YjtFIesznIM-JtQsi4EVxQxfh7-SZmh-zciHcJgOdClL8TWXURLr7MZkHu1zOGPPX8M8GB9hfw"
+          VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
         run: pnpm build
 
       - name: Copy index.html to 404.html

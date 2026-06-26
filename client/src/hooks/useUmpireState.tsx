@@ -10,6 +10,8 @@ import { ScoringLogic, type MatchFormat } from "@/lib/umpire/scoringLogic";
 import type { PlayerSlim as Player } from "@/types";
 import { MatchEditState, BwfMatchState, PointLogEntry, CardType, CardTarget } from "@/types/umpire";
 import { usePlayers, usePlayerBuddies } from "@/hooks/usePlayers";
+import { computeAddPoint, computeDeductPoint, computeForceEndSet, computeEditSet } from "@/lib/umpire/umpireMutations";
+import { useUmpireHelpers } from "@/hooks/useUmpireHelpers";
 
 export interface UmpireStateProps {
   userId: string;
@@ -217,54 +219,7 @@ export function useUmpireState({
       }
     }, [playersData]);
   
-    const getInferredCategory = (cat: string, t1: BwfMatchState["t1"], t2: BwfMatchState["t2"]): string => {
-      if (match?.customCategory) return match.customCategory;
-      if (!["Singles", "Doubles", "Hybrid"].includes(cat)) return cat;
-      const t1p1 = players.find(p => p.id === t1.p1Id);
-      const t1p2 = t1.p2Id ? players.find(p => p.id === t1.p2Id) : undefined;
-      const t2p1 = players.find(p => p.id === t2.p1Id);
-      const t2p2 = t2.p2Id ? players.find(p => p.id === t2.p2Id) : undefined;
-      const getComp = (p1?: Player, p2?: Player) => {
-        const g1 = p1?.gender === "Female" ? "F" : (p1?.gender === "Male" ? "M" : "U");
-        if (!p2) return g1;
-        const g2 = p2?.gender === "Female" ? "F" : (p2?.gender === "Male" ? "M" : "U");
-        if (g1 === "U" || g2 === "U") return "UU";
-        if (g1 === "M" && g2 === "M") return "MM";
-        if (g1 === "F" && g2 === "F") return "FF";
-        return "MF";
-      };
-      const c1 = getComp(t1p1, t1p2);
-      const c2 = getComp(t2p1, t2p2);
-      const formatComp = (c: string, isSingles: boolean) => {
-        if (isSingles) {
-          if (c === "M") return "Men's Singles";
-          if (c === "F") return "Women's Singles";
-          return "Singles";
-        } else {
-          if (c === "MM") return "Men's Doubles";
-          if (c === "FF") return "Women's Doubles";
-          if (c === "MF") return "Mixed Doubles";
-          return "Doubles";
-        }
-      };
-      if (cat === "Singles") {
-        if (c1 === c2 && c1 !== "U") return formatComp(c1, true);
-        if (c1 !== c2 && c1 !== "U" && c2 !== "U") return `${formatComp(c1, true)} vs ${formatComp(c2, true)}`;
-        return "Singles";
-      }
-      if (cat === "Doubles") {
-        if (c1 === c2 && c1 !== "UU") return formatComp(c1, false);
-        if (c1 !== c2 && c1 !== "UU" && c2 !== "UU") return `${formatComp(c1, false)} vs ${formatComp(c2, false)}`;
-        return "Doubles";
-      }
-      if (cat === "Hybrid") {
-        const n1 = t1p2 ? formatComp(c1, false) : formatComp(c1, true);
-        const n2 = t2p2 ? formatComp(c2, false) : formatComp(c2, true);
-        return `${n1} vs ${n2}`;
-      }
-      return cat;
-    };
-  
+    const { getName, getGender, getInferredCategory, deduceCategory } = useUmpireHelpers(players, match);
     const updateMatch = async (updates: Partial<BwfMatchState>) => {
       const next = { ...match, ...updates };
       next.inferredCategory = getInferredCategory(next.category, next.t1, next.t2);
@@ -274,31 +229,7 @@ export function useUmpireState({
       
     };
   
-    const getName = (idOrName: string) =>
-      players.find((p) => p.id === idOrName)?.full_name || idOrName;
-  
-    const getGender = (idOrName: string) =>
-      players.find((p) => p.id === idOrName)?.gender?.toLowerCase() || "unknown";
-  
-    const deduceCategory = () => {
-      const t1HasP2 = !!match.t1.p2Id;
-      const t2HasP2 = !!match.t2.p2Id;
-      if (!t1HasP2 && !t2HasP2) {
-        const g1 = getGender(match.t1.p1Id), g2 = getGender(match.t2.p1Id);
-        if (g1 === "male" && g2 === "male") return "MS";
-        if (g1 === "female" && g2 === "female") return "WS";
-        return "Singles";
-      } else if (t1HasP2 && t2HasP2) {
-        const gs = [match.t1.p1Id, match.t1.p2Id!, match.t2.p1Id, match.t2.p2Id!].map(getGender);
-        if (gs.every(g => g === "male")) return "MD";
-        if (gs.every(g => g === "female")) return "WD";
-        const t1Mixed = (gs[0] === "male") !== (gs[1] === "male");
-        const t2Mixed = (gs[2] === "male") !== (gs[3] === "male");
-        if (t1Mixed && t2Mixed) return "XD";
-        return "Doubles";
-      }
-      return "Hybrid";
-    };
+
   
     // ── Start Match ─────────────────────────────────────────────────────────────
   
@@ -337,195 +268,39 @@ export function useUmpireState({
     // ── Add Point ───────────────────────────────────────────────────────────────
   
     const handleEditSet = (index: number, newT1Str: string, newT2Str: string) => {
-      const newSetsHistory = [...match.setsHistory];
-      newSetsHistory[index] = `${newT1Str}-${newT2Str}`;
-      
-      let t1Games = 0;
-      let t2Games = 0;
-      newSetsHistory.forEach(s => {
-        const [s1, s2] = s.split("-").map(Number);
-        if (!isNaN(s1) && !isNaN(s2)) {
-           if (s1 > s2) t1Games++;
-           else if (s2 > s1) t2Games++;
-        }
-      });
-  
-      let nextWinner = match.winner;
-      if (match.status === "finished" || nextWinner) {
-        if (t1Games > t2Games) nextWinner = 1;
-        else if (t2Games > t1Games) nextWinner = 2;
-        else nextWinner = undefined;
-      }
-  
-      updateMatch({ 
-        setsHistory: newSetsHistory, 
-        t1: { ...match.t1, games: t1Games }, 
-        t2: { ...match.t2, games: t2Games },
-        ...(nextWinner !== match.winner ? { winner: nextWinner } : {})
-      });
+      const updates = computeEditSet(match, index, newT1Str, newT2Str);
+      updateMatch(updates);
     };
   
     const forceEndSet = () => {
-      if (match.status !== "playing") return;
-      if (match.t1.score === 0 && match.t2.score === 0) return;
-      
-      let t1Won = match.t1.score > match.t2.score;
-      let t2Won = match.t2.score > match.t1.score;
-      
-      if (match.t1.score === match.t2.score) {
-        toast.error("Scores are tied! Cannot end set.");
-        return;
+      const updates = computeForceEndSet(match);
+      if (updates) {
+        if (match.t1.score === match.t2.score) {
+          toast.error("Scores are tied! Cannot end set.");
+          return;
+        }
+        updateMatch(updates);
+        toast.success("Set ended!");
       }
-      
-      let { t1, t2, setsHistory, bestOfSets } = match;
-      let newT1 = { ...t1 };
-      let newT2 = { ...t2 };
-      
-      setsHistory = [...setsHistory, `${newT1.score}-${newT2.score}`];
-      if (t1Won) newT1.games++;
-      if (t2Won) newT2.games++;
-      newT1.score = 0;
-      newT2.score = 0;
-      
-      const gamesToWin = Math.ceil(bestOfSets / 2);
-      let nextStatus: "setup" | "playing" | "finished" = match.status;
-      let nextWinner = match.winner;
-      
-      if (newT1.games >= gamesToWin) { nextStatus = "finished"; nextWinner = 1; }
-      else if (newT2.games >= gamesToWin) { nextStatus = "finished"; nextWinner = 2; }
-      
-      updateMatch({
-        setsHistory,
-        t1: newT1,
-        t2: newT2,
-        status: nextStatus as any,
-        winner: nextWinner,
-        serverTeam: t1Won ? 1 : 2,
-        serverPlayerIndex: 0,
-        t1LastServedBy: 1,
-        t2LastServedBy: 0,
-      });
-      
-      toast.success("Set ended!");
     };
   
     const addPoint = (team: 1 | 2, note?: string) => {
-      if (match.status !== "playing") return;
-      let { t1, t2, serverTeam, serverPlayerIndex, receiverPlayerIndex, receiverP0AtTop,
-            t1LastServedBy, t2LastServedBy,
-            setsHistory, pointsToWin, goldenPoint, bestOfSets, endsSwapped, pointLog } = match;
-      let newT1 = { ...t1 };
-      let newT2 = { ...t2 };
-      const isT1Doubles = !!newT1.p2Id, isT2Doubles = !!newT2.p2Id;
-  
-      // ── BWF service rotation (Domain Logic Extracted) ───────────
-      const formatStr = bestOfSets === 3 ? `BestOf3_${pointsToWin}` : `Single_${pointsToWin}`;
-      const engine = new ScoringLogic(formatStr as MatchFormat, {
-          t1Score: newT1.score,
-          t2Score: newT2.score,
-          serverTeam,
-          serverPlayerIndex,
-          receiverP0AtTop,
-          t1LastServedBy,
-          t2LastServedBy,
-          t1GamesWon: newT1.games,
-          t2GamesWon: newT2.games,
-          endsSwapped
-      });
-  
-      if (team === 1) engine.addT1Score(isT1Doubles);
-      else engine.addT2Score(isT2Doubles);
-  
-      // Map back state
-      newT1.score = engine.state.t1Score;
-      newT2.score = engine.state.t2Score;
-      serverTeam = engine.state.serverTeam;
-      serverPlayerIndex = engine.state.serverPlayerIndex as 0 | 1;
-      receiverP0AtTop = engine.state.receiverP0AtTop;
-      t1LastServedBy = engine.state.t1LastServedBy as 0 | 1;
-      t2LastServedBy = engine.state.t2LastServedBy as 0 | 1;
-  
-      // ── Log entry ───────────────────────────────────────────────────────────
-      const currentGame = newT1.games + newT2.games + 1;
-      const newLog: PointLogEntry = {
-        gameNum: currentGame,
-        team,
-        t1Score: newT1.score,
-        t2Score: newT2.score,
-        serverTeam,
-        ...(note ? { note } : {}),
-        ts: Date.now(),
-      };
-      pointLog = [...pointLog, newLog];
-  
-      // ── Check 11 in deciding game (interval + change ends) ──────────────────
-      const isDeciding = currentGame === bestOfSets;
-      const justHit11 =
-        isDeciding &&
-        !pointLog.slice(0, -1).some(e => e.gameNum === currentGame && (e.t1Score + e.t2Score) >= 11) &&
-        (newT1.score + newT2.score) === 11;
-  
-      // ── Check game won ───────────────────────────────────────────────────────
-      let t1WonGame = false, t2WonGame = false;
-      if (newT1.score >= pointsToWin && (newT1.score - newT2.score >= 2 || newT1.score === goldenPoint)) t1WonGame = true;
-      else if (newT2.score >= pointsToWin && (newT2.score - newT1.score >= 2 || newT2.score === goldenPoint)) t2WonGame = true;
-  
-      let nextStatus: "setup" | "playing" | "finished" = match.status;
-      let nextWinner: 1 | 2 | undefined = match.winner;
-  
-      if (t1WonGame || t2WonGame) {
-        setsHistory = [...setsHistory, `${newT1.score}-${newT2.score}`];
-        if (t1WonGame) newT1.games++;
-        if (t2WonGame) newT2.games++;
-        newT1.score = 0;
-        newT2.score = 0;
-        const gamesToWin = Math.ceil(bestOfSets / 2);
-        if (newT1.games >= gamesToWin) { nextStatus = "finished"; nextWinner = 1; }
-        else if (newT2.games >= gamesToWin) { nextStatus = "finished"; nextWinner = 2; }
-        else {
-          serverTeam = t1WonGame ? 1 : 2;
-          serverPlayerIndex = 0;
-          // Reset for new game
-          t1LastServedBy = 1;
-          t2LastServedBy = 0;
-          receiverP0AtTop = true;
-          // Flip ends between games
-          endsSwapped = !endsSwapped;
-          const gamesPlayed = newT1.games + newT2.games;
-          const breakSecs = gamesPlayed === 1 ? 90 : 120;
-          const reason = `End of Game ${gamesPlayed} — Change Ends`;
-          setPendingBreakAfterEnds(breakSecs);
-          setChangeEndsReason(reason);
-          setShowChangeEnds(true);
-        }
-      } else if (justHit11) {
-        // Interval at 11 in deciding game + change ends
-        endsSwapped = !endsSwapped;
-        setPendingBreakAfterEnds(60);
-        setChangeEndsReason("Deciding Game — 11 pts Interval (Change Ends)");
+      const updates = computeAddPoint(match, team, note);
+      if (!updates) return;
+      
+      const { _changeEnds, _reason, _break, ...stateUpdates } = updates as any;
+      updateMatch(stateUpdates);
+
+      if (_changeEnds) {
+        setPendingBreakAfterEnds(_break || null);
+        setChangeEndsReason(_reason || "Change Ends");
         setShowChangeEnds(true);
       }
-  
-      updateMatch({
-        t1: newT1, t2: newT2,
-        serverTeam, serverPlayerIndex, receiverPlayerIndex, receiverP0AtTop,
-        t1LastServedBy, t2LastServedBy,
-        endsSwapped, pointLog: pointLog,
-        setsHistory, status: nextStatus, winner: nextWinner,
-      });
     };
   
     const deductPoint = (team: 1 | 2) => {
-      if (match.status !== "playing") return;
-      const { t1, t2 } = match;
-      if (team === 1 && t1.score > 0) {
-        const trimmed = match.pointLog.slice(0, -1);
-        updateMatch({ t1: { ...t1, score: t1.score - 1 }, pointLog: trimmed });
-      }
-      if (team === 2 && t2.score > 0) {
-        const trimmed = match.pointLog.slice(0, -1);
-        updateMatch({ t2: { ...t2, score: t2.score - 1 }, pointLog: trimmed });
-      }
+      const updates = computeDeductPoint(match, team);
+      if (updates) updateMatch(updates);
     };
   
     // ── Dismiss change ends overlay ─────────────────────────────────────────────

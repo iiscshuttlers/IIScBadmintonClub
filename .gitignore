@@ -23,3 +23,5 @@ all_items.txt
 keystore.properties
 release-key.keystore
 google-services.json
+# Added by code-review-graph
+.code-review-graph/

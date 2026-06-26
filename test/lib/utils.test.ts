@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { cn, getEloTier, getBaseShareUrl } from '@/lib/utils';
+import { cn, getBaseShareUrl } from '@/lib/utils';
+import { getEloTier } from '@/lib/tiers';
 
 describe('Utils', () => {
   describe('cn - className merger', () => {
@@ -33,47 +34,47 @@ describe('Utils', () => {
     it('returns Bronze tier for low ELO', () => {
       const tier = getEloTier(800);
       expect(tier.name).toBe('Bronze');
-      expect(tier.icon).toBe('b');
+      expect(tier.icon).toBe('🥉');
     });
 
-    it('returns Silver tier for 1000-1299 ELO', () => {
-      const tier = getEloTier(1200);
+    it('returns Silver tier for 1000-1199 ELO', () => {
+      const tier = getEloTier(1050);
       expect(tier.name).toBe('Silver');
-      expect(tier.icon).toBe('s');
+      expect(tier.icon).toBe('🥈');
     });
 
-    it('returns Gold tier for 1300-1599 ELO', () => {
-      const tier = getEloTier(1500);
+    it('returns Gold tier for 1200-1399 ELO', () => {
+      const tier = getEloTier(1250);
       expect(tier.name).toBe('Gold');
-      expect(tier.icon).toBe('g');
+      expect(tier.icon).toBe('🥇');
     });
 
-    it('returns Platinum tier for 1600-1899 ELO', () => {
-      const tier = getEloTier(1750);
+    it('returns Platinum tier for 1400-1599 ELO', () => {
+      const tier = getEloTier(1450);
       expect(tier.name).toBe('Platinum');
-      expect(tier.icon).toBe('p');
+      expect(tier.icon).toBe('✨');
     });
 
-    it('returns Diamond tier for 1900-2199 ELO', () => {
-      const tier = getEloTier(2000);
+    it('returns Diamond tier for 1600-1799 ELO', () => {
+      const tier = getEloTier(1650);
       expect(tier.name).toBe('Diamond');
-      expect(tier.icon).toBe('d');
+      expect(tier.icon).toBe('💎');
     });
 
-    it('returns Grandmaster tier for 2200+ ELO', () => {
-      const tier = getEloTier(2500);
+    it('returns Grandmaster tier for 1800+ ELO', () => {
+      const tier = getEloTier(1900);
       expect(tier.name).toBe('Grandmaster');
-      expect(tier.icon).toBe('gm');
+      expect(tier.icon).toBe('👑');
     });
 
-    it('handles undefined ELO as 1200 (default)', () => {
+    it('handles undefined ELO as Bronze (default)', () => {
       const tier = getEloTier(undefined);
-      expect(tier.name).toBe('Silver'); // 1200 = Silver
+      expect(tier.name).toBe('Bronze');
     });
 
-    it('handles null ELO as 1200 (default)', () => {
+    it('handles null ELO as Bronze (default)', () => {
       const tier = getEloTier(null);
-      expect(tier.name).toBe('Silver');
+      expect(tier.name).toBe('Bronze');
     });
 
     it('has correct styling properties', () => {
