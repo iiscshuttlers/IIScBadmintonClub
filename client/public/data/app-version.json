@@ -1,6 +1,6 @@
 {
-  "versionCode": 153,
-  "versionName": "1.153",
+  "versionCode": 154,
+  "versionName": "1.154",
   "downloadUrl": "https://play.google.com/store/apps/details?id=com.iiscshuttlers.app",
-  "changelog": "- architecture changes\n- chore: release v1.152 (build 152)"
+  "changelog": "- Architecture\n- chore: release v1.153 (build 153)"
 }
