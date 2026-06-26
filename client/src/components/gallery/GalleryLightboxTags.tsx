@@ -15,6 +15,7 @@ export function GalleryLightboxTags({
   requestTag,
   saveTag,
   isAdmin,
+  currentUserProfile,
 }: {
   itemPath: string;
   tags: TagEntry[];
@@ -28,6 +29,7 @@ export function GalleryLightboxTags({
   requestTag: (path: string) => void;
   saveTag: (path: string, player: { id: string; full_name: string; user_id: string | null }) => void;
   isAdmin: boolean;
+  currentUserProfile?: { id: string; full_name: string } | null;
 }) {
   const [showTagPanel, setShowTagPanel] = useState(false);
   const [tagSearch, setTagSearch] = useState("");
@@ -85,10 +87,9 @@ export function GalleryLightboxTags({
       )}
 
       {/* Regular User Request Tag Button */}
-      {session && !isAdmin && tagPlayers.find((p) => p.user_id === session.user.id) && (() => {
-        const currentUserPlayer = tagPlayers.find((p) => p.user_id === session.user.id)!;
-        const isAlreadyTagged = tags.some((t) => t.id === currentUserPlayer.id);
-        const isAlreadyPending = pendingTags.some((t) => t.id === currentUserPlayer.id);
+      {currentUserProfile && !isAdmin && (() => {
+        const isAlreadyTagged = tags.some((t) => t.id === currentUserProfile.id);
+        const isAlreadyPending = pendingTags.some((t) => t.id === currentUserProfile.id);
 
         if (isAlreadyTagged) return null;
 

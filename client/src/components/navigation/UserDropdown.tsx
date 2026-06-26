@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
-  Sun, Moon, Lock, Zap, UserPlus, Shield, LogOut
+  Sun, Moon, Lock, Zap, UserPlus, Shield, LogOut, User
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -107,7 +107,10 @@ export default function SubBarProfileButton({
             </div>
           )}
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
-            <DropdownMenuItem onSelect={() => setLocation("/profile/password")} className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2.5 gap-2.5">
+            <DropdownMenuItem onSelect={() => setLocation("/profile/setup")} className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2.5 gap-2.5">
+              <User className="w-4 h-4 text-slate-400" /> Edit Profile
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => setLocation("/profile/password")} className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2.5 border-t border-slate-100 dark:border-slate-800 gap-2.5">
               <Lock className="w-4 h-4 text-slate-400" /> Change Password
             </DropdownMenuItem>
             {isAdmin && (

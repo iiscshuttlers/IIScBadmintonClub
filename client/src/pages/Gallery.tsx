@@ -95,7 +95,7 @@ export default function Gallery() {
   });
 
   const queryClient = useQueryClient();
-  const { session, isAdmin } = useAuth();
+  const { session, isAdmin, profile } = useAuth();
   const [, setLocation] = useLocation();
 
   const [activeTab, setActiveTab] = useHashTab(
@@ -174,7 +174,7 @@ export default function Gallery() {
 
   const [galleryTags, setGalleryTags] = useState<Record<string, TagEntry[]>>({});
   const [pendingTags, setPendingTags] = useState<Record<string, TagEntry[]>>({});
-  const [tagPlayers, setTagPlayers] = useState<{ id: string; full_name: string; user_id: string | null }[]>([]);
+  const [tagPlayers, setTagPlayers] = useState<{ id: string; full_name: string }[]>([]);
 
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
@@ -250,14 +250,13 @@ export default function Gallery() {
     if (selectedIndex !== null && tagPlayers.length === 0) {
       supabase
         .from("players")
-        .select("id, full_name, user_id")
-        .is("deleted_at", null)
+        .select("id, full_name")
         .order("full_name")
         .then(({ data }) => { if (data) setTagPlayers(data); });
     }
   }, [selectedIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const saveTag = async (photoPath: string, player: { id: string; full_name: string; user_id: string | null }) => {
+  const saveTag = async (photoPath: string, player: { id: string; full_name: string }) => {
     const current = galleryTags[photoPath] || [];
     if (current.some((t) => t.id === player.id)) return;
     const updated = { ...galleryTags, [photoPath]: [...current, { id: player.id, name: player.full_name }] };
@@ -273,7 +272,7 @@ export default function Gallery() {
 
   const requestTag = async (photoPath: string) => {
     if (!session?.user) return;
-    const currentUserPlayer = tagPlayers.find((p) => p.user_id === session.user.id);
+    const currentUserPlayer = tagPlayers.find((p) => p.id === session.user.id);
     if (!currentUserPlayer) {
       toast.error("Your player profile could not be found.");
       return;
@@ -951,6 +950,7 @@ export default function Gallery() {
                     pendingTags={pendingTags[item?.path] || []}
                     session={session}
                     isAdmin={isAdmin}
+                    currentUserProfile={profile}
                     tagPlayers={tagPlayers}
                     setLocation={setLocation}
                     removeTag={removeTag}
@@ -961,7 +961,7 @@ export default function Gallery() {
                   />
 
                   {/* Remove Button for Remote Photos */}
-                  {item?.url && (
+                  {isAdmin && item?.url && (
                       <button
                         className="flex items-center gap-1.5 text-white/50 hover:text-red-400 text-xs font-bold px-3 py-1.5 rounded-full border border-white/20 hover:border-red-400/40 hover:bg-red-400/10 transition-all"
                         onClick={async (e) => {

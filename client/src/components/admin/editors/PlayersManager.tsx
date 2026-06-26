@@ -10,6 +10,7 @@ import {
   inputCls, labelCls, cardCls, colorSwatchCls, toHex, parseTime, fmtTime
 } from "./shared";
 import { optimizeImage } from '@/lib/imageUtils';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function PlayersManager() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -21,6 +22,7 @@ export function PlayersManager() {
   >("profile");
   const [actionId, setActionId] = useState<string | null>(null);
   const { recordAction } = useAdminHistory();
+  const { isMainAdmin, updateRole } = useAuth();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -29,7 +31,7 @@ export function PlayersManager() {
         supabase
           .from("players")
           .select(
-            "id, full_name, email, department, is_approved, created_at, stats, iisc_email, contact_number, sr_number",
+            "id, full_name, email, department, is_approved, created_at, stats, iisc_email, contact_number, sr_number, role",
           )
           .order("created_at", { ascending: false }),
         supabase.functions.invoke("admin-users", { method: "GET" }),
@@ -207,6 +209,28 @@ export function PlayersManager() {
       setPlayers((p) => p.filter((pl) => pl.id !== id));
     }
     setActionId(null);
+  };
+
+  const handleRoleChange = async (id: string, name: string, newRole: string) => {
+    if (!confirm(`Change role for "${name}" to ${newRole.toUpperCase()}?`)) return;
+    setActionId(id);
+    try {
+      await updateRole(id, newRole);
+      toast("Role updated successfully", { icon: "✅" });
+      setPlayers((p) => p.map((pl) => (pl.id === id ? { ...pl, role: newRole } : pl)));
+      await recordAction({
+        action_type: "update",
+        entity_type: "players",
+        entity_id: id,
+        before_state: { role: players.find(p => p.id === id)?.role },
+        after_state: { role: newRole },
+        label: `Updated role for ${name} to ${newRole}`,
+      });
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update role");
+    } finally {
+      setActionId(null);
+    }
   };
 
   const noProfileUsers = authUsers.filter(
@@ -413,6 +437,19 @@ export function PlayersManager() {
                 </div>
               </div>
               <div className="flex gap-2 shrink-0 flex-wrap sm:flex-nowrap">
+                {isMainAdmin && (
+                  <select
+                    value={p.role || "player"}
+                    onChange={(e) => handleRoleChange(p.id, p.full_name, e.target.value)}
+                    disabled={busy}
+                    className="px-2 py-2 rounded-xl text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 outline-none focus:ring-2 focus:ring-emerald-500 transition disabled:opacity-50"
+                  >
+                    <option value="player">Regular</option>
+                    <option value="umpire">Umpire</option>
+                    <option value="admin">Admin</option>
+                    <option value="master_admin">Master Admin</option>
+                  </select>
+                )}
                 {!p.is_approved ? (
                   <button
                     onClick={() => approve(p.id)}

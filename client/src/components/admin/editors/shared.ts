@@ -48,6 +48,7 @@ export type Player = {
   iisc_email?: string;
   contact_number?: string;
   sr_number?: string;
+  role?: string;
 };
 export type AuthUser = {
   id: string;

@@ -400,15 +400,20 @@ export default function Navigation() {
                   <div className="h-10 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
                 ) : isLoggedIn ? (
                   <div className="space-y-0.5">
-                    <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl mb-2 overflow-hidden border border-slate-100 dark:border-slate-800">
-                      <QuickSettingsContent />
-                      <div className="h-px bg-slate-200 dark:bg-slate-800 my-1 mx-2" />
-                      <Link href="/profile/password">
-                        <button className="w-full flex items-center gap-2 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
-                          <Lock className="h-4 w-4 text-slate-400" /> Change Password
-                        </button>
-                      </Link>
-                    </div>
+                      <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl mb-2 overflow-hidden border border-slate-100 dark:border-slate-800">
+                        <QuickSettingsContent />
+                        <div className="h-px bg-slate-200 dark:bg-slate-800 my-1 mx-2" />
+                        <Link href="/profile/setup">
+                          <a className="w-full flex items-center gap-2 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
+                            <User className="h-4 w-4 text-slate-400" /> Edit Profile
+                          </a>
+                        </Link>
+                        <Link href="/profile/password">
+                          <a className="w-full flex items-center gap-2 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
+                            <Lock className="h-4 w-4 text-slate-400" /> Change Password
+                          </a>
+                        </Link>
+                      </div>
 
                     {isTrulyMainAdmin && (
                       <div className="px-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
@@ -435,9 +440,9 @@ export default function Navigation() {
                     )}
                     {isAdmin && (
                       <Link href="/admin">
-                        <button className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-violet-50 dark:hover:bg-violet-950/30 text-violet-600 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
+                        <a className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-violet-50 dark:hover:bg-violet-950/30 text-violet-600 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
                           <Zap className="h-4 w-4" /> Site Admin
-                        </button>
+                        </a>
                       </Link>
                     )}
                     <button
