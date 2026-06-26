@@ -138,7 +138,7 @@ Head to Head Record:
 ${p1.full_name} has won ${p1Wins} times.
 ${p2.full_name} has won ${p2Wins} times.
 
-Write a 2-paragraph highly engaging, hyped-up sports prediction for this match. Discuss their playing styles clashing, who has the mathematical/ELO edge, and any psychological advantages from the head-to-head record.
+Write a highly engaging, hyped-up sports prediction for this match in STRICTLY 20 to 30 words. Briefly mention their clash and edge.
 Do not use markdown formatting like bolding or headers, just plain text.
   `.trim();
 
@@ -152,7 +152,7 @@ Do not use markdown formatting like bolding or headers, just plain text.
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 250,
+            maxOutputTokens: 1000,
           },
         }),
       }

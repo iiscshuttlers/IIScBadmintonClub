@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Target, Users } from "lucide-react";
+import { Target, Users, HelpCircle } from "lucide-react";
 import {
   ResponsiveContainer,
   RadarChart,
@@ -47,6 +47,18 @@ export function ProfileStatsTabLeft({
         <h2 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-white/45 flex items-center gap-2 mb-6">
           <Target className="w-4 h-4 text-emerald-500 dark:text-emerald-400" /> Player
           Type Analysis
+          <div className="group relative inline-flex ml-auto md:ml-2">
+            <HelpCircle className="w-4 h-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-help" />
+            
+            {/* Tooltip positioned to drop DOWNWARD so it doesn't get clipped by the container's overflow-hidden */}
+            <div className="absolute right-0 md:left-1/2 md:-translate-x-1/2 top-full mt-2 w-64 bg-slate-900 text-white text-[10px] sm:text-xs p-3 rounded-xl shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 normal-case tracking-normal font-medium leading-relaxed">
+              <ul className="space-y-1">
+                <li><strong className="text-emerald-400">Singles/Doubles/Mixed:</strong> Win % in each format</li>
+                <li><strong className="text-emerald-400">Activity:</strong> Based on total matches logged</li>
+                <li><strong className="text-emerald-400">Synergy:</strong> Overall rating in team formats</li>
+              </ul>
+            </div>
+          </div>
         </h2>
         <div className="h-72 w-full" aria-label="Player strengths radar chart" role="img">
           {(() => {
@@ -121,8 +133,6 @@ export function ProfileStatsTabLeft({
         matches={liveMatches}
         playerId={id}
         elo={player.elo_rating ?? 1200}
-        wins={player.stats?.wins ?? 0}
-        losses={player.stats?.losses ?? 0}
       />
       <PerformanceTrends matches={liveMatches} playerId={id} />
       <WrappedCard

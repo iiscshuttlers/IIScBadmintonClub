@@ -26,6 +26,7 @@ interface ProfileRankingTabProps {
   HeadToHeadWidget: any;
   Badges: any;
   id: string;
+  eloRank?: any;
 }
 
 export function ProfileRankingTab({
@@ -39,7 +40,14 @@ export function ProfileRankingTab({
   HeadToHeadWidget,
   Badges,
   id,
+  eloRank,
 }: ProfileRankingTabProps) {
+  const peakElo = eloHistoryData.length > 0 ? Math.max(...eloHistoryData.map(d => d.elo)) : player.elo_rating || 1200;
+
+  const genderPrefix = eloRank?.targetGender === "female" ? "W" : (eloRank?.targetGender === "male" ? "M" : "");
+  const singlesLabel = genderPrefix ? `${genderPrefix}S Rank` : "Singles Rank";
+  const doublesLabel = genderPrefix ? `${genderPrefix}D Rank` : "Doubles Rank";
+
   return (
     <motion.section variants={itemVariants} className="space-y-6 md:space-y-8">
       {authSession?.user?.id && player.userId && authSession.user.id !== player.userId && (
@@ -55,6 +63,42 @@ export function ProfileRankingTab({
         matches={liveMatches.filter((m) => m.status === "confirmed")}
         playerId={id}
       />
+
+      {/* Format Rankings */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
+        <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-4 flex flex-col shadow-lg shadow-amber-500/20 text-white relative overflow-hidden">
+          <div className="absolute -right-4 -top-4 opacity-20">
+            <Trophy className="w-20 h-20" />
+          </div>
+          <span className="text-[10px] font-black uppercase tracking-widest text-white/80 mb-1 relative z-10">Overall Rank</span>
+          <span className="text-3xl font-black relative z-10">{eloRank?.overall ? `#${eloRank.overall}` : "N/A"}</span>
+          <span className="text-xs font-bold text-white/90 mt-1 relative z-10">{player.elo_rating || 1200} ELO</span>
+        </div>
+
+        <div className="bg-white dark:bg-slate-800/50 rounded-2xl p-4 flex flex-col border border-slate-200 dark:border-slate-700/50">
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">{singlesLabel}</span>
+          <span className="text-2xl font-black text-slate-800 dark:text-white">{eloRank?.singles ? `#${eloRank.singles}` : "N/A"}</span>
+          <span className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1">{player.singles_elo || 1200} ELO</span>
+        </div>
+
+        <div className="bg-white dark:bg-slate-800/50 rounded-2xl p-4 flex flex-col border border-slate-200 dark:border-slate-700/50">
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">{doublesLabel}</span>
+          <span className="text-2xl font-black text-slate-800 dark:text-white">{eloRank?.doubles ? `#${eloRank.doubles}` : "N/A"}</span>
+          <span className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1">{player.doubles_elo || 1200} ELO</span>
+        </div>
+
+        <div className="bg-white dark:bg-slate-800/50 rounded-2xl p-4 flex flex-col border border-slate-200 dark:border-slate-700/50">
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">Mixed Rank</span>
+          <span className="text-2xl font-black text-slate-800 dark:text-white">{eloRank?.mixed ? `#${eloRank.mixed}` : "N/A"}</span>
+          <span className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1">{player.mixed_elo || 1200} ELO</span>
+        </div>
+
+        <div className="bg-slate-900 dark:bg-black/50 rounded-2xl p-4 flex flex-col border border-slate-800 dark:border-white/10 text-white col-span-2 md:col-span-1">
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Peak ELO</span>
+          <span className="text-2xl font-black text-white">{peakElo}</span>
+          <span className="text-xs font-bold text-emerald-400 mt-1">Career Best</span>
+        </div>
+      </div>
 
       <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-3xl p-5 sm:p-6 border border-slate-200 dark:border-white/8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">

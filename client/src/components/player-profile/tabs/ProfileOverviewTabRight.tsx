@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
-import { Quote, BookOpen, Trophy, Medal, Calendar } from "lucide-react";
+import { Quote, Trophy, Calendar, Target, BookOpen, Medal } from "lucide-react";
 import type { PlayerProfileType } from "@/types";
+import { PlayerEndorsementsWidget } from "../PlayerEndorsementsWidget";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -10,10 +11,17 @@ const itemVariants = {
 export function ProfileOverviewTabRight({
   player,
   validAchievements,
+  splitStats,
 }: {
   player: PlayerProfileType;
   validAchievements: string[];
+  splitStats?: any;
 }) {
+  const dynamicWins = splitStats?.all?.wins ?? 0;
+  const dynamicLosses = splitStats?.all?.losses ?? 0;
+  const displayRecord = (dynamicWins > 0 || dynamicLosses > 0)
+    ? `${dynamicWins}W - ${dynamicLosses}L`
+    : player.winLossRecord || "0W - 0L";
   return (
     <>
       {/* Quote */}
@@ -103,7 +111,7 @@ export function ProfileOverviewTabRight({
               Overall W/L
             </div>
             <div className="text-2xl font-black text-white">
-              {player.winLossRecord}
+              {displayRecord}
             </div>
           </div>
         </div>
@@ -206,6 +214,10 @@ export function ProfileOverviewTabRight({
             </div>
           </div>
         )}
+      </motion.section>
+
+      <motion.section variants={itemVariants}>
+        <PlayerEndorsementsWidget playerId={player.userId || player.id} />
       </motion.section>
     </>
   );

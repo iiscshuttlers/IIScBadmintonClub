@@ -10,6 +10,7 @@ import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
 import { toast } from "sonner";
 import { useOtherPlayersSlim } from "@/hooks/usePlayers";
 import { useAuth } from "@/contexts/AuthContext";
+import confetti from "canvas-confetti";
 
 import type { PlayerSlim as Player } from "@/types";
 
@@ -385,7 +386,15 @@ export default function LogMatchModal({
         .filter(Boolean)
         .some((id) => otherPlayers.find((p) => p.id === id)?.is_guest);
 
-      if (myTeamWon) toast.success("Incredible victory!");
+      if (myTeamWon) {
+        toast.success("Incredible victory!");
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#10b981', '#fbbf24', '#3b82f6']
+        });
+      }
       toast.success(
         involvesGuest
           ? "Match submitted! A guest is involved — waiting for an admin to approve."

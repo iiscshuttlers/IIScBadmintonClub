@@ -165,11 +165,21 @@ interface Props {
   matches: Match[];
   playerId: string;
   elo: number;
-  wins: number;
-  losses: number;
 }
 
-export function AchievementBadges({ matches, playerId, elo, wins, losses }: Props) {
+export function AchievementBadges({ matches, playerId, elo }: Props) {
+  const { wins, losses } = useMemo(() => {
+    let w = 0;
+    let l = 0;
+    matches
+      .filter((m) => m.status === "confirmed")
+      .forEach((m) => {
+        if (m.winner_id === playerId) w++;
+        else l++;
+      });
+    return { wins: w, losses: l };
+  }, [matches, playerId]);
+
   const badgeData = useMemo(() => {
     return BADGES.map(b => ({
       badge: b,

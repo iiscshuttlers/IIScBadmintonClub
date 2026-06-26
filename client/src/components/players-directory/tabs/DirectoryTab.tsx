@@ -116,7 +116,7 @@ export function DirectoryTab({
       />
 
       {/* Recommended Opponents (Matchmaking) */}
-      {!loading && ownProfile && recommended.length > 0 && (
+      {!loading && ownProfile && recommended.length > 0 && !searchQuery && levelFilter === "All" && departmentFilter === "All" && (
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-4">
             <div className="p-2 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg">
@@ -213,7 +213,10 @@ export function DirectoryTab({
             animate="show"
             className="grid grid-cols-1 md:grid-cols-2 gap-3"
           >
-            {filteredPlayers.slice(0, visibleCount).map((player) => (
+            {filteredPlayers
+              .filter(p => !(!searchQuery && levelFilter === "All" && departmentFilter === "All" && recommended.find(r => r.id === p.id)))
+              .slice(0, visibleCount)
+              .map((player) => (
               <motion.div
                 key={player.id}
                 variants={itemVariants}

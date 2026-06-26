@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { Swords, Trophy, Activity, ArrowLeft, BarChart3 } from "lucide-react";
 import { Link } from "wouter";
 import { BeautifulScoreDisplay } from "@/components/feed/BeautifulScoreDisplay";
+import { RivalriesDashboard } from "./RivalriesDashboard";
 
 export function H2HSection() {
   const [players, setPlayers] = useState<any[]>([]);
@@ -158,7 +159,10 @@ export function H2HSection() {
     );
 
   return (
-    <div className="font-sans animate-in fade-in zoom-in-95 duration-300">
+    <div className="font-sans animate-in fade-in zoom-in-95 duration-300 space-y-12">
+      
+      <RivalriesDashboard />
+
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="text-center">
           <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white flex items-center justify-center gap-2">

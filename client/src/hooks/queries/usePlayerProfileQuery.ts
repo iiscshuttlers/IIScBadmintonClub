@@ -38,15 +38,36 @@ export function usePlayerProfileQuery(id: string | undefined, ownPlayerProfileId
       if (!id) return null;
       const { data, error } = await supabase
         .from("players")
-        .select("id, elo_rating")
-        .is("deleted_at", null)
-        .order("elo_rating", { ascending: false });
+        .select("id, elo_rating, singles_elo, doubles_elo, mixed_elo, gender")
+        .is("deleted_at", null);
 
       if (error) throw error;
       if (!data) return null;
 
-      const rank = data.findIndex((p) => p.id === id) + 1;
-      return rank > 0 ? rank : null;
+      const targetPlayer = data.find((p) => p.id === id);
+      const targetGender = targetPlayer?.gender?.toLowerCase() || "unknown";
+
+      const sameGenderData = targetGender !== "unknown" 
+        ? data.filter(p => (p.gender || "").toLowerCase() === targetGender)
+        : data;
+
+      const sortedOverall = [...data].sort((a, b) => (b.elo_rating || 0) - (a.elo_rating || 0));
+      const sortedSingles = [...sameGenderData].sort((a, b) => (b.singles_elo || 0) - (a.singles_elo || 0));
+      const sortedDoubles = [...sameGenderData].sort((a, b) => (b.doubles_elo || 0) - (a.doubles_elo || 0));
+      const sortedMixed = [...data].sort((a, b) => (b.mixed_elo || 0) - (a.mixed_elo || 0));
+
+      const overallRank = sortedOverall.findIndex((p) => p.id === id) + 1;
+      const singlesRank = sortedSingles.findIndex((p) => p.id === id) + 1;
+      const doublesRank = sortedDoubles.findIndex((p) => p.id === id) + 1;
+      const mixedRank = sortedMixed.findIndex((p) => p.id === id) + 1;
+
+      return {
+        overall: overallRank > 0 ? overallRank : null,
+        singles: singlesRank > 0 ? singlesRank : null,
+        doubles: doublesRank > 0 ? doublesRank : null,
+        mixed: mixedRank > 0 ? mixedRank : null,
+        targetGender: targetGender
+      };
     },
     enabled: !!id,
     staleTime: 15 * 60 * 1000,

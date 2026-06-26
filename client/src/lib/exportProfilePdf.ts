@@ -3,12 +3,16 @@ interface ProfileData {
   elo: number;
   wins: number;
   losses: number;
+  rank?: number | string;
+  streak?: number;
   avatarUrl?: string | null;
   recentMatches: Array<{
     date: string;
     opponent: string;
+    partner?: string;
     score: string;
     result: "W" | "L";
+    format?: string;
   }>;
 }
 
@@ -20,15 +24,34 @@ export function exportProfilePdf(data: ProfileData) {
 
   const rows = data.recentMatches
     .slice(0, 15)
-    .map(
-      (m) =>
-        `<tr>
-          <td>${new Date(m.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</td>
-          <td>${m.opponent}</td>
-          <td>${m.score}</td>
-          <td style="color:${m.result === "W" ? "#059669" : "#dc2626"}; font-weight:700">${m.result}</td>
-        </tr>`,
-    )
+    .map((m) => {
+      const scoreHtml = m.score.split(',').map(s => {
+        const t = s.trim();
+        if(!t) return '';
+        return `<span style="display:inline-block;padding:3px 6px;margin:2px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:700;color:#475569;white-space:nowrap;">${t}</span>`;
+      }).join("");
+
+      return `<tr>
+        <td style="padding:12px 10px; border-bottom:1px solid #f1f5f9; width:40px;">
+          <div style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:white;background:${m.result === 'W' ? '#10b981' : '#f43f5e'}; box-shadow:0 2px 4px ${m.result === 'W' ? 'rgba(16,185,129,0.3)' : 'rgba(244,63,94,0.3)'};">${m.result}</div>
+        </td>
+        <td style="padding:12px 10px; border-bottom:1px solid #f1f5f9; width:60px;">
+          ${m.format ? `<div style="display:inline-block;padding:4px 8px;border-radius:12px;background:#f1f5f9;border:1px solid #e2e8f0;font-size:10px;font-weight:800;color:#64748b;letter-spacing:0.05em;">${m.format}</div>` : ""}
+        </td>
+        <td style="padding:12px 10px; border-bottom:1px solid #f1f5f9;">
+          <div style="font-weight:700;color:#1e293b;font-size:13px;line-height:1.4;">
+            <span style="color:#ef4444;font-size:10px;font-weight:900;margin-right:4px;">VS</span>${m.opponent}
+          </div>
+          ${m.partner ? `<div style="font-size:11px;color:#3b82f6;font-weight:700;margin-top:4px;line-height:1.4;"><span style="color:#60a5fa;font-size:9px;font-weight:900;margin-right:4px;">WITH</span>${m.partner}</div>` : ""}
+        </td>
+        <td style="padding:12px 10px; border-bottom:1px solid #f1f5f9;">
+          <div style="display:flex;flex-wrap:wrap;gap:2px;">${scoreHtml}</div>
+        </td>
+        <td style="padding:12px 10px; border-bottom:1px solid #f1f5f9; text-align:right; font-size:11px; font-weight:600; color:#64748b; width:100px;">
+          ${new Date(m.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+        </td>
+      </tr>`;
+    })
     .join("");
 
   // Remove any existing overlay first
@@ -69,15 +92,26 @@ export function exportProfilePdf(data: ProfileData) {
         }
         <div>
           <h1 style="margin:0 0 4px;font-size:24px;font-weight:900;">${data.name}</h1>
-          <div style="color:#059669;font-size:13px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">IISc Badminton Club</div>
+          <div style="color:#059669;font-size:13px;font-weight:700;letter-spacing:0.05em;">IISc Badminton Club</div>
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px;">
         <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px;">
           <div style="font-size:28px;font-weight:900;color:#059669;">${data.elo}</div>
           <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;">ELO Rating</div>
         </div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px;">
+          <div style="font-size:28px;font-weight:900;color:#0f172a;">${data.rank ? '#' + data.rank : 'N/A'}</div>
+          <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;">Club Rank</div>
+        </div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px;">
+          <div style="font-size:28px;font-weight:900;color:#0f172a;">${data.streak || 0}</div>
+          <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;">Best Streak</div>
+        </div>
+      </div>
+      
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;">
         <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px;">
           <div style="font-size:28px;font-weight:900;color:#0f172a;">${data.wins}</div>
           <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;">Wins</div>
@@ -95,12 +129,13 @@ export function exportProfilePdf(data: ProfileData) {
       ${
         rows
           ? `<h2 style="font-size:14px;font-weight:900;color:#475569;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 12px;">Recent Matches</h2>
-      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;background:white;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
         <thead><tr>
-          <th style="text-align:left;padding:8px 10px;background:#f1f5f9;font-weight:700;color:#64748b;text-transform:uppercase;font-size:10px;letter-spacing:0.05em;">Date</th>
-          <th style="text-align:left;padding:8px 10px;background:#f1f5f9;font-weight:700;color:#64748b;text-transform:uppercase;font-size:10px;letter-spacing:0.05em;">Opponent</th>
-          <th style="text-align:left;padding:8px 10px;background:#f1f5f9;font-weight:700;color:#64748b;text-transform:uppercase;font-size:10px;letter-spacing:0.05em;">Score</th>
-          <th style="text-align:left;padding:8px 10px;background:#f1f5f9;font-weight:700;color:#64748b;text-transform:uppercase;font-size:10px;letter-spacing:0.05em;">Result</th>
+          <th style="text-align:left;padding:12px 10px;background:#f8fafc;border-bottom:2px solid #e2e8f0;font-weight:800;color:#94a3b8;text-transform:uppercase;font-size:10px;letter-spacing:0.05em;">Res</th>
+          <th style="text-align:left;padding:12px 10px;background:#f8fafc;border-bottom:2px solid #e2e8f0;font-weight:800;color:#94a3b8;text-transform:uppercase;font-size:10px;letter-spacing:0.05em;">Format</th>
+          <th style="text-align:left;padding:12px 10px;background:#f8fafc;border-bottom:2px solid #e2e8f0;font-weight:800;color:#94a3b8;text-transform:uppercase;font-size:10px;letter-spacing:0.05em;">Opponent</th>
+          <th style="text-align:left;padding:12px 10px;background:#f8fafc;border-bottom:2px solid #e2e8f0;font-weight:800;color:#94a3b8;text-transform:uppercase;font-size:10px;letter-spacing:0.05em;">Score</th>
+          <th style="text-align:right;padding:12px 10px;background:#f8fafc;border-bottom:2px solid #e2e8f0;font-weight:800;color:#94a3b8;text-transform:uppercase;font-size:10px;letter-spacing:0.05em;">Date</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>`

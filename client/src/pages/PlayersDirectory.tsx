@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useMemo, lazy, Suspense } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSocialActions } from "@/hooks/useSocial";
 import { useLocation } from "wouter";
-import { Users, Trophy, Swords, Heart } from "lucide-react";
+import { Users, Trophy, Swords, Heart, Shield } from "lucide-react";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { supabase } from "@/lib/supabase";
@@ -17,6 +17,7 @@ import { H2HSection } from "@/components/players-directory/H2HSection";
 import { AuthBanner } from "@/components/players-directory/AuthBanner";
 import { NetworkTab } from "@/components/players-directory/tabs/NetworkTab";
 import { DirectoryTab } from "@/components/players-directory/tabs/DirectoryTab";
+import { TeamsTab } from "@/components/players-directory/tabs/TeamsTab";
 
 const LogMatchModal = lazy(() => import("@/components/LogMatchModal"));
 
@@ -80,12 +81,12 @@ export default function PlayersDirectory() {
 
   const LEADERBOARD_SUB_TABS = ["elo", "ironman"];
   const [activeTab, setActiveTab] = useHashTab(
-    ["directory", "leaderboard", "network", "h2h", ...LEADERBOARD_SUB_TABS] as const,
+    ["directory", "leaderboard", "network", "h2h", "teams", ...LEADERBOARD_SUB_TABS] as const,
     "directory"
   );
   const effectiveTab = LEADERBOARD_SUB_TABS.includes(activeTab as string)
     ? "leaderboard"
-    : activeTab as "directory" | "leaderboard" | "network" | "h2h";
+    : activeTab as "directory" | "leaderboard" | "network" | "h2h" | "teams";
 
   const { handleBuddyAction: doBuddyAction, handleToggleFollow: doToggleFollow } = useSocialActions();
 
@@ -163,7 +164,7 @@ export default function PlayersDirectory() {
         <div className="container mx-auto px-4 relative z-10">
           <div className="flex flex-col items-center justify-center gap-6">
             <div className="w-full md:w-auto flex justify-center">
-              <div className="grid grid-cols-2 sm:flex bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 gap-1.5 w-full sm:w-auto">
+              <div className="grid grid-cols-2 md:flex bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 gap-1.5 w-full md:w-auto">
                 <button
                   onClick={() => setActiveTab("directory")}
                   className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-sm font-black transition-all ${
@@ -187,6 +188,14 @@ export default function PlayersDirectory() {
                   }`}
                 >
                   <Swords className="w-4 h-4 shrink-0" /> H2H
+                </button>
+                <button
+                  onClick={() => setActiveTab("teams")}
+                  className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-sm font-black transition-all ${
+                    effectiveTab === "teams" ? "bg-white text-violet-700 shadow-md" : "text-white/80 hover:text-white hover:bg-white/10"
+                  }`}
+                >
+                  <Shield className="w-4 h-4 shrink-0" /> Teams
                 </button>
                 {session && ownProfile && (
                   <button
@@ -217,6 +226,10 @@ export default function PlayersDirectory() {
         {effectiveTab === "h2h" ? (
           <div className="mt-8">
             <H2HSection />
+          </div>
+        ) : effectiveTab === "teams" ? (
+          <div className="mt-8">
+            <TeamsTab />
           </div>
         ) : effectiveTab === "leaderboard" ? (
           <div className="mt-8">

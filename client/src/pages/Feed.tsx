@@ -133,13 +133,13 @@ export default function Feed() {
           </p>
 
           <div className="mt-8 w-full flex justify-center">
-            <div className="w-full grid grid-cols-2 gap-2 sm:flex sm:w-auto sm:gap-0 bg-transparent sm:bg-white/10 sm:backdrop-blur-md sm:p-1.5 sm:rounded-2xl sm:border sm:border-white/20">
+            <div className="w-full grid grid-cols-2 gap-2 md:flex md:w-auto md:gap-0 bg-transparent md:bg-white/10 md:backdrop-blur-md md:p-1.5 md:rounded-2xl md:border md:border-white/20">
               <Link
                 href="/feed/activity"
                 onClick={() => handleTabChange("matches")}
-                className={`flex justify-center items-center gap-2 px-4 py-3 sm:px-6 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${activeTab === "matches"
+                className={`flex justify-center items-center gap-2 px-4 py-3 md:px-6 md:py-2.5 rounded-xl text-xs md:text-sm font-black transition-all ${activeTab === "matches"
                   ? "bg-white text-emerald-900 shadow-md"
-                  : "bg-white/10 sm:bg-transparent text-white/90 sm:text-white/80 hover:bg-white/20 sm:hover:bg-white/10"
+                  : "bg-white/10 md:bg-transparent text-white/90 md:text-white/80 hover:bg-white/20 md:hover:bg-white/10"
                   }`}
               >
                 <Activity className="w-4 h-4" /> Match Activity
@@ -151,9 +151,9 @@ export default function Feed() {
                   localStorage.setItem("iisc_announcements_last_seen", Date.now().toString());
                   window.dispatchEvent(new Event("announcements-read"));
                 }}
-                className={`flex justify-center items-center gap-2 px-4 py-3 sm:px-6 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${activeTab === "announcements"
+                className={`flex justify-center items-center gap-2 px-4 py-3 md:px-6 md:py-2.5 rounded-xl text-xs md:text-sm font-black transition-all ${activeTab === "announcements"
                   ? "bg-white text-emerald-900 shadow-md"
-                  : "bg-white/10 sm:bg-transparent text-white/90 sm:text-white/80 hover:bg-white/20 sm:hover:bg-white/10"
+                  : "bg-white/10 md:bg-transparent text-white/90 md:text-white/80 hover:bg-white/20 md:hover:bg-white/10"
                   }`}
               >
                 <Bell className="w-4 h-4" /> Announcements
@@ -163,9 +163,9 @@ export default function Feed() {
                   <Link
                     href="/feed/my-matches"
                     onClick={() => handleTabChange("my_matches")}
-                    className={`flex justify-center items-center gap-2 px-4 py-3 sm:px-6 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${activeTab === "my_matches"
+                    className={`flex justify-center items-center gap-2 px-4 py-3 md:px-6 md:py-2.5 rounded-xl text-xs md:text-sm font-black transition-all ${activeTab === "my_matches"
                       ? "bg-white text-emerald-900 shadow-md"
-                      : "bg-white/10 sm:bg-transparent text-white/90 sm:text-white/80 hover:bg-white/20 sm:hover:bg-white/10"
+                      : "bg-white/10 md:bg-transparent text-white/90 md:text-white/80 hover:bg-white/20 md:hover:bg-white/10"
                       }`}
                   >
                     <UserCheck className="w-4 h-4" /> My Matches
@@ -173,9 +173,9 @@ export default function Feed() {
                   <Link
                     href="/feed/challenges"
                     onClick={() => handleTabChange("challenges")}
-                    className={`flex justify-center items-center gap-2 px-4 py-3 sm:px-6 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${activeTab === "challenges"
+                    className={`flex justify-center items-center gap-2 px-4 py-3 md:px-6 md:py-2.5 rounded-xl text-xs md:text-sm font-black transition-all ${activeTab === "challenges"
                       ? "bg-white text-emerald-900 shadow-md"
-                      : "bg-white/10 sm:bg-transparent text-white/90 sm:text-white/80 hover:bg-white/20 sm:hover:bg-white/10"
+                      : "bg-white/10 md:bg-transparent text-white/90 md:text-white/80 hover:bg-white/20 md:hover:bg-white/10"
                       }`}
                   >
                     <Swords className="w-4 h-4" /> Challenges
@@ -186,9 +186,9 @@ export default function Feed() {
                 <Link
                   href="/feed/umpire"
                   onClick={() => handleTabChange("umpire")}
-                  className={`col-span-full sm:col-span-1 flex justify-center items-center gap-2 px-4 py-3 sm:px-6 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${activeTab === "umpire"
+                  className={`col-span-full md:col-span-1 flex justify-center items-center gap-2 px-4 py-3 md:px-6 md:py-2.5 rounded-xl text-xs md:text-sm font-black transition-all ${activeTab === "umpire"
                     ? "bg-white text-emerald-900 shadow-md"
-                    : "bg-white/10 sm:bg-transparent text-white/90 sm:text-white/80 hover:bg-white/20 sm:hover:bg-white/10"
+                    : "bg-white/10 md:bg-transparent text-white/90 md:text-white/80 hover:bg-white/20 md:hover:bg-white/10"
                     }`}
                 >
                   <Tv2 className="w-4 h-4" /> Umpire

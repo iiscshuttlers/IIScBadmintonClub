@@ -24,6 +24,8 @@ interface BasicInfoTabProps {
   setDepartment: (val: string) => void;
   customDepartment: string;
   setCustomDepartment: (val: string) => void;
+  isRetired: boolean;
+  setIsRetired: (val: boolean) => void;
   handleAvatarUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
@@ -48,6 +50,8 @@ export function BasicInfoTab({
   setDepartment,
   customDepartment,
   setCustomDepartment,
+  isRetired,
+  setIsRetired,
   handleAvatarUpload,
 }: BasicInfoTabProps) {
   return (
@@ -225,25 +229,41 @@ export function BasicInfoTab({
         </div>
       </div>
 
-      <div className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700">
-        <input
-          type="checkbox"
-          id="isGuest"
-          checked={isGuest}
-          onChange={(e) => {
-            setIsGuest(e.target.checked);
-            if (e.target.checked) {
-              setDepartment("Guest");
-            } else if (department === "Guest") {
-              setDepartment("");
-            }
-          }}
-          className="w-5 h-5 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500 bg-white dark:bg-slate-900"
-        />
-        <label htmlFor="isGuest" className="text-sm font-semibold text-slate-700 dark:text-slate-300 cursor-pointer">
-          I am a Guest / Project Assistant / Intern
-          <p className="text-xs text-slate-500 font-normal mt-0.5">Select this if you are not an active IISc degree student.</p>
-        </label>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700">
+          <input
+            type="checkbox"
+            id="isGuest"
+            checked={isGuest}
+            onChange={(e) => {
+              setIsGuest(e.target.checked);
+              if (e.target.checked) {
+                setDepartment("Guest");
+              } else if (department === "Guest") {
+                setDepartment("");
+              }
+            }}
+            className="w-5 h-5 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500 bg-white dark:bg-slate-900"
+          />
+          <label htmlFor="isGuest" className="text-sm font-semibold text-slate-700 dark:text-slate-300 cursor-pointer">
+            I am a Guest / Project Assistant / Intern
+            <p className="text-xs text-slate-500 font-normal mt-0.5">Select this if you are not an active IISc degree student.</p>
+          </label>
+        </div>
+
+        <div className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-rose-200 dark:border-rose-900/50">
+          <input
+            type="checkbox"
+            id="isRetired"
+            checked={isRetired}
+            onChange={(e) => setIsRetired(e.target.checked)}
+            className="w-5 h-5 rounded border-rose-300 text-rose-500 focus:ring-rose-500 bg-white dark:bg-slate-900"
+          />
+          <label htmlFor="isRetired" className="text-sm font-semibold text-rose-700 dark:text-rose-400 cursor-pointer">
+            Mark Profile as Retired
+            <p className="text-xs text-rose-500/70 font-normal mt-0.5">Retired players are hidden from rankings and cannot be challenged.</p>
+          </label>
+        </div>
       </div>
 
       {!isGuest && (

@@ -20,20 +20,7 @@ export function EloAuditModal({ isOpen, onClose, matches, playerId }: EloAuditMo
     return 0;
   };
 
-  const getOpponents = (match: any) => {
-    const isTeam1 = match.player1_id === playerId || match.team1_partner_id === playerId;
-    if (isTeam1) {
-      if (match.category === "doubles" || match.category === "mixed") {
-        return "Team 2";
-      }
-      return match.player2?.full_name || "Unknown";
-    } else {
-      if (match.category === "doubles" || match.category === "mixed") {
-        return "Team 1";
-      }
-      return match.player1?.full_name || "Unknown";
-    }
-  };
+  const getFirstName = (name: string) => name ? name.split(" ")[0] : "";
 
   let totalChange = 0;
   let singlesChange = 0;
@@ -47,9 +34,21 @@ export function EloAuditModal({ isOpen, onClose, matches, playerId }: EloAuditMo
   validMatches.forEach(m => {
     const change = getEloChange(m) || 0;
     totalChange += change;
-    if (m.category === "singles") singlesChange += change;
-    else if (m.category === "doubles") doublesChange += change;
-    else if (m.category === "mixed") mixedChange += change;
+
+    const isSingles = !m.team1_partner_id && !m.team2_partner_id;
+    if (isSingles) {
+      singlesChange += change;
+    } else {
+      const allGenders = [m.player1?.gender, m.player2?.gender, m.partner1?.gender, m.partner2?.gender]
+         .map(g => (g || '').toLowerCase())
+         .filter(Boolean);
+      const isMixed = allGenders.includes('male') && allGenders.includes('female');
+      if (isMixed) {
+        mixedChange += change;
+      } else {
+        doublesChange += change;
+      }
+    }
   });
 
   return (
@@ -128,12 +127,37 @@ export function EloAuditModal({ isOpen, onClose, matches, playerId }: EloAuditMo
               validMatches.map((m) => {
                 const change = getEloChange(m);
                 const isPositive = change > 0;
+                const isTeam1 = m.player1_id === playerId || m.team1_partner_id === playerId;
+                
+                const isSingles = !m.team1_partner_id && !m.team2_partner_id;
+                const allGenders = [m.player1?.gender, m.player2?.gender, m.partner1?.gender, m.partner2?.gender].map(g => (g || '').toLowerCase()).filter(Boolean);
+                const isMixed = allGenders.includes('male') && allGenders.includes('female');
+                const formatLabel = isSingles ? "S" : (isMixed ? "XD" : "D");
+                
+                const opponentPlayer = isTeam1 ? m.player2 : m.player1;
+                const opponentPartner = isTeam1 ? m.partner2 : m.partner1;
+                
+                let ownPartner = null;
+                if (!isSingles) {
+                  if (isTeam1) ownPartner = (m.player1_id === playerId) ? m.partner1 : m.player1;
+                  else ownPartner = (m.player2_id === playerId) ? m.partner2 : m.player2;
+                }
+                
+                const opponentStr = [opponentPlayer?.full_name, opponentPartner?.full_name]
+                  .filter(Boolean)
+                  .map(n => getFirstName(n))
+                  .join(" & ");
+
+                const cleanScore = m.score 
+                  ? m.score.replace(/\[.*?\]/g, '').trim()
+                  : "";
+
                 return (
                   <div key={m.id} className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center justify-between gap-4">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
-                          {m.category === "singles" ? "S" : m.category === "doubles" ? "D" : "XD"}
+                          {formatLabel}
                           {m.is_friendly ? " • F" : ""}
                         </span>
                         <span className="text-xs font-bold text-slate-500 flex items-center gap-1 truncate">
@@ -141,9 +165,27 @@ export function EloAuditModal({ isOpen, onClose, matches, playerId }: EloAuditMo
                           {format(new Date(m.created_at), "MMM d, yyyy")}
                         </span>
                       </div>
-                      <div className="font-bold text-sm text-slate-800 dark:text-slate-200 truncate">
-                        vs {getOpponents(m)}
+                      <div className="font-bold text-sm text-slate-800 dark:text-slate-200 truncate flex items-center gap-2">
+                        <span><span className="text-[10px] uppercase text-rose-500/70 mr-1">vs</span>{opponentStr}</span>
+                        {ownPartner && (
+                          <span className="text-xs text-slate-400 font-medium ml-1">
+                            <span className="text-[9px] uppercase text-sky-500/70 mr-1">with</span>{getFirstName(ownPartner.full_name)}
+                          </span>
+                        )}
                       </div>
+                      {cleanScore && (
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {cleanScore.split(',').map((s: string, i: number) => {
+                            const setScore = s.trim();
+                            if (!setScore) return null;
+                            return (
+                              <span key={i} className="px-1.5 py-0.5 rounded text-[10px] font-black tracking-widest bg-slate-100 dark:bg-slate-800 text-slate-500">
+                                {setScore}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                     <div className={`shrink-0 flex items-center justify-center min-w-[3.5rem] px-3 py-1.5 rounded-xl font-black text-sm border shadow-sm ${
                       isPositive 

@@ -253,6 +253,11 @@ export function PlayerCard({
           <div className="text-2xl font-black text-slate-900 dark:text-white leading-none uppercase tracking-tight w-full truncate px-2">
             {lastName}
           </div>
+          {player.is_retired && (
+            <div className="mt-2 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm bg-rose-500 text-white shadow-sm">
+              Retired
+            </div>
+          )}
           <div className="mt-3 flex items-center justify-center gap-2 flex-wrap">
             <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md">
               ELO {player.elo_rating ?? "—"}

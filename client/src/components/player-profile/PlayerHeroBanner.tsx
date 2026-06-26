@@ -60,17 +60,32 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
           <div className="flex-1 pb-2 md:pb-4 text-slate-900 dark:text-white mt-4 md:mt-0">
             <div className="flex flex-col">
               {heroRestName && (
-                <span
-                  className="text-xl md:text-3xl font-bold uppercase tracking-[0.2em] text-white/95 dark:text-slate-900"
-                  style={
-                    theme === "light"
-                      ? { textShadow: "0 2px 12px rgba(0,0,0,0.7), 0 1px 4px rgba(0,0,0,0.5)" }
-                      : undefined
-                  }
-                >
-                  {heroRestName}
-                </span>
+                <div className="flex items-center gap-3">
+                  <span
+                    className="text-xl md:text-3xl font-bold uppercase tracking-[0.2em] text-white/95 dark:text-slate-900"
+                    style={
+                      theme === "light"
+                        ? { textShadow: "0 2px 12px rgba(0,0,0,0.7), 0 1px 4px rgba(0,0,0,0.5)" }
+                        : undefined
+                    }
+                  >
+                    {heroRestName}
+                  </span>
+                  {player.is_retired && (
+                    <span className="px-2.5 py-1 text-xs font-black uppercase tracking-widest bg-rose-500 text-white rounded-md shadow-md border border-rose-400">
+                      Retired
+                    </span>
+                  )}
+                </div>
               )}
+              {!heroRestName && player.is_retired && (
+                <div className="mb-2">
+                  <span className="px-2.5 py-1 text-xs font-black uppercase tracking-widest bg-rose-500 text-white rounded-md shadow-md border border-rose-400">
+                    Retired
+                  </span>
+                </div>
+              )}
+
               <div className="flex items-center flex-wrap gap-4">
                 <h1
                   className="text-5xl md:text-8xl font-black uppercase tracking-tighter leading-none text-white dark:text-slate-900"

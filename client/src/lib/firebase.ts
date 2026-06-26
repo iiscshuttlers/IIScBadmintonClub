@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getMessaging, type Messaging } from "firebase/messaging";
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -12,11 +13,12 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-let app, db, auth;
+let app, db, auth, storage;
 try {
   app = initializeApp(firebaseConfig);
   db = getFirestore(app);
   auth = getAuth(app);
+  storage = getStorage(app);
 } catch (e) {
   console.warn("Firebase blocked or failed to initialize", e);
 }
@@ -33,4 +35,5 @@ export function getFirebaseMessaging(): Messaging | null {
   }
 }
 
-export { db, auth };
+export { db, auth, storage };
+

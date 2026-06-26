@@ -41,6 +41,7 @@ export interface PlayerRow {
   recent_form: string | null;
   status: string | null;
   is_looking_to_play: boolean | null;
+  is_retired: boolean | null;
   role: 'master_admin' | 'admin' | 'umpire' | 'player';
   gender: string | null;
   buddies: string[] | null;
@@ -134,6 +135,8 @@ export interface PlayerProfileType {
   tournamentHistory: string[];
   achievements: string[];
   winLossRecord: string;
+
+  is_retired?: boolean;
 
   // New optional fields
   nationality?: string;

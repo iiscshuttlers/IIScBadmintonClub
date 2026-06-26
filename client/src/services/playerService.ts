@@ -18,6 +18,17 @@ export const playerService = {
     return (data ?? []) as unknown as PlayerRow[];
   },
 
+  async getAllCompletedMatches() {
+    const { data, error } = await supabase
+      .from("matches")
+      .select("*, player1:players!player1_id(full_name, avatar_url, gender), player2:players!player2_id(full_name, avatar_url, gender), partner1:players!team1_partner_id(full_name, avatar_url, gender), partner2:players!team2_partner_id(full_name, avatar_url, gender)")
+      .eq("status", "confirmed")
+      .order("created_at", { ascending: false });
+    
+    if (error) throw error;
+    return data;
+  },
+
   async getOtherPlayersSlim(currentUserId: string) {
     const { data, error } = await supabase
       .from("players")

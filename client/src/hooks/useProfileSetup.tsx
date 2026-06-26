@@ -45,7 +45,7 @@ export function useProfileSetup() {
     fullName, setFullName, nickname, setNickname, status, setStatus, iiscEmail, setIiscEmail,
     contactNumber, setContactNumber, department, setDepartment, customDepartment, setCustomDepartment,
     joinedYear, setJoinedYear, nationality, setNationality, homeState, setHomeState, height, setHeight,
-    instagram, setInstagram, avatarUrl, setAvatarUrl, gender, setGender, isGuest, setIsGuest 
+    instagram, setInstagram, avatarUrl, setAvatarUrl, gender, setGender, isGuest, setIsGuest, isRetired, setIsRetired 
   } = basic;
 
   const { 
@@ -196,6 +196,8 @@ export function useProfileSetup() {
           setFavoriteFormat(profile.favorite_format || "");
           setHeight(profile.height || "");
           setYearsPlaying(profile.years_playing?.toString() || "");
+          setIsGuest(profile.is_guest || false);
+          setIsRetired(profile.is_retired || false);
           setCoach(profile.coach || "");
           setBio(profile.bio || "");
           setApparel(profile.apparel || "");
@@ -272,6 +274,9 @@ export function useProfileSetup() {
       full_name: fullName,
       nickname: nickname || null,
       status: status,
+      is_looking_to_play: status === 'looking',
+      is_guest: isGuest,
+      is_retired: isRetired,
       iisc_email: iiscEmail || null,
       contact_number: contactNumber || null,
       department: department === "OTHER - Other" ? customDepartment : department,
@@ -336,7 +341,7 @@ export function useProfileSetup() {
     fullName, setFullName, nickname, setNickname, status, setStatus, iiscEmail, setIiscEmail,
     contactNumber, setContactNumber, department, setDepartment, customDepartment, setCustomDepartment,
     joinedYear, setJoinedYear, nationality, setNationality, homeState, setHomeState, height, setHeight,
-    instagram, setInstagram, avatarUrl, setAvatarUrl, gender, setGender, isGuest, setIsGuest,
+    instagram, setInstagram, avatarUrl, setAvatarUrl, gender, setGender, isGuest, setIsGuest, isRetired, setIsRetired,
     // Badminton
     playingLevel, setPlayingLevel, playingStyle, setPlayingStyle, dominantHand, setDominantHand,
     favoriteShot, setFavoriteShot, yearsPlaying, setYearsPlaying, coach, setCoach,

@@ -247,8 +247,14 @@ export function PlayerActionBar({
               </button>
             )}
             <button
-              onClick={() => setIsChallengeModalOpen(true)}
-              className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-orange-500 text-white hover:bg-orange-600 border border-orange-400"
+              onClick={() => !player.is_retired && setIsChallengeModalOpen(true)}
+              disabled={player.is_retired}
+              title={player.is_retired ? "Cannot challenge a retired player" : "Challenge"}
+              className={`flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider ${
+                player.is_retired
+                  ? "bg-slate-300 dark:bg-slate-700 text-slate-500 cursor-not-allowed border border-slate-300 dark:border-slate-600"
+                  : "bg-orange-500 text-white hover:bg-orange-600 border border-orange-400"
+              }`}
             >
               <Swords className="w-4 h-4" />
               Challenge

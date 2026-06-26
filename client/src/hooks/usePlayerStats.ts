@@ -205,7 +205,11 @@ export function usePlayerStats(
     let current = 0;
     let max = 0;
     confirmed.forEach(m => {
-      if (m.winner_id === id) {
+      const isTeam1 = m.player1_id === id || m.team1_partner_id === id;
+      const isTeam1Winner = m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id;
+      const won = isTeam1 ? isTeam1Winner : !isTeam1Winner;
+      
+      if (won) {
         current++;
         if (current > max) max = current;
       } else {

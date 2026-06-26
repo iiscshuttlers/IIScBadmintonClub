@@ -11,25 +11,39 @@ import {
   Tag,
   UserPlus,
   Search,
+  CheckCircle2,
+  Check,
+  Heart,
+  Bell,
+  BellRing,
 } from "lucide-react";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSiteData } from "@/lib/siteData";
 import { supabase } from "@/lib/supabase";
 import { SocialCTA } from "@/components/SocialCTA";
+import { toast } from "sonner";
+import { motion } from "framer-motion";
 import { lazy, Suspense } from "react";
 const VideoPlayerModal = lazy(() => import("@/components/VideoPlayerModal").then(mod => ({ default: mod.VideoPlayerModal })));
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation } from "wouter";
+import { fetchRemoteGalleryImages, deleteRemoteGalleryImage, deleteRemoteGalleryImages, type RemoteGalleryItem } from "@/lib/galleryStorage";
+import { GalleryUploader } from "@/components/admin/GalleryUploader";
+import { useQueryClient } from "@tanstack/react-query";
+import { Trash2 } from "lucide-react";
+import { GalleryLightboxTags, type TagEntry } from "@/components/gallery/GalleryLightboxTags";
 
 // ─── Lazy Image Component ───────────────────────────────────────────────────
 function LazyImage({
   moduleLoader,
+  url,
   alt,
   className,
   onClick,
 }: {
-  moduleLoader: () => Promise<{ default: string }>;
+  moduleLoader?: () => Promise<{ default: string }>;
+  url?: string;
   alt: string;
   className?: string;
   onClick?: () => void;
@@ -41,7 +55,11 @@ function LazyImage({
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          moduleLoader().then((mod) => setSrc(mod.default));
+          if (url) {
+            setSrc(url);
+          } else if (moduleLoader) {
+            moduleLoader().then((mod) => setSrc(mod.default));
+          }
           observer.disconnect();
         }
       },
@@ -49,7 +67,7 @@ function LazyImage({
     );
     if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
-  }, [moduleLoader]);
+  }, [moduleLoader, url]);
 
   return (
     <div ref={ref} className={className} onClick={onClick}>
@@ -67,7 +85,7 @@ function LazyImage({
   );
 }
 
-type TagEntry = { id: string; name: string };
+
 
 export default function Gallery() {
   usePageMeta({
@@ -76,7 +94,8 @@ export default function Gallery() {
       "Photos and videos from IISc Badminton Club tournaments and events.",
   });
 
-  const { session } = useAuth();
+  const queryClient = useQueryClient();
+  const { session, isAdmin } = useAuth();
   const [, setLocation] = useLocation();
 
   const [activeTab, setActiveTab] = useHashTab(
@@ -84,17 +103,78 @@ export default function Gallery() {
     "albums"
   );
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [likedPhotos, setLikedPhotos] = useState<Set<string>>(new Set());
+  const [subscribedTags, setSubscribedTags] = useState<Set<string>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("gallery_subscriptions") || "[]")); }
+    catch { return new Set(); }
+  });
+
+  const handleLike = (e: React.MouseEvent, path: string) => {
+    e.stopPropagation();
+    setLikedPhotos(prev => {
+      const next = new Set(prev);
+      if (next.has(path)) next.delete(path);
+      else next.add(path);
+      return next;
+    });
+  };
+
+  const handleSubscribe = (e: React.MouseEvent, tag: string) => {
+    e.stopPropagation();
+    setSubscribedTags(prev => {
+      const next = new Set(prev);
+      if (next.has(tag)) {
+        next.delete(tag);
+        toast("Unsubscribed from " + formatText(tag), { icon: <Bell className="w-4 h-4 text-slate-400" /> });
+      } else {
+        next.add(tag);
+        toast.success("Subscribed to " + formatText(tag) + "! You'll be notified of new photos.");
+      }
+      localStorage.setItem("gallery_subscriptions", JSON.stringify([...next]));
+      return next;
+    });
+  };
+
   const [selectedSubfolder, setSelectedSubfolder] = useState("all");
+  const [tagSearch, setTagSearch] = useState("");
+  const [visibleCount, setVisibleCount] = useState(20);
+  const observerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setVisibleCount(20);
+  }, [activeTab, selectedCategory, selectedSubfolder]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((c) => c + 20);
+        }
+      },
+      { rootMargin: "400px" }
+    );
+    if (observerRef.current) observer.observe(observerRef.current);
+    return () => observer.disconnect();
+  }, [activeTab, selectedCategory, selectedSubfolder]);
+
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [videos, setVideos] = useState<any[]>([]);
   const [activeVideo, setActiveVideo] = useState<any | null>(null);
 
-  // ── Player tagging ──────────────────────────────────────────────────────────
+  // ── Admin Selection Mode ────────────────────────────────────────────────────
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedPaths, setSelectedPaths] = useState<Set<string>>(new Set());
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const toggleSelectionMode = () => {
+    setIsSelectionMode(!isSelectionMode);
+    setSelectedPaths(new Set());
+  };
+
   const [galleryTags, setGalleryTags] = useState<Record<string, TagEntry[]>>({});
-  const [showTagPanel, setShowTagPanel] = useState(false);
-  const [tagSearch, setTagSearch] = useState("");
-  const [tagPlayers, setTagPlayers] = useState<Array<{ id: string; full_name: string }>>([]);
+  const [pendingTags, setPendingTags] = useState<Record<string, TagEntry[]>>({});
+  const [tagPlayers, setTagPlayers] = useState<{ id: string; full_name: string; user_id: string | null }[]>([]);
 
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
@@ -145,6 +225,12 @@ export default function Gallery() {
     refetchInterval: 120_000,
   });
 
+  const { data: remotePhotos = [], isLoading: loadingRemote } = useQuery({
+    queryKey: ["gallery-remote-photos"],
+    queryFn: fetchRemoteGalleryImages,
+    refetchInterval: 300_000, // Refetch every 5 minutes
+  });
+
   useEffect(() => {
     if (queryVideos.length > 0) setVideos(queryVideos);
   }, [queryVideos]);
@@ -154,6 +240,9 @@ export default function Gallery() {
     fetchSiteData<Record<string, TagEntry[]>>("gallery_tags", null)
       .then((data) => { if (data) setGalleryTags(data); })
       .catch(() => {});
+    fetchSiteData<Record<string, TagEntry[]>>("gallery_pending_tags", null)
+      .then((data) => { if (data) setPendingTags(data); })
+      .catch(() => {});
   }, []);
 
   // Fetch player list lazily when lightbox first opens
@@ -161,21 +250,18 @@ export default function Gallery() {
     if (selectedIndex !== null && tagPlayers.length === 0) {
       supabase
         .from("players")
-        .select("id, full_name")
+        .select("id, full_name, user_id")
         .is("deleted_at", null)
         .order("full_name")
         .then(({ data }) => { if (data) setTagPlayers(data); });
     }
-    setShowTagPanel(false);
-    setTagSearch("");
   }, [selectedIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const saveTag = async (photoPath: string, player: { id: string; full_name: string }) => {
+  const saveTag = async (photoPath: string, player: { id: string; full_name: string; user_id: string | null }) => {
     const current = galleryTags[photoPath] || [];
     if (current.some((t) => t.id === player.id)) return;
     const updated = { ...galleryTags, [photoPath]: [...current, { id: player.id, name: player.full_name }] };
     setGalleryTags(updated);
-    setShowTagPanel(false);
     await supabase.from("site_data").upsert({ key: "gallery_tags", value: updated }, { onConflict: "key" });
   };
 
@@ -185,25 +271,83 @@ export default function Gallery() {
     await supabase.from("site_data").upsert({ key: "gallery_tags", value: updated }, { onConflict: "key" });
   };
 
+  const requestTag = async (photoPath: string) => {
+    if (!session?.user) return;
+    const currentUserPlayer = tagPlayers.find((p) => p.user_id === session.user.id);
+    if (!currentUserPlayer) {
+      toast.error("Your player profile could not be found.");
+      return;
+    }
+
+    const currentPending = pendingTags[photoPath] || [];
+    if (currentPending.some((t) => t.id === currentUserPlayer.id)) return;
+    
+    const updated = { ...pendingTags, [photoPath]: [...currentPending, { id: currentUserPlayer.id, name: currentUserPlayer.full_name }] };
+    setPendingTags(updated);
+    await supabase.from("site_data").upsert({ key: "gallery_pending_tags", value: updated }, { onConflict: "key" });
+    toast.success("Tag request sent!");
+  };
+
+  const approveTag = async (photoPath: string, tag: TagEntry) => {
+    // Add to galleryTags
+    const currentTags = galleryTags[photoPath] || [];
+    const updatedTags = { ...galleryTags, [photoPath]: [...currentTags, tag] };
+    setGalleryTags(updatedTags);
+    await supabase.from("site_data").upsert({ key: "gallery_tags", value: updatedTags }, { onConflict: "key" });
+
+    // Remove from pendingTags
+    const currentPending = pendingTags[photoPath] || [];
+    const updatedPending = { ...pendingTags, [photoPath]: currentPending.filter((t) => t.id !== tag.id) };
+    setPendingTags(updatedPending);
+    await supabase.from("site_data").upsert({ key: "gallery_pending_tags", value: updatedPending }, { onConflict: "key" });
+  };
+
+  const rejectTag = async (photoPath: string, tag: TagEntry) => {
+    // Remove from pendingTags
+    const currentPending = pendingTags[photoPath] || [];
+    const updatedPending = { ...pendingTags, [photoPath]: currentPending.filter((t) => t.id !== tag.id) };
+    setPendingTags(updatedPending);
+    await supabase.from("site_data").upsert({ key: "gallery_pending_tags", value: updatedPending }, { onConflict: "key" });
+  };
+
   // ── LAZY glob (not eager) ──────────────────────────────────────────
   const imageModules = import.meta.glob("/src/assets/gallery/**/*.{png,webp}", {
     eager: false,
   }) as Record<string, () => Promise<{ default: string }>>;
 
   const formatText = (text: string) =>
-    text.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    text.replace(/[-_]/g, " ").replace(/\//g, " > ").replace(/\b\w/g, (c) => c.toUpperCase());
 
-  const galleryItems = Object.entries(imageModules).map(
+  const localGalleryItems = Object.entries(imageModules).map(
     ([path, loader], index) => {
       const cleanPath = path.replace("/src/assets/gallery/", "");
       const parts = cleanPath.split("/");
       const category = parts[0];
-      const subfolder = parts.length > 2 ? parts[1] : "";
+      const subfolder = parts.length > 2 ? parts.slice(1, -1).join("/") : "";
       const filename = parts[parts.length - 1];
       const title = formatText(filename.replace(/\.[^/.]+$/, ""));
       return { id: index + 1, title, category, subfolder, loader, path: cleanPath };
     },
   );
+
+  type UnifiedGalleryItem = {
+    id: number;
+    title: string;
+    category: string;
+    subfolder: string;
+    path: string;
+    url?: string;
+    loader?: () => Promise<{ default: string }>;
+  };
+
+  // Merge remote items with local items, formatting remote items to match structure
+  const galleryItems: UnifiedGalleryItem[] = [
+    ...localGalleryItems,
+    ...remotePhotos.map((photo, index) => ({
+      ...photo,
+      id: localGalleryItems.length + index + 1,
+    }))
+  ];
 
   const categories = [
     { id: "all", label: "All" },
@@ -230,6 +374,7 @@ export default function Gallery() {
               .map((item) => item.subfolder),
           ),
         );
+
 
   // Read URL params to auto-select album
   useEffect(() => {
@@ -270,9 +415,43 @@ export default function Gallery() {
     return categoryMatch && subfolderMatch;
   });
 
+  const visibleItems = filteredItems.slice(0, visibleCount);
+  
+  const hasOpenedPhoto = useRef(false);
+  useEffect(() => {
+    if (hasOpenedPhoto.current || filteredItems.length === 0) return;
+    const params = new URLSearchParams(window.location.search);
+    const photoParam = params.get("photo");
+    if (photoParam) {
+      const decodedPath = decodeURIComponent(photoParam);
+      const idx = filteredItems.findIndex(i => i.path === decodedPath);
+      if (idx !== -1) {
+        hasOpenedPhoto.current = true;
+        setSelectedIndex(idx);
+        const item = filteredItems[idx];
+        if (item.url) setLightboxSrc(item.url);
+        else if (item.loader) item.loader().then((mod: any) => setLightboxSrc(mod.default));
+      }
+    }
+  }, [filteredItems]);
+
   const openLightbox = (idx: number) => {
+    const item = filteredItems[idx];
+    if (isSelectionMode && session && item.url) {
+      const newSet = new Set(selectedPaths);
+      if (newSet.has(item.path)) newSet.delete(item.path);
+      else newSet.add(item.path);
+      setSelectedPaths(newSet);
+      return;
+    }
+    if (isSelectionMode) return; // Ignore clicks on local images during selection mode
+
     setSelectedIndex(idx);
-    filteredItems[idx].loader().then((mod) => setLightboxSrc(mod.default));
+    if (item.url) {
+      setLightboxSrc(item.url);
+    } else if (item.loader) {
+      item.loader().then((mod) => setLightboxSrc(mod.default));
+    }
   };
 
   const navigate = (dir: 1 | -1) => {
@@ -281,7 +460,12 @@ export default function Gallery() {
       (selectedIndex + dir + filteredItems.length) % filteredItems.length;
     setSelectedIndex(next);
     setLightboxSrc(null);
-    filteredItems[next].loader().then((mod) => setLightboxSrc(mod.default));
+    const item = filteredItems[next];
+    if (item.url) {
+      setLightboxSrc(item.url);
+    } else if (item.loader) {
+      item.loader().then((mod) => setLightboxSrc(mod.default));
+    }
   };
 
   return (
@@ -394,27 +578,39 @@ export default function Gallery() {
                 All Albums
               </button>
               {subfolders.map((sub) => (
-                <button
-                  key={sub}
-                  onClick={() => {
-                    setSelectedSubfolder(sub);
-                    updateUrlFilter(sub, true);
-                  }}
-                  className={`px-5 py-1.5 rounded-full text-sm font-semibold transition ${
-                    selectedSubfolder === sub
-                      ? "bg-blue-900 dark:bg-blue-700 text-white"
-                      : "bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-700"
-                  }`}
-                >
-                  {formatText(sub)}
-                </button>
+                <div key={sub} className="flex items-center gap-1 group relative">
+                  <button
+                    onClick={() => {
+                      setSelectedSubfolder(sub);
+                      updateUrlFilter(sub, true);
+                    }}
+                    className={`px-5 py-1.5 rounded-full text-sm font-semibold transition pr-10 ${
+                      selectedSubfolder === sub
+                        ? "bg-blue-900 dark:bg-blue-700 text-white shadow-md"
+                        : "bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-700"
+                    }`}
+                  >
+                    {formatText(sub)}
+                  </button>
+                  <button
+                    onClick={(e) => handleSubscribe(e, sub)}
+                    className={`absolute right-1.5 p-1.5 rounded-full transition-colors ${
+                      subscribedTags.has(sub) 
+                        ? "text-emerald-400 hover:text-emerald-500 bg-emerald-500/10" 
+                        : "text-gray-400 hover:text-emerald-500 hover:bg-emerald-500/10 opacity-0 group-hover:opacity-100"
+                    }`}
+                    title={subscribedTags.has(sub) ? "Unsubscribe" : "Subscribe to notifications"}
+                  >
+                    {subscribedTags.has(sub) ? <BellRing className="w-3.5 h-3.5" /> : <Bell className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
               ))}
             </div>
           )}
 
           {/* ── Masonry Gallery ── */}
           <div className="columns-2 md:columns-3 lg:columns-4 gap-4">
-            {filteredItems.map((item, idx) => {
+            {visibleItems.map((item, idx) => {
               // Vary aspect ratio for true masonry feel
               const aspectClass =
                 idx % 5 === 0
@@ -425,16 +621,30 @@ export default function Gallery() {
               return (
                 <div
                   key={item.id}
-                  className={`group relative ${aspectClass} overflow-hidden rounded-2xl cursor-pointer shadow-sm hover:shadow-xl transition-all duration-500 opacity-0 mb-4 break-inside-avoid`}
+                  className={`group relative ${aspectClass} overflow-hidden rounded-2xl cursor-pointer shadow-sm hover:shadow-xl transition-all duration-500 opacity-0 mb-4 break-inside-avoid ${isSelectionMode && selectedPaths.has(item.path) ? "ring-4 ring-red-500 scale-[0.98]" : ""}`}
                   style={{
                     animation: `fadeSlideUp 0.4s ease forwards`,
                     animationDelay: `${Math.min(idx * 40, 800)}ms`,
                   }}
                   onClick={() => openLightbox(idx)}
                 >
+                  {/* Selection Checkbox */}
+                  {isSelectionMode && session && item.url && (
+                    <div className="absolute top-3 left-3 z-20">
+                      {selectedPaths.has(item.path) ? (
+                        <div className="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg">
+                          <CheckCircle2 className="w-4 h-4" />
+                        </div>
+                      ) : (
+                        <div className="w-6 h-6 rounded-full bg-black/40 border-2 border-white/80 text-transparent flex items-center justify-center shadow-lg backdrop-blur-sm" />
+                      )}
+                    </div>
+                  )}
+
                   {/* Lazy image */}
                   <LazyImage
                     moduleLoader={item.loader}
+                    url={item.url}
                     alt={item.title}
                     className="w-full h-full"
                   />
@@ -454,6 +664,12 @@ export default function Gallery() {
               );
             })}
           </div>
+
+          {visibleCount < filteredItems.length && (
+            <div ref={observerRef} className="h-20 w-full flex items-center justify-center mt-8">
+              <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
 
           {filteredItems.length === 0 && (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
@@ -691,100 +907,88 @@ export default function Gallery() {
             <ChevronRight className="w-8 h-8 md:w-10 md:h-10" />
           </button>
 
-          <div className="absolute bottom-0 left-0 right-0 px-4 pb-4 pt-2 z-50 flex flex-col items-center gap-2">
-            {selectedIndex !== null && (() => {
-              const item = filteredItems[selectedIndex];
-              const tags = galleryTags[item?.path] || [];
-              const filteredPlayers = tagPlayers.filter((p) =>
-                p.full_name.toLowerCase().includes(tagSearch.toLowerCase())
-              );
-              return (
-                <>
-                  <p className="text-white text-base md:text-xl font-bold tracking-wide drop-shadow-lg leading-tight text-center">
-                    {item?.title}
-                  </p>
-                  {item?.subfolder && (
-                    <p className="text-emerald-300 font-medium text-xs uppercase tracking-widest drop-shadow">
-                      {formatText(item.subfolder)}
-                    </p>
-                  )}
-
-                  {/* Tagged player chips */}
-                  {tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 justify-center">
-                      {tags.map((tag) => (
-                        <div
-                          key={tag.id}
-                          className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 backdrop-blur-sm border border-white/20 text-white text-xs font-bold px-3 py-1 rounded-full cursor-pointer transition-colors group"
-                          onClick={(e) => { e.stopPropagation(); setLocation(`/player/${tag.id}`); }}
-                        >
-                          <Tag className="w-3 h-3 text-emerald-400" />
-                          {tag.name}
-                          {session && (
-                            <button
-                              className="ml-1 text-white/40 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
-                              onClick={(e) => { e.stopPropagation(); removeTag(item.path, tag.id); }}
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Tag a player button + panel */}
-                  {session && (
-                    <div className="relative">
-                      <button
-                        className="flex items-center gap-1.5 text-white/50 hover:text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 hover:bg-white/10 transition-all"
-                        onClick={(e) => { e.stopPropagation(); setShowTagPanel((v) => !v); setTagSearch(""); }}
+          <div className="absolute bottom-0 left-0 right-0 px-4 pb-28 md:pb-6 pt-24 bg-gradient-to-t from-black/90 via-black/50 to-transparent z-50 flex flex-col items-center gap-2 pointer-events-none">
+            <div className="pointer-events-auto flex flex-col items-center gap-2 w-full max-w-4xl">
+              {selectedIndex !== null && (() => {
+                const item = filteredItems[selectedIndex];
+                const tags = galleryTags[item?.path] || [];
+                const filteredPlayers = tagPlayers.filter((p) =>
+                  p.full_name.toLowerCase().includes(tagSearch.toLowerCase())
+                );
+                return (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <p className="text-white text-base md:text-xl font-bold tracking-wide drop-shadow-lg leading-tight text-center">
+                        {item?.title}
+                      </p>
+                      <motion.button
+                        onClick={(e) => handleLike(e, item?.path || "")}
+                        whileTap={{ scale: 0.8 }}
+                        animate={likedPhotos.has(item?.path || "") ? { scale: [1, 1.4, 1] } : {}}
+                        transition={{ duration: 0.3 }}
+                        className="p-2 -mr-2"
                       >
-                        <UserPlus className="w-3.5 h-3.5" /> Tag a player
-                      </button>
-
-                      {showTagPanel && (
-                        <div
-                          className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-64 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <div className="p-2 border-b border-slate-700 flex items-center gap-2">
-                            <Search className="w-4 h-4 text-slate-400 shrink-0" />
-                            <input
-                              autoFocus
-                              value={tagSearch}
-                              onChange={(e) => setTagSearch(e.target.value)}
-                              placeholder="Search player…"
-                              className="flex-1 bg-transparent text-white text-sm placeholder-slate-500 outline-none"
-                            />
-                          </div>
-                          <div className="max-h-48 overflow-y-auto">
-                            {filteredPlayers.length === 0 ? (
-                              <p className="text-slate-500 text-xs text-center py-4">No players found</p>
-                            ) : (
-                              filteredPlayers.map((p) => (
-                                <button
-                                  key={p.id}
-                                  className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-emerald-600/20 transition-colors flex items-center gap-2"
-                                  onClick={() => saveTag(item.path, p)}
-                                >
-                                  <UserPlus className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                                  {p.full_name}
-                                </button>
-                              ))
-                            )}
-                          </div>
-                        </div>
-                      )}
+                        <Heart 
+                          className={`w-6 h-6 md:w-7 md:h-7 drop-shadow-lg transition-colors ${
+                            likedPhotos.has(item?.path || "") 
+                              ? "fill-rose-500 text-rose-500" 
+                              : "text-white hover:text-rose-400"
+                          }`} 
+                        />
+                      </motion.button>
                     </div>
-                  )}
+                    {item?.subfolder && (
+                      <p className="text-emerald-300 font-medium text-xs uppercase tracking-widest drop-shadow-md">
+                        {formatText(item.subfolder)}
+                      </p>
+                    )}
 
+                  {/* Extracted Tagging Component */}
+                  <GalleryLightboxTags
+                    key={item?.path}
+                    itemPath={item?.path || ""}
+                    tags={tags}
+                    pendingTags={pendingTags[item?.path] || []}
+                    session={session}
+                    isAdmin={isAdmin}
+                    tagPlayers={tagPlayers}
+                    setLocation={setLocation}
+                    removeTag={removeTag}
+                    approveTag={approveTag}
+                    rejectTag={rejectTag}
+                    requestTag={requestTag}
+                    saveTag={saveTag}
+                  />
+
+                  {/* Remove Button for Remote Photos */}
+                  {item?.url && (
+                      <button
+                        className="flex items-center gap-1.5 text-white/50 hover:text-red-400 text-xs font-bold px-3 py-1.5 rounded-full border border-white/20 hover:border-red-400/40 hover:bg-red-400/10 transition-all"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          if (confirm("Remove this photo from the gallery?")) {
+                            try {
+                              await deleteRemoteGalleryImage(item.path);
+                              toast.success("Photo removed from gallery");
+                              setSelectedIndex(null);
+                              setLightboxSrc(null);
+                              queryClient.invalidateQueries({ queryKey: ["gallery-remote-photos"] });
+                            } catch (err) {
+                              toast.error("Failed to remove photo");
+                            }
+                          }
+                        }}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Remove
+                      </button>
+                    )}
                   <p className="text-white/30 text-[10px] mt-1 hidden sm:block">
                     ← → to navigate &nbsp;·&nbsp; Esc to close
                   </p>
                 </>
               );
             })()}
+            </div>
           </div>
         </div>
       )}
@@ -797,6 +1001,68 @@ export default function Gallery() {
             onClose={() => setActiveVideo(null)}
           />
         </Suspense>
+      )}
+      {/* Admin Uploader */}
+      {session && <GalleryUploader remotePhotos={remotePhotos} />}
+
+      {/* Admin Bulk Selection Toolbar */}
+      {session && (activeTab === "albums" || activeTab === "photos") && (
+        <div className="fixed bottom-24 sm:bottom-6 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-3">
+          {isSelectionMode ? (
+            <div className="bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 animate-in slide-in-from-bottom-5">
+              <span className="font-bold">{selectedPaths.size} selected</span>
+              <button
+                className="text-emerald-400 hover:text-emerald-300 font-bold transition flex items-center gap-2 text-sm whitespace-nowrap"
+                onClick={() => {
+                  const remotePaths = filteredItems.filter(i => i.url).map(i => i.path);
+                  if (selectedPaths.size === remotePaths.length && remotePaths.length > 0) {
+                    setSelectedPaths(new Set());
+                  } else {
+                    setSelectedPaths(new Set(remotePaths));
+                  }
+                }}
+              >
+                {selectedPaths.size > 0 && selectedPaths.size === filteredItems.filter(i => i.url).length ? "Deselect All" : "Select All"}
+              </button>
+              <div className="w-px h-6 bg-slate-700" />
+              <button
+                className="text-red-400 hover:text-red-300 font-bold transition flex items-center gap-2 disabled:opacity-50 whitespace-nowrap"
+                disabled={selectedPaths.size === 0 || isDeleting}
+                onClick={async () => {
+                  if (confirm(`Delete ${selectedPaths.size} images permanently?`)) {
+                    setIsDeleting(true);
+                    try {
+                      await deleteRemoteGalleryImages(Array.from(selectedPaths));
+                      toast.success(`Deleted ${selectedPaths.size} images!`);
+                      setIsSelectionMode(false);
+                      setSelectedPaths(new Set());
+                      queryClient.invalidateQueries({ queryKey: ["gallery-remote-photos"] });
+                    } catch (err) {
+                      toast.error("Failed to delete images.");
+                    } finally {
+                      setIsDeleting(false);
+                    }
+                  }
+                }}
+              >
+                {isDeleting ? "Deleting..." : "Delete Selected"}
+              </button>
+              <button
+                className="text-slate-400 hover:text-white transition font-medium ml-2"
+                onClick={toggleSelectionMode}
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              className="bg-slate-900/80 hover:bg-slate-900 backdrop-blur-md text-white px-6 py-3 rounded-full shadow-2xl font-bold transition-all hover:scale-105 active:scale-95"
+              onClick={toggleSelectionMode}
+            >
+              Select Photos
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

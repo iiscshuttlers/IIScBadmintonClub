@@ -119,7 +119,7 @@ export default function Marketplace() {
             </div>
 
             {/* Categories Scroller */}
-            <div className="max-w-5xl mx-auto px-4 py-3 overflow-x-auto no-scrollbar flex items-center gap-2">
+            <div className="max-w-5xl mx-auto px-4 py-3 grid grid-cols-2 md:flex md:flex-wrap items-center gap-2">
               {categories.map(cat => (
                 <button
                   key={cat}

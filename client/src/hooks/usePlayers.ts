@@ -50,3 +50,11 @@ export function usePendingMatches(profileId?: string) {
     enabled: !!profileId,
   });
 }
+
+export function useAllMatches() {
+  return useQuery({
+    queryKey: ["matches", "all_completed"],
+    queryFn: () => playerService.getAllCompletedMatches(),
+    staleTime: 1000 * 60 * 10,
+  });
+}

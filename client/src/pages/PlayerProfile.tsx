@@ -2,6 +2,8 @@ import { useParams, useLocation, Link } from "wouter";
 import { useEffect, useState, useMemo } from "react";
 import { useHashTab } from "@/hooks/useHashTab";
 import { useAuth } from "@/contexts/AuthContext";
+import { Capacitor } from "@capacitor/core";
+import { Filesystem, Directory } from "@capacitor/filesystem";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -33,6 +35,7 @@ import { PlayerAnalyticsWidget } from "@/components/player-profile/PlayerAnalyti
 import { ActivityHeatmap } from "@/components/player-profile/PlayerProfileWidgets";
 import { DoublesSynergyWidget } from "@/components/player-profile/PlayerProfileWidgets";
 import { Badges } from "@/components/player-profile/PlayerProfileWidgets";
+import { PlayerPhotosSection } from "@/components/player-profile/PlayerPhotosSection";
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { ChallengeModal } from "@/components/ChallengeModal";
@@ -75,7 +78,7 @@ export default function PlayerProfile() {
   const { theme } = useTheme();
 
   // Load active tab from hash
-  const [activeTab, setActiveTab] = useHashTab(["OVERVIEW", "RANKING", "STATS", "MATCHES"] as const, "OVERVIEW");
+  const [activeTab, setActiveTab] = useHashTab(["OVERVIEW", "RANKING", "STATS", "MATCHES", "PHOTOS"] as const, "OVERVIEW");
 
   const [isChallengeModalOpen, setIsChallengeModalOpen] = useState(false);
   const [showEloAudit, setShowEloAudit] = useState(false);
@@ -142,15 +145,62 @@ export default function PlayerProfile() {
     if (!player) return;
     try {
       const shareUrl = `${getBaseShareUrl()}/player/${player.id}`;
-      if (navigator.share) {
-        await navigator.share({
+      const shareText = `🏸 ${player.fullName}'s Badminton Profile\n🏆 ELO Rating: ${player.elo_rating || 1200}\n📈 Win Rate: ${splitStats?.all?.winPct || 0}%\n⚔️ Matches Played: ${splitStats?.all?.total || 0}\n\nCheck out the full stats here:\n${shareUrl}`;
+
+      let file: File | undefined;
+      if (player.avatar) {
+        try {
+          // Add cache-busting to bypass CORS issues if any, though Supabase storage usually has CORS enabled
+          const response = await fetch(player.avatar + '?download=true');
+          const blob = await response.blob();
+          file = new File([blob], "profile_picture.jpg", { type: blob.type || "image/jpeg" });
+        } catch (e) {
+          console.error("Failed to fetch avatar for sharing", e);
+        }
+      }
+
+      if (Capacitor.isNativePlatform()) {
+        let localUri = "";
+        if (file) {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          await new Promise<void>((resolve) => {
+            reader.onloadend = async () => {
+              const base64data = (reader.result as string).split(',')[1];
+              const result = await Filesystem.writeFile({
+                path: `share_avatar_${Date.now()}.jpg`,
+                data: base64data,
+                directory: Directory.Cache
+              });
+              localUri = result.uri;
+              resolve();
+            };
+          });
+        }
+
+        await Share.share({
           title: `${player.fullName} - Player Profile`,
-          text: `Check out ${player.fullName}'s badminton profile!`,
-          url: shareUrl,
+          text: shareText,
+          url: localUri || shareUrl,
+          dialogTitle: 'Share Profile'
         });
       } else {
-        await navigator.clipboard.writeText(shareUrl);
-        toast.success("Profile link copied to clipboard!");
+        const shareData: any = {
+          title: `${player.fullName} - Player Profile`,
+          text: shareText,
+        };
+
+        // NOTE: We intentionally do NOT include `files` here for the Web fallback. 
+        // The Web Share API is notoriously buggy across different OS/Browser combinations. 
+        // If `files` is included, many share targets (like WhatsApp on Windows/Android) 
+        // will completely drop the `text` and `url` and ONLY share the image.
+        
+        if (navigator.share) {
+          await navigator.share(shareData);
+        } else {
+          await navigator.clipboard.writeText(shareText);
+          toast.success("Profile info copied to clipboard!");
+        }
       }
     } catch (err) {
       console.error("Error sharing:", err);
@@ -172,27 +222,55 @@ export default function PlayerProfile() {
       });
       if (!canvas) throw new Error("Failed to render canvas");
       const dataUrl = canvas.toDataURL("image/png");
-      const byteString = atob(dataUrl.split(",")[1]);
-      const ab = new ArrayBuffer(byteString.length);
-      const ia = new Uint8Array(ab);
-      for (let i = 0; i < byteString.length; i++) {
-        ia[i] = byteString.charCodeAt(i);
-      }
-      const file = new File([ab], "wrapped_2024.png", { type: "image/png" });
+      const base64Data = dataUrl.split(",")[1];
 
-      if (navigator.share) {
-        toast.dismiss(toastId);
-        await navigator.share({
+      toast.dismiss(toastId);
+
+      if (Capacitor.isNativePlatform()) {
+        const fileName = `wrapped_2024_${Date.now()}.png`;
+        const result = await Filesystem.writeFile({
+          path: fileName,
+          data: base64Data,
+          directory: Directory.Cache
+        });
+        
+        await Share.share({
           title: "My 2024 Badminton Wrapped",
           text: "Check out my badminton stats for 2024!",
-          files: [file],
+          url: result.uri,
+          dialogTitle: 'Share your Wrapped'
         });
       } else {
-        const link = document.createElement("a");
-        link.href = dataUrl;
-        link.download = "wrapped_2024.png";
-        link.click();
-        toast.success("Wrapped image downloaded!", { id: toastId });
+        const byteString = atob(base64Data);
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i);
+        }
+        const file = new File([ab], "wrapped_2024.png", { type: "image/png" });
+
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: "My 2024 Badminton Wrapped",
+              text: "Check out my badminton stats for 2024!",
+              files: [file],
+            });
+          } catch (e) {
+            // Fallback if sharing files is unsupported
+            const link = document.createElement("a");
+            link.href = dataUrl;
+            link.download = "wrapped_2024.png";
+            link.click();
+            toast.success("Wrapped image downloaded!");
+          }
+        } else {
+          const link = document.createElement("a");
+          link.href = dataUrl;
+          link.download = "wrapped_2024.png";
+          link.click();
+          toast.success("Wrapped image downloaded!");
+        }
       }
     } catch (err) {
       console.error(err);
@@ -240,10 +318,65 @@ export default function PlayerProfile() {
               onClick={() => exportProfilePdf({
                 name: player.fullName,
                 elo: player.elo_rating || 1200,
-                wins: player.stats?.wins || 0,
-                losses: player.stats?.losses || 0,
+                wins: splitStats?.all?.wins || 0,
+                losses: splitStats?.all?.losses || 0,
+                rank: eloRank?.overall,
+                streak: streakStats?.max || 0,
                 avatarUrl: player.avatar,
-                recentMatches: []
+                recentMatches: (liveMatches || []).slice(0, 15).map((m: any) => {
+                  const isTeam1 = m.player1?.id === player.id || m.partner1?.id === player.id;
+                  
+                  let me, partner, opponents: any[] = [];
+                  if (isTeam1) {
+                    me = m.player1?.id === player.id ? m.player1 : m.partner1;
+                    partner = m.player1?.id === player.id ? m.partner1 : m.player1;
+                    if (m.player2) opponents.push(m.player2);
+                    if (m.partner2) opponents.push(m.partner2);
+                  } else {
+                    me = m.player2?.id === player.id ? m.player2 : m.partner2;
+                    partner = m.player2?.id === player.id ? m.partner2 : m.player2;
+                    if (m.player1) opponents.push(m.player1);
+                    if (m.partner1) opponents.push(m.partner1);
+                  }
+
+                  let formatLabel = "S";
+                  const allGenders = [me?.gender, partner?.gender, ...opponents.map(o => o?.gender)]
+                    .map(g => (g || '').toLowerCase())
+                    .filter(Boolean);
+                    
+                  if (partner || opponents.length > 1) {
+                    const hasMale = allGenders.includes('male');
+                    const hasFemale = allGenders.includes('female');
+                    if (hasMale && hasFemale) formatLabel = "XD";
+                    else if (hasFemale) formatLabel = "WD";
+                    else formatLabel = "MD";
+                  } else {
+                    if (me?.gender?.toLowerCase() === 'female' || opponents[0]?.gender?.toLowerCase() === 'female') {
+                      formatLabel = "WS";
+                    } else {
+                      formatLabel = "MS";
+                    }
+                  }
+
+                  let displayScore = m.score || m.match_score || "";
+                  if (displayScore.includes(" | ")) displayScore = displayScore.split(" | ")[0];
+                  displayScore = displayScore.replace(/\s*\[.*$/, "").trim();
+
+                  const getFirstName = (p: any) => p?.full_name?.split(" ")[0] || "";
+                  const opponentStr = opponents.map(getFirstName).filter(Boolean).join(" & ");
+
+                  const isTeam1Winner = m.winner_id === m.player1_id || (m.team1_partner_id && m.winner_id === m.team1_partner_id);
+                  const won = isTeam1 ? isTeam1Winner : !isTeam1Winner;
+
+                  return {
+                    date: m.date_played || m.created_at || new Date().toISOString(),
+                    opponent: opponentStr,
+                    partner: partner ? getFirstName(partner) : undefined,
+                    score: displayScore,
+                    result: won ? "W" : "L",
+                    format: formatLabel
+                  };
+                })
               })}
               className="px-3 md:px-5 py-2 md:py-2.5 h-10 md:h-12 bg-black/20 hover:bg-black/40 backdrop-blur-md text-white font-black text-xs md:text-sm uppercase tracking-wider rounded-full flex items-center gap-2 transition-all border border-white/20 whitespace-nowrap"
             >
@@ -251,7 +384,7 @@ export default function PlayerProfile() {
               <span className="sm:hidden">PDF</span>
             </button>
             {currentUser && currentUser.id === player.userId && (
-              <Link href="/profile/edit">
+              <Link href="/profile/setup">
                 <button className="w-10 h-10 md:w-12 md:h-12 bg-black/20 hover:bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center transition-all">
                   <Settings className="w-4 h-4 md:w-5 md:h-5" />
                 </button>
@@ -269,7 +402,7 @@ export default function PlayerProfile() {
         </div>
 
         {/* Hero Section */}
-        <PlayerHeroBanner player={player} eloRank={eloRank} theme={theme} />
+        <PlayerHeroBanner player={player} eloRank={eloRank?.overall || null} theme={theme} />
 
         <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pb-8 mt-2 md:mt-8">
           <div className="flex flex-col lg:flex-row gap-6 justify-between items-start">
@@ -284,13 +417,13 @@ export default function PlayerProfile() {
 
         {/* Tab Navigation */}
         <div className="w-full border-b border-slate-200 dark:border-amber-900/20 bg-white dark:bg-[#0a1628] sticky top-0 z-30 shadow-sm dark:shadow-amber-900/10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 overflow-x-auto hide-scrollbar">
-            <div className="flex items-center gap-8 min-w-max">
-              {["OVERVIEW", "RANKING", "STATS", "MATCHES"].map((tab) => (
+          <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-10">
+            <div className="grid grid-cols-2 md:flex md:items-center gap-x-2 md:gap-8 w-full md:min-w-max">
+              {["OVERVIEW", "RANKING", "STATS", "MATCHES", "PHOTOS"].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab as any)}
-                  className={`py-4 text-sm font-black tracking-widest uppercase transition-colors relative ${
+                  className={`py-3 md:py-4 text-xs md:text-sm font-black tracking-widest uppercase transition-colors relative ${
                     activeTab === tab
                       ? "text-amber-600 dark:text-amber-400"
                       : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-300"
@@ -395,6 +528,7 @@ export default function PlayerProfile() {
                 HeadToHeadWidget={HeadToHeadWidget}
                 Badges={Badges}
                 id={id!}
+                eloRank={eloRank}
               />
             )}
 
@@ -425,6 +559,10 @@ export default function PlayerProfile() {
                 handleResendRequest={handleResendRequest}
               />
             )}
+
+            {activeTab === "PHOTOS" && (
+              <PlayerPhotosSection playerId={id!} />
+            )}
           </div>
 
           {/* ── RIGHT COLUMN ── */}
@@ -433,6 +571,7 @@ export default function PlayerProfile() {
               <ProfileOverviewTabRight
                 player={player}
                 validAchievements={validAchievements}
+                splitStats={splitStats}
               />
             )}
             {activeTab === "STATS" && (

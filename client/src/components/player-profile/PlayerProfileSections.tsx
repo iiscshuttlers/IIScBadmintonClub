@@ -490,3 +490,4 @@ export function CareerHighlightsSection({ player }: { player: any }) {
     </motion.section>
   );
 }
+

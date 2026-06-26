@@ -16,11 +16,13 @@ export function useProfileBasicState() {
   const [avatarUrl, setAvatarUrl] = useState("");
   const [gender, setGender] = useState("");
   const [isGuest, setIsGuest] = useState(false);
+  const [isRetired, setIsRetired] = useState(false);
 
   return {
     fullName, setFullName, nickname, setNickname, status, setStatus, iiscEmail, setIiscEmail,
     contactNumber, setContactNumber, department, setDepartment, customDepartment, setCustomDepartment,
     joinedYear, setJoinedYear, nationality, setNationality, homeState, setHomeState, height, setHeight,
     instagram, setInstagram, avatarUrl, setAvatarUrl, gender, setGender, isGuest, setIsGuest,
+    isRetired, setIsRetired,
   };
 }

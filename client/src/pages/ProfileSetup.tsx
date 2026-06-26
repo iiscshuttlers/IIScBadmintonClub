@@ -76,7 +76,7 @@ export default function ProfileSetup() {
           </div>
 
           {/* Sleek Tab Navigation */}
-          <div className="-mx-4 sm:mx-0 px-4 sm:px-0 flex border-b border-slate-200 dark:border-slate-800 mb-6 sm:mb-8 overflow-x-auto gap-2 pb-2 scrollbar-none snap-x">
+          <div className="-mx-4 sm:mx-0 px-4 sm:px-0 grid grid-cols-2 md:flex md:flex-wrap border-b border-slate-200 dark:border-slate-800 mb-6 sm:mb-8 gap-2 pb-2">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = setup.activeTab === tab.id;
@@ -90,8 +90,8 @@ export default function ProfileSetup() {
                       : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900/50"
                     }`}
                 >
-                  <Icon className="w-4 h-4" />
-                  {tab.label}
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{tab.label}</span>
                 </button>
               );
             })}
@@ -112,6 +112,7 @@ export default function ProfileSetup() {
                     isGuest={setup.isGuest} setIsGuest={setup.setIsGuest}
                     department={setup.department} setDepartment={setup.setDepartment}
                     customDepartment={setup.customDepartment} setCustomDepartment={setup.setCustomDepartment}
+                    isRetired={setup.isRetired} setIsRetired={setup.setIsRetired}
                     handleAvatarUpload={setup.handleAvatarUpload}
                   />
                 )}

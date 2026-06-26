@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Bell, Pin, CalendarDays } from "lucide-react";
@@ -51,6 +51,21 @@ export function AnnouncementsSection() {
   >([]);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(10);
+  const observerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((c) => c + 10);
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    if (observerRef.current) observer.observe(observerRef.current);
+    return () => observer.disconnect();
+  }, [loading, selectedCategory]);
 
   function sortByNewest(items: Announcement[]) {
     return [...items].sort(
@@ -126,6 +141,8 @@ export function AnnouncementsSection() {
       : recentAnnouncements.filter(
           (item) => item.category === selectedCategory,
         );
+
+  const visibleRecent = filteredRecent.slice(0, visibleCount);
 
   function getStatus(item: Announcement) {
     const today = new Date();
@@ -280,7 +297,7 @@ export function AnnouncementsSection() {
             {/* Filter */}
             <section className="py-6 border-b bg-white dark:bg-slate-950 sticky top-16 z-10 shadow-sm">
               <div className="container mx-auto px-4">
-                <div className="flex flex-wrap gap-2.5 justify-center">
+                <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2.5 justify-center">
                   {categories.map((cat) => (
                     <button
                       key={cat.id}
@@ -319,8 +336,9 @@ export function AnnouncementsSection() {
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    {filteredRecent.map((item, index) => {
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      {visibleRecent.map((item, index) => {
                       const status = getStatus(item);
 
                       return (
@@ -393,6 +411,13 @@ export function AnnouncementsSection() {
                       );
                     })}
                   </div>
+                  
+                  {visibleCount < filteredRecent.length && (
+                    <div ref={observerRef} className="h-20 w-full flex items-center justify-center mt-6">
+                      <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  )}
+                  </>
                 )}
               </div>
             </section>

@@ -268,14 +268,14 @@ export default function Navigation() {
                     setViewAsRole={setViewAsRole}
                   />
                 ) : (
-                  <button onClick={() => {
+                  <div onClick={() => {
                     sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
                     setLocation("/join");
-                  }}>
-                    <Button className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 rounded-full h-8 shadow-sm cursor-pointer">
+                  }} className="cursor-pointer">
+                    <Button className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 rounded-full h-8 shadow-sm cursor-pointer pointer-events-none">
                       <LogIn className="w-3.5 h-3.5" /> Sign In
                     </Button>
-                  </button>
+                  </div>
                 )
               )}
             </div>
@@ -459,7 +459,7 @@ export default function Navigation() {
                     </button>
                   </div>
                 ) : (
-                  <button onClick={() => {
+                  <div onClick={() => {
                     sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
                     setIsOpen(false);
                     setLocation("/join");
@@ -467,7 +467,7 @@ export default function Navigation() {
                     <Button className="w-full flex items-center gap-2 justify-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl h-11 cursor-pointer mt-1">
                       <LogIn className="w-4 h-4" /> Sign In to your account
                     </Button>
-                  </button>
+                  </div>
                 )}
               </div>
               </div>

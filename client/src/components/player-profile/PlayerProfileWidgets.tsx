@@ -372,9 +372,18 @@ export const ActivityHeatmap = ({ matches }: { matches: any[] }) => {
     setHeatmapData(data);
   }, [matches]);
 
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   const endDate = new Date();
   const startDate = new Date();
-  startDate.setMonth(startDate.getMonth() - 11);
+  startDate.setMonth(startDate.getMonth() - (isMobile ? 2 : 11));
 
   return (
     <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-5 sm:p-6 shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 mt-6 md:mt-8 overflow-hidden">
@@ -387,7 +396,7 @@ export const ActivityHeatmap = ({ matches }: { matches: any[] }) => {
         )}
       </h3>
       <div className="overflow-x-auto pb-4 custom-scrollbar">
-        <div style={{ minWidth: "600px" }}>
+        <div style={{ minWidth: isMobile ? "auto" : "600px" }}>
           <CalendarHeatmap
             startDate={startDate}
             endDate={endDate}
@@ -438,6 +447,7 @@ export const ActivityHeatmap = ({ matches }: { matches: any[] }) => {
               const format = match.category === "Singles" ? "Singles" : (match.team1_partner_id ? (match.player1?.gender !== match.partner1?.gender ? "Mixed Doubles" : "Doubles") : "Doubles");
               let displayScore = match.score || "N/A";
               if (displayScore.includes(" | ")) displayScore = displayScore.split(" | ")[0];
+              displayScore = displayScore.replace(/\[.*?\]/g, "").trim();
               
               return (
                 <div key={match.id} className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800 flex flex-col gap-2">
@@ -615,16 +625,16 @@ export const DoublesSynergyWidget = ({
 
       if (m.player1_id === playerId && m.team1_partner_id) {
         partnerId = m.team1_partner_id;
-        myTeamWon = m.match_winner_id === m.player1_id;
+        myTeamWon = m.winner_id === m.player1_id;
       } else if (m.team1_partner_id === playerId) {
         partnerId = m.player1_id;
-        myTeamWon = m.match_winner_id === m.player1_id;
+        myTeamWon = m.winner_id === m.player1_id;
       } else if (m.player2_id === playerId && m.team2_partner_id) {
         partnerId = m.team2_partner_id;
-        myTeamWon = m.match_winner_id === m.player2_id;
+        myTeamWon = m.winner_id === m.player2_id;
       } else if (m.team2_partner_id === playerId) {
         partnerId = m.player2_id;
-        myTeamWon = m.match_winner_id === m.player2_id;
+        myTeamWon = m.winner_id === m.player2_id;
       }
 
       if (partnerId) {
@@ -646,12 +656,13 @@ export const DoublesSynergyWidget = ({
     }));
     return arr
       .sort((a, b) => b.winPct - a.winPct || b.total - a.total)
-      .filter((x) => x.total >= 3);
+      .filter((x) => x.total >= 1);
   }, [matches, playerId, allPlayers]);
 
   if (synergy.length === 0) return null;
 
   const bestPartner = synergy[0];
+  const runnerUps = synergy.slice(1, 3);
 
   return (
     <div className="bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-950/40 dark:to-emerald-950/40 rounded-3xl p-5 border border-teal-100 dark:border-teal-800/50 shadow-sm relative overflow-hidden mt-6">
@@ -684,6 +695,31 @@ export const DoublesSynergyWidget = ({
           {bestPartner.wins} Wins in {bestPartner.total} Matches together
         </div>
       </div>
+      
+      {runnerUps.length > 0 && (
+        <div className="relative z-10 mt-5 pt-4 border-t border-teal-200/50 dark:border-teal-800/50">
+          <div className="text-[10px] font-black uppercase tracking-widest text-teal-600/50 dark:text-teal-400/50 mb-3">
+            Other Partners
+          </div>
+          <div className="space-y-3">
+            {runnerUps.map((partner) => (
+              <div key={partner.id} className="flex items-center justify-between">
+                <div className="text-sm font-bold text-teal-800 dark:text-teal-200">
+                  {partner.name}
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-black text-teal-700 dark:text-teal-400">
+                    {Math.round(partner.winPct * 100)}%
+                  </div>
+                  <div className="text-[9px] font-bold text-teal-600/60 dark:text-teal-400/60 uppercase">
+                    {partner.wins}W - {partner.total - partner.wins}L
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
