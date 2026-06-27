@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { Trophy, Swords, Sparkles, TrendingUp, Heart, Share2, Video, Edit2, BarChart2, Trash2 } from "lucide-react";
+import { Trophy, Swords, Sparkles, TrendingUp, Heart, Share2, Video, Edit2, BarChart2, Trash2, Loader2, Bot } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { EditVideoModal } from "./EditVideoModal";
 import { MatchScorecardModal } from "./MatchScorecardModal";
+import { fetchMatchSummary } from "@/lib/aiPredictor";
 
 const isApp = Capacitor.isNativePlatform();
 
@@ -48,6 +49,25 @@ export function MatchCard({
   const [currentVideoUrl, setCurrentVideoUrl] = useState(match.video_url || null);
   const [isEditVideoOpen, setIsEditVideoOpen] = useState(false);
   const [isScorecardOpen, setIsScorecardOpen] = useState(false);
+  
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+
+  const handleGenerateSummary = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (aiSummary || isGeneratingSummary) return;
+    
+    setIsGeneratingSummary(true);
+    try {
+      const summary = await fetchMatchSummary(match);
+      setAiSummary(summary);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to generate AI summary.");
+    } finally {
+      setIsGeneratingSummary(false);
+    }
+  };
 
   let displayScore = match.score || match.match_score || "";
   let highlightUrl = currentVideoUrl;
@@ -375,11 +395,51 @@ export function MatchCard({
       {/* Children (e.g., Accept/Reject buttons) */}
       {children && <div className="mt-4">{children}</div>}
 
+      {/* AI Summary Block */}
+      {isGeneratingSummary && (
+        <div className="mt-4 p-4 rounded-2xl bg-gradient-to-br from-indigo-50 to-emerald-50 dark:from-indigo-950/30 dark:to-emerald-950/30 border border-indigo-100 dark:border-indigo-900/50 flex flex-col items-center justify-center min-h-[80px]">
+          <Loader2 className="w-5 h-5 text-indigo-500 animate-spin mb-2" />
+          <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-400 animate-pulse">Gemini is analyzing the match...</span>
+        </div>
+      )}
+      
+      {aiSummary && !isGeneratingSummary && (
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+          className="mt-4 p-4 rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-950 text-white shadow-lg border border-indigo-500/30 relative overflow-hidden"
+        >
+          <div className="absolute -top-6 -right-6 text-indigo-500/20">
+            <Sparkles className="w-24 h-24" />
+          </div>
+          <div className="flex items-center gap-2 mb-2 text-indigo-300">
+            <Bot className="w-4 h-4" />
+            <span className="text-[10px] font-black uppercase tracking-widest">AI Recap</span>
+          </div>
+          <p className="text-sm font-medium leading-relaxed relative z-10 text-slate-100">
+            "{aiSummary}"
+          </p>
+        </motion.div>
+      )}
+
       {/* Reaction Kudos & Edit */}
       {!hideActions && (
       <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/50 flex flex-col gap-2 relative z-50">
-        {/* Scorecard — centered */}
-        <div className="flex justify-center">
+        {/* Actions Row */}
+        <div className="flex justify-between items-center px-1">
+          <button
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={handleGenerateSummary}
+            disabled={isGeneratingSummary || !!aiSummary}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${
+              aiSummary 
+                ? "text-indigo-500 bg-indigo-50 dark:bg-indigo-500/20 opacity-70" 
+                : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+            }`}
+          >
+            {isGeneratingSummary ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+            AI Recap
+          </button>
+          
           <button
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsScorecardOpen(true); }}
@@ -390,7 +450,7 @@ export function MatchCard({
         </div>
 
         {/* Like / Share */}
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center px-1">
           <button
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {

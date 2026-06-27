@@ -177,3 +177,66 @@ Do not use markdown formatting like bolding or headers, just plain text.
   }
 }
 
+/**
+ * Calls the Google Gemini 2.5 Flash API to generate a post-match recap.
+ */
+export async function fetchMatchSummary(match: any): Promise<string> {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("Missing VITE_GEMINI_API_KEY in environment variables.");
+  }
+
+  const getPlayerName = (p: any) => p?.full_name?.split(" ")[0] || "Unknown";
+  
+  const p1 = getPlayerName(match.player1);
+  const p2 = getPlayerName(match.player2);
+  const partner1 = match.partner1 ? getPlayerName(match.partner1) : null;
+  const partner2 = match.partner2 ? getPlayerName(match.partner2) : null;
+
+  const team1 = partner1 ? `${p1} & ${partner1}` : p1;
+  const team2 = partner2 ? `${p2} & ${partner2}` : p2;
+
+  const isTeam1Winner = match.winner_id === match.player1_id || match.winner_id === match.team1_partner_id;
+  const winner = isTeam1Winner ? team1 : team2;
+
+  const prompt = `
+Act as a hyped-up, enthusiastic sports commentator analyzing a badminton match that just finished.
+Here is the raw data from the match:
+- Team 1: ${team1}
+- Team 2: ${team2}
+- Final Score: ${match.score || match.match_score || "Unknown"}
+- The Winner: ${winner}
+
+Write a fun, highly engaging 2-sentence match summary recap. Emphasize the final score, highlight if it was a close fight or a total blowout, and celebrate the winner.
+Do not use markdown formatting like bolding or headers, just plain text. Do not include hashtags. Keep it under 40 words total.
+  `.trim();
+
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.8,
+            maxOutputTokens: 500,
+          },
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    if (data.candidates && data.candidates.length > 0) {
+      return data.candidates[0].content.parts[0].text.trim();
+    }
+    throw new Error("Invalid response from Gemini API.");
+  } catch (err: any) {
+    throw new Error(err.message || "Failed to generate match summary.");
+  }
+}

@@ -86,7 +86,11 @@ export default function Feed() {
     setFeedFilter,
     courtUtil,
     matchOfTheDayId,
-    weeklyRecap
+    weeklyRecap,
+    categoryFilter,
+    setCategoryFilter,
+    timeFilter,
+    setTimeFilter
   } = useFeedMatches(ownProfile);
 
   usePullToRefresh();
@@ -330,39 +334,63 @@ export default function Feed() {
               </div>
             )}
 
-            {/* Feed filter tabs */}
-            <div className="mb-5 flex gap-2">
-              <button
-                onClick={() => setFeedFilter("global")}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all ${feedFilter === "global"
-                  ? "bg-emerald-600 text-white shadow-md"
-                  : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-emerald-400"
-                  }`}
-              >
-                <Activity className="w-3.5 h-3.5" /> Global
-              </button>
-              {session && (
-                <>
-                  <button
-                    onClick={() => setFeedFilter("following")}
-                    className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all ${feedFilter === "following"
-                      ? "bg-sky-600 text-white shadow-md"
-                      : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-sky-400"
-                      }`}
-                  >
-                    <UserCheck className="w-3.5 h-3.5" /> Following
-                  </button>
-                  <button
-                    onClick={() => setFeedFilter("buddies")}
-                    className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all ${feedFilter === "buddies"
-                      ? "bg-violet-600 text-white shadow-md"
-                      : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-violet-400"
-                      }`}
-                  >
-                    <Heart className="w-3.5 h-3.5" /> Buddies
-                  </button>
-                </>
-              )}
+            {/* Feed filter tabs and Advanced Filters */}
+            <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+              <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0 hide-scrollbar">
+                <button
+                  onClick={() => setFeedFilter("global")}
+                  className={`shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all ${feedFilter === "global"
+                    ? "bg-emerald-600 text-white shadow-md"
+                    : "bg-transparent text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    }`}
+                >
+                  <Activity className="w-3.5 h-3.5" /> Global
+                </button>
+                {session && (
+                  <>
+                    <button
+                      onClick={() => setFeedFilter("following")}
+                      className={`shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all ${feedFilter === "following"
+                        ? "bg-sky-600 text-white shadow-md"
+                        : "bg-transparent text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                        }`}
+                    >
+                      <UserCheck className="w-3.5 h-3.5" /> Following
+                    </button>
+                    <button
+                      onClick={() => setFeedFilter("buddies")}
+                      className={`shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all ${feedFilter === "buddies"
+                        ? "bg-violet-600 text-white shadow-md"
+                        : "bg-transparent text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                        }`}
+                    >
+                      <Heart className="w-3.5 h-3.5" /> Buddies
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {/* Advanced Filters */}
+              <div className="flex items-center gap-2 pl-2 sm:pl-4 sm:border-l sm:border-slate-200 dark:sm:border-slate-700">
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value as any)}
+                  className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-lg px-2 py-1.5 outline-none border-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                >
+                  <option value="all">All Modes</option>
+                  <option value="singles">Singles</option>
+                  <option value="doubles">Doubles</option>
+                </select>
+                <select
+                  value={timeFilter}
+                  onChange={(e) => setTimeFilter(e.target.value as any)}
+                  className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-lg px-2 py-1.5 outline-none border-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                >
+                  <option value="all">All Time</option>
+                  <option value="today">Today</option>
+                  <option value="week">This Week</option>
+                </select>
+              </div>
             </div>
 
             {/* Empty state for social filters */}

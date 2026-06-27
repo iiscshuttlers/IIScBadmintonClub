@@ -184,38 +184,16 @@ try {
   console.warn("⚠ OneDrive copy initiation failed (non-fatal) — continuing");
 }
 
-/* ── 7. GitHub Release ──────────────────────────────────────────── */
-log(`Creating GitHub Release v${newName} (build ${newCode})…`);
+/* ── 7. Git Tag ─────────────────────────────────────────────── */
+log(`Creating Git Tag v${newName} (build ${newCode})…`);
 const tag = `v${newName}-build${newCode}`;
 
-// Rename APK & AAB to IIScShuttlers_v{version}.[apk|aab]
-const releaseApkPath = resolve(dirname(APK_SRC), finalApkName);
-const releaseAabPath = resolve(dirname(AAB_SRC), finalAabName);
 try {
-  run(`copy "${APK_SRC}" "${releaseApkPath}"`, { shell: true });
-  run(`copy "${AAB_SRC}" "${releaseAabPath}"`, { shell: true });
+  run(`git tag ${tag}`, { cwd: root });
+  ok(`Git tag ${tag} created`);
 } catch (e) {
-  fail("Failed to rename APK/AAB for release");
+  console.warn(`⚠ Failed to create tag ${tag} (maybe it already exists?)`);
 }
-
-// Delete tag/release if it somehow already exists
-try {
-  execSync(`gh release delete ${tag} --repo ${REPO} --yes`, { stdio: "pipe" });
-} catch { }
-try {
-  execSync(`gh api repos/${REPO}/git/refs/tags/${tag} -X DELETE`, {
-    stdio: "pipe",
-  });
-} catch { }
-
-run(
-  `gh release create ${tag} "${releaseApkPath}" "${releaseAabPath}" ` +
-  `--repo ${REPO} ` +
-  `--title "v${newName}" ` +
-  `--notes "${changelog.replace(/"/g, "'")}" ` +
-  `--latest`,
-);
-ok(`GitHub Release v${newName} published with APK and AAB`);
 
 /* ── 8. Commit + push ───────────────────────────────────────────── */
 log("Committing version bump and pushing…");
@@ -225,7 +203,7 @@ run(`git add android/app/build.gradle client/public/data/app-version.json client
 run(`git commit -m "chore: release v${newName} (build ${newCode})"`, {
   cwd: root,
 });
-run("git push", { cwd: root });
+run("git push --follow-tags", { cwd: root });
 ok("Pushed — GitHub Pages deploy triggered");
 
 console.log(

@@ -322,14 +322,14 @@ export default function Navigation() {
                   setViewAsRole={setViewAsRole}
                 />
               ) : (
-                <button onClick={() => {
+                <div className="cursor-pointer" onClick={() => {
                   sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
                   setLocation("/join");
                 }}>
-                  <Button className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 rounded-full h-7 shadow-sm cursor-pointer">
+                  <Button className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 rounded-full h-7 shadow-sm cursor-pointer pointer-events-none">
                     <LogIn className="w-3.5 h-3.5" /> Sign In
                   </Button>
-                </button>
+                </div>
               )
             )}
           </div>

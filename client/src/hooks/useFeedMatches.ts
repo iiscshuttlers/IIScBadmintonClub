@@ -6,6 +6,8 @@ export function useFeedMatches(ownProfile: any) {
   const [loading, setLoading] = useState(true);
   const [limitCount, setLimitCount] = useState(100);
   const [feedFilter, setFeedFilter] = useState<"global" | "following" | "buddies">("global");
+  const [categoryFilter, setCategoryFilter] = useState<"all" | "singles" | "doubles">("all");
+  const [timeFilter, setTimeFilter] = useState<"all" | "today" | "week">("all");
 
   const fetchFeed = useCallback(
     async (silent = false) => {
@@ -47,26 +49,53 @@ export function useFeedMatches(ownProfile: any) {
   }, [ownProfile?.buddies]);
 
   const displayMatches = useMemo(() => {
-    if (feedFilter === "global") return matches;
-    const ids = feedFilter === "buddies" ? buddyIds : followingIds;
+    let filtered = matches;
 
-    if (ids.length === 0) return [];
+    // 1. Social Filter
+    if (feedFilter !== "global") {
+      const ids = feedFilter === "buddies" ? buddyIds : followingIds;
+      if (ids.length === 0) {
+        filtered = [];
+      } else {
+        filtered = filtered.filter((m: any) => {
+          const matchIds = [
+            m.player1_id, m.player2_id, m.team1_partner_id, m.team2_partner_id,
+            m.player1?.id, m.player2?.id, m.partner1?.id, m.partner2?.id
+          ].filter(Boolean).map(String);
+          return ids.some((id: string) => matchIds.includes(id));
+        });
+      }
+    }
 
-    return matches.filter((m: any) => {
-      const matchIds = [
-        m.player1_id,
-        m.player2_id,
-        m.team1_partner_id,
-        m.team2_partner_id,
-        m.player1?.id,
-        m.player2?.id,
-        m.partner1?.id,
-        m.partner2?.id
-      ].filter(Boolean).map(String);
+    // 2. Category Filter
+    if (categoryFilter !== "all") {
+      filtered = filtered.filter((m: any) => {
+        const cat = (m.category || "").toLowerCase();
+        if (categoryFilter === "singles") return cat.includes("singles");
+        if (categoryFilter === "doubles") return cat.includes("doubles");
+        return true;
+      });
+    }
 
-      return ids.some((id: string) => matchIds.includes(id));
-    });
-  }, [matches, feedFilter, followingIds, buddyIds]);
+    // 3. Time Filter
+    if (timeFilter !== "all") {
+      const now = new Date();
+      filtered = filtered.filter((m: any) => {
+        const matchDate = new Date(m.created_at);
+        if (timeFilter === "today") {
+          return matchDate.toDateString() === now.toDateString();
+        }
+        if (timeFilter === "week") {
+          const weekAgo = new Date();
+          weekAgo.setDate(now.getDate() - 7);
+          return matchDate >= weekAgo;
+        }
+        return true;
+      });
+    }
+
+    return filtered;
+  }, [matches, feedFilter, categoryFilter, timeFilter, followingIds, buddyIds]);
 
   const courtUtil = useMemo(() => {
     const hours = new Array(24).fill(0);
@@ -153,6 +182,10 @@ export function useFeedMatches(ownProfile: any) {
     setFeedFilter,
     courtUtil,
     matchOfTheDayId,
-    weeklyRecap
+    weeklyRecap,
+    categoryFilter,
+    setCategoryFilter,
+    timeFilter,
+    setTimeFilter
   };
 }
