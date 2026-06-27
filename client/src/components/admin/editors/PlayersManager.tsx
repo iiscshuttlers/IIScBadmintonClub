@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
-  Trash2, Plus, Loader2, UserCheck, UserX, Activity, Search, RefreshCw, Download, AlertTriangle, Play, Pencil, Clock, CheckCircle2, Ban, Shield, History, FileDown, ArrowRight, ExternalLink
+  Trash2, Plus, Loader2, UserCheck, UserX, Activity, Search, RefreshCw, Download, AlertTriangle, Play, Pencil, Clock, CheckCircle2, Ban, Shield, History, FileDown, ArrowRight, ExternalLink, Sunset
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
@@ -31,7 +31,7 @@ export function PlayersManager() {
         supabase
           .from("players")
           .select(
-            "id, full_name, email, department, is_approved, created_at, stats, iisc_email, contact_number, sr_number, role",
+            "id, full_name, email, department, is_approved, created_at, stats, iisc_email, contact_number, sr_number, role, is_retired",
           )
           .order("created_at", { ascending: false }),
         supabase.functions.invoke("admin-users", { method: "GET" }),
@@ -233,6 +233,30 @@ export function PlayersManager() {
     }
   };
 
+  const retirePlayer = async (id: string, name: string, currentlyRetired: boolean) => {
+    if (!currentlyRetired && !confirm(`Mark "${name}" as retired? They will be hidden from matchmaking and challenges will be disabled.`)) return;
+    setActionId(id);
+    const { error } = await supabase
+      .from("players")
+      .update({ is_retired: !currentlyRetired })
+      .eq("id", id);
+    if (error) {
+      toast.error("Failed to update retirement status: " + error.message);
+    } else {
+      toast.success(currentlyRetired ? `${name} unretired.` : `${name} marked as retired.`, { icon: currentlyRetired ? "✅" : "🏅" });
+      setPlayers((p) => p.map((pl) => (pl.id === id ? { ...pl, is_retired: !currentlyRetired } : pl)));
+      await recordAction({
+        action_type: "update",
+        entity_type: "players",
+        entity_id: id,
+        before_state: { is_retired: currentlyRetired },
+        after_state: { is_retired: !currentlyRetired },
+        label: `${currentlyRetired ? "Unretired" : "Retired"} player: ${name}`,
+      });
+    }
+    setActionId(null);
+  };
+
   const noProfileUsers = authUsers.filter(
     (u) => !players.some((p) => p.id === u.id),
   );
@@ -423,6 +447,11 @@ export function PlayersManager() {
                   >
                     {p.is_approved ? "Approved" : "Pending"}
                   </span>
+                  {p.is_retired && (
+                    <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400">
+                      Retired
+                    </span>
+                  )}
                   {elo && (
                     <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400 font-bold">
                       ELO {elo}
@@ -477,6 +506,15 @@ export function PlayersManager() {
                     Revoke
                   </button>
                 )}
+                <button
+                  onClick={() => retirePlayer(p.id, p.full_name, !!p.is_retired)}
+                  disabled={busy}
+                  title={p.is_retired ? "Unretire player" : "Retire player"}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition disabled:opacity-50 ${p.is_retired ? "bg-amber-100 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 hover:bg-amber-200" : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700"}`}
+                >
+                  <Sunset className="w-3.5 h-3.5" />
+                  {p.is_retired ? "Unretire" : "Retire"}
+                </button>
                 <button
                   onClick={() => removeProfile(p.id, p.full_name)}
                   disabled={busy}

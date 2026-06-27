@@ -21,13 +21,13 @@ export function GalleryLightboxTags({
   tags: TagEntry[];
   pendingTags: TagEntry[];
   session: any;
-  tagPlayers: { id: string; full_name: string; user_id: string | null }[];
+  tagPlayers: { id: string; full_name: string }[];
   setLocation: (path: string) => void;
   removeTag: (path: string, id: string) => void;
   approveTag: (path: string, tag: TagEntry) => void;
   rejectTag: (path: string, tag: TagEntry) => void;
   requestTag: (path: string) => void;
-  saveTag: (path: string, player: { id: string; full_name: string; user_id: string | null }) => void;
+  saveTag: (path: string, player: { id: string; full_name: string }) => void;
   isAdmin: boolean;
   currentUserProfile?: { id: string; full_name: string } | null;
 }) {

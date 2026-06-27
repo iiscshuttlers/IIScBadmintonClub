@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { motion, AnimatePresence } from "framer-motion";
-import { Store, Plus, Search, Filter, Phone, Mail, Clock, Package, MapPin, ExternalLink, Image as ImageIcon } from "lucide-react";
+import { Store, Plus, Search, Filter, Phone, Mail, Clock, Package, MapPin, ExternalLink, Image as ImageIcon, MoreVertical, CheckCircle2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { CreateListingModal } from "@/components/marketplace/CreateListingModal";
 import FindLost from "@/pages/FindLost";
 
@@ -32,6 +33,10 @@ export default function Marketplace() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [filter, setFilter] = useState("All");
+  const [showSold, setShowSold] = useState(false);
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<"marketplace" | "findlost">(() => {
     return window.location.pathname.includes("find-lost") || window.location.hash.includes("lost") ? "findlost" : "marketplace";
   });
@@ -50,7 +55,7 @@ export default function Marketplace() {
             phone
           )
         `)
-        .eq('status', 'active')
+        .in('status', ['active', 'sold'])
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -62,6 +67,50 @@ export default function Marketplace() {
     }
   };
 
+  const logAction = async (action: string) => {
+    await supabase.from("admin_logs").insert({
+      admin_email: session?.user?.email || "user",
+      action,
+      created_at: new Date().toISOString(),
+    });
+  };
+
+  const markAsSold = async (id: string) => {
+    setBusyId(id);
+    setMenuOpenId(null);
+    const listing = listings.find(l => l.id === id);
+    const { error } = await supabase.from('marketplace_listings').update({ status: 'sold' }).eq('id', id);
+    if (error) { toast.error("Failed to mark as sold"); } else {
+      toast.success("Listing marked as sold!");
+      setListings(prev => prev.map(l => l.id === id ? { ...l, status: 'sold' } : l));
+      if (listing) await logAction(`Marked listing "${listing.title}" as sold`);
+    }
+    setBusyId(null);
+  };
+
+  const deleteListing = async (id: string) => {
+    setMenuOpenId(null);
+    if (!confirm("Delete this listing permanently?")) return;
+    setBusyId(id);
+    const listing = listings.find(l => l.id === id);
+    const { error } = await supabase.from('marketplace_listings').delete().eq('id', id);
+    if (error) { toast.error("Failed to delete listing"); } else {
+      toast.success("Listing deleted.");
+      setListings(prev => prev.filter(l => l.id !== id));
+      if (listing) await logAction(`Deleted marketplace listing "${listing.title}"`);
+    }
+    setBusyId(null);
+  };
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpenId(null);
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
   useEffect(() => {
     fetchListings();
   }, []);
@@ -69,7 +118,9 @@ export default function Marketplace() {
   usePullToRefresh();
 
   const categories = ["All", "Racket", "Shoes", "Shuttlecocks", "Accessories", "Other"];
-  const filteredListings = filter === "All" ? listings : listings.filter(l => l.category === filter);
+  const filteredListings = listings
+    .filter(l => showSold ? true : l.status === 'active')
+    .filter(l => filter === "All" ? true : l.category === filter);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-safe pb-24">
@@ -119,20 +170,30 @@ export default function Marketplace() {
             </div>
 
             {/* Categories Scroller */}
-            <div className="max-w-5xl mx-auto px-4 py-3 grid grid-cols-2 md:flex md:flex-wrap items-center gap-2">
+            <div className="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-2">
               {categories.map(cat => (
                 <button
                   key={cat}
                   onClick={() => setFilter(cat)}
                   className={`px-4 py-1.5 rounded-full text-xs font-black whitespace-nowrap transition-all ${
-                    filter === cat 
-                      ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900 shadow-sm' 
+                    filter === cat
+                      ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900 shadow-sm'
                       : 'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700'
                   }`}
                 >
                   {cat}
                 </button>
               ))}
+              <button
+                onClick={() => setShowSold(s => !s)}
+                className={`ml-auto px-4 py-1.5 rounded-full text-xs font-black whitespace-nowrap transition-all ${
+                  showSold
+                    ? 'bg-slate-500 text-white shadow-sm'
+                    : 'bg-slate-100 text-slate-400 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:hover:bg-slate-700'
+                }`}
+              >
+                {showSold ? "✓ Showing Sold" : "Show Sold"}
+              </button>
             </div>
           </div>
 
@@ -165,8 +226,17 @@ export default function Marketplace() {
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.2 }}
                   key={item.id}
-                  className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm group hover:shadow-md transition-shadow flex flex-col"
+                  className={`bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm group hover:shadow-md transition-shadow flex flex-col relative ${item.status === 'sold' ? 'opacity-60' : ''}`}
                 >
+                  {/* SOLD stamp */}
+                  {item.status === 'sold' && (
+                    <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+                      <div className="rotate-[-20deg] border-4 border-rose-500 text-rose-500 text-3xl font-black px-4 py-1 rounded-lg opacity-80 tracking-widest">
+                        SOLD
+                      </div>
+                    </div>
+                  )}
+
                   {/* Image Area */}
                   <div className="h-48 bg-slate-100 dark:bg-slate-800 relative flex items-center justify-center shrink-0">
                     {item.image_url ? (
@@ -197,9 +267,9 @@ export default function Marketplace() {
                     <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800">
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
-                          <img 
-                            src={seller.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(safeName)}&background=10b981&color=fff`} 
-                            alt={safeName} 
+                          <img
+                            src={seller.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(safeName)}&background=10b981&color=fff`}
+                            alt={safeName}
                             className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 object-cover"
                           />
                           <div>
@@ -210,19 +280,45 @@ export default function Marketplace() {
                           </div>
                         </div>
                       </div>
-                      
+
                       {session?.user?.id !== item.seller_id ? (
-                        <div className="flex gap-2">
-                          <a 
-                            href={`mailto:${safeName.replace(/\s+/g, '.').toLowerCase()}@iisc.ac.in?subject=Marketplace: ${encodeURIComponent(item.title)}`}
-                            className="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-colors"
-                          >
-                            <Mail className="w-3.5 h-3.5" /> Contact
-                          </a>
-                        </div>
+                        item.status !== 'sold' && (
+                          <div className="flex gap-2">
+                            <a
+                              href={`mailto:${safeName.replace(/\s+/g, '.').toLowerCase()}@iisc.ac.in?subject=Marketplace: ${encodeURIComponent(item.title)}`}
+                              className="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-colors"
+                            >
+                              <Mail className="w-3.5 h-3.5" /> Contact
+                            </a>
+                          </div>
+                        )
                       ) : (
-                        <div className="text-center bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 py-2 rounded-xl text-xs font-black uppercase tracking-wider">
-                          Your Listing
+                        <div className="relative" ref={menuOpenId === item.id ? menuRef : undefined}>
+                          <button
+                            disabled={busyId === item.id}
+                            onClick={() => setMenuOpenId(menuOpenId === item.id ? null : item.id)}
+                            className="w-full flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 py-2 rounded-xl text-xs font-black transition disabled:opacity-50"
+                          >
+                            <MoreVertical className="w-3.5 h-3.5" /> Manage Listing
+                          </button>
+                          {menuOpenId === item.id && (
+                            <div className="absolute bottom-full mb-2 left-0 right-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl z-20 overflow-hidden">
+                              {item.status !== 'sold' && (
+                                <button
+                                  onClick={() => markAsSold(item.id)}
+                                  className="w-full flex items-center gap-2 px-4 py-3 text-sm font-bold text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition"
+                                >
+                                  <CheckCircle2 className="w-4 h-4" /> Mark as Sold
+                                </button>
+                              )}
+                              <button
+                                onClick={() => deleteListing(item.id)}
+                                className="w-full flex items-center gap-2 px-4 py-3 text-sm font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
+                              >
+                                <Trash2 className="w-4 h-4" /> Delete Listing
+                              </button>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

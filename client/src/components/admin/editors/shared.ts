@@ -26,6 +26,8 @@ export type EventItem = {
   title: string;
   link: string;
   registrationDeadline?: string;
+  time?: string;
+  location?: string;
 };
 export type Chapter = { time: number; title: string };
 export type VideoItem = {
@@ -49,6 +51,7 @@ export type Player = {
   contact_number?: string;
   sr_number?: string;
   role?: string;
+  is_retired?: boolean;
 };
 export type AuthUser = {
   id: string;

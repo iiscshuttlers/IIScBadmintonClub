@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, User, Swords, Megaphone, ArrowRight, Loader2, CalendarDays } from "lucide-react";
+import { Search, X, User, Swords, Megaphone, ArrowRight, Loader2, CalendarDays, Users } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface SearchResult {
-  type: "player" | "match" | "announcement" | "event";
+  type: "player" | "match" | "announcement" | "event" | "team";
   id: string;
   title: string;
   subtitle?: string;
@@ -54,7 +54,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
     try {
       const lq = q.toLowerCase();
 
-      const [playersRes, matchesRes, annRes, eventsRes] = await Promise.all([
+      const [playersRes, matchesRes, annRes, eventsRes, teamsRes] = await Promise.all([
         supabase
           .from("players")
           .select("id, full_name, avatar_url, department, elo_rating")
@@ -65,7 +65,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
         supabase
           .from("matches")
           .select(
-            "id, match_score, score, category, created_at, player1:players!player1_id(full_name), player2:players!player2_id(full_name)"
+            "id, match_score, score, category, created_at, player1_id, player2_id, player1:players!player1_id(full_name), player2:players!player2_id(full_name)"
           )
           .eq("status", "confirmed")
           .or(
@@ -83,6 +83,11 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
           .select("value")
           .eq("key", "events")
           .maybeSingle(),
+        supabase
+          .from("doubles_teams")
+          .select("id, team_name, player1_id, player2_id, elo_rating")
+          .ilike("team_name", `%${q}%`)
+          .limit(4),
       ]);
 
       const playerResults: SearchResult[] = (playersRes.data || []).map((p) => ({
@@ -99,7 +104,15 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
         id: m.id,
         title: `${m.player1?.full_name ?? "?"} vs ${m.player2?.full_name ?? "?"}`,
         subtitle: `${m.category ?? "Match"} · ${m.match_score || m.score || ""}`,
-        href: `/feed`,
+        href: m.player1_id ? `/player/${m.player1_id}` : `/feed`,
+      }));
+
+      const teamResults: SearchResult[] = (teamsRes.data || []).map((t: any) => ({
+        type: "team",
+        id: t.id,
+        title: t.team_name,
+        subtitle: t.elo_rating ? `${t.elo_rating} ELO` : undefined,
+        href: `/doubles/${t.player1_id}/${t.player2_id}`,
       }));
 
       const annList: SearchResult[] = [];
@@ -144,7 +157,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
         }
       }
 
-      setResults([...playerResults, ...matchResults, ...annList, ...eventList]);
+      setResults([...playerResults, ...matchResults, ...teamResults, ...annList, ...eventList]);
     } catch (e) {
       console.error("Search error:", e);
     } finally {
@@ -167,6 +180,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
     if (type === "player") return <User className="w-4 h-4 shrink-0 text-emerald-500" />;
     if (type === "match") return <Swords className="w-4 h-4 shrink-0 text-blue-500" />;
     if (type === "event") return <CalendarDays className="w-4 h-4 shrink-0 text-violet-500" />;
+    if (type === "team") return <Users className="w-4 h-4 shrink-0 text-pink-500" />;
     return <Megaphone className="w-4 h-4 shrink-0 text-amber-500" />;
   };
 
@@ -206,7 +220,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
               ref={inputRef}
               value={query}
               onChange={(e) => handleChange(e.target.value)}
-              placeholder="Search players, matches, events, announcements…"
+              placeholder="Search players, teams, matches, events…"
               className="flex-1 bg-transparent text-slate-800 dark:text-white placeholder-slate-400 text-sm outline-none"
             />
             <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
@@ -228,10 +242,10 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
             )}
 
             {/* Group by type */}
-            {(["player", "match", "announcement", "event"] as const).map((type) => {
+            {(["player", "team", "match", "announcement", "event"] as const).map((type) => {
               const group = results.filter((r) => r.type === type);
               if (!group.length) return null;
-              const labels = { player: "Players", match: "Matches", announcement: "Announcements", event: "Events" };
+              const labels = { player: "Players", team: "Teams", match: "Matches", announcement: "Announcements", event: "Events" };
               return (
                 <div key={type}>
                   <div className="px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/80 dark:bg-slate-800/50">

@@ -4,15 +4,20 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { UmpireEngine } from "./UmpireEngine";
 import { BwfMatchState, MatchEditState } from "@/types/umpire";
-import { Play, Tv2, AlertTriangle } from "lucide-react";
+import { Play, Tv2, AlertTriangle, Swords } from "lucide-react";
+import { useUmpireStore } from "@/store/umpireStore";
 import { fetchSiteData } from "@/lib/siteData";
 import { BeautifulScoreDisplay } from "@/components/feed/BeautifulScoreDisplay";
+import { UmpireTournamentTab, type TournamentMatchForUmpire } from "./UmpireTournamentTab";
 
 export function UmpireTab() {
   const { session, isUmpire } = useAuth();
   const [isUmpiring, setIsUmpiring] = useState(false);
   const [myLiveMatch, setMyLiveMatch] = useState<BwfMatchState | MatchEditState | null>(null);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [activeSubTab, setActiveSubTab] = useState<"friendly" | "tournament">("friendly");
+  const [activeTournamentMatch, setActiveTournamentMatch] = useState<TournamentMatchForUmpire | null>(null);
+  const resetUmpireStore = useUmpireStore((s) => s.reset);
   // Admin "take over" of another umpire's broadcast (key = original umpire's id)
   const [takeoverKey, setTakeoverKey] = useState<string | null>(null);
   const [takeoverMatch, setTakeoverMatch] = useState<BwfMatchState | null>(null);
@@ -101,6 +106,23 @@ export function UmpireTab() {
     );
   }
 
+  // Tournament match umpiring
+  if (activeTournamentMatch) {
+    return (
+      <div className="-mx-4 sm:mx-0 mb-6">
+        <UmpireEngine
+          userId={session.user.id}
+          userEmail={session.user.email!}
+          userName={session.user.user_metadata?.full_name || "Guest"}
+          isTournamentUmpire={isUmpire}
+          initialMatchState={null}
+          tournamentMatch={activeTournamentMatch}
+          onClose={() => setActiveTournamentMatch(null)}
+        />
+      </div>
+    );
+  }
+
   if (isUmpiring || myLiveMatch) {
     return (
       <div className="-mx-4 sm:mx-0 mb-6">
@@ -120,43 +142,66 @@ export function UmpireTab() {
   }
 
   return (
-    <div className="w-full max-w-5xl mx-auto p-4 space-y-8">
-      <div className="flex flex-col items-center justify-center bg-slate-900 rounded-[2rem] p-12 shadow-xl border border-slate-800 gap-6 text-center">
-        <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center">
-          <Tv2 className="w-10 h-10 text-emerald-400" />
-        </div>
-        <div>
-          <h2 className="text-3xl font-black text-white mb-2">
-            Umpire Station
-          </h2>
-          <p className="text-slate-400 max-w-md mx-auto">
-            {maintenanceMode 
-              ? "Match logging is temporarily disabled due to system maintenance." 
-              : "Start a new live broadcast. Your match will be visible to everyone in the Match Activity feed."}
-          </p>
-        </div>
-        
-        {maintenanceMode ? (
-          <div className="bg-rose-900/40 text-rose-300 px-6 py-4 rounded-xl flex items-center gap-3 border border-rose-800">
-            <AlertTriangle className="w-6 h-6" />
-            <span className="font-bold">Maintenance Mode Active</span>
-          </div>
-        ) : (
-          <button
-            onClick={() => setIsUmpiring(true)}
-            className="px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg transition-colors text-lg"
-          >
-            <Play className="w-6 h-6 fill-white" /> Start Umpiring
-          </button>
-        )}
+    <div className="w-full max-w-5xl mx-auto p-4 space-y-6">
+      {/* Sub-tabs */}
+      <div className="flex gap-2 bg-slate-900 p-1 rounded-2xl w-fit">
+        <button
+          onClick={() => setActiveSubTab("friendly")}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black transition-all ${activeSubTab === "friendly" ? "bg-emerald-600 text-white shadow" : "text-slate-400 hover:text-white"}`}
+        >
+          <Tv2 className="w-4 h-4" /> Friendly
+        </button>
+        <button
+          onClick={() => setActiveSubTab("tournament")}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black transition-all ${activeSubTab === "tournament" ? "bg-emerald-600 text-white shadow" : "text-slate-400 hover:text-white"}`}
+        >
+          <Swords className="w-4 h-4" /> Tournament
+        </button>
       </div>
-      
-      <RecentUmpireMatches 
-        onEdit={(matchData) => {
-          setMyLiveMatch(matchData);
-          setIsUmpiring(true);
-        }} 
-      />
+
+      {activeSubTab === "friendly" && (
+        <>
+          <div className="flex flex-col items-center justify-center bg-slate-900 rounded-[2rem] p-12 shadow-xl border border-slate-800 gap-6 text-center">
+            <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center">
+              <Tv2 className="w-10 h-10 text-emerald-400" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-black text-white mb-2">Umpire Station</h2>
+              <p className="text-slate-400 max-w-md mx-auto">
+                {maintenanceMode
+                  ? "Match logging is temporarily disabled due to system maintenance."
+                  : "Start a new live broadcast. Your match will be visible to everyone in the Match Activity feed."}
+              </p>
+            </div>
+            {maintenanceMode ? (
+              <div className="bg-rose-900/40 text-rose-300 px-6 py-4 rounded-xl flex items-center gap-3 border border-rose-800">
+                <AlertTriangle className="w-6 h-6" />
+                <span className="font-bold">Maintenance Mode Active</span>
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsUmpiring(true)}
+                className="px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg transition-colors text-lg"
+              >
+                <Play className="w-6 h-6 fill-white" /> Start Umpiring
+              </button>
+            )}
+          </div>
+          <RecentUmpireMatches
+            onEdit={(matchData) => {
+              setMyLiveMatch(matchData);
+              setIsUmpiring(true);
+            }}
+          />
+        </>
+      )}
+
+      {activeSubTab === "tournament" && (
+        <div className="bg-slate-900 rounded-[2rem] p-6 shadow-xl border border-slate-800">
+          <h2 className="text-xl font-black text-white mb-5">Tournament Matches</h2>
+          <UmpireTournamentTab onStartMatch={(m) => { resetUmpireStore(); setActiveTournamentMatch(m); }} />
+        </div>
+      )}
     </div>
   );
 }

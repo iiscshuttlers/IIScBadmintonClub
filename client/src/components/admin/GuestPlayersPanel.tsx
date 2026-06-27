@@ -3,9 +3,10 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import {
   UserPlus, Loader2, RefreshCw, Trash2, Ghost, CheckCircle,
-  Trophy, ShieldCheck, AlertTriangle,
+  Trophy, ShieldCheck, AlertTriangle, Link2, X, Search,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAdminHistory } from "@/contexts/AdminHistoryContext";
 
 interface GuestRow {
   id: string;
@@ -14,6 +15,12 @@ interface GuestRow {
   elo_rating: number | null;
   total_friendly_matches: number | null;
   created_at: string;
+}
+
+interface RealPlayer {
+  id: string;
+  full_name: string;
+  department?: string | null;
 }
 
 interface PendingGuestMatch {
@@ -30,6 +37,7 @@ interface PendingGuestMatch {
 
 export function GuestPlayersPanel() {
   const { session } = useAuth();
+  const { recordAction } = useAdminHistory();
   const [guests, setGuests] = useState<GuestRow[]>([]);
   const [pending, setPending] = useState<PendingGuestMatch[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +45,11 @@ export function GuestPlayersPanel() {
   const [gender, setGender] = useState<"Male" | "Female" | "">("");
   const [creating, setCreating] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [claimGuest, setClaimGuest] = useState<GuestRow | null>(null);
+  const [realPlayers, setRealPlayers] = useState<RealPlayer[]>([]);
+  const [claimSearch, setClaimSearch] = useState("");
+  const [selectedReal, setSelectedReal] = useState<RealPlayer | null>(null);
+  const [claiming, setClaiming] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -159,6 +172,51 @@ export function GuestPlayersPanel() {
       toast.error(err?.message || "Failed to reject match");
     } finally {
       setBusyId(null);
+    }
+  };
+
+  const openClaimModal = async (g: GuestRow) => {
+    setClaimGuest(g);
+    setClaimSearch("");
+    setSelectedReal(null);
+    if (realPlayers.length === 0) {
+      const { data } = await supabase
+        .from("players")
+        .select("id, full_name, department")
+        .eq("is_approved", true)
+        .is("is_guest", null)
+        .order("full_name");
+      setRealPlayers((data as RealPlayer[]) ?? []);
+    }
+  };
+
+  const executeClaim = async () => {
+    if (!claimGuest || !selectedReal) return;
+    const matchCount = claimGuest.total_friendly_matches ?? 0;
+    if (!confirm(`Link all ${matchCount} match(es) from "${claimGuest.full_name}" to "${selectedReal.full_name}"? This cannot be undone.`)) return;
+    setClaiming(true);
+    try {
+      const { error } = await supabase.rpc("claim_guest_player", {
+        p_guest_id: claimGuest.id,
+        p_real_player_id: selectedReal.id,
+      });
+      if (error) throw error;
+      toast.success(`Guest "${claimGuest.full_name}" claimed by "${selectedReal.full_name}". ${matchCount} match(es) transferred.`);
+      await logAction(`Claimed guest "${claimGuest.full_name}" → "${selectedReal.full_name}" (${matchCount} matches)`);
+      await recordAction({
+        action_type: "delete",
+        entity_type: "players",
+        entity_id: claimGuest.id,
+        before_state: { is_guest: true, full_name: claimGuest.full_name },
+        after_state: { claimed_by: selectedReal.full_name, real_player_id: selectedReal.id },
+        label: `Claimed guest "${claimGuest.full_name}" → "${selectedReal.full_name}"`,
+      });
+      setGuests((prev) => prev.filter((x) => x.id !== claimGuest.id));
+      setClaimGuest(null);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to claim guest");
+    } finally {
+      setClaiming(false);
     }
   };
 
@@ -332,6 +390,16 @@ export function GuestPlayersPanel() {
                     {(g.total_friendly_matches ?? 0) === 1 ? "" : "es"}
                   </p>
                 </div>
+                {(claimGuest?.id !== g.id) && (
+                  <button
+                    disabled={busyId === g.id}
+                    onClick={() => openClaimModal(g)}
+                    title="Claim: link to a real player account"
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-900/20 text-xs font-bold transition disabled:opacity-50"
+                  >
+                    <Link2 className="w-3.5 h-3.5" /> Claim
+                  </button>
+                )}
                 <button
                   disabled={busyId === g.id}
                   onClick={() => deleteGuest(g)}
@@ -346,9 +414,80 @@ export function GuestPlayersPanel() {
         )}
         <p className="text-[11px] text-slate-400 mt-3 flex items-center gap-1.5">
           <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-          Guests with match history can't be deleted — claiming (linking to a real account) is coming next.
+          Guests with match history can't be deleted — use "Claim" to link them to a real player account and transfer their match history.
         </p>
       </div>
+
+      {/* ── Claim modal ──────────────────────────────────────── */}
+      {claimGuest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-md p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
+                <Link2 className="w-5 h-5 text-violet-500" /> Claim Guest Account
+              </h3>
+              <button onClick={() => setClaimGuest(null)} className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                <X className="w-4 h-4 text-slate-500" />
+              </button>
+            </div>
+
+            <div className="bg-violet-50 dark:bg-violet-900/20 rounded-2xl p-4">
+              <p className="text-sm font-bold text-violet-800 dark:text-violet-300">
+                <Ghost className="w-4 h-4 inline mr-1" />
+                {claimGuest.full_name}
+              </p>
+              <p className="text-xs text-violet-600 dark:text-violet-400 mt-1">
+                {claimGuest.total_friendly_matches ?? 0} match(es) will be transferred to the selected real player.
+              </p>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Select Real Player</label>
+              <div className="relative mb-2">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  value={claimSearch}
+                  onChange={(e) => { setClaimSearch(e.target.value); setSelectedReal(null); }}
+                  placeholder="Search by name..."
+                  className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-violet-500"
+                />
+              </div>
+              <div className="max-h-48 overflow-y-auto space-y-1">
+                {realPlayers
+                  .filter(p => !claimSearch || p.full_name.toLowerCase().includes(claimSearch.toLowerCase()))
+                  .slice(0, 20)
+                  .map(p => (
+                    <button
+                      key={p.id}
+                      onClick={() => setSelectedReal(p)}
+                      className={`w-full text-left px-3 py-2 rounded-xl text-sm transition ${selectedReal?.id === p.id ? "bg-violet-100 dark:bg-violet-900/40 text-violet-800 dark:text-violet-200 font-bold" : "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"}`}
+                    >
+                      {p.full_name}
+                      {p.department && <span className="text-xs text-slate-400 ml-2">· {p.department}</span>}
+                    </button>
+                  ))}
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setClaimGuest(null)}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={executeClaim}
+                disabled={!selectedReal || claiming}
+                className="flex-1 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-sm transition disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {claiming ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
+                Claim Account
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

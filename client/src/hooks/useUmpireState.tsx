@@ -1,5 +1,6 @@
 import { playTimerEndEffect } from "@/lib/umpire/umpireEffects";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import type { TournamentMatchForUmpire } from "@/components/umpire/UmpireTournamentTab";
 import { useUmpireStore } from "@/store/umpireStore";
 import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
 import { supabase } from "@/lib/supabase";
@@ -20,6 +21,7 @@ export interface UmpireStateProps {
   isTournamentUmpire?: boolean;
   friendlyOnly?: boolean;
   initialMatchState?: BwfMatchState | MatchEditState | null;
+  tournamentMatch?: TournamentMatchForUmpire | null;
   onClose: () => void;
 }
 
@@ -30,6 +32,7 @@ export function useUmpireState({
   isTournamentUmpire,
   friendlyOnly,
   initialMatchState,
+  tournamentMatch,
   onClose
 }: UmpireStateProps) {
   const isAdmin = isAdminEmail(userEmail);
@@ -115,6 +118,49 @@ export function useUmpireState({
           umpireName: liveState.umpireName || userName,
         } as BwfMatchState;
       }
+      // Tournament match pre-fill — skip player-search setup, go straight to server selection
+      if (tournamentMatch) {
+        const catMap: Record<string, string> = {
+          MS: "Singles", WS: "Singles", MD: "Doubles", WD: "Doubles", XD: "Doubles",
+        };
+        return {
+          id: userId,
+          umpireName: userName,
+          isFriendly: false,
+          matchNumber: tournamentMatch.match_code,
+          category: catMap[tournamentMatch.category] ?? "Singles",
+          pointsToWin: tournamentMatch.points_to_win,
+          bestOfSets: tournamentMatch.best_of_sets,
+          goldenPoint: tournamentMatch.golden_point,
+          t1: {
+            p1Id: tournamentMatch.player1_id ?? "",
+            p1Name: tournamentMatch.team1_label ?? "Team 1",
+            p2Id: tournamentMatch.player3_id ?? undefined,
+            p2Name: "",
+            score: 0,
+            games: 0,
+          },
+          t2: {
+            p1Id: tournamentMatch.player2_id ?? "",
+            p1Name: tournamentMatch.team2_label ?? "Team 2",
+            p2Id: tournamentMatch.player4_id ?? undefined,
+            p2Name: "",
+            score: 0,
+            games: 0,
+          },
+          serverTeam: 1,
+          serverPlayerIndex: 0,
+          receiverPlayerIndex: 0,
+          receiverP0AtTop: true,
+          t1LastServedBy: 1,
+          t2LastServedBy: 1,
+          endsSwapped: false,
+          pointLog: [],
+          status: "setup",
+          setsHistory: [],
+        };
+      }
+
       return {
         id: userId,
         umpireName: userName,
@@ -247,13 +293,9 @@ export function useUmpireState({
         toast.error("Invalid format: Singles vs Doubles matches are not allowed.");
         return;
       }
-      // Compute fixed initial receiver position from setup choice.
-      // Score 0 (even), server on left when serverTeam=1 (endsSwapped=false at start).
-      // Server at bottom-left (even+left) → diagonal at top-right → if receiverPlayerIndex=0, P0 at top.
-      // For serverTeam=2: server on right, even → server at top-right → diagonal at bottom-left.
       const initServerOnLeft = match.serverTeam === 1;
-      const initIsEven = true; // score always 0 at start
-      const initDiagonalAtTop = initServerOnLeft === initIsEven; // true if serverTeam=1
+      const initIsEven = true;
+      const initDiagonalAtTop = initServerOnLeft === initIsEven;
       const initReceiverP0AtTop = (initDiagonalAtTop === (match.receiverPlayerIndex === 0));
       await updateMatch({
         status: "playing",
@@ -263,6 +305,26 @@ export function useUmpireState({
         t2: { ...match.t2, p1Name: getName(match.t2.p1Id), p2Name: match.t2.p2Id ? getName(match.t2.p2Id) : undefined },
       });
       toast.success("Match Broadcast Started!");
+    };
+
+    // Tournament variant — names already set, player IDs may be null (external players)
+    const startTournamentMatch = async () => {
+      const catMap: Record<string, string> = {
+        MS: "Singles", WS: "Singles", MD: "Doubles", WD: "Doubles", XD: "Doubles",
+      };
+      const cat = tournamentMatch ? (catMap[tournamentMatch.category] ?? "Singles") : match.category;
+      const initServerOnLeft = match.serverTeam === 1;
+      const initDiagonalAtTop = initServerOnLeft; // score 0 is even
+      const initReceiverP0AtTop = (initDiagonalAtTop === (match.receiverPlayerIndex === 0));
+      await updateMatch({
+        status: "playing",
+        category: cat,
+        receiverP0AtTop: initReceiverP0AtTop,
+        // preserve pre-filled names — do NOT call getName() which needs player IDs
+        t1: { ...match.t1 },
+        t2: { ...match.t2 },
+      });
+      toast.success("Tournament match started!");
     };
   
     // ── Add Point ───────────────────────────────────────────────────────────────
@@ -376,6 +438,31 @@ export function useUmpireState({
     // ── Save match ─────────────────────────────────────────────────────────────
     const saveMatchToProfile = async () => {
       if (match.status !== "finished") return;
+
+      // Tournament match path — submit to tournament_matches, no ELO impact
+      if (tournamentMatch) {
+        const winnerSide: 1 | 2 = match.winner === 1 ? 1 : 2;
+        const scoreStr = match.setsHistory.join(", ");
+        try {
+          const { error } = await supabase.rpc("submit_tournament_match", {
+            p_match_id: tournamentMatch.id,
+            p_winner_side: winnerSide,
+            p_score: scoreStr,
+            p_sets: match.setsHistory,
+            p_umpire_id: userId || null,
+          });
+          if (error) throw error;
+          await supabase.from("site_data").upsert({
+            key: "match_alert",
+            value: { message: `🏆 Tournament: ${match.t1.p1Name}${match.t1.p2Name ? ` & ${match.t1.p2Name}` : ""} vs ${match.t2.p1Name}${match.t2.p2Name ? ` & ${match.t2.p2Name}` : ""} — ${scoreStr}`, time: Date.now() },
+          });
+          toast.success("Tournament match result saved!");
+          handleClose();
+        } catch (err: any) {
+          toast.error("Failed to save tournament match: " + err.message);
+        }
+        return;
+      }
       const realIds = new Set(players.map(p => p.id));
       const toRealId = (id?: string) => (id && realIds.has(id) ? id : "");
       const hasAnyRealPlayer = [match.t1.p1Id, match.t1.p2Id, match.t2.p1Id, match.t2.p2Id]
@@ -515,6 +602,7 @@ export function useUmpireState({
     setBreakLabel,
     updateMatch,
     startMatch,
+    startTournamentMatch,
     handleEditSet,
     addPoint,
     deductPoint,

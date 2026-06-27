@@ -1,8 +1,9 @@
 import { useParams, Link } from "wouter";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { Trophy, Users, TrendingUp, Swords, ArrowLeft, Loader2 } from "lucide-react";
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 import type { PlayerRow as Player } from "@/types";
 
@@ -84,6 +85,20 @@ export default function DoublesPairProfile() {
     else currentStreak = 0;
   }
 
+  const eloHistory = useMemo(() => {
+    const chronological = [...pairMatches].reverse();
+    if (chronological.length < 2) return [];
+    let elo = 1200;
+    return chronological.map((m) => {
+      const won = m.winner_id === p1 || m.winner_id === p2;
+      elo += won ? 18 : -18;
+      return {
+        name: new Date(m.created_at!).toLocaleDateString("en-IN", { month: "short", day: "numeric" }),
+        elo,
+      };
+    });
+  }, [pairMatches, p1, p2]);
+
   const stats = [
     { label: "Matches Together", value: totalMatches, icon: Swords, color: "text-blue-600" },
     { label: "Wins", value: wins, icon: Trophy, color: "text-emerald-600" },
@@ -128,6 +143,35 @@ export default function DoublesPairProfile() {
             </div>
           ))}
         </div>
+
+        {/* Pair ELO Journey */}
+        {eloHistory.length >= 2 && (
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="font-black text-slate-800 dark:text-white">Pair ELO Journey</h3>
+              <span className="text-[10px] text-slate-400 font-medium">Estimated from match results</span>
+            </div>
+            <p className="text-xs text-slate-400 mb-4">Starting from 1200 · ±18 per match</p>
+            <ResponsiveContainer width="100%" height={160}>
+              <AreaChart data={eloHistory} margin={{ top: 4, right: 8, left: -24, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="pairEloGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#94a3b8" }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+                <YAxis tick={{ fontSize: 10, fill: "#94a3b8" }} tickLine={false} axisLine={false} />
+                <Tooltip
+                  contentStyle={{ background: "var(--tw-bg, #1e293b)", border: "1px solid #334155", borderRadius: 12, fontSize: 12 }}
+                  labelStyle={{ color: "#94a3b8" }}
+                  itemStyle={{ color: "#60a5fa" }}
+                />
+                <Area type="monotone" dataKey="elo" stroke="#3b82f6" strokeWidth={2} fill="url(#pairEloGrad)" dot={false} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        )}
 
         {/* Match history */}
         {pairMatches.length > 0 && (

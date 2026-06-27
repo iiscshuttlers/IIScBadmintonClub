@@ -77,16 +77,32 @@ export function EventEditor({
               placeholder="/events/..."
             />
           </div>
-          <div className="flex items-end gap-2 lg:col-span-2">
+          <div>
+            <label className={labelCls}>Reg. Deadline</label>
+            <input
+              type="date"
+              value={e.registrationDeadline || ""}
+              onChange={(ev) => update(i, "registrationDeadline", ev.target.value)}
+              className={inputCls}
+            />
+          </div>
+          <div>
+            <label className={labelCls}>Time</label>
+            <input
+              value={e.time || ""}
+              onChange={(ev) => update(i, "time", ev.target.value)}
+              className={inputCls}
+              placeholder="e.g. 2:00 PM – 6:00 PM"
+            />
+          </div>
+          <div className="flex items-end gap-2">
             <div className="flex-1">
-              <label className={labelCls}>Reg. Deadline</label>
+              <label className={labelCls}>Location</label>
               <input
-                type="date"
-                value={e.registrationDeadline || ""}
-                onChange={(ev) =>
-                  update(i, "registrationDeadline", ev.target.value)
-                }
+                value={e.location || ""}
+                onChange={(ev) => update(i, "location", ev.target.value)}
                 className={inputCls}
+                placeholder="e.g. Gymnasium Court 1"
               />
             </div>
             <button

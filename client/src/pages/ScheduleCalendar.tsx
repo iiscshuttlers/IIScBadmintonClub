@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import { db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
 import { fetchSiteData } from "@/lib/siteData";
 import { fetchTournamentConfig } from "@/lib/tournaments";
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
@@ -144,12 +142,7 @@ export default function ScheduleCalendar() {
         const [eventsData, holidaysData, tourneySnap, tourneyCfg] = await Promise.all([
           fetchSiteData<CalendarEvent[]>("events", "events.json").catch(() => []),
           fetchSiteData<Holiday[]>("holidays", "holidays.json").catch(() => []),
-          db
-            ? getDoc(doc(db, "live_data", "tournament")).catch((err) => {
-                console.error("Firebase tourney fetch failed:", err);
-                return null;
-              })
-            : Promise.resolve(null),
+          Promise.resolve(null), // Tournament schedule now comes from Supabase tournament_matches
           fetchTournamentConfig().catch(() => null),
         ]);
 

@@ -24,7 +24,6 @@ import {
   signOut,
   User as FirebaseUser,
 } from "firebase/auth";
-import { advanceWinners } from "@/lib/tournamentProgression";
 
 const inputCls =
   "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500 transition";
@@ -216,12 +215,7 @@ export function UmpireMode() {
       lastUpdated: new Date().toISOString(),
     });
     if (status === "completed" && winner) {
-      try {
-        await advanceWinners(selectedFormat, selectedMatchId);
-        toast("Score saved & winner advanced!", { icon: "✅" });
-      } catch {
-        toast("Score saved (auto-advance failed)", { icon: "⚠️" });
-      }
+      toast("Score saved!", { icon: "✅" });
       setWinner("");
       setMatchId("");
     } else {

@@ -103,7 +103,7 @@ export function TeamsTab() {
               const p2 = players?.find((p) => p.id === team.player2_id);
 
               return (
-                <div key={team.id} className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow group">
+                <Link key={team.id} href={`/doubles/${team.player1_id}/${team.player2_id}`} className="flex items-center gap-4 bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-violet-300 dark:hover:border-violet-700 transition-all cursor-pointer group">
                   <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center font-black text-xl text-slate-400">
                     #{index + 1}
                   </div>
@@ -113,23 +113,23 @@ export function TeamsTab() {
                       {team.team_name}
                     </h3>
                     <div className="flex items-center gap-2 mt-1">
-                      <Link href={`/player/${p1?.id}`} className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-emerald-500 transition-colors truncate">
+                      <span className="flex items-center gap-1.5 text-sm font-medium text-slate-500 truncate">
                         {p1?.full_name || "Unknown"}
                         {p1?.is_retired && (
                           <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-sm bg-rose-500 text-white shadow-sm shrink-0">
                             Retired
                           </span>
                         )}
-                      </Link>
+                      </span>
                       <span className="text-xs text-slate-300 font-bold">&</span>
-                      <Link href={`/player/${p2?.id}`} className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-emerald-500 transition-colors truncate">
+                      <span className="flex items-center gap-1.5 text-sm font-medium text-slate-500 truncate">
                         {p2?.full_name || "Unknown"}
                         {p2?.is_retired && (
                           <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-sm bg-rose-500 text-white shadow-sm shrink-0">
                             Retired
                           </span>
                         )}
-                      </Link>
+                      </span>
                     </div>
                   </div>
 
@@ -142,7 +142,7 @@ export function TeamsTab() {
                       {team.matches_won}W - {team.matches_played - team.matches_won}L
                     </div>
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>

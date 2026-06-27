@@ -27,6 +27,9 @@ export function useSiteDataEditor<T>(
   
   const { recordAction, reloadTrigger } = useAdminHistory();
   const mounted = useRef(true);
+  // Stabilize emptyState so that callers passing object/array literals
+  // (e.g., `useSiteDataEditor("key", [])`) don't cause infinite re-renders.
+  const emptyStateRef = useRef(emptyState);
 
   useEffect(() => {
     mounted.current = true;
@@ -45,14 +48,7 @@ export function useSiteDataEditor<T>(
 
       if (error) throw error;
       
-      let fetchedValue = (row?.value as T) ?? emptyState;
-      
-      // Some keys store objects where the array is inside a property (e.g., announcements -> { recent: [] })
-      // For ease of use, if the hook is expected to return the inner array, the caller should pass emptyState as an array
-      // and we handle the unwrapping/wrapping via the transformer in save(), but we need to unwrap on load too if needed.
-      // Actually, let's keep the hook pure. The component should pass the exact shape stored in the DB, OR
-      // we can handle it if we make the caller provide a readTransformer and writeTransformer.
-      // Let's assume the hook returns exactly what is in the DB, and if it's null, returns emptyState.
+      let fetchedValue = (row?.value as T) ?? emptyStateRef.current;
 
       if (mounted.current) {
         setDataRaw(fetchedValue);
@@ -66,7 +62,7 @@ export function useSiteDataEditor<T>(
     } finally {
       if (mounted.current) setIsLoading(false);
     }
-  }, [dbKey, emptyState]);
+  }, [dbKey]);
 
   useEffect(() => {
     loadData();

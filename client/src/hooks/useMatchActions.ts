@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import type { PlayerRow } from "@/types";
+import { queueOfflineAction } from "@/hooks/useOfflineSync";
 
 export function useMatchActions(
   ownPlayerProfile: PlayerRow | null,
@@ -11,6 +12,11 @@ export function useMatchActions(
 ) {
   const handleConfirmMatch = async (matchId: string) => {
     if (!ownPlayerProfile) return;
+    if (!navigator.onLine) {
+      queueOfflineAction({ type: "confirm", matchId, confirmerId: ownPlayerProfile.id });
+      toast.info("You're offline — confirmation queued and will sync when reconnected.");
+      return;
+    }
     try {
       const { data, error } = await supabase.rpc("confirm_friendly_match", {
         match_uuid: matchId,
@@ -43,6 +49,11 @@ export function useMatchActions(
 
   const handleRejectMatch = async (matchId: string) => {
     if (!ownPlayerProfile) return;
+    if (!navigator.onLine) {
+      queueOfflineAction({ type: "reject", matchId, rejecterId: ownPlayerProfile.id });
+      toast.info("You're offline — rejection queued and will sync when reconnected.");
+      return;
+    }
     try {
       const { error } = await supabase.rpc("reject_friendly_match", {
         match_uuid: matchId,
@@ -78,6 +89,12 @@ export function useMatchActions(
       action: {
         label: "Withdraw",
         onClick: async () => {
+          if (!navigator.onLine) {
+            queueOfflineAction({ type: "withdraw", matchId });
+            setRawMatches((prev) => prev.filter((m) => m.id !== matchId));
+            toast.info("You're offline — withdrawal queued and will sync when reconnected.");
+            return;
+          }
           try {
             const { data, error } = await supabase
               .from("matches")

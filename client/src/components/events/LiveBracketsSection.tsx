@@ -1,16 +1,10 @@
 import { useState, useEffect } from "react";
 import { Trophy, Activity, CheckCircle } from "lucide-react";
-import { db } from "@/lib/firebase";
-import { doc, onSnapshot } from "firebase/firestore";
+import { supabase } from "@/lib/supabase";
 
 interface TournamentData {
   formats: string[];
-  players: any;
-  matches: {
-    [format: string]: any[];
-  };
-  config: any;
-  lastUpdated: string;
+  matches: { [format: string]: any[] };
 }
 
 export function LiveBracketsSection() {
@@ -21,31 +15,63 @@ export function LiveBracketsSection() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!db) {
-      setError("Firebase is unavailable.");
-      setLoading(false);
-      return;
-    }
-    const unsubscribe = onSnapshot(
-      doc(db, "live_data", "tournament"),
-      (docSnap) => {
-        if (docSnap.exists()) {
-          setTournamentData(docSnap.data() as TournamentData);
-          setLoading(false);
-          setError("");
-        } else {
-          setError("Tournament brackets are not available yet.");
-          setLoading(false);
-        }
-      },
-      (err) => {
-        console.error("Firebase listen error:", err);
-        setError("Failed to connect to live updates.");
-        setLoading(false);
-      },
-    );
+    const load = async () => {
+      // Find the most recently active/completed tournament
+      const { data: tournaments } = await supabase
+        .from("tournaments")
+        .select("id, categories")
+        .in("status", ["active", "completed", "archived"])
+        .order("created_at", { ascending: false })
+        .limit(1);
 
-    return () => unsubscribe();
+      if (!tournaments?.length) {
+        setError("Tournament brackets are not available yet.");
+        setLoading(false);
+        return;
+      }
+
+      const tournament = tournaments[0];
+      const { data: matchRows, error: matchError } = await supabase
+        .from("tournament_matches")
+        .select("*")
+        .eq("tournament_id", tournament.id)
+        .order("round")
+        .order("match_number");
+
+      if (matchError || !matchRows?.length) {
+        setError("Tournament brackets are not available yet.");
+        setLoading(false);
+        return;
+      }
+
+      // Reshape into the format the existing UI expects
+      const matchesByFormat: Record<string, any[]> = {};
+      for (const m of matchRows) {
+        if (!matchesByFormat[m.category]) matchesByFormat[m.category] = [];
+        matchesByFormat[m.category].push({
+          Match_ID: m.match_code,
+          Round: m.round_name,
+          Player_1: m.team1_label ?? "TBD",
+          Player_2: m.team2_label ?? "TBD",
+          Players_1: m.team1_label ?? "TBD",
+          Players_2: m.team2_label ?? "TBD",
+          Status: m.status === "completed" ? "completed" : m.status === "in_progress" ? "in-progress" : "scheduled",
+          Winner: m.winner_side === 1 ? (m.team1_label ?? "") : m.winner_side === 2 ? (m.team2_label ?? "") : undefined,
+          _sets: m.sets_history,
+        });
+      }
+
+      const formats = (tournament.categories as string[]).filter((c) => matchesByFormat[c]);
+      setTournamentData({ formats, matches: matchesByFormat });
+      if (formats.length) setActiveFormat(formats[0]);
+      setLoading(false);
+    };
+
+    load();
+
+    // Poll every 30s for live updates
+    const interval = setInterval(load, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const currentMatches = tournamentData?.matches[activeFormat] || [];

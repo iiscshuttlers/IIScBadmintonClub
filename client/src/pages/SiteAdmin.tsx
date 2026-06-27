@@ -24,6 +24,7 @@ import {
   Undo2,
   Redo2,
   FileCode2,
+  ExternalLink,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
@@ -47,7 +48,7 @@ import { AdminActivityLog } from "@/components/admin/AdminActivityLog";
 import { EloAuditPanel } from "@/components/admin/EloAuditPanel";
 import { AdminFeaturesPanel } from "@/components/admin/AdminFeaturesPanel";
 import { AdminAllFeaturesPanel } from "@/components/admin/AdminAllFeaturesPanel";
-import { TournamentEditor } from "@/components/admin/TournamentEditor";
+import { TournamentManager } from "@/components/admin/TournamentManager";
 import { RecycleBin } from "@/components/admin/RecycleBin";
 import { GuestPlayersPanel } from "@/components/admin/GuestPlayersPanel";
 import { AdminHistoryProvider, useAdminHistory } from "@/contexts/AdminHistoryContext";
@@ -254,6 +255,15 @@ function SiteAdminInner() {
               <p className="text-slate-300 text-sm mt-1">Site content · Player management · Live tournament scoring</p>
             </div>
             <div className="flex items-center gap-2">
+              <a
+                href="/tournament-admin"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-sm font-bold transition"
+                title="Open full Tournament Manager"
+              >
+                <Trophy className="w-4 h-4" />
+                <span className="hidden sm:inline">Tournaments</span>
+                <ExternalLink className="w-3 h-3 opacity-60" />
+              </a>
               <button
                 onClick={undo}
                 disabled={!canUndo}
@@ -408,7 +418,7 @@ function SiteAdminInner() {
                 setTabCount={(c) => setTabCounts(prev => ({ ...prev, events: c }))} 
               />
             )}
-            {activeTab === "tournament" && <TournamentEditor />}
+            {activeTab === "tournament" && <TournamentManager />}
             {activeTab === "videos" && (
               <ContentEditorWrapper 
                 dbKey="videos" 

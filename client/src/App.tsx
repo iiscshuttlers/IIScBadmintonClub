@@ -69,6 +69,7 @@ const DoublesPairProfile = lazy(() => import("./pages/DoublesPairProfile"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const Marketplace = lazy(() => import("./pages/Marketplace"));
+const TournamentAdmin = lazy(() => import("./pages/TournamentAdmin"));
 
 
 
@@ -115,6 +116,7 @@ function AppRoutes() {
           <Route path="/terms" component={TermsOfService} />
 
           <Route path="/admin"><ProtectedRoute><SiteAdmin /></ProtectedRoute></Route>
+          <Route path="/tournament-admin"><ProtectedRoute><TournamentAdmin /></ProtectedRoute></Route>
           <Route path="/profile/setup"><ProtectedRoute><ProfileSetup /></ProtectedRoute></Route>
           <Route path="/players"><ProtectedRoute><PlayersDirectory /></ProtectedRoute></Route>
           <Route path="/player/:id/edit"><ProtectedRoute><ProfileSetup /></ProtectedRoute></Route>

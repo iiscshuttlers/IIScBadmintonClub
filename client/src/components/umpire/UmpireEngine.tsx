@@ -4,7 +4,7 @@ import { ScoringLogic, type MatchFormat } from "@/lib/umpire/scoringLogic";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import {
-  Trophy, Activity, Plus, Minus, X, Settings, Save, Timer,
+  Trophy, Activity, Plus, Minus, X, Settings, Save, Timer, Play,
   AlertTriangle, BookOpen, ArrowLeftRight, Flag, ChevronDown, ChevronUp, Repeat,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -86,6 +86,8 @@ import { useUmpireState } from "@/hooks/useUmpireState";
 
 // ── UmpireEngine ──────────────────────────────────────────────────────────────
 
+import type { TournamentMatchForUmpire } from "./UmpireTournamentTab";
+
 export function UmpireEngine({
   userId,
   userEmail,
@@ -93,6 +95,7 @@ export function UmpireEngine({
   isTournamentUmpire = false,
   onClose,
   initialMatchState,
+  tournamentMatch,
 }: {
   userId: string;
   userEmail: string;
@@ -100,6 +103,7 @@ export function UmpireEngine({
   isTournamentUmpire?: boolean;
   onClose: () => void;
   initialMatchState?: BwfMatchState | MatchEditState | null;
+  tournamentMatch?: TournamentMatchForUmpire | null;
 }) {
   const umpireState = useUmpireState({
     userId,
@@ -108,6 +112,7 @@ export function UmpireEngine({
     isTournamentUmpire,
     friendlyOnly: !isAdminEmail(userEmail) && !isTournamentUmpire,
     initialMatchState,
+    tournamentMatch,
     onClose
   });
 
@@ -120,7 +125,7 @@ export function UmpireEngine({
     setPendingBreakAfterEnds, setShowCardPanel, setCardTarget, setShowRetireModal,
     setIsEditSetupOpen, setShowToolsMenu, setIsDirectScoreOpen, setShowFullTimer,
     setDirectSetsText, setDirectWinner, setBreakSecondsLeft, setBreakLabel,
-    updateMatch, startMatch, handleEditSet, addPoint, deductPoint, forceEndSet,
+    updateMatch, startMatch, startTournamentMatch, handleEditSet, addPoint, deductPoint, forceEndSet,
     confirmChangeEnds, callLet, callServiceFault, issueCard, retireTeam, saveMatchToProfile,
     handleClose, getName, getGender, deduceCategory, startBreak, endBreak,
     selectedPlayerIds, buddyCheckPassed, isDoubles, serverName, receiverName,
@@ -129,6 +134,130 @@ export function UmpireEngine({
 
   // Render variables
   const friendlyOnly = !isAdminEmail(userEmail) && !isTournamentUmpire;
+  // ── TOURNAMENT SETUP SCREEN ────────────────────────────────────────────────
+  // Shown instead of UmpireSetupFlow when a tournament match is pre-filled.
+  const renderTournamentSetup = () => {
+    if (!tournamentMatch) return null;
+    const tm = tournamentMatch;
+    const isDoublesMatch = ["MD", "WD", "XD"].includes(tm.category);
+    const CAT_BADGE: Record<string, string> = {
+      MS: "bg-blue-600", WS: "bg-pink-600", MD: "bg-emerald-600",
+      WD: "bg-purple-600", XD: "bg-orange-600",
+    };
+    const badgeCls = CAT_BADGE[tm.category] ?? "bg-slate-600";
+
+    return (
+      <div className="bg-slate-900 border border-slate-800 rounded-4xl p-5 sm:p-8 text-white max-w-lg mx-auto shadow-2xl">
+        <div className="absolute top-0 inset-x-0 h-1.5 bg-linear-to-r from-emerald-500 to-sky-500 rounded-t-4xl" />
+
+        {/* Header */}
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg text-white ${badgeCls}`}>{tm.category}</span>
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{tm.round_name} · {tm.match_code}</span>
+            </div>
+            <p className="text-xs text-slate-500 font-bold">{tm.tournament_name}</p>
+          </div>
+          <button onClick={handleClose} className="p-2 hover:bg-slate-800 rounded-xl text-slate-500 hover:text-white transition">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Teams */}
+        <div className="grid grid-cols-[1fr_auto_1fr] gap-3 items-center mb-6">
+          <div className="bg-slate-800 rounded-2xl p-3 border border-slate-700 text-center">
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Team 1</p>
+            <p className="text-white font-black text-sm leading-snug">{tm.team1_label ?? "TBD"}</p>
+          </div>
+          <span className="text-[10px] font-black text-rose-400">VS</span>
+          <div className="bg-slate-800 rounded-2xl p-3 border border-slate-700 text-center">
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Team 2</p>
+            <p className="text-white font-black text-sm leading-snug">{tm.team2_label ?? "TBD"}</p>
+          </div>
+        </div>
+
+        {/* Scoring config (editable) */}
+        <div className="bg-slate-800/60 rounded-2xl p-4 space-y-3 mb-5 border border-slate-700/50">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Scoring Rules</p>
+          <div className="flex gap-2">
+            {[1, 3, 5].map((sets) => (
+              <button key={sets}
+                onClick={() => setMatch({ ...match, bestOfSets: sets })}
+                className={`flex-1 py-2 rounded-xl font-black text-sm border transition ${match.bestOfSets === sets ? "bg-sky-500/20 border-sky-500 text-sky-400" : "bg-slate-700/50 border-slate-700 text-slate-400 hover:border-slate-500"}`}>
+                BO{sets}
+              </button>
+            ))}
+            <div className="w-px bg-slate-700 self-stretch mx-1" />
+            {[11, 15, 21].map((pts) => (
+              <button key={pts}
+                onClick={() => setMatch({ ...match, pointsToWin: pts, goldenPoint: pts === 21 ? 30 : pts === 15 ? 21 : 15 })}
+                className={`flex-1 py-2 rounded-xl font-black text-sm border transition ${match.pointsToWin === pts ? "bg-emerald-500/20 border-emerald-500 text-emerald-400" : "bg-slate-700/50 border-slate-700 text-slate-400 hover:border-slate-500"}`}>
+                {pts}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-slate-500 shrink-0">Golden point cap:</span>
+            <input type="number" value={match.goldenPoint}
+              onChange={(e) => setMatch({ ...match, goldenPoint: parseInt(e.target.value) || 30 })}
+              className="w-16 bg-slate-700 border border-slate-600 rounded-lg px-2 py-1 text-center text-sm font-bold text-amber-400 outline-none focus:border-amber-500 transition" />
+            <span className="text-xs text-slate-500">pts</span>
+          </div>
+        </div>
+
+        {/* Server selection */}
+        <div className="bg-slate-800/60 rounded-2xl p-4 space-y-3 mb-6 border border-slate-700/50">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Who Serves First?</p>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { team: 1, label: tm.team1_label ?? "Team 1" },
+              { team: 2, label: tm.team2_label ?? "Team 2" },
+            ].map(({ team, label }) => (
+              <button key={team}
+                onClick={() => setMatch({ ...match, serverTeam: team as 1 | 2, serverPlayerIndex: 0 })}
+                className={`py-3 px-3 rounded-xl font-black text-sm border transition text-center ${
+                  match.serverTeam === team
+                    ? "bg-emerald-500/20 border-emerald-500 text-emerald-400"
+                    : "bg-slate-700/50 border-slate-700 text-slate-400 hover:border-slate-500"
+                }`}>
+                {label}
+              </button>
+            ))}
+          </div>
+          {isDoublesMatch && (
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              {[0, 1].map((idx) => {
+                const serving = match.serverTeam === 1;
+                const teamLabel = serving ? tm.team1_label : tm.team2_label;
+                const names = (teamLabel ?? "").split(/[&,]/).map((s) => s.trim());
+                const name = names[idx] ?? `Player ${idx + 1}`;
+                return (
+                  <button key={idx}
+                    onClick={() => setMatch({ ...match, serverPlayerIndex: idx as 0 | 1 })}
+                    className={`py-2 px-3 rounded-xl text-xs font-black border transition ${
+                      match.serverPlayerIndex === idx
+                        ? "bg-sky-500/20 border-sky-500 text-sky-400"
+                        : "bg-slate-700/50 border-slate-700 text-slate-400 hover:border-slate-500"
+                    }`}>
+                    {name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Start */}
+        <button
+          onClick={startTournamentMatch}
+          className="w-full py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-black text-lg transition shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2">
+          <Play className="w-5 h-5 fill-white" /> Start Match
+        </button>
+      </div>
+    );
+  };
+
   // ── SETUP SCREEN ───────────────────────────────────────────────────────────
   const renderSetupContent = () => (
     <UmpireSetupFlow
@@ -159,6 +288,15 @@ export function UmpireEngine({
       </div>
     );
   };
+
+  // Tournament pre-fill — show clean setup screen instead of generic UmpireSetupFlow
+  if (tournamentMatch && match.status === "setup") {
+    return (
+      <div className="relative max-w-lg mx-auto">
+        {renderTournamentSetup()}
+      </div>
+    );
+  }
 
   // ── PLAYING / FINISHED SCREEN ──────────────────────────────────────────────
   return (
