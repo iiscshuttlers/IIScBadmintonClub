@@ -1,5 +1,16 @@
 [
   {
+    "versionCode": 161,
+    "versionName": "1.161",
+    "date": "2026-06-27T17:37:45.346Z",
+    "changes": [
+      "- chore: release v1.160 (build 160)",
+      "- Update Gallery.tsx",
+      "- up",
+      "- chore: release v1.159 (build 159)"
+    ]
+  },
+  {
     "versionCode": 160,
     "versionName": "1.160",
     "date": "2026-06-27T17:30:47.810Z",

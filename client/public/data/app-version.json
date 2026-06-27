@@ -1,6 +1,6 @@
 {
-  "versionCode": 160,
-  "versionName": "1.160",
+  "versionCode": 161,
+  "versionName": "1.161",
   "downloadUrl": "https://play.google.com/store/apps/details?id=com.iiscshuttlers.app",
-  "changelog": "- Update Gallery.tsx\n- up\n- chore: release v1.159 (build 159)"
+  "changelog": "- chore: release v1.160 (build 160)\n- Update Gallery.tsx\n- up\n- chore: release v1.159 (build 159)"
 }
