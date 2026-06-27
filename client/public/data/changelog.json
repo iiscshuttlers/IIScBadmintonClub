@@ -1,5 +1,14 @@
 [
   {
+    "versionCode": 162,
+    "versionName": "1.162",
+    "date": "2026-06-27T17:53:15.758Z",
+    "changes": [
+      "- Tournamnet",
+      "- chore: release v1.161 (build 161)"
+    ]
+  },
+  {
     "versionCode": 161,
     "versionName": "1.161",
     "date": "2026-06-27T17:37:45.346Z",
