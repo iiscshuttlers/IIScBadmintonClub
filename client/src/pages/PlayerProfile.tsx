@@ -15,6 +15,7 @@ import {
   Settings,
   Swords,
   Footprints,
+  Flag,
 } from "lucide-react";
 
 import { usePlayerStats } from "@/hooks/usePlayerStats";
@@ -210,6 +211,13 @@ export default function PlayerProfile() {
     }
   };
 
+  const handleReport = () => {
+    if (confirm("Report this user for inappropriate content or behavior?")) {
+      window.location.href = `mailto:iiscbadmintonclub@gmail.com?subject=Report User ID: ${player?.id}&body=I would like to report the user ${player?.fullName} for the following reason:%0D%0A%0D%0A[Please type your reason here]`;
+      toast.success("Opened email client to send report.");
+    }
+  };
+
   const handleWrapped = async () => {
     if (!player) return;
     const toastId = toast.loading("Generating your 2024 Wrapped...");
@@ -303,6 +311,15 @@ export default function PlayerProfile() {
           </Link>
 
           <div className="flex items-center gap-2 md:gap-3">
+            {!ownPlayerProfile && (
+              <button
+                onClick={handleReport}
+                title="Report User"
+                className="w-10 h-10 md:w-12 md:h-12 bg-black/20 hover:bg-rose-500/80 backdrop-blur-md text-white rounded-full flex items-center justify-center transition-all"
+              >
+                <Flag className="w-4 h-4 md:w-5 md:h-5" />
+              </button>
+            )}
             <button
               onClick={handleShare}
               className="w-10 h-10 md:w-12 md:h-12 bg-black/20 hover:bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center transition-all"

@@ -169,19 +169,21 @@ function SiteAdminInner() {
 
   const [activeTab, setActiveTab] = useState<TabId>(() => {
     const hash = window.location.hash.replace("#", "");
-    if (TABS.some(t => t.id === hash)) return hash as TabId;
+    const baseHash = hash.split("/")[0];
+    if (TABS.some(t => t.id === baseHash)) return baseHash as TabId;
     return isAdmin ? "overview" : "umpire";
   });
 
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace("#", "");
-      if (TABS.some(t => t.id === hash)) setActiveTab(hash as TabId);
+      const baseHash = hash.split("/")[0];
+      if (TABS.some(t => t.id === baseHash)) setActiveTab(baseHash as TabId);
     };
     window.addEventListener("hashchange", handleHashChange);
     if (!window.location.hash) window.history.replaceState(null, "", `#${activeTab}`);
     return () => window.removeEventListener("hashchange", handleHashChange);
-  }, []);
+  }, [activeTab]);
 
   const handleTabChange = (tabId: TabId) => {
     setActiveTab(tabId);
@@ -328,8 +330,8 @@ function SiteAdminInner() {
               </div>
               <p className="text-slate-300 text-sm mt-1">Site content · Player management · Live tournament scoring</p>
             </div>
-            <div className="flex flex-col items-end gap-1">
-              <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:items-end items-start gap-1 w-full sm:w-auto mt-2 sm:mt-0">
+              <div className="flex flex-wrap items-center gap-2">
                 <a
                   href="/tournament-admin"
                   className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-sm font-bold transition"
@@ -359,7 +361,7 @@ function SiteAdminInner() {
                 </button>
               </div>
               {(canUndo || canRedo) && (
-                <div className="text-[10px] text-emerald-300 font-medium max-w-[200px] sm:max-w-[300px] truncate text-right leading-tight">
+                <div className="text-[10px] text-emerald-300 font-medium w-full sm:max-w-[300px] sm:text-right text-left leading-tight break-words">
                   {canUndo && <div><span className="opacity-70">Undo:</span> {lastAction?.label}</div>}
                   {canRedo && <div><span className="opacity-70">Redo:</span> {nextRedoAction?.label}</div>}
                 </div>

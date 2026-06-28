@@ -5,7 +5,7 @@ import { BracketVisual, type BracketMatch } from "@/components/tournament/Bracke
 
 const CATEGORY_ORDER = ["MS", "WS", "MD", "WD", "XD"];
 
-export function LiveBracketsSection() {
+export function LiveBracketsSection({ tournamentId }: { tournamentId: string | null }) {
   const [activeFormat, setActiveFormat] = useState("MS");
   const [formats, setFormats] = useState<string[]>([]);
   const [matchesByFormat, setMatchesByFormat] = useState<Record<string, BracketMatch[]>>({});
@@ -14,20 +14,24 @@ export function LiveBracketsSection() {
 
   useEffect(() => {
     const load = async () => {
-      const { data: tournaments } = await supabase
-        .from("tournaments")
-        .select("id, categories")
-        .in("status", ["active", "completed", "archived"])
-        .order("created_at", { ascending: false })
-        .limit(1);
-
-      if (!tournaments?.length) {
+      if (!tournamentId) {
         setError("Tournament brackets are not available yet.");
         setLoading(false);
         return;
       }
 
-      const tournament = tournaments[0];
+      const { data: tournament } = await supabase
+        .from("tournaments")
+        .select("id, categories")
+        .eq("id", tournamentId)
+        .single();
+
+      if (!tournament) {
+        setError("Tournament not found.");
+        setLoading(false);
+        return;
+      }
+
       const { data: rows, error: matchError } = await supabase
         .from("tournament_matches")
         .select("*")
@@ -58,7 +62,7 @@ export function LiveBracketsSection() {
     };
 
     load();
-  }, []);
+  }, [tournamentId]);
 
   if (loading) {
     return (

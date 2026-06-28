@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.iiscshuttlers.app",
+      "sha256_cert_fingerprints": [
+        "76:2C:A7:70:93:05:C1:FE:CC:70:D1:BA:7D:7B:32:AE:0B:8A:51:2D:3B:8B:93:C3:EB:BA:3D:73:AE:01:CF:41",
+        "REPLACE_WITH_GOOGLE_PLAY_SIGNING_KEY_SHA256"
+      ]
+    }
+  }
+]

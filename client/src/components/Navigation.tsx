@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { getTournaments } from "@/lib/tournaments";
 import { fetchSiteData } from "@/lib/siteData";
@@ -44,6 +44,7 @@ import { useAuth, type ViewAsRole } from "@/contexts/AuthContext";
 import { useAppUpdate } from "@/hooks/useAppUpdate";
 import { PreferencesModal } from "@/components/QuickSettings";
 import { GlobalSearch } from "@/components/GlobalSearch";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 const TOP_LEVEL_LINKS = [
   { href: "/feed", label: "Feed" },
@@ -63,6 +64,7 @@ export default function Navigation() {
   const [liveEventCount, setLiveEventCount] = useState(0);
   const [hasUnreadAnnouncements, setHasUnreadAnnouncements] = useState(false);
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
+  const [signOutDialog, setSignOutDialog] = useState<{ open: boolean; message: string; onConfirm: () => void }>({ open: false, message: "", onConfirm: () => {} });
   const {
     authLoading,
     isAdmin,
@@ -149,12 +151,15 @@ export default function Navigation() {
   const isActive = (href: string) =>
     href === "/" ? location === "/" : location.startsWith(href);
 
-  const handleSignOut = async (
-    message = "Are you sure you want to sign out of all accounts?"
-  ) => {
-    if (!confirm(message)) return;
-    setIsOpen(false);
-    await signOut();
+  const handleSignOut = (message = "Are you sure you want to sign out of all accounts?") => {
+    setSignOutDialog({
+      open: true,
+      message,
+      onConfirm: async () => {
+        setIsOpen(false);
+        await signOut();
+      },
+    });
   };
 
   const handleInvite = async () => {
@@ -186,12 +191,10 @@ export default function Navigation() {
       <nav
         className={`pt-[max(env(safe-area-inset-top),36px)] md:pt-[max(env(safe-area-inset-top),16px)] sticky top-0 z-50 transition-all duration-300 ${
           scrolled
-            ? "bg-white/92 dark:bg-slate-950/92 backdrop-blur-xl shadow-lg shadow-slate-200/40 dark:shadow-slate-900/40 border-b border-slate-100/80 dark:border-slate-800/60"
-            : "bg-white dark:bg-slate-950 border-b border-transparent"
+            ? "bg-gradient-to-r from-emerald-50/95 to-white/95 dark:from-emerald-950/40 dark:to-slate-950/95 backdrop-blur-xl shadow-lg shadow-emerald-900/5 dark:shadow-slate-900/40 border-b border-emerald-100/50 dark:border-slate-800/60"
+            : "bg-gradient-to-r from-emerald-50/60 to-white dark:from-emerald-950/20 dark:to-slate-950 border-b border-transparent"
         }`}
       >
-        {/* Top gradient accent bar */}
-        <div className="h-[3px] bg-gradient-to-r from-emerald-500 via-teal-400 to-orange-500 w-full" />
         <div className={`container mx-auto px-4 transition-all duration-300 ${scrolled ? "py-1.5" : "py-2"}`}>
 
           {/* ── Row 1: Logo + Nav Links ─────────────────────────────── */}
@@ -500,8 +503,18 @@ export default function Navigation() {
 
       {/* Global Search Modal */}
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
-      
+
       <PreferencesModal isOpen={isPreferencesOpen} onClose={() => setIsPreferencesOpen(false)} />
+
+      <ConfirmDialog
+        open={signOutDialog.open}
+        title="Sign Out"
+        description={signOutDialog.message}
+        confirmLabel="Sign Out"
+        confirmVariant="danger"
+        onConfirm={() => { setSignOutDialog(d => ({ ...d, open: false })); signOutDialog.onConfirm(); }}
+        onCancel={() => setSignOutDialog(d => ({ ...d, open: false }))}
+      />
     </>
   );
 }

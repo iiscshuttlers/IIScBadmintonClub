@@ -35,6 +35,18 @@ export function MatchScoreDisplay({ sets_history, team1_label, team2_label, winn
     );
   }
 
+  const renderLabel = (label: string) => {
+    if (!label.includes("&")) return <div className="break-words whitespace-normal leading-[1.1]">{label}</div>;
+    const parts = label.split("&");
+    return (
+      <div className="flex flex-col leading-[1.1] py-0.5">
+        <span className="break-words whitespace-normal w-full">{parts[0].trim()}</span>
+        <span className="text-[10px] opacity-60 my-0.5 font-bold text-slate-400 dark:text-slate-500">&amp;</span>
+        <span className="break-words whitespace-normal w-full">{parts[1].trim()}</span>
+      </div>
+    );
+  };
+
   return (
     <div className="overflow-x-auto">
       <table className="text-xs w-full border-collapse">
@@ -49,18 +61,18 @@ export function MatchScoreDisplay({ sets_history, team1_label, team2_label, winn
         </thead>
         <tbody>
           <tr className={winner_side === 1 ? "text-emerald-600 dark:text-emerald-400 font-black" : "text-slate-400 dark:text-slate-500"}>
-            <td className="py-1 pr-3 truncate max-w-[120px]">{team1_label || "Team 1"}</td>
+            <td className="py-1 pr-3 align-middle">{renderLabel(team1_label || "Team 1")}</td>
             {parsed.map((s, i) => (
-              <td key={i} className={`text-center py-1 px-2 rounded ${s.a > s.b ? "bg-emerald-50 dark:bg-emerald-950/30" : ""}`}>{s.a}</td>
+              <td key={i} className={`text-center py-1 px-2 rounded align-middle ${s.a > s.b ? "bg-emerald-50 dark:bg-emerald-950/30" : ""}`}>{s.a}</td>
             ))}
-            <td className="text-center py-1 px-2 font-black">{t1Sets}</td>
+            <td className="text-center py-1 px-2 font-black align-middle">{t1Sets}</td>
           </tr>
           <tr className={winner_side === 2 ? "text-emerald-600 dark:text-emerald-400 font-black" : "text-slate-400 dark:text-slate-500"}>
-            <td className="py-1 pr-3 truncate max-w-[120px]">{team2_label || "Team 2"}</td>
+            <td className="py-1 pr-3 align-middle">{renderLabel(team2_label || "Team 2")}</td>
             {parsed.map((s, i) => (
-              <td key={i} className={`text-center py-1 px-2 rounded ${s.b > s.a ? "bg-emerald-50 dark:bg-emerald-950/30" : ""}`}>{s.b}</td>
+              <td key={i} className={`text-center py-1 px-2 rounded align-middle ${s.b > s.a ? "bg-emerald-50 dark:bg-emerald-950/30" : ""}`}>{s.b}</td>
             ))}
-            <td className="text-center py-1 px-2 font-black">{t2Sets}</td>
+            <td className="text-center py-1 px-2 font-black align-middle">{t2Sets}</td>
           </tr>
         </tbody>
       </table>

@@ -76,8 +76,8 @@ export function UndoHistory() {
           <p className="text-xs text-slate-400 mt-1">Modifications will appear here once you make changes.</p>
         </div>
       ) : (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-          <table className="w-full text-sm">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-x-auto shadow-sm">
+          <table className="w-full text-sm min-w-[700px]">
             <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
               <tr>
                 <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 w-48">Time</th>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchSiteData } from "@/lib/siteData";
-import { fetchTournamentConfig } from "@/lib/tournaments";
+import { fetchTournamentConfig, getTournaments } from "@/lib/tournaments";
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import {
   Tooltip,
@@ -140,9 +140,10 @@ export default function ScheduleCalendar() {
   useEffect(() => {
     async function loadEvents() {
       try {
-        const [eventsData, holidaysData, tourneySnap, tourneyCfg] = await Promise.all([
+        const [eventsData, holidaysData, dbTournaments, tourneySnap, tourneyCfg] = await Promise.all([
           fetchSiteData<CalendarEvent[]>("events", "events.json").catch(() => []),
           fetchSiteData<Holiday[]>("holidays", "holidays.json").catch(() => []),
+          getTournaments().catch(() => []),
           Promise.resolve(null), // Tournament schedule now comes from Supabase tournament_matches
           fetchTournamentConfig().catch(() => null),
         ]);
@@ -160,6 +161,21 @@ export default function ScheduleCalendar() {
               type: "holiday",
               location: "Gymkhana",
             });
+          });
+        }
+        
+        if (dbTournaments && dbTournaments.length > 0) {
+          dbTournaments.forEach((t: any) => {
+            if (t.startDate) {
+              merged.push({
+                date: t.startDate,
+                endDate: t.endDate || t.startDate,
+                title: t.name,
+                type: "event",
+                location: t.venue || "Gymkhana",
+                link: "/events#tournament",
+              });
+            }
           });
         }
 

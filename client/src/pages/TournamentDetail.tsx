@@ -1,4 +1,5 @@
-import { Link, useRoute } from "wouter";
+import { Link, useRoute, useLocation } from "wouter";
+import { useEffect } from "react";
 import {
   ArrowLeft,
   Medal,
@@ -17,9 +18,13 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { getArchivedTournament } from "@/data/tournamentArchive";
+import { getArchivedTournament, ArchivedTournament } from "@/data/tournamentArchive";
 import { motion } from "framer-motion";
 import { InfoModal } from "@/components/InfoModal";
+import { useQuery } from "@tanstack/react-query";
+import { getTournaments } from "@/lib/tournaments";
+import { Loader2 } from "lucide-react";
+import { TournamentArchiveBrackets } from "@/components/events/TournamentSection";
 
 const PODIUM_CONFIGS = [
   {
@@ -47,7 +52,7 @@ const PODIUM_CONFIGS = [
     label: "Fourth Place",
     border: "border-blue-200",
     bg: "bg-blue-50 dark:bg-blue-950/20",
-    text: "text-blue-700 dark:text-blue-400",
+    text: "text-blue-400 dark:text-blue-400",
     ring: "",
   },
 ];
@@ -63,9 +68,44 @@ const fadeUp = {
 
 export default function TournamentDetail() {
   const [, routeParams] = useRoute("/events/:slug");
+  const [, setLocation] = useLocation();
   const params = routeParams ?? { slug: "" };
   const slug = params.slug;
-  const tournament = getArchivedTournament(slug);
+  let tournament: ArchivedTournament | undefined = getArchivedTournament(slug);
+  
+  const { data: events, isLoading } = useQuery({
+    queryKey: ["tournaments"],
+    queryFn: getTournaments,
+    enabled: !tournament, // Only fetch if not a legacy tournament
+  });
+
+  useEffect(() => {
+    if (tournament && (tournament.status === "active" || tournament.status === "draft")) {
+      setLocation(`/events?t=${tournament.status}#tournament`);
+    }
+  }, [tournament?.id, tournament?.status, setLocation]);
+
+  if (!tournament && events) {
+    const sb = events.find(e => e.slug === slug || e.id === slug);
+    if (sb) {
+      tournament = {
+        id: sb.id,
+        slug: sb.slug,
+        status: sb.status,
+        type: sb.subtitle as any,
+        startDate: sb.startDate,
+        name: sb.name,
+        subtitle: "Official Results",
+        description: sb.description || "Tournament completed.",
+        winners: sb.winners,
+        podium: sb.podium,
+      } as any;
+    }
+  }
+
+  if (isLoading && !tournament) {
+    return <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>;
+  }
 
   if (!tournament) {
     return (
@@ -142,7 +182,7 @@ export default function TournamentDetail() {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbLink href="/events">Events</BreadcrumbLink>
+              <BreadcrumbLink href="/events?t=completed#tournament">Events</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
@@ -283,6 +323,18 @@ export default function TournamentDetail() {
                 )}
               </CardContent>
             </Card>
+
+            {tournament.id && (
+              <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-1.5 h-6 bg-gradient-to-b from-slate-400 to-slate-600 rounded-full" />
+                  <h2 className="text-2xl font-black text-blue-900 dark:text-white">
+                    Past Brackets & Results
+                  </h2>
+                </div>
+                <TournamentArchiveBrackets tournamentId={tournament.id} />
+              </div>
+            )}
           </motion.div>
 
           {/* Sidebar */}
@@ -413,7 +465,7 @@ export default function TournamentDetail() {
                   <Link href="/hall-of-fame">
                     <button className="w-full flex items-center justify-center gap-2 bg-blue-900 hover:bg-blue-800 dark:bg-blue-800 dark:hover:bg-blue-700 text-white font-bold px-4 py-3 rounded-xl text-sm transition-all hover:-translate-y-0.5">
                       <Trophy className="w-4 h-4" />
-                      All Winners
+                      Club Hall of Fame
                     </button>
                   </Link>
                 </div>

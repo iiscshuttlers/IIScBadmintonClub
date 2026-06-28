@@ -52,9 +52,33 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
     }
     setLoading(true);
     try {
+      if (q.includes("iiscbadmintonclub.github.io") || q.includes("localhost:3000") || q.includes("localhost:5173")) {
+        try {
+          const parsed = new URL(q.startsWith("http") ? q : `https://${q}`);
+          // Extract everything after /iiscshuttlers if present, otherwise just use pathname
+          let pathAfterBase = parsed.pathname;
+          if (pathAfterBase.startsWith("/iiscshuttlers")) {
+            pathAfterBase = pathAfterBase.replace(/^\/iiscshuttlers/, "");
+          }
+          if (!pathAfterBase) pathAfterBase = "/";
+          
+          const fullPath = pathAfterBase + parsed.search + parsed.hash;
+          
+          setResults([{
+            type: "event",
+            id: "url-direct",
+            title: "Open Shared Link",
+            subtitle: fullPath,
+            href: fullPath,
+          }]);
+          setLoading(false);
+          return;
+        } catch (e) {}
+      }
+
       const lq = q.toLowerCase();
 
-      const [playersRes, matchesRes, annRes, eventsRes, teamsRes] = await Promise.all([
+      const [playersRes, playerIdRes, annRes, eventsRes, teamsRes] = await Promise.all([
         supabase
           .from("players")
           .select("id, full_name, avatar_url, department, elo_rating")
@@ -62,17 +86,13 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
           .is("deleted_at", null)
           .eq("is_guest", false)
           .limit(5),
+        // Separate ID-only query used to filter matches safely (avoids raw subquery injection)
         supabase
-          .from("matches")
-          .select(
-            "id, match_score, score, category, created_at, player1_id, player2_id, player1:players!player1_id(full_name), player2:players!player2_id(full_name)"
-          )
-          .eq("status", "confirmed")
-          .or(
-            `player1_id.in.(select id from players where full_name ilike '%${q}%'),player2_id.in.(select id from players where full_name ilike '%${q}%')`
-          )
-          .order("created_at", { ascending: false })
-          .limit(4),
+          .from("players")
+          .select("id")
+          .ilike("full_name", `%${q}%`)
+          .is("deleted_at", null)
+          .limit(20),
         supabase
           .from("site_data")
           .select("value")
@@ -99,13 +119,25 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
         href: `/player/${p.id}`,
       }));
 
-      const matchResults: SearchResult[] = (matchesRes.data || []).map((m: any) => ({
-        type: "match",
-        id: m.id,
-        title: `${m.player1?.full_name ?? "?"} vs ${m.player2?.full_name ?? "?"}`,
-        subtitle: `${m.category ?? "Match"} · ${m.match_score || m.score || ""}`,
-        href: m.player1_id ? `/player/${m.player1_id}` : `/feed`,
-      }));
+      // Use the ID list to filter matches with parameterised .in() — no raw interpolation
+      const matchingIds = (playerIdRes.data || []).map((r: any) => r.id);
+      let matchResults: SearchResult[] = [];
+      if (matchingIds.length > 0) {
+        const { data: matchRows } = await supabase
+          .from("matches")
+          .select("id, match_score, score, category, created_at, player1_id, player2_id, player1:players!player1_id(full_name), player2:players!player2_id(full_name)")
+          .eq("status", "confirmed")
+          .or(`player1_id.in.(${matchingIds.join(",")}),player2_id.in.(${matchingIds.join(",")})`)
+          .order("created_at", { ascending: false })
+          .limit(4);
+        matchResults = (matchRows || []).map((m: any) => ({
+          type: "match" as const,
+          id: m.id,
+          title: `${m.player1?.full_name ?? "?"} vs ${m.player2?.full_name ?? "?"}`,
+          subtitle: `${m.category ?? "Match"} · ${m.match_score || m.score || ""}`,
+          href: m.player1_id ? `/player/${m.player1_id}` : `/feed`,
+        }));
+      }
 
       const teamResults: SearchResult[] = (teamsRes.data || []).map((t: any) => ({
         type: "team",

@@ -8,7 +8,7 @@ const config: CapacitorConfig = {
     androidScheme: "https",
   },
   android: {
-    backgroundColor: "#000000",
+    backgroundColor: "#ffffff",
     allowMixedContent: false,
     captureInput: true,
     webContentsDebuggingEnabled: false,
@@ -17,7 +17,7 @@ const config: CapacitorConfig = {
     SplashScreen: {
       launchShowDuration: 1200,
       launchAutoHide: true,
-      backgroundColor: "#000000",
+      backgroundColor: "#ffffff",
       androidScaleType: "CENTER_CROP",
       showSpinner: false,
     },
@@ -28,6 +28,11 @@ const config: CapacitorConfig = {
     PushNotifications: {
       presentationOptions: ["badge", "sound", "alert"],
     },
+    StatusBar: {
+      style: "DARK",
+      overlaysWebView: false,
+      backgroundColor: "#ffffff"
+    }
   },
 };
 

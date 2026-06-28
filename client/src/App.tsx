@@ -188,27 +188,36 @@ function AppContent() {
     const handleDeepLink = (event: any) => {
       const url = event.url;
       if (url) {
-        // Handle iiscshuttlers:// scheme
-        if (url.startsWith("iiscshuttlers://")) {
-          const path = url.slice("iiscshuttlers://".length);
-          setLocation("/" + path);
-          return;
-        }
-        // Handle https URLs
-        if (url.includes("iiscbadmintonclub.github.io")) {
-          const match = url.match(/iiscbadmintonclub\.github\.io\/iiscshuttlers(\/[^?]*)?/);
-          if (match) {
-            setLocation(match[1] || "/");
+        try {
+          // Handle iiscshuttlers:// scheme
+          if (url.startsWith("iiscshuttlers://")) {
+            const path = url.slice("iiscshuttlers://".length);
+            // Preserve the full path including query params and hash
+            setLocation("/" + path);
+            return;
           }
+          // Handle https URLs
+          if (url.includes("iiscbadmintonclub.github.io")) {
+            const parsed = new URL(url);
+            // Extract everything after /iiscshuttlers, preserving query + hash
+            const pathAfterBase = parsed.pathname.replace(/^\/iiscshuttlers/, "") || "/";
+            const fullPath = pathAfterBase + parsed.search + parsed.hash;
+            setLocation(fullPath);
+          }
+        } catch {
+          // Fallback for malformed URLs
+          setLocation("/");
         }
       }
     };
 
-    CapacitorApp.addListener("appUrlOpen", handleDeepLink);
+    let listenerHandle: { remove: () => void } | null = null;
+    CapacitorApp.addListener("appUrlOpen", handleDeepLink).then((handle) => {
+      listenerHandle = handle;
+    });
 
-    // Clean up listeners on unmount
     return () => {
-      CapacitorApp.removeAllListeners();
+      listenerHandle?.remove();
     };
   }, [setLocation]);
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Lock, Zap, UserPlus, LogOut, User, Settings } from "lucide-react";
+import { Lock, Zap, UserPlus, LogOut, User, Settings, Shield, Trash2 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -34,7 +34,7 @@ export default function SubBarProfileButton({
     if (!profile?.id || updatingStatus) return;
     setUpdatingStatus(true);
     try {
-      const { error } = await supabase.from("players").update({ status: newStatus }).eq("id", session?.user?.id);
+      const { error } = await supabase.from("players").update({ status: newStatus }).eq("id", profile.id);
       if (error) throw error;
       if (newStatus === "playing" && session?.user?.id) {
         const now = new Date();
@@ -70,7 +70,7 @@ export default function SubBarProfileButton({
           <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full bg-white/10 pointer-events-none" />
           <div className="absolute -bottom-4 -left-4 w-20 h-20 rounded-full bg-white/5 pointer-events-none" />
           <div className="relative flex justify-between items-center mb-3">
-            <span className="text-[10px] font-black uppercase tracking-widest text-white/50">IISc Badminton Club</span>
+            <span className="text-[10px] font-black tracking-widest text-white/50">IISc BADMINTON CLUB</span>
             <button onClick={() => handleSignOut()} className="text-[11px] font-bold text-white/50 hover:text-white/90 transition-colors px-2 py-0.5 rounded-md hover:bg-white/10">Sign out</button>
           </div>
           <div className="relative flex items-center gap-3">
@@ -131,6 +131,9 @@ export default function SubBarProfileButton({
             <DropdownMenuItem onSelect={handleInvite} className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:text-slate-900 dark:focus:text-white focus:bg-slate-50 dark:focus:bg-slate-800 border-t border-slate-100 dark:border-slate-800 gap-2.5 px-3 py-2.5">
               <UserPlus className="h-4 w-4 text-emerald-500" /> Invite Friends
             </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => setLocation("/privacy")} className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:text-slate-900 dark:focus:text-white focus:bg-slate-50 dark:focus:bg-slate-800 border-t border-slate-100 dark:border-slate-800 gap-2.5 px-3 py-2.5">
+              <Shield className="h-4 w-4 text-slate-400" /> Privacy Policy
+            </DropdownMenuItem>
             {isAdmin && (
               <DropdownMenuItem onSelect={() => setLocation("/admin")} className="cursor-pointer font-semibold rounded-none text-violet-600 dark:text-violet-400 focus:text-violet-700 dark:focus:text-violet-300 focus:bg-violet-50 dark:focus:bg-violet-950/30 gap-2.5 px-3 py-2.5 border-t border-slate-100 dark:border-slate-800">
                 <Zap className="h-4 w-4" /> Site Admin
@@ -152,6 +155,9 @@ export default function SubBarProfileButton({
           )}
           <button onClick={() => handleSignOut("Are you sure you want to sign out of this account?")} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/25 hover:bg-rose-100 dark:hover:bg-rose-950/50 text-rose-600 dark:text-rose-400 font-bold text-sm border border-rose-100 dark:border-rose-900/50 transition-colors">
             <LogOut className="h-4 w-4" /> Sign Out
+          </button>
+          <button onClick={() => setLocation("/delete-account")} className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-slate-400 dark:text-slate-600 hover:text-rose-500 dark:hover:text-rose-500 font-semibold text-xs transition-colors">
+            <Trash2 className="h-3.5 w-3.5" /> Delete Account
           </button>
         </div>
       </DropdownMenuContent>

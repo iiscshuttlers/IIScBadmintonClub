@@ -26,8 +26,10 @@ import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
 import { useAuth } from "@/contexts/AuthContext";
 import { LiveScoreSection } from "@/components/events/LiveScoreSection";
 import { LiveBracketsSection } from "@/components/events/LiveBracketsSection";
+import { LivePlayersSection } from "@/components/events/LivePlayersSection";
 import { UmpireTab } from "@/components/umpire/UmpireTab";
 import { useHashTab } from "@/hooks/useHashTab";
+import { BracketVisual } from "@/components/tournament/BracketVisual";
 import { MatchScoreDisplay } from "@/components/tournament/MatchScoreDisplay";
 import {
   fetchTournamentConfig,
@@ -77,22 +79,56 @@ interface PastMatch {
   sets_history: string[] | null;
   status: string;
 }
+export interface TournamentSectionProps {
+  liveEvents?: any[];
+  upcomingEvents?: any[];
+  completedEvents?: any[];
+  renderCard?: (item: any, liveMode?: boolean) => React.ReactNode;
+}
 
-export function TournamentSection() {
+export function TournamentSection({ liveEvents, upcomingEvents, completedEvents, renderCard }: TournamentSectionProps) {
   const { session, isUmpire } = useAuth();
-  const isAdmin = isAdminEmail(session?.user?.email);
+  const [isAdmin, setIsAdmin] = useState(isAdminEmail(session?.user?.email));
   const [config, setConfig] = useState<TournamentConfig>(DEFAULT_TOURNAMENT_CONFIG);
-  // Live Supabase tournament (takes priority over site_data config)
-  const [liveTournament, setLiveTournament] = useState<SupabaseTournament | null>(null);
+  
+  const searchParams = new URLSearchParams(window.location.search);
+  const [viewStatus, setViewStatus] = useState<string>(searchParams.get("t") || "active");
+  const [activeTid, setActiveTid] = useState<string | null>(searchParams.get("tid"));
+  const [allTournaments, setAllTournaments] = useState<SupabaseTournament[]>([]);
   const [files, setFiles] = useState<any[]>([]);
   const [loadingFiles, setLoadingFiles] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useHashTab(
-    ["notices", "schedule", "broadcast", "brackets", "past", "umpire"] as const,
+    ["notices", "players", "schedule", "broadcast", "brackets", "past", "umpire"] as const,
     "notices",
   );
   const mountedRef = useRef(true);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("t", viewStatus);
+    if (activeTid) url.searchParams.set("tid", activeTid);
+    else url.searchParams.delete("tid");
+    window.history.replaceState({}, "", url.toString());
+  }, [viewStatus, activeTid]);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        supabase
+          .from("players")
+          .select("role")
+          .eq("id", user.id)
+          .single()
+          .then(({ data }) => {
+            if (data && (data.role === "admin" || data.role === "master_admin")) {
+              setIsAdmin(true);
+            }
+          });
+      }
+    });
+  }, []);
 
   useEffect(() => {
     // Load site_data fallback config
@@ -100,21 +136,26 @@ export function TournamentSection() {
     // Load active Supabase tournament (open type preferred for public display)
     supabase
       .from("tournaments")
-      .select("id,name,tournament_type,categories,status,start_date,end_date,venue,description,eligibility,form_url,form_status,archived_at")
-      .in("status", ["draft", "active", "completed"])
+      .select("*")
       .order("created_at", { ascending: false })
-      .limit(5)
       .then(({ data }) => {
         if (!data?.length) return;
-        // Prefer active open tournament; fall back to any active; then any
-        const active = data.find((t) => t.status === "active" && t.tournament_type === "open")
-          ?? data.find((t) => t.status === "active")
-          ?? data[0];
-        // Only show to non-admin if not draft
-        if (!isAdmin && active.status === "draft") return;
-        setLiveTournament(active as SupabaseTournament);
+        const validTournaments = isAdmin ? data : data.filter((t) => t.status !== "draft");
+        setAllTournaments(validTournaments as SupabaseTournament[]);
       });
   }, [isAdmin]);
+
+  const relevantEvents = viewStatus === "active" ? liveEvents : viewStatus === "draft" ? upcomingEvents : null;
+  
+  const liveTournament = viewStatus === "completed"
+    ? null
+    : ((activeTid ? relevantEvents?.find(t => t.slug === activeTid || t.id === activeTid) : null)
+      ?? relevantEvents?.find((t) => t.tournament_type === "open")
+      ?? relevantEvents?.[0]
+      ?? (activeTid ? allTournaments.find(t => t.slug === activeTid || t.id === activeTid) : null)
+      ?? allTournaments.find((t) => t.status === viewStatus && t.tournament_type === "open")
+      ?? allTournaments.find((t) => t.status === viewStatus)
+      ?? null);
 
   // Tournament bracket data now comes from Supabase tournament_matches (see LiveBracketsSection)
 
@@ -237,12 +278,62 @@ export function TournamentSection() {
   return (
     <section className="font-sans pb-16 pt-8">
       <div className="container mx-auto px-4 max-w-5xl space-y-8">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-2 h-8 bg-gradient-to-b from-amber-500 to-orange-600 rounded-full" />
-          <h2 className="text-3xl font-black text-blue-900 dark:text-white">
-            {liveTournament?.status === "active" ? "Live: " : "Upcoming: "}{displayName}
-          </h2>
+        {/* Tournament Status Subtabs */}
+        <div className="flex justify-center mb-8">
+          <div className="flex items-center gap-2 p-1 bg-slate-100 dark:bg-slate-800/50 rounded-2xl w-full max-w-md mx-auto">
+            {[
+              { id: "draft", label: "upcoming" },
+              { id: "active", label: "live" },
+              { id: "completed", label: "completed" }
+            ].map((st) => (
+              <button
+                key={st.id}
+                onClick={() => setViewStatus(st.id)}
+                className={`flex-1 py-2 px-4 rounded-xl text-sm font-bold transition-all capitalize ${
+                  viewStatus === st.id
+                    ? "bg-white dark:bg-slate-700 text-blue-900 dark:text-white shadow-sm"
+                    : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
+                }`}
+              >
+                {st.label}
+              </button>
+            ))}
+          </div>
         </div>
+
+        {/* Tournament Selection Subtabs (If multiple exist) */}
+        {relevantEvents && relevantEvents.length > 1 && (
+          <div className="flex justify-center mb-10 -mt-2">
+            <div className="flex flex-wrap justify-center gap-2 bg-slate-50 dark:bg-slate-800/30 p-1.5 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+              {relevantEvents.map((event) => {
+                const isActive = liveTournament?.id === event.id;
+                return (
+                  <button
+                    key={event.id}
+                    onClick={() => setActiveTid(event.slug || event.id)}
+                    className={`px-4 py-1.5 rounded-xl text-sm font-bold transition-all ${
+                      isActive
+                        ? "bg-emerald-500 text-white shadow-sm"
+                        : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700/50"
+                    }`}
+                  >
+                    {event.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {liveTournament && (
+          <>
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-2 h-8 bg-gradient-to-b from-amber-500 to-orange-600 rounded-full" />
+              <h2 className="text-3xl font-black text-blue-900 dark:text-white">
+                {viewStatus === "active" ? "Live: " : viewStatus === "draft" ? "Upcoming: " : "Completed: "}
+                {displayName}
+              </h2>
+            </div>
 
         {/* Info cards */}
         <motion.div
@@ -319,10 +410,10 @@ export function TournamentSection() {
         <div className="flex flex-wrap sm:flex-nowrap bg-white/5 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-1.5 rounded-2xl mb-6 shadow-sm gap-1.5">
           {[
             { id: "notices", label: "Info & Notices", icon: FileText },
+            { id: "players", label: "Players", icon: Users },
             { id: "schedule", label: "Match Schedule", icon: Calendar },
             { id: "broadcast", label: "Live Broadcast", icon: Radio },
             { id: "brackets", label: "Brackets", icon: LayoutList },
-            { id: "past", label: "Past Tournaments", icon: Archive },
             ...((isUmpire || isAdmin) ? [{ id: "umpire", label: "Umpire", icon: Tv2 }] : []),
           ].map((tab) => (
             <button
@@ -339,6 +430,12 @@ export function TournamentSection() {
             </button>
           ))}
         </div>
+
+        {activeTab === "players" && liveTournament && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <LivePlayersSection tournamentId={liveTournament.id} categories={liveTournament.categories || []} />
+          </div>
+        )}
 
         {activeTab === "notices" && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -470,22 +567,84 @@ export function TournamentSection() {
             <LiveScoreSection />
           </div>
         )}
-
         {activeTab === "brackets" && (
           <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-md border border-slate-100 dark:border-slate-700 p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-[500px]">
-            <LiveBracketsSection />
-          </div>
-        )}
-
-        {activeTab === "past" && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <PastTournamentsSection isAdmin={isAdmin} />
+            <LiveBracketsSection tournamentId={liveTournament?.id ?? null} />
           </div>
         )}
 
         {activeTab === "umpire" && (isUmpire || isAdmin) && (
           <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-md border border-slate-100 dark:border-slate-700 p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-[500px]">
             <UmpireTab tournamentOnly={true} />
+          </div>
+        )}
+          </>
+        )}
+      </div>
+      
+      {/* ── GRID OF TOURNAMENTS (Rendered under the dashboard, or as the main view if dashboard is hidden) ── */}
+      <div className="container mx-auto px-4 max-w-5xl mt-16 space-y-12 pb-16">
+        {viewStatus === "active" && liveEvents && (
+          <div>
+            {liveEvents.filter(e => e.id !== liveTournament?.id).length > 0 ? (
+              <div className="grid md:grid-cols-2 gap-8">
+                {liveEvents.filter(e => e.id !== liveTournament?.id).map((item) => renderCard?.(item, true))}
+              </div>
+            ) : !liveTournament ? (
+              <div className="col-span-full rounded-3xl border-2 border-dashed border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/10 p-14 text-center">
+                <Radio className="w-12 h-12 text-red-400 mx-auto mb-4 animate-pulse" />
+                <h3 className="text-xl font-bold text-blue-900 dark:text-white mb-2">
+                  No live tournaments
+                </h3>
+                <p className="text-gray-500 dark:text-slate-400 max-w-md mx-auto">
+                  There are no ongoing tournaments at the moment. Check the upcoming tab to see what's next!
+                </p>
+              </div>
+            ) : null}
+          </div>
+        )}
+
+        {viewStatus === "draft" && upcomingEvents && (
+          <div>
+            {upcomingEvents.filter(e => e.id !== liveTournament?.id).length > 0 ? (
+              <div className="grid md:grid-cols-2 gap-8">
+                {upcomingEvents.filter(e => e.id !== liveTournament?.id).map((item) => renderCard?.(item, false))}
+              </div>
+            ) : !liveTournament ? (
+              <div className="col-span-full rounded-3xl border-2 border-dashed border-emerald-200 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-950/10 p-14 text-center">
+                <Calendar className="w-12 h-12 text-emerald-400 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-blue-900 dark:text-white mb-2">
+                  No upcoming tournaments
+                </h3>
+                <p className="text-gray-500 dark:text-slate-400 max-w-md mx-auto">
+                  No events are scheduled right now — check back soon, or browse our completed events.
+                </p>
+              </div>
+            ) : null}
+          </div>
+        )}
+
+        {viewStatus === "completed" && (
+          <div className="space-y-16">
+            {completedEvents && (
+              <div>
+                {completedEvents.length > 0 ? (
+                  <div className="grid md:grid-cols-2 gap-8">
+                    {completedEvents.map((item) => renderCard?.(item, false))}
+                  </div>
+                ) : (
+                  <div className="col-span-full rounded-3xl border-2 border-dashed border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/10 p-14 text-center">
+                    <Archive className="w-12 h-12 text-amber-400 mx-auto mb-4" />
+                    <h3 className="text-xl font-bold text-blue-900 dark:text-white mb-2">
+                      No completed tournaments
+                    </h3>
+                    <p className="text-gray-500 dark:text-slate-400 max-w-md mx-auto">
+                      We don't have any completed tournament records yet.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -627,141 +786,139 @@ function SupabaseScheduleView({ tournamentId }: { tournamentId: string | null })
     </div>
   );
 }
+// ── Tournament Archive Brackets ────────────────────────────────────────────────
 
-// ── Past Tournaments ───────────────────────────────────────────────────────────
-
-function PastTournamentsSection({ isAdmin }: { isAdmin: boolean }) {
-  const [tournaments, setTournaments] = useState<SupabaseTournament[]>([]);
-  const [matches, setMatches] = useState<Record<string, PastMatch[]>>({});
-  const [openId, setOpenId] = useState<string | null>(null);
+export function TournamentArchiveBrackets({ tournamentId }: { tournamentId: string }) {
+  const [matches, setMatches] = useState<PastMatch[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<"list" | "bracket">("list");
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   useEffect(() => {
     supabase
-      .from("tournaments")
-      .select("id,name,tournament_type,categories,status,start_date,end_date,venue,description,eligibility,form_url,form_status,archived_at")
-      .in("status", isAdmin ? ["completed", "archived"] : ["archived"])
-      .order("created_at", { ascending: false })
-      .then(({ data }) => {
-        setTournaments((data as SupabaseTournament[]) ?? []);
-        setLoading(false);
-      });
-  }, [isAdmin]);
-
-  const loadMatches = async (tournamentId: string) => {
-    if (matches[tournamentId]) { setOpenId(tournamentId); return; }
-    const { data } = await supabase
       .from("tournament_matches")
       .select("id,category,match_code,round,round_name,match_number,team1_label,team2_label,winner_side,score,sets_history,status")
       .eq("tournament_id", tournamentId)
       .order("round")
-      .order("match_number");
-    setMatches((prev) => ({ ...prev, [tournamentId]: (data as PastMatch[]) ?? [] }));
-    setOpenId(tournamentId);
-  };
+      .order("match_number")
+      .then(({ data }) => {
+        const loadedMatches = (data as PastMatch[]) ?? [];
+        setMatches(loadedMatches);
+        if (loadedMatches.length > 0) {
+          const cats = [...new Set(loadedMatches.map((m: any) => m.category))];
+          if (cats.length > 0) setActiveCategory(cats[0]);
+        }
+        setLoading(false);
+      });
+  }, [tournamentId]);
 
-  if (loading) return (
-    <div className="flex justify-center py-16">
-      <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
-    </div>
-  );
+  if (loading) return <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-emerald-500" /></div>;
 
-  if (!tournaments.length) return (
-    <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-md border border-slate-100 dark:border-slate-700 p-12 text-center">
-      <Archive className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-      <h3 className="text-xl font-black text-slate-700 dark:text-slate-200 mb-2">No Past Tournaments Yet</h3>
-      <p className="text-slate-400">Completed and archived tournaments will appear here with full fixture history.</p>
-    </div>
-  );
+  const categories = [...new Set(matches.map((m) => m.category))];
+
+  if (!matches.length) {
+    return (
+      <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 p-8 text-center">
+        <p className="text-slate-400">No match results recorded for this tournament.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-4">
-      {tournaments.map((t) => {
-        const isOpen = openId === t.id;
-        const tournamentMatches = matches[t.id] ?? [];
-        const categories = [...new Set(tournamentMatches.map((m) => m.category))];
-
-        const fmt = (d: string | null) => d
-          ? new Date(d + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
-          : null;
-
-        return (
-          <div key={t.id} className="bg-white dark:bg-slate-800 rounded-3xl shadow-md border border-slate-100 dark:border-slate-700 overflow-hidden">
-            <button
-              onClick={() => isOpen ? setOpenId(null) : loadMatches(t.id)}
-              className="w-full flex items-center justify-between p-6 text-left hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors"
-            >
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/30 flex items-center justify-center flex-shrink-0">
-                  <Trophy className="w-6 h-6 text-amber-500" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-lg font-black text-slate-800 dark:text-white">{t.name}</h3>
-                    <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${t.status === "archived" ? "bg-amber-100 dark:bg-amber-950/40 text-amber-600" : "bg-blue-100 dark:bg-blue-950/40 text-blue-600"}`}>
-                      {t.status}
-                    </span>
-                  </div>
-                  <p className="text-sm text-slate-500 mt-0.5">
-                    {t.venue && <span>{t.venue} · </span>}
-                    {fmt(t.start_date) && <span>{fmt(t.start_date)}{t.end_date && t.end_date !== t.start_date ? ` – ${fmt(t.end_date)}` : ""}</span>}
-                    {t.categories?.length > 0 && <span className="ml-1">· {t.categories.join(", ")}</span>}
-                  </p>
-                </div>
-              </div>
-              {isOpen ? <ChevronUp className="w-5 h-5 text-slate-400 flex-shrink-0" /> : <ChevronDown className="w-5 h-5 text-slate-400 flex-shrink-0" />}
+    <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 p-6 space-y-6">
+      {categories.length > 0 && matches.length > 0 && (
+        <div className="space-y-4 border-b border-slate-100 dark:border-slate-700 pb-4">
+          <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-fit">
+            <button onClick={() => setViewMode("list")} className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-1.5 text-xs font-black uppercase tracking-widest rounded-lg transition ${viewMode === "list" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}>
+              <LayoutList className="w-3.5 h-3.5" /> List View
             </button>
-
-            {isOpen && (
-              <div className="border-t border-slate-100 dark:border-slate-700 p-6 space-y-6">
-                {!tournamentMatches.length && (
-                  <p className="text-slate-400 text-center py-6">No match results recorded for this tournament.</p>
-                )}
-                {categories.map((cat) => {
-                  const catMatches = tournamentMatches.filter((m) => m.category === cat);
-                  const rounds = [...new Set(catMatches.map((m) => m.round))].sort((a, b) => a - b);
-                  return (
-                    <div key={cat}>
-                      <h4 className="text-sm font-black text-slate-700 dark:text-slate-200 mb-3 flex items-center gap-2">
-                        <span className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">{cat}</span>
-                      </h4>
-                      <div className="space-y-4">
-                        {rounds.map((round) => {
-                          const roundMatches = catMatches.filter((m) => m.round === round);
-                          return (
-                            <div key={round}>
-                              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">{roundMatches[0]?.round_name}</p>
-                              <div className="grid gap-2">
-                                {roundMatches.map((m) => (
-                                  <div key={m.id} className="bg-slate-50 dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-700">
-                                    <div className="flex items-center gap-2 mb-2">
-                                      <span className="text-[10px] font-black text-slate-400">{m.match_code}</span>
-                                      {m.status === "walkover" && (
-                                        <span className="text-[10px] font-black uppercase px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-950/40 text-blue-500">W/O</span>
-                                      )}
-                                    </div>
-                                    <MatchScoreDisplay
-                                      sets_history={m.sets_history}
-                                      team1_label={m.team1_label ?? "TBD"}
-                                      team2_label={m.team2_label ?? "TBD"}
-                                      winner_side={m.winner_side}
-                                      status={m.status}
-                                    />
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            <button onClick={() => setViewMode("bracket")} className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-1.5 text-xs font-black uppercase tracking-widest rounded-lg transition ${viewMode === "bracket" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}>
+              <Tv2 className="w-3.5 h-3.5" /> Bracket Tree
+            </button>
           </div>
-        );
-      })}
+          
+          <div className="flex flex-wrap gap-2">
+            {categories.map((cat) => (
+              <button key={cat} onClick={() => setActiveCategory(cat)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all border ${
+                  activeCategory === cat
+                    ? "bg-emerald-600 text-white border-emerald-600 shadow"
+                    : "border-slate-200 dark:border-slate-700 text-slate-500 hover:border-emerald-400"
+                }`}>
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {viewMode === "bracket" && activeCategory ? (
+        <div className="overflow-x-auto pb-4">
+          {(() => {
+            const catMatches = matches.filter((m) => m.category === activeCategory);
+            const rounds = [...new Set(catMatches.map((m) => m.round))].sort((a, b) => a - b);
+            return <BracketVisual matches={catMatches as any} rounds={rounds} />;
+          })()}
+        </div>
+      ) : (
+        <>
+          {[activeCategory].filter(Boolean).map((cat) => {
+            const catMatches = matches.filter((m) => m.category === cat);
+            const rounds = [...new Set(catMatches.map((m) => m.round))].sort((a, b) => a - b);
+            return (
+              <div key={cat}>
+                <h4 className="text-sm font-black text-slate-700 dark:text-slate-200 mb-3 flex items-center gap-2">
+                  <span className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">{cat}</span>
+                </h4>
+                <div className="space-y-4">
+                  {rounds.map((round) => {
+                    const roundMatches = catMatches.filter((m) => m.round === round);
+                    return (
+                      <div key={round}>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">{roundMatches[0]?.round_name}</p>
+                        <div className="grid gap-2">
+                          {roundMatches.map((m) => (
+                            <div key={m.id} className="bg-slate-50 dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-700">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-[10px] font-black text-slate-400">{m.match_code}</span>
+                                {m.status === "walkover" && (
+                                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/40 text-blue-600">W/O</span>
+                                )}
+                                {m.status === "scheduled" && !m.scheduled_at && (
+                                  <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500">Not scheduled yet</span>
+                                )}
+                                {m.status === "scheduled" && m.scheduled_at && (
+                                  <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600">
+                                    Scheduled at {new Date(m.scheduled_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                                    {m.court_number ? ` (Court ${m.court_number})` : ""}
+                                  </span>
+                                )}
+                                {m.status === "in_progress" && (
+                                  <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-600">In Progress</span>
+                                )}
+                                {m.status === "completed" && (
+                                  <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600">Completed</span>
+                                )}
+                              </div>
+                              <MatchScoreDisplay
+                                sets_history={m.sets_history}
+                                team1_label={m.team1_label ?? "TBD"}
+                                team2_label={m.team2_label ?? "TBD"}
+                                winner_side={m.winner_side}
+                                status={m.status}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </>
+      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAdminHistory } from "@/contexts/AdminHistoryContext";
 import { usePlayers } from "@/hooks/usePlayers";
 import { generateSingleElimBracket } from "@/lib/bracketGenerator";
 import { MatchScoreDisplay } from "@/components/tournament/MatchScoreDisplay";
@@ -9,7 +10,7 @@ import { BracketVisual } from "@/components/tournament/BracketVisual";
 import {
   Loader2, Save, Trophy, Users, Swords, Archive, Plus, X, Search,
   ChevronDown, ChevronUp, Lock, Unlock, Play, SkipForward, Settings2,
-  CalendarDays, MapPin, Link, Download, Upload
+  CalendarDays, MapPin, Link, Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle
 } from "lucide-react";
 import { InfoModal } from "@/components/InfoModal";
 
@@ -142,18 +143,21 @@ function StatusChip({ status }: { status: string }) {
   );
 }
 
-function MatchStatusChip({ status }: { status: string }) {
-  const map: Record<string, string> = {
-    scheduled: "bg-slate-100 dark:bg-slate-800 text-slate-500",
-    in_progress: "bg-amber-100 dark:bg-amber-950/40 text-amber-600",
-    completed: "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600",
-    walkover: "bg-blue-100 dark:bg-blue-950/40 text-blue-600",
-  };
-  return (
-    <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${map[status] ?? map.scheduled}`}>
-      {status.replace("_", " ")}
-    </span>
-  );
+function MatchStatusChip({ match }: { match: { status: string, scheduled_at?: string | null, court_number?: string | null } }) {
+  if (match.status === "walkover") return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/40 text-blue-600">W/O</span>;
+  if (match.status === "completed") return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600">COMPLETED</span>;
+  if (match.status === "in_progress") return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-600">IN PROGRESS</span>;
+  
+  if (match.scheduled_at) {
+    return (
+      <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600">
+        Scheduled at {new Date(match.scheduled_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+        {match.court_number ? ` (Court ${match.court_number})` : ""}
+      </span>
+    );
+  }
+
+  return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500">Not scheduled yet</span>;
 }
 
 // ── TournamentManager ──────────────────────────────────────────────────────────
@@ -189,10 +193,16 @@ export function TournamentManager() {
       .from("tournaments")
       .select("*")
       .order("created_at", { ascending: false });
-    setTournaments((data as Tournament[]) ?? []);
-    if (data?.length && !selected) setSelected(data[0] as Tournament);
+    
+    // Filter out deleted tournaments from the dropdown
+    const activeTournaments = (data as Tournament[] ?? []).filter(t => t.status !== "deleted");
+    setTournaments(activeTournaments);
+    
+    if (activeTournaments.length && (!selected || selected.status === "deleted")) {
+      setSelected(activeTournaments[0]);
+    }
     setLoading(false);
-  }, []);
+  }, [selected]);
 
   useEffect(() => { loadTournaments(); }, [loadTournaments]);
 
@@ -261,12 +271,12 @@ export function TournamentManager() {
       {selected && (
         <>
           {/* Tabs */}
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
             {(["setup", "participants", "bracket", "archive"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setTab(tab)}
-                className={`px-5 py-2 rounded-xl text-sm font-black transition-all ${
+                className={`px-3 py-2 rounded-xl text-sm font-black transition-all w-full sm:w-auto text-center ${
                   activeTab === tab
                     ? "bg-emerald-600 text-white shadow"
                     : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-emerald-400"
@@ -282,6 +292,7 @@ export function TournamentManager() {
               tournament={selected}
               onSaved={(t) => { setSelected(t); loadTournaments(); }}
               isMasterAdmin={isMainAdmin}
+              onDelete={() => { setSelected(null); loadTournaments(); }}
             />
           )}
           {activeTab === "participants" && (
@@ -308,21 +319,30 @@ export function TournamentManager() {
 
 // ── Setup Tab ──────────────────────────────────────────────────────────────────
 
-function SetupTab({ tournament, onSaved, isMasterAdmin }: {
+function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
   tournament: Tournament;
   onSaved: (t: Tournament) => void;
   isMasterAdmin: boolean;
+  onDelete?: () => void;
 }) {
   const [form, setForm] = useState<Tournament>({ ...tournament });
   const [saving, setSaving] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
   const { session } = useAuth();
+  const { recordAction } = useAdminHistory();
 
   useEffect(() => { setForm({ ...tournament }); }, [tournament.id]);
 
   const upd = <K extends keyof Tournament>(k: K, v: Tournament[K]) => setForm((p) => ({ ...p, [k]: v }));
 
   const save = async () => {
+    if (form.start_date && form.end_date) {
+      if (new Date(form.start_date) > new Date(form.end_date)) {
+        toast.error("Start date cannot be after the end date.");
+        return;
+      }
+    }
+    
     setSaving(true);
     const { id, created_at, archived_at, ...rest } = form;
     const { data, error } = await supabase.from("tournaments").update(rest).eq("id", id).select().single();
@@ -346,6 +366,22 @@ function SetupTab({ tournament, onSaved, isMasterAdmin }: {
     setTransitioning(false);
   };
 
+  const deleteDraft = async () => {
+    if (form.status !== "draft") return;
+    if (!confirm("Are you sure you want to completely delete this draft tournament? This cannot be undone.")) return;
+    setSaving(true);
+    const { error } = await supabase.from("tournaments").delete().eq("id", tournament.id);
+    if (error) { toast.error("Failed to delete: " + error.message); setSaving(false); return; }
+    
+    await supabase.from("admin_logs").insert({
+      admin_email: session?.user?.email ?? "admin",
+      action: `Deleted draft tournament "${form.name}"`,
+    });
+    toast.success("Tournament deleted");
+    if (onDelete) onDelete();
+    setSaving(false);
+  };
+
   return (
     <div className="space-y-5">
       {/* Status transitions */}
@@ -360,9 +396,21 @@ function SetupTab({ tournament, onSaved, isMasterAdmin }: {
             </button>
           )}
           {form.status === "active" && (
-            <button onClick={() => transition("completed")} disabled={transitioning}
-              className="px-3 py-1 text-xs font-black rounded-xl bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50 transition">
-              {transitioning ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "→ Mark Completed"}
+            <>
+              <button onClick={() => transition("completed")} disabled={transitioning}
+                className="px-3 py-1 text-xs font-black rounded-xl bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50 transition">
+                {transitioning ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "→ Mark Completed"}
+              </button>
+              <button onClick={() => transition("draft")} disabled={transitioning}
+                className="px-3 py-1 text-xs font-black rounded-xl bg-slate-600 hover:bg-slate-500 text-white disabled:opacity-50 transition">
+                {transitioning ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "↺ Revert to Draft"}
+              </button>
+            </>
+          )}
+          {form.status === "completed" && (
+            <button onClick={() => transition("active")} disabled={transitioning}
+              className="px-3 py-1 text-xs font-black rounded-xl bg-amber-600 hover:bg-amber-500 text-white disabled:opacity-50 transition">
+              {transitioning ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "↺ Re-Activate (Live)"}
             </button>
           )}
           {form.status === "draft" && (
@@ -450,12 +498,63 @@ function SetupTab({ tournament, onSaved, isMasterAdmin }: {
 
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center">
+        <div>
+          {form.status === "draft" && (
+            <button onClick={deleteDraft} disabled={saving || transitioning}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-900/50 text-rose-600 dark:text-rose-400 font-bold transition">
+              <Trash2 className="w-4 h-4" />
+              Delete Draft
+            </button>
+          )}
+        </div>
         <button onClick={save} disabled={saving}
           className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-black transition shadow-lg">
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           Save Details
         </button>
+      </div>
+
+      {/* Danger Zone */}
+      <div className="mt-12 pt-8 border-t-2 border-red-100 dark:border-red-900/30">
+        <h3 className="text-sm font-black text-red-600 dark:text-red-400 mb-4 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4" /> Danger Zone
+        </h3>
+        <div className="bg-red-50 dark:bg-red-950/20 rounded-2xl p-6 border border-red-200 dark:border-red-900/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <h4 className="font-bold text-red-900 dark:text-red-100">Send to Trash (Soft Delete)</h4>
+            <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+              Move this tournament to the trash instead of permanently deleting it. You can undo this action from the admin panel history.
+            </p>
+          </div>
+          <button
+            onClick={async () => {
+              const confirmMsg = "Move this tournament to the Trash? You will be able to undo this action using the admin panel's Undo feature.";
+              if (!window.confirm(confirmMsg)) return;
+              
+              const afterState = { ...tournament, status: "deleted" };
+              const { error } = await supabase.from("tournaments").update({ status: "deleted" }).eq("id", tournament.id);
+              if (error) {
+                toast.error("Failed to trash: " + error.message);
+              } else {
+                await recordAction({
+                  action_type: "update",
+                  entity_type: "tournaments",
+                  entity_id: tournament.id,
+                  before_state: tournament,
+                  after_state: afterState,
+                  label: `Sent tournament "${tournament.name}" to Trash`,
+                });
+                
+                toast.success("Tournament sent to Trash");
+                if (onDelete) onDelete(); // Close setup tab view by clearing selected
+              }
+            }}
+            className="shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black transition shadow"
+          >
+            Trash Tournament
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -646,6 +745,11 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
   };
 
   const generateBracket = async (onlyCat?: string) => {
+    if (bulkText.trim() && bulkCat && (!onlyCat || onlyCat === bulkCat)) {
+      toast.error(`You have un-imported participants in ${bulkCat}. Please click 'Import' first.`);
+      return;
+    }
+
     const catsToGenerate = onlyCat ? [onlyCat] : Object.keys(participants);
     if (await hasMatches()) {
       const msg = onlyCat
@@ -876,11 +980,27 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                         Paste names — one per line.
                         {isDoubles(cat) && ' For doubles, use two columns (tab-separated) or "Name1 & Name2".'}
                       </p>
-                      <button
-                        onClick={() => downloadParticipantTemplate(cat)}
-                        className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-[10px] font-black text-slate-500 hover:text-emerald-600 hover:border-emerald-400 transition">
-                        <Download className="w-3 h-3" /> CSV Template
-                      </button>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          onClick={async () => {
+                            try {
+                              const text = await navigator.clipboard.readText();
+                              if (text) setBulkText(p => p ? p + "\n" + text : text);
+                            } catch (e) {
+                              toast.error("Clipboard access denied or empty");
+                            }
+                          }}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-[10px] font-black text-blue-500 hover:text-blue-600 hover:border-blue-400 transition"
+                        >
+                          <Clipboard className="w-3 h-3" /> Paste
+                        </button>
+                        <button
+                          onClick={() => downloadParticipantTemplate(cat)}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-[10px] font-black text-slate-500 hover:text-emerald-600 hover:border-emerald-400 transition"
+                        >
+                          <Download className="w-3 h-3" /> CSV Template
+                        </button>
+                      </div>
                     </div>
                     <textarea
                       autoFocus
@@ -972,12 +1092,26 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
   const [matches, setMatches] = useState<TournamentMatch[]>([]);
   const [roundRules, setRoundRules] = useState<RoundRule[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeCategory, setActiveCategory] = useState(tournament.categories[0] ?? "");
+  const [activeCategory, setActiveCategory] = useState(() => {
+    const hash = window.location.hash.replace("#", "");
+    const parts = hash.split("/");
+    if (parts[1] === "bracket" && parts[2]) {
+      return tournament.categories.includes(parts[2]) ? parts[2] : (tournament.categories[0] ?? "");
+    }
+    return tournament.categories[0] ?? "";
+  });
   const [showRules, setShowRules] = useState(false);
-  const [viewMode, setViewMode] = useState<"list" | "visual">("visual");
+  const [viewMode, setViewMode] = useState<"list" | "visual">(() => {
+    const hash = window.location.hash.replace("#", "");
+    const parts = hash.split("/");
+    if (parts[1] === "bracket" && parts[3]) {
+      return parts[3] === "list" ? "list" : "visual";
+    }
+    return "visual";
+  });
   const [actingOn, setActingOn] = useState<string | null>(null);
   const [editScore, setEditScore] = useState<{
-    matchId: string; side: 1 | 2; sets: string; bestOfSets: number;
+    matchId: string; side: 1 | 2; sets: string; bestOfSets: number; goldenPoint: number; pointsToWin: number;
     setsData: { t1: string; t2: string }[];
   } | null>(null);
   const [editSchedule, setEditSchedule] = useState<{ matchId: string; court: string; at: string } | null>(null);
@@ -998,6 +1132,27 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
   }, [tournament.id]);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    if (activeCategory) {
+      const hash = window.location.hash.replace("#", "");
+      const baseHash = hash.split("/")[0] || "tournament";
+      window.history.replaceState(null, "", `#${baseHash}/bracket/${activeCategory}/${viewMode}`);
+    }
+  }, [activeCategory, viewMode]);
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace("#", "");
+      const parts = hash.split("/");
+      if (parts[1] === "bracket") {
+        if (parts[2] && tournament.categories.includes(parts[2])) setActiveCategory(parts[2]);
+        if (parts[3] === "list" || parts[3] === "visual") setViewMode(parts[3] as "list" | "visual");
+      }
+    };
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, [tournament.categories]);
 
   const setStatus = async (matchId: string, status: string) => {
     setActingOn(matchId);
@@ -1034,6 +1189,45 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
 
   const submitEditScore = async () => {
     if (!editScore) return;
+    
+    // Validate badminton rules
+    const ptw = editScore.pointsToWin;
+    const gp = editScore.goldenPoint;
+    let t1Wins = 0;
+    let t2Wins = 0;
+    const needed = Math.ceil(editScore.bestOfSets / 2);
+
+    for (let i = 0; i < editScore.setsData.length; i++) {
+      const s = editScore.setsData[i];
+      if (s.t1 === "" || s.t2 === "") continue;
+
+      if (t1Wins >= needed || t2Wins >= needed) {
+        toast.error(`Invalid score: The match was already won in earlier sets. You cannot enter a score for set ${i + 1}.`);
+        return;
+      }
+
+      const t1 = parseInt(s.t1, 10) || 0;
+      const t2 = parseInt(s.t2, 10) || 0;
+      const win = Math.max(t1, t2);
+      const lose = Math.min(t1, t2);
+      
+      let valid = false;
+      if (win === ptw && (win - lose) >= 2) valid = true;
+      else if (win > ptw && win < gp && (win - lose) === 2) valid = true;
+      else if (win === gp && (win - lose) >= 1 && (win - lose) <= 2) valid = true;
+      
+      // Allow 0-0 as incomplete set or empty entry
+      if (win === 0 && lose === 0) continue;
+
+      if (!valid) {
+        toast.error(`Invalid score in set ${i + 1}: ${t1}-${t2}. Enter a mathematically valid badminton score.`);
+        return;
+      }
+
+      if (t1 > t2) t1Wins++;
+      else if (t2 > t1) t2Wins++;
+    }
+
     const setsArr = editScore.setsData
       .filter((s) => s.t1 !== "" && s.t2 !== "")
       .map((s) => `${s.t1}-${s.t2}`);
@@ -1166,6 +1360,14 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
       best_of_sets: rule.best_of_sets,
       golden_point: rule.golden_point,
     }, { onConflict: "tournament_id,category,round" });
+
+    // Sync to existing matches in this round
+    await supabase.from("tournament_matches").update({
+      points_to_win: rule.points_to_win,
+      best_of_sets: rule.best_of_sets,
+      golden_point: rule.golden_point,
+    }).eq("tournament_id", tournament.id).eq("category", rule.category).eq("round", rule.round);
+
     await load();
     toast.success("Round rules saved");
   };
@@ -1204,29 +1406,29 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
             </button>
           ))}
         </div>
-        <div className="flex gap-2">
-          <div className="flex rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden text-xs font-black">
+        <div className="grid grid-cols-2 gap-2 w-full sm:w-auto">
+          <div className="flex rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden text-xs font-black w-full">
             <button onClick={() => setViewMode("visual")}
-              className={`px-3 py-1.5 transition ${viewMode === "visual" ? "bg-slate-800 text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}>
+              className={`flex-1 px-3 py-1.5 transition ${viewMode === "visual" ? "bg-slate-800 text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}>
               Visual
             </button>
             <button onClick={() => setViewMode("list")}
-              className={`px-3 py-1.5 transition ${viewMode === "list" ? "bg-slate-800 text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}>
+              className={`flex-1 px-3 py-1.5 transition ${viewMode === "list" ? "bg-slate-800 text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}>
               List
             </button>
           </div>
           <button onClick={() => setShowRules((v) => !v)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-black text-slate-600 dark:text-slate-300 hover:border-emerald-400 transition">
-            <Settings2 className="w-3.5 h-3.5" /> Round Rules
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-black text-slate-600 dark:text-slate-300 hover:border-emerald-400 transition w-full">
+            <Settings2 className="w-3.5 h-3.5 shrink-0" /> Round Rules
           </button>
           <button onClick={() => { setShowBulkSchedule(true); setBulkPreview([]); setBulkText(""); }}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-blue-300 dark:border-blue-700 text-xs font-black text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition">
-            <CalendarDays className="w-3.5 h-3.5" /> Bulk Schedule
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-blue-300 dark:border-blue-700 text-xs font-black text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition w-full">
+            <CalendarDays className="w-3.5 h-3.5 shrink-0" /> Bulk Schedule
           </button>
           {isMasterAdmin && (
             <button onClick={batchAdvance}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black transition">
-              <SkipForward className="w-3.5 h-3.5" /> Batch Advance
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black transition w-full">
+              <SkipForward className="w-3.5 h-3.5 shrink-0" /> Batch Advance
             </button>
           )}
         </div>
@@ -1244,20 +1446,33 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                 points_to_win: 21, best_of_sets: 3, golden_point: 30,
               };
               return (
-                <div key={round} className="grid grid-cols-4 gap-2 items-end">
+                <div key={round} className="grid grid-cols-[1.5fr_1fr_1fr_1fr_auto] gap-2 items-end mb-2 pb-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
                   <div>
                     <label className={labelCls}>Round</label>
-                    <div className="text-sm font-bold text-slate-700 dark:text-slate-300 py-2">{rule.round_name ?? `R${round}`}</div>
+                    <div className="text-sm font-bold text-slate-700 dark:text-slate-300 py-2 truncate">{rule.round_name ?? `R${round}`}</div>
                   </div>
                   {(["points_to_win", "best_of_sets", "golden_point"] as const).map((field) => (
                     <div key={field}>
                       <label className={labelCls}>{field.replace(/_/g, " ")}</label>
                       <input type="number" min={1}
+                        id={`rule-${activeCategory}-${round}-${field}`}
                         defaultValue={rule[field]}
-                        onBlur={(e) => saveRoundRule({ ...rule, [field]: parseInt(e.target.value) })}
                         className={inputCls} />
                     </div>
                   ))}
+                  <div>
+                    <button
+                      onClick={() => {
+                        const ptw = parseInt((document.getElementById(`rule-${activeCategory}-${round}-points_to_win`) as HTMLInputElement)?.value || "21");
+                        const bos = parseInt((document.getElementById(`rule-${activeCategory}-${round}-best_of_sets`) as HTMLInputElement)?.value || "3");
+                        const gp = parseInt((document.getElementById(`rule-${activeCategory}-${round}-golden_point`) as HTMLInputElement)?.value || "30");
+                        saveRoundRule({ ...rule, points_to_win: ptw, best_of_sets: bos, golden_point: gp });
+                      }}
+                      className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black transition shadow-sm mb-[1px]"
+                    >
+                      Save
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -1282,7 +1497,8 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                 const busy = actingOn === m.id;
                 const isEditing = editScore?.matchId === m.id;
                 const isScheduling = editSchedule?.matchId === m.id;
-                const canEdit = !m.locked || isMasterAdmin;
+                const isByeMatch = m.team1_label === "BYE" || m.team2_label === "BYE";
+                const canEdit = (!m.locked || isMasterAdmin) && !isByeMatch;
 
                 return (
                   <div key={m.id} className={`${cardCls} !p-4`}>
@@ -1291,7 +1507,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                         {/* Match header */}
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-[10px] font-black text-slate-400 uppercase">{m.match_code}</span>
-                          <MatchStatusChip status={m.status} />
+                          <MatchStatusChip match={m} />
                           {m.locked && <Lock className="w-3 h-3 text-amber-500" aria-label="Locked — master_admin only" />}
                           {m.court_number && (
                             <span className="text-[10px] text-blue-500 font-bold">Court {m.court_number}</span>
@@ -1323,53 +1539,145 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                           </div>
                         )}
                       </div>
+                    </div>
 
-                      {/* Actions */}
-                      <div className="flex flex-col gap-1.5 shrink-0">
-                        {m.status === "scheduled" && canEdit && (
-                          <button onClick={() => setStatus(m.id, "in_progress")} disabled={busy}
-                            className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-black rounded-lg bg-amber-100 dark:bg-amber-950/40 text-amber-700 hover:bg-amber-200 transition">
-                            <Play className="w-3 h-3" /> In Progress
-                          </button>
-                        )}
-                        {m.status !== "completed" && canEdit && (
-                          <>
-                            <button onClick={() => {
-                              const bo = m.best_of_sets ?? 3;
-                              setEditScore({ matchId: m.id, side: 1, sets: "", bestOfSets: bo, setsData: Array.from({ length: bo }, () => ({ t1: "", t2: "" })) });
-                            }}
-                              className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-black rounded-lg bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 hover:bg-emerald-200 transition">
-                              <Trophy className="w-3 h-3" /> Enter Score
-                            </button>
-                            <button onClick={() => submitWalkover(m.id, 1)} disabled={busy}
-                              className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-black rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
-                              <SkipForward className="w-3 h-3" /> W/O T1
-                            </button>
-                            <button onClick={() => submitWalkover(m.id, 2)} disabled={busy}
-                              className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-black rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
-                              <SkipForward className="w-3 h-3" /> W/O T2
-                            </button>
-                          </>
-                        )}
-                        {m.status === "completed" && isMasterAdmin && (
+                    {/* Actions */}
+                    <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
+                      {m.status === "scheduled" && canEdit && (
+                        <button onClick={() => setStatus(m.id, "in_progress")} disabled={busy}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-lg bg-amber-100 dark:bg-amber-950/40 text-amber-700 hover:bg-amber-200 transition">
+                          <Play className="w-3.5 h-3.5" /> Start Match
+                        </button>
+                      )}
+                      {m.status !== "completed" && canEdit && (
+                        <>
                           <button onClick={() => {
                             const bo = m.best_of_sets ?? 3;
-                            const hist = m.sets_history ?? [];
-                            const setsData = Array.from({ length: bo }, (_, i) => {
-                              const parts = (hist[i] ?? "").split("-");
-                              return { t1: parts[0] ?? "", t2: parts[1] ?? "" };
-                            });
-                            setEditScore({ matchId: m.id, side: m.winner_side ?? 1, sets: hist.join(", "), bestOfSets: bo, setsData });
+                            const gp = m.golden_point ?? 30;
+                            const ptw = m.points_to_win ?? 21;
+                            setEditScore({ matchId: m.id, side: 1, sets: "", bestOfSets: bo, goldenPoint: gp, pointsToWin: ptw, setsData: Array.from({ length: bo }, () => ({ t1: "", t2: "" })) });
                           }}
-                            className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-black rounded-lg border border-amber-300 dark:border-amber-700 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20 transition">
-                            <Unlock className="w-3 h-3" /> Edit (Admin)
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-lg bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 hover:bg-emerald-200 transition">
+                            <Trophy className="w-3.5 h-3.5" /> Enter Score
                           </button>
-                        )}
-                        <button onClick={() => setEditSchedule({ matchId: m.id, court: m.court_number ?? "", at: m.scheduled_at ?? "" })}
-                          className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-black rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
-                          <CalendarDays className="w-3 h-3" /> Schedule
+                          <button onClick={() => submitWalkover(m.id, 1)} disabled={busy}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                            <SkipForward className="w-3.5 h-3.5" /> W/O T1
+                          </button>
+                          <button onClick={() => submitWalkover(m.id, 2)} disabled={busy}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                            <SkipForward className="w-3.5 h-3.5" /> W/O T2
+                          </button>
+                        </>
+                      )}
+                      {m.status === "completed" && isMasterAdmin && (
+                        <button onClick={() => {
+                          const bo = m.best_of_sets ?? 3;
+                          const gp = m.golden_point ?? 30;
+                          const ptw = m.points_to_win ?? 21;
+                          const hist = m.sets_history ?? [];
+                          const setsData = Array.from({ length: bo }, (_, i) => {
+                            const parts = (hist[i] ?? "").split("-");
+                            let t1Str = parts[0] ?? "";
+                            let t2Str = parts[1] ?? "";
+                            if (parseInt(t1Str, 10) > gp) t1Str = gp.toString();
+                            if (parseInt(t2Str, 10) > gp) t2Str = gp.toString();
+                            return { t1: t1Str, t2: t2Str };
+                          });
+                          setEditScore({ matchId: m.id, side: m.winner_side ?? 1, sets: hist.join(", "), bestOfSets: bo, goldenPoint: gp, pointsToWin: ptw, setsData });
+                        }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-lg border border-amber-300 dark:border-amber-700 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20 transition">
+                          <Unlock className="w-3.5 h-3.5" /> Edit
                         </button>
-                      </div>
+                      )}
+                      {!isByeMatch && (
+                        <button onClick={() => setEditSchedule({ matchId: m.id, court: m.court_number ?? "", at: m.scheduled_at ?? "" })}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition ml-auto">
+                          <CalendarDays className="w-3.5 h-3.5" /> Schedule
+                        </button>
+                      )}
+                      {m.status !== "scheduled" && isMasterAdmin && !isByeMatch && (
+                        <button onClick={async () => {
+                          if (!confirm("Are you sure you want to reset this match to Scheduled? This will wipe the current score and status.")) return;
+                          setActingOn(m.id);
+                          const prev = { status: m.status, score: m.score, sets_history: m.sets_history, winner_side: m.winner_side };
+                          const { error } = await supabase.from("tournament_matches").update({ status: "scheduled", score: null, sets_history: [], winner_side: null }).eq("id", m.id);
+                          setActingOn(null);
+                          if (error) { toast.error(error.message); return; }
+                          toast.success("Match reset to Scheduled", {
+                            action: {
+                              label: "Undo",
+                              onClick: async () => {
+                                await supabase.from("tournament_matches").update(prev).eq("id", m.id);
+                                const res = await supabase.from("tournament_matches").select("*").eq("tournament_id", tournament.id).order("round").order("match_number");
+                                if (!res.error) setMatches((res.data as TournamentMatch[]) ?? []);
+                              }
+                            },
+                            duration: 5000
+                          });
+                          const res = await supabase.from("tournament_matches").select("*").eq("tournament_id", tournament.id).order("round").order("match_number");
+                          if (!res.error) setMatches((res.data as TournamentMatch[]) ?? []);
+                        }}
+                          disabled={busy}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-lg bg-red-100 dark:bg-red-950/40 text-red-600 hover:bg-red-200 transition ml-auto">
+                          <RotateCcw className="w-3.5 h-3.5" /> Reset Match
+                        </button>
+                      )}
+                      {isMasterAdmin && !isByeMatch && (
+                        <div className={`${m.status === "scheduled" ? "ml-auto" : ""} flex items-center gap-2`}>
+                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Force Status:</label>
+                          <select
+                            value={m.status}
+                            onChange={async (e) => {
+                              const newStatus = e.target.value;
+                              if (newStatus === m.status) return;
+                              if (!confirm(`Are you sure you want to force change this match's status to ${newStatus.toUpperCase()} without wiping scores?`)) return;
+                              setActingOn(m.id);
+                              
+                              const prev = { status: m.status };
+                              const { error } = await supabase.from("tournament_matches").update({ status: newStatus }).eq("id", m.id);
+                              setActingOn(null);
+                              if (error) { toast.error(error.message); return; }
+                              toast.success("Match status updated", {
+                                action: {
+                                  label: "Undo",
+                                  onClick: async () => {
+                                    await supabase.from("tournament_matches").update(prev).eq("id", m.id);
+                                    const res = await supabase.from("tournament_matches").select("*").eq("tournament_id", tournament.id).order("round").order("match_number");
+                                    if (!res.error) setMatches((res.data as TournamentMatch[]) ?? []);
+                                  }
+                                },
+                                duration: 5000
+                              });
+                              const res = await supabase.from("tournament_matches").select("*").eq("tournament_id", tournament.id).order("round").order("match_number");
+                              if (!res.error) setMatches((res.data as TournamentMatch[]) ?? []);
+                            }}
+                            disabled={busy}
+                            className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-black uppercase text-slate-600 dark:text-slate-300 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-emerald-500 outline-none transition cursor-pointer"
+                          >
+                            <option value="scheduled">Scheduled</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                            <option value="walkover">Walkover</option>
+                          </select>
+                        </div>
+                      )}
+                      {isByeMatch && m.status !== "completed" && isMasterAdmin && (
+                        <button onClick={async () => {
+                          setActingOn(m.id);
+                          const wSide = m.team1_label === "BYE" ? 2 : 1;
+                          const { error } = await supabase.from("tournament_matches").update({ status: "completed", winner_side: wSide, score: "BYE" }).eq("id", m.id);
+                          setActingOn(null);
+                          if (error) { toast.error(error.message); return; }
+                          toast.success("BYE match restored");
+                          const res = await supabase.from("tournament_matches").select("*").eq("tournament_id", tournament.id).order("round").order("match_number");
+                          if (!res.error) setMatches((res.data as TournamentMatch[]) ?? []);
+                        }}
+                          disabled={busy}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-lg bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 hover:bg-emerald-200 transition ml-auto">
+                          <RotateCcw className="w-3.5 h-3.5" /> Restore BYE
+                        </button>
+                      )}
                     </div>
 
                     {/* Inline score entry */}
@@ -1378,36 +1686,76 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                       const setsStr = sd.filter(s => s.t1 !== "" && s.t2 !== "").map(s => `${s.t1}-${s.t2}`).join(", ");
                       const autoWinner = autoWinnerFromSets(setsStr, editScore!.bestOfSets);
                       const updateSet = (i: number, field: "t1" | "t2", val: string) => {
-                        const next = sd.map((s, idx) => idx === i ? { ...s, [field]: val.replace(/\D/g, "").slice(0, 2) } : s);
+                        let numStr = val.replace(/\D/g, "");
+                        if (numStr) {
+                          const num = parseInt(numStr, 10);
+                          if (num > editScore!.goldenPoint) numStr = editScore!.goldenPoint.toString();
+                        }
+                        const next = sd.map((s, idx) => idx === i ? { ...s, [field]: numStr } : s);
                         const nextStr = next.filter(s => s.t1 !== "" && s.t2 !== "").map(s => `${s.t1}-${s.t2}`).join(", ");
                         const auto = autoWinnerFromSets(nextStr, editScore!.bestOfSets);
                         setEditScore((p) => p && ({ ...p, setsData: next, sets: nextStr, ...(auto ? { side: auto } : {}) }));
                       };
                       return (
                         <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                          {/* Scoring rules indicator */}
+                          <div className="flex items-center justify-center gap-2 mb-1 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 dark:bg-slate-800/50 py-1.5 rounded-lg border border-slate-100 dark:border-slate-700/50">
+                            <span title="Points required to win a set">Win at {editScore!.pointsToWin}</span>
+                            <span className="opacity-30">•</span>
+                            <span title="Best of X sets">Best of {editScore!.bestOfSets}</span>
+                            <span className="opacity-30">•</span>
+                            <span title="Maximum points possible (Golden Point)">GP {editScore!.goldenPoint}</span>
+                          </div>
                           {/* Header row */}
                           <div className="grid grid-cols-[3rem_1fr_1.5rem_1fr] gap-x-2 items-center">
                             <div />
-                            <div className="text-center text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate px-1">
-                              {m.team1_label ?? "Team 1"}
+                            <div className="text-center text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1">
+                              {(() => {
+                                const l = m.team1_label ?? "Team 1";
+                                if (!l.includes("&")) return <div className="break-words whitespace-normal leading-[1.1]">{l}</div>;
+                                const parts = l.split("&");
+                                return (
+                                  <div className="flex flex-col items-center leading-[1.1]">
+                                    <span className="break-words whitespace-normal w-full">{parts[0].trim()}</span>
+                                    <span className="text-[8px] opacity-40 lowercase my-0.5">and</span>
+                                    <span className="break-words whitespace-normal w-full">{parts[1].trim()}</span>
+                                  </div>
+                                );
+                              })()}
                             </div>
                             <div />
-                            <div className="text-center text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate px-1">
-                              {m.team2_label ?? "Team 2"}
+                            <div className="text-center text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1">
+                              {(() => {
+                                const l = m.team2_label ?? "Team 2";
+                                if (!l.includes("&")) return <div className="break-words whitespace-normal leading-[1.1]">{l}</div>;
+                                const parts = l.split("&");
+                                return (
+                                  <div className="flex flex-col items-center leading-[1.1]">
+                                    <span className="break-words whitespace-normal w-full">{parts[0].trim()}</span>
+                                    <span className="text-[8px] opacity-40 lowercase my-0.5">and</span>
+                                    <span className="break-words whitespace-normal w-full">{parts[1].trim()}</span>
+                                  </div>
+                                );
+                              })()}
                             </div>
                           </div>
                           {/* Per-set rows */}
                           {sd.map((s, i) => {
+                            const setsBeforeStr = sd.slice(0, i).filter(prev => prev.t1 !== "" && prev.t2 !== "").map(prev => `${prev.t1}-${prev.t2}`).join(",");
+                            const isAlreadyWon = autoWinnerFromSets(setsBeforeStr, editScore!.bestOfSets) !== null;
                             const prevFilled = i === 0 || (sd[i - 1].t1 !== "" && sd[i - 1].t2 !== "");
+                            const isDisabled = !prevFilled || isAlreadyWon;
+
                             const t1n = parseInt(s.t1), t2n = parseInt(s.t2);
                             const t1Won = !isNaN(t1n) && !isNaN(t2n) && t1n > t2n;
                             const t2Won = !isNaN(t1n) && !isNaN(t2n) && t2n > t1n;
                             return (
-                              <div key={i} className={`grid grid-cols-[3rem_1fr_1.5rem_1fr] gap-x-2 items-center ${!prevFilled ? "opacity-30 pointer-events-none" : ""}`}>
+                              <div key={i} className={`grid grid-cols-[3rem_1fr_1.5rem_1fr] gap-x-2 items-center ${isDisabled ? "opacity-40 pointer-events-none grayscale" : ""}`}>
                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">G{i + 1}</span>
                                 <input
                                   type="text" inputMode="numeric" value={s.t1}
                                   onChange={(e) => updateSet(i, "t1", e.target.value)}
+                                  disabled={isDisabled}
                                   placeholder="—"
                                   className={`text-center font-black text-base rounded-xl border-2 py-2 outline-none transition w-full
                                     ${t1Won ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300"
@@ -1418,6 +1766,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                                 <input
                                   type="text" inputMode="numeric" value={s.t2}
                                   onChange={(e) => updateSet(i, "t2", e.target.value)}
+                                  disabled={isDisabled}
                                   placeholder="—"
                                   className={`text-center font-black text-base rounded-xl border-2 py-2 outline-none transition w-full
                                     ${t2Won ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300"
@@ -1651,10 +2000,23 @@ function ArchiveTab({ tournament, isMasterAdmin, onArchived }: {
       )}
 
       {tournament.status === "archived" && (
-        <div className="text-center py-2">
+        <div className="flex flex-col items-center gap-3 py-2">
           <span className="text-xs font-black text-amber-600 uppercase tracking-widest px-3 py-1.5 bg-amber-100 dark:bg-amber-950/40 rounded-full">
             Archived {tournament.archived_at ? new Date(tournament.archived_at).toLocaleDateString() : ""}
           </span>
+          {isMasterAdmin && (
+            <button onClick={async () => {
+              if (!confirm(`Unarchive "${tournament.name}"?`)) return;
+              setArchiving(true);
+              const { error } = await supabase.from("tournaments").update({ status: "completed", archived_at: null }).eq("id", tournament.id);
+              if (error) { toast.error(error.message); setArchiving(false); return; }
+              toast.success("Tournament unarchived");
+              onArchived();
+            }} disabled={archiving} className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-widest font-black px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition disabled:opacity-50">
+              {archiving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
+              Unarchive
+            </button>
+          )}
         </div>
       )}
 
@@ -1676,7 +2038,7 @@ function ArchiveTab({ tournament, isMasterAdmin, onArchived }: {
                         <div key={m.id} className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3">
                           <div className="flex items-center gap-2 mb-2">
                             <span className="text-[10px] font-black text-slate-400">{m.match_code}</span>
-                            <MatchStatusChip status={m.status} />
+                            <MatchStatusChip match={m} />
                           </div>
                           <MatchScoreDisplay
                             sets_history={m.sets_history}

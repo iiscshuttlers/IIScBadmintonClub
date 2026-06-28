@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { Mail, MapPin, ExternalLink, ArrowUpRight } from "lucide-react";
 import { useState, useEffect } from "react";
+import { Capacitor } from "@capacitor/core";
 
 export default function Footer() {
   const [apkUrl, setApkUrl] = useState(
@@ -167,7 +168,8 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* ── App Download ── */}
+          {/* ── App Download — only shown on web, never inside the native app (Play Store policy) ── */}
+          {!Capacitor.isNativePlatform() && (
           <div>
             <h4 className="font-bold text-xs text-emerald-400 uppercase tracking-widest mb-5">Get the App</h4>
             <a
@@ -193,6 +195,7 @@ export default function Footer() {
               Full-featured native app with live scores, match logging, tournaments, and player profiles.
             </p>
           </div>
+          )}
         </div>
 
         {/* ── Bottom Bar ── */}

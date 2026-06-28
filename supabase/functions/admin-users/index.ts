@@ -39,7 +39,7 @@ serve(async (req) => {
       });
     }
 
-    // Verify admin status
+    // Resolve admin status (used by GET, POST, and non-self DELETE)
     const adminEmails = [
       "janmejayk18@gmail.com",
       "admin@iiscshuttlers.com",
@@ -47,24 +47,25 @@ serve(async (req) => {
       "paras@iiscshuttlers.com",
       "raja79sharma@gmail.com",
     ];
-    const isAdmin = adminEmails.includes(user.email ?? "");
-
+    let isAdmin = adminEmails.includes(user.email ?? "");
     if (!isAdmin) {
-      // Check if they have admin role in players table
       const { data: playerData } = await supabaseAdmin
         .from("players")
         .select("role")
         .eq("id", user.id)
         .single();
-      if (playerData?.role !== "admin" && playerData?.role !== "master_admin") {
-        return new Response(JSON.stringify({ error: "Not an admin" }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+      isAdmin = playerData?.role === "admin" || playerData?.role === "master_admin";
     }
 
     const method = req.method;
+
+    // Non-admins may only self-delete (DELETE their own userId). All other operations require admin.
+    if (!isAdmin && method !== "DELETE") {
+      return new Response(JSON.stringify({ error: "Not an admin" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (method === "GET") {
       const { data, error } = await supabaseAdmin.auth.admin.listUsers();
@@ -84,7 +85,15 @@ serve(async (req) => {
         });
       }
 
-      // Delete user
+      // Admins may delete any user; non-admins may only self-delete.
+      const isSelfDeletion = userId === user.id;
+      if (!isAdmin && !isSelfDeletion) {
+        return new Response(JSON.stringify({ error: "Not authorized to delete this user" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
       if (error) throw error;
 

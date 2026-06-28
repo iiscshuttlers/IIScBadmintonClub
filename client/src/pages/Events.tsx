@@ -27,9 +27,10 @@ import { InfoModal } from "@/components/InfoModal";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import ScheduleCalendar from "./ScheduleCalendar";
-import { TournamentSection } from "@/components/events/TournamentSection";
+import { TournamentSection, PastTournamentsSection } from "@/components/events/TournamentSection";
 import { LiveScoreSection } from "@/components/events/LiveScoreSection";
 import { useHashTab } from "@/hooks/useHashTab";
+import { useAuth } from "@/contexts/AuthContext";
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 28 },
@@ -175,13 +176,16 @@ function UpcomingCountdown({ event }: { event: any }) {
 }
 
 export default function Events() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "master_admin" || user?.role === "admin";
+
   usePageMeta({
     title: "Events & Championships",
     description:
       "Browse live, upcoming and completed badminton tournaments at IISc.",
   });
 
-  const TOURNAMENT_SUB_TABS = ["notices", "schedule", "broadcast", "brackets", "past", "umpire"];
+  const TOURNAMENT_SUB_TABS = ["notices", "players", "schedule", "broadcast", "brackets", "past", "umpire"];
   const [activeTab, setActiveTab] = useHashTab(
     ["calendar", "tournament", "history", ...TOURNAMENT_SUB_TABS] as const,
     "calendar"
@@ -214,16 +218,16 @@ export default function Events() {
     fetchTournamentConfig().then(setTournamentCfg).catch(() => {});
   }, []);
 
-  const live = events.filter((e) => e.status === "live");
-  const upcoming = events.filter((e) => e.status === "upcoming");
+  const live = events.filter((e) => e.status === "active");
+  const upcoming = events.filter((e) => e.status === "draft");
   const completed: any[] = [
     ...ARCHIVED_TOURNAMENTS,
     ...events.filter(
       (e) =>
-        e.status === "completed" &&
+        (e.status === "completed" || e.status === "archived") &&
         !ARCHIVED_TOURNAMENTS.some((archived) => archived.slug === e.slug),
     ),
-  ];
+  ].sort((a, b) => (b.startDate || "").localeCompare(a.startDate || ""));
 
   const getTypeLabel = (type: string) => {
     if (type === "open") return "Open Tournament";
@@ -233,7 +237,7 @@ export default function Events() {
   };
 
   const renderCard = (item: any | ArchivedTournament, liveMode = false) => {
-    const isUpcoming = item.status === "upcoming";
+    const isUpcoming = item.status === "draft";
 
     const cardContent = (
       <Card className="rounded-3xl border border-emerald-100 dark:border-slate-700 shadow-md bg-white dark:bg-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer h-full overflow-hidden">
@@ -243,10 +247,18 @@ export default function Events() {
         />
         <CardContent className="p-8 space-y-5">
           <div className="flex flex-wrap items-center gap-3">
-            {liveMode && (
+            {liveMode ? (
               <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400 text-xs font-bold">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
                 LIVE
+              </span>
+            ) : (
+              <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                item.status === 'draft' ? 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400' :
+                item.status === 'completed' || item.status === 'archived' ? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400' :
+                'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400'
+              }`}>
+                {item.status === 'draft' ? 'Upcoming' : item.status}
               </span>
             )}
 
@@ -322,10 +334,8 @@ export default function Events() {
 
           <div className="flex items-center gap-2 pt-1 font-bold text-emerald-600 dark:text-emerald-400 text-sm">
             {isUpcoming
-              ? item.slug
-                ? "View Details"
-                : "Coming Soon"
-              : item.status === "live"
+              ? "View details"
+              : item.status === "active"
                 ? "View live fixtures"
                 : "View results"}
             <ArrowRight className="w-4 h-4" />
@@ -334,33 +344,31 @@ export default function Events() {
       </Card>
     );
 
-    if (isUpcoming) {
-      if (item.slug) {
-        const href =
-          `/events/${item.slug}`;
-        return (
-          <Link href={href} key={item.id}>
-            {cardContent}
-          </Link>
-        );
-      }
+    const tidParam = `&tid=${item.slug || item.id}`;
+    const cardLink = isUpcoming 
+      ? `/events?t=draft${tidParam}#tournament` 
+      : liveMode 
+        ? `/events?t=active${tidParam}#tournament` 
+        : `/events/${item.slug || item.id}`;
+
+    if (isUpcoming || liveMode) {
       return (
-        <div
+        <a 
+          href={cardLink} 
           key={item.id}
-          onClick={() =>
-            toast.info("Details coming soon.", {
-              icon: <Info className="w-4 h-4" />,
-            })
-          }
-          className="h-full cursor-pointer"
+          className="block h-full group focus:outline-none focus:ring-4 focus:ring-emerald-500/20 rounded-3xl transition-all"
         >
           {cardContent}
-        </div>
+        </a>
       );
     }
 
     return (
-      <Link href={`/events/${item.slug}`} key={item.id}>
+      <Link 
+        href={cardLink} 
+        key={item.id}
+        className="block h-full group focus:outline-none focus:ring-4 focus:ring-emerald-500/20 rounded-3xl transition-all"
+      >
         {cardContent}
       </Link>
     );
@@ -414,7 +422,8 @@ export default function Events() {
                       : "text-white/80 hover:text-rose-400 hover:bg-rose-500/10 scale-95"
                   }`}
                 >
-                  <Timer className="w-4 h-4" /> {tournamentCfg.name}
+                  <Trophy className="w-4 h-4" /> 
+                  Tournaments
                 </button>
               )}
               <button
@@ -433,7 +442,12 @@ export default function Events() {
       </section>
 
       {effectiveTab === "tournament" && tournamentCfg.enabled && (
-        <TournamentSection />
+        <TournamentSection 
+          liveEvents={live}
+          upcomingEvents={upcoming}
+          completedEvents={completed}
+          renderCard={(item, liveMode) => renderCard(item, liveMode)}
+        />
       )}
 
       {effectiveTab === "history" && (
@@ -464,48 +478,128 @@ export default function Events() {
               <div className="relative">
                 <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-emerald-500 via-blue-500 to-purple-500 opacity-30" />
                 <div className="space-y-8">
-                  {MILESTONES.map((m, i) => (
-                    <motion.div
-                      key={i}
-                      variants={fadeUp}
-                      initial="hidden"
-                      whileInView="visible"
-                      viewport={{ once: true, margin: "-40px" }}
-                      className="flex gap-5 relative"
-                    >
-                      <div
-                        className={`flex-shrink-0 w-12 h-12 rounded-2xl ${m.upcoming ? "bg-emerald-50 dark:bg-emerald-950/30" : "bg-white dark:bg-slate-800"} border-2 ${m.color} flex items-center justify-center text-xl shadow-sm z-10`}
-                      >
-                        <m.icon className="w-5 h-5 text-slate-600 dark:text-slate-300" />
-                      </div>
-                      <div
-                        className={`flex-1 rounded-2xl p-5 hover:shadow-md transition-shadow ${m.upcoming ? "bg-emerald-50 dark:bg-emerald-950/20 border-2 border-emerald-300 dark:border-emerald-800" : "bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700"}`}
-                      >
-                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                          <span className="text-xs font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest">
-                            {m.year}
-                          </span>
-                          {m.upcoming && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-black uppercase tracking-wider">
-                              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                              Upcoming
-                            </span>
-                          )}
-                        </div>
-                        <h3
-                          className={`font-black text-base mb-1 ${m.upcoming ? "text-emerald-800 dark:text-emerald-300" : "text-blue-900 dark:text-white"}`}
+                  {[
+                    ...events,
+                    ...ARCHIVED_TOURNAMENTS.filter((archived) => !events.some((e) => e.slug === archived.slug)),
+                  ]
+                    .map((t, i) => {
+                      const colors = [
+                        "border-amber-400",
+                        "border-emerald-500",
+                        "border-blue-500",
+                        "border-purple-500",
+                        "border-orange-400",
+                      ];
+
+                      let href = "#history";
+                      if (t.status === "upcoming" || t.status === "live") {
+                        href = "#tournament";
+                      } else if (t.status === "completed") {
+                        href = "?t=completed#tournament";
+                      } else if ("winners" in t || "podium" in t) {
+                        href = `/events/${t.slug}`;
+                      }
+
+                      return {
+                        year: t.startDate || new Date().getFullYear().toString(),
+                        title: t.name,
+                        desc: t.description || "Tournament completed.",
+                        icon: (MILESTONE_ICONS[i % MILESTONE_ICONS.length] ?? Trophy) as LucideIcon,
+                        color: colors[i % colors.length] ?? "border-slate-400",
+                        upcoming: t.status === "upcoming",
+                        live: t.status === "live",
+                        href,
+                        id: t.id
+                      };
+                    })
+                    .sort((a, b) => new Date(b.year).getTime() - new Date(a.year).getTime())
+                    .map((m, i) => {
+                      const cardBody = (
+                        <div
+                          className={`flex-1 rounded-2xl p-5 hover:-translate-y-1 transition-all ${m.live ? "bg-red-50 dark:bg-red-950/20 border-2 border-red-300 dark:border-red-800" : m.upcoming ? "bg-emerald-50 dark:bg-emerald-950/20 border-2 border-emerald-300 dark:border-emerald-800" : "bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 hover:shadow-md cursor-pointer"}`}
                         >
-                          {m.title}
-                        </h3>
-                        <p className="text-gray-600 dark:text-slate-400 text-sm leading-relaxed">
-                          {m.desc}
-                        </p>
-                      </div>
-                    </motion.div>
-                  ))}
+                          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                            <span className="text-xs font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest">
+                              {m.year}
+                            </span>
+                            {m.live ? (
+                              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400 text-[10px] font-bold uppercase tracking-wider">
+                                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                                LIVE
+                              </span>
+                            ) : m.upcoming ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-wider">
+                                Upcoming
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-[10px] font-bold uppercase tracking-wider">
+                                Completed
+                              </span>
+                            )}
+                          </div>
+                          <h3
+                            className={`font-black text-base mb-1 ${m.live ? "text-red-800 dark:text-red-300" : m.upcoming ? "text-emerald-800 dark:text-emerald-300" : "text-blue-900 dark:text-white"}`}
+                          >
+                            {m.title}
+                          </h3>
+                          <p className="text-gray-600 dark:text-slate-400 text-sm leading-relaxed">
+                            {m.desc}
+                          </p>
+                          <div className={`flex items-center gap-2 mt-3 font-bold text-xs ${m.live ? "text-red-600 dark:text-red-400" : m.upcoming ? "text-emerald-600 dark:text-emerald-400" : "text-blue-600 dark:text-blue-400"}`}>
+                            {m.upcoming
+                              ? "View details"
+                              : m.live
+                                ? "View live fixtures"
+                                : "View bracket history"}
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </div>
+                        </div>
+                      );
+
+                      return (
+                        <motion.div
+                          key={i}
+                          variants={fadeUp}
+                          initial="hidden"
+                          whileInView="visible"
+                          viewport={{ once: true, margin: "-40px" }}
+                          className="flex gap-5 relative group"
+                        >
+                          <div
+                            className={`flex-shrink-0 w-12 h-12 rounded-2xl ${m.live ? "bg-red-50 dark:bg-red-950/30" : m.upcoming ? "bg-emerald-50 dark:bg-emerald-950/30" : "bg-white dark:bg-slate-800"} border-2 ${m.color} flex items-center justify-center text-xl shadow-sm z-10`}
+                          >
+                            <m.icon className="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:scale-110 transition-transform" />
+                          </div>
+                          {m.href.startsWith("#") || m.href.includes("#tournament") ? (
+                            <a href={m.href} onClick={(e) => { 
+                              e.preventDefault(); 
+                              if (m.href.includes("?t=")) {
+                                const tValue = m.href.split("?t=")[1].split("#")[0];
+                                const url = new URL(window.location.href);
+                                url.searchParams.set("t", tValue);
+                                window.history.replaceState({}, "", url.toString());
+                              }
+                              setActiveTab(m.href.split("#").pop() || "");
+                              if (m.href === "#history") {
+                                setTimeout(() => document.getElementById("past-brackets")?.scrollIntoView({ behavior: "smooth" }), 100);
+                              }
+                            }} className="flex-1 block outline-none">
+                              {cardBody}
+                            </a>
+                          ) : (
+                            <Link href={m.href} className="flex-1 block outline-none">
+                              {cardBody}
+                            </Link>
+                          )}
+                        </motion.div>
+                      );
+                    })}
                 </div>
               </div>
             </div>
+
+
+
           </div>
         </section>
       )}
@@ -517,70 +611,6 @@ export default function Events() {
           {/* ── 1. Match Calendar ───────────────────────────────────────────── */}
       <ScheduleCalendar />
 
-      {/* ── 3. All Tournaments (Live, Upcoming, Completed) ──────────────── */}
-      <section className="py-16 container mx-auto px-4 space-y-16">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-2 h-8 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full" />
-          <h2 className="text-3xl font-black text-blue-900 dark:text-white">
-            All Tournaments
-          </h2>
-        </div>
-
-        {loading && (
-          <div className="grid md:grid-cols-2 gap-8">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <EventSkeleton key={i} />
-            ))}
-          </div>
-        )}
-
-        {!loading && live.length > 0 && (
-          <div>
-            <div className="flex items-center gap-3 mb-8">
-              <div className="flex items-center gap-2 bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400 px-3 py-1.5 rounded-full text-sm font-bold pulse-glow">
-                <Radio className="w-4 h-4" />
-                LIVE NOW
-              </div>
-            </div>
-            <div className="grid md:grid-cols-2 gap-8">
-              {live.map((item) => renderCard(item, true))}
-            </div>
-          </div>
-        )}
-
-        {!loading && upcoming.length === 0 && live.length === 0 && (
-          <NoUpcomingEvents />
-        )}
-
-        {!loading && upcoming.length > 0 && (
-          <div>
-            <div className="flex items-center gap-3 mb-8">
-              <div className="w-2 h-8 bg-gradient-to-b from-emerald-500 to-teal-600 rounded-full" />
-              <h2 className="text-3xl font-black text-blue-900 dark:text-white">
-                Upcoming
-              </h2>
-            </div>
-            <div className="grid md:grid-cols-2 gap-8">
-              {upcoming.map((item) => renderCard(item))}
-            </div>
-          </div>
-        )}
-
-        {!loading && completed.length > 0 && (
-          <div>
-            <div className="flex items-center gap-3 mb-8">
-              <div className="w-2 h-8 bg-gradient-to-b from-amber-500 to-orange-500 rounded-full" />
-              <h2 className="text-3xl font-black text-blue-900 dark:text-white">
-                Completed
-              </h2>
-              <Trophy className="text-amber-500 ml-1" />
-            </div>
-            <div className="grid md:grid-cols-2 gap-8">
-              {completed.map((item) => renderCard(item))}
-            </div>
-          </div>
-        )}
-      </section>
         </>
       )}
     </div>

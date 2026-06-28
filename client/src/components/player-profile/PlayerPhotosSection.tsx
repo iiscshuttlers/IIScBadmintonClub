@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, X, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
+import { Camera, X, ChevronLeft, ChevronRight, ExternalLink, Flag } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSiteData } from "@/lib/siteData";
 import { fetchRemoteGalleryImages } from "@/lib/galleryStorage";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -16,6 +18,21 @@ const itemVariants = {
 
 export function PlayerPhotosSection({ playerId }: { playerId: string }) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [reportedPaths, setReportedPaths] = useState<Set<string>>(new Set());
+
+  const handleReport = async (photo: { path: string; title: string }) => {
+    if (reportedPaths.has(photo.path)) {
+      toast.info("You've already reported this photo.");
+      return;
+    }
+    await supabase.from("admin_logs").insert({
+      admin_email: "user_report",
+      action: "report_photo",
+      details: `Reported photo: ${photo.title} (path: ${photo.path}) on player profile ${playerId}`,
+    });
+    setReportedPaths((prev) => new Set(prev).add(photo.path));
+    toast.success("Photo reported. Our team will review it shortly.");
+  };
 
   // swipe handlers
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -136,14 +153,28 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
                   <p className="text-white text-base md:text-xl font-bold tracking-wide drop-shadow-lg leading-tight text-center">
                     {photo.title}
                   </p>
-                  <a
-                    href={galleryUrl}
-                    className="mt-3 flex items-center gap-2 px-6 py-2.5 bg-white text-black rounded-full text-sm font-bold shadow-lg hover:bg-gray-200 transition-all active:scale-95"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    View in Album
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
+                  <div className="flex items-center gap-3 mt-3">
+                    <a
+                      href={galleryUrl}
+                      className="flex items-center gap-2 px-6 py-2.5 bg-white text-black rounded-full text-sm font-bold shadow-lg hover:bg-gray-200 transition-all active:scale-95"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      View in Album
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleReport(photo); }}
+                      className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-bold shadow-lg transition-all active:scale-95 ${
+                        reportedPaths.has(photo.path)
+                          ? "bg-slate-700 text-slate-400 cursor-default"
+                          : "bg-rose-600/80 hover:bg-rose-600 text-white"
+                      }`}
+                      title="Report this photo"
+                    >
+                      <Flag className="w-4 h-4" />
+                      {reportedPaths.has(photo.path) ? "Reported" : "Report"}
+                    </button>
+                  </div>
                 </div>
               </div>
             </motion.div>

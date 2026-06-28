@@ -81,7 +81,24 @@ export default function DeleteAccount() {
       // 3. Remove push tokens
       await supabase.from("user_push_tokens").delete().eq("user_id", session.user.id);
 
-      // 4. Sign out
+      // 4. Hard-delete the auth.users record via the admin edge function
+      // This satisfies Google Play's requirement for complete account deletion.
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      if (currentSession?.access_token) {
+        await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-users`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${currentSession.access_token}`,
+          },
+          body: JSON.stringify({ userId: session.user.id }),
+        }).catch(() => {
+          // Auth deletion may fail if the user is already partially deleted;
+          // the profile is gone so we still proceed to sign out.
+        });
+      }
+
+      // 5. Sign out locally
       await supabase.auth.signOut();
 
       setStep("done");

@@ -1,7 +1,58 @@
 import { fetchSiteData } from "@/lib/siteData";
+import { supabase } from "@/lib/supabase";
 
 export async function getTournaments() {
-  return [];
+  const { data, error } = await supabase
+    .from("tournaments")
+    .select("*, tournament_matches(category, match_code, round_name, winner_side, team1_label, team2_label)")
+    .order("created_at", { ascending: false });
+  
+  if (error) {
+    console.error("Error fetching tournaments:", error);
+    return [];
+  }
+  
+  // Transform snake_case columns to camelCase to match the expected LiveTournament type
+  return data.map((t) => {
+    let winners: any[] | undefined = undefined;
+
+    // Only compute winners if the tournament is completed or archived
+    if (t.status === "completed" || t.status === "archived") {
+      const finals = (t.tournament_matches || []).filter((m: any) => 
+        (m.round_name === "Final" || m.match_code?.includes("_F_")) && m.winner_side
+      );
+      
+      if (finals.length > 0) {
+        winners = finals.map((m: any) => ({
+          category: m.category,
+          winner: m.winner_side === 1 ? m.team1_label : m.team2_label
+        }));
+      }
+    }
+
+    return {
+      id: t.id,
+      slug: t.slug || t.id,
+      name: t.name,
+      subtitle: t.tournament_type,
+      description: t.description,
+      startDate: t.start_date,
+      endDate: t.end_date,
+      status: t.status,
+      venue: t.venue,
+      categories: t.categories,
+      created_at: t.created_at,
+      eligibility: t.eligibility,
+      form_url: t.form_url,
+      form_status: t.form_status,
+      form_close_date: t.form_close_date,
+      tournament_type: t.tournament_type,
+      bracket_format: t.bracket_format,
+      archived_at: t.archived_at,
+      created_by: t.created_by,
+      winners,
+    };
+  });
 }
 
 /** Registration form states an admin can pick. */

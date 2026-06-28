@@ -1,9 +1,5 @@
 import { useEffect, useState } from "react";
-import { Capacitor } from "@capacitor/core";
-import { App as CapacitorApp } from "@capacitor/app";
-import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabase";
 import { useOtherPlayersSlim } from "./usePlayers";
 
 import { useInactivityLogout } from "./useInactivityLogout";
@@ -15,7 +11,6 @@ import { usePingsNotification } from "./usePingsNotification";
 import { initSounds } from "@/lib/sounds";
 
 export function useAppBootstrap() {
-  const [, setLocation] = useLocation();
   const { profile } = useAuth();
   const [isLogMatchOpen, setIsLogMatchOpen] = useState(false);
   const [defaultOpponentId, setDefaultOpponentId] = useState<string | undefined>(undefined);
@@ -31,33 +26,7 @@ export function useAppBootstrap() {
     initSounds();
   }, []);
 
-  // Handle deep links from QR codes and NFC scans
-  useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return;
-
-    const handleDeepLink = (event: any) => {
-      const url = event.url;
-      if (url) {
-        if (url.startsWith("iiscshuttlers://")) {
-          const path = url.slice("iiscshuttlers://".length);
-          setLocation("/" + path);
-          return;
-        }
-        if (url.includes("iiscbadmintonclub.github.io")) {
-          const match = url.match(/iiscbadmintonclub\.github\.io\/iiscshuttlers(\/[^?]*)?/);
-          if (match) {
-            setLocation(match[1] || "/");
-          }
-        }
-      }
-    };
-
-    CapacitorApp.addListener("appUrlOpen", handleDeepLink);
-
-    return () => {
-      CapacitorApp.removeAllListeners();
-    };
-  }, [setLocation]);
+  // Deep-link handling is centralised in App.tsx — do not register a second listener here.
 
   useEffect(() => {
     const handleOpenLogMatch = (e: any) => {
