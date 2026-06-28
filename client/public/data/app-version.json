@@ -1,6 +1,6 @@
 {
-  "versionCode": 165,
-  "versionName": "1.165",
+  "versionCode": 166,
+  "versionName": "1.166",
   "downloadUrl": "https://play.google.com/store/apps/details?id=com.iiscshuttlers.app",
-  "changelog": "- Updated version\n- chore: release v1.164 (build 164)"
+  "changelog": "Version 1.166 released with bug fixes and performance improvements."
 }
