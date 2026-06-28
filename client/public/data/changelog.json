@@ -1,5 +1,13 @@
 [
   {
+    "versionCode": 172,
+    "versionName": "1.172",
+    "date": "2026-06-28T22:22:20.704Z",
+    "changes": [
+      "- fix: TypeScript type errors for tournaments"
+    ]
+  },
+  {
     "versionCode": 171,
     "versionName": "1.171",
     "date": "2026-06-28T22:15:08.857Z",

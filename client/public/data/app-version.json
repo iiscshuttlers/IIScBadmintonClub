@@ -1,6 +1,6 @@
 {
-  "versionCode": 171,
-  "versionName": "1.171",
+  "versionCode": 172,
+  "versionName": "1.172",
   "downloadUrl": "https://play.google.com/store/apps/details?id=com.iiscshuttlers.app",
-  "changelog": "- updates"
+  "changelog": "- fix: TypeScript type errors for tournaments"
 }
