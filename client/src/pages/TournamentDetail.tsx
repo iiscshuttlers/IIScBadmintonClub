@@ -98,7 +98,7 @@ export default function TournamentDetail() {
         subtitle: "Official Results",
         description: sb.description || "Tournament completed.",
         winners: sb.winners,
-        podium: sb.podium,
+        podium: (sb as any).podium,
       } as any;
     }
   }

@@ -1,4 +1,4 @@
-export type TournamentStatus = "live" | "upcoming" | "completed";
+export type TournamentStatus = "live" | "upcoming" | "completed" | "active" | "draft" | "archived";
 export type TournamentType = "open" | "team" | "special";
 
 export type TournamentWinner = {

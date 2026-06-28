@@ -63,6 +63,7 @@ interface SupabaseTournament {
   form_url: string | null;
   form_status: string;
   archived_at: string | null;
+  slug?: string;
 }
 
 interface PastMatch {
@@ -78,6 +79,8 @@ interface PastMatch {
   score: string | null;
   sets_history: string[] | null;
   status: string;
+  scheduled_at?: string | null;
+  court_number?: string | null;
 }
 export interface TournamentSectionProps {
   liveEvents?: any[];

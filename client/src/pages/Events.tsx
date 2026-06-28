@@ -27,7 +27,7 @@ import { InfoModal } from "@/components/InfoModal";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import ScheduleCalendar from "./ScheduleCalendar";
-import { TournamentSection, PastTournamentsSection } from "@/components/events/TournamentSection";
+import { TournamentSection } from "@/components/events/TournamentSection";
 import { LiveScoreSection } from "@/components/events/LiveScoreSection";
 import { useHashTab } from "@/hooks/useHashTab";
 import { useAuth } from "@/contexts/AuthContext";
