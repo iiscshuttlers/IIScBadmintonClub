@@ -30,8 +30,10 @@ interface AdminHistoryContextType {
   canUndo: boolean;
   canRedo: boolean;
   lastAction: HistoryEntry | null;
+  nextRedoAction: HistoryEntry | null;
   undo: () => Promise<void>;
   redo: () => Promise<void>;
+  revertAction: (action: HistoryEntry) => Promise<void>;
   recordAction: (entry: Omit<HistoryEntry, "id" | "created_at">) => Promise<void>;
   softDelete: (
     tableName: string,
@@ -272,6 +274,27 @@ export function AdminHistoryProvider({
     await performUndo(undoStack[0], undoStack);
   }, [undoStack, performUndo]);
 
+  const revertAction = useCallback(async (action: HistoryEntry) => {
+    if (busy.current) return;
+    if (!confirm(`Are you sure you want to revert this specific action: "${action.label}"?\n\nCaution: If newer actions modified the same record, this may overwrite them.`)) return;
+    
+    busy.current = true;
+    try {
+      await applyToDb(action, "undo");
+      if (action.id) {
+        await supabase.from("admin_history").delete().eq("id", action.id);
+      }
+      setUndoStack(prev => prev.filter(a => a.id !== action.id));
+      setRedoStack(prev => prev.filter(a => a.id !== action.id));
+      setReloadTrigger(n => n + 1);
+      await refreshRecycleBin();
+      toast(`Reverted: ${action.label}`, { icon: "↩️" });
+    } catch (err: any) {
+      toast("Revert failed: " + err?.message, { icon: "❌" });
+    }
+    busy.current = false;
+  }, [refreshRecycleBin]);
+
   /* ── redo ─────────────────────────────────────────────────────── */
   const performRedo = useCallback(
     async (action: HistoryEntry, stack: HistoryEntry[]) => {
@@ -342,8 +365,10 @@ export function AdminHistoryProvider({
         canUndo: undoStack.length > 0,
         canRedo: redoStack.length > 0,
         lastAction: undoStack[0] ?? null,
+        nextRedoAction: redoStack[0] ?? null,
         undo,
         redo,
+        revertAction,
         recordAction,
         softDelete,
         recycleBinCount,

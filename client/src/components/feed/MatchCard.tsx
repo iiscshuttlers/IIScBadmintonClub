@@ -188,11 +188,17 @@ export function MatchCard({
         );
         const avatarEl = (
           <div className="relative shrink-0">
-            <img
-              src={player.avatar_url || ""}
-              loading="lazy"
-              className={`w-7 h-7 rounded-full object-cover shadow-sm ${win ? "ring-2 ring-emerald-500 ring-offset-1 dark:ring-offset-slate-900" : dim ? "grayscale opacity-70" : ""}`}
-            />
+            {player.avatar_url ? (
+              <img
+                src={player.avatar_url}
+                loading="lazy"
+                className={`w-7 h-7 rounded-full object-cover shadow-sm ${win ? "ring-2 ring-emerald-500 ring-offset-1 dark:ring-offset-slate-900" : dim ? "grayscale opacity-70" : ""}`}
+              />
+            ) : (
+              <div className={`w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-500 shadow-sm ${win ? "ring-2 ring-emerald-500 ring-offset-1 dark:ring-offset-slate-900" : dim ? "grayscale opacity-70" : ""}`}>
+                {player.full_name?.substring(0, 2).toUpperCase() || "??"}
+              </div>
+            )}
             {win && (
               <div className="absolute -bottom-1 -right-1 bg-emerald-500 text-white rounded-full p-0.5 border border-white dark:border-slate-900 shadow-sm">
                 <Trophy className="w-2 h-2" />
@@ -423,7 +429,7 @@ export function MatchCard({
 
       {/* Reaction Kudos & Edit */}
       {!hideActions && (
-      <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/50 flex flex-col gap-2 relative z-50">
+      <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/50 flex flex-col gap-2 relative z-10">
         {/* Actions Row */}
         <div className="flex justify-between items-center px-1">
           <button

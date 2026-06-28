@@ -60,6 +60,7 @@ export type AuthUser = {
   email: string;
   created_at: string;
   last_sign_in_at: string;
+  email_confirmed_at?: string;
 };
 export type SiteConfig = {
   stats: {

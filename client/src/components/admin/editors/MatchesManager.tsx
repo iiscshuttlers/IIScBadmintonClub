@@ -10,8 +10,12 @@ import {
   inputCls, labelCls, cardCls, colorSwatchCls, toHex, parseTime, fmtTime
 } from "./shared";
 import { optimizeImage } from '@/lib/imageUtils';
+import { useAuth } from "@/contexts/AuthContext";
+import { MatchCard } from "../../feed/MatchCard";
+import { Capacitor } from "@capacitor/core";
 
 export function MatchesManager() {
+  const { user } = useAuth();
   const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState<string | null>(null);
@@ -25,8 +29,10 @@ export function MatchesManager() {
       .select(
         `
         *,
-        player1:players!matches_player1_id_fkey(full_name),
-        player2:players!matches_player2_id_fkey(full_name)
+        player1:players!matches_player1_id_fkey(id, full_name, avatar_url),
+        player2:players!matches_player2_id_fkey(id, full_name, avatar_url),
+        partner1:players!team1_partner_id(id, full_name, avatar_url),
+        partner2:players!team2_partner_id(id, full_name, avatar_url)
       `,
       )
       .order("created_at", { ascending: false })
@@ -41,16 +47,18 @@ export function MatchesManager() {
         .limit(100);
       const { data: players } = await supabase
         .from("players")
-        .select("id, full_name");
+        .select("id, full_name, avatar_url");
       const pMap = Object.fromEntries(
-        (players || []).map((p) => [p.id, p.full_name]),
+        (players || []).map((p) => [p.id, p]),
       );
       if (flatMatches) {
         setMatches(
           flatMatches.map((m) => ({
             ...m,
-            player1: { full_name: pMap[m.player1_id] || "Unknown" },
-            player2: { full_name: pMap[m.player2_id] || "Unknown" },
+            player1: pMap[m.player1_id] ? pMap[m.player1_id] : { full_name: m.player1_id || "Unknown" },
+            player2: pMap[m.player2_id] ? pMap[m.player2_id] : { full_name: m.player2_id || "Unknown" },
+            partner1: m.team1_partner_id ? pMap[m.team1_partner_id] || { full_name: m.team1_partner_id } : null,
+            partner2: m.team2_partner_id ? pMap[m.team2_partner_id] || { full_name: m.team2_partner_id } : null,
           })),
         );
       }
@@ -151,29 +159,68 @@ export function MatchesManager() {
     setActionId(null);
   };
 
-  const exportMatchesCsv = () => {
+  const exportMatchesCsv = async () => {
     if (matches.length === 0) return;
-    const headers = ["ID", "Status", "Created At", "Player1", "Player2", "Category", "Score", "Winner ID", "P1 Elo Change", "P2 Elo Change"];
-    const rows = matches.map(m => [
-      m.id,
-      m.status,
-      m.created_at,
-      `"${m.player1?.full_name || m.player1_id || ""}"`,
-      `"${m.player2?.full_name || m.player2_id || ""}"`,
-      m.category || "friendly",
-      `"${m.match_score || m.score || ""}"`,
-      m.winner_id,
-      m.elo_change_p1 || "",
-      m.elo_change_p2 || ""
-    ].join(","));
+    const headers = [
+      "ID", "Status", "Created At", "Category", "Is Friendly", "Tournament",
+      "Player 1", "Partner 1", "Player 2", "Partner 2", 
+      "Score", "Sets History", "Confirmed By", "Winner ID", 
+      "P1 Elo Change", "Partner1 Elo Change", "P2 Elo Change", "Partner2 Elo Change"
+    ];
+    
+    const rows = matches.map(m => {
+      let rawScore = m.match_score || m.score || "";
+      if (typeof rawScore === "object") rawScore = JSON.stringify(rawScore);
+      const cleanScore = typeof rawScore === "string" ? rawScore.replace(/\s*\[.*Doubles:.*\]/i, '') : "";
+
+      const setsHistorySafe = Array.isArray(m.sets_history) ? JSON.stringify(m.sets_history) : (m.sets_history || "");
+      const confirmedBySafe = Array.isArray(m.confirmed_by) ? JSON.stringify(m.confirmed_by) : (m.confirmed_by || "");
+
+      return [
+        m.id,
+        m.status,
+        m.created_at,
+        m.category || "friendly",
+        m.is_friendly || false,
+        `"${m.tournament_slug || ""}"`,
+        `"${m.player1?.full_name || m.player1_id || ""}"`,
+        `"${m.partner1?.full_name || m.team1_partner_id || ""}"`,
+        `"${m.player2?.full_name || m.player2_id || ""}"`,
+        `"${m.partner2?.full_name || m.team2_partner_id || ""}"`,
+        `"${cleanScore}"`,
+        `"${setsHistorySafe.replace(/"/g, '""')}"`,
+        `"${confirmedBySafe.replace(/"/g, '""')}"`,
+        m.winner_id || "",
+        m.elo_change_p1 || "",
+        m.elo_change_p3 || "",
+        m.elo_change_p2 || "",
+        m.elo_change_p4 || ""
+      ].join(",");
+    });
     const csv = [headers.join(","), ...rows].join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `matches_export_${new Date().toISOString().split("T")[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const filename = `matches_export_${new Date().toISOString().split("T")[0]}.csv`;
+    const csvContent = '\uFEFF' + csv;
+    const file = new File([csvContent], filename, { type: "text/csv;charset=utf-8;" });
+    
+    try {
+      const isNative = Capacitor.isNativePlatform();
+      if (isNative && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: filename,
+        });
+      } else {
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch (err) {
+      console.error("Export error", err);
+    }
   };
 
   if (loading)
@@ -185,82 +232,66 @@ export function MatchesManager() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-0">
         <h3 className="font-black text-slate-800 dark:text-white">
           Recent Matches (Last 100)
         </h3>
-        <div className="flex gap-2">
+        <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
           <button
             onClick={recalculateElo}
             disabled={actionId === "recalc"}
-            className="flex items-center gap-2 px-3 py-2 border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 font-bold text-xs rounded-xl hover:bg-rose-100 disabled:opacity-50 transition"
+            className="flex justify-center items-center gap-2 px-3 py-2 border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 font-bold text-xs rounded-xl hover:bg-rose-100 disabled:opacity-50 transition w-full md:w-auto"
           >
             {actionId === "recalc" ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
             Recalculate All ELOs
           </button>
-          <button
-            onClick={exportMatchesCsv}
-            className="flex items-center gap-2 px-3 py-2 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-50 transition"
-          >
-            <Download className="w-4 h-4" />
-            Download CSV
-          </button>
-          <button
-            onClick={load}
-            className="p-2 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800"
-          >
-            <RefreshCw className="w-4 h-4 text-slate-500" />
-          </button>
+          <div className="flex gap-2 w-full md:w-auto">
+            <button
+              onClick={exportMatchesCsv}
+              className="flex justify-center items-center gap-2 px-3 py-2 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-50 transition flex-1 md:flex-none"
+            >
+              <Download className="w-4 h-4" />
+              Download CSV
+            </button>
+            <button
+              onClick={load}
+              className="flex justify-center items-center p-2 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800"
+            >
+              <RefreshCw className="w-4 h-4 text-slate-500" />
+            </button>
+          </div>
         </div>
       </div>
       <div className="space-y-3">
         {matches.map((m, idx) => {
           const busy = actionId === m.id;
           return (
-            <div
+            <MatchCard
               key={m.id}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm"
+              match={m}
+              currentUser={user}
+              hideActions={true}
+              isKudosed={false}
+              kudosCount={0}
+              index={idx}
             >
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-mono text-slate-400 text-xs mr-2">
-                    #{idx + 1}
-                  </span>
-                  <span className="font-bold text-slate-900 dark:text-white">
-                    {m.player1?.full_name || m.player1_id}{" "}
-                    <span className="text-slate-400 font-normal mx-1">vs</span>{" "}
-                    {m.player2?.full_name || m.player2_id}
-                  </span>
-                  <span
-                    className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${m.status === "confirmed" ? "bg-emerald-100 text-emerald-700" : m.status === "rejected" ? "bg-rose-100 text-rose-700" : "bg-amber-100 text-amber-700"}`}
-                  >
-                    {m.status}
-                  </span>
-                </div>
-                <div className="text-sm text-slate-600 dark:text-slate-400 font-mono">
-                  {m.match_score || m.score}
-                </div>
-                <div className="text-xs text-slate-400 mt-1">
-                  {new Date(m.created_at).toLocaleString()}
-                </div>
-              </div>
-              <div className="flex gap-2">
+              <div className="pt-2 mt-2 border-t border-slate-100 dark:border-slate-800 flex justify-center gap-3 w-full relative z-10">
                 <button
                   onClick={() => revokeMatch(m.id)}
                   disabled={busy}
-                  className="px-3 py-1.5 text-xs font-bold bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg disabled:opacity-50 transition"
+                  className="px-5 py-2.5 text-sm font-bold bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-xl disabled:opacity-50 transition w-full sm:w-auto text-center"
                 >
-                  Revoke
+                  Revoke Match
                 </button>
                 <button
                   onClick={() => deleteMatch(m.id)}
                   disabled={busy}
-                  className="px-3 py-1.5 text-xs font-bold bg-rose-100 hover:bg-rose-200 text-rose-700 rounded-lg flex items-center gap-1 disabled:opacity-50 transition"
+                  className="px-5 py-2.5 text-sm font-bold bg-rose-100 hover:bg-rose-200 text-rose-700 rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 transition w-full sm:w-auto"
                 >
-                  <Trash2 className="w-3 h-3" /> Delete
+                  <Trash2 className="w-4 h-4" /> Delete Match
                 </button>
               </div>
-            </div>
+            </MatchCard>
           );
         })}
       </div>

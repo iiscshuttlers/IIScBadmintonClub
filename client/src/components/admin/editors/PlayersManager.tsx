@@ -211,6 +211,33 @@ export function PlayersManager() {
     setActionId(null);
   };
 
+  const forceVerify = async (id: string, email: string) => {
+    if (!confirm(`Force verify email for "${email}"?`)) return;
+    setActionId(id);
+    const { error } = await supabase.functions.invoke("admin-users", {
+      method: "POST",
+      body: { action: "verify", userId: id },
+    });
+    if (error) {
+      toast("Verify failed: " + error.message, { icon: "❌" });
+    } else {
+      toast("Email verified successfully.", { icon: "✅" });
+      setAuthUsers((u) => u.map((user) => user.id === id ? { ...user, email_confirmed_at: new Date().toISOString() } : user));
+    }
+    setActionId(null);
+  };
+
+  const resendVerifyEmail = async (id: string, email: string) => {
+    setActionId(id);
+    const { error } = await supabase.auth.resend({ type: 'signup', email });
+    if (error) {
+      toast("Resend failed: " + error.message, { icon: "❌" });
+    } else {
+      toast("Verification email resent.", { icon: "✉️" });
+    }
+    setActionId(null);
+  };
+
   const handleRoleChange = async (id: string, name: string, newRole: string) => {
     if (!confirm(`Change role for "${name}" to ${newRole.toUpperCase()}?`)) return;
     setActionId(id);
@@ -300,7 +327,7 @@ export function PlayersManager() {
   return (
     <div className="space-y-4">
       {/* Stats bar */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
         {[
           {
             label: "Total Acc",
@@ -325,10 +352,10 @@ export function PlayersManager() {
         ].map((s) => (
           <div
             key={s.label}
-            className={`rounded-2xl border p-4 text-center ${s.color}`}
+            className={`rounded-2xl border p-3 sm:p-4 flex flex-col items-center justify-center text-center ${s.color}`}
           >
-            <div className="text-2xl font-black">{s.value}</div>
-            <div className="text-xs font-bold uppercase tracking-wider mt-0.5">
+            <div className="text-xl sm:text-2xl font-black leading-none">{s.value}</div>
+            <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider mt-1.5 sm:mt-0.5 leading-tight">
               {s.label}
             </div>
           </div>
@@ -423,6 +450,24 @@ export function PlayersManager() {
                     )}
                     Delete Account
                   </button>
+                  {!u.email_confirmed_at && (
+                    <>
+                      <button
+                        onClick={() => resendVerifyEmail(u.id, u.email)}
+                        disabled={busy}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sky-600 bg-sky-50 hover:bg-sky-100 dark:bg-sky-900/30 dark:hover:bg-sky-900/50 text-xs font-bold transition disabled:opacity-50"
+                      >
+                        Resend Email
+                      </button>
+                      <button
+                        onClick={() => forceVerify(u.id, u.email)}
+                        disabled={busy}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-emerald-600 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 text-xs font-bold transition disabled:opacity-50"
+                      >
+                        Force Verify
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             );

@@ -36,7 +36,7 @@ export function NoticeboardManager({
   return (
     <div className="space-y-6">
       {/* Sub-navigation */}
-      <div className="flex bg-white dark:bg-slate-900 rounded-2xl p-1.5 border border-slate-200 dark:border-slate-800 w-fit max-w-full overflow-x-auto mx-auto sm:mx-0 shadow-sm">
+      <div className="grid grid-cols-2 sm:flex bg-white dark:bg-slate-900 rounded-2xl p-1.5 border border-slate-200 dark:border-slate-800 w-full sm:w-fit sm:max-w-full overflow-x-auto mx-auto sm:mx-0 shadow-sm gap-1 sm:gap-0">
         {tabs.map((t) => {
           const Icon = t.icon;
           const active = activeTab === t.id;
@@ -44,13 +44,13 @@ export function NoticeboardManager({
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
-              className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
+              className={`flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 px-2 sm:px-5 py-2 rounded-xl text-[11px] sm:text-sm font-bold whitespace-nowrap transition-all ${
                 active
                   ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 shadow-sm"
                   : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
               }`}
             >
-              <Icon className="w-4 h-4 shrink-0" />
+              <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
               {t.label}
             </button>
           );

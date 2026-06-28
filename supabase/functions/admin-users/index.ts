@@ -45,6 +45,7 @@ serve(async (req) => {
       "admin@iiscshuttlers.com",
       "shuttlersiisc@gmail.com",
       "paras@iiscshuttlers.com",
+      "raja79sharma@gmail.com",
     ];
     const isAdmin = adminEmails.includes(user.email ?? "");
 
@@ -88,6 +89,29 @@ serve(async (req) => {
       if (error) throw error;
 
       return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (method === "POST") {
+      const { action, userId } = await req.json();
+      if (!userId) {
+        return new Response(JSON.stringify({ error: "Missing userId" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (action === "verify") {
+        const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, { email_confirm: true });
+        if (error) throw error;
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(JSON.stringify({ error: "Invalid action" }), {
+        status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

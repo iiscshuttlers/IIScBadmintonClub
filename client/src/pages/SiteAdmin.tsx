@@ -50,6 +50,7 @@ import { TooltipRegistryPanel } from "@/components/admin/TooltipRegistryPanel";
 import { TournamentManager } from "@/components/admin/TournamentManager";
 import { RecycleBin } from "@/components/admin/RecycleBin";
 import { GuestPlayersPanel } from "@/components/admin/GuestPlayersPanel";
+import { UndoHistory } from "@/components/admin/UndoHistory";
 import { AdminHistoryProvider, useAdminHistory } from "@/contexts/AdminHistoryContext";
 import { ContentEditorWrapper } from "@/components/admin/ContentEditorWrapper";
 
@@ -75,7 +76,8 @@ type TabId =
   | "features"
   | "all_features"
   | "tooltips"
-  | "recycle_bin";
+  | "recycle_bin"
+  | "undo_history";
 
 interface TabGroup {
   title: string;
@@ -135,6 +137,7 @@ const TAB_GROUPS: TabGroup[] = [
       { id: "settings", label: "Settings", icon: Settings },
       { id: "activity_log", label: "Activity Log", icon: ClipboardList },
       { id: "changelog", label: "System Logs", icon: FileCode2 },
+      { id: "undo_history", label: "Undo History", icon: Undo2 },
       { id: "recycle_bin", label: "Recycle Bin", icon: Trash2 },
     ],
   },
@@ -162,7 +165,7 @@ function SiteAdminInner() {
 
   const [authState, setAuthState] = useState<"loading" | "denied" | "ok">("loading");
   const { session, isInitializing, isAdmin, isMasterAdmin, isUmpire } = useAuth();
-  const { canUndo, canRedo, undo, redo, recycleBinCount } = useAdminHistory();
+  const { canUndo, canRedo, undo, redo, recycleBinCount, lastAction, nextRedoAction } = useAdminHistory();
 
   const [activeTab, setActiveTab] = useState<TabId>(() => {
     const hash = window.location.hash.replace("#", "");
@@ -251,7 +254,7 @@ function SiteAdminInner() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-safe pb-24 lg:pb-8">
       {/* Header */}
-      <section className="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-900 text-white py-10 md:sticky md:top-0 md:z-[60] shadow-xl border-b border-slate-900">
+      <section className="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-900 text-white py-10 md:sticky md:top-[48px] lg:top-[88px] md:z-40 shadow-xl border-b border-slate-900">
         <div className="container mx-auto px-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
@@ -325,34 +328,42 @@ function SiteAdminInner() {
               </div>
               <p className="text-slate-300 text-sm mt-1">Site content · Player management · Live tournament scoring</p>
             </div>
-            <div className="flex items-center gap-2">
-              <a
-                href="/tournament-admin"
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-sm font-bold transition"
-                title="Open full Tournament Manager"
-              >
-                <Trophy className="w-4 h-4" />
-                <span className="hidden sm:inline">Tournaments</span>
-                <ExternalLink className="w-3 h-3 opacity-60" />
-              </a>
-              <button
-                onClick={undo}
-                disabled={!canUndo}
-                title="Undo last saved action (Ctrl+Z)"
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-sm font-bold transition disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <Undo2 className="w-4 h-4" />
-                <span className="hidden sm:inline">Undo</span>
-              </button>
-              <button
-                onClick={redo}
-                disabled={!canRedo}
-                title="Redo (Ctrl+Y)"
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-sm font-bold transition disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <Redo2 className="w-4 h-4" />
-                <span className="hidden sm:inline">Redo</span>
-              </button>
+            <div className="flex flex-col items-end gap-1">
+              <div className="flex items-center gap-2">
+                <a
+                  href="/tournament-admin"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-sm font-bold transition"
+                  title="Open full Tournament Manager"
+                >
+                  <Trophy className="w-4 h-4" />
+                  <span className="hidden sm:inline">Tournaments</span>
+                  <ExternalLink className="w-3 h-3 opacity-60" />
+                </a>
+                <button
+                  onClick={undo}
+                  disabled={!canUndo}
+                  title={canUndo && lastAction ? `Undo: ${lastAction.label}` : "Undo last saved action (Ctrl+Z)"}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-sm font-bold transition disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <Undo2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Undo</span>
+                </button>
+                <button
+                  onClick={redo}
+                  disabled={!canRedo}
+                  title={canRedo && nextRedoAction ? `Redo: ${nextRedoAction.label}` : "Redo (Ctrl+Y)"}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-sm font-bold transition disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <Redo2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Redo</span>
+                </button>
+              </div>
+              {(canUndo || canRedo) && (
+                <div className="text-[10px] text-emerald-300 font-medium max-w-[200px] sm:max-w-[300px] truncate text-right leading-tight">
+                  {canUndo && <div><span className="opacity-70">Undo:</span> {lastAction?.label}</div>}
+                  {canRedo && <div><span className="opacity-70">Redo:</span> {nextRedoAction?.label}</div>}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -439,6 +450,7 @@ function SiteAdminInner() {
             {activeTab === "features" && <AdminFeaturesPanel />}
             {activeTab === "all_features" && <AdminAllFeaturesPanel />}
             {activeTab === "tooltips" && <TooltipRegistryPanel />}
+            {activeTab === "undo_history" && <UndoHistory />}
             {activeTab === "recycle_bin" && <RecycleBin />}
           </motion.div>
         </AnimatePresence>

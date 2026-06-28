@@ -183,16 +183,15 @@ export default function Navigation() {
 
   return (
     <>
-      {/* Top gradient accent bar */}
-      <div className="h-[3px] bg-gradient-to-r from-emerald-500 via-teal-400 to-orange-500" />
-
       <nav
-        className={`sticky top-0 z-50 transition-all duration-300 ${
+        className={`pt-[max(env(safe-area-inset-top),36px)] md:pt-[max(env(safe-area-inset-top),16px)] sticky top-0 z-50 transition-all duration-300 ${
           scrolled
             ? "bg-white/92 dark:bg-slate-950/92 backdrop-blur-xl shadow-lg shadow-slate-200/40 dark:shadow-slate-900/40 border-b border-slate-100/80 dark:border-slate-800/60"
             : "bg-white dark:bg-slate-950 border-b border-transparent"
         }`}
       >
+        {/* Top gradient accent bar */}
+        <div className="h-[3px] bg-gradient-to-r from-emerald-500 via-teal-400 to-orange-500 w-full" />
         <div className={`container mx-auto px-4 transition-all duration-300 ${scrolled ? "py-1.5" : "py-2"}`}>
 
           {/* ── Row 1: Logo + Nav Links ─────────────────────────────── */}
@@ -396,46 +395,17 @@ export default function Navigation() {
                         <button className="w-full flex items-center gap-2 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer border-b border-slate-100 dark:border-slate-800" onClick={() => { setIsOpen(false); setIsPreferencesOpen(true); }}>
                           <Settings className="h-4 w-4 text-slate-400" /> App Preferences
                         </button>
-                        <Link href="/profile/setup">
-                          <a className="w-full flex items-center gap-2 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
-                            <User className="h-4 w-4 text-slate-400" /> Edit Profile
-                          </a>
+                        <Link href="/profile/setup" className="w-full flex items-center gap-2 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
+                          <User className="h-4 w-4 text-slate-400" /> Edit Profile
                         </Link>
-                        <Link href="/profile/password">
-                          <a className="w-full flex items-center gap-2 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
-                            <Lock className="h-4 w-4 text-slate-400" /> Change Password
-                          </a>
+                        <Link href="/profile/password" className="w-full flex items-center gap-2 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
+                          <Lock className="h-4 w-4 text-slate-400" /> Change Password
                         </Link>
                       </div>
 
-                    {isTrulyMainAdmin && (
-                      <div className="px-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">View As</p>
-                        <div className="grid grid-cols-2 gap-1">
-                          {(["master_admin", "admin", "umpire", "player"] as ViewAsRole[]).map(role => {
-                            const active = viewAsRole === role || (!viewAsRole && role === "master_admin");
-                            const labels: Record<ViewAsRole, string> = { master_admin: "Master Admin", admin: "Admin", umpire: "Umpire", player: "Player" };
-                            return (
-                              <button
-                                key={role}
-                                onClick={() => setViewAsRole(role === "master_admin" ? null : role)}
-                                className={`px-2 py-1.5 rounded-lg text-xs font-bold transition-colors ${active ? "bg-violet-600 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
-                              >
-                                {labels[role]}
-                              </button>
-                            );
-                          })}
-                        </div>
-                        {viewAsRole && (
-                          <p className="text-[10px] text-amber-500 font-bold mt-1.5 text-center">Viewing as {viewAsRole.replace("_", " ")}</p>
-                        )}
-                      </div>
-                    )}
                     {isAdmin && (
-                      <Link href="/admin">
-                        <a className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-violet-50 dark:hover:bg-violet-950/30 text-violet-600 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
-                          <Zap className="h-4 w-4" /> Site Admin
-                        </a>
+                      <Link href="/admin" className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-violet-50 dark:hover:bg-violet-950/30 text-violet-600 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
+                        <Zap className="h-4 w-4" /> Site Admin
                       </Link>
                     )}
                     <button
@@ -444,10 +414,8 @@ export default function Navigation() {
                     >
                       <UserPlus className="h-4 w-4 text-emerald-500" /> Invite Friends
                     </button>
-                    <Link href="/privacy">
-                      <button className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
-                        <Shield className="h-4 w-4 text-slate-400" /> Privacy Policy
-                      </button>
+                    <Link href="/privacy" className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
+                      <Shield className="h-4 w-4 text-slate-400" /> Privacy Policy
                     </Link>
                     <button
                       className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-600 font-medium text-sm transition-colors cursor-pointer"

@@ -225,16 +225,18 @@ export function PlayerCard({
               />
             ) : (
               <div
-                className={`w-full h-full bg-gradient-to-br ${avatarGradient(player.full_name)} flex items-center justify-center text-white font-black text-2xl`}
+                className={`w-full h-full bg-gradient-to-br ${avatarGradient(player.full_name || "")} flex items-center justify-center text-white font-black text-2xl`}
               >
-                {player.full_name.charAt(0).toUpperCase()}
+                {(player.full_name || "?").charAt(0).toUpperCase()}
               </div>
             )}
           </div>
           {/* Dept Badge */}
-          <div className="absolute -bottom-1 -right-2 flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 border-2 border-white dark:border-slate-900 shadow-sm" title={player.department}>
-            {player.department.substring(0, 3)}
-          </div>
+          {player.department && (
+            <div className="absolute -bottom-1 -right-2 flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 border-2 border-white dark:border-slate-900 shadow-sm" title={player.department}>
+              {player.department.substring(0, 3)}
+            </div>
+          )}
           
           {/* Status Dot */}
           {player.status === "playing" && (

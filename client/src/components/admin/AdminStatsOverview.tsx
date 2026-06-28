@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, Cell } from "recharts";
 import { format, subDays, parseISO } from "date-fns";
+import { Capacitor } from "@capacitor/core";
 
 interface Stats {
   totalPlayers: number;
@@ -141,27 +142,7 @@ export function AdminStatsOverview() {
 
   const maxCount = Math.max(...stats.eloDistribution.map((d) => d.count), 1);
 
-  const exportToCsv = async (type: "players" | "matches") => {
-    try {
-      const { data, error } = await supabase.from(type).select("*");
-      if (error) throw error;
-      if (!data || data.length === 0) return;
-      
-      const headers = Object.keys(data[0]).join(",");
-      const rows = data.map(row => Object.values(row).map(v => typeof v === "string" ? `"${v.replace(/"/g, '""')}"` : v).join(",")).join("\n");
-      const csv = `${headers}\n${rows}`;
-      
-      const blob = new Blob([csv], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `iisc_shuttlers_${type}_${new Date().toISOString().split("T")[0]}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("Export error", err);
-    }
-  };
+
 
   return (
     <div className="space-y-6">
@@ -169,14 +150,6 @@ export function AdminStatsOverview() {
         <h2 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
           <Activity className="w-5 h-5 text-emerald-500" /> Platform Overview
         </h2>
-        <div className="flex gap-2">
-          <button onClick={() => exportToCsv("players")} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-bold rounded-xl transition-colors">
-            <Download className="w-4 h-4" /> Players CSV
-          </button>
-          <button onClick={() => exportToCsv("matches")} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-bold rounded-xl transition-colors">
-            <Download className="w-4 h-4" /> Matches CSV
-          </button>
-        </div>
       </div>
 
       {/* KPI Grid */}

@@ -1,6 +1,7 @@
 import { useRegisterSW } from "virtual:pwa-register/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RefreshCw, X } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
 
 export function PwaUpdatePrompt() {
   const {
@@ -15,6 +16,10 @@ export function PwaUpdatePrompt() {
     },
   });
 
+  // Only show in installed PWA mode, and hide on native Capacitor (which has its own update prompt)
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+  if (!isStandalone || Capacitor.isNativePlatform()) return null;
+
   return (
     <AnimatePresence>
       {needRefresh && (
@@ -22,7 +27,7 @@ export function PwaUpdatePrompt() {
           initial={{ opacity: 0, y: 50, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 50, scale: 0.95 }}
-          className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-50 w-80 bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md border border-emerald-500/50 shadow-2xl shadow-emerald-900/20 rounded-2xl p-5 overflow-hidden"
+          className="fixed bottom-24 right-4 sm:bottom-8 sm:right-8 z-50 w-[calc(100vw-2rem)] sm:w-80 bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md border border-emerald-500/50 shadow-2xl shadow-emerald-900/20 rounded-2xl p-5 overflow-hidden"
         >
           {/* Decorative glowing orb */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-2xl rounded-full -mr-16 -mt-16 pointer-events-none" />

@@ -70,8 +70,7 @@ export default function Marketplace() {
           seller:seller_id (
             full_name,
             avatar_url,
-            department,
-            phone
+            department
           )
         `)
         .in('status', ['active', 'sold'])
@@ -226,53 +225,60 @@ export default function Marketplace() {
               </button>
             </div>
 
-            {/* Categories and Filters Scroller */}
-            <div className="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-2 overflow-x-auto no-scrollbar">
-              {/* Type Filter */}
-              <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-full mr-2 shrink-0">
+            {/* Categories and Filters */}
+            <div className="max-w-5xl mx-auto px-4 py-3 flex flex-col gap-3">
+              {/* Top Row: Type Filter & Sold Toggle */}
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-full shrink-0">
+                  <button
+                    onClick={() => setTypeFilter('all')}
+                    className={`px-3 py-1 text-xs font-black rounded-full transition-all ${typeFilter === 'all' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => setTypeFilter('sell')}
+                    className={`px-3 py-1 text-xs font-black rounded-full transition-all ${typeFilter === 'sell' ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                  >
+                    Selling
+                  </button>
+                  <button
+                    onClick={() => setTypeFilter('buy')}
+                    className={`px-3 py-1 text-xs font-black rounded-full transition-all ${typeFilter === 'buy' ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                  >
+                    Requests
+                  </button>
+                </div>
+                
+                {/* Toggle Sold Items */}
                 <button
-                  onClick={() => setTypeFilter('all')}
-                  className={`px-3 py-1 text-xs font-black rounded-full transition-all ${typeFilter === 'all' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                  onClick={() => setShowSold(s => !s)}
+                  className={`px-4 py-1.5 rounded-full text-xs font-black whitespace-nowrap transition-all ${
+                    showSold
+                      ? 'bg-slate-500 text-white shadow-sm'
+                      : 'bg-slate-100 text-slate-400 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:hover:bg-slate-700'
+                  }`}
                 >
-                  All
-                </button>
-                <button
-                  onClick={() => setTypeFilter('sell')}
-                  className={`px-3 py-1 text-xs font-black rounded-full transition-all ${typeFilter === 'sell' ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                >
-                  Selling
-                </button>
-                <button
-                  onClick={() => setTypeFilter('buy')}
-                  className={`px-3 py-1 text-xs font-black rounded-full transition-all ${typeFilter === 'buy' ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                >
-                  Requests
+                  {showSold ? "✓ Showing Sold" : "Show Sold"}
                 </button>
               </div>
 
-              {categories.map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => setFilter(cat)}
-                  className={`px-4 py-1.5 rounded-full text-xs font-black whitespace-nowrap transition-all ${
-                    filter === cat
-                      ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900 shadow-sm'
-                      : 'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-              <button
-                onClick={() => setShowSold(s => !s)}
-                className={`ml-auto px-4 py-1.5 rounded-full text-xs font-black whitespace-nowrap transition-all ${
-                  showSold
-                    ? 'bg-slate-500 text-white shadow-sm'
-                    : 'bg-slate-100 text-slate-400 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:hover:bg-slate-700'
-                }`}
-              >
-                {showSold ? "✓ Showing Sold" : "Show Sold"}
-              </button>
+              {/* Bottom Row: Category Filters */}
+              <div className="grid grid-cols-3 md:flex md:flex-wrap gap-2">
+                {categories.map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setFilter(cat)}
+                    className={`px-1 sm:px-4 py-1.5 rounded-full text-xs font-black transition-all truncate text-center ${
+                      filter === cat
+                        ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900 shadow-sm'
+                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 

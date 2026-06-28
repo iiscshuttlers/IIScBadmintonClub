@@ -189,47 +189,49 @@ export function RecycleBin() {
             return (
               <div
                 key={item.id}
-                className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 flex items-center gap-4 shadow-sm"
+                className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 shadow-sm"
               >
-                <span className="text-xl shrink-0">{tableIcon(item.table_name)}</span>
+                <div className="flex items-start gap-4 w-full sm:w-auto flex-1 min-w-0">
+                  <span className="text-xl shrink-0 mt-0.5 sm:mt-0">{tableIcon(item.table_name)}</span>
 
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm text-slate-900 dark:text-white truncate">
-                    {humanLabel(item)}
-                  </p>
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
-                    <span className="text-xs text-slate-400 capitalize">
-                      {item.table_name}
-                    </span>
-                    <span className="text-xs text-slate-400">
-                      Deleted{" "}
-                      {new Date(item.deleted_at).toLocaleDateString("en-IN", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </span>
-                    <span
-                      className={`flex items-center gap-1 text-xs font-medium ${
-                        isExpiringSoon
-                          ? "text-rose-500"
-                          : "text-amber-500"
-                      }`}
-                    >
-                      {isExpiringSoon && (
-                        <AlertTriangle className="w-3 h-3" />
-                      )}
-                      <Clock className="w-3 h-3" />
-                      {days}d left
-                    </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm text-slate-900 dark:text-white truncate">
+                      {humanLabel(item)}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
+                      <span className="text-xs text-slate-400 capitalize">
+                        {item.table_name}
+                      </span>
+                      <span className="text-xs text-slate-400">
+                        Deleted{" "}
+                        {new Date(item.deleted_at).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </span>
+                      <span
+                        className={`flex items-center gap-1 text-xs font-medium ${
+                          isExpiringSoon
+                            ? "text-rose-500"
+                            : "text-amber-500"
+                        }`}
+                      >
+                        {isExpiringSoon && (
+                          <AlertTriangle className="w-3 h-3" />
+                        )}
+                        <Clock className="w-3 h-3" />
+                        {days}d left
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end pt-3 sm:pt-0 mt-1 sm:mt-0 border-t border-slate-100 dark:border-slate-800 sm:border-0">
                   <button
                     onClick={() => restore(item)}
                     disabled={isLoading}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 text-xs font-bold hover:bg-emerald-100 dark:hover:bg-emerald-950/50 transition disabled:opacity-50"
+                    className="flex-1 sm:flex-none justify-center flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 text-xs font-bold hover:bg-emerald-100 dark:hover:bg-emerald-950/50 transition disabled:opacity-50"
                   >
                     {isLoading ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -242,7 +244,7 @@ export function RecycleBin() {
                     <button
                       onClick={() => permanentDelete(item)}
                       disabled={isLoading}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 text-xs font-bold hover:bg-rose-100 dark:hover:bg-rose-950/50 transition disabled:opacity-50"
+                      className="flex-1 sm:flex-none justify-center flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 text-xs font-bold hover:bg-rose-100 dark:hover:bg-rose-950/50 transition disabled:opacity-50"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                       Delete

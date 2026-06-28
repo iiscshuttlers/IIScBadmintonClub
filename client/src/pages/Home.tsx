@@ -110,7 +110,7 @@ export default function Home() {
             <div className="absolute inset-0 dot-pattern opacity-30" />
           </div>
 
-          <div className="container mx-auto px-4 pt-16 pb-20 lg:py-28 relative z-10 w-full">
+          <div className="container mx-auto px-4 pt-24 pb-20 lg:pt-28 lg:pb-28 relative z-10 w-full">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
 
               {/* Left Content */}

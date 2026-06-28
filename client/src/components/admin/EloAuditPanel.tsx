@@ -385,10 +385,10 @@ export function EloAuditPanel() {
         </button>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto hide-scrollbar">
+      <div className="flex flex-col sm:flex-row gap-2">
         {(["history", "snapshot", "matchwise"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${tab === t ? "bg-emerald-600 text-white" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-emerald-300"}`}>
+            className={`px-4 py-3 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition text-center ${tab === t ? "bg-emerald-600 text-white shadow-md" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-emerald-300"}`}>
             {t === "history" ? "Recalculation History" : t === "snapshot" ? "Current ELO Snapshot" : "Matchwise ELO"}
           </button>
         ))}

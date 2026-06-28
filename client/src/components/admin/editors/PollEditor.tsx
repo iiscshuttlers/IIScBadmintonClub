@@ -33,7 +33,7 @@ export function PollEditor({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-black text-slate-800 dark:text-white">Community Polls</h2>
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
