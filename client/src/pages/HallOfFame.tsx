@@ -1,6 +1,7 @@
 import { WinnersWallSection } from "@/components/events/WinnersWallSection";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { Trophy } from "lucide-react";
+import { InfoModal } from "@/components/InfoModal";
 
 export default function HallOfFame() {
   usePageMeta({
@@ -16,6 +17,13 @@ export default function HallOfFame() {
           <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 px-4 py-2 rounded-full text-sm font-semibold mb-5">
             <Trophy className="w-4 h-4 text-amber-400" />
             Club Legends
+            <InfoModal
+              title="HALL OF FAME"
+              items={[
+                { badge: "HONOR", title: "Legacy", desc: "This wall records the ultimate podium finishers across all major club tournaments." }
+              ]}
+              triggerClassName="text-white hover:text-amber-200"
+            />
           </div>
           <h1
             className="text-5xl md:text-6xl font-black mb-5"

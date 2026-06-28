@@ -20,26 +20,24 @@ import {
   BarChart2,
   Zap,
   Sparkles,
-  ChevronUp,
   Undo2,
   Redo2,
   FileCode2,
   ExternalLink,
+  LayoutGrid,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import {
   HolidayEditor,
-  AnnouncementEditor,
   PollEditor,
-  EventEditor,
   VideoEditor,
   PlayersManager,
   UmpireMode,
   ConfigEditor,
   MatchesManager,
   ChangelogViewer,
-  FlyerEditor,
+  NoticeboardManager,
 } from "@/components/admin/AdminEditors";
 import { AdminStatsOverview } from "@/components/admin/AdminStatsOverview";
 import { DisputePanel } from "@/components/admin/DisputePanel";
@@ -48,6 +46,7 @@ import { AdminActivityLog } from "@/components/admin/AdminActivityLog";
 import { EloAuditPanel } from "@/components/admin/EloAuditPanel";
 import { AdminFeaturesPanel } from "@/components/admin/AdminFeaturesPanel";
 import { AdminAllFeaturesPanel } from "@/components/admin/AdminAllFeaturesPanel";
+import { TooltipRegistryPanel } from "@/components/admin/TooltipRegistryPanel";
 import { TournamentManager } from "@/components/admin/TournamentManager";
 import { RecycleBin } from "@/components/admin/RecycleBin";
 import { GuestPlayersPanel } from "@/components/admin/GuestPlayersPanel";
@@ -58,11 +57,9 @@ import { ContentEditorWrapper } from "@/components/admin/ContentEditorWrapper";
 type TabId =
   | "overview"
   | "config"
-  | "flyers"
+  | "noticeboard"
   | "holidays"
-  | "announcements"
   | "polls"
-  | "events"
   | "tournament"
   | "videos"
   | "players"
@@ -77,6 +74,7 @@ type TabId =
   | "activity_log"
   | "features"
   | "all_features"
+  | "tooltips"
   | "recycle_bin";
 
 interface TabGroup {
@@ -92,37 +90,42 @@ const TAB_GROUPS: TabGroup[] = [
     tabs: [{ id: "overview", label: "Statistics", icon: Activity }],
   },
   {
-    title: "📝 Content Management",
+    title: "📝 Content",
     description: "Manage club content, announcements, and events",
     tabs: [
       { id: "config", label: "Landing Pages", icon: Paintbrush },
-      { id: "flyers", label: "Flyers", icon: Megaphone },
-      { id: "announcements", label: "Announcements", icon: Megaphone },
+      { id: "noticeboard", label: "Noticeboard", icon: Megaphone },
       { id: "polls", label: "Community Polls", icon: Megaphone },
       { id: "holidays", label: "Holidays", icon: Calendar },
-      { id: "events", label: "Events", icon: CalendarDays },
-      { id: "tournament", label: "Tournament", icon: Trophy },
       { id: "videos", label: "Videos", icon: Video },
     ],
   },
   {
-    title: "🎮 Match Management",
-    description: "Manage players, matches, umpiring, and disputes",
+    title: "🏆 Tournament & Matches",
+    description: "Manage competitive play and live scoring",
     tabs: [
-      { id: "players", label: "Players", icon: Users },
-      { id: "guests", label: "Guests", icon: Ghost },
+      { id: "tournament", label: "Tournament", icon: Trophy },
       { id: "matches", label: "Matches", icon: Trophy },
       { id: "umpire", label: "Umpire Mode", icon: Activity },
       { id: "disputes", label: "Disputes", icon: AlertTriangle },
+    ],
+  },
+  {
+    title: "👥 Players",
+    description: "Manage players, guests, and ELO analytics",
+    tabs: [
+      { id: "players", label: "Players", icon: Users },
+      { id: "guests", label: "Guests", icon: Ghost },
       { id: "elo_audit", label: "ELO Audit", icon: BarChart2 },
     ],
   },
   {
-    title: "✨ Features & Info",
+    title: "✨ Features",
     description: "View platform features and system information",
     tabs: [
       { id: "all_features", label: "All Features", icon: Sparkles },
       { id: "features", label: "Live Features", icon: Zap },
+      { id: "tooltips", label: "Tooltip Registry", icon: Megaphone },
     ],
   },
   {
@@ -179,12 +182,16 @@ function SiteAdminInner() {
 
   const handleTabChange = (tabId: TabId) => {
     setActiveTab(tabId);
-    window.location.hash = tabId;
+    // Clear query parameters when switching main tabs so sub-tab state (like Noticeboard's ?tab=events) doesn't persist inappropriately
+    window.history.pushState(null, "", `${window.location.pathname}#${tabId}`);
+    
+    // Manually dispatch a hashchange event in case any other components are listening
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
   };
 
-  const [navOpen, setNavOpen] = useState(false);
-  const navRef = useRef<HTMLDivElement>(null);
-  useClickOutside(navRef, () => setNavOpen(false), navOpen);
+  const [waffleOpen, setWaffleOpen] = useState(false);
+  const waffleRef = useRef<HTMLDivElement>(null);
+  useClickOutside(waffleRef, () => setWaffleOpen(false), waffleOpen);
 
   // Tab counts state for content editors
   const [tabCounts, setTabCounts] = useState<Record<string, number>>({});
@@ -244,14 +251,78 @@ function SiteAdminInner() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-safe pb-24 lg:pb-8">
       {/* Header */}
-      <section className="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-900 text-white py-10">
+      <section className="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-900 text-white py-10 md:sticky md:top-0 md:z-[60] shadow-xl border-b border-slate-900">
         <div className="container mx-auto px-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 text-emerald-400 text-xs font-black uppercase tracking-widest mb-2">
                 <Shield className="w-4 h-4" /> Admin Panel
               </div>
-              <h1 className="text-3xl sm:text-4xl font-black tracking-tight">Control Center</h1>
+              <div className="flex items-center gap-3">
+                {/* Waffle launcher */}
+                <div className="relative" ref={waffleRef}>
+                  <button
+                    onClick={() => setWaffleOpen(o => !o)}
+                    title="All admin sections"
+                    className={`p-2 rounded-xl transition border ${waffleOpen ? "bg-white/20 border-white/30" : "bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30"}`}
+                  >
+                    <LayoutGrid className="w-6 h-6 text-white" />
+                  </button>
+
+                  <AnimatePresence>
+                    {waffleOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: -8 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: -8 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute left-0 top-full mt-2 z-50 w-80 max-h-[80vh] overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl"
+                      >
+                        <div className="p-3 border-b border-slate-100 dark:border-slate-800">
+                          <p className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Admin Sections</p>
+                        </div>
+                        <div className="p-3 space-y-4">
+                          {TAB_GROUPS.map((group) => {
+                            const visibleTabs = group.tabs.filter((tab) => isAdmin || tab.id === "umpire");
+                            if (visibleTabs.length === 0) return null;
+                            return (
+                              <div key={group.title}>
+                                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1 mb-2">{group.title}</p>
+                                <div className="grid grid-cols-3 gap-1.5">
+                                  {visibleTabs.map((tab) => {
+                                    const Icon = tab.icon;
+                                    const active = activeTab === tab.id;
+                                    const count = getTabCount(tab.id);
+                                    return (
+                                      <button
+                                        key={tab.id}
+                                        onClick={() => { handleTabChange(tab.id); setWaffleOpen(false); }}
+                                        className={`relative flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl text-[11px] font-bold transition-all ${
+                                          active
+                                            ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
+                                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent"
+                                        }`}
+                                      >
+                                        <Icon className={`w-5 h-5 ${active ? "text-emerald-500" : "text-slate-400"}`} />
+                                        <span className="text-center leading-tight">{tab.label}</span>
+                                        {count !== null && (
+                                          <span className="absolute top-1 right-1 text-[9px] px-1 py-0.5 rounded-full font-black bg-emerald-500 text-white leading-none">{count}</span>
+                                        )}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                <h1 className="text-3xl sm:text-4xl font-black tracking-tight">Control Center</h1>
+              </div>
               <p className="text-slate-300 text-sm mt-1">Site content · Player management · Live tournament scoring</p>
             </div>
             <div className="flex items-center gap-2">
@@ -288,73 +359,22 @@ function SiteAdminInner() {
       </section>
 
       <div className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* Tab Navigation */}
+        {/* Breadcrumb */}
         {(() => {
           const activeGroup = TAB_GROUPS.find(g => g.tabs.some(t => t.id === activeTab));
           const activeTabMeta = TABS.find(t => t.id === activeTab);
           const ActiveIcon = activeTabMeta?.icon;
-
-          const navGrid = (
-            <div className="space-y-4">
-              {TAB_GROUPS.map((group) => {
-                const visibleTabs = group.tabs.filter((tab) => isAdmin || tab.id === "umpire");
-                if (visibleTabs.length === 0) return null;
-                return (
-                  <div key={group.title} className="space-y-2">
-                    <div className="flex items-start gap-3 px-4 py-2">
-                      <div>
-                        <h3 className="font-black text-slate-900 dark:text-white text-sm">{group.title}</h3>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{group.description}</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 px-2">
-                      {visibleTabs.map((tab) => {
-                        const Icon = tab.icon;
-                        const active = activeTab === tab.id;
-                        const count = getTabCount(tab.id);
-                        return (
-                          <button
-                            key={tab.id}
-                            onClick={() => { handleTabChange(tab.id); setNavOpen(false); }}
-                            className={`group flex flex-col items-center justify-center gap-2 px-3 py-3 rounded-xl text-xs font-bold transition-all duration-300 relative ${
-                              active
-                                ? "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-2 border-emerald-300 dark:border-emerald-700/60 shadow-sm"
-                                : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700/60 hover:text-emerald-600 dark:hover:text-emerald-400"
-                            }`}
-                          >
-                            {Icon && <Icon className={`w-5 h-5 transition-colors ${active ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400"}`} />}
-                            <span className="text-center leading-tight">{tab.label}</span>
-                            {count !== null && (
-                              <span className={`absolute top-1 right-1 text-[10px] px-1.5 py-0.5 rounded-full font-black ${active ? "bg-emerald-600 text-white" : "bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300"}`}>
-                                {count}
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          );
-
           return (
-            <div className="mb-8">
-              <div className="lg:hidden" ref={navRef}>
-                <button
-                  onClick={() => setNavOpen(o => !o)}
-                  className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm text-sm font-bold text-slate-700 dark:text-slate-200 mb-3"
-                >
-                  <span className="flex items-center gap-2.5 min-w-0">
-                    {ActiveIcon && <ActiveIcon className="w-4 h-4 text-emerald-500 shrink-0" />}
-                    <span className="truncate">{activeGroup?.title ?? "Navigation"} › {activeTabMeta?.label}</span>
-                  </span>
-                  <ChevronUp className={`w-4 h-4 shrink-0 text-slate-400 transition-transform ${navOpen ? "" : "rotate-180"}`} />
-                </button>
-                {navOpen && navGrid}
-              </div>
-              <div className="hidden lg:block">{navGrid}</div>
+            <div className="flex items-center gap-2 mb-6 text-sm text-slate-500 dark:text-slate-400">
+              <button 
+                onClick={() => setWaffleOpen(true)}
+                className="text-slate-400 dark:text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
+                title="View all admin sections"
+              >
+                {activeGroup?.title ?? ""}
+              </button>
+              <span className="text-slate-300 dark:text-slate-600">›</span>
+              <span className="font-bold text-slate-700 dark:text-slate-200">{activeTabMeta?.label}</span>
             </div>
           );
         })()}
@@ -372,8 +392,8 @@ function SiteAdminInner() {
             {activeTab === "config" && (
               <ContentEditorWrapper dbKey="site_config" emptyState={null} editorName="Landing Page Config" EditorComponent={ConfigEditor} />
             )}
-            {activeTab === "flyers" && (
-              <ContentEditorWrapper dbKey="flyers" emptyState={[]} editorName="Flyers" EditorComponent={FlyerEditor} setTabCount={(c) => setTabCounts(prev => ({ ...prev, flyers: c }))} />
+            {activeTab === "noticeboard" && (
+              <NoticeboardManager setTabCounts={setTabCounts} />
             )}
             {activeTab === "holidays" && (
               <ContentEditorWrapper 
@@ -385,18 +405,6 @@ function SiteAdminInner() {
                 setTabCount={(c) => setTabCounts(prev => ({ ...prev, holidays: c }))} 
               />
             )}
-            {activeTab === "announcements" && (
-              <ContentEditorWrapper 
-                dbKey="announcements" 
-                emptyState={{ recent: [] }} 
-                editorName="Announcements" 
-                // We map {recent: []} to [] for the editor, and back to {recent: []} for the DB
-                EditorComponent={(props: any) => <AnnouncementEditor data={props.data.recent || []} onChange={(d) => props.onChange({ recent: d })} />} 
-                writeTransformer={(data: any) => ({ recent: data.recent.filter((a: any) => a.title) })}
-                setTabCount={(c) => setTabCounts(prev => ({ ...prev, announcements: c }))} 
-                countExtractor={(data: any) => data.recent?.length ?? 0}
-              />
-            )}
             {activeTab === "polls" && (
               <ContentEditorWrapper 
                 dbKey="polls" 
@@ -406,16 +414,6 @@ function SiteAdminInner() {
                 writeTransformer={(data: any) => ({ polls: data.polls })}
                 setTabCount={(c) => setTabCounts(prev => ({ ...prev, polls: c }))} 
                 countExtractor={(data: any) => data.polls?.length ?? 0}
-              />
-            )}
-            {activeTab === "events" && (
-              <ContentEditorWrapper 
-                dbKey="events" 
-                emptyState={[]} 
-                editorName="Events" 
-                EditorComponent={EventEditor} 
-                writeTransformer={(data) => data.filter((e: any) => e.title && e.date)}
-                setTabCount={(c) => setTabCounts(prev => ({ ...prev, events: c }))} 
               />
             )}
             {activeTab === "tournament" && <TournamentManager />}
@@ -435,11 +433,12 @@ function SiteAdminInner() {
             {activeTab === "disputes" && <DisputePanel />}
             {activeTab === "elo_audit" && <EloAuditPanel />}
             {activeTab === "umpire" && <UmpireMode />}
-            {activeTab === "changelog" && <ChangelogViewer />}
-            {activeTab === "activity_log" && <AdminActivityLog />}
             {activeTab === "settings" && <AdminSettings />}
+            {activeTab === "activity_log" && <AdminActivityLog />}
+            {activeTab === "changelog" && <ChangelogViewer />}
             {activeTab === "features" && <AdminFeaturesPanel />}
             {activeTab === "all_features" && <AdminAllFeaturesPanel />}
+            {activeTab === "tooltips" && <TooltipRegistryPanel />}
             {activeTab === "recycle_bin" && <RecycleBin />}
           </motion.div>
         </AnimatePresence>

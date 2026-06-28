@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import { StatusBar, Style } from "@capacitor/status-bar";
 
 type Theme = "light" | "dark";
 type Accent = "emerald" | "violet" | "rose" | "amber" | "blue" | "cyberpunk";
@@ -44,19 +45,18 @@ export function ThemeProvider({
 
   useEffect(() => {
     const root = document.documentElement;
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    
-    if (theme === "dark") {
+    const isDark = theme === "dark";
+
+    if (isDark) {
       root.classList.add("dark");
-      if (metaThemeColor) {
-        metaThemeColor.setAttribute("content", "#020617"); // slate-950
-      }
     } else {
       root.classList.remove("dark");
-      if (metaThemeColor) {
-        metaThemeColor.setAttribute("content", "#f8fafc"); // slate-50
-      }
     }
+
+    // Update all theme-color meta tags
+    document.querySelectorAll('meta[name="theme-color"]').forEach((el) => {
+      el.setAttribute("content", isDark ? "#000000" : "#1e3a5f");
+    });
 
     if (accent === "emerald") {
       root.removeAttribute("data-accent");
@@ -67,6 +67,12 @@ export function ThemeProvider({
     if (switchable) {
       localStorage.setItem("theme", theme);
       localStorage.setItem("accent", accent);
+    }
+
+    // Sync Android status bar style with theme
+    if (Capacitor.isNativePlatform()) {
+      StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light }).catch(() => {});
+      StatusBar.setBackgroundColor({ color: isDark ? "#000000" : "#1e3a5f" }).catch(() => {});
     }
   }, [theme, accent, switchable]);
 

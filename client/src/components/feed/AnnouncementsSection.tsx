@@ -40,6 +40,7 @@ type Announcement = {
   endDate?: string;
   category: string;
   content: string;
+  url?: string;
 };
 
 export function AnnouncementsSection() {
@@ -49,7 +50,21 @@ export function AnnouncementsSection() {
   const [recentAnnouncements, setRecentAnnouncements] = useState<
     Announcement[]
   >([]);
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("cat") || "all";
+  });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (selectedCategory === "all") {
+      params.delete("cat");
+    } else {
+      params.set("cat", selectedCategory);
+    }
+    const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}${window.location.hash}`;
+    window.history.replaceState(null, "", newUrl);
+  }, [selectedCategory]);
   const [loading, setLoading] = useState(true);
   const [visibleCount, setVisibleCount] = useState(10);
   const observerRef = useRef<HTMLDivElement>(null);
@@ -237,7 +252,19 @@ export function AnnouncementsSection() {
                           <div className="h-1 bg-gradient-to-r from-orange-500 to-amber-400" />
                           <CardHeader>
                             <CardTitle className="text-blue-900 dark:text-white text-xl">
-                              {item.title}
+                              {item.url ? (
+                                <a
+                                  href={item.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="hover:text-emerald-600 dark:hover:text-emerald-400 transition flex items-center gap-2"
+                                >
+                                  {item.title}
+                                  <svg className="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                </a>
+                              ) : (
+                                item.title
+                              )}
                             </CardTitle>
 
                             <div className="flex flex-wrap gap-2 text-sm text-gray-600 mt-3">
@@ -357,7 +384,19 @@ export function AnnouncementsSection() {
                           />
                           <CardHeader className="pb-3">
                             <CardTitle className="text-blue-900 dark:text-white text-base font-bold">
-                              {item.title}
+                              {item.url ? (
+                                <a
+                                  href={item.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="hover:text-emerald-600 dark:hover:text-emerald-400 transition flex items-center gap-2"
+                                >
+                                  {item.title}
+                                  <svg className="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                </a>
+                              ) : (
+                                item.title
+                              )}
                             </CardTitle>
 
                             <div className="flex flex-wrap gap-2 text-sm text-gray-600 mt-2">

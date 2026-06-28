@@ -14,9 +14,11 @@ import {
   Play,
   RotateCcw,
   Circle,
+  Bell,
 } from "lucide-react";
 import { toast } from "sonner";
 import { db, auth } from "@/lib/firebase";
+import { supabase } from "@/lib/supabase";
 import { doc, updateDoc, onSnapshot } from "firebase/firestore";
 import {
   signInAnonymously,
@@ -51,6 +53,8 @@ export function UmpireMode() {
   const [activeSet, setActiveSet] = useState(0);
   const [server, setServer] = useState("p1-0"); // "p1-0", "p1-1", "p2-0", "p2-1" for doubles
   const [history, setHistory] = useState<HistoryEntry[]>([]);
+
+  const [sendingPush, setSendingPush] = useState(false);
 
   // Break timer
   const [timerActive, setTimerActive] = useState(false);
@@ -220,6 +224,43 @@ export function UmpireMode() {
       setMatchId("");
     } else {
       toast("Live score pushed!", { icon: "📡" });
+    }
+  };
+
+  const sendMatchStartPush = async () => {
+    if (!selectedMatchId || !data) return;
+    setSendingPush(true);
+    try {
+      const match = data.matches[selectedFormat]?.find((m: any) => m.Match_ID === selectedMatchId);
+      if (!match) { toast.error("Match not found"); setSendingPush(false); return; }
+      const player1 = match.Player_1 || match.Players_1 || "Player 1";
+      const player2 = match.Player_2 || match.Players_2 || "Player 2";
+      const roundLabel = match.Round || match.round || "";
+      const tournamentName = data?.tournament_name || "IISC Shuttlers";
+      const scoreStr = scores.map((s) => `${s.p1}-${s.p2}`).filter((s) => s !== "0-0" || scores.length === 1).join(", ");
+      const title = `${tournamentName} • ${selectedFormat}${roundLabel ? ` • ${roundLabel}` : ""}`;
+      const body = `Match ${selectedMatchId}: ${player1} vs ${player2}${scoreStr && scoreStr !== "0-0" ? ` | ${scoreStr}` : " — Match Started!"}`;
+
+      const { error: fnError } = await supabase.functions.invoke("send-announcement", {
+        body: {
+          title,
+          body,
+          admin_email: "umpire",
+          data: { type: "live_score", match_id: selectedMatchId },
+        },
+      });
+      if (fnError) throw fnError;
+
+      await supabase.from("site_data").upsert(
+        { key: "admin_push", value: { title, body, url: "/feed/live", timestamp: Date.now() }, updated_at: new Date().toISOString() },
+        { onConflict: "key" }
+      );
+
+      toast.success("Push notification sent to all players!");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to send push");
+    } finally {
+      setSendingPush(false);
     }
   };
 
@@ -502,6 +543,16 @@ export function UmpireMode() {
               <Save className="w-4 h-4" /> PUSH TO LIVE
             </button>
           </div>
+
+          {/* Push notification to all players */}
+          <button
+            onClick={sendMatchStartPush}
+            disabled={sendingPush}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm shadow-lg active:scale-95 transition disabled:opacity-50"
+          >
+            {sendingPush ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bell className="w-4 h-4" />}
+            {sendingPush ? "Sending…" : "Notify All Players (Push)"}
+          </button>
 
           {/* Break Timer */}
           <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 space-y-3">

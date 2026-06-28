@@ -209,7 +209,6 @@ export default function Footer() {
               <p className="text-slate-600 text-xs flex items-center gap-1">
                 Built with
                 <span className="text-rose-500/70">♥</span>
-                by the IISc community
               </p>
               {versionName && (
                 <span className="text-slate-700 text-xs font-mono bg-slate-800 px-2 py-0.5 rounded-md">

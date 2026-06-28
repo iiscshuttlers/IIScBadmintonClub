@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { useAuth } from "@/contexts/AuthContext";
+import { InfoModal } from "@/components/InfoModal";
 
 import { toast } from "sonner";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
@@ -230,6 +231,12 @@ export default function Feed() {
                   <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
                     <BarChart3 className="w-4 h-4 text-emerald-500" /> Court
                     Utilization (Recent)
+                    <InfoModal
+                      title="COURT UTILIZATION"
+                      items={[
+                        { badge: "TIME", title: "Time of Day", desc: "Shows when matches were played recently (Morning, Afternoon, Evening). Useful to know when the courts are busiest." }
+                      ]}
+                    />
                   </div>
                   <div className="flex h-3 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800">
                     <motion.div
@@ -380,6 +387,7 @@ export default function Feed() {
                   <option value="all">All Modes</option>
                   <option value="singles">Singles</option>
                   <option value="doubles">Doubles</option>
+                  <option value="mixed">Mixed Doubles</option>
                 </select>
                 <select
                   value={timeFilter}

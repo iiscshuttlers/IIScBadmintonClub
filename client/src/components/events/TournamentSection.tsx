@@ -485,7 +485,7 @@ export function TournamentSection() {
 
         {activeTab === "umpire" && (isUmpire || isAdmin) && (
           <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-md border border-slate-100 dark:border-slate-700 p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-[500px]">
-            <UmpireTab />
+            <UmpireTab tournamentOnly={true} />
           </div>
         )}
       </div>

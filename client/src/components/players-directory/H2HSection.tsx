@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
-import { Swords, Trophy, Activity, ArrowLeft, BarChart3 } from "lucide-react";
+import { Swords, Trophy, Activity, BarChart3 } from "lucide-react";
 import { Link } from "wouter";
 import { BeautifulScoreDisplay } from "@/components/feed/BeautifulScoreDisplay";
 import { RivalriesDashboard } from "./RivalriesDashboard";
@@ -10,6 +10,8 @@ export function H2HSection() {
   const [p1Id, setP1Id] = useState<string>("");
   const [p2Id, setP2Id] = useState<string>("");
   const [matches, setMatches] = useState<any[]>([]);
+  const [tournamentMatches, setTournamentMatches] = useState<any[]>([]);
+  const [matchTab, setMatchTab] = useState<"club" | "tournament">("club");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -34,6 +36,14 @@ export function H2HSection() {
       .then(({ data }) => {
         if (data) setMatches(data);
       });
+
+    supabase
+      .from("tournament_matches")
+      .select("*, tournaments(name)")
+      .eq("status", "completed")
+      .then(({ data }) => {
+        if (data) setTournamentMatches(data);
+      });
   }, []);
 
   const h2hMatches = useMemo(() => {
@@ -53,6 +63,22 @@ export function H2HSection() {
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
       );
   }, [matches, p1Id, p2Id]);
+
+  const h2hTournamentMatches = useMemo(() => {
+    if (!p1Id || !p2Id || !tournamentMatches.length) return [];
+    return tournamentMatches
+      .filter((m) =>
+        ((m.player1_id === p1Id || m.player3_id === p1Id) && (m.player2_id === p2Id || m.player4_id === p2Id)) ||
+        ((m.player1_id === p2Id || m.player3_id === p2Id) && (m.player2_id === p1Id || m.player4_id === p1Id))
+      )
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }, [tournamentMatches, p1Id, p2Id]);
+
+  const t1TournamentWins = h2hTournamentMatches.filter((m) => {
+    const isTeam1 = m.player1_id === p1Id || m.player3_id === p1Id;
+    return (isTeam1 && m.winner_side === 1) || (!isTeam1 && m.winner_side === 2);
+  }).length;
+  const t2TournamentWins = h2hTournamentMatches.length - t1TournamentWins;
 
   const topRivalries = useMemo(() => {
     if (!matches.length || !players.length) return [];
@@ -301,12 +327,62 @@ export function H2HSection() {
           </div>
         </div>
 
-        {h2hMatches.length > 0 && (
+        {(h2hMatches.length > 0 || h2hTournamentMatches.length > 0) && (
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 space-y-4">
-            <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 mb-4">
-              Match History
-            </h3>
-            {h2hMatches.map((m, i) => {
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-black uppercase tracking-widest text-slate-500">
+                Match History
+              </h3>
+              <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                <button
+                  onClick={() => setMatchTab("club")}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${matchTab === "club" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+                >
+                  Club {h2hMatches.length > 0 && <span className="ml-1 opacity-60">({h2hMatches.length})</span>}
+                </button>
+                <button
+                  onClick={() => setMatchTab("tournament")}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${matchTab === "tournament" ? "bg-amber-500 text-white shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+                >
+                  <Swords className="w-3 h-3" /> Tournament {h2hTournamentMatches.length > 0 && <span className="ml-0.5 opacity-80">({h2hTournamentMatches.length})</span>}
+                </button>
+              </div>
+            </div>
+
+            {matchTab === "tournament" && h2hTournamentMatches.length === 0 && (
+              <p className="text-center text-slate-400 text-sm py-6">No tournament matches between these players yet.</p>
+            )}
+
+            {matchTab === "tournament" && h2hTournamentMatches.map((m, i) => {
+              const isTeam1 = m.player1_id === p1Id || m.player3_id === p1Id;
+              const p1Won = (isTeam1 && m.winner_side === 1) || (!isTeam1 && m.winner_side === 2);
+              return (
+                <div key={i} className="flex flex-col p-4 bg-amber-50 dark:bg-amber-950/20 rounded-xl gap-2 border border-amber-100 dark:border-amber-900/30">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest">
+                        {m.tournaments?.name ?? "Tournament"}
+                      </span>
+                      <span className="text-[10px] bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded font-bold">
+                        {m.round_name}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-slate-400">{m.match_code}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-sm font-bold ${p1Won ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500"}`}>
+                      {p1?.full_name} {p1Won && <Trophy className="inline w-3.5 h-3.5 text-amber-500 ml-1" />}
+                    </span>
+                    <span className="text-xs font-mono font-bold text-slate-500">{m.score}</span>
+                    <span className={`text-sm font-bold ${!p1Won ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500"}`}>
+                      {!p1Won && <Trophy className="inline w-3.5 h-3.5 text-amber-500 mr-1" />}{p2?.full_name}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+
+            {matchTab === "club" && h2hMatches.map((m, i) => {
               const mp1 = players.find(p => p.id === m.player1_id);
               const mp2 = players.find(p => p.id === m.player2_id);
               const mp3 = players.find(p => p.id === m.team1_partner_id);
@@ -373,6 +449,19 @@ export function H2HSection() {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* Tournament H2H summary row */}
+        {h2hTournamentMatches.length > 0 && (
+          <div className="bg-amber-50 dark:bg-amber-950/20 rounded-2xl p-4 border border-amber-100 dark:border-amber-900/30 flex items-center justify-between">
+            <span className="text-xs font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+              <Swords className="w-3.5 h-3.5" /> Tournament H2H
+            </span>
+            <div className="text-lg font-black text-slate-800 dark:text-slate-100">
+              {t1TournamentWins} <span className="text-slate-300 dark:text-slate-600">-</span> {t2TournamentWins}
+            </div>
+            <span className="text-[10px] text-amber-500 font-bold uppercase tracking-wider">{h2hTournamentMatches.length} bracket matches</span>
           </div>
         )}
 

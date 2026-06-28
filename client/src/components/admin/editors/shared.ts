@@ -18,6 +18,7 @@ export type Announcement = {
   location?: string;
   contact?: string;
   content: string;
+  url?: string;
   flyer?: DynamicFlyer;
 };
 export type EventItem = {
@@ -25,6 +26,7 @@ export type EventItem = {
   endDate?: string;
   title: string;
   link: string;
+  url?: string;
   registrationDeadline?: string;
   time?: string;
   location?: string;
@@ -78,6 +80,7 @@ export type DynamicFlyer = {
   endDate?: string;
   speed?: "slow" | "normal" | "fast" | "custom";
   customSpeed?: number;
+  url?: string;
 };
 
 export const inputCls =

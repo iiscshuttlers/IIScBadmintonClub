@@ -1,20 +1,25 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import { Trophy, Activity, Tv2, Trash2, Save, ShieldCheck, X, MonitorPlay } from "lucide-react";
+import { Trophy, Activity, Tv2, Trash2, Save, ShieldCheck, X, MonitorPlay, Bell, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
+import { playSmashSound } from "@/lib/sounds";
 import type { BwfMatchState } from "@/types/umpire";
 
 function MatchBroadcastCard({
   match,
   isAdmin,
+  isUmpire,
+  session,
   onKill,
   onSubmit,
   onTakeover,
 }: {
   match: BwfMatchState;
   isAdmin: boolean;
+  isUmpire: boolean;
+  session: any;
   onKill: (matchId: string) => void;
   onSubmit: (m: BwfMatchState, winner: 1 | 2, setsText: string) => void;
   onTakeover: (matchId: string) => void;
@@ -22,6 +27,45 @@ function MatchBroadcastCard({
   const [showAdminForm, setShowAdminForm] = useState(false);
   const [adminWinner, setAdminWinner] = useState<1 | 2 | null>(null);
   const [adminSets, setAdminSets] = useState("");
+  const [sendingPush, setSendingPush] = useState(false);
+
+  const sendScorePush = async () => {
+    setSendingPush(true);
+    try {
+      const t1Label = match.t1.p1Name + (match.t1.p2Name ? ` & ${match.t1.p2Name}` : "");
+      const t2Label = match.t2.p1Name + (match.t2.p2Name ? ` & ${match.t2.p2Name}` : "");
+      const scoreStr = `${match.t1.score} – ${match.t2.score}`;
+      const setsStr = match.setsHistory.length ? ` (${match.setsHistory.join(", ")})` : "";
+      const round = match.matchNumber || (match.isFriendly ? "Friendly" : "");
+      const format = match.inferredCategory || match.category || "";
+
+      const tournamentLine = match.isFriendly ? "🏸 Live Friendly" : `🏆 Live Tournament${format ? ` • ${format}` : ""}`;
+      const roundLine = round ? `${round}` : "";
+      const title = `${tournamentLine}${roundLine ? ` • ${roundLine}` : ""}`;
+      const body = `${t1Label} vs ${t2Label} | ${scoreStr}${setsStr}`;
+
+      const { error: fnError } = await supabase.functions.invoke("send-announcement", {
+        body: {
+          title,
+          body,
+          admin_email: session?.user?.email ?? "umpire",
+          data: { type: "live_score" },
+        },
+      });
+      if (fnError) throw fnError;
+
+      await supabase.from("site_data").upsert(
+        { key: "admin_push", value: { title, body, url: "/feed/live", timestamp: Date.now() }, updated_at: new Date().toISOString() },
+        { onConflict: "key" }
+      );
+
+      toast.success("Score notification sent to all players!");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to send push");
+    } finally {
+      setSendingPush(false);
+    }
+  };
 
   if (match.status === "setup") return null;
 
@@ -117,21 +161,24 @@ function MatchBroadcastCard({
         </div>
       )}
 
-      {/* ── Admin controls ── */}
-      {isAdmin && match.status !== "finished" && (
+      {/* ── Admin/Umpire controls ── */}
+      {(isAdmin || isUmpire) && match.status !== "finished" && (
         <div className="mt-8 pt-5 border-t border-slate-800">
           <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-amber-400 mb-3">
-            <ShieldCheck className="w-3.5 h-3.5" /> Admin Controls
+            <ShieldCheck className="w-3.5 h-3.5" /> {isAdmin ? "Admin" : "Umpire"} Controls
           </div>
 
           {!showAdminForm ? (
             <div className="flex flex-wrap gap-2">
+              {isAdmin && (
               <button
                 onClick={() => onTakeover(match.id)}
                 className="flex items-center gap-1.5 px-4 py-2.5 bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/40 text-indigo-300 font-bold text-xs rounded-xl transition"
               >
                 <MonitorPlay className="w-4 h-4" /> Open in Umpire
               </button>
+              )}
+              {isAdmin && (<>
               <button
                 onClick={() => { setAdminSets(match.setsHistory.join(", ")); setShowAdminForm(true); }}
                 className="flex items-center gap-1.5 px-4 py-2.5 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 font-bold text-xs rounded-xl transition"
@@ -143,6 +190,15 @@ function MatchBroadcastCard({
                 className="flex items-center gap-1.5 px-4 py-2.5 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 font-bold text-xs rounded-xl transition"
               >
                 <Trash2 className="w-4 h-4" /> Kill Broadcast
+              </button>
+              </>)}
+              <button
+                onClick={sendScorePush}
+                disabled={sendingPush}
+                className="flex items-center gap-1.5 px-4 py-2.5 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 font-bold text-xs rounded-xl transition disabled:opacity-50"
+              >
+                {sendingPush ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bell className="w-4 h-4" />}
+                Push Score to All
               </button>
             </div>
           ) : (
@@ -185,6 +241,7 @@ export function LiveScoreSection() {
   const { session, profile, isAdmin, isUmpire } = useAuth();
   const [, navigate] = useLocation();
   const [liveMatches, setLiveMatches] = useState<Record<string, BwfMatchState>>({});
+  const prevScoresRef = useRef<Record<string, { t1: number; t2: number }>>({});
 
   // ── Admin: jump into the umpire panel to control a running broadcast ──
   const handleTakeover = (matchId: string) => {
@@ -198,7 +255,14 @@ export function LiveScoreSection() {
       .select("value")
       .eq("key", "live_matches")
       .single();
-    if (data?.value) setLiveMatches(data.value);
+    if (data?.value) {
+      // Seed baseline scores so the first load doesn't trigger sounds
+      const matches: Record<string, BwfMatchState> = data.value;
+      Object.values(matches).forEach((m) => {
+        prevScoresRef.current[m.id] = { t1: m.t1.score, t2: m.t2.score };
+      });
+      setLiveMatches(data.value);
+    }
   };
 
   useEffect(() => {
@@ -217,7 +281,16 @@ export function LiveScoreSection() {
         },
         (payload) => {
           if (payload.new && (payload.new as any).value) {
-            setLiveMatches((payload.new as any).value);
+            const newMatches: Record<string, BwfMatchState> = (payload.new as any).value;
+            // Play smash sound whenever any match score changes
+            Object.values(newMatches).forEach((m) => {
+              const prev = prevScoresRef.current[m.id];
+              if (prev && m.status === "playing" && (m.t1.score !== prev.t1 || m.t2.score !== prev.t2)) {
+                playSmashSound();
+              }
+              prevScoresRef.current[m.id] = { t1: m.t1.score, t2: m.t2.score };
+            });
+            setLiveMatches(newMatches);
           }
         },
       )
@@ -309,7 +382,7 @@ export function LiveScoreSection() {
       ) : (
         <div className="space-y-8">
           {activeMatchList.map((m) => (
-            <MatchBroadcastCard key={m.id} match={m} isAdmin={isAdmin} onKill={handleKill} onSubmit={handleSubmit} onTakeover={handleTakeover} />
+            <MatchBroadcastCard key={m.id} match={m} isAdmin={isAdmin} isUmpire={isUmpire} session={session} onKill={handleKill} onSubmit={handleSubmit} onTakeover={handleTakeover} />
           ))}
         </div>
       )}

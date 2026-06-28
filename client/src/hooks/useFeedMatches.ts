@@ -6,7 +6,7 @@ export function useFeedMatches(ownProfile: any) {
   const [loading, setLoading] = useState(true);
   const [limitCount, setLimitCount] = useState(100);
   const [feedFilter, setFeedFilter] = useState<"global" | "following" | "buddies">("global");
-  const [categoryFilter, setCategoryFilter] = useState<"all" | "singles" | "doubles">("all");
+  const [categoryFilter, setCategoryFilter] = useState<"all" | "singles" | "doubles" | "mixed">("all");
   const [timeFilter, setTimeFilter] = useState<"all" | "today" | "week">("all");
 
   const fetchFeed = useCallback(
@@ -72,7 +72,8 @@ export function useFeedMatches(ownProfile: any) {
       filtered = filtered.filter((m: any) => {
         const cat = (m.category || "").toLowerCase();
         if (categoryFilter === "singles") return cat.includes("singles");
-        if (categoryFilter === "doubles") return cat.includes("doubles");
+        if (categoryFilter === "doubles") return cat.includes("doubles") && !cat.includes("mixed");
+        if (categoryFilter === "mixed") return cat.includes("mixed");
         return true;
       });
     }

@@ -418,6 +418,54 @@ export const FEATURES: Feature[] = [
     status: "active",
     icon: "Search",
   },
+  {
+    id: "club-marketplace",
+    name: "Club Marketplace",
+    description: "A hub for members to buy and sell used badminton gear",
+    category: "Social & Community",
+    status: "active",
+    icon: "Target",
+  },
+  {
+    id: "guest-management",
+    name: "Guest Player Management",
+    description: "Create guest profiles, track their ELO, and merge them later",
+    category: "Admin Tools",
+    status: "active",
+    icon: "Users",
+  },
+  {
+    id: "onboarding-tour",
+    name: "Interactive Onboarding Tour",
+    description: "A guided walkthrough for new users to understand the app",
+    category: "Platform Features",
+    status: "active",
+    icon: "Brain",
+  },
+  {
+    id: "doubles-pair-profiles",
+    name: "Doubles Pair Profiles",
+    description: "Dedicated statistical profiles for established doubles teams",
+    category: "Player Profiles",
+    status: "active",
+    icon: "Users",
+  },
+  {
+    id: "quick-settings",
+    name: "Quick Settings Menu",
+    description: "A universally accessible menu for toggling global preferences",
+    category: "Platform Features",
+    status: "active",
+    icon: "Settings",
+  },
+  {
+    id: "maintenance-mode",
+    name: "Maintenance Mode",
+    description: "Global site-wide maintenance banner with optional lockout controls",
+    category: "Admin Tools",
+    status: "active",
+    icon: "AlertTriangle",
+  }
 ];
 
 export function getFeaturesByCategory(category: string): Feature[] {

@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { AlertTriangle, CheckCircle, XCircle, Loader2, RefreshCw, Trophy, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { InfoModal } from "@/components/InfoModal";
 
 interface DisputedMatch {
   id: string;
@@ -85,6 +86,13 @@ export function DisputePanel() {
         <h2 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
           <AlertTriangle className="w-5 h-5 text-rose-500" /> Disputed Matches
           <span className="text-sm font-bold bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 px-2 py-0.5 rounded-full">{matches.length}</span>
+          <InfoModal
+            title="MATCH DISPUTES"
+            items={[
+              { badge: "LIFECYCLE", title: "Dispute Process", desc: "Players can flag a match if they disagree with the score entered by the opponent or umpire. The match remains unconfirmed until resolved." },
+              { badge: "RESOLVE", title: "Admin Action", desc: "You can either Uphold the original result, or Override the winner based on offline confirmation." }
+            ]}
+          />
         </h2>
         <button onClick={load} className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition px-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
           <RefreshCw className="w-3.5 h-3.5" /> Refresh

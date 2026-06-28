@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useOtherPlayersSlim } from "@/hooks/usePlayers";
 import { useAuth } from "@/contexts/AuthContext";
 import confetti from "canvas-confetti";
+import { InfoModal } from "@/components/InfoModal";
 
 import type { PlayerSlim as Player } from "@/types";
 
@@ -432,6 +433,13 @@ export default function LogMatchModal({
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <Sword className="w-5 h-5 text-emerald-500" />
                 Log {matchCategory === "tournament" ? "Tournament" : "Friendly"} Match
+                <InfoModal
+                  title="LOGGING MATCHES"
+                  items={[
+                    { badge: "VALIDATE", title: "Confirmation", desc: "Your opponent must confirm the score before ELO is updated." },
+                    { badge: "OFFLINE", title: "Gym Mode", desc: "If you lose internet connection on court, matches are queued locally and sync automatically." }
+                  ]}
+                />
               </h2>
               <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                 <X className="w-5 h-5" />

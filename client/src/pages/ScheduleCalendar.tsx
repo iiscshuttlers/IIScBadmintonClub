@@ -30,6 +30,7 @@ interface CalendarEvent {
   time?: string;
   location?: string;
   type?: "event" | "holiday";
+  url?: string;
 }
 
 interface Holiday {
@@ -604,6 +605,17 @@ export default function ScheduleCalendar() {
                                 <ArrowRight className="w-4 h-4" />
                               </button>
                             </Link>
+                          )}
+                          {event.url && (
+                            <a
+                              href={event.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 text-sm font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 transition group-hover:underline mt-2"
+                            >
+                              External Link{" "}
+                              <ExternalLink className="w-4 h-4" />
+                            </a>
                           )}
                         </div>
                       );

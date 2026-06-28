@@ -7,6 +7,7 @@ import { PlayerRank } from "@/hooks/useLeaderboardState";
 interface Props {
   top3: PlayerRank[];
   activeTab: "elo" | "ironman";
+  eloMode: "club" | "tournament";
   ironmanFilter: "all" | "monthly";
   monthlyCounts: Record<string, number>;
   getCategoryElo: (player: PlayerRank) => number;
@@ -17,10 +18,11 @@ interface Props {
 }
 
 export function LeaderboardPodium({
-  top3, activeTab, ironmanFilter, monthlyCounts,
+  top3, activeTab, eloMode, ironmanFilter, monthlyCounts,
   getCategoryElo, getCategoryRecord, getMatchesCount, displayRecord,
   lastEloChange
 }: Props) {
+  const eloLabel = eloMode === "tournament" ? "T-ELO" : "ELO";
   if (top3.length === 0) return null;
 
   return (
@@ -55,7 +57,7 @@ export function LeaderboardPodium({
               <div className="flex flex-col items-center justify-center gap-0.5 mt-2">
                 <span className="font-bold text-slate-600 dark:text-slate-300 text-sm">
                   {activeTab === "elo"
-                    ? `${getEloTier(getCategoryElo(top3[1])).name} • ${getCategoryElo(top3[1])} ELO`
+                    ? `${getEloTier(getCategoryElo(top3[1])).name} • ${getCategoryElo(top3[1])} ${eloLabel}`
                     : ironmanFilter === "monthly" 
                       ? `${monthlyCounts[top3[1].id] || 0} Matches This Month`
                       : `${getMatchesCount(getCategoryRecord(top3[1]))} Matches All-Time`}
@@ -111,7 +113,7 @@ export function LeaderboardPodium({
               <div className="flex flex-col items-center justify-center gap-0.5 mt-2">
                 <span className="font-black text-amber-900 dark:text-amber-100 text-base">
                   {activeTab === "elo"
-                    ? `${getEloTier(getCategoryElo(top3[0])).name} • ${getCategoryElo(top3[0])} ELO`
+                    ? `${getEloTier(getCategoryElo(top3[0])).name} • ${getCategoryElo(top3[0])} ${eloLabel}`
                     : `${getMatchesCount(getCategoryRecord(top3[0]))} Matches`}
                 </span>
                 {activeTab === "elo" && lastEloChange[top3[0].id] != null && (
@@ -164,7 +166,7 @@ export function LeaderboardPodium({
               <div className="flex flex-col items-center justify-center gap-0.5 mt-1">
                 <span className="font-bold text-amber-900 dark:text-orange-200 text-sm">
                   {activeTab === "elo"
-                    ? `${getEloTier(getCategoryElo(top3[2])).name} • ${getCategoryElo(top3[2])} ELO`
+                    ? `${getEloTier(getCategoryElo(top3[2])).name} • ${getCategoryElo(top3[2])} ${eloLabel}`
                     : `${getMatchesCount(getCategoryRecord(top3[2]))} Matches`}
                 </span>
                 {activeTab === "elo" && lastEloChange[top3[2].id] != null && (

@@ -22,6 +22,8 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
           ironmanFilter={state.ironmanFilter}
           setIronmanFilter={state.setIronmanFilter}
           exportLeaderboard={state.exportLeaderboard}
+          eloMode={state.eloMode}
+          setEloMode={state.setEloMode}
         />
 
         {state.activeTab === "elo" && (
@@ -34,6 +36,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
         <LeaderboardPodium
           top3={state.top3}
           activeTab={state.activeTab}
+          eloMode={state.eloMode}
           ironmanFilter={state.ironmanFilter}
           monthlyCounts={state.monthlyCounts}
           getCategoryElo={state.getCategoryElo}
@@ -46,6 +49,7 @@ export function LeaderboardSection({ players }: LeaderboardProps) {
         <LeaderboardTable
           rest={state.rest}
           activeTab={state.activeTab}
+          eloMode={state.eloMode}
           allStreaks={state.allStreaks}
           getCategoryElo={state.getCategoryElo}
           getCategoryRecord={state.getCategoryRecord}

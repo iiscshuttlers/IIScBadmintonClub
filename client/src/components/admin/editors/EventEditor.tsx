@@ -78,6 +78,15 @@ export function EventEditor({
             />
           </div>
           <div>
+            <label className={labelCls}>External URL</label>
+            <input
+              value={e.url || ""}
+              onChange={(ev) => update(i, "url", ev.target.value)}
+              className={inputCls}
+              placeholder="https://..."
+            />
+          </div>
+          <div>
             <label className={labelCls}>Reg. Deadline</label>
             <input
               type="date"

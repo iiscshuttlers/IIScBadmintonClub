@@ -123,6 +123,15 @@ export function FlyerConfigBuilder({
               )}
             </div>
           </div>
+          <div className="flex-1 w-full sm:w-auto">
+            <label className={labelCls}>Link URL (Optional)</label>
+            <input
+              value={f.url || ""}
+              onChange={(e) => update("url", e.target.value)}
+              className={inputCls}
+              placeholder="https://..."
+            />
+          </div>
         </div>
       </div>
       

@@ -42,7 +42,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useNavigationAuth } from "@/hooks/useNavigationAuth";
 import { useAuth, type ViewAsRole } from "@/contexts/AuthContext";
 import { useAppUpdate } from "@/hooks/useAppUpdate";
-import { QuickSettingsContent } from "@/components/QuickSettings";
+import { PreferencesModal } from "@/components/QuickSettings";
 import { GlobalSearch } from "@/components/GlobalSearch";
 
 const TOP_LEVEL_LINKS = [
@@ -51,7 +51,7 @@ const TOP_LEVEL_LINKS = [
   { href: "/events", label: "Events" },
   { href: "/hall-of-fame", label: "Winners Wall" },
   { href: "/gallery", label: "Gallery" },
-  { href: "/find-lost", label: "Find & Lost" },
+  { href: "/exchange", label: "Exchange" },
   { href: "/about", label: "Club" },
 ];
 
@@ -62,6 +62,7 @@ export default function Navigation() {
   const [scrolled, setScrolled] = useState(false);
   const [liveEventCount, setLiveEventCount] = useState(0);
   const [hasUnreadAnnouncements, setHasUnreadAnnouncements] = useState(false);
+  const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
   const {
     authLoading,
     isAdmin,
@@ -257,15 +258,10 @@ export default function Navigation() {
                     myPlayerId={myPlayerId}
                     pendingActionCount={pendingActionCount}
                     isAdmin={isAdmin}
-                    theme={theme}
-                    toggleTheme={toggleTheme}
                     savedAccounts={savedAccounts}
                     switchAccount={switchAccount}
                     handleSignOut={handleSignOut}
                     handleInvite={handleInvite}
-                    isTrulyMainAdmin={isTrulyMainAdmin}
-                    viewAsRole={viewAsRole}
-                    setViewAsRole={setViewAsRole}
                   />
                 ) : (
                   <div onClick={() => {
@@ -311,17 +307,13 @@ export default function Navigation() {
                   myPlayerId={myPlayerId}
                   pendingActionCount={pendingActionCount}
                   isAdmin={isAdmin}
-                  theme={theme}
-                  toggleTheme={toggleTheme}
                   savedAccounts={savedAccounts}
                   switchAccount={switchAccount}
                   handleSignOut={handleSignOut}
                   handleInvite={handleInvite}
-                  isTrulyMainAdmin={isTrulyMainAdmin}
-                  viewAsRole={viewAsRole}
-                  setViewAsRole={setViewAsRole}
                 />
               ) : (
+
                 <div className="cursor-pointer" onClick={() => {
                   sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
                   setLocation("/join");
@@ -401,8 +393,9 @@ export default function Navigation() {
                 ) : isLoggedIn ? (
                   <div className="space-y-0.5">
                       <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl mb-2 overflow-hidden border border-slate-100 dark:border-slate-800">
-                        <QuickSettingsContent />
-                        <div className="h-px bg-slate-200 dark:bg-slate-800 my-1 mx-2" />
+                        <button className="w-full flex items-center gap-2 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer border-b border-slate-100 dark:border-slate-800" onClick={() => { setIsOpen(false); setIsPreferencesOpen(true); }}>
+                          <Settings className="h-4 w-4 text-slate-400" /> App Preferences
+                        </button>
                         <Link href="/profile/setup">
                           <a className="w-full flex items-center gap-2 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
                             <User className="h-4 w-4 text-slate-400" /> Edit Profile
@@ -539,6 +532,8 @@ export default function Navigation() {
 
       {/* Global Search Modal */}
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
+      
+      <PreferencesModal isOpen={isPreferencesOpen} onClose={() => setIsPreferencesOpen(false)} />
     </>
   );
 }

@@ -107,16 +107,30 @@ log("Updating version history and changelog…");
 let autoChangelog = "";
 try {
   const tags = execSync("git tag --sort=-creatordate").toString().trim().split('\n');
+  let rawLog = "";
   if (tags.length > 0 && tags[0]) {
-    autoChangelog = execSync(`git log ${tags[0]}..HEAD --pretty=format:"- %s"`).toString().trim();
+    rawLog = execSync(`git log ${tags[0]}..HEAD --pretty=format:"%s"`).toString().trim();
+  } else {
+    rawLog = execSync(`git log -n 10 --pretty=format:"%s"`).toString().trim();
+  }
+
+  // Filter out noise commits like version bumps, chores, and merges
+  const validCommits = rawLog.split('\n')
+    .map(m => m.trim())
+    .filter(m => m && 
+      !m.toLowerCase().startsWith('chore: release') && 
+      !m.toLowerCase().startsWith('updated version') && 
+      !m.toLowerCase().startsWith('merge branch') &&
+      !m.toLowerCase().startsWith('merge pull request') &&
+      !m.toLowerCase().startsWith('wip')
+    );
+  
+  if (validCommits.length > 0) {
+    autoChangelog = validCommits.map(m => `- ${m}`).join('\n');
   }
 } catch (e) { }
 
-if (!autoChangelog) {
-  try { autoChangelog = execSync(`git log -n 5 --pretty=format:"- %s"`).toString().trim(); } catch (e) { }
-}
-
-const changelog = process.argv[2] || autoChangelog || `Version ${newName} released`;
+const changelog = process.argv[2] || autoChangelog || `Version ${newName} released with bug fixes and performance improvements.`;
 const finalApkName = `IIScShuttlers_v${newName}.apk`;
 const finalAabName = `IIScShuttlers_v${newName}.aab`;
 

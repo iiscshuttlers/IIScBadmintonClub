@@ -52,10 +52,50 @@ export function AdminActivityLog() {
   };
 
   const getActionColor = (action: string) => {
-    if (action.toLowerCase().includes("delete") || action.toLowerCase().includes("remove")) return "text-rose-600 dark:text-rose-400";
-    if (action.toLowerCase().includes("override") || action.toLowerCase().includes("uphold")) return "text-amber-600 dark:text-amber-400";
-    if (action.toLowerCase().includes("approved") || action.toLowerCase().includes("saved") || action.toLowerCase().includes("updated")) return "text-emerald-600 dark:text-emerald-400";
-    return "text-blue-600 dark:text-blue-400";
+    if (action.toLowerCase().includes("delete") || action.toLowerCase().includes("remove")) return "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-900/50";
+    if (action.toLowerCase().includes("override") || action.toLowerCase().includes("uphold")) return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/50";
+    if (action.toLowerCase().includes("approved") || action.toLowerCase().includes("saved") || action.toLowerCase().includes("updated")) return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900/50";
+    return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-900/50";
+  };
+
+  const renderDetails = (details: any) => {
+    if (!details) return null;
+    let parsed = details;
+    if (typeof details === "string") {
+      try {
+        parsed = JSON.parse(details);
+      } catch (e) {
+        // Not a JSON string
+      }
+    }
+    
+    if (typeof parsed === "object" && parsed !== null) {
+      return (
+        <div className="mt-2 space-y-1.5 bg-slate-50 dark:bg-slate-800/30 p-2 rounded-xl border border-slate-100 dark:border-slate-800/50 w-fit max-w-full">
+          {Object.entries(parsed).map(([k, v]: any) => (
+            <div key={k} className="flex flex-wrap items-center gap-2">
+              <span className="text-[10px] font-bold text-slate-500 capitalize shrink-0">{k.replace(/_/g, " ")}:</span>
+              {Array.isArray(v) ? (
+                <div className="flex gap-1 flex-wrap">
+                  {v.map((item: any, i: number) => (
+                    <span key={i} className="px-1.5 py-0.5 bg-black/5 dark:bg-white/10 text-slate-700 dark:text-slate-300 rounded text-[9px] font-black">{String(item)}</span>
+                  ))}
+                </div>
+              ) : typeof v === "object" && v !== null ? (
+                <span className="text-[9px] text-slate-500 break-words font-mono bg-slate-100 dark:bg-slate-800 p-1.5 rounded-lg">
+                  {JSON.stringify(v)}
+                </span>
+              ) : (
+                <span className="text-[10px] font-black px-2 py-0.5 rounded-md text-slate-700 dark:text-slate-300 bg-black/5 dark:bg-white/10">
+                  {String(v)}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return <p className="text-[10px] text-slate-500 mt-1.5 break-words font-medium">{String(details)}</p>;
   };
 
   return (
@@ -99,13 +139,13 @@ export function AdminActivityLog() {
                   <td className="px-4 py-3">
                     <span className="font-bold text-slate-700 dark:text-slate-300 text-xs">{log.admin_email.split("@")[0]}</span>
                   </td>
-                  <td className="px-4 py-3">
-                    <span className={`font-semibold text-xs ${getActionColor(log.action)}`}>{log.action}</span>
-                    {log.details && (
-                      <p className="text-[10px] text-slate-400 mt-0.5 break-words">
-                        {typeof log.details === "object" ? JSON.stringify(log.details) : log.details}
-                      </p>
-                    )}
+                  <td className="px-4 py-3 align-top">
+                    <div className="flex flex-col items-start gap-1">
+                      <span className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border ${getActionColor(log.action)}`}>
+                        {log.action.replace(/_/g, " ")}
+                      </span>
+                      {renderDetails(log.details)}
+                    </div>
                   </td>
                 </tr>
               ))}

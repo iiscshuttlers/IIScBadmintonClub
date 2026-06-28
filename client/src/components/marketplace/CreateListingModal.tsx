@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useForm } from "react-hook-form";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { Tag, MapPin, DollarSign, Image as ImageIcon, CheckCircle, Package } from "lucide-react";
+import { Tag, MapPin, IndianRupee, Image as ImageIcon, CheckCircle, Package } from "lucide-react";
 
 interface CreateListingModalProps {
   isOpen: boolean;
@@ -15,6 +15,7 @@ interface CreateListingModalProps {
 export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: CreateListingModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGiveaway, setIsGiveaway] = useState(false);
+  const [listingType, setListingType] = useState<'sell' | 'buy'>('sell');
   const { register, handleSubmit, formState: { errors }, reset, getValues } = useForm();
 
   const onSubmit = async (data: any) => {
@@ -30,7 +31,8 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
         condition: data.condition,
         category: data.category,
         image_url: data.image_url || null,
-        status: 'active'
+        status: 'active',
+        listing_type: listingType
       });
 
       if (error) throw error;
@@ -48,20 +50,39 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+      <DialogContent className="sm:max-w-md bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full rounded-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-slate-800 dark:text-white font-black text-xl">
-            <Package className="w-5 h-5 text-emerald-500" />
-            Sell Equipment
+            <Package className={`w-5 h-5 ${listingType === 'sell' ? 'text-emerald-500' : 'text-indigo-500'}`} />
+            {listingType === 'sell' ? 'Sell Equipment' : 'Request Equipment'}
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-4">
+        <div className="mt-4 flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
+          <button
+            type="button"
+            onClick={() => setListingType('sell')}
+            className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${listingType === 'sell' ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+          >
+            Selling an Item
+          </button>
+          <button
+            type="button"
+            onClick={() => setListingType('buy')}
+            className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${listingType === 'buy' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+          >
+            Looking to Buy
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
           <div>
-            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest block mb-2">Item Name</label>
+            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest block mb-2">
+              {listingType === 'sell' ? 'Item Name' : 'What are you looking for?'}
+            </label>
             <input 
               {...register("title", { required: true })} 
-              placeholder="e.g. Yonex Astrox 99 Pro"
+              placeholder={listingType === 'sell' ? "e.g. Yonex Astrox 99 Pro" : "e.g. Size 9 Yonex Shoes"}
               className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
             />
             {errors.title && <span className="text-xs text-rose-500 mt-1 block">Title is required</span>}
@@ -70,18 +91,22 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
           <div className="grid grid-cols-2 gap-4">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest block">Price (₹)</label>
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest block">
+                  {listingType === 'sell' ? 'Price (₹)' : 'Max Budget (₹)'}
+                </label>
                 <label className="flex items-center gap-1.5 cursor-pointer">
-                  <input type="checkbox" className="rounded text-emerald-500 focus:ring-emerald-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800" onChange={(e) => {
+                  <input type="checkbox" className={`rounded ${listingType === 'sell' ? 'text-emerald-500 focus:ring-emerald-500' : 'text-indigo-500 focus:ring-indigo-500'} border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800`} onChange={(e) => {
                     const isFree = e.target.checked;
                     setIsGiveaway(isFree);
                     if (isFree) reset({ ...getValues(), price: 0 });
                   }} />
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Giveaway</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    {listingType === 'sell' ? 'Giveaway' : 'Negotiable'}
+                  </span>
                 </label>
               </div>
               <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input 
                   type="number"
                   disabled={isGiveaway}
@@ -93,7 +118,9 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
               {errors.price && <span className="text-xs text-rose-500 mt-1 block">{(errors.price as any).message || "Invalid price"}</span>}
             </div>
             <div>
-              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest block mb-2">Condition</label>
+              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest block mb-2">
+                {listingType === 'sell' ? 'Condition' : 'Desired Condition'}
+              </label>
               <select 
                 {...register("condition", { required: true })}
                 className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none"
@@ -111,7 +138,7 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
               {['Racket', 'Shoes', 'Shuttlecocks', 'Accessories', 'Other'].map(cat => (
                 <label key={cat} className="cursor-pointer">
                   <input type="radio" value={cat} {...register("category", { required: true })} className="peer sr-only" defaultChecked={cat === 'Racket'} />
-                  <div className="px-4 py-2 rounded-xl text-sm font-bold border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 peer-checked:bg-emerald-500 peer-checked:border-emerald-500 peer-checked:text-white transition-all">
+                  <div className={`px-4 py-2 rounded-xl text-sm font-bold border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 ${listingType === 'sell' ? 'peer-checked:bg-emerald-500 peer-checked:border-emerald-500' : 'peer-checked:bg-indigo-500 peer-checked:border-indigo-500'} peer-checked:text-white transition-all`}>
                     {cat}
                   </div>
                 </label>
@@ -144,13 +171,13 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
           <button 
             type="submit" 
             disabled={isSubmitting}
-            className="w-full mt-4 bg-emerald-500 hover:bg-emerald-600 text-white font-black py-4 rounded-xl shadow-lg shadow-emerald-500/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            className={`w-full mt-4 text-white font-black py-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 ${listingType === 'sell' ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/25' : 'bg-indigo-500 hover:bg-indigo-600 shadow-indigo-500/25'}`}
           >
             {isSubmitting ? (
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
               <>
-                <CheckCircle className="w-5 h-5" /> Post Listing
+                <CheckCircle className="w-5 h-5" /> {listingType === 'sell' ? 'Post Listing' : 'Post Request'}
               </>
             )}
           </button>

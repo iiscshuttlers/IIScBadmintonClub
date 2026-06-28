@@ -150,13 +150,22 @@ export function AnnouncementEditor({
                 className={inputCls}
               />
             </div>
-            <div className="sm:col-span-2">
+            <div>
               <label className={labelCls}>Event End Date</label>
               <input
                 type="date"
                 value={a.endDate || ""}
                 onChange={(e) => update(i, "endDate", e.target.value)}
                 className={inputCls}
+              />
+            </div>
+            <div>
+              <label className={labelCls}>URL (Optional)</label>
+              <input
+                value={a.url || ""}
+                onChange={(e) => update(i, "url", e.target.value)}
+                className={inputCls}
+                placeholder="https://..."
               />
             </div>
           </div>

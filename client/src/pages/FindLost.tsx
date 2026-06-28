@@ -5,6 +5,7 @@ import { usePageMeta } from "@/hooks/usePageMeta";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { InfoModal } from "@/components/InfoModal";
 import {
   Search,
   Plus,
@@ -67,7 +68,22 @@ export default function FindLost() {
   const { session, profile, isAdmin } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | PostType>("all");
+  const [filter, setFilter] = useState<"all" | PostType>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const cat = params.get("cat");
+    return (cat === "lost" || cat === "found") ? cat : "all";
+  });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (filter === "all") {
+      params.delete("cat");
+    } else {
+      params.set("cat", filter);
+    }
+    const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}${window.location.hash}`;
+    window.history.replaceState(null, "", newUrl);
+  }, [filter]);
   const [showResolved, setShowResolved] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -311,6 +327,14 @@ export default function FindLost() {
         <div className="container mx-auto px-4 max-w-3xl relative z-10 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-black uppercase tracking-widest mb-4">
             <Search className="w-4 h-4 text-indigo-400" /> Find & Lost
+            <InfoModal
+              title="FIND & LOST"
+              items={[
+                { badge: "NOTIFY", title: "Real-time Alerts", desc: "Whenever you post an item, all users will see it in the global feed." },
+                { badge: "CLAIM", title: "Claiming an item", desc: "Click 'Claim' on an item to securely ping the poster that you have their item or want to collect it." }
+              ]}
+              triggerClassName="text-white hover:text-indigo-200"
+            />
           </div>
           <h1 className="text-3xl sm:text-4xl font-black mb-3">Lost something on court?</h1>
           <p className="text-slate-300 text-sm">Post about lost or found items at the IISc badminton courts. Get real-time notifications when someone replies.</p>

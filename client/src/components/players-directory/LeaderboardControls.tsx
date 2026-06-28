@@ -1,4 +1,4 @@
-import { Trophy, Crown, Flame, BarChart3, Download } from "lucide-react";
+import { Trophy, Crown, Flame, BarChart3, Download, Swords } from "lucide-react";
 import { InfoModal } from "@/components/InfoModal";
 
 interface Props {
@@ -9,11 +9,14 @@ interface Props {
   ironmanFilter: "all" | "monthly";
   setIronmanFilter: (val: "all" | "monthly") => void;
   exportLeaderboard: () => void;
+  eloMode: "club" | "tournament";
+  setEloMode: (val: "club" | "tournament") => void;
 }
 
 export function LeaderboardControls({
   activeTab, setActiveTab, categoryFilter, setCategoryFilter,
-  ironmanFilter, setIronmanFilter, exportLeaderboard
+  ironmanFilter, setIronmanFilter, exportLeaderboard,
+  eloMode, setEloMode
 }: Props) {
   return (
     <>
@@ -97,7 +100,23 @@ export function LeaderboardControls({
             </button>
           </div>
         )}
-        <button 
+        {activeTab === "elo" && (
+          <div className="flex gap-1 bg-slate-100/50 dark:bg-slate-800/30 p-1.5 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 shrink-0">
+            <button
+              onClick={() => setEloMode("club")}
+              className={`px-4 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${eloMode === "club" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm ring-1 ring-slate-200 dark:ring-slate-600" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+            >
+              <Crown className="w-3 h-3" /> Club
+            </button>
+            <button
+              onClick={() => setEloMode("tournament")}
+              className={`px-4 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${eloMode === "tournament" ? "bg-amber-500 text-white shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+            >
+              <Swords className="w-3 h-3" /> Tournament
+            </button>
+          </div>
+        )}
+        <button
            onClick={exportLeaderboard}
            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs transition-all border border-slate-200 dark:border-slate-700 w-full md:w-auto justify-center md:absolute right-4"
         >

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ShieldCheck, LogIn, UserPlus, Clock } from "lucide-react";
 import { useJoinAuth } from "@/hooks/useJoinAuth";
 import { WelcomeView, SignInView, SignUpView, OtpEmailView, OtpVerifyView } from "@/components/auth/JoinViews";
+import { InfoModal } from "@/components/InfoModal";
 
 export default function Join() {
   const auth = useJoinAuth();
@@ -29,7 +30,17 @@ export default function Join() {
           <div className="w-16 h-16 bg-white/10 border border-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg backdrop-blur-sm">
             <ShieldCheck className="w-8 h-8 text-emerald-400" />
           </div>
-          <h1 className="text-3xl font-black text-white tracking-tight" style={{ fontFamily: "Playfair Display, serif" }}>IISc Badminton Club</h1>
+          <div className="flex items-center justify-center gap-2">
+            <h1 className="text-3xl font-black text-white tracking-tight" style={{ fontFamily: "Playfair Display, serif" }}>IISc Badminton Club</h1>
+            <InfoModal
+              title="MEMBER PORTAL"
+              items={[
+                { badge: "ACCESS", title: "Club Members Only", desc: "You must be an approved club member to access the internal platform." },
+                { badge: "GUESTS", title: "Guest Access", desc: "If you are a guest, you don't need an account. Your host will log matches on your behalf." }
+              ]}
+              triggerClassName="text-white hover:text-emerald-300"
+            />
+          </div>
           <p className="mt-2 text-sm text-blue-300">Member portal · Campus Badminton Community</p>
         </div>
 

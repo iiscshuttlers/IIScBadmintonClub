@@ -27,7 +27,7 @@ import { usePullToRefresh } from "./hooks/usePullToRefresh";
 import { useOfflineSync } from "./hooks/useOfflineSync";
 import { useBroadcastNotification } from "./hooks/useBroadcastNotification";
 import { usePingsNotification } from "./hooks/usePingsNotification";
-import { initSounds } from "./lib/sounds";
+import { initSounds, playOnUnlock, playSmashSound } from "./lib/sounds";
 import { OnboardingTour } from "./components/OnboardingTour";
 
 import { Filesystem, Directory } from "@capacitor/filesystem";
@@ -162,7 +162,10 @@ function OfflineBanner() {
 function GlobalAuthHooks() {
   usePingsNotification();
   useBroadcastNotification();
-  useEffect(() => { initSounds(); }, []);
+  useEffect(() => {
+    initSounds();
+    playOnUnlock(playSmashSound); // shuttle smash on every page load/refresh
+  }, []);
   return null;
 }
 

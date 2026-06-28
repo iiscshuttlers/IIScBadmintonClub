@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchSiteData } from "@/lib/siteData";
+import { supabase } from "@/lib/supabase";
 import { Link, useLocation } from "wouter";
 import { X } from "lucide-react";
 
@@ -34,6 +35,7 @@ export type DynamicFlyer = {
   endDate?: string;
   speed?: "slow" | "normal" | "fast" | "custom";
   customSpeed?: number;
+  url?: string;
 };
 
 /* Flyer colors may be a raw CSS color/gradient (from the admin color picker)
@@ -66,6 +68,8 @@ export default function StatusBanner() {
       .then(([holidaysData, eventsData, announcementsData, flyersData, settingsData]) => {
         if (settingsData?.maintenanceMode) {
           setMaintenance({ mode: true, msg: settingsData.maintenanceMessage || "Site is under maintenance. Please check back shortly." });
+        } else {
+          setMaintenance({ mode: false, msg: "" });
         }
         const holidays = Array.isArray(holidaysData) ? holidaysData : [];
         const events = Array.isArray(eventsData) ? eventsData : [];
@@ -175,6 +179,25 @@ export default function StatusBanner() {
         }
       })
       .catch((err) => console.warn("StatusBanner data fetch failed:", err));
+
+    const channel = supabase.channel('club-settings-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'site_data', filter: "key=eq.club_settings" },
+        (payload: any) => {
+          const newSettings = payload.new?.value;
+          if (newSettings?.maintenanceMode) {
+            setMaintenance({ mode: true, msg: newSettings.maintenanceMessage || "Site is under maintenance. Please check back shortly." });
+          } else {
+            setMaintenance({ mode: false, msg: "" });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   if (location !== "/" && !maintenance.mode) return null;
@@ -228,12 +251,7 @@ export default function StatusBanner() {
       {/* Dynamic Admin Flyers */}
       {dynamicFlyers.filter(f => !closedFlyers.has(f.id)).map((flyer) => {
         const bgIsCss = isCssColor(flyer.bgColorClass);
-        return (
-        <div
-          key={flyer.id}
-          className={`relative ${bgIsCss ? "" : flyer.bgColorClass} text-white py-2.5 overflow-hidden flex items-center z-20 shadow-md`}
-          style={bgIsCss ? { background: flyer.bgColorClass } : undefined}
-        >
+        const flyerContent = (
           <div className="flex-1 overflow-hidden min-w-0 pr-10">
             <div 
               className="marquee-anim flex gap-8 font-semibold tracking-wide text-sm md:text-base whitespace-nowrap hover:opacity-90 transition-opacity"
@@ -256,32 +274,47 @@ export default function StatusBanner() {
                             key={`${blockIdx}-${idx}`}
                             className="flex items-center gap-8"
                           >
-                            <span
-                              className={isCssColor(msg.colorClass) ? "" : msg.colorClass}
-                              style={isCssColor(msg.colorClass) ? { color: msg.colorClass } : undefined}
-                            >{msg.text}</span>
-                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-white/40 flex-shrink-0" />
-                          </span>
+                              <span
+                                className={isCssColor(msg.colorClass) ? "" : msg.colorClass}
+                                style={isCssColor(msg.colorClass) ? { color: msg.colorClass } : undefined}
+                              >{msg.text}</span>
+                              <span className="inline-block w-1.5 h-1.5 rounded-full bg-white/40 flex-shrink-0" />
+                            </span>
                         );
                       })}
                   </span>
                 ))}
-            </div>
-          </div>
-          <button
-            onClick={() => {
-              const newClosed = new Set(closedFlyers);
-              newClosed.add(flyer.id);
-              setClosedFlyers(newClosed);
-            }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-black/10 rounded-full transition-colors z-30"
-            aria-label="Close flyer"
-          >
-            <X className="w-5 h-5 text-white/90" />
-          </button>
-        </div>
-        );
-      })}
+                </div>
+              </div>
+            );
+
+            return (
+              <div
+                key={flyer.id}
+                className={`relative ${bgIsCss ? "" : flyer.bgColorClass} text-white py-2.5 overflow-hidden flex items-center z-20 shadow-md`}
+                style={bgIsCss ? { background: flyer.bgColorClass } : undefined}
+              >
+                {flyer.url ? (
+                  <a href={flyer.url} target="_blank" rel="noopener noreferrer" className="flex-1 min-w-0 pr-10 cursor-pointer hover:opacity-90 transition-opacity">
+                    {flyerContent}
+                  </a>
+                ) : (
+                  flyerContent
+                )}
+                <button
+                  onClick={() => {
+                    const newClosed = new Set(closedFlyers);
+                    newClosed.add(flyer.id);
+                    setClosedFlyers(newClosed);
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-black/10 rounded-full transition-colors z-30"
+                  aria-label="Close flyer"
+                >
+                  <X className="w-5 h-5 text-white/90" />
+                </button>
+              </div>
+            );
+          })}
     </div>
   );
 }

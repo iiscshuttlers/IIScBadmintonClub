@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
-import { Quote, Trophy, Calendar, Target, BookOpen, Medal } from "lucide-react";
+import { Quote, Trophy, Calendar, BookOpen, Medal, Swords } from "lucide-react";
 import type { PlayerProfileType } from "@/types";
 import { PlayerEndorsementsWidget } from "../PlayerEndorsementsWidget";
+import type { TournamentRun } from "@/hooks/useTournamentMatchHistory";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -12,10 +13,12 @@ export function ProfileOverviewTabRight({
   player,
   validAchievements,
   splitStats,
+  tournamentRuns,
 }: {
   player: PlayerProfileType;
   validAchievements: string[];
   splitStats?: any;
+  tournamentRuns?: TournamentRun[];
 }) {
   const dynamicWins = splitStats?.all?.wins ?? 0;
   const dynamicLosses = splitStats?.all?.losses ?? 0;
@@ -115,6 +118,55 @@ export function ProfileOverviewTabRight({
             </div>
           </div>
         </div>
+
+        {/* Bracket Record */}
+        {tournamentRuns && tournamentRuns.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-slate-500 dark:text-white/35 mb-3 flex items-center gap-1.5">
+              <Swords className="w-3 h-3 text-emerald-500" /> Bracket Record
+            </h3>
+            <div className="space-y-2">
+              {tournamentRuns.map((run) => {
+                const total = run.wins + run.losses;
+                const winPct = total > 0 ? Math.round((run.wins / total) * 100) : 0;
+                const resultLabel = run.eliminated
+                  ? `Out in ${run.deepest_round_name}`
+                  : `${run.deepest_round_name} ✓`;
+                return (
+                  <div
+                    key={`${run.tournament_id}_${run.category}`}
+                    className="rounded-xl border border-slate-200 dark:border-white/6 bg-slate-50 dark:bg-white/[0.03] px-3 py-2.5"
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-1">
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-bold text-slate-800 dark:text-white/85 truncate leading-tight">
+                          {run.tournament_name}
+                        </p>
+                        <p className="text-[9px] text-slate-500 dark:text-white/35 uppercase tracking-wider">
+                          {run.category}
+                        </p>
+                      </div>
+                      <span className={`text-[9px] font-bold shrink-0 px-2 py-0.5 rounded-full ${run.eliminated ? "bg-slate-200 dark:bg-white/8 text-slate-500 dark:text-white/40" : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"}`}>
+                        {resultLabel}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <div className="flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-white/8 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-emerald-500"
+                          style={{ width: `${winPct}%` }}
+                        />
+                      </div>
+                      <span className="text-[9px] font-mono text-slate-500 dark:text-white/35 shrink-0">
+                        {run.wins}W – {run.losses}L
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Achievements */}
         {validAchievements.length > 0 && (

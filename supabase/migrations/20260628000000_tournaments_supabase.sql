@@ -27,15 +27,18 @@ CREATE TABLE IF NOT EXISTS tournaments (
 ALTER TABLE tournaments ENABLE ROW LEVEL SECURITY;
 
 -- Public can see non-draft tournaments
+DROP POLICY IF EXISTS "tournaments_public_read" ON tournaments;
 CREATE POLICY "tournaments_public_read" ON tournaments
   FOR SELECT USING (status <> 'draft');
 
 -- Admins/master_admins can see all including drafts
+DROP POLICY IF EXISTS "tournaments_admin_read" ON tournaments;
 CREATE POLICY "tournaments_admin_read" ON tournaments
   FOR SELECT USING (
     EXISTS (SELECT 1 FROM players WHERE id = auth.uid() AND role IN ('admin','master_admin'))
   );
 
+DROP POLICY IF EXISTS "tournaments_admin_write" ON tournaments;
 CREATE POLICY "tournaments_admin_write" ON tournaments
   FOR ALL USING (
     EXISTS (SELECT 1 FROM players WHERE id = auth.uid() AND role IN ('admin','master_admin'))
@@ -57,11 +60,13 @@ CREATE TABLE IF NOT EXISTS tournament_participants (
 
 ALTER TABLE tournament_participants ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "tp_public_read" ON tournament_participants;
 CREATE POLICY "tp_public_read" ON tournament_participants
   FOR SELECT USING (
     EXISTS (SELECT 1 FROM tournaments t WHERE t.id = tournament_id AND t.status <> 'draft')
   );
 
+DROP POLICY IF EXISTS "tp_admin_all" ON tournament_participants;
 CREATE POLICY "tp_admin_all" ON tournament_participants
   FOR ALL USING (
     EXISTS (SELECT 1 FROM players WHERE id = auth.uid() AND role IN ('admin','master_admin'))
@@ -84,11 +89,13 @@ CREATE TABLE IF NOT EXISTS tournament_round_rules (
 
 ALTER TABLE tournament_round_rules ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "trr_public_read" ON tournament_round_rules;
 CREATE POLICY "trr_public_read" ON tournament_round_rules
   FOR SELECT USING (
     EXISTS (SELECT 1 FROM tournaments t WHERE t.id = tournament_id AND t.status <> 'draft')
   );
 
+DROP POLICY IF EXISTS "trr_admin_all" ON tournament_round_rules;
 CREATE POLICY "trr_admin_all" ON tournament_round_rules
   FOR ALL USING (
     EXISTS (SELECT 1 FROM players WHERE id = auth.uid() AND role IN ('admin','master_admin'))
@@ -135,9 +142,13 @@ CREATE TABLE IF NOT EXISTS tournament_matches (
   status               TEXT NOT NULL DEFAULT 'scheduled',  -- scheduled | in_progress | completed | walkover
   locked               BOOLEAN DEFAULT FALSE,              -- only master_admin can edit after lock
 
-  -- Bracket progression
+  -- Bracket progression (winner)
   advances_to_match    TEXT,                          -- match_code of the next match
   advances_to_position SMALLINT CHECK (advances_to_position IN (1, 2)),
+
+  -- Bracket progression (loser → 3rd place match)
+  advances_to_match_loser    TEXT,
+  advances_to_position_loser SMALLINT CHECK (advances_to_position_loser IN (1, 2)),
 
   -- Audit
   umpired_by           UUID REFERENCES players(id),
@@ -150,16 +161,19 @@ CREATE TABLE IF NOT EXISTS tournament_matches (
 
 ALTER TABLE tournament_matches ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "tm_public_read" ON tournament_matches;
 CREATE POLICY "tm_public_read" ON tournament_matches
   FOR SELECT USING (
     EXISTS (SELECT 1 FROM tournaments t WHERE t.id = tournament_id AND t.status <> 'draft')
   );
 
+DROP POLICY IF EXISTS "tm_admin_read" ON tournament_matches;
 CREATE POLICY "tm_admin_read" ON tournament_matches
   FOR SELECT USING (
     EXISTS (SELECT 1 FROM players WHERE id = auth.uid() AND role IN ('admin','master_admin','umpire'))
   );
 
+DROP POLICY IF EXISTS "tm_admin_write" ON tournament_matches;
 CREATE POLICY "tm_admin_write" ON tournament_matches
   FOR ALL USING (
     EXISTS (SELECT 1 FROM players WHERE id = auth.uid() AND role IN ('admin','master_admin','umpire'))
@@ -176,40 +190,71 @@ DECLARE
   v_winner_label TEXT;
   v_winner_p1    UUID;
   v_winner_p3    UUID;
+  v_loser_label  TEXT;
+  v_loser_p1     UUID;
+  v_loser_p3     UUID;
 BEGIN
   SELECT * INTO v_match FROM tournament_matches WHERE id = p_match_id;
-  IF NOT FOUND OR v_match.advances_to_match IS NULL THEN RETURN; END IF;
-
-  SELECT * INTO v_next FROM tournament_matches
-  WHERE tournament_id = v_match.tournament_id AND match_code = v_match.advances_to_match;
   IF NOT FOUND THEN RETURN; END IF;
 
-  -- Determine winning team's players and label
-  IF v_match.winner_side = 1 THEN
-    v_winner_p1    := v_match.player1_id;
-    v_winner_p3    := v_match.player3_id;
-    v_winner_label := COALESCE(v_match.team1_label,
-                        (SELECT full_name FROM players WHERE id = v_match.player1_id));
-  ELSE
-    v_winner_p1    := v_match.player2_id;
-    v_winner_p3    := v_match.player4_id;
-    v_winner_label := COALESCE(v_match.team2_label,
-                        (SELECT full_name FROM players WHERE id = v_match.player2_id));
+  -- ── Advance winner ──────────────────────────────────────────────────────────
+  IF v_match.advances_to_match IS NOT NULL THEN
+    SELECT * INTO v_next FROM tournament_matches
+    WHERE tournament_id = v_match.tournament_id AND match_code = v_match.advances_to_match;
+
+    IF FOUND THEN
+      IF v_match.winner_side = 1 THEN
+        v_winner_p1    := v_match.player1_id;
+        v_winner_p3    := v_match.player3_id;
+        v_winner_label := COALESCE(v_match.team1_label,
+                            (SELECT full_name FROM players WHERE id = v_match.player1_id));
+      ELSE
+        v_winner_p1    := v_match.player2_id;
+        v_winner_p3    := v_match.player4_id;
+        v_winner_label := COALESCE(v_match.team2_label,
+                            (SELECT full_name FROM players WHERE id = v_match.player2_id));
+      END IF;
+
+      IF v_match.advances_to_position = 1 THEN
+        UPDATE tournament_matches
+        SET player1_id = v_winner_p1, player3_id = v_winner_p3, team1_label = v_winner_label
+        WHERE id = v_next.id;
+      ELSE
+        UPDATE tournament_matches
+        SET player2_id = v_winner_p1, player4_id = v_winner_p3, team2_label = v_winner_label
+        WHERE id = v_next.id;
+      END IF;
+    END IF;
   END IF;
 
-  -- Slot winner into the next match
-  IF v_match.advances_to_position = 1 THEN
-    UPDATE tournament_matches
-    SET player1_id = v_winner_p1,
-        player3_id = v_winner_p3,
-        team1_label = v_winner_label
-    WHERE id = v_next.id;
-  ELSE
-    UPDATE tournament_matches
-    SET player2_id = v_winner_p1,
-        player4_id = v_winner_p3,
-        team2_label = v_winner_label
-    WHERE id = v_next.id;
+  -- ── Advance loser to 3rd place match (if configured) ──────────────────────
+  IF v_match.advances_to_match_loser IS NOT NULL THEN
+    SELECT * INTO v_next FROM tournament_matches
+    WHERE tournament_id = v_match.tournament_id AND match_code = v_match.advances_to_match_loser;
+
+    IF FOUND THEN
+      IF v_match.winner_side = 1 THEN
+        v_loser_p1    := v_match.player2_id;
+        v_loser_p3    := v_match.player4_id;
+        v_loser_label := COALESCE(v_match.team2_label,
+                          (SELECT full_name FROM players WHERE id = v_match.player2_id));
+      ELSE
+        v_loser_p1    := v_match.player1_id;
+        v_loser_p3    := v_match.player3_id;
+        v_loser_label := COALESCE(v_match.team1_label,
+                          (SELECT full_name FROM players WHERE id = v_match.player1_id));
+      END IF;
+
+      IF v_match.advances_to_position_loser = 1 THEN
+        UPDATE tournament_matches
+        SET player1_id = v_loser_p1, player3_id = v_loser_p3, team1_label = v_loser_label
+        WHERE id = v_next.id;
+      ELSE
+        UPDATE tournament_matches
+        SET player2_id = v_loser_p1, player4_id = v_loser_p3, team2_label = v_loser_label
+        WHERE id = v_next.id;
+      END IF;
+    END IF;
   END IF;
 END;
 $$;

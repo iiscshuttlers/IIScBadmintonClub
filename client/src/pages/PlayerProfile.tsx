@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import { usePlayerStats } from "@/hooks/usePlayerStats";
+import { useTournamentMatchHistory } from "@/hooks/useTournamentMatchHistory";
 import { useMatchActions } from "@/hooks/useMatchActions";
 import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
 import { MatchHistorySection } from "@/components/player-profile/MatchHistorySection";
@@ -127,6 +128,8 @@ export default function PlayerProfile() {
   const validAchievements = useMemo(() => {
     return player?.achievements?.filter((a: string) => a.trim().length > 0) || [];
   }, [player]);
+
+  const { data: tournamentRuns } = useTournamentMatchHistory(id);
 
   const { splitStats, streakStats, profileCompleteness } = usePlayerStats(
     (player as any) || null,
@@ -572,6 +575,7 @@ export default function PlayerProfile() {
                 player={player}
                 validAchievements={validAchievements}
                 splitStats={splitStats}
+                tournamentRuns={tournamentRuns}
               />
             )}
             {activeTab === "STATS" && (

@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { Trophy, Users, TrendingUp, Swords, ArrowLeft, Loader2 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { InfoModal } from "@/components/InfoModal";
 
 import type { PlayerRow as Player } from "@/types";
 
@@ -126,7 +127,16 @@ export default function DoublesPairProfile() {
               <Link href={`/player/${p2}`}><Avatar player={player2} size="lg" /></Link>
             </div>
             <div className="text-center">
-              <h1 className="text-2xl font-black text-white">{player1.full_name} & {player2.full_name}</h1>
+              <div className="flex items-center justify-center gap-2">
+                <h1 className="text-2xl font-black text-white">{player1.full_name} & {player2.full_name}</h1>
+                <InfoModal
+                  title="DOUBLES PAIR"
+                  items={[
+                    { badge: "STATS", title: "Combined Stats", desc: "This page shows statistics specifically for when these two players play together as a team on the same side of the court." }
+                  ]}
+                  triggerClassName="text-blue-300 hover:text-white"
+                />
+              </div>
               <p className="text-blue-300 text-sm mt-1">Doubles Pair Profile · {totalMatches} matches together</p>
             </div>
           </div>

@@ -43,7 +43,9 @@ serve(async (req) => {
     : { ok: true, keys: siteData?.map((r) => r.key) };
 
   // 3. Write a canary row to admin_logs and read it back
-  const canaryDetail = `backup_verify_${Date.now()}`;
+  const canaryId = `backup_verify_${Date.now()}`;
+  const canaryDetail = { canary_id: canaryId };
+  
   const { error: insertErr } = await supabase.from("admin_logs").insert({
     admin_email: "system@verify",
     action: "backup_health_check",
@@ -54,11 +56,16 @@ serve(async (req) => {
     errors.push(`canary_write: ${insertErr.message}`);
     results["canary_write"] = { ok: false, error: insertErr.message };
   } else {
+    // We can't easily .eq() on a JSON column without ->> operators in standard PostgREST easily,
+    // but PostgREST supports passing JSON directly to eq if it exactly matches.
+    // However, to be perfectly safe, we'll use a contains filter.
     const { data: canary, error: readErr } = await supabase
       .from("admin_logs")
       .select("id, details")
-      .eq("details", canaryDetail)
+      .contains("details", canaryDetail)
+      .limit(1)
       .single();
+      
     results["canary_read"] = readErr
       ? { ok: false, error: readErr.message }
       : { ok: true, id: canary?.id };

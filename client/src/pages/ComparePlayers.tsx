@@ -24,6 +24,7 @@ import {
 } from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
 import { MatchCard } from "@/components/feed/MatchCard";
+import { InfoModal } from "@/components/InfoModal";
 
 export default function ComparePlayers() {
   const [match, rawParams] = useRoute("/compare/:p1/:p2");
@@ -163,6 +164,13 @@ export default function ComparePlayers() {
       <div className="text-center mb-10">
         <div className="inline-flex items-center gap-2 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-4 border border-rose-200 dark:border-rose-900/50">
           <Swords className="w-4 h-4" /> Head to Head Rivalry
+          <InfoModal
+            title="H2H RIVALRY"
+            items={[
+              { badge: "AI", title: "Pundit Analysis", desc: "Our AI model analyzes playing styles to predict the outcome of future matches between these two players." }
+            ]}
+            triggerClassName="text-rose-400 hover:text-rose-600 dark:hover:text-rose-200"
+          />
         </div>
         <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white flex items-center justify-center gap-4">
           <span className="truncate max-w-[40%] text-right">{player1.full_name.split(" ")[0]}</span>

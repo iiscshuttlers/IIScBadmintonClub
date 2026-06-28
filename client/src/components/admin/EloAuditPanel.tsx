@@ -3,6 +3,8 @@ import {
   RefreshCw, Loader2, RotateCcw, TrendingUp, TrendingDown, ChevronDown, ChevronUp, ArrowLeft, Play
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
+import { InfoModal } from "@/components/InfoModal";
 
 interface AuditEntry {
   id: number;
@@ -55,6 +57,7 @@ export function EloAuditPanel() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"history" | "snapshot" | "matchwise">("history");
   const [recalcLoading, setRecalcLoading] = useState(false);
+  const { session } = useAuth();
 
   // Player drill-down
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerSnapshot | null>(null);
@@ -139,13 +142,23 @@ export function EloAuditPanel() {
     if (!confirm("Are you sure? This will wipe all current ELOs and recompute them from the very first match.")) return;
     setRecalcLoading(true);
     const { error } = await supabase.rpc('recalculate_all_elo');
-    setRecalcLoading(false);
     if (error) {
+      await supabase.from("admin_logs").insert({
+        admin_email: session?.user?.email || "unknown",
+        action: "elo_recalculation_failed",
+        details: error.message
+      });
       alert("Error recalculating ELO: " + error.message);
     } else {
+      await supabase.from("admin_logs").insert({
+        admin_email: session?.user?.email || "unknown",
+        action: "elo_recalculation",
+        details: "Manually triggered full recalculation of all ELOs"
+      });
       alert("Successfully recalculated all ELO histories!");
       load();
     }
+    setRecalcLoading(false);
   };
 
   const loadPlayerHistory = useCallback(async (player: PlayerSnapshot) => {
@@ -357,7 +370,16 @@ export function EloAuditPanel() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-black text-slate-800 dark:text-white">ELO Audit Log</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="font-black text-slate-800 dark:text-white">ELO Audit Log</h3>
+          <InfoModal
+            title="ELO AUDIT & RECALCULATION"
+            items={[
+              { badge: "ALGO", title: "Recalculation Engine", desc: "Replays all historical matches in chronological order to completely rebuild the ELO state." },
+              { badge: "WARN", title: "Destructive Action", desc: "Forcing a recalculation will overwrite all current ratings. Use only if database integrity is compromised." }
+            ]}
+          />
+        </div>
         <button onClick={load} className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
           <RefreshCw className="w-4 h-4 text-slate-500" />
         </button>

@@ -19,6 +19,7 @@ import { useState, useEffect } from "react";
 import { ARCHIVED_TOURNAMENTS } from "@/data/tournamentArchive";
 import { fetchSiteData } from "@/lib/siteData";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import { InfoModal } from "@/components/InfoModal";
 
 // ── Animation variants ────────────────────────────────────────────────────────
 const fadeUp: Variants = {
@@ -201,9 +202,17 @@ export default function Home() {
               variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}
             >
               <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-3">Quick Access</p>
-              <h2 className="text-3xl lg:text-4xl font-black text-slate-900 dark:text-white" style={{ fontFamily: "Playfair Display, serif" }}>
-                What are you looking for?
-              </h2>
+              <div className="flex items-center justify-center gap-2">
+                <h2 className="text-3xl lg:text-4xl font-black text-slate-900 dark:text-white" style={{ fontFamily: "Playfair Display, serif" }}>
+                  What are you looking for?
+                </h2>
+                <InfoModal
+                  title="QUICK LINKS"
+                  items={[
+                    { badge: "NAVIGATE", title: "Core Features", desc: "These are the most commonly accessed pages in the platform." }
+                  ]}
+                />
+              </div>
               <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm">Everything the club offers, one click away</p>
             </motion.div>
 

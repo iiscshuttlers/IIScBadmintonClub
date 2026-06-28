@@ -20,6 +20,8 @@ export interface TournamentMatchInsert {
   team2_label: string;
   advances_to_match: string | null;
   advances_to_position: 1 | 2 | null;
+  advances_to_match_loser: string | null;
+  advances_to_position_loser: 1 | 2 | null;
 }
 
 function nextPow2(n: number): number {
@@ -53,7 +55,8 @@ function matchCode(category: string, roundNum: number, totalRounds: number, matc
 export function generateSingleElimBracket(
   participants: BracketParticipant[],
   category: string,
-  tournamentId: string
+  tournamentId: string,
+  hasThirdPlace = false
 ): TournamentMatchInsert[] {
   if (participants.length < 2) return [];
 
@@ -96,6 +99,8 @@ export function generateSingleElimBracket(
       team2_label: s2?.displayName ?? "TBD",
       advances_to_match: totalRounds > 1 ? nextCode : null,
       advances_to_position: totalRounds > 1 ? pos : null,
+      advances_to_match_loser: null,
+      advances_to_position_loser: null,
     });
   }
 
@@ -123,8 +128,46 @@ export function generateSingleElimBracket(
         team2_label: `Winner of ${matchCode(category, r - 1, totalRounds, m * 2 + 2)}`,
         advances_to_match: nextCode,
         advances_to_position: isFinal ? null : pos,
+        advances_to_match_loser: null,
+        advances_to_position_loser: null,
       });
     }
+  }
+
+  // 3rd place playoff: SF losers feed into an extra match at the same round level as SF
+  if (hasThirdPlace && totalRounds >= 2) {
+    const sfRound = totalRounds - 1;
+    const thirdCode = `${category}_3RD_01`;
+    // Find the SF match rows and wire their loser to the 3rd place match
+    const sf01Code = matchCode(category, sfRound, totalRounds, 1);
+    const sf02Code = matchCode(category, sfRound, totalRounds, 2);
+    for (const row of rows) {
+      if (row.match_code === sf01Code) {
+        row.advances_to_match_loser = thirdCode;
+        row.advances_to_position_loser = 1;
+      } else if (row.match_code === sf02Code) {
+        row.advances_to_match_loser = thirdCode;
+        row.advances_to_position_loser = 2;
+      }
+    }
+    rows.push({
+      tournament_id: tournamentId,
+      category,
+      match_code: thirdCode,
+      round: sfRound,
+      round_name: "3rd Place Playoff",
+      match_number: 99,
+      player1_id: null,
+      player3_id: null,
+      team1_label: `Loser of ${sf01Code}`,
+      player2_id: null,
+      player4_id: null,
+      team2_label: `Loser of ${sf02Code}`,
+      advances_to_match: null,
+      advances_to_position: null,
+      advances_to_match_loser: null,
+      advances_to_position_loser: null,
+    });
   }
 
   // Auto-advance byes in round 1: if one slot is null, mark it as a walkover

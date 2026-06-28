@@ -231,6 +231,11 @@ function PredictionsPanel() {
 function ChallengesAdminPanel() {
   const [challenges, setChallenges] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdding, setIsAdding] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newType, setNewType] = useState("matches");
+  const [newTarget, setNewTarget] = useState(5);
+  const [newPoints, setNewPoints] = useState(10);
 
   const load = async () => {
     const sunday = new Date();
@@ -248,6 +253,30 @@ function ChallengesAdminPanel() {
     await supabase.from("weekly_challenges").delete().eq("id", id);
     toast.success("Challenge deleted");
     load();
+  };
+
+  const addChallenge = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTitle) return;
+    const sunday = new Date();
+    sunday.setDate(sunday.getDate() - sunday.getDay());
+    const weekStart = sunday.toISOString().slice(0, 10);
+    
+    const { error } = await supabase.from("weekly_challenges").insert({
+      title: newTitle,
+      type: newType,
+      target: newTarget,
+      points: newPoints,
+      week_start: weekStart,
+    });
+    if (error) {
+      toast.error("Failed to add challenge: " + error.message);
+    } else {
+      toast.success("Challenge added");
+      setNewTitle("");
+      setIsAdding(false);
+      load();
+    }
   };
 
   useEffect(() => { load(); }, []);
@@ -275,6 +304,39 @@ function ChallengesAdminPanel() {
           </div>
         )
       }
+      
+      {isAdding ? (
+        <form onSubmit={addChallenge} className="mt-4 bg-slate-50 dark:bg-slate-800 p-3 rounded-xl space-y-3">
+          <input
+            autoFocus
+            type="text"
+            placeholder="Challenge Title (e.g., Weekend Warrior)"
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-emerald-500"
+            required
+          />
+          <div className="grid grid-cols-3 gap-2">
+            <select value={newType} onChange={(e) => setNewType(e.target.value)} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-emerald-500">
+              <option value="matches">Matches</option>
+              <option value="wins">Wins</option>
+              <option value="singles">Singles</option>
+              <option value="doubles">Doubles</option>
+              <option value="streak">Streak</option>
+            </select>
+            <input type="number" min="1" placeholder="Target" value={newTarget} onChange={(e) => setNewTarget(Number(e.target.value))} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-emerald-500" required />
+            <input type="number" min="5" step="5" placeholder="Points" value={newPoints} onChange={(e) => setNewPoints(Number(e.target.value))} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-emerald-500" required />
+          </div>
+          <div className="flex justify-end gap-2 pt-1">
+            <button type="button" onClick={() => setIsAdding(false)} className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition">Cancel</button>
+            <button type="submit" className="px-3 py-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition">Save Challenge</button>
+          </div>
+        </form>
+      ) : (
+        <button onClick={() => setIsAdding(true)} className="w-full mt-4 py-2 border border-dashed border-emerald-300 dark:border-emerald-800 text-emerald-600 dark:text-emerald-500 rounded-xl text-sm font-bold hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition">
+          + Add Custom Challenge
+        </button>
+      )}
     </div>
   );
 }
@@ -296,11 +358,15 @@ function PublicApiPanel() {
     setTesting(path);
     setResult(null);
     try {
-      const res = await fetch(base + path);
-      const text = await res.text();
-      setResult(text.slice(0, 300));
+      // Use supabase.functions.invoke so the anon key/auth headers are automatically attached
+      const { data, error } = await supabase.functions.invoke("public-api" + path);
+      if (error) {
+        setResult("Error: " + error.message);
+      } else {
+        setResult(JSON.stringify(data, null, 2).slice(0, 500));
+      }
     } catch (e: any) {
-      setResult("Error: " + e.message);
+      setResult("Exception: " + e.message);
     }
     setTesting(null);
   };
@@ -354,13 +420,55 @@ function DbHealthPanel() {
       {health && (
         <div className="space-y-2">
           {Object.entries(health).map(([key, val]: any) => (
-            <div key={key} className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-2">
+            <div key={key} className={`flex ${typeof val === "object" && val !== null ? "flex-col items-start gap-2" : "items-center justify-between"} bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-2`}>
               <span className="text-sm font-bold text-slate-600 dark:text-slate-300 capitalize">{key.replace(/_/g, " ")}</span>
-              <span className={`text-xs font-black px-2 py-0.5 rounded-full ${
-                val === true || (typeof val === "number" && val > 0)
-                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
-                  : "bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400"
-              }`}>{String(val)}</span>
+              {typeof val === "object" && val !== null ? (
+                <div className="w-full mt-2 space-y-2 bg-slate-100/50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200/60 dark:border-slate-700/50">
+                  {Object.entries(val).map(([subKey, subVal]: any) => (
+                    <div key={subKey} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700">
+                      <span className="text-xs font-bold text-slate-600 dark:text-slate-300 capitalize flex items-center gap-1.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        {subKey.replace(/_/g, " ")}
+                      </span>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {typeof subVal === "object" && subVal !== null ? (
+                          Object.entries(subVal).map(([k, v]: any) => (
+                            <div
+                              key={k}
+                              className={`text-[10px] font-black px-2 py-1 rounded-md flex items-center gap-1.5 ${
+                                v === true || (typeof v === "number" && v > 0)
+                                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800"
+                                  : v === false
+                                  ? "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400 border border-rose-100 dark:border-rose-800"
+                                  : "bg-slate-50 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600"
+                              }`}
+                            >
+                              <span className="opacity-70 font-semibold">{k}:</span>
+                              {Array.isArray(v) ? (
+                                <div className="flex flex-wrap items-center gap-1">
+                                  {v.map((item: any, i: number) => (
+                                    <span key={i} className="px-1.5 py-0.5 bg-black/5 dark:bg-white/10 rounded-md leading-none">{String(item)}</span>
+                                  ))}
+                                </div>
+                              ) : typeof v === "object" ? JSON.stringify(v) : String(v)}
+                            </div>
+                          ))
+                        ) : (
+                          <span className="text-[10px] font-black px-2 py-1 rounded-md bg-slate-50 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
+                            {String(subVal)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <span className={`text-xs font-black px-2 py-0.5 rounded-full ${
+                  val === true || (typeof val === "number" && val > 0)
+                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                    : "bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400"
+                }`}>{String(val)}</span>
+              )}
             </div>
           ))}
         </div>
@@ -396,9 +504,19 @@ function CronJobsPanel() {
   );
 }
 
-/* ── Main Panel ───────────────────────────────────────────────────── */
 export function AdminFeaturesPanel() {
-  const [section, setSection] = useState<"live" | "predictions" | "challenges" | "notifications" | "api" | "health">("live");
+  const [section, setSection] = useState<"live" | "predictions" | "challenges" | "notifications" | "api" | "health">(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get("tab") as any;
+    return ["live", "predictions", "challenges", "notifications", "api", "health"].includes(tab) ? tab : "live";
+  });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    params.set("tab", section);
+    const newUrl = `${window.location.pathname}?${params.toString()}${window.location.hash}`;
+    window.history.replaceState(null, "", newUrl);
+  }, [section]);
 
   const sections = [
     { id: "live", label: "Live Scores", icon: <Circle className="w-3.5 h-3.5 fill-red-500 text-red-500" /> },

@@ -8,6 +8,7 @@ import {
   Calendar,
   Users,
 } from "lucide-react";
+import { InfoModal } from "@/components/InfoModal";
 
 const FORMAT_LABELS: Record<string, string> = {
   MS: "Men's Singles",
@@ -148,9 +149,18 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-            Match Schedule
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+              Match Schedule
+            </h2>
+            <InfoModal
+              title="TOURNAMENT SCHEDULE"
+              items={[
+                { badge: "FORMATS", title: "Match Formats", desc: "Use the filter pills below to switch between MS (Men's Singles), MD (Men's Doubles), etc." },
+                { badge: "LIVE", title: "Live Updates", desc: "Matches currently being played will glow red and update scores in real-time." }
+              ]}
+            />
+          </div>
           <p className="text-slate-500 dark:text-slate-400 text-sm sm:text-base mt-1 flex items-center gap-2">
             <Calendar size={14} className="sm:w-4 sm:h-4" />
             Tournament Timeline & Live Updates

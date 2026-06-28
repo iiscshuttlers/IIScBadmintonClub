@@ -16,6 +16,7 @@ export interface PlayerRank {
   singles_elo?: number;
   doubles_elo?: number;
   mixed_elo?: number;
+  tournament_elo?: number;
   singles_record?: string;
   doubles_record?: string;
   mixed_record?: string;
@@ -40,21 +41,28 @@ export function useLeaderboardState(players: PlayerRank[]) {
     return "ALL";
   });
 
+  const [ironmanFilter, setIronmanFilter] = useState<"all" | "monthly">("all");
+  const [eloMode, setEloMode] = useState<"club" | "tournament">(() => {
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get("mode");
+    if (mode === "club" || mode === "tournament") return mode as any;
+    return "club";
+  });
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     params.set("lb", activeTab);
     params.set("cat", categoryFilter);
+    params.set("mode", eloMode);
     window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}#${activeTab}`);
     localStorage.setItem("leaderboard_tab", activeTab);
-  }, [activeTab, categoryFilter]);
-
-  const [ironmanFilter, setIronmanFilter] = useState<"all" | "monthly">("all");
+  }, [activeTab, categoryFilter, eloMode]);
   
   // Refactored data fetching using React Query
-  const { data: monthlyCountsData } = useIronmanMonthlyQuery(activeTab === "ironman" && ironmanFilter === "monthly");
+  const { data: monthlyCountsData } = useIronmanMonthlyQuery(eloMode, activeTab === "ironman" && ironmanFilter === "monthly");
   const monthlyCounts = monthlyCountsData || {};
 
-  const { data: statsData } = useLeaderboardStatsQuery(categoryFilter, activeTab === "elo");
+  const { data: statsData } = useLeaderboardStatsQuery(categoryFilter, eloMode, activeTab === "elo");
   const upsets = statsData?.upsets || [];
   const activeStreaks = statsData?.activeStreaks || [];
   const allStreaks = statsData?.allStreaks || {};
@@ -62,6 +70,7 @@ export function useLeaderboardState(players: PlayerRank[]) {
   const eloHistory = statsData?.eloHistory || {};
 
   const getCategoryElo = (player: PlayerRank) => {
+    if (eloMode === "tournament") return player.tournament_elo ?? 1200;
     if (categoryFilter === "MS" || categoryFilter === "WS") {
       return player.singles_elo ?? player.elo_rating;
     } else if (categoryFilter === "MD" || categoryFilter === "WD") {
@@ -73,6 +82,9 @@ export function useLeaderboardState(players: PlayerRank[]) {
   };
 
   const getCategoryRecord = (player: PlayerRank) => {
+    if (eloMode === "tournament") {
+      return statsData?.tournamentRecords?.[player.id] || "0W - 0L";
+    }
     if (categoryFilter === "MS" || categoryFilter === "WS") return player.singles_record || "0W - 0L";
     if (categoryFilter === "MD" || categoryFilter === "WD") return player.doubles_record || "0W - 0L";
     if (categoryFilter === "XD") return player.mixed_record || "0W - 0L";
@@ -192,6 +204,7 @@ export function useLeaderboardState(players: PlayerRank[]) {
 
   return {
     activeTab, setActiveTab, categoryFilter, setCategoryFilter, ironmanFilter, setIronmanFilter,
+    eloMode, setEloMode,
     top3, rest, exportLeaderboard, upsets, activeStreaks, monthlyCounts,
     getCategoryElo, getCategoryRecord, getMatchesCount, displayRecord,
     lastEloChange, eloHistory, allStreaks

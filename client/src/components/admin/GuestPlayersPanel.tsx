@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminHistory } from "@/contexts/AdminHistoryContext";
+import { InfoModal } from "@/components/InfoModal";
 
 interface GuestRow {
   id: string;
@@ -231,6 +232,13 @@ export function GuestPlayersPanel() {
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 p-5 sm:p-6">
         <h2 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2 mb-1">
           <Ghost className="w-5 h-5 text-violet-500" /> Add Guest Player
+          <InfoModal
+            title="GUEST PLAYERS"
+            items={[
+              { badge: "LIMITS", title: "Invisible on Leaderboard", desc: "Guests are tracked for internal ELO math, but will never show up on the public leaderboard." },
+              { badge: "CLAIM", title: "Claiming a Guest", desc: "If a guest later registers for an official account, use the 'Claim Player' action to transfer their historical matches to their new account." }
+            ]}
+          />
         </h2>
         <p className="text-sm text-slate-400 mb-4">
           Create a profile for a visitor or non-member so their matches and ELO can be tracked.

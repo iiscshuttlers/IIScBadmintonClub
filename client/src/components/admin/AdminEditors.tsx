@@ -12,4 +12,6 @@ export { UmpireMode } from "./UmpireMode";
 export { RegistrationsManager } from "./editors/RegistrationsManager";
 export { MatchesManager } from "./editors/MatchesManager";
 export { ChangelogViewer } from "./editors/ChangelogViewer";
+export { NoticeboardManager } from "./NoticeboardManager";
+export { PushBroadcastPanel } from "./editors/PushBroadcastPanel";
 export * from "./editors/shared";

@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import { TrendingUp, Trophy } from "lucide-react";
+import { InfoModal } from "@/components/InfoModal";
+import { TrendingUp, Trophy, Info } from "lucide-react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -102,9 +103,18 @@ export function ProfileRankingTab({
 
       <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-3xl p-5 sm:p-6 border border-slate-200 dark:border-white/8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-          <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-white/45 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-amber-400" /> ELO Progression
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-white/45 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-amber-400" /> ELO Progression
+            </h3>
+            <InfoModal
+              title="ELO PROGRESSION"
+              items={[
+                { badge: "GRAPH", title: "Visual History", desc: "Tracks your global ELO over time, recalculating after every confirmed match." },
+                { badge: "CATEGORIES", title: "Category Breakdown", desc: "Toggle between Global, MS, MD, etc. to see your specific ratings in each format." }
+              ]}
+            />
+          </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowEloAudit(true)}

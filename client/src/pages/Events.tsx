@@ -23,6 +23,7 @@ import {
   type TournamentStatus,
 } from "@/data/tournamentArchive";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { InfoModal } from "@/components/InfoModal";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import ScheduleCalendar from "./ScheduleCalendar";
@@ -180,7 +181,7 @@ export default function Events() {
       "Browse live, upcoming and completed badminton tournaments at IISc.",
   });
 
-  const TOURNAMENT_SUB_TABS = ["notices", "schedule", "broadcast", "brackets", "umpire"];
+  const TOURNAMENT_SUB_TABS = ["notices", "schedule", "broadcast", "brackets", "past", "umpire"];
   const [activeTab, setActiveTab] = useHashTab(
     ["calendar", "tournament", "history", ...TOURNAMENT_SUB_TABS] as const,
     "calendar"
@@ -373,6 +374,14 @@ export default function Events() {
           <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 px-4 py-2 rounded-full text-sm font-semibold mb-5">
             <Calendar className="w-4 h-4 text-emerald-400" />
             Tournaments & Events
+            <InfoModal
+              title="EVENTS & CHAMPIONSHIPS"
+              items={[
+                { badge: "LIVE", title: "Live Tournaments", desc: "View real-time brackets, fixtures, and results during active championships." },
+                { badge: "ARCHIVE", title: "Hall of Fame", desc: "Look back at the history of previous tournaments and our champions." }
+              ]}
+              triggerClassName="text-white hover:text-emerald-200"
+            />
           </div>
           <h1
             className="text-5xl md:text-6xl font-black mb-5"

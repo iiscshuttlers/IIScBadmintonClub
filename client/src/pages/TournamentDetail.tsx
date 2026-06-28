@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { getArchivedTournament } from "@/data/tournamentArchive";
 import { motion } from "framer-motion";
+import { InfoModal } from "@/components/InfoModal";
 
 const PODIUM_CONFIGS = [
   {
@@ -173,9 +174,17 @@ export default function TournamentDetail() {
                       ✓ Completed
                     </span>
                   </div>
-                  <h2 className="text-2xl font-black text-blue-900 dark:text-white mb-3">
-                    Results Archive
-                  </h2>
+                  <div className="flex items-center gap-2 mb-3">
+                    <h2 className="text-2xl font-black text-blue-900 dark:text-white">
+                      Results Archive
+                    </h2>
+                    <InfoModal
+                      title="TOURNAMENT ARCHIVE"
+                      items={[
+                        { badge: "HISTORY", title: "Past Results", desc: "This page is a snapshot of the tournament results after it was completed." }
+                      ]}
+                    />
+                  </div>
                   <p className="text-gray-600 dark:text-slate-400 leading-relaxed">
                     {tournament.description}
                   </p>

@@ -1,21 +1,15 @@
 import { useState, useEffect } from "react";
-import { Settings, Palette, Activity, Check, Lock, Bell, BellOff, ChevronDown, ChevronUp, Info } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Settings, Activity, Check, Bell, ChevronDown, ChevronUp, Info, Sun, Moon, HelpCircle } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { InfoModal } from "@/components/InfoModal";
 
 export function QuickSettingsContent({ onClose }: { onClose?: () => void }) {
-  const { accent, setAccent } = useTheme();
-  const { profile, session, refreshProfile } = useAuth();
+  const { accent, setAccent, theme, toggleTheme } = useTheme();
+  const { profile, session, refreshProfile, isMasterAdmin, viewAsRole, setViewAsRole } = useAuth() as any;
   const [updating, setUpdating] = useState(false);
   const [notifsExpanded, setNotifsExpanded] = useState(false);
   const [appVersion, setAppVersion] = useState<string | null>(null);
@@ -104,26 +98,10 @@ export function QuickSettingsContent({ onClose }: { onClose?: () => void }) {
   };
 
   const statusConfig = [
-    {
-      id: "looking",
-      label: "Looking to play",
-      color: "text-emerald-500 bg-emerald-50 dark:bg-emerald-950",
-    },
-    {
-      id: "playing",
-      label: "Playing Right Now",
-      color: "text-amber-500 bg-amber-50 dark:bg-amber-950",
-    },
-    {
-      id: "resting",
-      label: "Taking a break",
-      color: "text-indigo-500 bg-indigo-50 dark:bg-indigo-950",
-    },
-    {
-      id: "injured",
-      label: "Injured",
-      color: "text-rose-500 bg-rose-50 dark:bg-rose-950",
-    },
+    { id: "looking",  label: "Available to play",  short: "Available",  color: "text-emerald-500 bg-emerald-50 dark:bg-emerald-950" },
+    { id: "playing",  label: "Playing Right Now", short: "Playing",  color: "text-amber-500 bg-amber-50 dark:bg-amber-950" },
+    { id: "resting",  label: "Taking a break",   short: "Resting",  color: "text-indigo-500 bg-indigo-50 dark:bg-indigo-950" },
+    { id: "injured",  label: "Injured",           short: "Injured",  color: "text-rose-500 bg-rose-50 dark:bg-rose-950" },
   ];
 
   const themes = [
@@ -140,30 +118,31 @@ export function QuickSettingsContent({ onClose }: { onClose?: () => void }) {
 
   return (
     <div className="divide-y divide-slate-100 dark:divide-slate-800">
-      {/* APP THEME COLOR */}
+      {/* APPEARANCE */}
       <div className="px-3 py-3">
         <div className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-          <Palette className="w-3 h-3" /> App Theme Color
+          <Sun className="w-3 h-3" /> Appearance
+        </div>
+        <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-1 flex gap-1 mb-3">
+          <button onClick={() => { if (theme === "dark") toggleTheme?.(); }} className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${theme === "light" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"}`}>
+            <Sun className="w-3.5 h-3.5" /> Light
+          </button>
+          <button onClick={() => { if (theme === "light") toggleTheme?.(); }} className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${theme === "dark" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"}`}>
+            <Moon className="w-3.5 h-3.5" /> Dark
+          </button>
         </div>
         <div className="flex items-center gap-2.5">
           {themes.map((color) => (
             <div
               key={color.id}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setAccent?.(color.id as any);
-              }}
-              className={`w-7 h-7 rounded-full cursor-pointer transition-all ${color.bg} ${
-                accent === color.id
-                  ? "ring-2 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 ring-slate-700 dark:ring-white scale-115"
-                  : "hover:scale-110 opacity-60 hover:opacity-100"
-              }`}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setAccent?.(color.id as any); }}
+              className={`w-7 h-7 rounded-full cursor-pointer transition-all ${color.bg} ${accent === color.id ? "ring-2 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 ring-slate-700 dark:ring-white scale-115" : "hover:scale-110 opacity-60 hover:opacity-100"}`}
               title={`Theme: ${color.id}`}
             />
           ))}
         </div>
       </div>
+
 
       {profile?.id && (
         <>
@@ -171,26 +150,34 @@ export function QuickSettingsContent({ onClose }: { onClose?: () => void }) {
           <div className="px-3 py-3">
             <div className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
               <Activity className="w-3 h-3" /> Live Status
+              <InfoModal
+                title="Live Status"
+                triggerClassName="!p-0 ml-1 !text-slate-400 hover:!text-slate-600 dark:hover:!text-slate-300"
+                triggerIcon={<HelpCircle className="w-3.5 h-3.5" />}
+                items={[
+                  { title: "Available", desc: "You are actively looking for a game to join or players to play with." },
+                  { title: "Playing", desc: "You are currently playing a match on court." },
+                  { title: "Resting", desc: "You are taking a break but still at the courts." },
+                  { title: "Injured", desc: "You are injured and unavailable to play." }
+                ]}
+              />
             </div>
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-1 flex gap-1">
               {statusConfig.map((status) => {
                 const isActive = currentStatus === status.id;
                 return (
                   <button
                     key={status.id}
                     disabled={updating}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      updateStatus(status.id);
-                    }}
-                    className={`flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                    onClick={(e) => { e.preventDefault(); updateStatus(status.id); }}
+                    title={status.label}
+                    className={`flex-1 py-1.5 rounded-lg text-[10px] font-black transition-all truncate px-1 ${
                       isActive
-                        ? status.color + " shadow-sm ring-1 ring-current/20"
-                        : "text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800"
+                        ? "bg-white dark:bg-slate-700 shadow-sm " + status.color.split(" ")[0]
+                        : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                     }`}
                   >
-                    <span className="truncate">{status.label}</span>
-                    {isActive && <Check className="w-3 h-3 shrink-0 ml-1" />}
+                    {status.short}
                   </button>
                 );
               })}
@@ -248,6 +235,31 @@ export function QuickSettingsContent({ onClose }: { onClose?: () => void }) {
           </div>
         </>
       )}
+      {/* VIEW AS — master admin only */}
+      {isMasterAdmin && (
+        <div className="px-3 py-3">
+          <div className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">View As</div>
+          <div className="grid grid-cols-2 gap-1">
+            {(["master_admin", "admin", "umpire", "player"] as const).map(role => {
+              const active = viewAsRole === role || (!viewAsRole && role === "master_admin");
+              const labels: Record<string, string> = { master_admin: "Master Admin", admin: "Admin", umpire: "Umpire", player: "Player" };
+              return (
+                <button
+                  key={role}
+                  onClick={() => setViewAsRole(role === "master_admin" ? null : role)}
+                  className={`px-2 py-1.5 rounded-lg text-xs font-bold transition-colors ${active ? "bg-violet-600 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+                >
+                  {labels[role]}
+                </button>
+              );
+            })}
+          </div>
+          {viewAsRole && (
+            <p className="text-[10px] text-amber-500 font-bold mt-1.5 text-center">Viewing as {viewAsRole.replace("_", " ")}</p>
+          )}
+        </div>
+      )}
+
       {/* APP VERSION */}
       {appVersion && (
         <div className="px-3 py-2.5 flex items-center justify-between">
@@ -260,5 +272,23 @@ export function QuickSettingsContent({ onClose }: { onClose?: () => void }) {
         </div>
       )}
     </div>
+  );
+}
+
+export function PreferencesModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-2xl w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto p-0">
+        <DialogHeader className="p-4 pb-2 border-b border-slate-100 dark:border-slate-800">
+          <DialogTitle className="flex items-center gap-2 text-slate-800 dark:text-white font-black text-xl">
+            <Settings className="w-5 h-5 text-emerald-500" />
+            App Preferences
+          </DialogTitle>
+        </DialogHeader>
+        <div className="p-2">
+          <QuickSettingsContent onClose={onClose} />
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -7,6 +7,7 @@ import { PlayerRank } from "@/hooks/useLeaderboardState";
 interface Props {
   rest: PlayerRank[];
   activeTab: "elo" | "ironman";
+  eloMode: "club" | "tournament";
   allStreaks: Record<string, number>;
   getCategoryElo: (player: PlayerRank) => number;
   getCategoryRecord: (player: PlayerRank) => string;
@@ -17,7 +18,7 @@ interface Props {
 }
 
 export function LeaderboardTable({
-  rest, activeTab, allStreaks, getCategoryElo, getCategoryRecord,
+  rest, activeTab, eloMode, allStreaks, getCategoryElo, getCategoryRecord,
   getMatchesCount, displayRecord, lastEloChange, eloHistory
 }: Props) {
   return (
@@ -32,7 +33,7 @@ export function LeaderboardTable({
                 <th className="p-4 hidden sm:table-cell">Department</th>
                 <th className="p-4 hidden md:table-cell">Record</th>
                 <th className="p-4 text-right">
-                  {activeTab === "elo" ? "ELO" : "Matches Played"}
+                  {activeTab === "elo" ? (eloMode === "tournament" ? "Tournament ELO" : "ELO") : "Matches Played"}
                 </th>
               </tr>
             </thead>

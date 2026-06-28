@@ -17,6 +17,21 @@ function createCtx() {
 }
 
 // Call this once at app startup. Listens for the first real gesture and
+// Sounds queued to play immediately on first user gesture (e.g. page-load smash).
+const _pendingOnUnlock: Array<() => void> = [];
+
+/**
+ * Queue a sound to fire on the very first user gesture after page load.
+ * Useful for "page refresh" welcome sounds that need audio context unlocked first.
+ */
+export function playOnUnlock(fn: () => void) {
+  if (_gestureReceived) {
+    fn();
+  } else {
+    _pendingOnUnlock.push(fn);
+  }
+}
+
 // creates + resumes the AudioContext so it's ready when notifications arrive.
 export function initSounds() {
   const unlock = () => {
@@ -25,6 +40,10 @@ export function initSounds() {
     if (_ctx?.state === "suspended") {
       _ctx.resume().catch(() => {});
     }
+    // Drain any sounds queued before first gesture
+    _pendingOnUnlock.splice(0).forEach((fn) => {
+      try { fn(); } catch (_) {}
+    });
     ["pointerdown", "touchstart", "click", "keydown"].forEach((e) =>
       document.removeEventListener(e, unlock)
     );

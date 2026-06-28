@@ -204,8 +204,13 @@ export function AdminAllFeaturesPanel() {
                   {feature.status === "coming-soon" ? "Soon" : feature.status.charAt(0).toUpperCase() + feature.status.slice(1)}
                 </span>
               </div>
-              <h4 className="font-bold text-slate-900 dark:text-white text-sm mb-1">{feature.name}</h4>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mb-2">{feature.description}</p>
+              <div className="flex items-center gap-2 mb-2">
+                <h4 className="font-bold text-slate-900 dark:text-white text-sm">{feature.name}</h4>
+                <InfoModal
+                  title={feature.name.toUpperCase()}
+                  items={[{ title: "Description", desc: feature.description }]}
+                />
+              </div>
               <div className="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">{feature.category}</div>
             </div>
           ))}
@@ -218,8 +223,13 @@ export function AdminAllFeaturesPanel() {
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <div className="text-xl shrink-0">{iconMap[feature.icon] || "✨"}</div>
                   <div className="min-w-0">
-                    <h4 className="font-bold text-slate-900 dark:text-white text-sm">{feature.name}</h4>
-                    <p className="text-xs text-slate-600 dark:text-slate-400">{feature.description}</p>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-bold text-slate-900 dark:text-white text-sm">{feature.name}</h4>
+                      <InfoModal
+                        title={feature.name.toUpperCase()}
+                        items={[{ title: "Description", desc: feature.description }]}
+                      />
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">

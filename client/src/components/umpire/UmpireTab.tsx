@@ -10,12 +10,28 @@ import { fetchSiteData } from "@/lib/siteData";
 import { BeautifulScoreDisplay } from "@/components/feed/BeautifulScoreDisplay";
 import { UmpireTournamentTab, type TournamentMatchForUmpire } from "./UmpireTournamentTab";
 
-export function UmpireTab() {
+export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean }) {
   const { session, isUmpire } = useAuth();
   const [isUmpiring, setIsUmpiring] = useState(false);
   const [myLiveMatch, setMyLiveMatch] = useState<BwfMatchState | MatchEditState | null>(null);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
-  const [activeSubTab, setActiveSubTab] = useState<"friendly" | "tournament">("friendly");
+  const [activeSubTab, setActiveSubTab] = useState<"friendly" | "tournament">(() => {
+    if (tournamentOnly) return "tournament";
+    const params = new URLSearchParams(window.location.search);
+    return params.get("mode") === "tournament" ? "tournament" : "friendly";
+  });
+
+  useEffect(() => {
+    if (tournamentOnly) return;
+    const params = new URLSearchParams(window.location.search);
+    if (activeSubTab === "friendly") {
+      params.delete("mode");
+    } else {
+      params.set("mode", "tournament");
+    }
+    const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}${window.location.hash}`;
+    window.history.replaceState(null, "", newUrl);
+  }, [activeSubTab, tournamentOnly]);
   const [activeTournamentMatch, setActiveTournamentMatch] = useState<TournamentMatchForUmpire | null>(null);
   const resetUmpireStore = useUmpireStore((s) => s.reset);
   // Admin "take over" of another umpire's broadcast (key = original umpire's id)
@@ -144,20 +160,22 @@ export function UmpireTab() {
   return (
     <div className="w-full max-w-5xl mx-auto p-4 space-y-6">
       {/* Sub-tabs */}
-      <div className="flex gap-2 bg-slate-900 p-1 rounded-2xl w-fit">
-        <button
-          onClick={() => setActiveSubTab("friendly")}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black transition-all ${activeSubTab === "friendly" ? "bg-emerald-600 text-white shadow" : "text-slate-400 hover:text-white"}`}
-        >
-          <Tv2 className="w-4 h-4" /> Friendly
-        </button>
-        <button
-          onClick={() => setActiveSubTab("tournament")}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black transition-all ${activeSubTab === "tournament" ? "bg-emerald-600 text-white shadow" : "text-slate-400 hover:text-white"}`}
-        >
-          <Swords className="w-4 h-4" /> Tournament
-        </button>
-      </div>
+      {!tournamentOnly && (
+        <div className="flex gap-2 bg-slate-900 p-1 rounded-2xl w-fit">
+          <button
+            onClick={() => setActiveSubTab("friendly")}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black transition-all ${activeSubTab === "friendly" ? "bg-emerald-600 text-white shadow" : "text-slate-400 hover:text-white"}`}
+          >
+            <Tv2 className="w-4 h-4" /> Friendly
+          </button>
+          <button
+            onClick={() => setActiveSubTab("tournament")}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black transition-all ${activeSubTab === "tournament" ? "bg-emerald-600 text-white shadow" : "text-slate-400 hover:text-white"}`}
+          >
+            <Swords className="w-4 h-4" /> Tournament
+          </button>
+        </div>
+      )}
 
       {activeSubTab === "friendly" && (
         <>
@@ -188,6 +206,7 @@ export function UmpireTab() {
             )}
           </div>
           <RecentUmpireMatches
+            isTournament={false}
             onEdit={(matchData) => {
               setMyLiveMatch(matchData);
               setIsUmpiring(true);
@@ -197,9 +216,18 @@ export function UmpireTab() {
       )}
 
       {activeSubTab === "tournament" && (
-        <div className="bg-slate-900 rounded-[2rem] p-6 shadow-xl border border-slate-800">
-          <h2 className="text-xl font-black text-white mb-5">Tournament Matches</h2>
-          <UmpireTournamentTab onStartMatch={(m) => { resetUmpireStore(); setActiveTournamentMatch(m); }} />
+        <div className="space-y-6">
+          <div className="bg-slate-900 rounded-[2rem] p-6 shadow-xl border border-slate-800">
+            <h2 className="text-xl font-black text-white mb-5">Tournament Matches</h2>
+            <UmpireTournamentTab onStartMatch={(m) => { resetUmpireStore(); setActiveTournamentMatch(m); }} />
+          </div>
+          <RecentUmpireMatches
+            isTournament={true}
+            onEdit={(matchData) => {
+              setMyLiveMatch(matchData);
+              setIsUmpiring(true);
+            }}
+          />
         </div>
       )}
     </div>
@@ -225,7 +253,7 @@ type RecentMatch = {
   partner2: { full_name: string; gender?: string | null } | null;
 };
 
-function RecentUmpireMatches({ onEdit }: { onEdit: (m: MatchEditState) => void }) {
+function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditState) => void, isTournament: boolean }) {
   const { profile, isAdmin } = useAuth();
   const [recent, setRecent] = useState<RecentMatch[]>([]);
 
@@ -235,6 +263,7 @@ function RecentUmpireMatches({ onEdit }: { onEdit: (m: MatchEditState) => void }
       let query = supabase
         .from("matches")
         .select("*, player1:players!player1_id(full_name, gender), player2:players!player2_id(full_name, gender), partner1:players!team1_partner_id(full_name, gender), partner2:players!team2_partner_id(full_name, gender)")
+        .eq("is_friendly", !isTournament)
         .order("created_at", { ascending: false });
       if (isAdmin) {
         query = query.limit(50);

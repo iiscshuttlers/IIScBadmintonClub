@@ -1,6 +1,7 @@
 import { motion, useInView } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
 import { Target, Dna, Activity, Footprints, Shirt, Star, Zap } from "lucide-react";
+import { InfoModal } from "@/components/InfoModal";
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -74,6 +75,12 @@ export function EquipmentArsenalSection({
         <div className="h-px flex-1 bg-linear-to-r from-transparent to-slate-300 dark:to-white/10" />
         <span className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500 dark:text-white/35 shrink-0 flex items-center gap-2">
           <Zap className="w-3.5 h-3.5 text-violet-500" /> Equipment Arsenal
+          <InfoModal
+            title="EQUIPMENT ARSENAL"
+            items={[
+              { badge: "GEAR", title: "Player Loadout", desc: "A detailed breakdown of the rackets, strings, shoes, and apparel this player uses on court." }
+            ]}
+          />
         </span>
         <div className="h-px flex-1 bg-gradient-to-l from-transparent to-slate-300 dark:to-white/10" />
       </div>

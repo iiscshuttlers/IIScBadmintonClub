@@ -23,7 +23,21 @@ export function MyMatchesTab() {
   const SUB_TABS = ["all", "requested", "accepted"] as const;
   const [subTab, setSubTab] = useHashTab(SUB_TABS, "all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [categoryFilter, setCategoryFilter] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("format") || "All";
+  });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (categoryFilter === "All") {
+      params.delete("format");
+    } else {
+      params.set("format", categoryFilter);
+    }
+    const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}${window.location.hash}`;
+    window.history.replaceState(null, "", newUrl);
+  }, [categoryFilter]);
 
   useEffect(() => {
     if (!profile?.id) return;
