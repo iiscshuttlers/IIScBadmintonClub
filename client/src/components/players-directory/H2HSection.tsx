@@ -125,7 +125,7 @@ export function H2HSection() {
     if (total === 0)
       return {
         text: `No matches yet between ${p1.full_name} & ${p2.full_name}. Who will draw first blood?`,
-        color: "text-slate-500",
+        color: "text-muted-foreground",
       };
     if (total === 1)
       return {
@@ -159,7 +159,7 @@ export function H2HSection() {
       };
     return {
       text: `${leader.full_name} leads ${leaderWins}-${trailerWins}. ${trailer.full_name} has some ground to make up!`,
-      color: "text-slate-500",
+      color: "text-muted-foreground",
     };
   }, [p1, p2, p1Wins, p2Wins]);
 
@@ -191,10 +191,10 @@ export function H2HSection() {
 
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="text-center">
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white flex items-center justify-center gap-2">
+          <h1 className="text-3xl font-black tracking-tight text-foreground dark:text-foreground flex items-center justify-center gap-2">
             <Swords className="w-8 h-8 text-primary" /> Head-to-Head
           </h1>
-          <p className="text-slate-500 font-medium mt-2">
+          <p className="text-muted-foreground font-medium mt-2">
             Compare player records
           </p>
         </div>
@@ -219,7 +219,7 @@ export function H2HSection() {
                   </option>
                 ))}
               </select>
-              <div className="text-sm font-black text-slate-400">
+              <div className="text-sm font-black text-muted-foreground">
                 ELO: <span className="text-primary">{p1?.elo_rating}</span>
               </div>
             </div>
@@ -227,17 +227,17 @@ export function H2HSection() {
             <div className="flex flex-col items-center w-full">
               <div className="text-4xl font-black text-slate-800 dark:text-slate-100 mb-2">
                 {p1Wins}{" "}
-                <span className="text-slate-300 dark:text-slate-700">-</span>{" "}
+                <span className="text-slate-300 dark:text-muted-foreground">-</span>{" "}
                 {p2Wins}
               </div>
-              <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">
+              <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
                 {h2hMatches.length} Matches Played
               </div>
 
               {/* Link to Deep Analytics */}
               {p1Id && p2Id && (
                 <Link href={`/compare/${p1Id}/${p2Id}`}>
-                  <button className="flex items-center gap-2 px-4 py-2 bg-slate-900 dark:bg-primary text-white rounded-full text-xs font-black uppercase tracking-wider mb-4 hover:scale-105 transition-transform shadow-md">
+                  <button className="flex items-center gap-2 px-4 py-2 bg-slate-900 dark:bg-primary text-foreground rounded-full text-xs font-black uppercase tracking-wider mb-4 hover:scale-105 transition-transform shadow-md">
                     <BarChart3 className="w-4 h-4" /> View Deep Analytics
                   </button>
                 </Link>
@@ -277,7 +277,7 @@ export function H2HSection() {
 
               {/* Win Probability Predictor */}
               <div className="w-full bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/50">
-                <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 text-center mb-2 flex items-center justify-center gap-1.5">
+                <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center mb-2 flex items-center justify-center gap-1.5">
                   <Activity className="w-3.5 h-3.5 text-blue-500" /> Win
                   Probability
                 </div>
@@ -320,7 +320,7 @@ export function H2HSection() {
                   </option>
                 ))}
               </select>
-              <div className="text-sm font-black text-slate-400">
+              <div className="text-sm font-black text-muted-foreground">
                 ELO: <span className="text-primary">{p2?.elo_rating}</span>
               </div>
             </div>
@@ -330,19 +330,19 @@ export function H2HSection() {
         {(h2hMatches.length > 0 || h2hTournamentMatches.length > 0) && (
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 space-y-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-black uppercase tracking-widest text-slate-500">
+              <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">
                 Match History
               </h3>
               <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
                 <button
                   onClick={() => setMatchTab("club")}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${matchTab === "club" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${matchTab === "club" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-foreground shadow-sm" : "text-muted-foreground hover:text-muted-foreground"}`}
                 >
                   Club {h2hMatches.length > 0 && <span className="ml-1 opacity-60">({h2hMatches.length})</span>}
                 </button>
                 <button
                   onClick={() => setMatchTab("tournament")}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${matchTab === "tournament" ? "bg-amber-500 text-white shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${matchTab === "tournament" ? "bg-amber-500 text-foreground shadow-sm" : "text-muted-foreground hover:text-muted-foreground"}`}
                 >
                   <Swords className="w-3 h-3" /> Tournament {h2hTournamentMatches.length > 0 && <span className="ml-0.5 opacity-80">({h2hTournamentMatches.length})</span>}
                 </button>
@@ -350,7 +350,7 @@ export function H2HSection() {
             </div>
 
             {matchTab === "tournament" && h2hTournamentMatches.length === 0 && (
-              <p className="text-center text-slate-400 text-sm py-6">No tournament matches between these players yet.</p>
+              <p className="text-center text-muted-foreground text-sm py-6">No tournament matches between these players yet.</p>
             )}
 
             {matchTab === "tournament" && h2hTournamentMatches.map((m, i) => {
@@ -367,14 +367,14 @@ export function H2HSection() {
                         {m.round_name}
                       </span>
                     </div>
-                    <span className="text-[10px] text-slate-400">{m.match_code}</span>
+                    <span className="text-[10px] text-muted-foreground">{m.match_code}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className={`text-sm font-bold ${p1Won ? "text-primary dark:text-primary" : "text-slate-500"}`}>
+                    <span className={`text-sm font-bold ${p1Won ? "text-primary dark:text-primary" : "text-muted-foreground"}`}>
                       {p1?.full_name} {p1Won && <Trophy className="inline w-3.5 h-3.5 text-amber-500 ml-1" />}
                     </span>
-                    <span className="text-xs font-mono font-bold text-slate-500">{m.score}</span>
-                    <span className={`text-sm font-bold ${!p1Won ? "text-primary dark:text-primary" : "text-slate-500"}`}>
+                    <span className="text-xs font-mono font-bold text-muted-foreground">{m.score}</span>
+                    <span className={`text-sm font-bold ${!p1Won ? "text-primary dark:text-primary" : "text-muted-foreground"}`}>
                       {!p1Won && <Trophy className="inline w-3.5 h-3.5 text-amber-500 mr-1" />}{p2?.full_name}
                     </span>
                   </div>
@@ -459,7 +459,7 @@ export function H2HSection() {
               <Swords className="w-3.5 h-3.5" /> Tournament H2H
             </span>
             <div className="text-lg font-black text-slate-800 dark:text-slate-100">
-              {t1TournamentWins} <span className="text-slate-300 dark:text-slate-600">-</span> {t2TournamentWins}
+              {t1TournamentWins} <span className="text-slate-300 dark:text-muted-foreground">-</span> {t2TournamentWins}
             </div>
             <span className="text-[10px] text-amber-500 font-bold uppercase tracking-wider">{h2hTournamentMatches.length} bracket matches</span>
           </div>
@@ -468,7 +468,7 @@ export function H2HSection() {
         {/* Top Rivalries */}
         {topRivalries.length > 0 && (
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 space-y-4 mt-8">
-            <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
+            <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground mb-4 flex items-center gap-2">
               <Activity className="w-4 h-4 text-rose-500" /> Club-Wide Top
               Rivalries
             </h3>
@@ -504,10 +504,10 @@ export function H2HSection() {
 
                     <div className="flex flex-col items-center px-4">
                       <div className="text-lg font-black text-slate-800 dark:text-slate-200">
-                        {p1Wins} <span className="text-slate-400">-</span>{" "}
+                        {p1Wins} <span className="text-muted-foreground">-</span>{" "}
                         {p2Wins}
                       </div>
-                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
+                      <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">
                         {r.count} matches
                       </span>
                     </div>

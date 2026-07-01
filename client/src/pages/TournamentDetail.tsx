@@ -38,7 +38,7 @@ const PODIUM_CONFIGS = [
     label: "🥈 Runner-up",
     border: "border-slate-300",
     bg: "bg-slate-50 dark:bg-slate-800",
-    text: "text-slate-600 dark:text-slate-300",
+    text: "text-muted-foreground dark:text-slate-300",
     ring: "ring-slate-400",
   },
   {
@@ -115,16 +115,16 @@ export default function TournamentDetail() {
             ?
           </div>
           <h1
-            className="text-3xl font-black text-blue-900 dark:text-white"
+            className="text-3xl font-black text-blue-900 dark:text-foreground"
             style={{ fontFamily: "Playfair Display, serif" }}
           >
             Tournament Not Found
           </h1>
-          <p className="text-gray-500 dark:text-slate-400">
+          <p className="text-muted-foreground dark:text-muted-foreground">
             This tournament page doesn't exist or hasn't been archived yet.
           </p>
           <Link href="/events">
-            <button className="inline-flex items-center gap-2 bg-primary hover:bg-primary text-white font-bold px-6 py-3 rounded-xl transition-all hover:-translate-y-0.5">
+            <button className="inline-flex items-center gap-2 bg-primary hover:bg-primary text-foreground font-bold px-6 py-3 rounded-xl transition-all hover:-translate-y-0.5">
               <ArrowLeft className="w-4 h-4" />
               Back to Events
             </button>
@@ -150,7 +150,7 @@ export default function TournamentDetail() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-primary/90 text-white py-24 relative overflow-hidden">
+      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-primary/90 text-foreground py-24 relative overflow-hidden">
         <div className="absolute inset-0 hero-pattern" />
         <div className="container mx-auto px-4 text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-400/20 border border-amber-400/30 text-amber-300 text-sm font-bold mb-5">
@@ -210,12 +210,12 @@ export default function TournamentDetail() {
                     >
                       {typeLabel}
                     </span>
-                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-muted-foreground dark:bg-slate-700 dark:text-slate-300">
                       ✓ Completed
                     </span>
                   </div>
                   <div className="flex items-center gap-2 mb-3">
-                    <h2 className="text-2xl font-black text-blue-900 dark:text-white">
+                    <h2 className="text-2xl font-black text-blue-900 dark:text-foreground">
                       Results Archive
                     </h2>
                     <InfoModal
@@ -225,7 +225,7 @@ export default function TournamentDetail() {
                       ]}
                     />
                   </div>
-                  <p className="text-gray-600 dark:text-slate-400 leading-relaxed">
+                  <p className="text-muted-foreground dark:text-muted-foreground leading-relaxed">
                     {tournament.description}
                   </p>
                 </div>
@@ -254,7 +254,7 @@ export default function TournamentDetail() {
                         {group !== "Overall" && (
                           <div className="flex items-center gap-3">
                             <div className="w-1.5 h-6 bg-gradient-to-b from-amber-400 to-orange-500 rounded-full" />
-                            <h3 className="text-lg font-black text-blue-900 dark:text-white">
+                            <h3 className="text-lg font-black text-blue-900 dark:text-foreground">
                               {group}
                             </h3>
                           </div>
@@ -269,16 +269,16 @@ export default function TournamentDetail() {
                                 <Medal className="w-3.5 h-3.5" />
                                 {result.category}
                               </div>
-                              <p className="font-bold text-blue-950 dark:text-white flex items-center gap-2">
+                              <p className="font-bold text-blue-950 dark:text-foreground flex items-center gap-2">
                                 🥇 {result.winner}
                               </p>
                               {result.runnerUp && (
-                                <p className="mt-1.5 text-sm font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-2">
+                                <p className="mt-1.5 text-sm font-semibold text-muted-foreground dark:text-muted-foreground flex items-center gap-2">
                                   🥈 {result.runnerUp}
                                 </p>
                               )}
                               {result.bronze && (
-                                <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-500 flex items-center gap-2">
+                                <p className="mt-1 text-sm font-semibold text-muted-foreground dark:text-muted-foreground flex items-center gap-2">
                                   🥉 {result.bronze.join(" / ")}
                                 </p>
                               )}
@@ -295,7 +295,7 @@ export default function TournamentDetail() {
                   <div>
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-1.5 h-6 bg-gradient-to-b from-amber-400 to-orange-500 rounded-full" />
-                      <h3 className="text-lg font-black text-blue-900 dark:text-white">
+                      <h3 className="text-lg font-black text-blue-900 dark:text-foreground">
                         Final Standings
                       </h3>
                     </div>
@@ -312,7 +312,7 @@ export default function TournamentDetail() {
                             >
                               {cfg.label}
                             </p>
-                            <p className="mt-2 text-lg font-bold text-blue-950 dark:text-white">
+                            <p className="mt-2 text-lg font-bold text-blue-950 dark:text-foreground">
                               {team}
                             </p>
                           </div>
@@ -328,7 +328,7 @@ export default function TournamentDetail() {
               <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-1.5 h-6 bg-gradient-to-b from-slate-400 to-slate-600 rounded-full" />
-                  <h2 className="text-2xl font-black text-blue-900 dark:text-white">
+                  <h2 className="text-2xl font-black text-blue-900 dark:text-foreground">
                     Past Brackets & Results
                   </h2>
                 </div>
@@ -349,7 +349,7 @@ export default function TournamentDetail() {
             <Card className="rounded-3xl shadow-md border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
               <div className="h-1 bg-gradient-to-r from-primary to-teal-600" />
               <CardContent className="p-7">
-                <h2 className="text-lg font-black text-blue-900 dark:text-white mb-5">
+                <h2 className="text-lg font-black text-blue-900 dark:text-foreground mb-5">
                   Event Highlights
                 </h2>
                 {tournament.highlights && tournament.highlights.length > 0 ? (
@@ -357,14 +357,14 @@ export default function TournamentDetail() {
                     {tournament.highlights.map((item, i) => (
                       <div key={i} className="flex gap-3 items-start">
                         <CheckCircle className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                        <p className="text-sm text-gray-600 dark:text-slate-400 leading-relaxed">
+                        <p className="text-sm text-muted-foreground dark:text-muted-foreground leading-relaxed">
                           {item}
                         </p>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-500 dark:text-slate-500 leading-relaxed">
+                  <p className="text-sm text-muted-foreground dark:text-muted-foreground leading-relaxed">
                     Official category results are archived for club records and
                     future reference.
                   </p>
@@ -376,28 +376,28 @@ export default function TournamentDetail() {
             <Card className="rounded-3xl shadow-md border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
               <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-600" />
               <CardContent className="p-7 space-y-4">
-                <h2 className="text-lg font-black text-blue-900 dark:text-white mb-2">
+                <h2 className="text-lg font-black text-blue-900 dark:text-foreground mb-2">
                   Tournament Info
                 </h2>
                 <div className="space-y-3 text-sm">
                   <div className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-700">
-                    <span className="text-gray-500 dark:text-slate-400 font-medium">
+                    <span className="text-muted-foreground dark:text-muted-foreground font-medium">
                       Year
                     </span>
-                    <span className="font-bold text-blue-900 dark:text-white">
+                    <span className="font-bold text-blue-900 dark:text-foreground">
                       {tournament.startDate}
                     </span>
                   </div>
                   <div className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-700">
-                    <span className="text-gray-500 dark:text-slate-400 font-medium">
+                    <span className="text-muted-foreground dark:text-muted-foreground font-medium">
                       Format
                     </span>
-                    <span className="font-bold text-blue-900 dark:text-white">
+                    <span className="font-bold text-blue-900 dark:text-foreground">
                       {typeLabel}
                     </span>
                   </div>
                   <div className="flex items-center justify-between py-2">
-                    <span className="text-gray-500 dark:text-slate-400 font-medium">
+                    <span className="text-muted-foreground dark:text-muted-foreground font-medium">
                       Status
                     </span>
                     <span className="flex items-center gap-1.5 font-bold text-primary dark:text-primary">
@@ -412,19 +412,19 @@ export default function TournamentDetail() {
                   {tournament.winners && (
                     <>
                       <div className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-700">
-                        <span className="text-gray-500 dark:text-slate-400 font-medium">
+                        <span className="text-muted-foreground dark:text-muted-foreground font-medium">
                           Categories
                         </span>
-                        <span className="font-bold text-blue-900 dark:text-white flex items-center gap-1.5">
+                        <span className="font-bold text-blue-900 dark:text-foreground flex items-center gap-1.5">
                           <Trophy className="w-3.5 h-3.5 text-amber-500" />
                           {tournament.winners.length}
                         </span>
                       </div>
                       <div className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-700">
-                        <span className="text-gray-500 dark:text-slate-400 font-medium">
+                        <span className="text-muted-foreground dark:text-muted-foreground font-medium">
                           Medalists
                         </span>
-                        <span className="font-bold text-blue-900 dark:text-white flex items-center gap-1.5">
+                        <span className="font-bold text-blue-900 dark:text-foreground flex items-center gap-1.5">
                           <Users className="w-3.5 h-3.5 text-primary" />
                           {tournament.winners.reduce(
                             (sum, w) =>
@@ -440,10 +440,10 @@ export default function TournamentDetail() {
                   )}
                   {tournament.podium && (
                     <div className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-700">
-                      <span className="text-gray-500 dark:text-slate-400 font-medium">
+                      <span className="text-muted-foreground dark:text-muted-foreground font-medium">
                         Teams Placed
                       </span>
-                      <span className="font-bold text-blue-900 dark:text-white flex items-center gap-1.5">
+                      <span className="font-bold text-blue-900 dark:text-foreground flex items-center gap-1.5">
                         <Users className="w-3.5 h-3.5 text-primary" />
                         {tournament.podium.length}
                       </span>
@@ -463,7 +463,7 @@ export default function TournamentDetail() {
                     </Link>
                   )}
                   <Link href="/hall-of-fame">
-                    <button className="w-full flex items-center justify-center gap-2 bg-blue-900 hover:bg-blue-800 dark:bg-blue-800 dark:hover:bg-blue-700 text-white font-bold px-4 py-3 rounded-xl text-sm transition-all hover:-translate-y-0.5">
+                    <button className="w-full flex items-center justify-center gap-2 bg-blue-900 hover:bg-blue-800 dark:bg-blue-800 dark:hover:bg-blue-700 text-foreground font-bold px-4 py-3 rounded-xl text-sm transition-all hover:-translate-y-0.5">
                       <Trophy className="w-4 h-4" />
                       Club Hall of Fame
                     </button>

@@ -188,11 +188,11 @@ export function LiveScoreWidget({ onClose }: Props) {
       <div className="px-5 py-4 border-b border-slate-700 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Circle className="w-2.5 h-2.5 fill-red-500 text-red-500 animate-pulse" />
-          <span className="font-black text-white text-sm">LIVE</span>
-          <span className="text-slate-400 text-xs">— {liveMatches.length} match{liveMatches.length > 1 ? "es" : ""}</span>
+          <span className="font-black text-foreground text-sm">LIVE</span>
+          <span className="text-muted-foreground text-xs">— {liveMatches.length} match{liveMatches.length > 1 ? "es" : ""}</span>
         </div>
         {onClose && (
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-700 transition text-slate-400">
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-700 transition text-muted-foreground">
             <X className="w-4 h-4" />
           </button>
         )}
@@ -213,7 +213,7 @@ export function LiveScoreWidget({ onClose }: Props) {
               <div className="flex items-center justify-between">
                 {/* Team 1 */}
                 <div className="flex-1 text-center">
-                  <p className="text-sm font-black text-white truncate">{team1Label}</p>
+                  <p className="text-sm font-black text-foreground truncate">{team1Label}</p>
                   <p className="text-3xl font-black text-primary mt-1">{m.score_p1}</p>
                   {isScorer && scoring === m.id && (
                     <div className="flex gap-2 justify-center mt-1">
@@ -222,7 +222,7 @@ export function LiveScoreWidget({ onClose }: Props) {
                         <Plus className="w-3.5 h-3.5" />
                       </button>
                       <button onClick={() => updateScore(m.id, "p1", -1)}
-                        className="p-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-400 transition">
+                        className="p-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-muted-foreground transition">
                         <Minus className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -232,14 +232,14 @@ export function LiveScoreWidget({ onClose }: Props) {
 
                 {/* Middle */}
                 <div className="px-4 text-center">
-                  <p className="text-xs text-slate-400 font-black uppercase tracking-widest">Set {m.set_number}</p>
-                  <p className="text-slate-500 text-lg my-0.5">vs</p>
+                  <p className="text-xs text-muted-foreground font-black uppercase tracking-widest">Set {m.set_number}</p>
+                  <p className="text-muted-foreground text-lg my-0.5">vs</p>
                   <Zap className="w-4 h-4 text-amber-400 mx-auto animate-pulse" />
                 </div>
 
                 {/* Team 2 */}
                 <div className="flex-1 text-center">
-                  <p className="text-sm font-black text-white truncate">{team2Label}</p>
+                  <p className="text-sm font-black text-foreground truncate">{team2Label}</p>
                   <p className="text-3xl font-black text-slate-300 mt-1">{m.score_p2}</p>
                   {isScorer && scoring === m.id && (
                     <div className="flex gap-2 justify-center mt-1">
@@ -248,12 +248,12 @@ export function LiveScoreWidget({ onClose }: Props) {
                         <Plus className="w-3.5 h-3.5" />
                       </button>
                       <button onClick={() => updateScore(m.id, "p2", -1)}
-                        className="p-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-400 transition">
+                        className="p-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-muted-foreground transition">
                         <Minus className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   )}
-                  <p className="text-xs text-slate-500 font-black mt-0.5">{m.sets_p2} sets</p>
+                  <p className="text-xs text-muted-foreground font-black mt-0.5">{m.sets_p2} sets</p>
                 </div>
               </div>
               {isScorer && scoring !== m.id && (
@@ -280,41 +280,41 @@ export function LiveScoreWidget({ onClose }: Props) {
                 <Trophy className="w-6 h-6 text-amber-500" />
               </div>
               <div>
-                <h3 className="font-black text-slate-900 dark:text-white text-lg">Submit for ELO?</h3>
-                <p className="text-xs text-slate-400">This will log it as a friendly match</p>
+                <h3 className="font-black text-foreground dark:text-foreground text-lg">Submit for ELO?</h3>
+                <p className="text-xs text-muted-foreground">This will log it as a friendly match</p>
               </div>
             </div>
 
             <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl px-4 py-3 space-y-1 text-sm">
               <div className="flex justify-between">
-                <span className="text-slate-500">Winner</span>
-                <span className="font-black text-slate-800 dark:text-white">
+                <span className="text-muted-foreground">Winner</span>
+                <span className="font-black text-slate-800 dark:text-foreground">
                   {eloPrompt.winnerId === eloPrompt.match.player1_id
                     ? (eloPrompt.match.player1 as any)?.full_name ?? "Player 1"
                     : (eloPrompt.match.player2 as any)?.full_name ?? "Player 2"}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Score</span>
-                <span className="font-bold text-slate-700 dark:text-slate-300">{eloPrompt.scoreStr}</span>
+                <span className="text-muted-foreground">Score</span>
+                <span className="font-bold text-muted-foreground dark:text-slate-300">{eloPrompt.scoreStr}</span>
               </div>
             </div>
 
-            <p className="text-xs text-slate-400 text-center">
+            <p className="text-xs text-muted-foreground text-center">
               The opponent will need to confirm the match before ELO updates.
             </p>
 
             <div className="flex gap-3">
               <button
                 onClick={() => setEloPrompt(null)}
-                className="flex-1 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                className="flex-1 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition"
               >
                 No thanks
               </button>
               <button
                 onClick={submitForElo}
                 disabled={submittingElo}
-                className="flex-1 py-3 rounded-2xl bg-primary hover:bg-primary disabled:opacity-60 text-white font-black text-sm transition flex items-center justify-center gap-2"
+                className="flex-1 py-3 rounded-2xl bg-primary hover:bg-primary disabled:opacity-60 text-foreground font-black text-sm transition flex items-center justify-center gap-2"
               >
                 {submittingElo ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trophy className="w-4 h-4" />}
                 {submittingElo ? "Submitting…" : "Yes, submit!"}
@@ -388,13 +388,13 @@ export function StartLiveScoringButton() {
 
   const otherIds = [player1Id, partner1Id, player2Id, partner2Id].filter(Boolean);
 
-  const selectCls = "w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary";
+  const selectCls = "w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-foreground dark:text-foreground px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary";
 
   return (
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-black transition-all shadow-md"
+        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-foreground text-sm font-black transition-all shadow-md"
       >
         <Circle className="w-2.5 h-2.5 fill-white animate-pulse" />
         Score Live Match
@@ -404,9 +404,9 @@ export function StartLiveScoringButton() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => { setOpen(false); reset(); }}>
           <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-6 max-w-sm w-full space-y-5" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
-              <h3 className="font-black text-lg text-slate-900 dark:text-white">Start Live Scoring</h3>
+              <h3 className="font-black text-lg text-foreground dark:text-foreground">Start Live Scoring</h3>
               <button onClick={() => { setOpen(false); reset(); }} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-                <X className="w-4 h-4 text-slate-500" />
+                <X className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
 
@@ -414,13 +414,13 @@ export function StartLiveScoringButton() {
             <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
               <button
                 onClick={() => setIsDoubles(false)}
-                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${!isDoubles ? "bg-white dark:bg-slate-700 shadow text-slate-900 dark:text-white" : "text-slate-500"}`}
+                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${!isDoubles ? "bg-white dark:bg-slate-700 shadow text-foreground dark:text-foreground" : "text-muted-foreground"}`}
               >
                 Singles
               </button>
               <button
                 onClick={() => setIsDoubles(true)}
-                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 ${isDoubles ? "bg-white dark:bg-slate-700 shadow text-slate-900 dark:text-white" : "text-slate-500"}`}
+                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 ${isDoubles ? "bg-white dark:bg-slate-700 shadow text-foreground dark:text-foreground" : "text-muted-foreground"}`}
               >
                 <Users className="w-3.5 h-3.5" /> Doubles
               </button>
@@ -429,7 +429,7 @@ export function StartLiveScoringButton() {
             <div className="space-y-4">
               {/* Team 1 */}
               <div>
-                <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">
+                <p className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-2">
                   {isDoubles ? "Team 1" : "Player 1"}
                 </p>
                 <div className="space-y-2">
@@ -450,11 +450,11 @@ export function StartLiveScoringButton() {
                 </div>
               </div>
 
-              <div className="text-center text-slate-400 font-black text-sm">VS</div>
+              <div className="text-center text-muted-foreground font-black text-sm">VS</div>
 
               {/* Team 2 */}
               <div>
-                <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">
+                <p className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-2">
                   {isDoubles ? "Team 2" : "Player 2"}
                 </p>
                 <div className="space-y-2">
@@ -479,7 +479,7 @@ export function StartLiveScoringButton() {
             <button
               onClick={start}
               disabled={loading || !canStart}
-              className="w-full py-3 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-black transition"
+              className="w-full py-3 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-foreground font-black transition"
             >
               {loading ? "Starting..." : "Start Match"}
             </button>

@@ -347,7 +347,7 @@ export function PlayersManager() {
           {
             label: "Pending",
             value: pending,
-            color: `${pending > 0 ? "bg-rose-50 text-rose-700" : "bg-slate-50 text-slate-500"}`,
+            color: `${pending > 0 ? "bg-rose-50 text-rose-700" : "bg-slate-50 text-muted-foreground"}`,
           },
         ].map((s) => (
           <div
@@ -365,7 +365,7 @@ export function PlayersManager() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -384,7 +384,7 @@ export function PlayersManager() {
           </button>
           <button 
              onClick={exportCsv}
-             className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 disabled:opacity-50 transition mr-2"
+             className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-muted-foreground dark:text-slate-300 font-bold text-xs hover:bg-slate-50 disabled:opacity-50 transition mr-2"
           >
              Download CSV
           </button>
@@ -393,7 +393,7 @@ export function PlayersManager() {
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-3 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${filter === f ? "bg-primary text-white" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-primary/50"}`}
+                className={`px-3 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${filter === f ? "bg-primary text-foreground" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-300 hover:border-primary/50"}`}
               >
                 {f === "profile"
                   ? "Profile Created"
@@ -407,7 +407,7 @@ export function PlayersManager() {
             onClick={load}
             className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
           >
-            <RefreshCw className="w-4 h-4 text-slate-500" />
+            <RefreshCw className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
       </div>
@@ -415,7 +415,7 @@ export function PlayersManager() {
       {/* Player list */}
       <div className="space-y-2">
         {filtered.length === 0 && (
-          <div className="text-center py-10 text-slate-400 dark:text-slate-500 text-sm font-medium">
+          <div className="text-center py-10 text-muted-foreground dark:text-muted-foreground text-sm font-medium">
             No players found.
           </div>
         )}
@@ -429,10 +429,10 @@ export function PlayersManager() {
                 className={`${cardCls} flex flex-col sm:flex-row gap-3 items-start sm:items-center`}
               >
                 <div className="flex-1 min-w-0">
-                  <div className="font-bold text-slate-900 dark:text-white">
+                  <div className="font-bold text-foreground dark:text-foreground">
                     {u.email}
                   </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  <div className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5">
                     Account Created:{" "}
                     {new Date(u.created_at).toLocaleDateString()}
                   </div>
@@ -484,7 +484,7 @@ export function PlayersManager() {
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-bold text-slate-900 dark:text-white">
+                  <span className="font-bold text-foreground dark:text-foreground">
                     {p.full_name}
                   </span>
                   <span
@@ -503,7 +503,7 @@ export function PlayersManager() {
                     </span>
                   )}
                 </div>
-                <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 space-x-2">
+                <div className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5 space-x-2">
                   {p.email && <span>{p.email}</span>}
                   {p.department && <span>· {p.department}</span>}
                   {p.sr_number && <span>· SR# {p.sr_number}</span>}
@@ -516,7 +516,7 @@ export function PlayersManager() {
                     value={p.role || "player"}
                     onChange={(e) => handleRoleChange(p.id, p.full_name, e.target.value)}
                     disabled={busy}
-                    className="px-2 py-2 rounded-xl text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 outline-none focus:ring-2 focus:ring-primary transition disabled:opacity-50"
+                    className="px-2 py-2 rounded-xl text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-300 outline-none focus:ring-2 focus:ring-primary transition disabled:opacity-50"
                   >
                     <option value="player">Regular</option>
                     <option value="umpire">Umpire</option>
@@ -528,7 +528,7 @@ export function PlayersManager() {
                   <button
                     onClick={() => approve(p.id)}
                     disabled={busy}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary hover:bg-primary text-white text-xs font-bold transition disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary hover:bg-primary text-foreground text-xs font-bold transition disabled:opacity-50"
                   >
                     {busy ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -541,7 +541,7 @@ export function PlayersManager() {
                   <button
                     onClick={() => revoke(p.id)}
                     disabled={busy}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-950/20 text-slate-600 dark:text-slate-300 hover:text-amber-700 text-xs font-bold transition disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-950/20 text-muted-foreground dark:text-slate-300 hover:text-amber-700 text-xs font-bold transition disabled:opacity-50"
                   >
                     {busy ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -555,7 +555,7 @@ export function PlayersManager() {
                   onClick={() => retirePlayer(p.id, p.full_name, !!p.is_retired)}
                   disabled={busy}
                   title={p.is_retired ? "Unretire player" : "Retire player"}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition disabled:opacity-50 ${p.is_retired ? "bg-amber-100 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 hover:bg-amber-200" : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700"}`}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition disabled:opacity-50 ${p.is_retired ? "bg-amber-100 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 hover:bg-amber-200" : "bg-slate-100 dark:bg-slate-800 text-muted-foreground hover:bg-slate-200 dark:hover:bg-slate-700"}`}
                 >
                   <Sunset className="w-3.5 h-3.5" />
                   {p.is_retired ? "Unretire" : "Retire"}

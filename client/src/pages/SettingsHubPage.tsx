@@ -66,8 +66,8 @@ export default function SettingsHubPage() {
   return (
     <div className="container mx-auto px-4 py-6 max-w-2xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Settings</h1>
-        <p className="text-slate-600 dark:text-slate-400 mt-2">
+        <h1 className="text-3xl font-bold text-foreground dark:text-foreground">Settings</h1>
+        <p className="text-muted-foreground dark:text-muted-foreground mt-2">
           Manage your account and preferences
         </p>
       </div>
@@ -82,10 +82,10 @@ export default function SettingsHubPage() {
                 <Icon className="w-6 h-6 text-primary dark:text-primary" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-slate-900 dark:text-white">
+                <h3 className="font-semibold text-foreground dark:text-foreground">
                   {item.label}
                 </h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-1">
                   {item.description}
                 </p>
               </div>
@@ -112,7 +112,7 @@ export default function SettingsHubPage() {
       <div className="border-t border-slate-200 dark:border-slate-800 pt-6">
         <Button
           onClick={() => setSignOutDialog(true)}
-          className="w-full flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold py-3 rounded-xl transition-colors"
+          className="w-full flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-700 text-foreground font-semibold py-3 rounded-xl transition-colors"
         >
           <LogOut className="w-5 h-5" />
           Sign Out

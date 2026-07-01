@@ -316,13 +316,13 @@ export default function FindLost() {
     load();
   };
 
-  const inputCls = "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-primary transition";
-  const labelCls = "block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5";
+  const inputCls = "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary transition";
+  const labelCls = "block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-1.5";
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-safe pb-24 lg:pb-8">
       {/* Hero */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white py-12 relative overflow-hidden">
+      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-foreground py-12 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(99,102,241,0.15),transparent)] pointer-events-none" />
         <div className="container mx-auto px-4 max-w-3xl relative z-10 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-black uppercase tracking-widest mb-4">
@@ -333,7 +333,7 @@ export default function FindLost() {
                 { badge: "NOTIFY", title: "Real-time Alerts", desc: "Whenever you post an item, all users will see it in the global feed." },
                 { badge: "CLAIM", title: "Claiming an item", desc: "Click 'Claim' on an item to securely ping the poster that you have their item or want to collect it." }
               ]}
-              triggerClassName="text-white hover:text-indigo-200"
+              triggerClassName="text-foreground hover:text-indigo-200"
             />
           </div>
           <h1 className="text-3xl sm:text-4xl font-black mb-3">Lost something on court?</h1>
@@ -341,7 +341,7 @@ export default function FindLost() {
           {session && (
             <button
               onClick={openNewPost}
-              className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-lg shadow-indigo-900/40 transition"
+              className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-foreground font-bold shadow-lg shadow-indigo-900/40 transition"
             >
               <Plus className="w-4 h-4" /> Post Item
             </button>
@@ -360,10 +360,10 @@ export default function FindLost() {
               className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-black text-slate-800 dark:text-white">
+                <h3 className="font-black text-slate-800 dark:text-foreground">
                   {editingId ? "Edit Post" : "New Post"}
                 </h3>
-                <button onClick={() => { setShowForm(false); setEditingId(null); }} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
+                <button onClick={() => { setShowForm(false); setEditingId(null); }} className="text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-200 transition">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -374,7 +374,7 @@ export default function FindLost() {
                   <button
                     key={t}
                     onClick={() => setForm((f) => ({ ...f, type: t }))}
-                    className={`flex-1 py-2 rounded-xl text-sm font-black uppercase tracking-wider transition ${form.type === t ? (t === "lost" ? "bg-rose-600 text-white" : "bg-primary text-white") : "bg-slate-100 dark:bg-slate-800 text-slate-500"}`}
+                    className={`flex-1 py-2 rounded-xl text-sm font-black uppercase tracking-wider transition ${form.type === t ? (t === "lost" ? "bg-rose-600 text-foreground" : "bg-primary text-foreground") : "bg-slate-100 dark:bg-slate-800 text-muted-foreground"}`}
                   >
                     {t === "lost" ? "I Lost Something" : "I Found Something"}
                   </button>
@@ -417,7 +417,7 @@ export default function FindLost() {
                         <button
                           type="button"
                           onClick={() => removeImage(url)}
-                          className="absolute -top-2 -right-2 bg-rose-500 hover:bg-rose-600 text-white rounded-full p-0.5 shadow"
+                          className="absolute -top-2 -right-2 bg-rose-500 hover:bg-rose-600 text-foreground rounded-full p-0.5 shadow"
                           aria-label="Remove image"
                         >
                           <X className="w-3.5 h-3.5" />
@@ -425,7 +425,7 @@ export default function FindLost() {
                       </div>
                     ))}
                     {form.images.length < MAX_IMAGES && (
-                      <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-sm rounded-xl transition">
+                      <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-muted-foreground dark:text-slate-300 font-bold text-sm rounded-xl transition">
                         {uploadingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />}
                         {form.images.length > 0 ? "Add More" : "Upload Images"}
                         <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} disabled={uploadingImage} />
@@ -433,7 +433,7 @@ export default function FindLost() {
                     )}
                   </div>
                   {form.images.length > 0 && (
-                    <p className="mt-1.5 text-xs text-slate-400">{form.images.length} / {MAX_IMAGES} images · click a thumbnail to preview</p>
+                    <p className="mt-1.5 text-xs text-muted-foreground">{form.images.length} / {MAX_IMAGES} images · click a thumbnail to preview</p>
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -465,7 +465,7 @@ export default function FindLost() {
                 <Button
                   onClick={submit}
                   disabled={submitting || !form.title.trim()}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-foreground"
                 >
                   {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : (editingId ? <Edit2 className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />)}
                   {submitting ? "Saving…" : (editingId ? "Save Changes" : "Publish Post")}
@@ -481,14 +481,14 @@ export default function FindLost() {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-4 py-1.5 rounded-full text-sm font-bold transition ${filter === f ? "bg-indigo-600 text-white shadow-md" : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-indigo-400"}`}
+              className={`px-4 py-1.5 rounded-full text-sm font-bold transition ${filter === f ? "bg-indigo-600 text-foreground shadow-md" : "bg-white dark:bg-slate-900 text-muted-foreground dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-indigo-400"}`}
             >
               {f === "all" ? "All" : f === "lost" ? "Lost" : "Found"}
             </button>
           ))}
           <button
             onClick={() => setShowResolved((v) => !v)}
-            className={`ml-auto px-3 py-1.5 rounded-full text-xs font-bold transition ${showResolved ? "bg-slate-800 text-white" : "bg-white dark:bg-slate-900 text-slate-500 border border-slate-200 dark:border-slate-700"}`}
+            className={`ml-auto px-3 py-1.5 rounded-full text-xs font-bold transition ${showResolved ? "bg-slate-800 text-foreground" : "bg-white dark:bg-slate-900 text-muted-foreground border border-slate-200 dark:border-slate-700"}`}
           >
             {showResolved ? "Hide Resolved" : "Show Resolved"}
           </button>
@@ -499,9 +499,9 @@ export default function FindLost() {
           <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-indigo-500" /></div>
         ) : posts.length === 0 ? (
           <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800">
-            <PackageSearch className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-            <h3 className="font-black text-slate-700 dark:text-slate-300 mb-1">No posts yet</h3>
-            <p className="text-slate-400 text-sm">Be the first to post a lost or found item.</p>
+            <PackageSearch className="w-12 h-12 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
+            <h3 className="font-black text-muted-foreground dark:text-slate-300 mb-1">No posts yet</h3>
+            <p className="text-muted-foreground text-sm">Be the first to post a lost or found item.</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -528,14 +528,14 @@ export default function FindLost() {
                           {style.label}
                         </span>
                         {post.resolved && (
-                          <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400">
+                          <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-muted-foreground">
                             RESOLVED
                           </span>
                         )}
                       </div>
-                      <h3 className="font-black text-slate-800 dark:text-white text-base mb-1">{post.title}</h3>
+                      <h3 className="font-black text-slate-800 dark:text-foreground text-base mb-1">{post.title}</h3>
                       {post.description && (
-                        <p className="text-sm text-slate-600 dark:text-slate-300 mb-2">{post.description}</p>
+                        <p className="text-sm text-muted-foreground dark:text-slate-300 mb-2">{post.description}</p>
                       )}
                       
                       {images.length > 0 && (
@@ -552,7 +552,7 @@ export default function FindLost() {
                                 alt={`${post.title} ${i + 1}`}
                                 className={`object-cover cursor-zoom-in transition group-hover:opacity-90 ${images.length === 1 ? "w-full max-w-sm max-h-72" : "w-24 h-24"}`}
                               />
-                              <span className="absolute bottom-1 right-1 bg-black/55 text-white rounded-md p-1 opacity-0 group-hover:opacity-100 transition">
+                              <span className="absolute bottom-1 right-1 bg-black/55 text-foreground rounded-md p-1 opacity-0 group-hover:opacity-100 transition">
                                 <ZoomIn className="w-3.5 h-3.5" />
                               </span>
                             </button>
@@ -560,7 +560,7 @@ export default function FindLost() {
                         </div>
                       )}
                       
-                      <div className="flex flex-wrap gap-3 text-xs text-slate-400">
+                      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
                         {post.location && (
                           <span className="flex items-center gap-1">
                             <MapPin className="w-3.5 h-3.5" /> {post.location}
@@ -577,7 +577,7 @@ export default function FindLost() {
                         </span>
                         {post.author && (
                           <span className="flex items-center gap-1">
-                            by <strong className="text-slate-600 dark:text-slate-300">{post.author.full_name}</strong>
+                            by <strong className="text-muted-foreground dark:text-slate-300">{post.author.full_name}</strong>
                           </span>
                         )}
                       </div>
@@ -643,14 +643,14 @@ export default function FindLost() {
                             <button
                               onClick={() => deletePost(post)}
                               title="Confirm delete"
-                              className="flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs font-bold bg-rose-500 text-white hover:bg-rose-600 transition"
+                              className="flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs font-bold bg-rose-500 text-foreground hover:bg-rose-600 transition"
                             >
                               <Trash2 className="w-3.5 h-3.5" /> Confirm
                             </button>
                             <button
                               onClick={() => setPendingDelete(null)}
                               title="Cancel"
-                              className="px-2 py-1.5 rounded-xl text-xs font-bold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition"
+                              className="px-2 py-1.5 rounded-xl text-xs font-bold bg-slate-200 dark:bg-slate-700 text-muted-foreground dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition"
                             >
                               <X className="w-3.5 h-3.5" />
                             </button>
@@ -676,7 +676,7 @@ export default function FindLost() {
         {!session && (
           <div className="text-center py-6 bg-indigo-50 dark:bg-indigo-950/20 rounded-2xl border border-indigo-100 dark:border-indigo-900/40">
             <Bell className="w-8 h-8 text-indigo-400 mx-auto mb-2" />
-            <p className="text-sm font-bold text-slate-700 dark:text-slate-300">Sign in to post items and get notifications</p>
+            <p className="text-sm font-bold text-muted-foreground dark:text-slate-300">Sign in to post items and get notifications</p>
           </div>
         )}
       </div>
@@ -693,7 +693,7 @@ export default function FindLost() {
           >
             {/* Counter */}
             {lightbox.images.length > 1 && (
-              <div className="absolute top-5 left-1/2 -translate-x-1/2 text-white/70 text-sm font-medium select-none">
+              <div className="absolute top-5 left-1/2 -translate-x-1/2 text-foreground/70 text-sm font-medium select-none">
                 {lightbox.index + 1} / {lightbox.images.length}
               </div>
             )}
@@ -703,7 +703,7 @@ export default function FindLost() {
               <button
                 onClick={() => setZoom((z) => Math.max(1, +(z - 0.5).toFixed(2)))}
                 disabled={zoom <= 1}
-                className="text-white hover:text-primary disabled:opacity-30 transition p-2"
+                className="text-foreground hover:text-primary disabled:opacity-30 transition p-2"
                 aria-label="Zoom out"
               >
                 <ZoomOut className="w-7 h-7" />
@@ -711,14 +711,14 @@ export default function FindLost() {
               <button
                 onClick={() => setZoom((z) => Math.min(4, +(z + 0.5).toFixed(2)))}
                 disabled={zoom >= 4}
-                className="text-white hover:text-primary disabled:opacity-30 transition p-2"
+                className="text-foreground hover:text-primary disabled:opacity-30 transition p-2"
                 aria-label="Zoom in"
               >
                 <ZoomIn className="w-7 h-7" />
               </button>
               <button
                 onClick={() => setLightbox(null)}
-                className="text-white hover:text-rose-400 transition p-2"
+                className="text-foreground hover:text-rose-400 transition p-2"
                 aria-label="Close"
               >
                 <X className="w-7 h-7" />
@@ -729,7 +729,7 @@ export default function FindLost() {
             {lightbox.images.length > 1 && (
               <button
                 onClick={(e) => { e.stopPropagation(); setZoom(1); setLightbox((lb) => lb ? { ...lb, index: (lb.index - 1 + lb.images.length) % lb.images.length } : lb); }}
-                className="absolute left-1 md:left-3 top-1/2 -translate-y-1/2 text-white hover:text-primary transition p-2 z-50"
+                className="absolute left-1 md:left-3 top-1/2 -translate-y-1/2 text-foreground hover:text-primary transition p-2 z-50"
                 aria-label="Previous"
               >
                 <ChevronLeft className="w-9 h-9 md:w-10 md:h-10" />
@@ -750,7 +750,7 @@ export default function FindLost() {
             {lightbox.images.length > 1 && (
               <button
                 onClick={(e) => { e.stopPropagation(); setZoom(1); setLightbox((lb) => lb ? { ...lb, index: (lb.index + 1) % lb.images.length } : lb); }}
-                className="absolute right-1 md:right-3 top-1/2 -translate-y-1/2 text-white hover:text-primary transition p-2 z-50"
+                className="absolute right-1 md:right-3 top-1/2 -translate-y-1/2 text-foreground hover:text-primary transition p-2 z-50"
                 aria-label="Next"
               >
                 <ChevronRight className="w-9 h-9 md:w-10 md:h-10" />

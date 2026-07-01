@@ -262,7 +262,7 @@ export default function ScheduleCalendar() {
       <div className="container mx-auto px-4 relative z-20 pt-8">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-2 h-8 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full" />
-          <h2 className="text-3xl font-black text-blue-900 dark:text-white">
+          <h2 className="text-3xl font-black text-blue-900 dark:text-foreground">
             Match Calendar
           </h2>
         </div>
@@ -343,7 +343,7 @@ export default function ScheduleCalendar() {
                                 <CalendarDayButton {...props} />
                               </div>
                             </TooltipTrigger>
-                            <TooltipContent className="z-50 bg-slate-800 text-white border-slate-700">
+                            <TooltipContent className="z-50 bg-slate-800 text-foreground border-slate-700">
                               <div className="space-y-1.5 p-1">
                                 {dayEvents.map((e, i) => (
                                   <div
@@ -474,7 +474,7 @@ export default function ScheduleCalendar() {
                             {e.title}
                           </h4>
                           {e.time ? (
-                            <div className="text-xs text-slate-500 flex items-center gap-1 mt-1">
+                            <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                               <Clock className="w-3 h-3" /> {e.time}
                             </div>
                           ) : isHoliday ? (
@@ -494,7 +494,7 @@ export default function ScheduleCalendar() {
                   })
                 )}
                 {upcomingEvents.length === 0 && !loading && (
-                  <p className="text-sm text-slate-500 italic">
+                  <p className="text-sm text-muted-foreground italic">
                     No upcoming events scheduled.
                   </p>
                 )}
@@ -510,7 +510,7 @@ export default function ScheduleCalendar() {
           >
             <Card className="rounded-3xl shadow-xl border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl min-h-[500px]">
               <div className="p-5 md:p-8 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 rounded-t-3xl">
-                <h2 className="text-2xl font-black text-slate-800 dark:text-white">
+                <h2 className="text-2xl font-black text-slate-800 dark:text-foreground">
                   {selectedDate
                     ? selectedDate.toLocaleDateString("en-US", {
                         weekday: "long",
@@ -520,7 +520,7 @@ export default function ScheduleCalendar() {
                       })
                     : "Select a date"}
                 </h2>
-                <p className="text-slate-500 dark:text-slate-400 mt-1">
+                <p className="text-muted-foreground dark:text-muted-foreground mt-1">
                   {selectedEvents.length} event
                   {selectedEvents.length !== 1 ? "s" : ""} scheduled
                 </p>
@@ -543,7 +543,7 @@ export default function ScheduleCalendar() {
                             className={`absolute left-0 top-0 bottom-0 w-1.5 ${isHoliday ? holidayColor?.solid : "bg-primary"}`}
                           />
                           <div className="flex items-center gap-2 mb-3 flex-wrap">
-                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                            <h3 className="text-xl font-bold text-foreground dark:text-foreground">
                               {event.title}
                             </h3>
                             {isHoliday && (
@@ -570,7 +570,7 @@ export default function ScheduleCalendar() {
                           </div>
 
                           {/* Date range */}
-                          <div className="flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300 mb-3">
+                          <div className="flex items-center gap-1.5 text-sm font-semibold text-muted-foreground dark:text-slate-300 mb-3">
                             <CalendarDays className="w-4 h-4 text-blue-500" />
                             {new Date(event.date).toLocaleDateString("en-US", {
                               month: "short",
@@ -594,13 +594,13 @@ export default function ScheduleCalendar() {
 
                           <div className="flex flex-wrap gap-4 mb-4">
                             {event.time && (
-                              <div className="flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                              <div className="flex items-center gap-1.5 text-sm font-semibold text-muted-foreground dark:text-slate-300">
                                 <Clock className="w-4 h-4 text-primary" />{" "}
                                 {event.time}
                               </div>
                             )}
                             {event.location && (
-                              <div className="flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                              <div className="flex items-center gap-1.5 text-sm font-semibold text-muted-foreground dark:text-slate-300">
                                 <MapPin className="w-4 h-4 text-primary" />{" "}
                                 {event.location}
                               </div>
@@ -641,13 +641,13 @@ export default function ScheduleCalendar() {
 
                 {selectedEvents.length === 0 && (!tournamentData || !dateFilterHasMatches(tournamentData, selectedDateStr)) && (
                   <div className="flex flex-col items-center justify-center h-64 text-center">
-                    <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4 text-slate-300 dark:text-slate-600">
+                    <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4 text-slate-300 dark:text-muted-foreground">
                       <CalendarDays className="w-8 h-8" />
                     </div>
-                    <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300">
+                    <h3 className="text-lg font-bold text-muted-foreground dark:text-slate-300">
                       No Events Scheduled
                     </h3>
-                    <p className="text-slate-500 dark:text-slate-400 mt-1 max-w-sm">
+                    <p className="text-muted-foreground dark:text-muted-foreground mt-1 max-w-sm">
                       There are no matches or practice sessions scheduled for
                       this date. Enjoy the rest!
                     </p>
@@ -659,7 +659,7 @@ export default function ScheduleCalendar() {
             {tournamentData && selectedDateStr && dateFilterHasMatches(tournamentData, selectedDateStr) && (
               <Card className="rounded-3xl shadow-xl border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl mt-6 overflow-hidden">
                 <div className="bg-slate-50 dark:bg-slate-800/50 p-5 md:p-8 border-b border-slate-100 dark:border-slate-800">
-                  <h3 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
+                  <h3 className="text-xl font-black text-slate-800 dark:text-foreground flex items-center gap-2">
                     <Trophy className="w-5 h-5 text-primary" />
                     Tournament Matches
                   </h3>

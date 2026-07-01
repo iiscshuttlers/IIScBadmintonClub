@@ -64,8 +64,8 @@ export default function PersonalCirclePage() {
   return (
     <div className="container mx-auto px-4 py-6 max-w-6xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Circle</h1>
-        <p className="text-slate-600 dark:text-slate-400 mt-2">
+        <h1 className="text-3xl font-bold text-foreground dark:text-foreground">Circle</h1>
+        <p className="text-muted-foreground dark:text-muted-foreground mt-2">
           Manage your badminton connections
         </p>
       </div>
@@ -77,7 +77,7 @@ export default function PersonalCirclePage() {
           className={`flex items-center gap-2 px-4 py-3 font-semibold transition-colors border-b-2 ${
             activeTab === "accepted"
               ? "border-primary text-primary dark:text-primary"
-              : "border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              : "border-transparent text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-foreground"
           }`}
         >
           <UserCheck className="w-4 h-4" />
@@ -88,7 +88,7 @@ export default function PersonalCirclePage() {
           className={`flex items-center gap-2 px-4 py-3 font-semibold transition-colors border-b-2 ${
             activeTab === "sent"
               ? "border-primary text-primary dark:text-primary"
-              : "border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              : "border-transparent text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-foreground"
           }`}
         >
           <Clock className="w-4 h-4" />
@@ -99,7 +99,7 @@ export default function PersonalCirclePage() {
           className={`flex items-center gap-2 px-4 py-3 font-semibold transition-colors border-b-2 ${
             activeTab === "received"
               ? "border-primary text-primary dark:text-primary"
-              : "border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              : "border-transparent text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-foreground"
           }`}
         >
           <Users className="w-4 h-4" />
@@ -110,8 +110,8 @@ export default function PersonalCirclePage() {
       {/* Players Grid */}
       {displayedPlayers.length === 0 ? (
         <div className="text-center py-12">
-          <Users className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-          <p className="text-slate-600 dark:text-slate-400">
+          <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <p className="text-muted-foreground dark:text-muted-foreground">
             {activeTab === "accepted" &&
               "You haven't connected with anyone yet. Browse the Players directory to send connection requests!"}
             {activeTab === "sent" &&

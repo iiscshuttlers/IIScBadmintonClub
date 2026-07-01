@@ -52,7 +52,7 @@ export function UmpireSetupFlow({
   const initials = (name: string) => name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
 
   return (
-    <div className="bg-slate-900 rounded-3xl text-white max-w-lg mx-auto shadow-2xl overflow-hidden">
+    <div className="bg-slate-900 rounded-3xl text-foreground max-w-lg mx-auto shadow-2xl overflow-hidden">
 
       {/* ── Header ── */}
       <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 px-6 pt-6 pb-5">
@@ -62,11 +62,11 @@ export function UmpireSetupFlow({
             <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-0.5">
               {isEditSetupOpen ? "Edit Setup" : "Umpire Station"}
             </p>
-            <h2 className="text-xl font-black text-white">Match Setup</h2>
+            <h2 className="text-xl font-black text-foreground">Match Setup</h2>
           </div>
           <button
             onClick={() => { if (isEditSetupOpen) setIsEditSetupOpen(false); else handleClose(); }}
-            className="p-2 hover:bg-slate-700 rounded-full text-slate-400 transition"
+            className="p-2 hover:bg-slate-700 rounded-full text-muted-foreground transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -83,11 +83,11 @@ export function UmpireSetupFlow({
             <div className="flex gap-2">
               <button
                 onClick={() => setMatch({ ...match, isFriendly: true })}
-                className={`px-4 py-1.5 rounded-full text-xs font-black border transition ${match.isFriendly ? "bg-primary/20 border-primary text-primary" : "bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500"}`}
+                className={`px-4 py-1.5 rounded-full text-xs font-black border transition ${match.isFriendly ? "bg-primary/20 border-primary text-primary" : "bg-slate-800 border-slate-700 text-muted-foreground hover:border-slate-500"}`}
               >Friendly</button>
               <button
                 onClick={() => setMatch({ ...match, isFriendly: false })}
-                className={`px-4 py-1.5 rounded-full text-xs font-black border transition ${!match.isFriendly ? "bg-amber-500/20 border-amber-500 text-amber-400" : "bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500"}`}
+                className={`px-4 py-1.5 rounded-full text-xs font-black border transition ${!match.isFriendly ? "bg-amber-500/20 border-amber-500 text-amber-400" : "bg-slate-800 border-slate-700 text-muted-foreground hover:border-slate-500"}`}
               >Tournament</button>
             </div>
           )}
@@ -99,49 +99,49 @@ export function UmpireSetupFlow({
         {/* ── Match number (tournament only) ── */}
         {!match.isFriendly && (
           <div>
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Match Number</label>
+            <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">Match Number</label>
             <input
               value={match.matchNumber}
               onChange={(e) => setMatch({ ...match, matchNumber: e.target.value })}
               placeholder="e.g. MS-14"
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-primary transition"
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-foreground text-sm outline-none focus:border-primary transition"
             />
           </div>
         )}
 
         {/* ── Format row ── */}
         <div className="bg-slate-800/60 rounded-2xl p-4 space-y-3">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Match Format</p>
+          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Match Format</p>
           <div className="flex gap-2">
             {[1, 3, 5].map(sets => (
               <button key={sets}
                 onClick={() => setMatch({ ...match, bestOfSets: sets })}
-                className={`flex-1 py-2 rounded-xl font-black text-sm border transition ${match.bestOfSets === sets ? "bg-sky-500/20 border-sky-500 text-sky-400" : "bg-slate-700/50 border-slate-700 text-slate-400 hover:border-slate-500"}`}
+                className={`flex-1 py-2 rounded-xl font-black text-sm border transition ${match.bestOfSets === sets ? "bg-sky-500/20 border-sky-500 text-sky-400" : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"}`}
               >BO{sets}</button>
             ))}
             <div className="w-px bg-slate-700 self-stretch mx-1" />
             {[11, 15, 21].map(pts => (
               <button key={pts}
                 onClick={() => setMatch({ ...match, pointsToWin: pts, goldenPoint: pts === 21 ? 30 : pts === 15 ? 21 : 15 })}
-                className={`flex-1 py-2 rounded-xl font-black text-sm border transition ${match.pointsToWin === pts ? "bg-primary/20 border-primary text-primary" : "bg-slate-700/50 border-slate-700 text-slate-400 hover:border-slate-500"}`}
+                className={`flex-1 py-2 rounded-xl font-black text-sm border transition ${match.pointsToWin === pts ? "bg-primary/20 border-primary text-primary" : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"}`}
               >{pts}pts</button>
             ))}
           </div>
           <div className="flex items-center gap-3 pt-1">
-            <span className="text-xs text-slate-500 shrink-0">Golden point cap:</span>
+            <span className="text-xs text-muted-foreground shrink-0">Golden point cap:</span>
             <input
               type="number"
               value={match.goldenPoint}
               onChange={(e) => setMatch({ ...match, goldenPoint: parseInt(e.target.value) || 0 })}
               className="w-16 bg-slate-700 border border-slate-600 rounded-lg px-2 py-1 text-center text-sm font-bold text-amber-400 outline-none focus:border-amber-500 transition"
             />
-            <span className="text-xs text-slate-500">pts</span>
+            <span className="text-xs text-muted-foreground">pts</span>
           </div>
         </div>
 
         {/* ── Players ── */}
         <div>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Players</p>
+          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3">Players</p>
 
           {/* Court layout */}
           <div className="grid grid-cols-[1fr_auto_1fr] gap-2 items-start">
@@ -155,10 +155,10 @@ export function UmpireSetupFlow({
                     <div className="w-7 h-7 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center text-[10px] font-black text-primary shrink-0">
                       {initials(t1p1Name)}
                     </div>
-                    <span className="text-sm font-black text-white truncate">{t1p1Name}</span>
+                    <span className="text-sm font-black text-foreground truncate">{t1p1Name}</span>
                   </>
                 ) : (
-                  <span className="text-xs text-slate-500 italic">Team 1</span>
+                  <span className="text-xs text-muted-foreground italic">Team 1</span>
                 )}
               </div>
               {t1p2Name && (
@@ -166,7 +166,7 @@ export function UmpireSetupFlow({
                   <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-[10px] font-black text-primary shrink-0">
                     {initials(t1p2Name)}
                   </div>
-                  <span className="text-sm font-black text-white truncate">{t1p2Name}</span>
+                  <span className="text-sm font-black text-foreground truncate">{t1p2Name}</span>
                 </div>
               )}
               <div className="space-y-1.5 pt-1 border-t border-slate-700/50">
@@ -190,7 +190,7 @@ export function UmpireSetupFlow({
             {/* VS divider */}
             <div className="flex flex-col items-center justify-center gap-1 pt-3">
               <div className="w-px h-6 bg-slate-700" />
-              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">vs</span>
+              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">vs</span>
               <div className="w-px h-6 bg-slate-700" />
             </div>
 
@@ -202,10 +202,10 @@ export function UmpireSetupFlow({
                     <div className="w-7 h-7 rounded-full bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-[10px] font-black text-sky-400 shrink-0">
                       {initials(t2p1Name)}
                     </div>
-                    <span className="text-sm font-black text-white truncate">{t2p1Name}</span>
+                    <span className="text-sm font-black text-foreground truncate">{t2p1Name}</span>
                   </>
                 ) : (
-                  <span className="text-xs text-slate-500 italic">Team 2</span>
+                  <span className="text-xs text-muted-foreground italic">Team 2</span>
                 )}
               </div>
               {t2p2Name && (
@@ -213,7 +213,7 @@ export function UmpireSetupFlow({
                   <div className="w-7 h-7 rounded-full bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-[10px] font-black text-sky-500 shrink-0">
                     {initials(t2p2Name)}
                   </div>
-                  <span className="text-sm font-black text-white truncate">{t2p2Name}</span>
+                  <span className="text-sm font-black text-foreground truncate">{t2p2Name}</span>
                 </div>
               )}
               <div className="space-y-1.5 pt-1 border-t border-slate-700/50">
@@ -240,7 +240,7 @@ export function UmpireSetupFlow({
         {playersReady && (
           <div className="flex items-center gap-3 bg-slate-800/40 rounded-xl px-4 py-3 border border-slate-700/40">
             <div className="flex-1">
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-0.5">Detected Category</p>
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">Detected Category</p>
               <p className="text-sm font-black text-primary">{match.customCategory || deduceCategory()}</p>
             </div>
             <div className="flex flex-col gap-1.5 items-end">
@@ -250,7 +250,7 @@ export function UmpireSetupFlow({
                   if (e.target.value === "Other") setMatch({ ...match, customCategory: "" });
                   else setMatch({ ...match, customCategory: e.target.value });
                 }}
-                className="w-36 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-white text-xs outline-none focus:border-primary transition"
+                className="w-36 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-foreground text-xs outline-none focus:border-primary transition"
               >
                 <option value="">Override…</option>
                 <option value="MS">MS</option>
@@ -268,7 +268,7 @@ export function UmpireSetupFlow({
                   onChange={(e) => setMatch({ ...match, customCategory: e.target.value })}
                   placeholder="Custom category"
                   autoFocus
-                  className="w-36 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white text-xs outline-none focus:border-primary transition"
+                  className="w-36 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-foreground text-xs outline-none focus:border-primary transition"
                 />
               )}
             </div>
@@ -278,14 +278,14 @@ export function UmpireSetupFlow({
         {/* ── First Serve (only once players are set) ── */}
         {playersReady && (
           <div className="space-y-2">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">First Serve</p>
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">First Serve</p>
             <div className="grid grid-cols-2 gap-2">
               {([1, 2] as const).map(t => {
                 const label = t === 1 ? t1Label : t2Label;
                 return (
                   <button key={t}
                     onClick={() => setMatch({ ...match, serverTeam: t })}
-                    className={`py-2.5 rounded-xl font-bold text-sm border transition truncate ${match.serverTeam === t ? "bg-primary/20 border-primary text-primary" : "bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500"}`}
+                    className={`py-2.5 rounded-xl font-bold text-sm border transition truncate ${match.serverTeam === t ? "bg-primary/20 border-primary text-primary" : "bg-slate-800 border-slate-700 text-muted-foreground hover:border-slate-500"}`}
                   >{label} serves</button>
                 );
               })}
@@ -294,7 +294,7 @@ export function UmpireSetupFlow({
             {/* Doubles: who serves first in the serving team */}
             {isDoubles && (
               <>
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest pt-1">Server within team</p>
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pt-1">Server within team</p>
                 <div className="grid grid-cols-2 gap-2">
                   {([0, 1] as const).map(i => {
                     const servingTeam = match.serverTeam === 1 ? match.t1 : match.t2;
@@ -305,13 +305,13 @@ export function UmpireSetupFlow({
                     return (
                       <button key={i}
                         onClick={() => setMatch({ ...match, serverPlayerIndex: i })}
-                        className={`py-2 rounded-xl font-bold text-xs border transition truncate ${match.serverPlayerIndex === i ? "bg-primary/20 border-primary text-primary" : "bg-slate-800 border-slate-700 text-slate-400"}`}
+                        className={`py-2 rounded-xl font-bold text-xs border transition truncate ${match.serverPlayerIndex === i ? "bg-primary/20 border-primary text-primary" : "bg-slate-800 border-slate-700 text-muted-foreground"}`}
                       >{pName} serves first</button>
                     );
                   })}
                 </div>
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest pt-1">
-                  First Receiver <span className="normal-case text-slate-600">(BWF 9.4)</span>
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pt-1">
+                  First Receiver <span className="normal-case text-muted-foreground">(BWF 9.4)</span>
                 </p>
                 <div className="grid grid-cols-2 gap-2">
                   {([0, 1] as const).map(i => {
@@ -323,7 +323,7 @@ export function UmpireSetupFlow({
                     return (
                       <button key={i}
                         onClick={() => setMatch({ ...match, receiverPlayerIndex: i })}
-                        className={`py-2 rounded-xl font-bold text-xs border transition truncate ${match.receiverPlayerIndex === i ? "bg-amber-500/20 border-amber-500 text-amber-400" : "bg-slate-800 border-slate-700 text-slate-400"}`}
+                        className={`py-2 rounded-xl font-bold text-xs border transition truncate ${match.receiverPlayerIndex === i ? "bg-amber-500/20 border-amber-500 text-amber-400" : "bg-slate-800 border-slate-700 text-muted-foreground"}`}
                       >{pName} receives</button>
                     );
                   })}
@@ -359,7 +359,7 @@ export function UmpireSetupFlow({
               startMatch();
             }
           }}
-          className="w-full py-4 bg-primary hover:bg-primary active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-2xl font-black uppercase tracking-widest shadow-[0_4px_24px_rgba(16,185,129,0.35)] transition-all"
+          className="w-full py-4 bg-primary hover:bg-primary active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed text-foreground rounded-2xl font-black uppercase tracking-widest shadow-[0_4px_24px_rgba(16,185,129,0.35)] transition-all"
         >
           {isEditSetupOpen ? "Save Changes" : (match.pointLog.length > 0 ? "▶ Resume Broadcasting" : "▶ Start Broadcasting")}
         </button>

@@ -87,7 +87,7 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
   const statusIcon = (m: BracketMatch) => {
     if (m.status === "completed") return <CheckCircle2 size={12} className="text-primary shrink-0" />;
     if (m.status === "in_progress") return <Play size={12} className="text-red-400 shrink-0 animate-pulse" />;
-    return <Clock size={12} className="text-slate-500 shrink-0" />;
+    return <Clock size={12} className="text-muted-foreground shrink-0" />;
   };
 
   const statusLabel = (m: BracketMatch) => {
@@ -119,12 +119,12 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0">
           <div className="min-w-0">
-            <p className="text-[9px] text-slate-500 uppercase tracking-widest mb-0.5">Player Roadmap</p>
+            <p className="text-[9px] text-muted-foreground uppercase tracking-widest mb-0.5">Player Roadmap</p>
             <p className={`font-black text-primary truncate ${isMobile ? "text-sm" : "text-sm"}`}>{player}</p>
           </div>
           <button
             onClick={onClose}
-            className="shrink-0 ml-3 flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 active:bg-slate-600 transition-colors"
+            className="shrink-0 ml-3 flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-slate-700 active:bg-slate-600 transition-colors"
             aria-label="Close"
           >
             <X size={16} />
@@ -132,7 +132,7 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
         </div>
 
         {/* Scroll hint label */}
-        <p className="px-4 pt-2 pb-0 text-[9px] text-slate-600 uppercase tracking-widest shrink-0">
+        <p className="px-4 pt-2 pb-0 text-[9px] text-muted-foreground uppercase tracking-widest shrink-0">
           ← swipe to see full path →
         </p>
 
@@ -185,7 +185,7 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
                 <React.Fragment key={m.id}>
                   {idx > 0 && (
                     <div className="flex items-center shrink-0">
-                      <ChevronRight size={14} className="text-slate-600" />
+                      <ChevronRight size={14} className="text-muted-foreground" />
                     </div>
                   )}
 
@@ -199,11 +199,11 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
                         <p className="text-[9px] font-black uppercase tracking-wider text-amber-400 truncate">
                           {m.round_name ?? `Round ${m.round}`}
                         </p>
-                        <p className="text-[8px] text-slate-600">{m.match_code}</p>
+                        <p className="text-[8px] text-muted-foreground">{m.match_code}</p>
                       </div>
                       <div className="flex items-center gap-0.5 shrink-0">
                         {statusIcon(m)}
-                        <span className={`text-[8px] font-bold ${isLive ? "text-red-400" : isCompleted ? "text-primary" : "text-slate-500"}`}>
+                        <span className={`text-[8px] font-bold ${isLive ? "text-red-400" : isCompleted ? "text-primary" : "text-muted-foreground"}`}>
                           {statusLabel(m)}
                         </span>
                       </div>
@@ -213,14 +213,14 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
                     <div className={`px-2.5 flex items-center justify-between gap-1 border-b border-slate-700/30 ${playerWon ? "bg-primary/10" : ""}`} style={{ minHeight: 36 }}>
                       <div className="flex items-center gap-1 min-w-0">
                         {playerWon && <Trophy size={9} className="text-amber-400 shrink-0" />}
-                        <span className={`text-[10px] font-black truncate ${playerWon ? "text-amber-300" : playerLost ? "text-slate-500" : "text-white"}`}>
+                        <span className={`text-[10px] font-black truncate ${playerWon ? "text-amber-300" : playerLost ? "text-muted-foreground" : "text-foreground"}`}>
                           {playerName}
                         </span>
                       </div>
                       {sets && (
                         <div className="flex gap-0.5 shrink-0">
                           {sets.map((s, i) => (
-                            <span key={i} className={`text-[10px] font-mono font-bold ${s.me > s.opp ? "text-white" : "text-slate-600"}`}>
+                            <span key={i} className={`text-[10px] font-mono font-bold ${s.me > s.opp ? "text-foreground" : "text-muted-foreground"}`}>
                               {s.me}
                             </span>
                           ))}
@@ -230,13 +230,13 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
 
                     {/* Opponent row */}
                     <div className={`px-2.5 flex items-center justify-between gap-1 ${playerLost ? "bg-amber-500/10" : ""}`} style={{ minHeight: 36 }}>
-                      <span className={`text-[10px] font-semibold truncate ${playerLost ? "text-amber-300" : "text-slate-400"}`}>
+                      <span className={`text-[10px] font-semibold truncate ${playerLost ? "text-amber-300" : "text-muted-foreground"}`}>
                         {opponentName}
                       </span>
                       {sets && (
                         <div className="flex gap-0.5 shrink-0">
                           {sets.map((s, i) => (
-                            <span key={i} className={`text-[10px] font-mono font-bold ${s.opp > s.me ? "text-white" : "text-slate-600"}`}>
+                            <span key={i} className={`text-[10px] font-mono font-bold ${s.opp > s.me ? "text-foreground" : "text-muted-foreground"}`}>
                               {s.opp}
                             </span>
                           ))}
@@ -269,7 +269,7 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
               return (
                 <>
                   <div className="flex items-center shrink-0">
-                    <ChevronRight size={14} className="text-slate-600" />
+                    <ChevronRight size={14} className="text-muted-foreground" />
                   </div>
                   {isEliminated ? (
                     <div
@@ -278,7 +278,7 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
                     >
                       <div className="text-center px-1">
                         <p className="text-base leading-none mb-1">🏸</p>
-                        <p className="text-[8px] text-slate-500 uppercase tracking-widest leading-tight">Good game!</p>
+                        <p className="text-[8px] text-muted-foreground uppercase tracking-widest leading-tight">Good game!</p>
                       </div>
                     </div>
                   ) : (
@@ -288,7 +288,7 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
                     >
                       <div className="text-center">
                         <Trophy size={18} className="text-amber-400/25 mx-auto mb-0.5" />
-                        <p className="text-[8px] text-slate-700 uppercase tracking-widest">Final</p>
+                        <p className="text-[8px] text-muted-foreground uppercase tracking-widest">Final</p>
                       </div>
                     </div>
                   )}
@@ -435,9 +435,9 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false }: Br
     <div className="rounded-2xl border border-slate-700 overflow-hidden" style={{ background: "#0d1117" }}>
       {/* Toolbar */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-slate-800">
-        <span className="text-[10px] text-slate-500 uppercase tracking-widest truncate mr-2">
+        <span className="text-[10px] text-muted-foreground uppercase tracking-widest truncate mr-2">
           {enablePathHighlight && selectedPlayer
-            ? <><span className="text-primary font-black">{selectedPlayer}</span><span className="text-slate-600"> · roadmap open</span></>
+            ? <><span className="text-primary font-black">{selectedPlayer}</span><span className="text-muted-foreground"> · roadmap open</span></>
             : enablePathHighlight ? "Tap a player to see roadmap" : "Bracket"
           }
         </span>
@@ -445,22 +445,22 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false }: Br
         <div className="flex items-center gap-1 shrink-0">
           <button
             onClick={() => setScale((s) => Math.max(0.4, +(s - 0.1).toFixed(1)))}
-            className="w-8 h-8 flex items-center justify-center rounded-md text-slate-400 hover:text-white hover:bg-slate-700 active:bg-slate-600 transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-slate-700 active:bg-slate-600 transition-colors"
             aria-label="Zoom out"
           >
             <ZoomOut size={15} />
           </button>
-          <span className="text-[10px] text-slate-500 w-8 text-center tabular-nums">{Math.round(scale * 100)}%</span>
+          <span className="text-[10px] text-muted-foreground w-8 text-center tabular-nums">{Math.round(scale * 100)}%</span>
           <button
             onClick={() => setScale((s) => Math.min(1.5, +(s + 0.1).toFixed(1)))}
-            className="w-8 h-8 flex items-center justify-center rounded-md text-slate-400 hover:text-white hover:bg-slate-700 active:bg-slate-600 transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-slate-700 active:bg-slate-600 transition-colors"
             aria-label="Zoom in"
           >
             <ZoomIn size={15} />
           </button>
           <button
             onClick={computeScale}
-            className="text-[10px] text-slate-500 hover:text-white px-2 py-1 rounded-md hover:bg-slate-700 transition-colors"
+            className="text-[10px] text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-slate-700 transition-colors"
           >
             Fit
           </button>
@@ -536,7 +536,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false }: Br
                   style={{ position: "absolute", left: ri * COL_W + PADDING, top: y + PADDING + LABEL_H, width: MATCH_W }}>
                   <div className={`rounded-lg overflow-hidden border ${borderCls} transition-all`} style={{ background: "#161b22" }}>
                     {/* Match header */}
-                    <div className="px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-slate-500 border-b border-slate-700/50 flex justify-between items-center">
+                    <div className="px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-muted-foreground border-b border-slate-700/50 flex justify-between items-center">
                       <span>{m.match_code}</span>
                       <span className="flex items-center gap-1">
                         {m.court_number && <span className="text-blue-400">C{m.court_number}</span>}
@@ -570,10 +570,10 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false }: Br
                         <div className="flex shrink-0 border-l border-slate-700/50">
                           {sets.map((s, i) => (
                             <div key={i} className={`flex flex-col${i < sets.length - 1 ? " border-r border-slate-700/30" : ""}`} style={{ width: 22 }}>
-                              <div style={{ minHeight: playerRowH }} className={`flex items-center justify-center text-[11px] font-mono font-bold border-b border-slate-700/50 ${t1Won ? "bg-amber-500/10" : ""} ${s.t1 > s.t2 ? "text-white" : "text-slate-500"}`}>
+                              <div style={{ minHeight: playerRowH }} className={`flex items-center justify-center text-[11px] font-mono font-bold border-b border-slate-700/50 ${t1Won ? "bg-amber-500/10" : ""} ${s.t1 > s.t2 ? "text-foreground" : "text-muted-foreground"}`}>
                                 {s.t1}
                               </div>
-                              <div style={{ minHeight: playerRowH }} className={`flex items-center justify-center text-[11px] font-mono font-bold ${t2Won ? "bg-amber-500/10" : ""} ${s.t2 > s.t1 ? "text-white" : "text-slate-500"}`}>
+                              <div style={{ minHeight: playerRowH }} className={`flex items-center justify-center text-[11px] font-mono font-bold ${t2Won ? "bg-amber-500/10" : ""} ${s.t2 > s.t1 ? "text-foreground" : "text-muted-foreground"}`}>
                                 {s.t2}
                               </div>
                             </div>

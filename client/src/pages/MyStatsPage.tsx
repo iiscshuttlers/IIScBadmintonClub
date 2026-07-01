@@ -56,8 +56,8 @@ export default function MyStatsPage() {
   return (
     <div className="container mx-auto px-4 py-6 max-w-4xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">My Stats</h1>
-        <p className="text-slate-600 dark:text-slate-400 mt-2">
+        <h1 className="text-3xl font-bold text-foreground dark:text-foreground">My Stats</h1>
+        <p className="text-muted-foreground dark:text-muted-foreground mt-2">
           Your performance analytics and achievement badges
         </p>
       </div>

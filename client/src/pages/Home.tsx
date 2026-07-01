@@ -91,7 +91,7 @@ export default function Home() {
       <div className="min-h-screen pb-24 lg:pb-8">
 
         {/* ── HERO ──────────────────────────────────────────────────────── */}
-        <section aria-label="Hero" className="relative overflow-hidden text-white min-h-[calc(90vh-72px)] lg:min-h-[90vh] flex items-center">
+        <section aria-label="Hero" className="relative overflow-hidden text-foreground min-h-[calc(90vh-72px)] lg:min-h-[90vh] flex items-center">
           {/* Mobile photo bg */}
           <div className="lg:hidden absolute inset-0 z-0">
             <img src={iiscTeam} alt="IISc Badminton Team" className="w-full h-full object-cover object-[25%_center]" />
@@ -134,7 +134,7 @@ export default function Home() {
                     <br />
                     Are Forged
                   </h1>
-                  <p className="text-base text-white/50 font-medium uppercase tracking-widest pt-1">
+                  <p className="text-base text-foreground/50 font-medium uppercase tracking-widest pt-1">
                     Indian Institute of Science · Bangalore
                   </p>
                 </div>
@@ -147,12 +147,12 @@ export default function Home() {
                 {/* CTAs */}
                 <div className="flex flex-col sm:flex-row gap-3.5 pt-1">
                   <Link href="/events">
-                    <Button className="bg-primary hover:bg-primary text-white px-8 py-6 text-sm font-bold flex items-center gap-2 w-full sm:w-auto justify-center rounded-xl shadow-lg shadow-primary/25 hover:-translate-y-0.5 transition-all duration-300 glow-emerald cursor-pointer">
+                    <Button className="bg-primary hover:bg-primary text-foreground px-8 py-6 text-sm font-bold flex items-center gap-2 w-full sm:w-auto justify-center rounded-xl shadow-lg shadow-primary/25 hover:-translate-y-0.5 transition-all duration-300 glow-emerald cursor-pointer">
                       Explore Events <ArrowRight className="w-4 h-4" />
                     </Button>
                   </Link>
                   <Link href="/players">
-                    <Button variant="outline" className="border-2 border-white/20 bg-white/5 text-white hover:bg-white/10 hover:border-white/35 px-8 py-6 text-sm font-semibold w-full sm:w-auto rounded-xl transition-all duration-300 cursor-pointer backdrop-blur-sm">
+                    <Button variant="outline" className="border-2 border-white/20 bg-white/5 text-foreground hover:bg-white/10 hover:border-white/35 px-8 py-6 text-sm font-semibold w-full sm:w-auto rounded-xl transition-all duration-300 cursor-pointer backdrop-blur-sm">
                       Meet the Players
                     </Button>
                   </Link>
@@ -166,8 +166,8 @@ export default function Home() {
                     { value: config?.stats?.trophies || "10+", label: "IISM Trophies" },
                   ].map(({ value, label }) => (
                     <div key={label} className="text-center">
-                      <div className="text-2xl font-black text-white">{value}</div>
-                      <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">{label}</div>
+                      <div className="text-2xl font-black text-foreground">{value}</div>
+                      <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{label}</div>
                     </div>
                   ))}
                 </div>
@@ -187,7 +187,7 @@ export default function Home() {
           </div>
 
           {/* Scroll indicator */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 text-white/30 animate-bounce">
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 text-foreground/30 animate-bounce">
             <div className="w-5 h-8 rounded-full border-2 border-white/20 flex items-start justify-center pt-1.5">
               <div className="w-1 h-2 bg-white/40 rounded-full" />
             </div>
@@ -203,7 +203,7 @@ export default function Home() {
             >
               <p className="text-xs font-bold text-primary dark:text-primary uppercase tracking-widest mb-3">Quick Access</p>
               <div className="flex items-center justify-center gap-2">
-                <h2 className="text-3xl lg:text-4xl font-black text-slate-900 dark:text-white" style={{ fontFamily: "Playfair Display, serif" }}>
+                <h2 className="text-3xl lg:text-4xl font-black text-foreground dark:text-foreground" style={{ fontFamily: "Playfair Display, serif" }}>
                   What are you looking for?
                 </h2>
                 <InfoModal
@@ -213,7 +213,7 @@ export default function Home() {
                   ]}
                 />
               </div>
-              <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm">Everything the club offers, one click away</p>
+              <p className="text-muted-foreground dark:text-muted-foreground mt-2 text-sm">Everything the club offers, one click away</p>
             </motion.div>
 
             <motion.div
@@ -263,8 +263,8 @@ export default function Home() {
                           {item.tag}
                         </span>
                       </div>
-                      <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{item.title}</h3>
-                      <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-5">{item.description}</p>
+                      <h3 className="text-lg font-bold text-foreground dark:text-foreground mb-2">{item.title}</h3>
+                      <p className="text-muted-foreground dark:text-muted-foreground text-sm leading-relaxed mb-5">{item.description}</p>
                       <div className={`inline-flex items-center gap-1.5 text-sm font-bold ${item.accentColor} group-hover:gap-3 transition-all duration-300`}>
                         Open <ChevronRight className="w-4 h-4" />
                       </div>
@@ -295,11 +295,11 @@ export default function Home() {
                 >
                   <div className={`absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r ${gradient}`} />
                   <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${gradient} bg-opacity-10 mb-4`}>
-                    <Icon className="w-5 h-5 text-white" />
+                    <Icon className="w-5 h-5 text-foreground" />
                   </div>
-                  <div className="text-4xl lg:text-5xl font-black text-white mb-1 tabular-nums">{value}</div>
+                  <div className="text-4xl lg:text-5xl font-black text-foreground mb-1 tabular-nums">{value}</div>
                   <div className="text-sm font-bold text-slate-300 mb-1">{label}</div>
-                  <div className="text-xs text-slate-500">{desc}</div>
+                  <div className="text-xs text-muted-foreground">{desc}</div>
                 </motion.div>
               ))}
             </motion.div>
@@ -316,11 +316,11 @@ export default function Home() {
               <div className="inline-flex items-center gap-2 bg-primary/10 dark:bg-primary/10 border border-primary/40 dark:border-primary/25 text-primary dark:text-primary px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider mb-5">
                 <Zap className="w-3.5 h-3.5" /> Our Story
               </div>
-              <h2 className="text-4xl lg:text-5xl font-black text-slate-900 dark:text-white mb-4 leading-tight" style={{ fontFamily: "Playfair Display, serif" }}>
+              <h2 className="text-4xl lg:text-5xl font-black text-foreground dark:text-foreground mb-4 leading-tight" style={{ fontFamily: "Playfair Display, serif" }}>
                 About IISc
                 <span className="text-primary dark:text-primary"> Badminton Club</span>
               </h2>
-              <p className="text-slate-600 dark:text-slate-300 max-w-2xl text-lg leading-relaxed">
+              <p className="text-muted-foreground dark:text-slate-300 max-w-2xl text-lg leading-relaxed">
                 A thriving community of 350+ badminton enthusiasts at the Indian Institute of Science — competing, connecting, and celebrating the sport year-round.
               </p>
             </motion.div>
@@ -332,29 +332,29 @@ export default function Home() {
               {/* Mission */}
               <motion.div variants={fadeUp} className="space-y-6">
                 <div>
-                  <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-1 flex items-center gap-3" style={{ fontFamily: "Playfair Display, serif" }}>
+                  <h3 className="text-2xl font-black text-foreground dark:text-foreground mb-1 flex items-center gap-3" style={{ fontFamily: "Playfair Display, serif" }}>
                     <span className="w-1.5 h-7 bg-gradient-to-b from-primary to-teal-500 rounded-full inline-block" />
                     Our Mission
                   </h3>
                 </div>
-                <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-base whitespace-pre-wrap">
+                <p className="text-muted-foreground dark:text-slate-300 leading-relaxed text-base whitespace-pre-wrap">
                   {config?.about?.mission ||
                     "To foster excellence in badminton through competitive play and community engagement at IISc. We aim to develop skilled players while promoting discipline, teamwork, and sportsmanship."}
                 </p>
                 {config?.about?.history && (
                   <div className="pt-4 space-y-3">
-                    <h3 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-3" style={{ fontFamily: "Playfair Display, serif" }}>
+                    <h3 className="text-2xl font-black text-foreground dark:text-foreground flex items-center gap-3" style={{ fontFamily: "Playfair Display, serif" }}>
                       <span className="w-1.5 h-7 bg-gradient-to-b from-blue-400 to-indigo-500 rounded-full inline-block" />
                       Our History
                     </h3>
-                    <p className="text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{config.about.history}</p>
+                    <p className="text-muted-foreground dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{config.about.history}</p>
                   </div>
                 )}
               </motion.div>
 
               {/* Values */}
               <motion.div variants={fadeUp}>
-                <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-6 flex items-center gap-3" style={{ fontFamily: "Playfair Display, serif" }}>
+                <h3 className="text-2xl font-black text-foreground dark:text-foreground mb-6 flex items-center gap-3" style={{ fontFamily: "Playfair Display, serif" }}>
                   <span className="w-1.5 h-7 bg-gradient-to-b from-orange-400 to-amber-500 rounded-full inline-block" />
                   Our Values
                 </h3>
@@ -367,8 +367,8 @@ export default function Home() {
                       <div className="w-8 h-8 rounded-xl bg-primary/15 dark:bg-primary/40 flex items-center justify-center mb-3">
                         <Icon className="w-4 h-4 text-primary dark:text-primary" />
                       </div>
-                      <h4 className="font-black text-slate-900 dark:text-white text-sm mb-1.5">{title}</h4>
-                      <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed">{desc}</p>
+                      <h4 className="font-black text-foreground dark:text-foreground text-sm mb-1.5">{title}</h4>
+                      <p className="text-muted-foreground dark:text-muted-foreground text-xs leading-relaxed">{desc}</p>
                     </div>
                   ))}
                 </div>
@@ -385,7 +385,7 @@ export default function Home() {
               onClick={() => setIsImageOpen(true)}
             >
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent z-10 flex items-end p-8 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <span className="text-white text-sm font-semibold bg-white/15 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
+                <span className="text-foreground text-sm font-semibold bg-white/15 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
                   Click to enlarge photo
                 </span>
               </div>
@@ -409,10 +409,10 @@ export default function Home() {
               variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
             >
               <p className="text-xs font-bold text-orange-500 uppercase tracking-widest mb-3">Leadership</p>
-              <h2 className="text-3xl font-black text-slate-900 dark:text-white" style={{ fontFamily: "Playfair Display, serif" }}>
+              <h2 className="text-3xl font-black text-foreground dark:text-foreground" style={{ fontFamily: "Playfair Display, serif" }}>
                 Club Leadership
               </h2>
-              <p className="text-slate-500 dark:text-slate-400 text-sm mt-2">The people keeping the shuttles flying</p>
+              <p className="text-muted-foreground dark:text-muted-foreground text-sm mt-2">The people keeping the shuttles flying</p>
             </motion.div>
 
             <motion.div
@@ -439,15 +439,15 @@ export default function Home() {
                           onError={() => setImageErrors((prev) => ({ ...prev, [member.name]: true }))}
                         />
                       ) : (
-                        <span className="text-white text-3xl font-black">{initials}</span>
+                        <span className="text-foreground text-3xl font-black">{initials}</span>
                       )}
                     </div>
                     <div className="min-w-0">
                       <span className="inline-block text-[10px] font-black text-primary dark:text-primary uppercase tracking-widest mb-1.5 px-2.5 py-1 bg-primary/10 dark:bg-primary/40 rounded-full">
                         {member.role}
                       </span>
-                      <h3 className="text-xl font-black text-slate-900 dark:text-white leading-tight">{member.name}</h3>
-                      <p className="text-slate-500 dark:text-slate-400 text-sm mt-1.5 leading-relaxed">{member.description}</p>
+                      <h3 className="text-xl font-black text-foreground dark:text-foreground leading-tight">{member.name}</h3>
+                      <p className="text-muted-foreground dark:text-muted-foreground text-sm mt-1.5 leading-relaxed">{member.description}</p>
                     </div>
                   </motion.div>
                 );
@@ -475,19 +475,19 @@ export default function Home() {
                     <div className="inline-flex items-center gap-2 bg-amber-400/15 border border-amber-400/25 text-amber-300 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
                       <Star className="w-3 h-3" /> Recent Highlight
                     </div>
-                    <h3 className="text-2xl md:text-3xl font-black text-white leading-tight" style={{ fontFamily: "Playfair Display, serif" }}>
+                    <h3 className="text-2xl md:text-3xl font-black text-foreground leading-tight" style={{ fontFamily: "Playfair Display, serif" }}>
                       {highlight.name}
                     </h3>
                     <p className="text-slate-300 text-sm leading-relaxed max-w-xl">{highlight.description}</p>
                   </div>
                   <div className="flex gap-3 flex-wrap">
                     <Link href={`/events/${highlight.slug}`}>
-                      <Button className="bg-white text-slate-900 hover:bg-slate-100 font-bold px-6 py-3 rounded-xl flex items-center gap-2 cursor-pointer shadow-lg transition-all hover:-translate-y-0.5">
+                      <Button className="bg-white text-foreground hover:bg-slate-100 font-bold px-6 py-3 rounded-xl flex items-center gap-2 cursor-pointer shadow-lg transition-all hover:-translate-y-0.5">
                         View Results <Trophy className="w-4 h-4" />
                       </Button>
                     </Link>
                     <Link href="/hall-of-fame">
-                      <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 font-semibold px-6 py-3 rounded-xl cursor-pointer transition-all">
+                      <Button variant="outline" className="border-white/20 text-foreground hover:bg-white/10 font-semibold px-6 py-3 rounded-xl cursor-pointer transition-all">
                         Winners Wall
                       </Button>
                     </Link>
@@ -512,21 +512,21 @@ export default function Home() {
               <div className="inline-flex items-center gap-2 bg-white/8 border border-white/12 text-primary px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider">
                 <Zap className="w-3.5 h-3.5" /> Join the Community
               </div>
-              <h2 className="text-4xl lg:text-5xl font-black text-white leading-tight" style={{ fontFamily: "Playfair Display, serif" }}>
+              <h2 className="text-4xl lg:text-5xl font-black text-foreground leading-tight" style={{ fontFamily: "Playfair Display, serif" }}>
                 Ready to Pick Up<br />
                 <span className="text-primary">the Racket?</span>
               </h2>
-              <p className="text-slate-400 text-base leading-relaxed">
+              <p className="text-muted-foreground text-base leading-relaxed">
                 Whether you're a seasoned player or just starting out, there's a court and a community waiting for you at IISc.
               </p>
               <div className="flex flex-col sm:flex-row gap-3.5 justify-center pt-2">
                 <Link href="/join">
-                  <Button className="bg-primary hover:bg-primary text-white px-10 py-6 text-sm font-bold rounded-xl shadow-lg shadow-primary/20 hover:-translate-y-0.5 transition-all duration-300 glow-emerald cursor-pointer">
+                  <Button className="bg-primary hover:bg-primary text-foreground px-10 py-6 text-sm font-bold rounded-xl shadow-lg shadow-primary/20 hover:-translate-y-0.5 transition-all duration-300 glow-emerald cursor-pointer">
                     Get Started Today
                   </Button>
                 </Link>
                 <Link href="/players">
-                  <Button variant="outline" className="border-white/20 bg-white/5 text-white hover:bg-white/10 px-10 py-6 text-sm font-semibold rounded-xl transition-all duration-300 cursor-pointer">
+                  <Button variant="outline" className="border-white/20 bg-white/5 text-foreground hover:bg-white/10 px-10 py-6 text-sm font-semibold rounded-xl transition-all duration-300 cursor-pointer">
                     Meet the Players
                   </Button>
                 </Link>
@@ -555,7 +555,7 @@ function ImageModal({ src, alt, onClose }: { src: string; alt: string; onClose: 
       onClick={onClose}
     >
       <button
-        className="absolute top-5 right-5 z-[60] text-white/60 hover:text-white bg-white/10 hover:bg-white/20 rounded-full p-2.5 transition-all cursor-pointer"
+        className="absolute top-5 right-5 z-[60] text-foreground/60 hover:text-foreground bg-white/10 hover:bg-white/20 rounded-full p-2.5 transition-all cursor-pointer"
         onClick={(e) => { e.stopPropagation(); onClose(); }}
         aria-label="Close"
       >
@@ -621,7 +621,7 @@ function AnimatedLogo() {
 
           {/* Top text */}
           <div className="absolute top-16 left-0 right-0 text-center z-10 flex flex-col items-center">
-            <h1 className="text-7xl font-black text-white tracking-wider drop-shadow-md flex items-baseline">
+            <h1 className="text-7xl font-black text-foreground tracking-wider drop-shadow-md flex items-baseline">
               IIS<span className="text-6xl text-amber-400 ml-0.5">c</span>
             </h1>
           </div>

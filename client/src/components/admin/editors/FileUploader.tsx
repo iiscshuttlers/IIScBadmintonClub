@@ -52,7 +52,7 @@ export function FileUploader({
       <button
         type="button"
         disabled={uploading}
-        className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 text-[10px] font-bold transition"
+        className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 text-[10px] font-bold transition"
       >
         {uploading ? (
           <Loader2 className="w-3 h-3 animate-spin" />

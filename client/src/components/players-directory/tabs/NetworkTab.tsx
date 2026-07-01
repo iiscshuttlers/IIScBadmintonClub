@@ -42,13 +42,13 @@ export function NetworkTab({
     <div className="space-y-10">
       {/* Buddies section */}
       <div>
-        <h2 className="text-xs uppercase tracking-widest font-black text-slate-400 dark:text-slate-500 mb-5 flex items-center gap-2">
+        <h2 className="text-xs uppercase tracking-widest font-black text-muted-foreground dark:text-muted-foreground mb-5 flex items-center gap-2">
           <Heart className="w-4 h-4 text-violet-500" /> My Buddies ({myBuddyIds.size})
         </h2>
         {myBuddyIds.size === 0 ? (
           <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
-            <Heart className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-500 font-medium text-sm">No buddies yet. Add some from the Directory!</p>
+            <Heart className="w-10 h-10 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground font-medium text-sm">No buddies yet. Add some from the Directory!</p>
           </div>
         ) : (() => {
           const buddyPlayers = players.filter((p) => myBuddyIds.has(p.id));
@@ -74,7 +74,7 @@ export function NetworkTab({
                           {player.avatar_url ? (
                             <img src={player.avatar_url} className="w-12 h-12 rounded-full object-cover" />
                           ) : (
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-teal-500 flex items-center justify-center text-white font-black text-lg">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-teal-500 flex items-center justify-center text-foreground font-black text-lg">
                               {player.full_name[0]}
                             </div>
                           )}
@@ -82,9 +82,9 @@ export function NetworkTab({
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="font-black text-sm text-slate-800 dark:text-slate-100 truncate">{player.full_name}</p>
-                          <p className="text-xs text-slate-400 truncate">{player.department}</p>
+                          <p className="text-xs text-muted-foreground truncate">{player.department}</p>
                           <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
-                            <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">ELO {player.elo_rating ?? "—"}</span>
+                            <span className="text-[11px] font-bold text-muted-foreground dark:text-muted-foreground">ELO {player.elo_rating ?? "—"}</span>
                             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${player.status === "playing" ? "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400" : "bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary"}`}>
                               {player.status === "playing" ? "Playing Right Now" : "Looking to Play"}
                             </span>
@@ -92,7 +92,7 @@ export function NetworkTab({
                         </div>
                         {ownProfile && (
                           <button
-                            className="ml-auto shrink-0 px-3 py-1.5 bg-primary hover:bg-primary text-white text-xs font-bold rounded-lg transition"
+                            className="ml-auto shrink-0 px-3 py-1.5 bg-primary hover:bg-primary text-foreground text-xs font-bold rounded-lg transition"
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedOpponentId(player.id);
@@ -110,7 +110,7 @@ export function NetworkTab({
               {inactiveBuddies.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-black uppercase tracking-wider">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-muted-foreground text-xs font-black uppercase tracking-wider">
                       <UserCheck className="w-3.5 h-3.5" /> Resting / Inactive
                     </span>
                   </div>
@@ -125,7 +125,7 @@ export function NetworkTab({
                           {player.avatar_url ? (
                             <img src={player.avatar_url} className="w-12 h-12 rounded-full object-cover" />
                           ) : (
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-slate-400 to-slate-500 flex items-center justify-center text-white font-black text-lg">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-slate-400 to-slate-500 flex items-center justify-center text-foreground font-black text-lg">
                               {player.full_name[0]}
                             </div>
                           )}
@@ -133,11 +133,11 @@ export function NetworkTab({
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="font-black text-sm text-slate-800 dark:text-slate-100 truncate">{player.full_name}</p>
-                          <p className="text-xs text-slate-400 truncate">{player.department}</p>
+                          <p className="text-xs text-muted-foreground truncate">{player.department}</p>
                           <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
-                            <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">ELO {player.elo_rating ?? "—"}</span>
+                            <span className="text-[11px] font-bold text-muted-foreground dark:text-muted-foreground">ELO {player.elo_rating ?? "—"}</span>
                             {player.status && player.status !== "offline" && (
-                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${player.status === "injured" ? "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400" : player.status === "resting" ? "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"}`}>
+                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${player.status === "injured" ? "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400" : player.status === "resting" ? "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400" : "bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-muted-foreground"}`}>
                                 {player.status === "injured" ? "Injured" : player.status === "resting" ? "Taking a break" : "Offline"}
                               </span>
                             )}
@@ -145,7 +145,7 @@ export function NetworkTab({
                         </div>
                         {ownProfile && (
                           <button
-                            className="ml-auto shrink-0 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-lg transition"
+                            className="ml-auto shrink-0 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-muted-foreground dark:text-slate-300 text-xs font-bold rounded-lg transition"
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedOpponentId(player.id);
@@ -167,13 +167,13 @@ export function NetworkTab({
 
       {/* Following section */}
       <div>
-        <h2 className="text-xs uppercase tracking-widest font-black text-slate-400 dark:text-slate-500 mb-5 flex items-center gap-2">
+        <h2 className="text-xs uppercase tracking-widest font-black text-muted-foreground dark:text-muted-foreground mb-5 flex items-center gap-2">
           <UserCheck className="w-4 h-4 text-violet-500" /> My Following ({followingIds.size})
         </h2>
         {followingIds.size === 0 ? (
           <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
-            <UserCheck className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-500 font-medium text-sm">You aren't following anyone yet. Find some players!</p>
+            <UserCheck className="w-10 h-10 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground font-medium text-sm">You aren't following anyone yet. Find some players!</p>
           </div>
         ) : (() => {
           const followingPlayers = players.filter((p) => followingIds.has(p.id));
@@ -212,13 +212,13 @@ export function NetworkTab({
 
       {/* Followers section */}
       <div>
-        <h2 className="text-xs uppercase tracking-widest font-black text-slate-400 dark:text-slate-500 mb-5 flex items-center gap-2">
+        <h2 className="text-xs uppercase tracking-widest font-black text-muted-foreground dark:text-muted-foreground mb-5 flex items-center gap-2">
           <Star className="w-4 h-4 text-amber-500" /> My Followers ({followers.length})
         </h2>
         {followers.length === 0 ? (
           <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
-            <UserCheck className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-500 font-medium text-sm">No followers yet. Keep playing!</p>
+            <UserCheck className="w-10 h-10 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground font-medium text-sm">No followers yet. Keep playing!</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -256,13 +256,13 @@ export function NetworkTab({
         const pendingPlayers = players.filter(p => myBuddyRequests.received.has(p.id));
         return (
           <div>
-            <h2 className="text-xs uppercase tracking-widest font-black text-slate-400 dark:text-slate-500 mb-5 flex items-center gap-2">
+            <h2 className="text-xs uppercase tracking-widest font-black text-muted-foreground dark:text-muted-foreground mb-5 flex items-center gap-2">
               <Heart className="w-4 h-4 text-primary" /> Pending Buddy Requests ({pendingPlayers.length})
             </h2>
             {pendingPlayers.length === 0 ? (
               <div className="text-center py-10 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
-                <Heart className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-                <p className="text-slate-500 font-medium text-sm">No pending requests.</p>
+                <Heart className="w-8 h-8 text-slate-300 dark:text-muted-foreground mx-auto mb-2" />
+                <p className="text-muted-foreground font-medium text-sm">No pending requests.</p>
               </div>
             ) : (
               <div className="flex flex-col gap-3">
@@ -275,25 +275,25 @@ export function NetworkTab({
                       {player.avatar_url ? (
                         <img src={player.avatar_url} className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center font-black text-slate-500">
+                        <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center font-black text-muted-foreground">
                           {player.full_name[0]}
                         </div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setLocation(`/player/${player.id}`)}>
-                      <div className="font-bold text-sm text-slate-800 dark:text-white truncate">{player.full_name}</div>
-                      <div className="text-xs text-slate-500">{player.department}</div>
+                      <div className="font-bold text-sm text-slate-800 dark:text-foreground truncate">{player.full_name}</div>
+                      <div className="text-xs text-muted-foreground">{player.department}</div>
                     </div>
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleBuddyAction(player.id, 'accept')}
-                        className="px-3 py-1.5 bg-primary hover:bg-primary text-white text-xs font-bold rounded-lg transition"
+                        className="px-3 py-1.5 bg-primary hover:bg-primary text-foreground text-xs font-bold rounded-lg transition"
                       >
                         Accept
                       </button>
                       <button
                         onClick={() => handleBuddyAction(player.id, 'remove')}
-                        className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-lg transition"
+                        className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-muted-foreground dark:text-slate-300 text-xs font-bold rounded-lg transition"
                       >
                         Decline
                       </button>

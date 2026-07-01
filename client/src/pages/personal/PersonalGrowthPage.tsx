@@ -62,8 +62,8 @@ export default function PersonalGrowthPage() {
   return (
     <div className="container mx-auto px-4 py-6 max-w-4xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Growth</h1>
-        <p className="text-slate-600 dark:text-slate-400 mt-2">
+        <h1 className="text-3xl font-bold text-foreground dark:text-foreground">Growth</h1>
+        <p className="text-muted-foreground dark:text-muted-foreground mt-2">
           Track your progress and improvement
         </p>
       </div>
@@ -106,14 +106,14 @@ export default function PersonalGrowthPage() {
       {/* Match Timeline */}
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Calendar className="w-6 h-6 text-slate-600 dark:text-slate-400" />
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+          <Calendar className="w-6 h-6 text-muted-foreground dark:text-muted-foreground" />
+          <h3 className="text-lg font-bold text-foreground dark:text-foreground">
             Match Timeline
           </h3>
         </div>
 
         {matches.length === 0 ? (
-          <p className="text-slate-600 dark:text-slate-400">
+          <p className="text-muted-foreground dark:text-muted-foreground">
             No matches yet. Start playing to track your growth!
           </p>
         ) : (
@@ -135,20 +135,20 @@ export default function PersonalGrowthPage() {
                       className={`font-medium ${
                         won
                           ? "text-primary dark:text-primary/30"
-                          : "text-slate-900 dark:text-white"
+                          : "text-foreground dark:text-foreground"
                       }`}
                     >
                       {match.player1?.full_name} vs {match.player2?.full_name}
                     </p>
-                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                    <p className="text-xs text-muted-foreground dark:text-muted-foreground">
                       {new Date(match.date).toLocaleDateString()}
                     </p>
                   </div>
                   <div
                     className={`font-bold text-sm px-3 py-1 rounded ${
                       won
-                        ? "bg-primary text-white"
-                        : "bg-slate-300 dark:bg-slate-700 text-slate-900 dark:text-white"
+                        ? "bg-primary text-foreground"
+                        : "bg-slate-300 dark:bg-slate-700 text-foreground dark:text-foreground"
                     }`}
                   >
                     {isPlayer1 ? match.score1 : match.score2} -{" "}

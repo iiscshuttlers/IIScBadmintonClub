@@ -57,7 +57,7 @@ export function CourtVisual({
     const sideIsServer = side === "left" ? leftIsServer : !leftIsServer;
     if (sideIsServer && serverPlayerIndex === pIdx) return "text-primary";
     if (!sideIsServer && (!isDoubles || pIdx === activeReceiverIndex)) return "text-amber-400/80";
-    return "text-slate-500";
+    return "text-muted-foreground";
   };
 
   const topPct = (side: "left" | "right", pIdx: 0 | 1) => {
@@ -150,7 +150,7 @@ export function CourtVisual({
         </div>
       </div>
 
-      <div className="absolute top-1 left-1/2 -translate-x-1/2 text-[8px] text-slate-600 font-bold uppercase tracking-widest pointer-events-none">NET</div>
+      <div className="absolute top-1 left-1/2 -translate-x-1/2 text-[8px] text-muted-foreground font-bold uppercase tracking-widest pointer-events-none">NET</div>
     </div>
   );
 }

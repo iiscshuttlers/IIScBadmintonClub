@@ -19,7 +19,7 @@ export default function About() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 lg:pb-8 font-sans selection:bg-primary/30">
-      <div className="bg-gradient-to-r from-blue-950 via-blue-900 to-primary/90 text-white py-12 lg:py-16 relative overflow-hidden">
+      <div className="bg-gradient-to-r from-blue-950 via-blue-900 to-primary/90 text-foreground py-12 lg:py-16 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(16,185,129,0.15),transparent)] pointer-events-none" />
         <div className="absolute inset-0 hero-pattern opacity-50" />
         
@@ -32,7 +32,7 @@ export default function About() {
                 { badge: "HELP", title: "Support", desc: "If you have issues with the app, check the FAQ or contact the admins here." },
                 { badge: "GUIDE", title: "Glossary", desc: "Confused by some terms? The glossary explains all the badminton jargon we use." }
               ]}
-              triggerClassName="text-white hover:text-primary/30"
+              triggerClassName="text-foreground hover:text-primary/30"
             />
           </div>
           <h1 className="text-3xl sm:text-5xl font-black mb-4 tracking-tight" style={{ fontFamily: "Playfair Display, serif" }}>
@@ -50,7 +50,7 @@ export default function About() {
                 className={`flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${
                   activeTab === "contact"
                     ? "bg-white text-blue-900 shadow-md scale-100"
-                    : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                    : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
                 }`}
               >
                 <Info className="w-4 h-4" /> Contact & FAQ
@@ -60,7 +60,7 @@ export default function About() {
                 className={`flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${
                   activeTab === "facilities"
                     ? "bg-white text-blue-900 shadow-md scale-100"
-                    : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                    : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
                 }`}
               >
                 <MapPin className="w-4 h-4" /> Facilities
@@ -70,7 +70,7 @@ export default function About() {
                 className={`flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${
                   activeTab === "glossary"
                     ? "bg-white text-blue-900 shadow-md scale-100"
-                    : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                    : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
                 }`}
               >
                 <BookOpen className="w-4 h-4" /> Glossary

@@ -43,9 +43,9 @@ function PollCard({ poll, onVote, onArchive, onDelete, currentUserId, isAdmin }:
     <div className={`bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 relative ${poll.is_archived ? "opacity-75" : ""}`}>
       <div className="flex items-center gap-3 mb-4">
         <div className={`p-2 rounded-xl ${poll.is_archived ? "bg-slate-100 dark:bg-slate-800" : "bg-violet-100 dark:bg-violet-900/50"}`}>
-          <BarChart2 className={`w-5 h-5 ${poll.is_archived ? "text-slate-500" : "text-violet-600 dark:text-violet-400"}`} />
+          <BarChart2 className={`w-5 h-5 ${poll.is_archived ? "text-muted-foreground" : "text-violet-600 dark:text-violet-400"}`} />
         </div>
-        <span className={`text-xs font-black uppercase tracking-widest ${poll.is_archived ? "text-slate-500" : "text-violet-500"}`}>
+        <span className={`text-xs font-black uppercase tracking-widest ${poll.is_archived ? "text-muted-foreground" : "text-violet-500"}`}>
           {poll.is_archived ? "Archived Poll" : "Community Poll"}
         </span>
       </div>
@@ -54,7 +54,7 @@ function PollCard({ poll, onVote, onArchive, onDelete, currentUserId, isAdmin }:
           {onArchive && (
             <button
               onClick={() => onArchive(poll.id, !poll.is_archived)}
-              className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-amber-500 transition-colors flex items-center gap-1"
+              className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-amber-500 transition-colors flex items-center gap-1"
             >
               {poll.is_archived ? "Unarchive" : "Archive"}
             </button>
@@ -62,17 +62,17 @@ function PollCard({ poll, onVote, onArchive, onDelete, currentUserId, isAdmin }:
           {onDelete && (
             <button
               onClick={() => onDelete(poll.id)}
-              className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-rose-500 transition-colors flex items-center gap-1"
+              className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-rose-500 transition-colors flex items-center gap-1"
             >
               Delete
             </button>
           )}
-          <a href="/admin#polls" className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-violet-500 transition-colors flex items-center gap-1 border-l border-slate-200 dark:border-slate-700 pl-2 ml-1">
+          <a href="/admin#polls" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-violet-500 transition-colors flex items-center gap-1 border-l border-slate-200 dark:border-slate-700 pl-2 ml-1">
             Manage
           </a>
         </div>
       )}
-      <h3 className="font-black text-slate-800 dark:text-white text-base mb-4 mt-2 pr-24">{poll.question}</h3>
+      <h3 className="font-black text-slate-800 dark:text-foreground text-base mb-4 mt-2 pr-24">{poll.question}</h3>
       <div className="space-y-2.5">
         {poll.options.map((option) => {
           const voteCount = option.votes?.length || 0;
@@ -105,12 +105,12 @@ function PollCard({ poll, onVote, onArchive, onDelete, currentUserId, isAdmin }:
               <div className="relative z-10 flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-2">
                   {isMyVote && <CheckCircle2 className="w-4 h-4 text-violet-500 shrink-0" />}
-                  <span className={`text-sm font-bold ${isMyVote ? "text-violet-700 dark:text-violet-300" : "text-slate-700 dark:text-slate-300"}`}>
+                  <span className={`text-sm font-bold ${isMyVote ? "text-violet-700 dark:text-violet-300" : "text-muted-foreground dark:text-slate-300"}`}>
                     {option.text}
                   </span>
                 </div>
                 {hasVoted && (
-                  <span className="text-xs font-black text-slate-500 dark:text-slate-400 ml-2 whitespace-nowrap">
+                  <span className="text-xs font-black text-muted-foreground dark:text-muted-foreground ml-2 whitespace-nowrap">
                     {pct}%
                   </span>
                 )}
@@ -119,7 +119,7 @@ function PollCard({ poll, onVote, onArchive, onDelete, currentUserId, isAdmin }:
           );
         })}
       </div>
-      <div className="mt-3 text-xs text-slate-400 text-right">
+      <div className="mt-3 text-xs text-muted-foreground text-right">
         {totalVotes} {totalVotes === 1 ? "vote" : "votes"}
         {!currentUserId && " · Sign in to vote"}
       </div>
@@ -163,16 +163,16 @@ function CreatePollForm({ onCreated, onCancel }: { onCreated: () => void; onCanc
   return (
     <div className="bg-white dark:bg-slate-900 rounded-3xl border border-violet-200 dark:border-violet-800 p-5 shadow-sm">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-black text-slate-800 dark:text-white flex items-center gap-2">
+        <h3 className="font-black text-slate-800 dark:text-foreground flex items-center gap-2">
           <BarChart2 className="w-4 h-4 text-violet-500" /> Create Poll
         </h3>
-        <button onClick={onCancel} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X className="w-4 h-4 text-slate-400" /></button>
+        <button onClick={onCancel} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"><X className="w-4 h-4 text-muted-foreground" /></button>
       </div>
       <input
         value={question}
         onChange={e => setQuestion(e.target.value)}
         placeholder="Ask the community something..."
-        className="w-full text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 outline-none text-slate-800 dark:text-white placeholder:text-slate-400 mb-4"
+        className="w-full text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 outline-none text-slate-800 dark:text-foreground placeholder:text-muted-foreground mb-4"
       />
       <div className="space-y-2 mb-3">
         {options.map((opt, i) => (
@@ -181,7 +181,7 @@ function CreatePollForm({ onCreated, onCancel }: { onCreated: () => void; onCanc
               value={opt}
               onChange={e => updateOption(i, e.target.value)}
               placeholder={`Option ${i + 1}`}
-              className="flex-1 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 outline-none text-slate-800 dark:text-white placeholder:text-slate-400"
+              className="flex-1 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 outline-none text-slate-800 dark:text-foreground placeholder:text-muted-foreground"
             />
             {options.length > 2 && (
               <button onClick={() => removeOption(i)} className="p-2 text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition">
@@ -198,7 +198,7 @@ function CreatePollForm({ onCreated, onCancel }: { onCreated: () => void; onCanc
         <button
           onClick={handleSave}
           disabled={saving}
-          className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold bg-violet-500 hover:bg-violet-600 text-white transition disabled:opacity-50"
+          className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold bg-violet-500 hover:bg-violet-600 text-foreground transition disabled:opacity-50"
         >
           <Save className="w-3.5 h-3.5" /> {saving ? "Saving..." : "Publish Poll"}
         </button>
@@ -305,7 +305,7 @@ export function PollsSection() {
       {polls.filter(p => p.is_archived).length > 0 && (
         <div className="mt-8">
           <div className="flex items-center gap-2 mb-4 px-2">
-            <h3 className="text-sm font-black uppercase tracking-widest text-slate-500">Archived Polls</h3>
+            <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Archived Polls</h3>
             <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800"></div>
           </div>
           <div className="space-y-4">

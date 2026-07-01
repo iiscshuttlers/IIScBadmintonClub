@@ -70,13 +70,13 @@ export default function PersonalProfilePage() {
       <div className="mb-8 flex items-center gap-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
         <Avatar src={profile?.avatar_url} name={profile?.name} size="lg" />
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-foreground dark:text-foreground">
             {profile?.name || "Your Profile"}
           </h1>
-          <p className="text-slate-600 dark:text-slate-400">
+          <p className="text-muted-foreground dark:text-muted-foreground">
             @{profile?.username || "username"}
           </p>
-          <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">
+          <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-1">
             Member since{" "}
             {profile?.created_at
               ? new Date(profile.created_at).toLocaleDateString()
@@ -95,10 +95,10 @@ export default function PersonalProfilePage() {
                 <Icon className="w-6 h-6 text-primary dark:text-primary" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-slate-900 dark:text-white">
+                <h3 className="font-semibold text-foreground dark:text-foreground">
                   {item.label}
                 </h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-1">
                   {item.description}
                 </p>
               </div>
@@ -125,7 +125,7 @@ export default function PersonalProfilePage() {
       <div className="border-t border-slate-200 dark:border-slate-800 pt-6">
         <Button
           onClick={() => setSignOutDialog(true)}
-          className="w-full flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold py-3 rounded-xl transition-colors"
+          className="w-full flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-700 text-foreground font-semibold py-3 rounded-xl transition-colors"
         >
           <LogOut className="w-5 h-5" />
           Sign Out

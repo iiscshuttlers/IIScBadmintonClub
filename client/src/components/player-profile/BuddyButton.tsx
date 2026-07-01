@@ -90,7 +90,7 @@ export function BuddyButton({ targetPlayerId }: Props) {
 
   if (status === "pending_sent") return (
     <button onClick={remove} disabled={acting}
-      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold text-xs hover:bg-rose-50 hover:text-rose-500 transition disabled:opacity-50">
+      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-muted-foreground font-bold text-xs hover:bg-rose-50 hover:text-rose-500 transition disabled:opacity-50">
       {acting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Clock className="w-3.5 h-3.5" />}
       Request Sent
     </button>
@@ -99,12 +99,12 @@ export function BuddyButton({ targetPlayerId }: Props) {
   if (status === "pending_received") return (
     <div className="flex items-center gap-2">
       <button onClick={accept} disabled={acting}
-        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary hover:bg-primary text-white font-bold text-xs transition disabled:opacity-50">
+        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary hover:bg-primary text-foreground font-bold text-xs transition disabled:opacity-50">
         {acting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserCheck className="w-3.5 h-3.5" />}
         Accept
       </button>
       <button onClick={remove} disabled={acting}
-        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold text-xs hover:bg-rose-50 hover:text-rose-500 transition disabled:opacity-50">
+        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-muted-foreground font-bold text-xs hover:bg-rose-50 hover:text-rose-500 transition disabled:opacity-50">
         Decline
       </button>
     </div>

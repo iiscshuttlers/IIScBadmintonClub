@@ -84,11 +84,11 @@ export function FacilitiesSection() {
                       <div className="w-12 h-12 rounded-2xl bg-primary/15 dark:bg-primary/30 flex items-center justify-center">
                         <Trophy className="w-6 h-6 text-primary dark:text-primary" />
                       </div>
-                      <h2 className="text-2xl font-black text-blue-900 dark:text-white">
+                      <h2 className="text-2xl font-black text-blue-900 dark:text-foreground">
                         Indoor Courts
                       </h2>
                     </div>
-                    <p className="text-gray-600 dark:text-slate-400 leading-relaxed mb-6">
+                    <p className="text-muted-foreground dark:text-muted-foreground leading-relaxed mb-6">
                       Three professional-grade wooden courts with synthetic mat
                       flooring and modern lighting, designed for both training
                       and competitive play.
@@ -97,7 +97,7 @@ export function FacilitiesSection() {
                       {courtDetails.map((detail, i) => (
                         <li key={i} className="flex gap-3 items-start">
                           <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700 dark:text-slate-300 text-sm">
+                          <span className="text-muted-foreground dark:text-slate-300 text-sm">
                             {detail}
                           </span>
                         </li>
@@ -122,7 +122,7 @@ export function FacilitiesSection() {
                       <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center">
                         <Clock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                       </div>
-                      <h2 className="text-2xl font-black text-blue-900 dark:text-white">
+                      <h2 className="text-2xl font-black text-blue-900 dark:text-foreground">
                         Operating Hours
                       </h2>
                     </div>
@@ -142,7 +142,7 @@ export function FacilitiesSection() {
                             >
                               {slot.day}
                             </p>
-                            <p className="text-xs text-gray-500 dark:text-slate-500 mt-0.5">
+                            <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5">
                               {slot.note}
                             </p>
                           </div>
@@ -171,7 +171,7 @@ export function FacilitiesSection() {
             {/* Section header */}
             <div className="flex items-center gap-3 mb-8">
               <div className="w-2 h-8 bg-gradient-to-b from-red-500 to-orange-500 rounded-full" />
-              <h2 className="text-2xl font-black text-blue-900 dark:text-white">
+              <h2 className="text-2xl font-black text-blue-900 dark:text-foreground">
                 Court Closure Days — {new Date().getFullYear()}
               </h2>
               <CalendarX className="w-5 h-5 text-red-500" />
@@ -185,7 +185,7 @@ export function FacilitiesSection() {
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
-                className="mb-8 bg-gradient-to-r from-blue-900 to-indigo-900 text-white p-5 rounded-2xl shadow-md relative overflow-hidden"
+                className="mb-8 bg-gradient-to-r from-blue-900 to-indigo-900 text-foreground p-5 rounded-2xl shadow-md relative overflow-hidden"
               >
                 <div className="absolute inset-0 hero-pattern opacity-30" />
                 <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-3">
@@ -194,10 +194,10 @@ export function FacilitiesSection() {
                       <Clock className="w-5 h-5 text-amber-300" />
                     </div>
                     <div>
-                      <p className="text-xs font-black text-white/60 uppercase tracking-widest">
+                      <p className="text-xs font-black text-foreground/60 uppercase tracking-widest">
                         Next Closure
                       </p>
-                      <p className="font-black text-white">
+                      <p className="font-black text-foreground">
                         {nextHoliday.name}
                       </p>
                     </div>
@@ -238,12 +238,12 @@ export function FacilitiesSection() {
                       }`}
                     >
                       <p
-                        className={`text-xs font-bold tabular-nums ${isNext ? "text-amber-600 dark:text-amber-400" : isPast ? "text-slate-400 dark:text-slate-500" : "text-gray-500 dark:text-slate-400"}`}
+                        className={`text-xs font-bold tabular-nums ${isNext ? "text-amber-600 dark:text-amber-400" : isPast ? "text-muted-foreground dark:text-muted-foreground" : "text-muted-foreground dark:text-muted-foreground"}`}
                       >
                         {h.date}
                       </p>
                       <p
-                        className={`text-xs font-semibold mt-1.5 leading-snug ${isNext ? "text-amber-800 dark:text-amber-300" : isPast ? "text-slate-400 dark:text-slate-500" : "text-blue-900 dark:text-slate-200"}`}
+                        className={`text-xs font-semibold mt-1.5 leading-snug ${isNext ? "text-amber-800 dark:text-amber-300" : isPast ? "text-muted-foreground dark:text-muted-foreground" : "text-blue-900 dark:text-slate-200"}`}
                       >
                         {h.name}
                       </p>
@@ -253,7 +253,7 @@ export function FacilitiesSection() {
                         </span>
                       )}
                       {isPast && (
-                        <span className="mt-2 inline-block text-[10px] text-slate-400 dark:text-slate-600">
+                        <span className="mt-2 inline-block text-[10px] text-muted-foreground dark:text-muted-foreground">
                           Past
                         </span>
                       )}
@@ -262,12 +262,12 @@ export function FacilitiesSection() {
                 })}
               </div>
             ) : (
-              <div className="text-center py-10 text-gray-400 dark:text-slate-500">
+              <div className="text-center py-10 text-gray-400 dark:text-muted-foreground">
                 Loading closure dates…
               </div>
             )}
 
-            <p className="mt-8 text-center text-sm text-gray-500 dark:text-slate-500">
+            <p className="mt-8 text-center text-sm text-muted-foreground dark:text-muted-foreground">
               * Dates may change as per Government announcements
             </p>
           </div>
@@ -292,21 +292,21 @@ export function FacilitiesSection() {
                       <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center">
                         <MapPin className="w-6 h-6 text-blue-700 dark:text-blue-400" />
                       </div>
-                      <h2 className="text-2xl font-black text-blue-900 dark:text-white">
+                      <h2 className="text-2xl font-black text-blue-900 dark:text-foreground">
                         Location
                       </h2>
                     </div>
-                    <h3 className="font-bold text-blue-900 dark:text-white text-base mb-2">
+                    <h3 className="font-bold text-blue-900 dark:text-foreground text-base mb-2">
                       IISc Gymkhana Badminton Courts
                     </h3>
-                    <p className="text-gray-600 dark:text-slate-400 leading-relaxed mb-2">
+                    <p className="text-muted-foreground dark:text-muted-foreground leading-relaxed mb-2">
                       Indian Institute of Science
                       <br />
                       Bangalore — 560012
                       <br />
                       India
                     </p>
-                    <p className="text-gray-500 dark:text-slate-500 text-sm mb-6">
+                    <p className="text-muted-foreground dark:text-muted-foreground text-sm mb-6">
                       Located within the IISc campus with easy access, ample
                       parking, and excellent connectivity.
                     </p>
@@ -314,7 +314,7 @@ export function FacilitiesSection() {
                       href="https://maps.app.goo.gl/pBTtJGYEPwnu6qd78"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 bg-primary hover:bg-primary text-white px-5 py-3 rounded-xl font-bold text-sm transition-all hover:-translate-y-0.5 shadow-md shadow-primary/20"
+                      className="inline-flex items-center gap-2 bg-primary hover:bg-primary text-foreground px-5 py-3 rounded-xl font-bold text-sm transition-all hover:-translate-y-0.5 shadow-md shadow-primary/20"
                     >
                       <MapPin className="w-4 h-4" />
                       Open in Google Maps
@@ -339,7 +339,7 @@ export function FacilitiesSection() {
                       <div className="w-12 h-12 rounded-2xl bg-primary/15 dark:bg-primary/30 flex items-center justify-center">
                         <Users className="w-6 h-6 text-primary dark:text-primary" />
                       </div>
-                      <h2 className="text-2xl font-black text-blue-900 dark:text-white">
+                      <h2 className="text-2xl font-black text-blue-900 dark:text-foreground">
                         Membership & Access
                       </h2>
                     </div>
@@ -348,7 +348,7 @@ export function FacilitiesSection() {
                       <h3 className="font-black text-primary dark:text-primary text-sm uppercase tracking-wider mb-2">
                         IISc Members
                       </h3>
-                      <p className="text-gray-600 dark:text-slate-400 text-sm leading-relaxed">
+                      <p className="text-muted-foreground dark:text-muted-foreground text-sm leading-relaxed">
                         Students, faculty, staff, and eligible members can
                         access the badminton facilities through Gymkhana
                         membership.
@@ -363,7 +363,7 @@ export function FacilitiesSection() {
                       ].map((item, i) => (
                         <li key={i} className="flex gap-3 items-start">
                           <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700 dark:text-slate-300 text-sm">
+                          <span className="text-muted-foreground dark:text-slate-300 text-sm">
                             {item}
                           </span>
                         </li>

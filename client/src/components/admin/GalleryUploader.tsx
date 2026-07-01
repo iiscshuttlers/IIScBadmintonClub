@@ -135,7 +135,7 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-24 sm:bottom-6 left-4 sm:left-6 z-[60] bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-2xl transition-transform hover:scale-110 flex items-center gap-2 group"
+        className="fixed bottom-24 sm:bottom-6 left-4 sm:left-6 z-[60] bg-blue-600 hover:bg-blue-700 text-foreground p-4 rounded-full shadow-2xl transition-transform hover:scale-110 flex items-center gap-2 group"
       >
         <Upload className="w-6 h-6" />
         <span className="font-bold hidden sm:block w-0 overflow-hidden group-hover:w-32 transition-all duration-300 whitespace-nowrap">Upload Photos</span>
@@ -147,11 +147,11 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
-          <h3 className="font-black text-lg text-slate-800 dark:text-white flex items-center gap-2">
+          <h3 className="font-black text-lg text-slate-800 dark:text-foreground flex items-center gap-2">
             <FolderPlus className="w-5 h-5 text-blue-600" />
             Upload to Gallery
           </h3>
-          <button onClick={() => !uploading && setIsOpen(false)} className="text-slate-400 hover:text-red-500 transition">
+          <button onClick={() => !uploading && setIsOpen(false)} className="text-muted-foreground hover:text-red-500 transition">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -159,17 +159,17 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
         <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Category Selection */}
           <div className="space-y-3">
-            <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Category (Folder)</label>
+            <label className="text-sm font-bold text-muted-foreground dark:text-slate-300">Category (Folder)</label>
             <div className="flex gap-2">
               <button
-                className={`flex-1 py-1.5 rounded-lg text-sm font-bold border transition-colors ${categoryMode === "select" ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500"}`}
+                className={`flex-1 py-1.5 rounded-lg text-sm font-bold border transition-colors ${categoryMode === "select" ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-muted-foreground"}`}
                 onClick={() => setCategoryMode("select")}
                 disabled={existingCategories.length === 0}
               >
                 Existing
               </button>
               <button
-                className={`flex-1 py-1.5 rounded-lg text-sm font-bold border transition-colors ${categoryMode === "new" ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500"}`}
+                className={`flex-1 py-1.5 rounded-lg text-sm font-bold border transition-colors ${categoryMode === "new" ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-muted-foreground"}`}
                 onClick={() => setCategoryMode("new")}
               >
                 Create New
@@ -199,23 +199,23 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
 
           {/* Subfolder Selection */}
           <div className="space-y-3">
-            <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Subfolder (Optional)</label>
+            <label className="text-sm font-bold text-muted-foreground dark:text-slate-300">Subfolder (Optional)</label>
             <div className="flex gap-2">
               <button
-                className={`flex-1 py-1.5 rounded-lg text-sm font-bold border transition-colors ${subfolderMode === "none" ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500"}`}
+                className={`flex-1 py-1.5 rounded-lg text-sm font-bold border transition-colors ${subfolderMode === "none" ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-muted-foreground"}`}
                 onClick={() => setSubfolderMode("none")}
               >
                 None
               </button>
               <button
-                className={`flex-1 py-1.5 rounded-lg text-sm font-bold border transition-colors ${subfolderMode === "select" ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500"}`}
+                className={`flex-1 py-1.5 rounded-lg text-sm font-bold border transition-colors ${subfolderMode === "select" ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-muted-foreground"}`}
                 onClick={() => setSubfolderMode("select")}
                 disabled={existingSubfolders.length === 0}
               >
                 Existing
               </button>
               <button
-                className={`flex-1 py-1.5 rounded-lg text-sm font-bold border transition-colors ${subfolderMode === "new" ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500"}`}
+                className={`flex-1 py-1.5 rounded-lg text-sm font-bold border transition-colors ${subfolderMode === "new" ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-muted-foreground"}`}
                 onClick={() => setSubfolderMode("new")}
               >
                 Create New
@@ -245,7 +245,7 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
 
           {/* File Picker */}
           <div className="space-y-3">
-            <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Photos</label>
+            <label className="text-sm font-bold text-muted-foreground dark:text-slate-300">Photos</label>
             <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-6 text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition cursor-pointer relative overflow-hidden group">
               <input
                 type="file"
@@ -259,10 +259,10 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
                 <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                   <Upload className="w-6 h-6" />
                 </div>
-                <span className="font-bold text-slate-700 dark:text-slate-300">
+                <span className="font-bold text-muted-foreground dark:text-slate-300">
                   Tap to select photos
                 </span>
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-muted-foreground">
                   PNG, JPG, WEBP
                 </span>
               </div>
@@ -270,17 +270,17 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
 
             {files.length > 0 && (
               <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl p-4 animate-in fade-in slide-in-from-bottom-2">
-                <div className="flex justify-between text-sm font-bold mb-3 text-slate-700 dark:text-slate-300">
+                <div className="flex justify-between text-sm font-bold mb-3 text-muted-foreground dark:text-slate-300">
                   <span>Selected ({files.length})</span>
                   <button onClick={() => setFiles([])} className="text-red-500 hover:text-red-600">Clear all</button>
                 </div>
                 <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
                   {files.slice(0, 9).map((f, i) => (
                     <div key={i} className="relative aspect-square rounded-lg bg-slate-200 dark:bg-slate-700 overflow-hidden group shadow-sm">
-                      <ImageIcon className="absolute inset-0 m-auto text-slate-400 w-6 h-6" />
+                      <ImageIcon className="absolute inset-0 m-auto text-muted-foreground w-6 h-6" />
                       <button 
                         onClick={() => removeFile(i)}
-                        className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition z-10 hover:bg-red-500"
+                        className="absolute top-1 right-1 bg-black/60 text-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition z-10 hover:bg-red-500"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -288,7 +288,7 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
                     </div>
                   ))}
                   {files.length > 9 && (
-                    <div className="aspect-square rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-slate-500 text-sm shadow-sm border border-slate-300 dark:border-slate-600">
+                    <div className="aspect-square rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-muted-foreground text-sm shadow-sm border border-slate-300 dark:border-slate-600">
                       +{files.length - 9}
                     </div>
                   )}
@@ -302,7 +302,7 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
         <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
           {uploading ? (
             <div className="w-full">
-              <div className="flex justify-between text-xs font-bold text-slate-600 dark:text-slate-400 mb-2">
+              <div className="flex justify-between text-xs font-bold text-muted-foreground dark:text-muted-foreground mb-2">
                 <span>Uploading to Cloudinary...</span>
                 <span>{progress}%</span>
               </div>
@@ -314,7 +314,7 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
             <button
               onClick={handleUpload}
               disabled={files.length === 0 || !finalCategory.trim()}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:dark:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25"
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:dark:bg-slate-700 disabled:text-muted-foreground disabled:cursor-not-allowed text-foreground font-bold py-3.5 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25"
             >
               <Upload className="w-5 h-5" />
               Upload {files.length > 0 && `${files.length} photos`}

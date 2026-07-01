@@ -60,14 +60,14 @@ export function AnnouncementEditor({
     <div className="space-y-4">
       <button
         onClick={add}
-        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary text-white text-sm font-bold transition shadow-md shadow-primary/20"
+        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary text-foreground text-sm font-bold transition shadow-md shadow-primary/20"
       >
         <Plus className="w-4 h-4" /> New Announcement
       </button>
       {data.map((a, i) => (
         <div key={i} className={`${cardCls} space-y-3`}>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-black text-slate-400 uppercase tracking-wider">
+            <span className="text-xs font-black text-muted-foreground uppercase tracking-wider">
               #{i + 1}
             </span>
             <div className="flex items-center gap-2">
@@ -171,7 +171,7 @@ export function AnnouncementEditor({
           </div>
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              <label className="block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider">
                 Content
               </label>
               <FileUploader
@@ -195,7 +195,7 @@ export function AnnouncementEditor({
           
           {/* Custom Flyer Config */}
           <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
-            <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 w-max">
+            <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-muted-foreground dark:text-slate-300 mb-4 w-max">
               <input
                 type="checkbox"
                 checked={!!a.flyer?.enabled}
@@ -205,7 +205,7 @@ export function AnnouncementEditor({
                       ...(a.flyer || {
                         id: `ann_flyer_${Date.now()}`,
                         bgColorClass: "bg-gradient-to-r from-primary to-teal-600",
-                        items: [{ text: a.title || "New Event", colorClass: "text-white" }]
+                        items: [{ text: a.title || "New Event", colorClass: "text-foreground" }]
                       }),
                       enabled: true
                     });

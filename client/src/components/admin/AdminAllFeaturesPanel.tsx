@@ -72,7 +72,7 @@ export function AdminAllFeaturesPanel() {
   const statusColors = {
     active: "bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary border-primary/40 dark:border-primary/80",
     beta: "bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800",
-    "coming-soon": "bg-slate-50 dark:bg-slate-900/30 text-slate-700 dark:text-slate-400 border-slate-200 dark:border-slate-700",
+    "coming-soon": "bg-slate-50 dark:bg-slate-900/30 text-muted-foreground dark:text-muted-foreground border-slate-200 dark:border-slate-700",
   };
 
   const statusIcons = {
@@ -84,7 +84,7 @@ export function AdminAllFeaturesPanel() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <h2 className="text-xl font-black text-slate-800 dark:text-white">All Features</h2>
+        <h2 className="text-xl font-black text-slate-800 dark:text-foreground">All Features</h2>
         <InfoModal
           title="FEATURE TRACKER"
           mainIcon={<Sparkles className="w-5 h-5" />}
@@ -110,8 +110,8 @@ export function AdminAllFeaturesPanel() {
           <div className="text-xs font-bold text-amber-600 dark:text-amber-500 uppercase">Beta</div>
         </div>
         <div className="bg-slate-100 dark:bg-slate-900/30 rounded-xl p-4 border border-slate-200 dark:border-slate-800">
-          <div className="text-2xl font-black text-slate-700 dark:text-slate-400">{stats.categories.length}</div>
-          <div className="text-xs font-bold text-slate-600 dark:text-slate-500 uppercase">Categories</div>
+          <div className="text-2xl font-black text-muted-foreground dark:text-muted-foreground">{stats.categories.length}</div>
+          <div className="text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase">Categories</div>
         </div>
       </div>
 
@@ -120,7 +120,7 @@ export function AdminAllFeaturesPanel() {
         {/* Search & View Mode */}
         <div className="flex gap-3 flex-wrap items-center">
           <div className="flex-1 min-w-[200px] relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search features..."
@@ -155,7 +155,7 @@ export function AdminAllFeaturesPanel() {
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
                   statusFilter === status
                     ? "bg-primary/15 dark:bg-primary border-primary/50 dark:border-primary text-primary dark:text-primary"
-                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400"
+                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-muted-foreground"
                 }`}
               >
                 {status === "all" ? "All" : status === "coming-soon" ? "Coming Soon" : status.charAt(0).toUpperCase() + status.slice(1)}
@@ -171,7 +171,7 @@ export function AdminAllFeaturesPanel() {
             className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
               !selectedCategory
                 ? "bg-blue-100 dark:bg-blue-950 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-400"
-                : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400"
+                : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-muted-foreground"
             }`}
           >
             All Categories
@@ -183,7 +183,7 @@ export function AdminAllFeaturesPanel() {
               className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
                 selectedCategory === cat
                   ? "bg-blue-100 dark:bg-blue-950 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-400"
-                  : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400"
+                  : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-muted-foreground"
               }`}
             >
               {cat}
@@ -205,13 +205,13 @@ export function AdminAllFeaturesPanel() {
                 </span>
               </div>
               <div className="flex items-center gap-2 mb-2">
-                <h4 className="font-bold text-slate-900 dark:text-white text-sm">{feature.name}</h4>
+                <h4 className="font-bold text-foreground dark:text-foreground text-sm">{feature.name}</h4>
                 <InfoModal
                   title={feature.name.toUpperCase()}
                   items={[{ title: "Description", desc: feature.description }]}
                 />
               </div>
-              <div className="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase">{feature.category}</div>
+              <div className="text-[10px] font-bold text-muted-foreground dark:text-muted-foreground uppercase">{feature.category}</div>
             </div>
           ))}
         </div>
@@ -224,7 +224,7 @@ export function AdminAllFeaturesPanel() {
                   <div className="text-xl shrink-0">{iconMap[feature.icon] || "✨"}</div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <h4 className="font-bold text-slate-900 dark:text-white text-sm">{feature.name}</h4>
+                      <h4 className="font-bold text-foreground dark:text-foreground text-sm">{feature.name}</h4>
                       <InfoModal
                         title={feature.name.toUpperCase()}
                         items={[{ title: "Description", desc: feature.description }]}
@@ -233,7 +233,7 @@ export function AdminAllFeaturesPanel() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded">
+                  <span className="text-[10px] font-bold text-muted-foreground dark:text-muted-foreground uppercase px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded">
                     {feature.category}
                   </span>
                   <span className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold border ${statusColors[feature.status]}`}>
@@ -248,7 +248,7 @@ export function AdminAllFeaturesPanel() {
 
       {filtered.length === 0 && (
         <div className="text-center py-12">
-          <div className="text-slate-400 dark:text-slate-600 mb-2">No features match your filters</div>
+          <div className="text-muted-foreground dark:text-muted-foreground mb-2">No features match your filters</div>
           <button
             onClick={() => {
               setSearchTerm("");

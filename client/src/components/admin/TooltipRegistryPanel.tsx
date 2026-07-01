@@ -41,11 +41,11 @@ export function TooltipRegistryPanel() {
     >
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-black text-slate-800 dark:text-white flex items-center gap-2">
+          <h2 className="text-2xl font-black text-slate-800 dark:text-foreground flex items-center gap-2">
             <HelpCircle className="w-6 h-6 text-primary" />
             Tooltip Registry
           </h2>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-muted-foreground dark:text-muted-foreground mt-1">
             A comprehensive list of all {tooltips.length} InfoModal tooltips embedded across the platform.
           </p>
         </div>
@@ -63,10 +63,10 @@ export function TooltipRegistryPanel() {
                   <div className="text-xs font-bold text-primary dark:text-primary uppercase tracking-wider mb-1">
                     {tip.page}
                   </div>
-                  <h3 className="font-bold text-slate-900 dark:text-white mb-2 leading-tight">
+                  <h3 className="font-bold text-foreground dark:text-foreground mb-2 leading-tight">
                     {tip.location}
                   </h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                  <p className="text-sm text-muted-foreground dark:text-muted-foreground leading-relaxed">
                     {tip.desc}
                   </p>
                 </div>

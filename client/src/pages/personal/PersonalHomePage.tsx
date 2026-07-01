@@ -55,10 +55,10 @@ export default function PersonalHomePage() {
     <div className="container mx-auto px-4 py-6 max-w-4xl">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+        <h1 className="text-3xl font-bold text-foreground dark:text-foreground">
           Welcome back, {profile?.name?.split(" ")[0]}!
         </h1>
-        <p className="text-slate-600 dark:text-slate-400 mt-2">
+        <p className="text-muted-foreground dark:text-muted-foreground mt-2">
           Here's your badminton activity overview
         </p>
       </div>
@@ -118,11 +118,11 @@ export default function PersonalHomePage() {
 
       {/* Recent Matches */}
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
+        <h2 className="text-xl font-bold text-foreground dark:text-foreground mb-4">
           Recent Matches
         </h2>
         {recentMatches.length === 0 ? (
-          <p className="text-slate-600 dark:text-slate-400">
+          <p className="text-muted-foreground dark:text-muted-foreground">
             No recent matches. Start playing to see your history!
           </p>
         ) : (
@@ -133,15 +133,15 @@ export default function PersonalHomePage() {
                 className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
               >
                 <div className="flex-1">
-                  <p className="font-medium text-slate-900 dark:text-white">
+                  <p className="font-medium text-foreground dark:text-foreground">
                     {match.player1?.full_name} vs {match.player2?.full_name}
                   </p>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                  <p className="text-sm text-muted-foreground dark:text-muted-foreground">
                     {new Date(match.date).toLocaleDateString()}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-slate-900 dark:text-white">
+                  <p className="font-bold text-foreground dark:text-foreground">
                     {match.score1} - {match.score2}
                   </p>
                 </div>

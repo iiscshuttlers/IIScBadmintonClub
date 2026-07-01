@@ -149,7 +149,7 @@ export function VideoEditor({
             <div className="flex items-center justify-between mb-2">
               <label className={labelCls + " mb-0"}>
                 Chapters{" "}
-                <span className="text-slate-400 font-normal">
+                <span className="text-muted-foreground font-normal">
                   (optional — mark key moments)
                 </span>
               </label>
@@ -161,7 +161,7 @@ export function VideoEditor({
               </button>
             </div>
             {(v.chapters ?? []).length === 0 && (
-              <p className="text-xs text-slate-400 italic">No chapters yet.</p>
+              <p className="text-xs text-muted-foreground italic">No chapters yet.</p>
             )}
             <div className="space-y-2">
               {(v.chapters ?? []).map((ch, ci) => (
@@ -195,7 +195,7 @@ export function VideoEditor({
           <div className="border-t border-slate-200 dark:border-slate-700 pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 dark:bg-slate-800/50 -mx-5 -mb-5 p-5 rounded-b-2xl">
             <div>
                <label className={labelCls + " mb-0"}>Live Scoreboard Data</label>
-               <p className="text-[11px] font-bold text-slate-500 mt-0.5">{(v.scoreLogs ?? []).length} timestamps recorded.</p>
+               <p className="text-[11px] font-bold text-muted-foreground mt-0.5">{(v.scoreLogs ?? []).length} timestamps recorded.</p>
             </div>
             <div className="flex gap-2">
                <button onClick={async () => {
@@ -223,7 +223,7 @@ export function VideoEditor({
       ))}
       <button
         onClick={add}
-        className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 text-slate-500 hover:border-primary hover:text-primary transition text-sm font-bold w-full justify-center"
+        className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 text-muted-foreground hover:border-primary hover:text-primary transition text-sm font-bold w-full justify-center"
       >
         <Plus className="w-4 h-4" /> Add Video
       </button>

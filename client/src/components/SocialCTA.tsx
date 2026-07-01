@@ -26,7 +26,7 @@ export function SocialCTA({
           href={instagramUrl}
           target="_blank"
           rel="noreferrer"
-          className="w-full sm:w-auto flex items-center justify-center gap-3 bg-gradient-to-r from-pink-500 to-orange-500 text-white px-8 py-3.5 rounded-full font-bold shadow-lg hover:shadow-pink-200 dark:hover:shadow-pink-900/30 hover:-translate-y-0.5 transition-all duration-300"
+          className="w-full sm:w-auto flex items-center justify-center gap-3 bg-gradient-to-r from-pink-500 to-orange-500 text-foreground px-8 py-3.5 rounded-full font-bold shadow-lg hover:shadow-pink-200 dark:hover:shadow-pink-900/30 hover:-translate-y-0.5 transition-all duration-300"
         >
           <Instagram className="w-5 h-5" />
           {instagramHandle}
@@ -35,7 +35,7 @@ export function SocialCTA({
           href={youtubeUrl}
           target="_blank"
           rel="noreferrer"
-          className="w-full sm:w-auto flex items-center justify-center gap-3 bg-red-600 hover:bg-red-700 text-white px-8 py-3.5 rounded-full font-bold shadow-lg hover:shadow-red-200 dark:hover:shadow-red-900/30 hover:-translate-y-0.5 transition-all duration-300"
+          className="w-full sm:w-auto flex items-center justify-center gap-3 bg-red-600 hover:bg-red-700 text-foreground px-8 py-3.5 rounded-full font-bold shadow-lg hover:shadow-red-200 dark:hover:shadow-red-900/30 hover:-translate-y-0.5 transition-all duration-300"
         >
           <Youtube className="w-5 h-5" />
           YouTube
@@ -46,7 +46,7 @@ export function SocialCTA({
 
   // card variant — dark gradient card with hero-pattern
   return (
-    <div className="bg-gradient-to-br from-blue-900 to-primary/80 text-white p-8 md:p-10 rounded-3xl shadow-xl relative overflow-hidden">
+    <div className="bg-gradient-to-br from-blue-900 to-primary/80 text-foreground p-8 md:p-10 rounded-3xl shadow-xl relative overflow-hidden">
       <div className="absolute inset-0 hero-pattern" />
       <div className="relative z-10">
         <h2
@@ -65,7 +65,7 @@ export function SocialCTA({
             href={instagramUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition-all hover:-translate-y-0.5 shadow-md"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 text-foreground font-bold px-5 py-2.5 rounded-xl text-sm transition-all hover:-translate-y-0.5 shadow-md"
           >
             <Instagram className="w-4 h-4" />
             Follow on Instagram
@@ -74,7 +74,7 @@ export function SocialCTA({
             href={youtubeUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition-all hover:-translate-y-0.5 shadow-md"
+            className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-foreground font-bold px-5 py-2.5 rounded-xl text-sm transition-all hover:-translate-y-0.5 shadow-md"
           >
             <Youtube className="w-4 h-4" />
             YouTube Channel

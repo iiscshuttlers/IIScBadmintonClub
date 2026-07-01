@@ -179,7 +179,7 @@ function OfflineBanner() {
     <div
       role="status"
       aria-live="polite"
-      className="fixed top-0 inset-x-0 z-[9998] flex items-center justify-center gap-2 bg-slate-800 text-white text-sm font-bold py-2 px-4 shadow-lg"
+      className="fixed top-0 inset-x-0 z-[9998] flex items-center justify-center gap-2 bg-slate-800 text-foreground text-sm font-bold py-2 px-4 shadow-lg"
     >
       <WifiOff className="w-4 h-4 shrink-0" />
       You're offline — some features may be unavailable
@@ -281,7 +281,7 @@ function AppContent() {
                 {/* Skip-to-content for keyboard / screen-reader users */}
                 <a
                   href="#main-content"
-                  className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-xl focus:font-bold focus:shadow-lg"
+                  className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-foreground focus:rounded-xl focus:font-bold focus:shadow-lg"
                 >
                   Skip to content
                 </a>

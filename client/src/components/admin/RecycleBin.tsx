@@ -128,11 +128,11 @@ export function RecycleBin() {
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
         <div className="flex items-center gap-3 mb-1">
           <Trash2 className="w-5 h-5 text-rose-500" />
-          <h2 className="text-lg font-black text-slate-900 dark:text-white">
+          <h2 className="text-lg font-black text-foreground dark:text-foreground">
             Recycle Bin
           </h2>
         </div>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
+        <p className="text-sm text-muted-foreground dark:text-muted-foreground">
           Deleted items are kept for 30 days before permanent removal.
           {!isMainAdmin && " Only master admins can permanently delete items."}
         </p>
@@ -145,8 +145,8 @@ export function RecycleBin() {
             onClick={() => setFilter("all")}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
               filter === "all"
-                ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900"
-                : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-400"
+                ? "bg-slate-900 dark:bg-white text-white dark:text-foreground"
+                : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-muted-foreground dark:text-muted-foreground hover:border-slate-400"
             }`}
           >
             All ({items.length})
@@ -157,8 +157,8 @@ export function RecycleBin() {
               onClick={() => setFilter(t)}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition capitalize ${
                 filter === t
-                  ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900"
-                  : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-400"
+                  ? "bg-slate-900 dark:bg-white text-white dark:text-foreground"
+                  : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-muted-foreground dark:text-muted-foreground hover:border-slate-400"
               }`}
             >
               {tableIcon(t)} {t} ({items.filter((i) => i.table_name === t).length})
@@ -170,12 +170,12 @@ export function RecycleBin() {
       {/* Items */}
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
+          <Loader2 className="w-6 h-6 text-muted-foreground animate-spin" />
         </div>
       ) : filtered.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-12 text-center">
-          <Trash2 className="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
-          <p className="text-slate-400 dark:text-slate-500 font-medium">
+          <Trash2 className="w-10 h-10 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
+          <p className="text-muted-foreground dark:text-muted-foreground font-medium">
             Recycle bin is empty
           </p>
         </div>
@@ -195,14 +195,14 @@ export function RecycleBin() {
                   <span className="text-xl shrink-0 mt-0.5 sm:mt-0">{tableIcon(item.table_name)}</span>
 
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm text-slate-900 dark:text-white truncate">
+                    <p className="font-semibold text-sm text-foreground dark:text-foreground truncate">
                       {humanLabel(item)}
                     </p>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
-                      <span className="text-xs text-slate-400 capitalize">
+                      <span className="text-xs text-muted-foreground capitalize">
                         {item.table_name}
                       </span>
-                      <span className="text-xs text-slate-400">
+                      <span className="text-xs text-muted-foreground">
                         Deleted{" "}
                         {new Date(item.deleted_at).toLocaleDateString("en-IN", {
                           day: "numeric",

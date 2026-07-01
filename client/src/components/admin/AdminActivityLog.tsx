@@ -74,19 +74,19 @@ export function AdminActivityLog() {
         <div className="mt-2 space-y-1.5 bg-slate-50 dark:bg-slate-800/30 p-2 rounded-xl border border-slate-100 dark:border-slate-800/50 w-fit max-w-full">
           {Object.entries(parsed).map(([k, v]: any) => (
             <div key={k} className="flex flex-wrap items-center gap-2">
-              <span className="text-[10px] font-bold text-slate-500 capitalize shrink-0">{k.replace(/_/g, " ")}:</span>
+              <span className="text-[10px] font-bold text-muted-foreground capitalize shrink-0">{k.replace(/_/g, " ")}:</span>
               {Array.isArray(v) ? (
                 <div className="flex gap-1 flex-wrap">
                   {v.map((item: any, i: number) => (
-                    <span key={i} className="px-1.5 py-0.5 bg-black/5 dark:bg-white/10 text-slate-700 dark:text-slate-300 rounded text-[9px] font-black">{String(item)}</span>
+                    <span key={i} className="px-1.5 py-0.5 bg-black/5 dark:bg-white/10 text-muted-foreground dark:text-slate-300 rounded text-[9px] font-black">{String(item)}</span>
                   ))}
                 </div>
               ) : typeof v === "object" && v !== null ? (
-                <span className="text-[9px] text-slate-500 break-words font-mono bg-slate-100 dark:bg-slate-800 p-1.5 rounded-lg">
+                <span className="text-[9px] text-muted-foreground break-words font-mono bg-slate-100 dark:bg-slate-800 p-1.5 rounded-lg">
                   {JSON.stringify(v)}
                 </span>
               ) : (
-                <span className="text-[10px] font-black px-2 py-0.5 rounded-md text-slate-700 dark:text-slate-300 bg-black/5 dark:bg-white/10">
+                <span className="text-[10px] font-black px-2 py-0.5 rounded-md text-muted-foreground dark:text-slate-300 bg-black/5 dark:bg-white/10">
                   {String(v)}
                 </span>
               )}
@@ -95,16 +95,16 @@ export function AdminActivityLog() {
         </div>
       );
     }
-    return <p className="text-[10px] text-slate-500 mt-1.5 break-words font-medium">{String(details)}</p>;
+    return <p className="text-[10px] text-muted-foreground mt-1.5 break-words font-medium">{String(details)}</p>;
   };
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
+        <h2 className="text-lg font-black text-slate-800 dark:text-foreground flex items-center gap-2">
           <ClipboardList className="w-5 h-5 text-blue-500" /> Admin Activity Log
         </h2>
-        <button onClick={() => { setPage(0); load(0); }} className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition px-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
+        <button onClick={() => { setPage(0); load(0); }} className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-slate-800 dark:hover:text-foreground transition px-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
           <RefreshCw className="w-3.5 h-3.5" /> Refresh
         </button>
       </div>
@@ -113,31 +113,31 @@ export function AdminActivityLog() {
         <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
       ) : logs.length === 0 ? (
         <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800">
-          <ClipboardList className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-          <p className="text-slate-500 font-bold">No admin actions logged yet.</p>
-          <p className="text-xs text-slate-400 mt-1">Actions will appear here once admins start making changes.</p>
+          <ClipboardList className="w-12 h-12 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
+          <p className="text-muted-foreground font-bold">No admin actions logged yet.</p>
+          <p className="text-xs text-muted-foreground mt-1">Actions will appear here once admins start making changes.</p>
         </div>
       ) : (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
               <tr>
-                <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Time</th>
-                <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Admin</th>
-                <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Action</th>
+                <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Time</th>
+                <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Admin</th>
+                <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {logs.map((log) => (
                 <tr key={log.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                  <td className="px-4 py-3 text-slate-400 whitespace-nowrap text-xs">
+                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap text-xs">
                     <div className="flex items-center gap-1.5">
                       <Clock className="w-3.5 h-3.5 shrink-0" />
                       {formatTime(log.created_at)}
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="font-bold text-slate-700 dark:text-slate-300 text-xs">{log.admin_email.split("@")[0]}</span>
+                    <span className="font-bold text-muted-foreground dark:text-slate-300 text-xs">{log.admin_email.split("@")[0]}</span>
                   </td>
                   <td className="px-4 py-3 align-top">
                     <div className="flex flex-col items-start gap-1">
@@ -157,7 +157,7 @@ export function AdminActivityLog() {
               <button
                 onClick={handleLoadMore}
                 disabled={loading}
-                className="px-4 py-2 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition"
+                className="px-4 py-2 text-sm font-bold text-muted-foreground dark:text-slate-300 hover:text-foreground dark:hover:text-foreground transition"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin inline" /> : "Load More"}
               </button>

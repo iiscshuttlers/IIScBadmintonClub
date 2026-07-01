@@ -199,7 +199,7 @@ export default function PlayersDirectory() {
   /* ── Render ─────────────────────────────────────────────────────── */
   return (
     <div className="flex-1 w-full flex flex-col bg-slate-50 dark:bg-slate-950">
-      <section className="bg-gradient-to-r from-blue-900 via-indigo-950 to-primary/80 text-white py-6 sm:py-8 relative overflow-hidden shrink-0">
+      <section className="bg-gradient-to-r from-blue-900 via-indigo-950 to-primary/80 text-foreground py-6 sm:py-8 relative overflow-hidden shrink-0">
         <div className="container mx-auto px-4 relative z-10">
           <div className="flex flex-col items-center justify-center gap-6">
             <div className="w-full md:w-auto flex justify-center">
@@ -207,7 +207,7 @@ export default function PlayersDirectory() {
                 <button
                   onClick={() => setActiveTab("directory")}
                   className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-sm font-black transition-all ${
-                    effectiveTab === "directory" ? "bg-white text-primary shadow-md" : "text-white/80 hover:text-white hover:bg-white/10"
+                    effectiveTab === "directory" ? "bg-white text-primary shadow-md" : "text-foreground/80 hover:text-foreground hover:bg-white/10"
                   }`}
                 >
                   <Users className="w-4 h-4 shrink-0" /> Directory
@@ -215,7 +215,7 @@ export default function PlayersDirectory() {
                 <button
                   onClick={() => setActiveTab("leaderboard")}
                   className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-sm font-black transition-all ${
-                    effectiveTab === "leaderboard" ? "bg-white text-primary shadow-md" : "text-white/80 hover:text-white hover:bg-white/10"
+                    effectiveTab === "leaderboard" ? "bg-white text-primary shadow-md" : "text-foreground/80 hover:text-foreground hover:bg-white/10"
                   }`}
                 >
                   <Trophy className="w-4 h-4 shrink-0" /> Rankings
@@ -223,7 +223,7 @@ export default function PlayersDirectory() {
                 <button
                   onClick={() => setActiveTab("h2h")}
                   className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-sm font-black transition-all ${
-                    effectiveTab === "h2h" ? "bg-white text-rose-700 shadow-md" : "text-white/80 hover:text-white hover:bg-white/10"
+                    effectiveTab === "h2h" ? "bg-white text-rose-700 shadow-md" : "text-foreground/80 hover:text-foreground hover:bg-white/10"
                   }`}
                 >
                   <Swords className="w-4 h-4 shrink-0" /> H2H
@@ -231,7 +231,7 @@ export default function PlayersDirectory() {
                 <button
                   onClick={() => setActiveTab("teams")}
                   className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-sm font-black transition-all ${
-                    effectiveTab === "teams" ? "bg-white text-violet-700 shadow-md" : "text-white/80 hover:text-white hover:bg-white/10"
+                    effectiveTab === "teams" ? "bg-white text-violet-700 shadow-md" : "text-foreground/80 hover:text-foreground hover:bg-white/10"
                   }`}
                 >
                   <Shield className="w-4 h-4 shrink-0" /> Teams
@@ -240,7 +240,7 @@ export default function PlayersDirectory() {
                   <button
                     onClick={() => setActiveTab("network")}
                     className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-sm font-black transition-all ${
-                      effectiveTab === "network" ? "bg-white text-violet-700 shadow-md" : "text-white/80 hover:text-white hover:bg-white/10"
+                      effectiveTab === "network" ? "bg-white text-violet-700 shadow-md" : "text-foreground/80 hover:text-foreground hover:bg-white/10"
                     }`}
                   >
                     <Heart className="w-4 h-4 shrink-0" /> Network

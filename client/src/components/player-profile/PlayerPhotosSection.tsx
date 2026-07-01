@@ -75,7 +75,7 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
     <motion.section variants={itemVariants}>
       <div className="flex items-center gap-3 mb-5">
         <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
-        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500 dark:text-white/35 shrink-0 flex items-center gap-2">
+        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground dark:text-foreground/35 shrink-0 flex items-center gap-2">
           <Camera className="w-3.5 h-3.5 text-blue-500" /> Through the Lens
         </span>
         <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
@@ -87,7 +87,7 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
             <img src={photo.url} alt={photo.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
             <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-              <p className="text-white text-xs font-bold truncate">{photo.title}</p>
+              <p className="text-foreground text-xs font-bold truncate">{photo.title}</p>
             </div>
           </button>
         ))}
@@ -109,11 +109,11 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
               onTouchMove={onTouchMove}
               onTouchEnd={onTouchEnd}
             >
-              <div className="absolute top-5 left-1/2 -translate-x-1/2 text-white/60 text-sm font-medium select-none">
+              <div className="absolute top-5 left-1/2 -translate-x-1/2 text-foreground/60 text-sm font-medium select-none">
                 {lightboxIndex + 1} / {photos.length}
               </div>
               <button
-                className="absolute top-4 right-2 md:right-4 text-white hover:text-primary transition-colors p-2 z-50"
+                className="absolute top-4 right-2 md:right-4 text-foreground hover:text-primary transition-colors p-2 z-50"
                 onClick={() => setLightboxIndex(null)}
                 aria-label="Close"
               >
@@ -121,7 +121,7 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
               </button>
               
               <button
-                className="absolute left-1 md:left-3 top-1/2 -translate-y-1/2 text-white hover:text-primary transition-colors p-2 z-50"
+                className="absolute left-1 md:left-3 top-1/2 -translate-y-1/2 text-foreground hover:text-primary transition-colors p-2 z-50"
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate(-1);
@@ -139,7 +139,7 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
               />
 
               <button
-                className="absolute right-1 md:right-3 top-1/2 -translate-y-1/2 text-white hover:text-primary transition-colors p-2 z-50"
+                className="absolute right-1 md:right-3 top-1/2 -translate-y-1/2 text-foreground hover:text-primary transition-colors p-2 z-50"
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate(1);
@@ -150,13 +150,13 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
 
               <div className="absolute bottom-0 left-0 right-0 px-4 pb-28 md:pb-6 pt-24 bg-gradient-to-t from-black/90 via-black/50 to-transparent z-50 flex flex-col items-center gap-2 pointer-events-none">
                 <div className="pointer-events-auto flex flex-col items-center gap-2 w-full max-w-4xl">
-                  <p className="text-white text-base md:text-xl font-bold tracking-wide drop-shadow-lg leading-tight text-center">
+                  <p className="text-foreground text-base md:text-xl font-bold tracking-wide drop-shadow-lg leading-tight text-center">
                     {photo.title}
                   </p>
                   <div className="flex items-center gap-3 mt-3">
                     <a
                       href={galleryUrl}
-                      className="flex items-center gap-2 px-6 py-2.5 bg-white text-black rounded-full text-sm font-bold shadow-lg hover:bg-gray-200 transition-all active:scale-95"
+                      className="flex items-center gap-2 px-6 py-2.5 bg-white text-foreground rounded-full text-sm font-bold shadow-lg hover:bg-gray-200 transition-all active:scale-95"
                       onClick={(e) => e.stopPropagation()}
                     >
                       View in Album
@@ -166,8 +166,8 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
                       onClick={(e) => { e.stopPropagation(); handleReport(photo); }}
                       className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-bold shadow-lg transition-all active:scale-95 ${
                         reportedPaths.has(photo.path)
-                          ? "bg-slate-700 text-slate-400 cursor-default"
-                          : "bg-rose-600/80 hover:bg-rose-600 text-white"
+                          ? "bg-slate-700 text-muted-foreground cursor-default"
+                          : "bg-rose-600/80 hover:bg-rose-600 text-foreground"
                       }`}
                       title="Report this photo"
                     >

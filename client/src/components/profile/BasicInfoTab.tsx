@@ -79,11 +79,11 @@ export function BasicInfoTab({
                 className="w-full h-full object-cover transition-opacity group-hover:opacity-50"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-slate-400 dark:text-slate-600 text-3xl font-bold uppercase transition-opacity group-hover:opacity-50">
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground dark:text-muted-foreground text-3xl font-bold uppercase transition-opacity group-hover:opacity-50">
                 {fullName ? fullName.charAt(0) : "U"}
               </div>
             )}
-            <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 text-white">
+            <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 text-foreground">
               <Upload className="w-5 h-5 mb-0.5" />
               <span className="text-[10px] font-bold">Upload</span>
             </div>
@@ -97,19 +97,19 @@ export function BasicInfoTab({
 
           <div className="flex-1 w-full space-y-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-1">
+              <label className="block text-xs font-semibold text-muted-foreground mb-1">
                 Direct Image Link
               </label>
               <input
                 type="text"
                 value={avatarUrl}
                 onChange={(e) => setAvatarUrl(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary"
                 placeholder="e.g. https://images.unsplash.com/... or your custom avatar URL"
               />
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground dark:text-muted-foreground">
               <span>or</span>
               <label className="flex items-center gap-1 cursor-pointer font-bold text-primary hover:text-primary dark:text-primary">
                 <Upload className="w-3.5 h-3.5" />
@@ -128,7 +128,7 @@ export function BasicInfoTab({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+          <label className="block text-sm font-semibold text-muted-foreground dark:text-slate-300 mb-2">
             Full Name *
           </label>
           <input
@@ -136,20 +136,20 @@ export function BasicInfoTab({
             type="text"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none transition-all"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
             placeholder="e.g. Tanu Singh"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+          <label className="block text-sm font-semibold text-muted-foreground dark:text-slate-300 mb-2">
             Nickname / Alias
           </label>
           <input
             type="text"
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none transition-all"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
             placeholder="e.g. Tanya"
           />
         </div>
@@ -157,7 +157,7 @@ export function BasicInfoTab({
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <div>
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+          <label className="block text-sm font-semibold text-muted-foreground dark:text-slate-300 mb-2">
             IISc Email *
           </label>
           <input
@@ -165,12 +165,12 @@ export function BasicInfoTab({
             type="email"
             value={iiscEmail}
             onChange={(e) => setIiscEmail(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none transition-all"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
             placeholder="e.g. tanu@iisc.ac.in"
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+          <label className="block text-sm font-semibold text-muted-foreground dark:text-slate-300 mb-2">
             Contact Number *
           </label>
           <input
@@ -184,7 +184,7 @@ export function BasicInfoTab({
                 e.target.value.replace(/\D/g, "").slice(0, 10),
               )
             }
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none transition-all"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
             placeholder="e.g. 9876543210"
           />
         </div>
@@ -192,14 +192,14 @@ export function BasicInfoTab({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-            Gender * <span className="text-xs font-normal text-slate-400 ml-1">(Hidden from profile, used only for match logic)</span>
+          <label className="block text-sm font-semibold text-muted-foreground dark:text-slate-300 mb-2">
+            Gender * <span className="text-xs font-normal text-muted-foreground ml-1">(Hidden from profile, used only for match logic)</span>
           </label>
           <select
             required
             value={gender}
             onChange={(e) => setGender(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none transition-all"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
           >
             <option value="" disabled>Select gender</option>
             <option value="Male">Male</option>
@@ -208,14 +208,14 @@ export function BasicInfoTab({
           </select>
         </div>
         <div>
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+          <label className="block text-sm font-semibold text-muted-foreground dark:text-slate-300 mb-2">
             Joined Year (Class of) *
           </label>
           <select
             required
             value={joinedYear}
             onChange={(e) => setJoinedYear(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none transition-all"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
           >
             <option value="" disabled>
               Select year
@@ -245,9 +245,9 @@ export function BasicInfoTab({
             }}
             className="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary bg-white dark:bg-slate-900"
           />
-          <label htmlFor="isGuest" className="text-sm font-semibold text-slate-700 dark:text-slate-300 cursor-pointer">
+          <label htmlFor="isGuest" className="text-sm font-semibold text-muted-foreground dark:text-slate-300 cursor-pointer">
             I am a Guest / Project Assistant / Intern
-            <p className="text-xs text-slate-500 font-normal mt-0.5">Select this if you are not an active IISc degree student.</p>
+            <p className="text-xs text-muted-foreground font-normal mt-0.5">Select this if you are not an active IISc degree student.</p>
           </label>
         </div>
 
@@ -269,14 +269,14 @@ export function BasicInfoTab({
       {!isGuest && (
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+            <label className="block text-sm font-semibold text-muted-foreground dark:text-slate-300 mb-2">
               Department *
             </label>
             <select
               required
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none transition-all"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
             >
               <option value="" disabled>
                 Select your department
@@ -296,7 +296,7 @@ export function BasicInfoTab({
               animate={{ opacity: 1, height: "auto" }}
               className="pt-2"
             >
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+              <label className="block text-sm font-semibold text-muted-foreground dark:text-slate-300 mb-2">
                 Specify Department *
               </label>
               <input
@@ -304,7 +304,7 @@ export function BasicInfoTab({
                 type="text"
                 value={customDepartment}
                 onChange={(e) => setCustomDepartment(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
                 placeholder="e.g. Center for Nano Science"
               />
             </motion.div>

@@ -164,13 +164,13 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
         <div className="flex gap-2 bg-slate-900 p-1 rounded-2xl w-fit mx-auto">
           <button
             onClick={() => setActiveSubTab("friendly")}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black transition-all ${activeSubTab === "friendly" ? "bg-primary text-white shadow" : "text-slate-400 hover:text-white"}`}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black transition-all ${activeSubTab === "friendly" ? "bg-primary text-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}
           >
             <Tv2 className="w-4 h-4" /> Friendly
           </button>
           <button
             onClick={() => setActiveSubTab("tournament")}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black transition-all ${activeSubTab === "tournament" ? "bg-primary text-white shadow" : "text-slate-400 hover:text-white"}`}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black transition-all ${activeSubTab === "tournament" ? "bg-primary text-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}
           >
             <Swords className="w-4 h-4" /> Tournament
           </button>
@@ -184,8 +184,8 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
               <Tv2 className="w-10 h-10 text-primary" />
             </div>
             <div>
-              <h2 className="text-3xl font-black text-white mb-2">Umpire Station</h2>
-              <p className="text-slate-400 max-w-md mx-auto">
+              <h2 className="text-3xl font-black text-foreground mb-2">Umpire Station</h2>
+              <p className="text-muted-foreground max-w-md mx-auto">
                 {maintenanceMode
                   ? "Match logging is temporarily disabled due to system maintenance."
                   : "Start a new live broadcast. Your match will be visible to everyone in the Match Activity feed."}
@@ -199,7 +199,7 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
             ) : (
               <button
                 onClick={() => setIsUmpiring(true)}
-                className="px-8 py-4 bg-primary hover:bg-primary text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg transition-colors text-lg"
+                className="px-8 py-4 bg-primary hover:bg-primary text-foreground font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg transition-colors text-lg"
               >
                 <Play className="w-6 h-6 fill-white" /> Start Umpiring
               </button>
@@ -218,7 +218,7 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
       {activeSubTab === "tournament" && (
         <div className="space-y-6">
           <div className="bg-slate-900 rounded-[2rem] p-6 shadow-xl border border-slate-800">
-            <h2 className="text-xl font-black text-white mb-5">Tournament Matches</h2>
+            <h2 className="text-xl font-black text-foreground mb-5">Tournament Matches</h2>
             <UmpireTournamentTab onStartMatch={(m) => { resetUmpireStore(); setActiveTournamentMatch(m); }} />
           </div>
           <RecentUmpireMatches
@@ -306,14 +306,14 @@ function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditSt
   return (
     <div className="bg-slate-900 rounded-[2rem] p-8 shadow-xl border border-slate-800">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-        <h3 className="text-xl font-black text-white">Recent Submissions (Editable for 15m)</h3>
+        <h3 className="text-xl font-black text-foreground">Recent Submissions (Editable for 15m)</h3>
         <div className="flex bg-slate-800 p-1 rounded-xl w-fit overflow-x-auto hide-scrollbar">
           {["ALL", "MS", "WS", "MD", "WD", "XD"].map(f => (
             <button
               key={f}
               onClick={() => setFilterFormat(f)}
               className={`px-3 py-1.5 rounded-lg text-xs font-black whitespace-nowrap transition-all ${
-                filterFormat === f ? "bg-primary text-white shadow-sm" : "text-slate-400 hover:text-white"
+                filterFormat === f ? "bg-primary text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {f}
@@ -391,7 +391,7 @@ function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditSt
               </div>
               <button 
                 onClick={() => onEdit({ ...m, is_edit_mode: true } as MatchEditState)}
-                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold rounded-lg transition-colors shrink-0"
+                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-foreground text-xs font-bold rounded-lg transition-colors shrink-0"
               >
                 Edit Score
               </button>

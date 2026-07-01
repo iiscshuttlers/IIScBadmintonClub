@@ -35,7 +35,7 @@ export function ProfileOverviewTabRight({
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-amber-400/0 via-amber-400/50 to-amber-400/0" />
             <Quote className="absolute -bottom-3 -right-3 w-24 h-24 text-amber-400/[0.12] -rotate-12 group-hover:scale-110 transition-transform duration-700 pointer-events-none" />
             <div className="relative z-10">
-              <p className="text-base sm:text-lg font-serif italic text-white/85 leading-snug">
+              <p className="text-base sm:text-lg font-serif italic text-foreground/85 leading-snug">
                 "{player.quote}"
               </p>
             </div>
@@ -50,11 +50,11 @@ export function ProfileOverviewTabRight({
           className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden"
         >
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-400 to-cyan-500" />
-          <h2 className="text-[10px] font-black text-slate-500 dark:text-white/35 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+          <h2 className="text-[10px] font-black text-muted-foreground dark:text-foreground/35 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
             <BookOpen className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />{" "}
             About
           </h2>
-          <p className="text-sm leading-relaxed text-slate-600 dark:text-white/65">
+          <p className="text-sm leading-relaxed text-muted-foreground dark:text-foreground/65">
             {player.bio}
           </p>
           {(player.coach ||
@@ -63,30 +63,30 @@ export function ProfileOverviewTabRight({
             <div className="mt-4 pt-4 border-t border-slate-200 dark:border-white/8 space-y-2.5">
               {player.coach && (
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-500 dark:text-white/35 font-medium">
+                  <span className="text-muted-foreground dark:text-foreground/35 font-medium">
                     Coach
                   </span>
-                  <span className="font-bold text-slate-800 dark:text-white/90">
+                  <span className="font-bold text-slate-800 dark:text-foreground/90">
                     {player.coach}
                   </span>
                 </div>
               )}
               {player.yearsPlaying != null && (
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-500 dark:text-white/35 font-medium">
+                  <span className="text-muted-foreground dark:text-foreground/35 font-medium">
                     Years Playing
                   </span>
-                  <span className="font-bold text-slate-800 dark:text-white/90">
+                  <span className="font-bold text-slate-800 dark:text-foreground/90">
                     {player.yearsPlaying} yrs
                   </span>
                 </div>
               )}
               {player.highestRanking != null && (
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-500 dark:text-white/35 font-medium">
+                  <span className="text-muted-foreground dark:text-foreground/35 font-medium">
                     Career-High Rank
                   </span>
-                  <span className="font-bold text-slate-800 dark:text-white/90">
+                  <span className="font-bold text-slate-800 dark:text-foreground/90">
                     #{player.highestRanking}
                   </span>
                 </div>
@@ -102,7 +102,7 @@ export function ProfileOverviewTabRight({
         className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden"
       >
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-400 to-orange-500" />
-        <h2 className="text-[10px] font-black text-slate-500 dark:text-white/35 uppercase tracking-[0.2em] mb-5 flex items-center gap-2">
+        <h2 className="text-[10px] font-black text-muted-foreground dark:text-foreground/35 uppercase tracking-[0.2em] mb-5 flex items-center gap-2">
           <Trophy className="w-3.5 h-3.5 text-amber-500" /> Career Record
         </h2>
 
@@ -113,7 +113,7 @@ export function ProfileOverviewTabRight({
             <div className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-400 mb-2">
               Overall W/L
             </div>
-            <div className="text-2xl font-black text-white">
+            <div className="text-2xl font-black text-foreground">
               {displayRecord}
             </div>
           </div>
@@ -122,7 +122,7 @@ export function ProfileOverviewTabRight({
         {/* Bracket Record */}
         {tournamentRuns && tournamentRuns.length > 0 && (
           <div className="mb-6">
-            <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-slate-500 dark:text-white/35 mb-3 flex items-center gap-1.5">
+            <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-muted-foreground dark:text-foreground/35 mb-3 flex items-center gap-1.5">
               <Swords className="w-3 h-3 text-primary" /> Bracket Record
             </h3>
             <div className="space-y-2">
@@ -139,14 +139,14 @@ export function ProfileOverviewTabRight({
                   >
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <div className="min-w-0">
-                        <p className="text-[11px] font-bold text-slate-800 dark:text-white/85 truncate leading-tight">
+                        <p className="text-[11px] font-bold text-slate-800 dark:text-foreground/85 truncate leading-tight">
                           {run.tournament_name}
                         </p>
-                        <p className="text-[9px] text-slate-500 dark:text-white/35 uppercase tracking-wider">
+                        <p className="text-[9px] text-muted-foreground dark:text-foreground/35 uppercase tracking-wider">
                           {run.category}
                         </p>
                       </div>
-                      <span className={`text-[9px] font-bold shrink-0 px-2 py-0.5 rounded-full ${run.eliminated ? "bg-slate-200 dark:bg-white/8 text-slate-500 dark:text-white/40" : "bg-primary/15 text-primary dark:text-primary"}`}>
+                      <span className={`text-[9px] font-bold shrink-0 px-2 py-0.5 rounded-full ${run.eliminated ? "bg-slate-200 dark:bg-white/8 text-muted-foreground dark:text-foreground/40" : "bg-primary/15 text-primary dark:text-primary"}`}>
                         {resultLabel}
                       </span>
                     </div>
@@ -157,7 +157,7 @@ export function ProfileOverviewTabRight({
                           style={{ width: `${winPct}%` }}
                         />
                       </div>
-                      <span className="text-[9px] font-mono text-slate-500 dark:text-white/35 shrink-0">
+                      <span className="text-[9px] font-mono text-muted-foreground dark:text-foreground/35 shrink-0">
                         {run.wins}W – {run.losses}L
                       </span>
                     </div>
@@ -171,7 +171,7 @@ export function ProfileOverviewTabRight({
         {/* Achievements */}
         {validAchievements.length > 0 && (
           <div className="mb-5">
-            <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-slate-500 dark:text-white/35 mb-4 flex items-center gap-1.5">
+            <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-muted-foreground dark:text-foreground/35 mb-4 flex items-center gap-1.5">
               <Medal className="w-3 h-3 text-amber-500 dark:text-amber-400" />{" "}
               Achievements
             </h3>
@@ -220,7 +220,7 @@ export function ProfileOverviewTabRight({
                         <span className="text-xs">{icon}</span>
                       </div>
                       <div className="flex-1 py-2 px-3 rounded-xl bg-slate-100 dark:bg-white/4 border border-slate-300 dark:border-white/6 hover:bg-slate-50 dark:hover:bg-slate-200 dark:bg-white/8 transition-colors">
-                        <span className="text-xs font-bold text-slate-700 dark:text-white/80 leading-snug">
+                        <span className="text-xs font-bold text-muted-foreground dark:text-foreground/80 leading-snug">
                           {ach}
                         </span>
                       </div>
@@ -240,7 +240,7 @@ export function ProfileOverviewTabRight({
                 : ""
             }
           >
-            <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-slate-500 dark:text-white/35 mb-4 flex items-center gap-1.5">
+            <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-muted-foreground dark:text-foreground/35 mb-4 flex items-center gap-1.5">
               <Calendar className="w-3 h-3 text-blue-500" /> Tournaments
             </h3>
             <div className="relative ml-5 space-y-2.5">
@@ -257,7 +257,7 @@ export function ProfileOverviewTabRight({
                       <div className="w-2 h-2 rounded-full bg-blue-500" />
                     </div>
                     <div className="flex-1 py-1.5 px-3 rounded-xl bg-slate-100 dark:bg-white/4 border border-slate-300 dark:border-white/6 hover:bg-slate-50 dark:hover:bg-slate-200 dark:bg-white/8 transition-colors">
-                      <span className="text-xs font-bold text-slate-700 dark:text-white/80">
+                      <span className="text-xs font-bold text-muted-foreground dark:text-foreground/80">
                         {t}
                       </span>
                     </div>

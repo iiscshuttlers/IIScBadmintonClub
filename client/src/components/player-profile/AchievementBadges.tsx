@@ -68,7 +68,7 @@ const BADGES: BadgeDef[] = [
     label: "Centurion",
     description: "Play 100 matches",
     icon: Shield,
-    color: "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400",
+    color: "bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-muted-foreground",
     getProgress: ({ wins, losses }) => ({ earned: wins + losses >= 100, current: Math.min(wins + losses, 100), max: 100 }),
   },
   {
@@ -199,8 +199,8 @@ export function AchievementBadges({ matches, playerId, elo }: Props) {
           <Trophy className="w-5 h-5 text-amber-500" />
         </div>
         <div>
-          <h3 className="text-base font-black text-slate-800 dark:text-white">Achievements</h3>
-          <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
+          <h3 className="text-base font-black text-slate-800 dark:text-foreground">Achievements</h3>
+          <p className="text-xs font-bold text-muted-foreground dark:text-muted-foreground">
             {earned.length} of {BADGES.length} Unlocked
           </p>
         </div>
@@ -237,7 +237,7 @@ export function AchievementBadges({ matches, playerId, elo }: Props) {
         <div>
           <div className="flex items-center gap-3 mb-4">
             <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0">In Progress</span>
+            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest shrink-0">In Progress</span>
             <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -256,12 +256,12 @@ export function AchievementBadges({ matches, playerId, elo }: Props) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-0.5">
-                      <span className="text-xs font-bold text-slate-600 dark:text-slate-300 truncate pr-2">{badge.label}</span>
-                      <span className="text-[10px] font-black text-slate-400 whitespace-nowrap">
+                      <span className="text-xs font-bold text-muted-foreground dark:text-slate-300 truncate pr-2">{badge.label}</span>
+                      <span className="text-[10px] font-black text-muted-foreground whitespace-nowrap">
                         {progress.max > 1 ? `${progress.current} / ${progress.max}` : `${percent}%`}
                       </span>
                     </div>
-                    <p className="text-[9px] text-slate-400 truncate mb-1.5" title={badge.description}>{badge.description}</p>
+                    <p className="text-[9px] text-muted-foreground truncate mb-1.5" title={badge.description}>{badge.description}</p>
                     <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-slate-400 dark:bg-slate-500 rounded-full transition-all duration-500" 

@@ -40,7 +40,7 @@ export function ConfigEditor({
     <div className="space-y-6">
       {/* Stats */}
       <div className={cardCls}>
-        <h3 className="text-lg font-black text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+        <h3 className="text-lg font-black text-slate-800 dark:text-foreground mb-4 flex items-center gap-2">
           <Activity className="w-5 h-5 text-primary" /> Global Stats (Home &
           About)
         </h3>
@@ -86,7 +86,7 @@ export function ConfigEditor({
 
       {/* About Page */}
       <div className={cardCls}>
-        <h3 className="text-lg font-black text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+        <h3 className="text-lg font-black text-slate-800 dark:text-foreground mb-4 flex items-center gap-2">
           <UserCheck className="w-5 h-5 text-blue-500" /> About Page Content
         </h3>
         <div className="space-y-4">

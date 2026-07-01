@@ -72,7 +72,7 @@ export function ContentEditorWrapper<T>({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-[88px] lg:bottom-6 left-0 right-0 mx-auto w-[90%] sm:w-max z-[9998] flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-3 sm:gap-4 px-4 sm:px-6 py-3 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-2xl border border-slate-700 dark:border-slate-300"
+            className="fixed bottom-[88px] lg:bottom-6 left-0 right-0 mx-auto w-[90%] sm:w-max z-[9998] flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-3 sm:gap-4 px-4 sm:px-6 py-3 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-foreground shadow-2xl border border-slate-700 dark:border-slate-300"
           >
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-amber-400 dark:text-amber-600 shrink-0" />
@@ -82,14 +82,14 @@ export function ContentEditorWrapper<T>({
               <button
                 onClick={discard}
                 disabled={isSaving}
-                className="px-4 py-2 rounded-xl text-slate-400 hover:text-white dark:text-slate-500 dark:hover:text-slate-900 text-sm font-bold transition disabled:opacity-50"
+                className="px-4 py-2 rounded-xl text-muted-foreground hover:text-white dark:text-muted-foreground dark:hover:text-foreground text-sm font-bold transition disabled:opacity-50"
               >
                 Undo
               </button>
               <button
                 onClick={() => setShowConfirm(true)}
                 disabled={isSaving}
-                className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-primary text-white text-sm font-bold transition disabled:opacity-50 shadow-md w-full sm:w-auto min-w-[140px]"
+                className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-primary text-foreground text-sm font-bold transition disabled:opacity-50 shadow-md w-full sm:w-auto min-w-[140px]"
               >
                 {isSaving ? (
                   <Loader2 className="w-4 h-4 animate-spin shrink-0" />
@@ -118,18 +118,18 @@ export function ContentEditorWrapper<T>({
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50 shrink-0">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2 capitalize">
+                <h2 className="text-xl font-bold text-foreground dark:text-foreground flex items-center gap-2 capitalize">
                   <Save className="w-5 h-5 text-primary" /> Review Changes: {editorName}
                 </h2>
                 <button
                   onClick={() => setShowConfirm(false)}
-                  className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition"
+                  className="text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-200 transition"
                 >
                   <XCircle className="w-6 h-6" />
                 </button>
               </div>
               <div className="p-5 overflow-y-auto flex-1 min-h-0">
-                <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
+                <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-2">
                   Please double check your changes before confirming. The left side is what is currently live, and the right side is what will be saved.
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 text-xs font-mono">
@@ -137,7 +137,7 @@ export function ContentEditorWrapper<T>({
                     <div className="bg-rose-100 dark:bg-rose-900/40 text-rose-800 dark:text-rose-300 font-bold px-3 py-2 rounded-t-lg border-b border-rose-200 dark:border-rose-800/50">
                       Current Live Version
                     </div>
-                    <div className="bg-rose-50/50 dark:bg-rose-950/20 p-4 rounded-b-lg text-slate-700 dark:text-slate-300 whitespace-pre overflow-x-auto border border-rose-100 dark:border-rose-900/30 border-t-0 h-[400px] overflow-y-auto shadow-inner">
+                    <div className="bg-rose-50/50 dark:bg-rose-950/20 p-4 rounded-b-lg text-muted-foreground dark:text-slate-300 whitespace-pre overflow-x-auto border border-rose-100 dark:border-rose-900/30 border-t-0 h-[400px] overflow-y-auto shadow-inner">
                       {JSON.stringify(originalData, null, 2)}
                     </div>
                   </div>
@@ -145,7 +145,7 @@ export function ContentEditorWrapper<T>({
                     <div className="bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary/70 font-bold px-3 py-2 rounded-t-lg border-b border-primary/40 dark:border-primary/50">
                       Your New Changes
                     </div>
-                    <div className="bg-primary/10/50 dark:bg-primary/20 p-4 rounded-b-lg text-slate-700 dark:text-slate-300 whitespace-pre overflow-x-auto border border-primary/30 dark:border-primary/30 border-t-0 h-[400px] overflow-y-auto shadow-inner">
+                    <div className="bg-primary/10/50 dark:bg-primary/20 p-4 rounded-b-lg text-muted-foreground dark:text-slate-300 whitespace-pre overflow-x-auto border border-primary/30 dark:border-primary/30 border-t-0 h-[400px] overflow-y-auto shadow-inner">
                       {JSON.stringify(data, null, 2)}
                     </div>
                   </div>
@@ -154,14 +154,14 @@ export function ContentEditorWrapper<T>({
               <div className="p-4 sm:p-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex flex-col-reverse sm:flex-row justify-end gap-3 shrink-0">
                 <button
                   onClick={() => setShowConfirm(false)}
-                  className="w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-xl font-bold text-slate-600 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-800 transition"
+                  className="w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-xl font-bold text-muted-foreground hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-800 transition"
                 >
                   Keep Editing
                 </button>
                 <button
                   onClick={handleSaveClick}
                   disabled={isSaving}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 sm:py-2.5 rounded-xl bg-primary hover:bg-primary text-white font-bold shadow-lg shadow-primary/20 transition disabled:opacity-50"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 sm:py-2.5 rounded-xl bg-primary hover:bg-primary text-foreground font-bold shadow-lg shadow-primary/20 transition disabled:opacity-50"
                 >
                   {isSaving ? (
                     <Loader2 className="w-5 h-5 animate-spin shrink-0" />

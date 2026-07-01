@@ -74,7 +74,7 @@ export function RivalryCards({ matches, limit = 3 }: Props) {
     <div className="mb-6">
       <div className="flex items-center gap-2 mb-3">
         <Flame className="w-4 h-4 text-orange-500" />
-        <span className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Club Rivalries</span>
+        <span className="text-xs font-black uppercase tracking-widest text-muted-foreground dark:text-muted-foreground">Club Rivalries</span>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {rivalries.map((r) => {
@@ -97,7 +97,7 @@ export function RivalryCards({ matches, limit = 3 }: Props) {
                         {r.p1.full_name[0]}
                       </div>
                     )}
-                    <Swords className="w-3.5 h-3.5 text-slate-400 mx-1" />
+                    <Swords className="w-3.5 h-3.5 text-muted-foreground mx-1" />
                     {r.p2.avatar_url ? (
                       <img src={r.p2.avatar_url} className="w-8 h-8 rounded-full object-cover border-2 border-white dark:border-slate-800 shadow" />
                     ) : (
@@ -106,13 +106,13 @@ export function RivalryCards({ matches, limit = 3 }: Props) {
                       </div>
                     )}
                   </div>
-                  <span className="ml-auto text-[10px] font-black uppercase text-slate-400">{r.count} matches</span>
+                  <span className="ml-auto text-[10px] font-black uppercase text-muted-foreground">{r.count} matches</span>
                 </div>
 
                 <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-xl font-black text-slate-800 dark:text-white">{r.p1Wins}</span>
-                  <span className="text-slate-300 dark:text-slate-700 font-black">—</span>
-                  <span className="text-xl font-black text-slate-800 dark:text-white">{r.p2Wins}</span>
+                  <span className="text-xl font-black text-slate-800 dark:text-foreground">{r.p1Wins}</span>
+                  <span className="text-slate-300 dark:text-muted-foreground font-black">—</span>
+                  <span className="text-xl font-black text-slate-800 dark:text-foreground">{r.p2Wins}</span>
                 </div>
 
                 <div className="h-1.5 w-full rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 mb-2">
@@ -123,12 +123,12 @@ export function RivalryCards({ matches, limit = 3 }: Props) {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <div className="text-[10px] text-slate-500 truncate">
+                  <div className="text-[10px] text-muted-foreground truncate">
                     {isClose ? (
                       <span className="text-amber-500 font-black">EVEN RIVALRY</span>
                     ) : (
                       <span>
-                        <span className="font-bold text-slate-700 dark:text-slate-300">{leader.full_name.split(" ")[0]}</span> leads
+                        <span className="font-bold text-muted-foreground dark:text-slate-300">{leader.full_name.split(" ")[0]}</span> leads
                       </span>
                     )}
                   </div>

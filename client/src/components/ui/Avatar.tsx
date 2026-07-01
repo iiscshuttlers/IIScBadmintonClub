@@ -30,7 +30,7 @@ export function Avatar({ src, name, size = "md", className }: AvatarProps) {
     <div
       className={cn(
         "relative rounded-full overflow-hidden flex items-center justify-center flex-shrink-0",
-        "bg-gradient-to-br from-primary to-primary font-bold text-white ring-1 ring-primary/30 dark:ring-primary",
+        "bg-gradient-to-br from-primary to-primary font-bold text-foreground ring-1 ring-primary/30 dark:ring-primary",
         sizes[size],
         className
       )}

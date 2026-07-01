@@ -230,7 +230,7 @@ export function GuestPlayersPanel() {
     <div className="space-y-8">
       {/* ── Create guest ─────────────────────────────────────── */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 p-5 sm:p-6">
-        <h2 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2 mb-1">
+        <h2 className="text-lg font-black text-slate-800 dark:text-foreground flex items-center gap-2 mb-1">
           <Ghost className="w-5 h-5 text-violet-500" /> Add Guest Player
           <InfoModal
             title="GUEST PLAYERS"
@@ -240,7 +240,7 @@ export function GuestPlayersPanel() {
             ]}
           />
         </h2>
-        <p className="text-sm text-slate-400 mb-4">
+        <p className="text-sm text-muted-foreground mb-4">
           Create a profile for a visitor or non-member so their matches and ELO can be tracked.
           They appear only in match-logging dropdowns — not the public leaderboard.
         </p>
@@ -251,7 +251,7 @@ export function GuestPlayersPanel() {
             onKeyDown={(e) => e.key === "Enter" && createGuest()}
             placeholder="Guest name (e.g. Visitor John)"
             maxLength={60}
-            className="flex-1 px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-violet-500"
+            className="flex-1 px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-bold text-foreground dark:text-foreground outline-none focus:ring-2 focus:ring-violet-500"
           />
           <div className="flex gap-2">
             {(["Male", "Female"] as const).map((opt) => (
@@ -262,7 +262,7 @@ export function GuestPlayersPanel() {
                 className={`px-4 py-2.5 rounded-xl text-sm font-bold border transition ${
                   gender === opt
                     ? "bg-violet-50 dark:bg-violet-900/30 border-violet-500 text-violet-700 dark:text-violet-300"
-                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"
+                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-muted-foreground"
                 }`}
               >
                 {opt}
@@ -272,13 +272,13 @@ export function GuestPlayersPanel() {
           <button
             onClick={createGuest}
             disabled={creating}
-            className="flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-bold transition disabled:opacity-50"
+            className="flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-foreground text-sm font-bold transition disabled:opacity-50"
           >
             {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
             Add
           </button>
         </div>
-        <p className="text-[11px] text-slate-400 mt-2">
+        <p className="text-[11px] text-muted-foreground mt-2">
           Gender is optional but recommended — it's needed for accurate cross-gender ELO scaling.
         </p>
       </div>
@@ -286,7 +286,7 @@ export function GuestPlayersPanel() {
       {/* ── Pending guest matches ────────────────────────────── */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
+          <h2 className="text-lg font-black text-slate-800 dark:text-foreground flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-amber-500" /> Matches Awaiting Approval
             {pending.length > 0 && (
               <span className="text-sm font-bold bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-full">
@@ -296,7 +296,7 @@ export function GuestPlayersPanel() {
           </h2>
           <button
             onClick={load}
-            className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition px-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-slate-800 dark:hover:text-foreground transition px-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
           >
             <RefreshCw className="w-3.5 h-3.5" /> Refresh
           </button>
@@ -309,7 +309,7 @@ export function GuestPlayersPanel() {
         ) : pending.length === 0 ? (
           <div className="text-center py-10 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
             <CheckCircle className="w-10 h-10 text-primary mx-auto mb-2" />
-            <p className="text-sm font-bold text-slate-500">No guest matches awaiting approval.</p>
+            <p className="text-sm font-bold text-muted-foreground">No guest matches awaiting approval.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -322,18 +322,18 @@ export function GuestPlayersPanel() {
                   className="bg-white dark:bg-slate-900 rounded-2xl border border-amber-200 dark:border-amber-900/40 p-4"
                 >
                   <div className="flex items-center gap-3 mb-3">
-                    <span className="font-black text-sm text-slate-800 dark:text-white truncate flex-1">
+                    <span className="font-black text-sm text-slate-800 dark:text-foreground truncate flex-1">
                       {sideName(m.player1, m.partner1)}
                     </span>
                     <div className="text-center shrink-0">
-                      <div className="text-xs font-black font-mono text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">
+                      <div className="text-xs font-black font-mono text-muted-foreground dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">
                         {displayScore}
                       </div>
-                      <div className="text-[10px] text-slate-400 uppercase tracking-wider mt-0.5">
+                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">
                         {m.category || "Friendly"}
                       </div>
                     </div>
-                    <span className="font-black text-sm text-slate-800 dark:text-white truncate flex-1 text-right">
+                    <span className="font-black text-sm text-slate-800 dark:text-foreground truncate flex-1 text-right">
                       {sideName(m.player2, m.partner2)}
                     </span>
                   </div>
@@ -341,7 +341,7 @@ export function GuestPlayersPanel() {
                     <button
                       disabled={isBusy}
                       onClick={() => approveMatch(m)}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary hover:bg-primary text-white text-sm font-bold transition disabled:opacity-50"
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary hover:bg-primary text-foreground text-sm font-bold transition disabled:opacity-50"
                     >
                       {isBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trophy className="w-4 h-4" />}
                       Approve & apply ELO
@@ -349,7 +349,7 @@ export function GuestPlayersPanel() {
                     <button
                       disabled={isBusy}
                       onClick={() => rejectMatch(m)}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-rose-600 hover:border-rose-300 text-sm font-bold transition disabled:opacity-50"
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-muted-foreground hover:text-rose-600 hover:border-rose-300 text-sm font-bold transition disabled:opacity-50"
                     >
                       <Trash2 className="w-4 h-4" /> Reject
                     </button>
@@ -363,7 +363,7 @@ export function GuestPlayersPanel() {
 
       {/* ── Guest roster ─────────────────────────────────────── */}
       <div>
-        <h2 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2 mb-3">
+        <h2 className="text-lg font-black text-slate-800 dark:text-foreground flex items-center gap-2 mb-3">
           <Ghost className="w-5 h-5 text-violet-500" /> Guest Roster
           {guests.length > 0 && (
             <span className="text-sm font-bold bg-violet-100 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 px-2 py-0.5 rounded-full">
@@ -374,7 +374,7 @@ export function GuestPlayersPanel() {
 
         {loading ? null : guests.length === 0 ? (
           <div className="text-center py-10 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
-            <p className="text-sm font-bold text-slate-500">No guest players yet.</p>
+            <p className="text-sm font-bold text-muted-foreground">No guest players yet.</p>
           </div>
         ) : (
           <div className="grid gap-2">
@@ -387,13 +387,13 @@ export function GuestPlayersPanel() {
                   <Ghost className="w-4 h-4 text-violet-500" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-black text-sm text-slate-800 dark:text-white truncate">
+                  <p className="font-black text-sm text-slate-800 dark:text-foreground truncate">
                     {g.full_name}
                     {g.gender && (
-                      <span className="ml-2 text-[10px] font-bold uppercase text-slate-400">{g.gender}</span>
+                      <span className="ml-2 text-[10px] font-bold uppercase text-muted-foreground">{g.gender}</span>
                     )}
                   </p>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-[11px] text-muted-foreground">
                     ELO {g.elo_rating ?? 1200} · {g.total_friendly_matches ?? 0} match
                     {(g.total_friendly_matches ?? 0) === 1 ? "" : "es"}
                   </p>
@@ -412,7 +412,7 @@ export function GuestPlayersPanel() {
                   disabled={busyId === g.id}
                   onClick={() => deleteGuest(g)}
                   title="Delete guest"
-                  className="p-2 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition disabled:opacity-50"
+                  className="p-2 rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition disabled:opacity-50"
                 >
                   {busyId === g.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                 </button>
@@ -420,7 +420,7 @@ export function GuestPlayersPanel() {
             ))}
           </div>
         )}
-        <p className="text-[11px] text-slate-400 mt-3 flex items-center gap-1.5">
+        <p className="text-[11px] text-muted-foreground mt-3 flex items-center gap-1.5">
           <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
           Guests with match history can't be deleted — use "Claim" to link them to a real player account and transfer their match history.
         </p>
@@ -431,11 +431,11 @@ export function GuestPlayersPanel() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-md p-6 space-y-5">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
+              <h3 className="text-lg font-black text-slate-800 dark:text-foreground flex items-center gap-2">
                 <Link2 className="w-5 h-5 text-violet-500" /> Claim Guest Account
               </h3>
               <button onClick={() => setClaimGuest(null)} className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-                <X className="w-4 h-4 text-slate-500" />
+                <X className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
 
@@ -450,14 +450,14 @@ export function GuestPlayersPanel() {
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Select Real Player</label>
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Select Real Player</label>
               <div className="relative mb-2">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   value={claimSearch}
                   onChange={(e) => { setClaimSearch(e.target.value); setSelectedReal(null); }}
                   placeholder="Search by name..."
-                  className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-violet-500"
+                  className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium text-foreground dark:text-foreground outline-none focus:ring-2 focus:ring-violet-500"
                 />
               </div>
               <div className="max-h-48 overflow-y-auto space-y-1">
@@ -468,10 +468,10 @@ export function GuestPlayersPanel() {
                     <button
                       key={p.id}
                       onClick={() => setSelectedReal(p)}
-                      className={`w-full text-left px-3 py-2 rounded-xl text-sm transition ${selectedReal?.id === p.id ? "bg-violet-100 dark:bg-violet-900/40 text-violet-800 dark:text-violet-200 font-bold" : "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"}`}
+                      className={`w-full text-left px-3 py-2 rounded-xl text-sm transition ${selectedReal?.id === p.id ? "bg-violet-100 dark:bg-violet-900/40 text-violet-800 dark:text-violet-200 font-bold" : "hover:bg-slate-50 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300"}`}
                     >
                       {p.full_name}
-                      {p.department && <span className="text-xs text-slate-400 ml-2">· {p.department}</span>}
+                      {p.department && <span className="text-xs text-muted-foreground ml-2">· {p.department}</span>}
                     </button>
                   ))}
               </div>
@@ -480,14 +480,14 @@ export function GuestPlayersPanel() {
             <div className="flex gap-3">
               <button
                 onClick={() => setClaimGuest(null)}
-                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-300 font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition"
               >
                 Cancel
               </button>
               <button
                 onClick={executeClaim}
                 disabled={!selectedReal || claiming}
-                className="flex-1 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-sm transition disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-foreground font-bold text-sm transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {claiming ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
                 Claim Account

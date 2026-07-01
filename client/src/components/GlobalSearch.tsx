@@ -244,31 +244,31 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
           {/* Input */}
           <div className="flex items-center gap-3 px-4 py-3.5 border-b border-slate-100 dark:border-slate-800">
             {loading ? (
-              <Loader2 className="w-5 h-5 text-slate-400 animate-spin shrink-0" />
+              <Loader2 className="w-5 h-5 text-muted-foreground animate-spin shrink-0" />
             ) : (
-              <Search className="w-5 h-5 text-slate-400 shrink-0" />
+              <Search className="w-5 h-5 text-muted-foreground shrink-0" />
             )}
             <input
               ref={inputRef}
               value={query}
               onChange={(e) => handleChange(e.target.value)}
               placeholder="Search players, teams, matches, events…"
-              className="flex-1 bg-transparent text-slate-800 dark:text-white placeholder-slate-400 text-sm outline-none"
+              className="flex-1 bg-transparent text-slate-800 dark:text-foreground placeholder-slate-400 text-sm outline-none"
             />
             <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-              <X className="w-4 h-4 text-slate-400" />
+              <X className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
 
           {/* Results */}
           <div className="max-h-80 overflow-y-auto">
             {results.length === 0 && query.length >= 2 && !loading && (
-              <div className="py-10 text-center text-slate-400 text-sm font-medium">
-                No results for "<span className="font-bold text-slate-600 dark:text-slate-300">{query}</span>"
+              <div className="py-10 text-center text-muted-foreground text-sm font-medium">
+                No results for "<span className="font-bold text-muted-foreground dark:text-slate-300">{query}</span>"
               </div>
             )}
             {results.length === 0 && query.length < 2 && (
-              <div className="py-8 text-center text-slate-400 text-xs">
+              <div className="py-8 text-center text-muted-foreground text-xs">
                 Type at least 2 characters to search
               </div>
             )}
@@ -280,7 +280,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
               const labels = { player: "Players", team: "Teams", match: "Matches", announcement: "Announcements", event: "Events" };
               return (
                 <div key={type}>
-                  <div className="px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/80 dark:bg-slate-800/50">
+                  <div className="px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground dark:text-muted-foreground bg-slate-50/80 dark:bg-slate-800/50">
                     {labels[type]}
                   </div>
                   {group.map((r) => (
@@ -297,14 +297,14 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-bold text-slate-800 dark:text-white truncate group-hover:text-primary dark:group-hover:text-primary transition-colors">
+                        <div className="text-sm font-bold text-slate-800 dark:text-foreground truncate group-hover:text-primary dark:group-hover:text-primary transition-colors">
                           {r.title}
                         </div>
                         {r.subtitle && (
-                          <div className="text-[11px] text-slate-400 truncate">{r.subtitle}</div>
+                          <div className="text-[11px] text-muted-foreground truncate">{r.subtitle}</div>
                         )}
                       </div>
-                      <ArrowRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-primary transition-colors shrink-0" />
+                      <ArrowRight className="w-4 h-4 text-slate-300 dark:text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
                     </button>
                   ))}
                 </div>
@@ -313,7 +313,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
           </div>
 
           {/* Footer hint */}
-          <div className="px-4 py-2 border-t border-slate-100 dark:border-slate-800 flex items-center gap-4 text-[11px] text-slate-400">
+          <div className="px-4 py-2 border-t border-slate-100 dark:border-slate-800 flex items-center gap-4 text-[11px] text-muted-foreground">
             <span><kbd className="font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[10px]">↵</kbd> select</span>
             <span><kbd className="font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[10px]">Esc</kbd> close</span>
             <span className="ml-auto"><kbd className="font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[10px]">⌘K</kbd> to open</span>

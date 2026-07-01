@@ -71,7 +71,7 @@ export function PerformanceTrends({ matches, playerId }: Props) {
   const formConfig = {
     hot: { label: "On Fire", color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-100 dark:bg-orange-950/40", icon: TrendingUp },
     neutral: { label: "Steady", color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-100 dark:bg-blue-950/40", icon: Minus },
-    cold: { label: "In a Slump", color: "text-slate-500 dark:text-slate-400", bg: "bg-slate-100 dark:bg-slate-800", icon: TrendingDown },
+    cold: { label: "In a Slump", color: "text-muted-foreground dark:text-muted-foreground", bg: "bg-slate-100 dark:bg-slate-800", icon: TrendingDown },
   }[data.recentForm];
 
   const FormIcon = formConfig.icon;
@@ -80,7 +80,7 @@ export function PerformanceTrends({ matches, playerId }: Props) {
   return (
     <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-black text-slate-800 dark:text-white flex items-center gap-2">
+        <h3 className="text-base font-black text-slate-800 dark:text-foreground flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-primary" /> Performance Trends
         </h3>
         <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-black ${formConfig.bg} ${formConfig.color}`}>
@@ -92,16 +92,16 @@ export function PerformanceTrends({ matches, playerId }: Props) {
       <div className="grid grid-cols-2 gap-3 mb-4">
         {/* Rolling Win Rate */}
         <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-3">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Win Rate (rolling 5)</p>
+          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mb-1">Win Rate (rolling 5)</p>
           <SparkLine values={data.winRates} color="#10b981" />
-          <p className="text-xs font-bold text-slate-600 dark:text-slate-300 mt-1">
+          <p className="text-xs font-bold text-muted-foreground dark:text-slate-300 mt-1">
             {data.winRates[data.winRates.length - 1]?.toFixed(0)}% last window
           </p>
         </div>
 
         {/* ELO Movement */}
         <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-3">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">ELO Movement</p>
+          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mb-1">ELO Movement</p>
           <SparkLine values={data.cumulativeElo} color={eloTrend >= 0 ? "#10b981" : "#f43f5e"} />
           <p className={`text-xs font-bold mt-1 ${eloTrend >= 0 ? "text-primary dark:text-primary" : "text-rose-600 dark:text-rose-400"}`}>
             {eloTrend >= 0 ? "+" : ""}{eloTrend} pts overall
@@ -111,7 +111,7 @@ export function PerformanceTrends({ matches, playerId }: Props) {
 
       {/* Recent form dots */}
       <div>
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Recent Form (last 5)</p>
+        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider mb-2">Recent Form (last 5)</p>
         <div className="flex gap-1.5">
           {matches
             .filter((m) => m.status === "confirmed")

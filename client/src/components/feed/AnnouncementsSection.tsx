@@ -112,7 +112,7 @@ export function AnnouncementsSection() {
   }, [queryData, isQueryLoading]);
 
   const categories = [
-    { id: "all", label: "All", color: "bg-gray-100 text-gray-700", icon: "📋" },
+    { id: "all", label: "All", color: "bg-gray-100 text-muted-foreground", icon: "📋" },
     {
       id: "tournament",
       label: "Tournament",
@@ -144,7 +144,7 @@ export function AnnouncementsSection() {
     return (
       found ?? {
         label: category,
-        color: "bg-gray-100 text-gray-700",
+        color: "bg-gray-100 text-muted-foreground",
         icon: "📄",
       }
     );
@@ -190,8 +190,8 @@ export function AnnouncementsSection() {
   function getStatusColor(status: string) {
     if (status === "upcoming") return "bg-primary/15 text-primary";
     if (status === "ongoing") return "bg-blue-100 text-blue-700";
-    if (status === "past") return "bg-gray-100 text-gray-600";
-    return "bg-gray-100 text-gray-600";
+    if (status === "past") return "bg-gray-100 text-muted-foreground";
+    return "bg-gray-100 text-muted-foreground";
   }
 
   return (
@@ -232,7 +232,7 @@ export function AnnouncementsSection() {
                   <div className="flex items-center gap-3 mb-8">
                     <div className="w-2 h-8 bg-gradient-to-b from-orange-500 to-amber-500 rounded-full" />
                     <h2
-                      className="text-2xl font-black text-blue-900 dark:text-white flex items-center gap-2"
+                      className="text-2xl font-black text-blue-900 dark:text-foreground flex items-center gap-2"
                       style={{ fontFamily: "Playfair Display, serif" }}
                     >
                       <Pin className="w-6 h-6 text-orange-500" />
@@ -251,7 +251,7 @@ export function AnnouncementsSection() {
                         >
                           <div className="h-1 bg-gradient-to-r from-orange-500 to-amber-400" />
                           <CardHeader>
-                            <CardTitle className="text-blue-900 dark:text-white text-xl">
+                            <CardTitle className="text-blue-900 dark:text-foreground text-xl">
                               {item.url ? (
                                 <a
                                   href={item.url}
@@ -267,11 +267,11 @@ export function AnnouncementsSection() {
                               )}
                             </CardTitle>
 
-                            <div className="flex flex-wrap gap-2 text-sm text-gray-600 mt-3">
+                            <div className="flex flex-wrap gap-2 text-sm text-muted-foreground mt-3">
                               {item.date && (
                                 <div className="flex items-center gap-1.5">
                                   <Calendar className="w-4 h-4 text-primary" />
-                                  <span className="text-gray-500 dark:text-slate-400 text-sm">
+                                  <span className="text-muted-foreground dark:text-muted-foreground text-sm">
                                     Published: {item.date}
                                   </span>
                                 </div>
@@ -307,7 +307,7 @@ export function AnnouncementsSection() {
                           </CardHeader>
                           <CardContent>
                             <p
-                              className="text-gray-700 dark:text-slate-300 leading-relaxed"
+                              className="text-muted-foreground dark:text-slate-300 leading-relaxed"
                               dangerouslySetInnerHTML={{
                                 __html: sanitize(item.content),
                               }}
@@ -331,7 +331,7 @@ export function AnnouncementsSection() {
                       onClick={() => setSelectedCategory(cat.id)}
                       className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
                         selectedCategory === cat.id
-                          ? "bg-primary text-white shadow-md shadow-primary/20 dark:shadow-primary/50/40 scale-105"
+                          ? "bg-primary text-foreground shadow-md shadow-primary/20 dark:shadow-primary/50/40 scale-105"
                           : `${cat.color} hover:shadow-sm dark:bg-slate-800 dark:text-slate-300`
                       }`}
                     >
@@ -348,7 +348,7 @@ export function AnnouncementsSection() {
                 <div className="flex items-center gap-3 mb-8">
                   <div className="w-2 h-8 bg-gradient-to-b from-primary to-teal-600 rounded-full" />
                   <h2
-                    className="text-2xl font-black text-blue-900 dark:text-white flex items-center gap-2"
+                    className="text-2xl font-black text-blue-900 dark:text-foreground flex items-center gap-2"
                     style={{ fontFamily: "Playfair Display, serif" }}
                   >
                     <Bell className="w-6 h-6 text-primary" />
@@ -358,7 +358,7 @@ export function AnnouncementsSection() {
 
                 {filteredRecent.length === 0 ? (
                   <div className="text-center py-16 rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-700">
-                    <p className="text-gray-500 dark:text-slate-400 text-lg">
+                    <p className="text-muted-foreground dark:text-muted-foreground text-lg">
                       No announcements found.
                     </p>
                   </div>
@@ -383,7 +383,7 @@ export function AnnouncementsSection() {
                             }`}
                           />
                           <CardHeader className="pb-3">
-                            <CardTitle className="text-blue-900 dark:text-white text-base font-bold">
+                            <CardTitle className="text-blue-900 dark:text-foreground text-base font-bold">
                               {item.url ? (
                                 <a
                                   href={item.url}
@@ -399,11 +399,11 @@ export function AnnouncementsSection() {
                               )}
                             </CardTitle>
 
-                            <div className="flex flex-wrap gap-2 text-sm text-gray-600 mt-2">
+                            <div className="flex flex-wrap gap-2 text-sm text-muted-foreground mt-2">
                               {item.date && (
                                 <div className="flex items-center gap-1.5">
                                   <Calendar className="w-3.5 h-3.5 text-primary" />
-                                  <span className="text-gray-500 dark:text-slate-400 text-xs">
+                                  <span className="text-muted-foreground dark:text-muted-foreground text-xs">
                                     Published: {item.date}
                                   </span>
                                 </div>
@@ -440,7 +440,7 @@ export function AnnouncementsSection() {
 
                           <CardContent>
                             <p
-                              className="text-gray-600 dark:text-slate-400 text-sm leading-relaxed"
+                              className="text-muted-foreground dark:text-muted-foreground text-sm leading-relaxed"
                               dangerouslySetInnerHTML={{
                                 __html: sanitize(item.content),
                               }}

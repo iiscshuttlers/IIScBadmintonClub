@@ -38,15 +38,15 @@ export default function MyNetworkPage() {
   return (
     <div className="container mx-auto px-4 py-6 max-w-6xl">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">My Network</h1>
-        <p className="text-slate-600 dark:text-slate-400 mt-2">
+        <h1 className="text-3xl font-bold text-foreground dark:text-foreground">My Network</h1>
+        <p className="text-muted-foreground dark:text-muted-foreground mt-2">
           {myBuddies.length} {myBuddies.length === 1 ? "buddy" : "buddies"}
         </p>
       </div>
 
       {myBuddies.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-slate-600 dark:text-slate-400">
+          <p className="text-muted-foreground dark:text-muted-foreground">
             You haven't connected with any buddies yet. Browse the Players directory to send connection requests!
           </p>
         </div>

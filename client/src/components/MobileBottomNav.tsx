@@ -31,7 +31,7 @@ export default function MobileBottomNav() {
           {/* HOME */}
           <button
             onClick={() => handleNav("/")}
-            className={`relative flex flex-col items-center justify-center w-16 h-14 transition-all duration-200 ${location === "/" ? "text-primary dark:text-primary scale-110" : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
+            className={`relative flex flex-col items-center justify-center w-16 h-14 transition-all duration-200 ${location === "/" ? "text-primary dark:text-primary scale-110" : "text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-foreground"}`}
           >
             {location === "/" && (
               <span className="absolute top-0.5 inset-x-1 h-full rounded-xl bg-primary/10 dark:bg-primary/25 -z-0" />
@@ -46,7 +46,7 @@ export default function MobileBottomNav() {
           {/* FEED */}
           <button
             onClick={() => handleNav("/feed")}
-            className={`relative flex flex-col items-center justify-center w-14 h-14 transition-all duration-200 ${location === "/feed" ? "text-primary dark:text-primary scale-110" : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
+            className={`relative flex flex-col items-center justify-center w-14 h-14 transition-all duration-200 ${location === "/feed" ? "text-primary dark:text-primary scale-110" : "text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-foreground"}`}
           >
             {location === "/feed" && (
               <span className="absolute top-0.5 inset-x-1 h-full rounded-xl bg-primary/10 dark:bg-primary/25 -z-0" />
@@ -71,7 +71,7 @@ export default function MobileBottomNav() {
                 }
                 window.dispatchEvent(new Event("openLogMatchModal"));
               }}
-              className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-teal-600 text-white shadow-lg shadow-primary/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-all ring-4 ring-white dark:ring-slate-900"
+              className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-teal-600 text-foreground shadow-lg shadow-primary/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-all ring-4 ring-white dark:ring-slate-900"
             >
               <Plus className="w-7 h-7" strokeWidth={3} />
             </button>
@@ -83,7 +83,7 @@ export default function MobileBottomNav() {
           {/* PLAYERS */}
           <button
             onClick={() => handleNav("/players")}
-            className={`relative flex flex-col items-center justify-center w-14 h-14 transition-all duration-200 ${location.startsWith("/players") ? "text-primary dark:text-primary scale-110" : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
+            className={`relative flex flex-col items-center justify-center w-14 h-14 transition-all duration-200 ${location.startsWith("/players") ? "text-primary dark:text-primary scale-110" : "text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-foreground"}`}
           >
             {location.startsWith("/players") && (
               <span className="absolute top-0.5 inset-x-1 h-full rounded-xl bg-primary/10 dark:bg-primary/25 -z-0" />
@@ -98,7 +98,7 @@ export default function MobileBottomNav() {
           {/* EVENTS */}
           <button
             onClick={() => handleNav("/events")}
-            className={`relative flex flex-col items-center justify-center w-14 h-14 transition-all duration-200 ${location.startsWith("/events") ? "text-primary dark:text-primary scale-110" : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
+            className={`relative flex flex-col items-center justify-center w-14 h-14 transition-all duration-200 ${location.startsWith("/events") ? "text-primary dark:text-primary scale-110" : "text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-foreground"}`}
           >
             {location.startsWith("/events") && (
               <span className="absolute top-0.5 inset-x-1 h-full rounded-xl bg-primary/10 dark:bg-primary/25 -z-0" />

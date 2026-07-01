@@ -20,7 +20,7 @@ export function FlyerConfigBuilder({
   onRemove?: () => void;
 }) {
   const update = (field: keyof DynamicFlyer, val: any) => onChange({ ...f, [field]: val });
-  const addItem = () => onChange({ ...f, items: [...f.items, { text: "New Item", colorClass: "text-white" }] });
+  const addItem = () => onChange({ ...f, items: [...f.items, { text: "New Item", colorClass: "text-foreground" }] });
   const removeItem = (itemIdx: number) => onChange({ ...f, items: f.items.filter((_, idx) => idx !== itemIdx) });
   const updateItem = (itemIdx: number, field: keyof FlyerItem, val: string) => {
     const nextItems = [...f.items];
@@ -53,7 +53,7 @@ export function FlyerConfigBuilder({
           </div>
           
           <div className="flex items-center gap-3 mb-2.5">
-            <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-slate-700 dark:text-slate-300">
+            <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-muted-foreground dark:text-slate-300">
               <input
                 type="checkbox"
                 checked={f.enabled}
@@ -118,7 +118,7 @@ export function FlyerConfigBuilder({
                     className={`${inputCls} w-20 px-2`}
                     placeholder="90"
                   />
-                  <span className="text-xs font-bold text-slate-500">secs</span>
+                  <span className="text-xs font-bold text-muted-foreground">secs</span>
                 </div>
               )}
             </div>

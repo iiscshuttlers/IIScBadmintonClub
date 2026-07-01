@@ -110,7 +110,7 @@ export function RegistrationsManager() {
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded-xl text-sm font-bold transition whitespace-nowrap ${filter === f ? "bg-slate-800 text-white" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"}`}
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition whitespace-nowrap ${filter === f ? "bg-slate-800 text-foreground" : "bg-white border border-slate-200 text-muted-foreground hover:bg-slate-50"}`}
           >
             {f.charAt(0).toUpperCase() + f.slice(1)}
           </button>
@@ -119,14 +119,14 @@ export function RegistrationsManager() {
           onClick={load}
           className="ml-auto px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50"
         >
-          <RefreshCw className="w-4 h-4 text-slate-500" />
+          <RefreshCw className="w-4 h-4 text-muted-foreground" />
         </button>
       </div>
 
       {/* List */}
       <div className="space-y-3">
         {filtered.length === 0 && (
-          <div className="text-center py-10 text-slate-400 font-medium border-2 border-dashed border-slate-200 rounded-2xl">
+          <div className="text-center py-10 text-muted-foreground font-medium border-2 border-dashed border-slate-200 rounded-2xl">
             No registrations found.
           </div>
         )}
@@ -139,7 +139,7 @@ export function RegistrationsManager() {
             >
               <div className="flex-1 space-y-1 w-full">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-bold text-slate-900 dark:text-white">
+                  <span className="font-bold text-foreground dark:text-foreground">
                     {r.full_name}
                   </span>
                   <span
@@ -148,14 +148,14 @@ export function RegistrationsManager() {
                     {r.status}
                   </span>
                 </div>
-                <div className="text-sm text-slate-600 dark:text-slate-400">
+                <div className="text-sm text-muted-foreground dark:text-muted-foreground">
                   <span className="font-semibold text-slate-800 dark:text-slate-200">
                     Events:
                   </span>{" "}
                   {r.categories.join(", ")}
                 </div>
                 {r.partner_names && Object.keys(r.partner_names).length > 0 && (
-                  <div className="text-sm text-slate-600 dark:text-slate-400">
+                  <div className="text-sm text-muted-foreground dark:text-muted-foreground">
                     <span className="font-semibold text-slate-800 dark:text-slate-200">
                       Partners:
                     </span>{" "}
@@ -164,7 +164,7 @@ export function RegistrationsManager() {
                       .join(" | ")}
                   </div>
                 )}
-                <div className="text-xs text-slate-500 font-mono mt-1">
+                <div className="text-xs text-muted-foreground font-mono mt-1">
                   UPI: {r.transaction_id}
                 </div>
               </div>
@@ -188,7 +188,7 @@ export function RegistrationsManager() {
                     <button
                       onClick={() => updateStatus(r.id, "approved")}
                       disabled={busy}
-                      className="flex-1 md:flex-none px-3 py-2 rounded-xl bg-primary hover:bg-primary text-white text-xs font-bold transition disabled:opacity-50"
+                      className="flex-1 md:flex-none px-3 py-2 rounded-xl bg-primary hover:bg-primary text-foreground text-xs font-bold transition disabled:opacity-50"
                     >
                       Approve
                     </button>
@@ -205,7 +205,7 @@ export function RegistrationsManager() {
                   <button
                     onClick={() => updateStatus(r.id, "pending")}
                     disabled={busy}
-                    className="flex-1 md:flex-none px-3 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs font-bold transition disabled:opacity-50"
+                    className="flex-1 md:flex-none px-3 py-2 rounded-xl bg-slate-100 text-muted-foreground hover:bg-slate-200 text-xs font-bold transition disabled:opacity-50"
                   >
                     Re-evaluate
                   </button>

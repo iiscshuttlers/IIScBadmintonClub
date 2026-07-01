@@ -32,10 +32,10 @@ export default function TournamentAdmin() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-[#060d1b] gap-4 p-8 text-center">
         <ShieldAlert className="w-16 h-16 text-rose-500" />
-        <h1 className="text-2xl font-black text-slate-800 dark:text-white">Access Denied</h1>
-        <p className="text-slate-500">You need admin permissions to access Tournament Manager.</p>
+        <h1 className="text-2xl font-black text-slate-800 dark:text-foreground">Access Denied</h1>
+        <p className="text-muted-foreground">You need admin permissions to access Tournament Manager.</p>
         <button onClick={() => navigate("/")}
-          className="mt-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary text-white font-black transition">
+          className="mt-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary text-foreground font-black transition">
           Go Home
         </button>
       </div>
@@ -50,7 +50,7 @@ export default function TournamentAdmin() {
           <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
             <button
               onClick={() => navigate("/admin")}
-              className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-500 hover:text-slate-800 dark:hover:text-white"
+              className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition text-muted-foreground hover:text-slate-800 dark:hover:text-foreground"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
@@ -59,8 +59,8 @@ export default function TournamentAdmin() {
                 <Trophy className="w-5 h-5 text-amber-500" />
               </div>
               <div>
-                <h1 className="text-base font-black text-slate-800 dark:text-white leading-tight">Tournament Manager</h1>
-                <p className="text-[10px] text-slate-400 leading-tight">Create · Bracket · Archive</p>
+                <h1 className="text-base font-black text-slate-800 dark:text-foreground leading-tight">Tournament Manager</h1>
+                <p className="text-[10px] text-muted-foreground leading-tight">Create · Bracket · Archive</p>
               </div>
             </div>
           </div>

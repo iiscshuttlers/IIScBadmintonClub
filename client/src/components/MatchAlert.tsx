@@ -67,10 +67,10 @@ export default function MatchAlert() {
               transition={{ delay: 0.3 }}
               className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg rounded-2xl px-8 py-4 shadow-2xl border border-primary/40 dark:border-primary/80 text-center max-w-xs"
             >
-              <p className="text-lg font-black text-slate-900 dark:text-white mb-1">
+              <p className="text-lg font-black text-foreground dark:text-foreground mb-1">
                 New Match Alert!
               </p>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
+              <p className="text-sm text-muted-foreground dark:text-muted-foreground">
                 {notification.opponentName
                   ? `${notification.opponentName} logged a match with you`
                   : "A match was just logged involving you"}

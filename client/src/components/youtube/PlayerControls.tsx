@@ -33,7 +33,7 @@ export function PlayerControls({ player, videoId, chapters, scoreLogs }: PlayerC
       <div className="relative px-4 pb-12 pt-12 md:pb-14 pointer-events-none">
         {/* Chapter label */}
         {currentChapter && (
-          <p className="text-white/60 text-xs mb-1.5 ml-0.5 truncate font-medium tracking-wide">
+          <p className="text-foreground/60 text-xs mb-1.5 ml-0.5 truncate font-medium tracking-wide">
             {currentChapter.title}
           </p>
         )}
@@ -78,12 +78,12 @@ export function PlayerControls({ player, videoId, chapters, scoreLogs }: PlayerC
         {/* Controls row */}
         <div className={`flex items-center gap-1 ${showControls || !playing ? "pointer-events-auto" : ""}`}>
           {/* Play / Pause */}
-          <button onClick={togglePlay} className="text-white hover:text-primary transition-colors p-1.5 rounded-lg hover:bg-white/10" aria-label={playing ? "Pause" : "Play"}>
+          <button onClick={togglePlay} className="text-foreground hover:text-primary transition-colors p-1.5 rounded-lg hover:bg-white/10" aria-label={playing ? "Pause" : "Play"}>
             {playing ? <Pause className="w-5 h-5" fill="currentColor" stroke="none" /> : <Play className="w-5 h-5" fill="currentColor" stroke="none" />}
           </button>
 
           {/* Skip −10 */}
-          <button onClick={() => skip(-10)} className="text-white/80 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10 flex items-center gap-0.5" aria-label="Rewind 10 seconds">
+          <button onClick={() => skip(-10)} className="text-foreground/80 hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-white/10 flex items-center gap-0.5" aria-label="Rewind 10 seconds">
             <RotateCcw className="w-4 h-4" />
             <span className="text-[10px] font-bold leading-none">10</span>
           </button>
@@ -92,7 +92,7 @@ export function PlayerControls({ player, videoId, chapters, scoreLogs }: PlayerC
           {scoreLogs && scoreLogs.length > 0 && (
              <button
                onClick={() => { setAutoHighlightsMode(!autoHighlightsMode); showHint(autoHighlightsMode ? "Highlights Off" : "Highlights On"); }}
-               className={`text-[10px] md:text-xs font-bold uppercase tracking-wider px-2 py-1.5 rounded-lg transition-colors flex items-center gap-1 shadow-sm border ${autoHighlightsMode ? 'bg-amber-500 text-white border-amber-400' : 'bg-white/10 text-white hover:bg-white/20 border-white/20'}`}
+               className={`text-[10px] md:text-xs font-bold uppercase tracking-wider px-2 py-1.5 rounded-lg transition-colors flex items-center gap-1 shadow-sm border ${autoHighlightsMode ? 'bg-amber-500 text-foreground border-amber-400' : 'bg-white/10 text-foreground hover:bg-white/20 border-white/20'}`}
                title="Auto-Skip Dead Time"
              >
                <Sparkles className="w-3 h-3" /> Highlights
@@ -100,7 +100,7 @@ export function PlayerControls({ player, videoId, chapters, scoreLogs }: PlayerC
           )}
 
           {/* Skip +10 */}
-          <button onClick={() => skip(10)} className="text-white/80 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10 flex items-center gap-0.5" aria-label="Forward 10 seconds">
+          <button onClick={() => skip(10)} className="text-foreground/80 hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-white/10 flex items-center gap-0.5" aria-label="Forward 10 seconds">
             <span className="text-[10px] font-bold leading-none">10</span>
             <SkipForward className="w-4 h-4" />
           </button>
@@ -113,12 +113,12 @@ export function PlayerControls({ player, videoId, chapters, scoreLogs }: PlayerC
           </button>
 
           {/* Mute */}
-          <button onClick={toggleMute} className="text-white/80 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10" aria-label={muted ? "Unmute" : "Mute"}>
+          <button onClick={toggleMute} className="text-foreground/80 hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-white/10" aria-label={muted ? "Unmute" : "Mute"}>
             {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
           </button>
 
           {/* Time */}
-          <span className="text-white/70 text-xs tabular-nums px-1 shrink-0">
+          <span className="text-foreground/70 text-xs tabular-nums px-1 shrink-0">
             {fmt(currentTime)} / {fmt(duration)}
           </span>
 
@@ -126,20 +126,20 @@ export function PlayerControls({ player, videoId, chapters, scoreLogs }: PlayerC
 
           {/* Club Controls (Settings) */}
           <div className="relative">
-            <button onClick={() => setShowClubControls((v) => !v)} className="text-white/80 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10" aria-label="Club Controls">
+            <button onClick={() => setShowClubControls((v) => !v)} className="text-foreground/80 hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-white/10" aria-label="Club Controls">
               <Settings className="w-4 h-4" />
             </button>
             {showClubControls && (
               <div className="absolute bottom-full right-0 mb-2 w-48 bg-gray-900/95 border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50 flex flex-col py-1">
                 {/* Speed Toggle */}
                 <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between">
-                  <span className="text-xs text-white/70 font-bold">Speed</span>
+                  <span className="text-xs text-foreground/70 font-bold">Speed</span>
                   <div className="flex gap-1">
                     {[0.5, 1, 1.5, 2].map((s) => (
                       <button
                         key={s}
                         onClick={() => { setPlaybackRate(s); setShowClubControls(false); }}
-                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${speed === s ? 'bg-primary text-white' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${speed === s ? 'bg-primary text-foreground' : 'bg-white/10 text-foreground/70 hover:bg-white/20'}`}
                       >
                         {s}x
                       </button>
@@ -147,22 +147,22 @@ export function PlayerControls({ player, videoId, chapters, scoreLogs }: PlayerC
                   </div>
                 </div>
                 {/* Lock Controls */}
-                <button onClick={() => { setIsLocked(true); setShowClubControls(false); }} className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-white/10 flex items-center gap-2">
+                <button onClick={() => { setIsLocked(true); setShowClubControls(false); }} className="w-full text-left px-4 py-2.5 text-sm text-foreground hover:bg-white/10 flex items-center gap-2">
                   <Lock className="w-4 h-4" /> Lock Screen
                 </button>
                 {/* Rotate */}
                 <button onClick={() => {
                   try { if (screen.orientation && screen.orientation.unlock) { screen.orientation.unlock(); showHint("Orientation Unlocked"); } } catch {}
                   setShowClubControls(false);
-                }} className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-white/10 flex items-center gap-2">
+                }} className="w-full text-left px-4 py-2.5 text-sm text-foreground hover:bg-white/10 flex items-center gap-2">
                   <Smartphone className="w-4 h-4" /> Unlock Rotation
                 </button>
                 {/* Open in YouTube */}
-                <a href={`https://www.youtube.com/watch?v=${videoId}&t=${Math.floor(currentTime)}s`} target="_blank" rel="noreferrer" onClick={() => { if (playing) togglePlay(); setShowClubControls(false); }} className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-white/10 flex items-center gap-2">
+                <a href={`https://www.youtube.com/watch?v=${videoId}&t=${Math.floor(currentTime)}s`} target="_blank" rel="noreferrer" onClick={() => { if (playing) togglePlay(); setShowClubControls(false); }} className="w-full text-left px-4 py-2.5 text-sm text-foreground hover:bg-white/10 flex items-center gap-2">
                   <Youtube className="w-4 h-4 text-red-500" /> Open in YouTube
                 </a>
                 {/* Help */}
-                <button onClick={() => { setShowHelp(true); if (playing) togglePlay(); setShowClubControls(false); }} className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-white/10 flex items-center gap-2">
+                <button onClick={() => { setShowHelp(true); if (playing) togglePlay(); setShowClubControls(false); }} className="w-full text-left px-4 py-2.5 text-sm text-foreground hover:bg-white/10 flex items-center gap-2">
                   <HelpCircle className="w-4 h-4 text-sky-400" /> Help / Gestures
                 </button>
               </div>
@@ -170,7 +170,7 @@ export function PlayerControls({ player, videoId, chapters, scoreLogs }: PlayerC
           </div>
 
           {/* Fullscreen */}
-          <button onClick={toggleFullscreen} className="text-white/80 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10" aria-label={isFullscreen ? "Exit fullscreen" : "Fullscreen"}>
+          <button onClick={toggleFullscreen} className="text-foreground/80 hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-white/10" aria-label={isFullscreen ? "Exit fullscreen" : "Fullscreen"}>
             {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
           </button>
         </div>

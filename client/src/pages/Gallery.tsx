@@ -125,7 +125,7 @@ export default function Gallery() {
       const next = new Set(prev);
       if (next.has(tag)) {
         next.delete(tag);
-        toast("Unsubscribed from " + formatText(tag), { icon: <Bell className="w-4 h-4 text-slate-400" /> });
+        toast("Unsubscribed from " + formatText(tag), { icon: <Bell className="w-4 h-4 text-muted-foreground" /> });
       } else {
         next.add(tag);
         toast.success("Subscribed to " + formatText(tag) + "! You'll be notified of new photos.");
@@ -470,10 +470,10 @@ export default function Gallery() {
   return (
     <div className="min-h-screen font-sans">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-primary/90 text-white py-20 relative overflow-hidden">
+      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-primary/90 text-foreground py-20 relative overflow-hidden">
         <div className="absolute inset-0 hero-pattern" />
         <div className="container mx-auto px-4 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 px-4 py-2 rounded-full text-sm font-semibold mb-5">
+          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-foreground/80 px-4 py-2 rounded-full text-sm font-semibold mb-5">
             <Camera className="w-4 h-4" /> Photos & Videos
           </div>
           <h1
@@ -493,7 +493,7 @@ export default function Gallery() {
                 className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
                   activeTab === "albums"
                     ? "bg-white text-blue-900 shadow-md scale-100"
-                    : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                    : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
                 }`}
               >
                 <Camera className="w-4 h-4" /> Albums
@@ -503,7 +503,7 @@ export default function Gallery() {
                 className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
                   activeTab === "photos"
                     ? "bg-white text-blue-900 shadow-md scale-100"
-                    : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                    : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
                 }`}
               >
                 <Camera className="w-4 h-4" /> All Photos
@@ -513,7 +513,7 @@ export default function Gallery() {
                 className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
                   activeTab === "videos"
                     ? "bg-white text-blue-900 shadow-md scale-100"
-                    : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                    : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
                 }`}
               >
                 <PlayCircle className="w-4 h-4" /> All Videos
@@ -544,13 +544,13 @@ export default function Gallery() {
                     }}
                     className={`px-6 py-2 rounded-full font-bold transition-all duration-300 flex items-center gap-2 ${
                       selectedCategory === cat.id
-                        ? "bg-primary text-white shadow-lg scale-105"
-                        : "bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700"
+                        ? "bg-primary text-foreground shadow-lg scale-105"
+                        : "bg-gray-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700"
                     }`}
                   >
                     {cat.label}
                     <span
-                      className={`text-xs font-black px-1.5 py-0.5 rounded-full ${selectedCategory === cat.id ? "bg-white/25" : "bg-gray-200 dark:bg-slate-700 text-gray-500 dark:text-slate-400"}`}
+                      className={`text-xs font-black px-1.5 py-0.5 rounded-full ${selectedCategory === cat.id ? "bg-white/25" : "bg-gray-200 dark:bg-slate-700 text-muted-foreground dark:text-muted-foreground"}`}
                     >
                       {count}
                     </span>
@@ -570,8 +570,8 @@ export default function Gallery() {
                 }}
                 className={`px-5 py-1.5 rounded-full text-sm font-semibold transition ${
                   selectedSubfolder === "all"
-                    ? "bg-blue-900 dark:bg-blue-700 text-white"
-                    : "bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-700"
+                    ? "bg-blue-900 dark:bg-blue-700 text-foreground"
+                    : "bg-gray-100 dark:bg-slate-800 text-muted-foreground dark:text-muted-foreground hover:bg-gray-200 dark:hover:bg-slate-700"
                 }`}
               >
                 All Albums
@@ -585,8 +585,8 @@ export default function Gallery() {
                     }}
                     className={`px-5 py-1.5 rounded-full text-sm font-semibold transition pr-10 ${
                       selectedSubfolder === sub
-                        ? "bg-blue-900 dark:bg-blue-700 text-white shadow-md"
-                        : "bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-700"
+                        ? "bg-blue-900 dark:bg-blue-700 text-foreground shadow-md"
+                        : "bg-gray-100 dark:bg-slate-800 text-muted-foreground dark:text-muted-foreground hover:bg-gray-200 dark:hover:bg-slate-700"
                     }`}
                   >
                     {formatText(sub)}
@@ -631,7 +631,7 @@ export default function Gallery() {
                   {isSelectionMode && session && item.url && (
                     <div className="absolute top-3 left-3 z-20">
                       {selectedPaths.has(item.path) ? (
-                        <div className="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg">
+                        <div className="w-6 h-6 rounded-full bg-red-500 text-foreground flex items-center justify-center shadow-lg">
                           <CheckCircle2 className="w-4 h-4" />
                         </div>
                       ) : (
@@ -650,7 +650,7 @@ export default function Gallery() {
 
                   {/* Hover overlay */}
                   <div className="absolute inset-0 bg-black/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center p-4 text-center">
-                    <h3 className="text-white font-black text-base tracking-wide drop-shadow-md line-clamp-2">
+                    <h3 className="text-foreground font-black text-base tracking-wide drop-shadow-md line-clamp-2">
                       {item.title}
                     </h3>
                     {item.subfolder && (
@@ -673,11 +673,11 @@ export default function Gallery() {
           {filteredItems.length === 0 && (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
               <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <svg className="w-8 h-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3 20.25h18A2.25 2.25 0 0023.25 18v-12A2.25 2.25 0 0021 3.75H3A2.25 2.25 0 00.75 6v12A2.25 2.25 0 003 20.25z" />
                 </svg>
               </div>
-              <p className="text-slate-500 dark:text-slate-400 font-medium">No photos in this category yet.</p>
+              <p className="text-muted-foreground dark:text-muted-foreground font-medium">No photos in this category yet.</p>
             </div>
           )}
 
@@ -690,7 +690,7 @@ export default function Gallery() {
             <div className="mt-16 animate-in fade-in slide-in-from-bottom-4">
               <div className="flex items-center gap-3 mb-8">
                 <div className="w-2 h-8 bg-gradient-to-b from-red-500 to-orange-500 rounded-full" />
-                <h2 className="text-3xl font-black text-blue-900 dark:text-white">
+                <h2 className="text-3xl font-black text-blue-900 dark:text-foreground">
                   Match Videos
                 </h2>
               </div>
@@ -712,18 +712,18 @@ export default function Gallery() {
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                       {video.tournament && (
-                        <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 text-white text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-full shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-all">
+                        <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 text-foreground text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-full shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-all">
                           {video.tournament}
                         </div>
                       )}
                       <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                        <div className="w-16 h-16 bg-red-600/90 text-white rounded-full flex items-center justify-center backdrop-blur-sm shadow-lg group-hover:scale-110 group-hover:bg-red-600 transition-all duration-300">
+                        <div className="w-16 h-16 bg-red-600/90 text-foreground rounded-full flex items-center justify-center backdrop-blur-sm shadow-lg group-hover:scale-110 group-hover:bg-red-600 transition-all duration-300">
                           <Play className="w-8 h-8 ml-1" fill="currentColor" stroke="none" />
                         </div>
                       </div>
                     </div>
                     <div className="p-5 sm:p-7">
-                      <h3 className="text-lg sm:text-xl font-bold text-blue-900 dark:text-white group-hover:text-primary dark:group-hover:text-primary transition-colors line-clamp-2">
+                      <h3 className="text-lg sm:text-xl font-bold text-blue-900 dark:text-foreground group-hover:text-primary dark:group-hover:text-primary transition-colors line-clamp-2">
                         {video.title}
                       </h3>
                     </div>
@@ -741,13 +741,13 @@ export default function Gallery() {
             <div className="flex items-center justify-center gap-3 mb-3">
               <div className="w-2 h-8 bg-gradient-to-b from-red-500 to-orange-500 rounded-full" />
               <h2
-                className="text-3xl font-black text-blue-900 dark:text-white"
+                className="text-3xl font-black text-blue-900 dark:text-foreground"
                 style={{ fontFamily: "Playfair Display, serif" }}
               >
                 Match Videos
               </h2>
             </div>
-            <p className="text-gray-600 dark:text-slate-400 max-w-2xl mx-auto">
+            <p className="text-muted-foreground dark:text-muted-foreground max-w-2xl mx-auto">
               Championship points, finals and highlights from our YouTube
               channel.
             </p>
@@ -772,12 +772,12 @@ export default function Gallery() {
                     }}
                   />
                   {video.tournament && (
-                    <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 text-white text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-full shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-all">
+                    <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 text-foreground text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-full shadow-[0_0_15px_rgba(255,255,255,0.3)] transition-all">
                       {video.tournament}
                     </div>
                   )}
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                    <div className="w-16 h-16 bg-red-600/90 text-white rounded-full flex items-center justify-center backdrop-blur-sm shadow-lg group-hover:scale-110 group-hover:bg-red-600 transition-all duration-300">
+                    <div className="w-16 h-16 bg-red-600/90 text-foreground rounded-full flex items-center justify-center backdrop-blur-sm shadow-lg group-hover:scale-110 group-hover:bg-red-600 transition-all duration-300">
                       <Play
                         className="w-8 h-8 ml-1"
                         fill="currentColor"
@@ -797,17 +797,17 @@ export default function Gallery() {
                       target="_blank"
                       rel="noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="flex items-center gap-1.5 text-gray-500 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400 transition-colors bg-gray-100 hover:bg-red-50 dark:bg-slate-800/50 dark:hover:bg-red-900/20 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                      className="flex items-center gap-1.5 text-muted-foreground hover:text-red-600 dark:text-muted-foreground dark:hover:text-red-400 transition-colors bg-gray-100 hover:bg-red-50 dark:bg-slate-800/50 dark:hover:bg-red-900/20 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
                     >
                       <Youtube className="w-3.5 h-3.5" />
                       <span>YouTube</span>
                     </a>
                   </div>
-                  <h3 className="text-xl font-bold text-blue-900 dark:text-white group-hover:text-primary dark:group-hover:text-primary transition-colors">
+                  <h3 className="text-xl font-bold text-blue-900 dark:text-foreground group-hover:text-primary dark:group-hover:text-primary transition-colors">
                     {video.title}
                   </h3>
                   {(video.chapters?.length ?? 0) > 0 && (
-                    <p className="text-gray-400 dark:text-slate-500 text-xs mt-2">
+                    <p className="text-gray-400 dark:text-muted-foreground text-xs mt-2">
                       {video.chapters.length} chapter
                       {video.chapters.length !== 1 ? "s" : ""}
                     </p>
@@ -819,7 +819,7 @@ export default function Gallery() {
 
           {videos.length === 0 && (
             <div className="text-center py-12 rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-700">
-              <p className="text-gray-400 dark:text-slate-500 italic">
+              <p className="text-gray-400 dark:text-muted-foreground italic">
                 New videos are being processed. Stay tuned!
               </p>
             </div>
@@ -859,11 +859,11 @@ export default function Gallery() {
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
         >
-          <div className="absolute top-5 left-1/2 -translate-x-1/2 text-white/60 text-sm font-medium select-none">
+          <div className="absolute top-5 left-1/2 -translate-x-1/2 text-foreground/60 text-sm font-medium select-none">
             {selectedIndex + 1} / {filteredItems.length}
           </div>
           <button
-            className="absolute top-4 right-2 md:right-4 text-white hover:text-primary transition-colors p-2 z-50"
+            className="absolute top-4 right-2 md:right-4 text-foreground hover:text-primary transition-colors p-2 z-50"
             onClick={() => {
               setSelectedIndex(null);
               setLightboxSrc(null);
@@ -873,7 +873,7 @@ export default function Gallery() {
             <X className="w-8 h-8" />
           </button>
           <button
-            className="absolute left-1 md:left-3 top-1/2 -translate-y-1/2 text-white hover:text-primary transition-colors p-2 z-50"
+            className="absolute left-1 md:left-3 top-1/2 -translate-y-1/2 text-foreground hover:text-primary transition-colors p-2 z-50"
             onClick={(e) => {
               e.stopPropagation();
               navigate(-1);
@@ -896,7 +896,7 @@ export default function Gallery() {
           )}
 
           <button
-            className="absolute right-1 md:right-3 top-1/2 -translate-y-1/2 text-white hover:text-primary transition-colors p-2 z-50"
+            className="absolute right-1 md:right-3 top-1/2 -translate-y-1/2 text-foreground hover:text-primary transition-colors p-2 z-50"
             onClick={(e) => {
               e.stopPropagation();
               navigate(1);
@@ -917,7 +917,7 @@ export default function Gallery() {
                 return (
                   <>
                     <div className="flex items-center gap-3">
-                      <p className="text-white text-base md:text-xl font-bold tracking-wide drop-shadow-lg leading-tight text-center">
+                      <p className="text-foreground text-base md:text-xl font-bold tracking-wide drop-shadow-lg leading-tight text-center">
                         {item?.title}
                       </p>
                       <motion.button
@@ -931,7 +931,7 @@ export default function Gallery() {
                           className={`w-6 h-6 md:w-7 md:h-7 drop-shadow-lg transition-colors ${
                             likedPhotos.has(item?.path || "") 
                               ? "fill-rose-500 text-rose-500" 
-                              : "text-white hover:text-rose-400"
+                              : "text-foreground hover:text-rose-400"
                           }`} 
                         />
                       </motion.button>
@@ -963,7 +963,7 @@ export default function Gallery() {
                   {/* Remove Button for Remote Photos */}
                   {isAdmin && item?.url && (
                       <button
-                        className="flex items-center gap-1.5 text-white/50 hover:text-red-400 text-xs font-bold px-3 py-1.5 rounded-full border border-white/20 hover:border-red-400/40 hover:bg-red-400/10 transition-all"
+                        className="flex items-center gap-1.5 text-foreground/50 hover:text-red-400 text-xs font-bold px-3 py-1.5 rounded-full border border-white/20 hover:border-red-400/40 hover:bg-red-400/10 transition-all"
                         onClick={async (e) => {
                           e.stopPropagation();
                           if (confirm("Remove this photo from the gallery?")) {
@@ -982,7 +982,7 @@ export default function Gallery() {
                         <Trash2 className="w-3.5 h-3.5" /> Remove
                       </button>
                     )}
-                  <p className="text-white/30 text-[10px] mt-1 hidden sm:block">
+                  <p className="text-foreground/30 text-[10px] mt-1 hidden sm:block">
                     ← → to navigate &nbsp;·&nbsp; Esc to close
                   </p>
                 </>
@@ -1009,7 +1009,7 @@ export default function Gallery() {
       {session && (activeTab === "albums" || activeTab === "photos") && (
         <div className="fixed bottom-24 sm:bottom-6 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-3">
           {isSelectionMode ? (
-            <div className="bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 animate-in slide-in-from-bottom-5">
+            <div className="bg-slate-900 text-foreground px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 animate-in slide-in-from-bottom-5">
               <span className="font-bold">{selectedPaths.size} selected</span>
               <button
                 className="text-primary hover:text-primary/70 font-bold transition flex items-center gap-2 text-sm whitespace-nowrap"
@@ -1048,7 +1048,7 @@ export default function Gallery() {
                 {isDeleting ? "Deleting..." : "Delete Selected"}
               </button>
               <button
-                className="text-slate-400 hover:text-white transition font-medium ml-2"
+                className="text-muted-foreground hover:text-foreground transition font-medium ml-2"
                 onClick={toggleSelectionMode}
               >
                 Cancel
@@ -1056,7 +1056,7 @@ export default function Gallery() {
             </div>
           ) : (
             <button
-              className="bg-slate-900/80 hover:bg-slate-900 backdrop-blur-md text-white px-6 py-3 rounded-full shadow-2xl font-bold transition-all hover:scale-105 active:scale-95"
+              className="bg-slate-900/80 hover:bg-slate-900 backdrop-blur-md text-foreground px-6 py-3 rounded-full shadow-2xl font-bold transition-all hover:scale-105 active:scale-95"
               onClick={toggleSelectionMode}
             >
               Select Photos

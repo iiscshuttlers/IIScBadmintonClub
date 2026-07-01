@@ -119,7 +119,7 @@ export function MatchHistorySection({
           </div>
         </div>
         <ChevronRight
-          className={`w-5 h-5 text-slate-400 shrink-0 transition-transform duration-200 ${isMatchHistoryOpen ? "rotate-90" : ""}`}
+          className={`w-5 h-5 text-muted-foreground shrink-0 transition-transform duration-200 ${isMatchHistoryOpen ? "rotate-90" : ""}`}
         />
       </button>
 
@@ -137,7 +137,7 @@ export function MatchHistorySection({
               {isViewingOther && h2hMatches.length > 0 && (
                 <div className="mb-4 ml-2 bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-800/50 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
                   <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(244,63,94,0.05),transparent)] pointer-events-none" />
-                  <div className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2 relative z-10">
+                  <div className="text-xs font-black uppercase tracking-widest text-muted-foreground dark:text-muted-foreground mb-3 flex items-center gap-2 relative z-10">
                     <Swords className="w-4 h-4 text-rose-500" /> Head-to-Head vs
                     You
                   </div>
@@ -146,7 +146,7 @@ export function MatchHistorySection({
                       <div className="text-3xl font-black text-rose-600 dark:text-rose-400">
                         {h2hWins}
                       </div>
-                      <div className="text-[10px] font-bold text-slate-400 uppercase mt-1">
+                      <div className="text-[10px] font-bold text-muted-foreground uppercase mt-1">
                         Their Wins
                       </div>
                     </div>
@@ -155,7 +155,7 @@ export function MatchHistorySection({
                       <div className="text-3xl font-black text-primary dark:text-primary">
                         {h2hLosses}
                       </div>
-                      <div className="text-[10px] font-bold text-slate-400 uppercase mt-1">
+                      <div className="text-[10px] font-bold text-muted-foreground uppercase mt-1">
                         Your Wins
                       </div>
                     </div>
@@ -191,7 +191,7 @@ export function MatchHistorySection({
                             : tab === "friendly"
                               ? "bg-primary/10 dark:bg-primary/30 border-primary text-primary dark:text-primary"
                               : "bg-blue-50 dark:bg-blue-900/30 border-blue-400 text-blue-700 dark:text-blue-400"
-                          : "border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
+                          : "border-slate-200 dark:border-slate-700 text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800"
                       }`}
                   >
                     {tab === "all"
@@ -300,7 +300,7 @@ export function MatchHistorySection({
                                 <BeautifulScoreDisplay score={m.match_score || m.score} />
                               </div>
                             </div>
-                            <div className="text-[10px] text-slate-400 shrink-0">
+                            <div className="text-[10px] text-muted-foreground shrink-0">
                               {new Date(m.created_at).toLocaleDateString(
                                 "en-IN",
                                 {
@@ -337,13 +337,13 @@ export function MatchHistorySection({
                                 <>
                                   <button
                                     onClick={() => handleConfirmMatch(m.id)}
-                                    className="flex-1 sm:flex-none text-xs font-bold px-3 py-1.5 rounded-lg bg-primary hover:bg-primary text-white transition-colors"
+                                    className="flex-1 sm:flex-none text-xs font-bold px-3 py-1.5 rounded-lg bg-primary hover:bg-primary text-foreground transition-colors"
                                   >
                                     Confirm
                                   </button>
                                   <button
                                     onClick={() => handleRejectMatch(m.id)}
-                                    className="flex-1 sm:flex-none text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 transition-colors"
+                                    className="flex-1 sm:flex-none text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-muted-foreground dark:text-slate-200 transition-colors"
                                   >
                                     Reject
                                   </button>
@@ -360,7 +360,7 @@ export function MatchHistorySection({
               {/* Match List — BWF table style */}
               <div className="bg-white dark:bg-slate-800/80 rounded-3xl shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 overflow-hidden">
                 {/* Table Header */}
-                <div className="hidden sm:grid grid-cols-12 gap-2 px-5 py-3 bg-slate-50 dark:bg-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-700/50">
+                <div className="hidden sm:grid grid-cols-12 gap-2 px-5 py-3 bg-slate-50 dark:bg-slate-800 text-[10px] font-black uppercase tracking-widest text-muted-foreground dark:text-muted-foreground border-b border-slate-100 dark:border-slate-700/50">
                   <div className="col-span-1 text-center">Result</div>
                   <div className="col-span-1">Type</div>
                   <div className="col-span-1 text-center">Format</div>
@@ -440,8 +440,8 @@ export function MatchHistorySection({
                               className={`w-10 h-10 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center font-black text-sm shadow-md
                             ${
                               won
-                                ? "bg-gradient-to-br from-primary to-primary text-white shadow-primary/30"
-                                : "bg-gradient-to-br from-rose-400 to-rose-600 text-white shadow-rose-500/30"
+                                ? "bg-gradient-to-br from-primary to-primary text-foreground shadow-primary/30"
+                                : "bg-gradient-to-br from-rose-400 to-rose-600 text-foreground shadow-rose-500/30"
                             }`}
                             >
                               {won ? "W" : "L"}
@@ -463,7 +463,7 @@ export function MatchHistorySection({
 
                           {/* Format */}
                           <div className="col-span-1 flex sm:justify-center">
-                            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">
+                            <span className="text-[10px] font-bold text-muted-foreground dark:text-muted-foreground uppercase">
                               {formatLabel}
                             </span>
                           </div>
@@ -499,7 +499,7 @@ export function MatchHistorySection({
                               ))}
                             </div>
                             {m.round && m.round !== "Tournament" && m.round !== "Friendly" && (
-                              <div className="text-[10px] text-slate-400 font-medium mt-1">
+                              <div className="text-[10px] text-muted-foreground font-medium mt-1">
                                 {m.round}
                               </div>
                             )}
@@ -515,14 +515,14 @@ export function MatchHistorySection({
                           {/* Date & Time & Share */}
                           <div className="col-span-3 flex items-center justify-end gap-3 text-right">
                             <div>
-                              <div className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                              <div className="text-xs font-bold text-muted-foreground dark:text-slate-300">
                                 {matchDate.toLocaleDateString("en-IN", {
                                   day: "numeric",
                                   month: "short",
                                   year: "numeric",
                                 })}
                               </div>
-                              <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                              <div className="text-[10px] text-muted-foreground dark:text-muted-foreground font-medium">
                                 {matchDate.toLocaleTimeString("en-IN", {
                                   hour: "2-digit",
                                   minute: "2-digit",
@@ -535,7 +535,7 @@ export function MatchHistorySection({
                                 e.stopPropagation();
                                 await shareMatch(m);
                               }}
-                              className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/20 rounded-lg transition-colors"
+                              className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/20 rounded-lg transition-colors"
                               title="Share Match Result"
                             >
                               <Share2 className="w-4 h-4" />
@@ -545,7 +545,7 @@ export function MatchHistorySection({
                       );
                     })
                   ) : (
-                    <div className="p-8 text-center text-sm text-slate-400 dark:text-slate-500 italic">
+                    <div className="p-8 text-center text-sm text-muted-foreground dark:text-muted-foreground italic">
                       No{" "}
                       {matchHistoryFilter === "all" ? "" : matchHistoryFilter}{" "}
                       matches found

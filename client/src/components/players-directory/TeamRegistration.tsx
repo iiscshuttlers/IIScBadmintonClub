@@ -86,15 +86,15 @@ export function TeamRegistration({ onTeamRegistered }: { onTeamRegistered: () =>
           <Shield className="w-5 h-5 text-violet-600 dark:text-violet-400" />
         </div>
         <div>
-          <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-wider">Register a Team</h2>
-          <p className="text-sm font-medium text-slate-500">Form an official doubles partnership</p>
+          <h2 className="text-xl font-black text-foreground dark:text-foreground uppercase tracking-wider">Register a Team</h2>
+          <p className="text-sm font-medium text-muted-foreground">Form an official doubles partnership</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         <div className="md:col-span-5 space-y-4">
           <div>
-            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Select Partner</label>
+            <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Select Partner</label>
             <select
               value={partnerId}
               onChange={(e) => setPartnerId(e.target.value)}
@@ -110,21 +110,21 @@ export function TeamRegistration({ onTeamRegistered }: { onTeamRegistered: () =>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Team Name</label>
+            <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Team Name</label>
             <input
               type="text"
               value={teamName}
               onChange={(e) => setTeamName(e.target.value)}
               placeholder="e.g. The Smashers"
               maxLength={30}
-              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 font-bold text-slate-800 dark:text-slate-200 placeholder:text-slate-400"
+              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 font-bold text-slate-800 dark:text-slate-200 placeholder:text-muted-foreground"
             />
           </div>
         </div>
 
         <div className="md:col-span-7 flex flex-col justify-center">
           <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-5 border border-slate-200 dark:border-slate-700">
-            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 text-center">Team Preview</h3>
+            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4 text-center">Team Preview</h3>
             
             <div className="flex items-center justify-center gap-4">
               <div className="flex flex-col items-center gap-2">
@@ -135,10 +135,10 @@ export function TeamRegistration({ onTeamRegistered }: { onTeamRegistered: () =>
                     <div className="w-full h-full flex items-center justify-center text-xl font-bold">{currentUser.full_name?.[0]}</div>
                   )}
                 </div>
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">You</span>
+                <span className="text-xs font-bold text-muted-foreground dark:text-slate-300">You</span>
               </div>
 
-              <div className="text-slate-300 dark:text-slate-600">
+              <div className="text-slate-300 dark:text-muted-foreground">
                 <Plus className="w-6 h-6" />
               </div>
 
@@ -147,12 +147,12 @@ export function TeamRegistration({ onTeamRegistered }: { onTeamRegistered: () =>
                   {selectedPartner?.avatar_url ? (
                     <img src={selectedPartner.avatar_url} alt="Partner" className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xl font-bold text-slate-400">
+                    <div className="w-full h-full flex items-center justify-center text-xl font-bold text-muted-foreground">
                       {selectedPartner ? selectedPartner.full_name[0] : "?"}
                     </div>
                   )}
                 </div>
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                <span className="text-xs font-bold text-muted-foreground dark:text-slate-300">
                   {selectedPartner ? selectedPartner.full_name.split(" ")[0] : "Partner"}
                 </span>
               </div>
@@ -170,7 +170,7 @@ export function TeamRegistration({ onTeamRegistered }: { onTeamRegistered: () =>
               <button
                 onClick={handleRegister}
                 disabled={loading || !partnerId || !teamName || !teamCategory}
-                className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl font-black text-sm uppercase tracking-wider transition-colors shadow-lg shadow-violet-500/20"
+                className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed text-foreground px-8 py-3 rounded-xl font-black text-sm uppercase tracking-wider transition-colors shadow-lg shadow-violet-500/20"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Register Team"}
               </button>

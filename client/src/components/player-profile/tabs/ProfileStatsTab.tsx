@@ -44,14 +44,14 @@ export function ProfileStatsTabLeft({
   return (
     <motion.section variants={itemVariants} className="space-y-6 md:space-y-8">
       <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-3xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden">
-        <h2 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-white/45 flex items-center gap-2 mb-6">
+        <h2 className="text-sm font-black uppercase tracking-widest text-muted-foreground dark:text-foreground/45 flex items-center gap-2 mb-6">
           <Target className="w-4 h-4 text-primary dark:text-primary" /> Player
           Type Analysis
           <div className="group relative inline-flex ml-auto md:ml-2">
-            <HelpCircle className="w-4 h-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-help" />
+            <HelpCircle className="w-4 h-4 text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-200 transition-colors cursor-help" />
             
             {/* Tooltip positioned to drop DOWNWARD so it doesn't get clipped by the container's overflow-hidden */}
-            <div className="absolute right-0 md:left-1/2 md:-translate-x-1/2 top-full mt-2 w-64 bg-slate-900 text-white text-[10px] sm:text-xs p-3 rounded-xl shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 normal-case tracking-normal font-medium leading-relaxed">
+            <div className="absolute right-0 md:left-1/2 md:-translate-x-1/2 top-full mt-2 w-64 bg-slate-900 text-foreground text-[10px] sm:text-xs p-3 rounded-xl shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 normal-case tracking-normal font-medium leading-relaxed">
               <ul className="space-y-1">
                 <li><strong className="text-primary">Singles/Doubles/Mixed:</strong> Win % in each format</li>
                 <li><strong className="text-primary">Activity:</strong> Based on total matches logged</li>
@@ -169,7 +169,7 @@ export function ProfileStatsTabRight({
       className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden"
     >
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-teal-400 to-primary" />
-      <h2 className="text-[10px] font-black text-slate-500 dark:text-white/35 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+      <h2 className="text-[10px] font-black text-muted-foreground dark:text-foreground/35 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
         <Users className="w-3.5 h-3.5 text-amber-400" /> Frequent Partners
       </h2>
       <div className="space-y-2">
@@ -187,10 +187,10 @@ export function ProfileStatsTabRight({
                   .join("")}
               </div>
               <div className="truncate">
-                <div className="text-sm font-bold text-slate-700 dark:text-white/90 truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                <div className="text-sm font-bold text-muted-foreground dark:text-foreground/90 truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
                   {p.name}
                 </div>
-                <div className="text-xs text-slate-500 dark:text-white/40">
+                <div className="text-xs text-muted-foreground dark:text-foreground/40">
                   {p.matchesTogether} matches
                 </div>
               </div>
@@ -199,7 +199,7 @@ export function ProfileStatsTabRight({
               <div className="text-xs font-black text-primary">
                 {p.winRate}%
               </div>
-              <div className="text-[9px] uppercase tracking-wider text-slate-400 dark:text-white/30">
+              <div className="text-[9px] uppercase tracking-wider text-muted-foreground dark:text-foreground/30">
                 Win Rate
               </div>
             </div>

@@ -67,36 +67,36 @@ export function ProfileRankingTab({
 
       {/* Format Rankings */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
-        <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-4 flex flex-col shadow-lg shadow-amber-500/20 text-white relative overflow-hidden">
+        <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-4 flex flex-col shadow-lg shadow-amber-500/20 text-foreground relative overflow-hidden">
           <div className="absolute -right-4 -top-4 opacity-20">
             <Trophy className="w-20 h-20" />
           </div>
-          <span className="text-[10px] font-black uppercase tracking-widest text-white/80 mb-1 relative z-10">Overall Rank</span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-foreground/80 mb-1 relative z-10">Overall Rank</span>
           <span className="text-3xl font-black relative z-10">{eloRank?.overall ? `#${eloRank.overall}` : "N/A"}</span>
-          <span className="text-xs font-bold text-white/90 mt-1 relative z-10">{player.elo_rating || 1200} ELO</span>
+          <span className="text-xs font-bold text-foreground/90 mt-1 relative z-10">{player.elo_rating || 1200} ELO</span>
         </div>
 
         <div className="bg-white dark:bg-slate-800/50 rounded-2xl p-4 flex flex-col border border-slate-200 dark:border-slate-700/50">
-          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">{singlesLabel}</span>
-          <span className="text-2xl font-black text-slate-800 dark:text-white">{eloRank?.singles ? `#${eloRank.singles}` : "N/A"}</span>
-          <span className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1">{player.singles_elo || 1200} ELO</span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground dark:text-muted-foreground mb-1">{singlesLabel}</span>
+          <span className="text-2xl font-black text-slate-800 dark:text-foreground">{eloRank?.singles ? `#${eloRank.singles}` : "N/A"}</span>
+          <span className="text-xs font-bold text-muted-foreground dark:text-muted-foreground mt-1">{player.singles_elo || 1200} ELO</span>
         </div>
 
         <div className="bg-white dark:bg-slate-800/50 rounded-2xl p-4 flex flex-col border border-slate-200 dark:border-slate-700/50">
-          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">{doublesLabel}</span>
-          <span className="text-2xl font-black text-slate-800 dark:text-white">{eloRank?.doubles ? `#${eloRank.doubles}` : "N/A"}</span>
-          <span className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1">{player.doubles_elo || 1200} ELO</span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground dark:text-muted-foreground mb-1">{doublesLabel}</span>
+          <span className="text-2xl font-black text-slate-800 dark:text-foreground">{eloRank?.doubles ? `#${eloRank.doubles}` : "N/A"}</span>
+          <span className="text-xs font-bold text-muted-foreground dark:text-muted-foreground mt-1">{player.doubles_elo || 1200} ELO</span>
         </div>
 
         <div className="bg-white dark:bg-slate-800/50 rounded-2xl p-4 flex flex-col border border-slate-200 dark:border-slate-700/50">
-          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">Mixed Rank</span>
-          <span className="text-2xl font-black text-slate-800 dark:text-white">{eloRank?.mixed ? `#${eloRank.mixed}` : "N/A"}</span>
-          <span className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1">{player.mixed_elo || 1200} ELO</span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground dark:text-muted-foreground mb-1">Mixed Rank</span>
+          <span className="text-2xl font-black text-slate-800 dark:text-foreground">{eloRank?.mixed ? `#${eloRank.mixed}` : "N/A"}</span>
+          <span className="text-xs font-bold text-muted-foreground dark:text-muted-foreground mt-1">{player.mixed_elo || 1200} ELO</span>
         </div>
 
-        <div className="bg-slate-900 dark:bg-black/50 rounded-2xl p-4 flex flex-col border border-slate-800 dark:border-white/10 text-white col-span-2 md:col-span-1">
-          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Peak ELO</span>
-          <span className="text-2xl font-black text-white">{peakElo}</span>
+        <div className="bg-slate-900 dark:bg-black/50 rounded-2xl p-4 flex flex-col border border-slate-800 dark:border-white/10 text-foreground col-span-2 md:col-span-1">
+          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Peak ELO</span>
+          <span className="text-2xl font-black text-foreground">{peakElo}</span>
           <span className="text-xs font-bold text-primary mt-1">Career Best</span>
         </div>
       </div>
@@ -104,7 +104,7 @@ export function ProfileRankingTab({
       <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-3xl p-5 sm:p-6 border border-slate-200 dark:border-white/8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-white/45 flex items-center gap-2">
+            <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground dark:text-foreground/45 flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-amber-400" /> ELO Progression
             </h3>
             <InfoModal
@@ -118,7 +118,7 @@ export function ProfileRankingTab({
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowEloAudit(true)}
-              className="px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-500 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 transition"
+              className="px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-widest text-muted-foreground bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-muted-foreground dark:hover:bg-slate-700 transition"
             >
               Audit Log
             </button>
@@ -130,7 +130,7 @@ export function ProfileRankingTab({
                   className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all ${
                     eloChartFilter === filter
                       ? "bg-white dark:bg-slate-700 text-amber-500 shadow-sm"
-                      : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                      : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"
                   }`}
                 >
                   {filter === "ALL" ? "OVR" : filter}
@@ -206,12 +206,12 @@ export function ProfileRankingTab({
         ) : (
           <div className="h-64 w-full flex flex-col items-center justify-center text-center">
             <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3">
-              <TrendingUp className="w-6 h-6 text-slate-400" />
+              <TrendingUp className="w-6 h-6 text-muted-foreground" />
             </div>
-            <h4 className="text-sm font-bold text-slate-600 dark:text-slate-300">
+            <h4 className="text-sm font-bold text-muted-foreground dark:text-slate-300">
               No Data Available
             </h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs">
+            <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-1 max-w-xs">
               Play more{" "}
               {eloChartFilter === "S"
                 ? "Singles"
@@ -230,11 +230,11 @@ export function ProfileRankingTab({
         eloHistoryData.length <= 1 &&
         liveMatches.length < 5 && (
           <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-8 border border-slate-200 dark:border-white/8 text-center">
-            <Trophy className="w-12 h-12 text-slate-300 dark:text-white/10 mx-auto mb-3" />
-            <h3 className="text-sm font-bold text-slate-500 dark:text-white/40">
+            <Trophy className="w-12 h-12 text-slate-300 dark:text-foreground/10 mx-auto mb-3" />
+            <h3 className="text-sm font-bold text-muted-foreground dark:text-foreground/40">
               Not Enough Data
             </h3>
-            <p className="text-xs text-slate-400 dark:text-white/20 mt-1">
+            <p className="text-xs text-muted-foreground dark:text-foreground/20 mt-1">
               Play more matches to unlock ranking analytics.
             </p>
           </div>

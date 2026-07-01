@@ -6,8 +6,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { InfoModal } from "@/components/InfoModal";
 
 const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm";
-const inputCls = "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-primary transition";
-const labelCls = "block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5";
+const inputCls = "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary transition";
+const labelCls = "block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-1.5";
 
 interface ClubSettings {
   maintenanceMode: boolean;
@@ -79,7 +79,7 @@ export function AdminSettings() {
       <div className={cardCls}>
         <div className="flex items-center gap-2 mb-4">
           <Power className="w-5 h-5 text-rose-500" />
-          <h3 className="font-black text-slate-800 dark:text-white">Maintenance Mode</h3>
+          <h3 className="font-black text-slate-800 dark:text-foreground">Maintenance Mode</h3>
           <InfoModal
             title="MAINTENANCE MODE"
             items={[
@@ -90,8 +90,8 @@ export function AdminSettings() {
         </div>
         <div className="flex items-center justify-between mb-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
           <div>
-            <p className="font-bold text-slate-800 dark:text-white text-sm">Enable Maintenance Mode</p>
-            <p className="text-xs text-slate-500 mt-0.5">Shows a maintenance banner and optionally blocks match logging</p>
+            <p className="font-bold text-slate-800 dark:text-foreground text-sm">Enable Maintenance Mode</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Shows a maintenance banner and optionally blocks match logging</p>
           </div>
           <button
             onClick={() => update("maintenanceMode", !settings.maintenanceMode)}
@@ -124,7 +124,7 @@ export function AdminSettings() {
       <div className={cardCls}>
         <div className="flex items-center gap-2 mb-4">
           <Zap className="w-5 h-5 text-primary" />
-          <h3 className="font-black text-slate-800 dark:text-white">ELO Rating Configuration</h3>
+          <h3 className="font-black text-slate-800 dark:text-foreground">ELO Rating Configuration</h3>
           <InfoModal
             title="ELO CONFIGURATION"
             items={[
@@ -133,7 +133,7 @@ export function AdminSettings() {
               { badge: "MULTIPLIER", title: "Global Multiplier", desc: "Scales down all point exchanges globally to prevent hyper-inflation of ratings over time." }
             ]}
           />
-          <span className="text-xs text-slate-400 font-medium ml-auto">(applied on next recalculation)</span>
+          <span className="text-xs text-muted-foreground font-medium ml-auto">(applied on next recalculation)</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
@@ -145,7 +145,7 @@ export function AdminSettings() {
               onChange={(e) => update("eloKFactorCalibration", Number(e.target.value))}
               className={inputCls}
             />
-            <p className="text-[10px] text-slate-400 mt-1">Default: 32 (higher = faster rating movement)</p>
+            <p className="text-[10px] text-muted-foreground mt-1">Default: 32 (higher = faster rating movement)</p>
           </div>
           <div>
             <label className={labelCls}>K-Factor (Stable, 10+ matches)</label>
@@ -156,7 +156,7 @@ export function AdminSettings() {
               onChange={(e) => update("eloKFactorStable", Number(e.target.value))}
               className={inputCls}
             />
-            <p className="text-[10px] text-slate-400 mt-1">Default: 16</p>
+            <p className="text-[10px] text-muted-foreground mt-1">Default: 16</p>
           </div>
           <div>
             <label className={labelCls}>Global ELO Multiplier (0–1)</label>
@@ -167,7 +167,7 @@ export function AdminSettings() {
               onChange={(e) => update("eloGlobalMultiplier", Number(e.target.value))}
               className={inputCls}
             />
-            <p className="text-[10px] text-slate-400 mt-1">Default: 0.33 (global ELO moves at 1/3 speed)</p>
+            <p className="text-[10px] text-muted-foreground mt-1">Default: 0.33 (global ELO moves at 1/3 speed)</p>
           </div>
         </div>
       </div>
@@ -176,13 +176,13 @@ export function AdminSettings() {
       <div className={cardCls}>
         <div className="flex items-center gap-2 mb-4">
           <Bell className="w-5 h-5 text-blue-500" />
-          <h3 className="font-black text-slate-800 dark:text-white">Automation & Notifications</h3>
+          <h3 className="font-black text-slate-800 dark:text-foreground">Automation & Notifications</h3>
         </div>
         <div className="space-y-4">
           <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
             <div>
-              <p className="font-bold text-slate-800 dark:text-white text-sm">Push on Announcements</p>
-              <p className="text-xs text-slate-500 mt-0.5">Send a push notification when a new announcement is published</p>
+              <p className="font-bold text-slate-800 dark:text-foreground text-sm">Push on Announcements</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Send a push notification when a new announcement is published</p>
             </div>
             <button
               onClick={() => update("matchAnnouncementPush", !settings.matchAnnouncementPush)}
@@ -201,7 +201,7 @@ export function AdminSettings() {
                 onChange={(e) => update("challengeExpiryHours", Number(e.target.value))}
                 className={inputCls}
               />
-              <p className="text-[10px] text-slate-400 mt-1">Auto-expire unanswered challenges after N hours</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Auto-expire unanswered challenges after N hours</p>
             </div>
             <div>
               <label className={labelCls}>Confirmation Nudge (hours)</label>
@@ -211,7 +211,7 @@ export function AdminSettings() {
                 onChange={(e) => update("confirmationNudgeHours", Number(e.target.value))}
                 className={inputCls}
               />
-              <p className="text-[10px] text-slate-400 mt-1">Remind opponent to confirm match after N hours</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Remind opponent to confirm match after N hours</p>
             </div>
             <div>
               <label className={labelCls}>Max Matches per Day per Player</label>
@@ -221,7 +221,7 @@ export function AdminSettings() {
                 onChange={(e) => update("maxMatchesPerDay", Number(e.target.value))}
                 className={inputCls}
               />
-              <p className="text-[10px] text-slate-400 mt-1">Rate-limit: prevents ELO farming</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Rate-limit: prevents ELO farming</p>
             </div>
           </div>
         </div>
@@ -235,7 +235,7 @@ export function AdminSettings() {
           <button
             onClick={save}
             disabled={saving}
-            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary hover:bg-primary text-white font-bold shadow-lg shadow-primary/20 transition disabled:opacity-50"
+            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary hover:bg-primary text-foreground font-bold shadow-lg shadow-primary/20 transition disabled:opacity-50"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {saving ? "Saving…" : "Save Settings"}

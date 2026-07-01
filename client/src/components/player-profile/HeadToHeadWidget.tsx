@@ -195,7 +195,7 @@ export function HeadToHeadWidget({
             Point Differential
           </div>
           <div
-            className={`text-2xl font-black flex items-end gap-1 ${stats.pointDiff > 0 ? "text-primary dark:text-primary" : stats.pointDiff < 0 ? "text-rose-600 dark:text-rose-400" : "text-slate-600 dark:text-slate-400"}`}
+            className={`text-2xl font-black flex items-end gap-1 ${stats.pointDiff > 0 ? "text-primary dark:text-primary" : stats.pointDiff < 0 ? "text-rose-600 dark:text-rose-400" : "text-muted-foreground dark:text-muted-foreground"}`}
           >
             {stats.pointDiff > 0 ? "+" : ""}
             {stats.pointDiff}

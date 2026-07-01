@@ -299,9 +299,9 @@ export function MatchesManager() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h3 className="font-black text-slate-800 dark:text-white">Match Administration</h3>
+        <h3 className="font-black text-slate-800 dark:text-foreground">Match Administration</h3>
         <div className="flex flex-wrap gap-2 w-full md:w-auto">
-          <button onClick={exportMatchesCsv} className="flex flex-1 md:flex-none justify-center items-center gap-2 px-3 py-2 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-50 transition">
+          <button onClick={exportMatchesCsv} className="flex flex-1 md:flex-none justify-center items-center gap-2 px-3 py-2 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-muted-foreground dark:text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-50 transition">
             <Download className="w-4 h-4" /> Export CSV
           </button>
           <button onClick={recalculateElo} disabled={actionId === "recalc"} className="flex flex-1 md:flex-none justify-center items-center gap-2 px-3 py-2 border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 font-bold text-xs rounded-xl hover:bg-rose-100 disabled:opacity-50 transition">
@@ -309,20 +309,20 @@ export function MatchesManager() {
             Recalculate Friendly ELOs
           </button>
           <button onClick={load} className="flex justify-center items-center p-2 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition">
-            <RefreshCw className="w-4 h-4 text-slate-500" />
+            <RefreshCw className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
       </div>
 
       <div className="flex rounded-xl bg-slate-100 dark:bg-slate-800/50 p-1">
-        <button onClick={() => { setActiveTab("friendly"); setActiveFormat("MS"); }} className={`flex-1 py-2 text-sm font-black rounded-lg transition ${activeTab === 'friendly' ? 'bg-white dark:bg-slate-700 shadow text-primary dark:text-primary' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>Friendly</button>
-        <button onClick={() => { setActiveTab("tournament"); setActiveFormat("MS"); }} className={`flex-1 py-2 text-sm font-black rounded-lg transition ${activeTab === 'tournament' ? 'bg-white dark:bg-slate-700 shadow text-primary dark:text-primary' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>Tournament</button>
+        <button onClick={() => { setActiveTab("friendly"); setActiveFormat("MS"); }} className={`flex-1 py-2 text-sm font-black rounded-lg transition ${activeTab === 'friendly' ? 'bg-white dark:bg-slate-700 shadow text-primary dark:text-primary' : 'text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300'}`}>Friendly</button>
+        <button onClick={() => { setActiveTab("tournament"); setActiveFormat("MS"); }} className={`flex-1 py-2 text-sm font-black rounded-lg transition ${activeTab === 'tournament' ? 'bg-white dark:bg-slate-700 shadow text-primary dark:text-primary' : 'text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300'}`}>Tournament</button>
       </div>
       
       {activeTab === "tournament" && (
         <div className="flex flex-col gap-2">
-          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Select Tournament</label>
-          <select value={selectedTournamentId} onChange={e => setSelectedTournamentId(e.target.value)} className="w-full p-2.5 text-sm font-bold border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary">
+          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Select Tournament</label>
+          <select value={selectedTournamentId} onChange={e => setSelectedTournamentId(e.target.value)} className="w-full p-2.5 text-sm font-bold border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-foreground outline-none focus:ring-2 focus:ring-primary">
             {tournaments.map(t => (
                <option key={t.id} value={t.id}>{t.name} {t.status === 'completed' ? '(Completed)' : ''}</option>
             ))}
@@ -333,7 +333,7 @@ export function MatchesManager() {
 
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide border-b border-slate-100 dark:border-slate-800">
         {FORMATS.map(f => (
-          <button key={f} onClick={() => setActiveFormat(f)} className={`shrink-0 px-5 py-2 rounded-t-xl text-xs font-black transition-all border-b-2 ${activeFormat === f ? 'border-primary text-primary bg-primary/10 dark:bg-primary/20' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
+          <button key={f} onClick={() => setActiveFormat(f)} className={`shrink-0 px-5 py-2 rounded-t-xl text-xs font-black transition-all border-b-2 ${activeFormat === f ? 'border-primary text-primary bg-primary/10 dark:bg-primary/20' : 'border-transparent text-muted-foreground hover:text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
             {f}
           </button>
         ))}
@@ -344,8 +344,8 @@ export function MatchesManager() {
           <div className="py-10 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary"/></div>
         ) : matches.length === 0 ? (
           <div className="py-10 text-center flex flex-col items-center">
-            <Activity className="w-10 h-10 text-slate-200 dark:text-slate-700 mb-3" />
-            <p className="text-slate-400 font-bold">No {activeTab} matches found for {activeFormat}.</p>
+            <Activity className="w-10 h-10 text-slate-200 dark:text-muted-foreground mb-3" />
+            <p className="text-muted-foreground font-bold">No {activeTab} matches found for {activeFormat}.</p>
           </div>
         ) : matches.map((m, idx) => {
           const busy = actionId === m.id;

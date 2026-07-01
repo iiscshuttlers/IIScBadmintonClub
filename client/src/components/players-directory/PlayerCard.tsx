@@ -62,7 +62,7 @@ const levelColor: Record<string, string> = {
   Intermediate:
     "bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary border border-primary/30 dark:border-primary/30",
   Beginner:
-    "bg-slate-100  dark:bg-slate-800      text-slate-600   dark:text-slate-300",
+    "bg-slate-100  dark:bg-slate-800      text-muted-foreground   dark:text-slate-300",
 };
 
 interface PlayerCardProps {
@@ -124,7 +124,7 @@ export function PlayerCard({
     if (isPinged) {
       setIsPinged(false);
       toast.success(`Ping to ${player.full_name} cancelled.`, {
-        icon: <BellOff className="w-4 h-4 text-slate-500" />,
+        icon: <BellOff className="w-4 h-4 text-muted-foreground" />,
       });
     } else {
       setIsPinged(true);
@@ -225,7 +225,7 @@ export function PlayerCard({
               />
             ) : (
               <div
-                className={`w-full h-full bg-gradient-to-br ${avatarGradient(player.full_name || "")} flex items-center justify-center text-white font-black text-2xl`}
+                className={`w-full h-full bg-gradient-to-br ${avatarGradient(player.full_name || "")} flex items-center justify-center text-foreground font-black text-2xl`}
               >
                 {(player.full_name || "?").charAt(0).toUpperCase()}
               </div>
@@ -233,7 +233,7 @@ export function PlayerCard({
           </div>
           {/* Dept Badge */}
           {player.department && (
-            <div className="absolute -bottom-1 -right-2 flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 border-2 border-white dark:border-slate-900 shadow-sm" title={player.department}>
+            <div className="absolute -bottom-1 -right-2 flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-black uppercase text-muted-foreground dark:text-slate-300 border-2 border-white dark:border-slate-900 shadow-sm" title={player.department}>
               {player.department.substring(0, 3)}
             </div>
           )}
@@ -249,19 +249,19 @@ export function PlayerCard({
 
         {/* Center: Name & Rank */}
         <div className="flex flex-col items-center w-full mb-6">
-          <div className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] mb-0.5 w-full truncate px-2 min-h-[14px]">
+          <div className="text-[10px] font-black text-muted-foreground dark:text-muted-foreground uppercase tracking-[0.2em] mb-0.5 w-full truncate px-2 min-h-[14px]">
             {displayFirst || "\u00A0"}
           </div>
-          <div className="text-2xl font-black text-slate-900 dark:text-white leading-none uppercase tracking-tight w-full truncate px-2">
+          <div className="text-2xl font-black text-foreground dark:text-foreground leading-none uppercase tracking-tight w-full truncate px-2">
             {lastName}
           </div>
           {player.is_retired && (
-            <div className="mt-2 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm bg-rose-500 text-white shadow-sm">
+            <div className="mt-2 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm bg-rose-500 text-foreground shadow-sm">
               Retired
             </div>
           )}
           <div className="mt-3 flex items-center justify-center gap-2 flex-wrap">
-            <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md">
+            <span className="text-[10px] font-bold text-muted-foreground bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md">
               ELO {player.elo_rating ?? "—"}
             </span>
             {winPct !== null && (
@@ -313,7 +313,7 @@ export function PlayerCard({
                       ? "text-primary dark:text-primary bg-primary/10 dark:bg-primary/30 border-primary/40 dark:border-primary/50"
                       : hasSentRequest
                       ? "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/50"
-                      : "text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:text-violet-600 hover:border-violet-300 hover:bg-violet-50 dark:hover:bg-violet-950/20"
+                      : "text-muted-foreground dark:text-muted-foreground bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:text-violet-600 hover:border-violet-300 hover:bg-violet-50 dark:hover:bg-violet-950/20"
                   }`}
                   title={isBuddy ? "Remove Buddy" : hasReceivedRequest ? "Accept Request" : hasSentRequest ? "Cancel Request" : "Add Buddy"}
                 >
@@ -338,7 +338,7 @@ export function PlayerCard({
                   className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-[11px] font-bold border transition-colors ${
                     isFollowing
                       ? "text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800/50"
-                      : "text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:text-rose-500 hover:border-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/20"
+                      : "text-muted-foreground dark:text-muted-foreground bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:text-rose-500 hover:border-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/20"
                   }`}
                   title={isFollowing ? "Unfollow" : "Follow"}
                 >
@@ -364,7 +364,7 @@ export function PlayerCard({
             <div className="flex items-center gap-1">
               <button
                 onClick={handleShare}
-                className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/90/30 transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/90/30 transition-colors"
                 title="Share profile"
               >
                 <Share2 className="w-3.5 h-3.5" />
@@ -373,7 +373,7 @@ export function PlayerCard({
                 <button
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); handlePing(); }}
                   className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
-                    isPinged ? "text-amber-500 bg-amber-50 dark:bg-amber-950/30" : "text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30"
+                    isPinged ? "text-amber-500 bg-amber-50 dark:bg-amber-950/30" : "text-muted-foreground hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30"
                   }`}
                   title="Ping player"
                 >
@@ -383,7 +383,7 @@ export function PlayerCard({
               {onLogMatch && !isOwn && (
                 <button
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); onLogMatch(player.id); }}
-                  className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                  className="w-8 h-8 flex items-center justify-center rounded-full text-muted-foreground hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
                   title="Log Match"
                 >
                   <Sword className="w-3.5 h-3.5" />
@@ -396,7 +396,7 @@ export function PlayerCard({
         
         {/* 'You' badge */}
         {isOwn && (
-          <span className="absolute top-4 left-4 bg-primary text-white px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest shadow-sm">
+          <span className="absolute top-4 left-4 bg-primary text-foreground px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest shadow-sm">
             You
           </span>
         )}

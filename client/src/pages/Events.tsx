@@ -103,10 +103,10 @@ function NoUpcomingEvents() {
   return (
     <div className="rounded-3xl border-2 border-dashed border-primary/40 dark:border-primary/50 bg-primary/10 dark:bg-primary/10 p-14 text-center">
       <Calendar className="w-12 h-12 text-primary mx-auto mb-4" />
-      <h3 className="text-xl font-bold text-blue-900 dark:text-white mb-2">
+      <h3 className="text-xl font-bold text-blue-900 dark:text-foreground mb-2">
         No upcoming tournaments
       </h3>
-      <p className="text-gray-500 dark:text-slate-400 max-w-md mx-auto">
+      <p className="text-muted-foreground dark:text-muted-foreground max-w-md mx-auto">
         No events are scheduled right now — check back soon, or browse our
         completed events below.
       </p>
@@ -139,7 +139,7 @@ function UpcomingCountdown({ event }: { event: any }) {
   if (!time) return null;
 
   return (
-    <div className="rounded-3xl bg-gradient-to-br from-blue-950 to-primary/90 text-white p-8 mb-8 shadow-2xl relative overflow-hidden">
+    <div className="rounded-3xl bg-gradient-to-br from-blue-950 to-primary/90 text-foreground p-8 mb-8 shadow-2xl relative overflow-hidden">
       <div className="absolute inset-0 hero-pattern" />
       <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-6">
         <div className="flex-1">
@@ -255,7 +255,7 @@ export default function Events() {
             ) : (
               <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
                 item.status === 'draft' ? 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400' :
-                item.status === 'completed' || item.status === 'archived' ? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400' :
+                item.status === 'completed' || item.status === 'archived' ? 'bg-slate-100 text-muted-foreground dark:bg-slate-800 dark:text-muted-foreground' :
                 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400'
               }`}>
                 {item.status === 'draft' ? 'Upcoming' : item.status}
@@ -274,17 +274,17 @@ export default function Events() {
               {getTypeLabel(item.type)}
             </span>
 
-            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-slate-400">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground dark:text-muted-foreground">
               <Calendar className="w-3.5 h-3.5" />
               {item.startDate}
             </div>
           </div>
 
-          <h3 className="text-2xl font-black text-blue-900 dark:text-white leading-tight">
+          <h3 className="text-2xl font-black text-blue-900 dark:text-foreground leading-tight">
             {item.name}
           </h3>
 
-          <p className="text-gray-600 dark:text-slate-400">
+          <p className="text-muted-foreground dark:text-muted-foreground">
             {item.description}
           </p>
 
@@ -299,7 +299,7 @@ export default function Events() {
                     <Medal className="w-3.5 h-3.5" />
                     {result.category}
                   </div>
-                  <p className="mt-1 font-bold text-blue-950 dark:text-white text-sm flex items-center gap-1.5">
+                  <p className="mt-1 font-bold text-blue-950 dark:text-foreground text-sm flex items-center gap-1.5">
                     <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" /> {result.winner}
                   </p>
                 </div>
@@ -318,13 +318,13 @@ export default function Events() {
                     {index === 0
                       ? <Trophy className="w-3.5 h-3.5 inline-block text-amber-500 mr-1" />
                       : index === 1
-                        ? <Medal className="w-3.5 h-3.5 inline-block text-slate-400 mr-1" />
+                        ? <Medal className="w-3.5 h-3.5 inline-block text-muted-foreground mr-1" />
                         : index === 2
                           ? <Award className="w-3.5 h-3.5 inline-block text-orange-400 mr-1" />
                           : `#${index + 1} `}
                     Rank {index + 1}
                   </p>
-                  <p className="mt-1 font-bold text-blue-950 dark:text-white text-sm">
+                  <p className="mt-1 font-bold text-blue-950 dark:text-foreground text-sm">
                     {team}
                   </p>
                 </div>
@@ -376,10 +376,10 @@ export default function Events() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 lg:pb-8">
-      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-primary/90 text-white py-24 relative overflow-hidden">
+      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-primary/90 text-foreground py-24 relative overflow-hidden">
         <div className="absolute inset-0 hero-pattern" />
         <div className="container mx-auto px-4 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 px-4 py-2 rounded-full text-sm font-semibold mb-5">
+          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-foreground/80 px-4 py-2 rounded-full text-sm font-semibold mb-5">
             <Calendar className="w-4 h-4 text-primary" />
             Tournaments & Events
             <InfoModal
@@ -388,7 +388,7 @@ export default function Events() {
                 { badge: "LIVE", title: "Live Tournaments", desc: "View real-time brackets, fixtures, and results during active championships." },
                 { badge: "ARCHIVE", title: "Hall of Fame", desc: "Look back at the history of previous tournaments and our champions." }
               ]}
-              triggerClassName="text-white hover:text-primary/30"
+              triggerClassName="text-foreground hover:text-primary/30"
             />
           </div>
           <h1
@@ -408,7 +408,7 @@ export default function Events() {
                 className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all flex-1 basis-[45%] sm:basis-auto shrink-0 ${
                   effectiveTab === "calendar"
                     ? "bg-white text-blue-900 shadow-md scale-100"
-                    : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                    : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
                 }`}
               >
                 <Calendar className="w-4 h-4" /> Event Calendar
@@ -418,8 +418,8 @@ export default function Events() {
                   onClick={() => setActiveTab("tournament")}
                   className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all flex-1 basis-[45%] sm:basis-auto shrink-0 ${
                     effectiveTab === "tournament"
-                      ? "bg-rose-500 text-white shadow-md scale-100 shadow-rose-500/30"
-                      : "text-white/80 hover:text-rose-400 hover:bg-rose-500/10 scale-95"
+                      ? "bg-rose-500 text-foreground shadow-md scale-100 shadow-rose-500/30"
+                      : "text-foreground/80 hover:text-rose-400 hover:bg-rose-500/10 scale-95"
                   }`}
                 >
                   <Trophy className="w-4 h-4" /> 
@@ -431,7 +431,7 @@ export default function Events() {
                 className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all flex-1 basis-[100%] sm:basis-auto shrink-0 ${
                   effectiveTab === "history"
                     ? "bg-white text-blue-900 shadow-md scale-100"
-                    : "text-white/80 hover:text-white hover:bg-white/10 scale-95"
+                    : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
                 }`}
               >
                 <Clock className="w-4 h-4" /> History
@@ -463,13 +463,13 @@ export default function Events() {
               <div className="flex items-center justify-center gap-3 mb-3">
                 <div className="w-2 h-8 bg-gradient-to-b from-purple-500 to-indigo-600 rounded-full" />
                 <h2
-                  className="text-3xl font-black text-blue-900 dark:text-white"
+                  className="text-3xl font-black text-blue-900 dark:text-foreground"
                   style={{ fontFamily: "Playfair Display, serif" }}
                 >
                   Tournament History
                 </h2>
               </div>
-              <p className="text-gray-500 dark:text-slate-400">
+              <p className="text-muted-foreground dark:text-muted-foreground">
                 Key moments from recent years
               </p>
             </motion.div>
@@ -519,7 +519,7 @@ export default function Events() {
                           className={`flex-1 rounded-2xl p-5 hover:-translate-y-1 transition-all ${m.live ? "bg-red-50 dark:bg-red-950/20 border-2 border-red-300 dark:border-red-800" : m.upcoming ? "bg-primary/10 dark:bg-primary/20 border-2 border-primary/50 dark:border-primary/80" : "bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 hover:shadow-md cursor-pointer"}`}
                         >
                           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                            <span className="text-xs font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest">
+                            <span className="text-xs font-black text-gray-400 dark:text-muted-foreground uppercase tracking-widest">
                               {m.year}
                             </span>
                             {m.live ? (
@@ -532,17 +532,17 @@ export default function Events() {
                                 Upcoming
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-[10px] font-bold uppercase tracking-wider">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-200 text-muted-foreground dark:bg-slate-800 dark:text-slate-300 text-[10px] font-bold uppercase tracking-wider">
                                 Completed
                               </span>
                             )}
                           </div>
                           <h3
-                            className={`font-black text-base mb-1 ${m.live ? "text-red-800 dark:text-red-300" : m.upcoming ? "text-primary dark:text-primary/70" : "text-blue-900 dark:text-white"}`}
+                            className={`font-black text-base mb-1 ${m.live ? "text-red-800 dark:text-red-300" : m.upcoming ? "text-primary dark:text-primary/70" : "text-blue-900 dark:text-foreground"}`}
                           >
                             {m.title}
                           </h3>
-                          <p className="text-gray-600 dark:text-slate-400 text-sm leading-relaxed">
+                          <p className="text-muted-foreground dark:text-muted-foreground text-sm leading-relaxed">
                             {m.desc}
                           </p>
                           <div className={`flex items-center gap-2 mt-3 font-bold text-xs ${m.live ? "text-red-600 dark:text-red-400" : m.upcoming ? "text-primary dark:text-primary" : "text-blue-600 dark:text-blue-400"}`}>
@@ -568,7 +568,7 @@ export default function Events() {
                           <div
                             className={`flex-shrink-0 w-12 h-12 rounded-2xl ${m.live ? "bg-red-50 dark:bg-red-950/30" : m.upcoming ? "bg-primary/10 dark:bg-primary/30" : "bg-white dark:bg-slate-800"} border-2 ${m.color} flex items-center justify-center text-xl shadow-sm z-10`}
                           >
-                            <m.icon className="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:scale-110 transition-transform" />
+                            <m.icon className="w-5 h-5 text-muted-foreground dark:text-slate-300 group-hover:scale-110 transition-transform" />
                           </div>
                           {m.href.startsWith("#") || m.href.includes("#tournament") ? (
                             <a href={m.href} onClick={(e) => { 

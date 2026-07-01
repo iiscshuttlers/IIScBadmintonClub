@@ -151,19 +151,19 @@ export function UmpireEngine({
     const badgeCls = CAT_BADGE[tm.category] ?? "bg-slate-600";
 
     return (
-      <div className="bg-slate-900 border border-slate-800 rounded-4xl p-5 sm:p-8 text-white max-w-lg mx-auto shadow-2xl">
+      <div className="bg-slate-900 border border-slate-800 rounded-4xl p-5 sm:p-8 text-foreground max-w-lg mx-auto shadow-2xl">
         <div className="absolute top-0 inset-x-0 h-1.5 bg-linear-to-r from-primary to-sky-500 rounded-t-4xl" />
 
         {/* Header */}
         <div className="flex items-start justify-between mb-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg text-white ${badgeCls}`}>{tm.category}</span>
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{tm.round_name} · {tm.match_code}</span>
+              <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg text-foreground ${badgeCls}`}>{tm.category}</span>
+              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">{tm.round_name} · {tm.match_code}</span>
             </div>
-            <p className="text-xs text-slate-500 font-bold">{tm.tournament_name}</p>
+            <p className="text-xs text-muted-foreground font-bold">{tm.tournament_name}</p>
           </div>
-          <button onClick={handleClose} className="p-2 hover:bg-slate-800 rounded-xl text-slate-500 hover:text-white transition">
+          <button onClick={handleClose} className="p-2 hover:bg-slate-800 rounded-xl text-muted-foreground hover:text-foreground transition">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -171,24 +171,24 @@ export function UmpireEngine({
         {/* Teams */}
         <div className="grid grid-cols-[1fr_auto_1fr] gap-3 items-center mb-6">
           <div className="bg-slate-800 rounded-2xl p-3 border border-slate-700 text-center">
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Team 1</p>
-            <p className="text-white font-black text-sm leading-snug">{tm.team1_label ?? "TBD"}</p>
+            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Team 1</p>
+            <p className="text-foreground font-black text-sm leading-snug">{tm.team1_label ?? "TBD"}</p>
           </div>
           <span className="text-[10px] font-black text-rose-400">VS</span>
           <div className="bg-slate-800 rounded-2xl p-3 border border-slate-700 text-center">
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Team 2</p>
-            <p className="text-white font-black text-sm leading-snug">{tm.team2_label ?? "TBD"}</p>
+            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-1">Team 2</p>
+            <p className="text-foreground font-black text-sm leading-snug">{tm.team2_label ?? "TBD"}</p>
           </div>
         </div>
 
         {/* Scoring config (editable) */}
         <div className="bg-slate-800/60 rounded-2xl p-4 space-y-3 mb-5 border border-slate-700/50">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Scoring Rules</p>
+          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Scoring Rules</p>
           <div className="flex gap-2">
             {[1, 3, 5].map((sets) => (
               <button key={sets}
                 onClick={() => setMatch({ ...match, bestOfSets: sets })}
-                className={`flex-1 py-2 rounded-xl font-black text-sm border transition ${match.bestOfSets === sets ? "bg-sky-500/20 border-sky-500 text-sky-400" : "bg-slate-700/50 border-slate-700 text-slate-400 hover:border-slate-500"}`}>
+                className={`flex-1 py-2 rounded-xl font-black text-sm border transition ${match.bestOfSets === sets ? "bg-sky-500/20 border-sky-500 text-sky-400" : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"}`}>
                 BO{sets}
               </button>
             ))}
@@ -196,23 +196,23 @@ export function UmpireEngine({
             {[11, 15, 21].map((pts) => (
               <button key={pts}
                 onClick={() => setMatch({ ...match, pointsToWin: pts, goldenPoint: pts === 21 ? 30 : pts === 15 ? 21 : 15 })}
-                className={`flex-1 py-2 rounded-xl font-black text-sm border transition ${match.pointsToWin === pts ? "bg-primary/20 border-primary text-primary" : "bg-slate-700/50 border-slate-700 text-slate-400 hover:border-slate-500"}`}>
+                className={`flex-1 py-2 rounded-xl font-black text-sm border transition ${match.pointsToWin === pts ? "bg-primary/20 border-primary text-primary" : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"}`}>
                 {pts}
               </button>
             ))}
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-slate-500 shrink-0">Golden point cap:</span>
+            <span className="text-xs text-muted-foreground shrink-0">Golden point cap:</span>
             <input type="number" value={match.goldenPoint}
               onChange={(e) => setMatch({ ...match, goldenPoint: parseInt(e.target.value) || 30 })}
               className="w-16 bg-slate-700 border border-slate-600 rounded-lg px-2 py-1 text-center text-sm font-bold text-amber-400 outline-none focus:border-amber-500 transition" />
-            <span className="text-xs text-slate-500">pts</span>
+            <span className="text-xs text-muted-foreground">pts</span>
           </div>
         </div>
 
         {/* Server selection */}
         <div className="bg-slate-800/60 rounded-2xl p-4 space-y-3 mb-6 border border-slate-700/50">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Who Serves First?</p>
+          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Who Serves First?</p>
           <div className="grid grid-cols-2 gap-2">
             {[
               { team: 1, label: tm.team1_label ?? "Team 1" },
@@ -223,7 +223,7 @@ export function UmpireEngine({
                 className={`py-3 px-3 rounded-xl font-black text-sm border transition text-center ${
                   match.serverTeam === team
                     ? "bg-primary/20 border-primary text-primary"
-                    : "bg-slate-700/50 border-slate-700 text-slate-400 hover:border-slate-500"
+                    : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"
                 }`}>
                 {label}
               </button>
@@ -242,7 +242,7 @@ export function UmpireEngine({
                     className={`py-2 px-3 rounded-xl text-xs font-black border transition ${
                       match.serverPlayerIndex === idx
                         ? "bg-sky-500/20 border-sky-500 text-sky-400"
-                        : "bg-slate-700/50 border-slate-700 text-slate-400 hover:border-slate-500"
+                        : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"
                     }`}>
                     {name}
                   </button>
@@ -255,7 +255,7 @@ export function UmpireEngine({
         {/* Start */}
         <button
           onClick={startTournamentMatch}
-          className="w-full py-4 rounded-2xl bg-primary hover:bg-primary text-white font-black text-lg transition shadow-lg shadow-primary/50/30 flex items-center justify-center gap-2">
+          className="w-full py-4 rounded-2xl bg-primary hover:bg-primary text-foreground font-black text-lg transition shadow-lg shadow-primary/50/30 flex items-center justify-center gap-2">
           <Play className="w-5 h-5 fill-white" /> Start Match
         </button>
       </div>
@@ -304,7 +304,7 @@ export function UmpireEngine({
 
   // ── PLAYING / FINISHED SCREEN ──────────────────────────────────────────────
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-4xl p-4 sm:p-8 text-white max-w-4xl lg:max-w-5xl mx-auto shadow-2xl relative overflow-hidden">
+    <div className="bg-slate-900 border border-slate-800 rounded-4xl p-4 sm:p-8 text-foreground max-w-4xl lg:max-w-5xl mx-auto shadow-2xl relative overflow-hidden">
       <div className="absolute top-0 inset-x-0 h-1.5 bg-linear-to-r from-primary to-sky-500" />
       {renderSetupOverlay()}
       {/* ── Change Ends Overlay ── */}
@@ -357,18 +357,18 @@ export function UmpireEngine({
         {match.status === "playing" && (
           <>
             <button onClick={() => updateMatch({ endsSwapped: !match.endsSwapped })} className="shrink-0 px-1 py-2 sm:px-3 sm:py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border border-slate-700 transition">
-              <ArrowLeftRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400" /> Swap Ends
+              <ArrowLeftRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" /> Swap Ends
             </button>
             {match.t1.p2Id && (
               <button onClick={() => updateMatch({ serverPlayerIndex: match.serverPlayerIndex === 0 ? 1 : 0 })} className="shrink-0 px-1 py-2 sm:px-3 sm:py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border border-slate-700 transition">
-                <Repeat className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400" /> Switch Server
+                <Repeat className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" /> Switch Server
               </button>
             )}
             <button onClick={() => setIsDirectScoreOpen(true)} className="shrink-0 px-1 py-2 sm:px-3 sm:py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border border-slate-700 transition">
-              <Flag className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400" /> Direct Score
+              <Flag className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" /> Direct Score
             </button>
             <button onClick={() => setIsEditSetupOpen(true)} className="shrink-0 px-1 py-2 sm:px-3 sm:py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border border-slate-700 transition">
-              <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400" /> Edit Setup
+              <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" /> Edit Setup
             </button>
           </>
         )}
@@ -379,7 +379,7 @@ export function UmpireEngine({
         <div className="text-center py-12">
           <Trophy className="w-20 h-20 mx-auto text-amber-400 mb-6 drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]" />
           <h2 className="text-3xl font-black mb-2">Match {match.retiredTeam ? "Retired" : "Finished"}!</h2>
-          <div className="text-xs font-bold text-slate-400 mb-4 tracking-widest uppercase">
+          <div className="text-xs font-bold text-muted-foreground mb-4 tracking-widest uppercase">
             {match.inferredCategory || match.category} • BO{match.bestOfSets} ({match.pointsToWin}pts)
           </div>
           <p className="text-xl text-slate-300 mb-2">
@@ -389,10 +389,10 @@ export function UmpireEngine({
             } Won
           </p>
           <p className="text-primary font-bold mb-8 text-2xl">{match.setsHistory.join(", ")}{match.retiredTeam ? ` (T${match.retiredTeam} Retired)` : ""}</p>
-          <button onClick={saveMatchToProfile} className="px-8 py-4 bg-linear-to-r from-amber-500 to-orange-500 text-white rounded-2xl font-black uppercase tracking-wider shadow-xl flex items-center gap-2 mx-auto">
+          <button onClick={saveMatchToProfile} className="px-8 py-4 bg-linear-to-r from-amber-500 to-orange-500 text-foreground rounded-2xl font-black uppercase tracking-wider shadow-xl flex items-center gap-2 mx-auto">
             <Save className="w-5 h-5" /> Save to Profile & Notify
           </button>
-          <button onClick={() => updateMatch({ status: "playing", winner: undefined, retiredTeam: undefined })} className="mt-6 text-sm font-bold text-slate-500 hover:text-slate-400 underline">
+          <button onClick={() => updateMatch({ status: "playing", winner: undefined, retiredTeam: undefined })} className="mt-6 text-sm font-bold text-muted-foreground hover:text-muted-foreground underline">
             Wait, add a set / resume match
           </button>
         </div>
@@ -403,7 +403,7 @@ export function UmpireEngine({
             <div className="flex items-center gap-1.5 text-primary font-black uppercase tracking-widest text-xs mb-0.5">
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" /> Live Umpire
             </div>
-            <div className="text-slate-400 text-[11px] font-bold truncate">
+            <div className="text-muted-foreground text-[11px] font-bold truncate">
               {match.isFriendly ? "Friendly" : `Tournament • ${match.matchNumber || "—"}`} • {match.inferredCategory || match.category} • BO{match.bestOfSets} ({match.pointsToWin}pts) • Game {currentGameNum}
             </div>
           </div>
@@ -418,7 +418,7 @@ export function UmpireEngine({
                   <Timer className="w-4 h-4 text-amber-400 animate-pulse" />
                   <span className="text-amber-400 font-black text-sm uppercase tracking-widest">{breakLabel || "Break"}</span>
                 </div>
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                   Elapsed: {
                     (() => {
                       const elapsed = (breakTotalSeconds ?? breakSecondsLeft) - breakSecondsLeft;
@@ -469,7 +469,7 @@ export function UmpireEngine({
                     className="absolute top-2 left-2 w-9 h-9 rounded-xl bg-slate-900/70 hover:bg-slate-700 flex items-center justify-center border border-slate-700 z-10"
                     aria-label="Deduct point"
                   >
-                    <Minus className="w-4 h-4 text-slate-400" />
+                    <Minus className="w-4 h-4 text-muted-foreground" />
                   </button>
 
                   {/* Names */}
@@ -510,7 +510,7 @@ export function UmpireEngine({
                   </div>
 
                   {/* Tap hint */}
-                  <div className="mt-1.5 text-[9px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-1">
+                  <div className="mt-1.5 text-[9px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1">
                     <Plus className="w-2.5 h-2.5" /> Tap to score
                   </div>
                 </div>
@@ -522,10 +522,10 @@ export function UmpireEngine({
           <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 mt-4 text-[11px] font-black uppercase tracking-widest">
             <span className="text-primary">{serverName}</span>
             <span className="text-primary text-base tabular-nums">{serverScore}</span>
-            <span className="text-slate-600">—</span>
+            <span className="text-muted-foreground">—</span>
             <span className="text-slate-300 text-base tabular-nums">{receiverScore}</span>
-            <span className="text-slate-500">{receiverName}</span>
-            <span className="text-[10px] font-bold text-slate-600 ml-1">({match.setsHistory.length > 0 ? match.setsHistory.join(", ") + " | " : ""}G{currentGameNum})</span>
+            <span className="text-muted-foreground">{receiverName}</span>
+            <span className="text-[10px] font-bold text-muted-foreground ml-1">({match.setsHistory.length > 0 ? match.setsHistory.join(", ") + " | " : ""}G{currentGameNum})</span>
           </div>
 
           {/* ── Court Visual ── */}
@@ -547,9 +547,9 @@ export function UmpireEngine({
 
           {/* ── Break shortcuts ── */}
           <div className="mt-5">
-            <div className="text-center text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 sm:hidden">Break Timers</div>
+            <div className="text-center text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 sm:hidden">Break Timers</div>
             <div className="grid grid-cols-2 sm:flex gap-2 justify-center">
-              <span className="hidden sm:inline-flex text-[10px] font-bold text-slate-500 uppercase tracking-widest self-center mr-1">Break:</span>
+              <span className="hidden sm:inline-flex text-[10px] font-bold text-muted-foreground uppercase tracking-widest self-center mr-1">Break:</span>
               {[["30s", 30, "Short Break"], ["1 min", 60, "1-min Interval"], ["90s", 90, "Set 1→2 Interval"], ["2 min", 120, "Set 2→3 Interval"]].map(([label, secs, lbl]) => (
                 <button key={label as string} onClick={() => startBreak(secs as number, lbl as string)}
                   className={`px-2.5 py-2 font-bold text-xs rounded-xl transition-all flex justify-center items-center gap-1.5 shadow-sm ${
@@ -598,7 +598,7 @@ export function UmpireEngine({
           {match.setsHistory.length > 0 && (
             <div className="mt-8 bg-slate-800/40 border border-slate-700 rounded-2xl overflow-hidden overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="bg-slate-800/80 text-xs uppercase text-slate-400">
+                <thead className="bg-slate-800/80 text-xs uppercase text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3 border-b border-slate-700 font-black"></th>
                     <th className="px-4 py-3 border-b border-slate-700 text-center font-black text-primary">
@@ -631,7 +631,7 @@ export function UmpireEngine({
 
                     return (
                       <tr key={i} className="hover:bg-slate-800/30 transition-colors">
-                        <td className="px-4 py-3 font-bold text-slate-400 whitespace-nowrap">Set {i + 1}</td>
+                        <td className="px-4 py-3 font-bold text-muted-foreground whitespace-nowrap">Set {i + 1}</td>
                         <td className="px-4 py-3 text-center">
                           <input 
                             type="text" 
@@ -658,7 +658,7 @@ export function UmpireEngine({
                             className="w-16 bg-slate-900 border border-slate-600 rounded-lg px-2 py-1 text-center font-bold text-sky-400 outline-none focus:border-sky-500 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                         </td>
-                        <td className="px-4 py-3 font-semibold text-xs text-slate-400 text-center">{winnerStr}</td>
+                        <td className="px-4 py-3 font-semibold text-xs text-muted-foreground text-center">{winnerStr}</td>
                       </tr>
                     );
                   })}
@@ -685,11 +685,11 @@ export function UmpireEngine({
           {showLog && (
             <div className="mt-4 bg-slate-800/60 border border-slate-700 rounded-2xl overflow-hidden max-h-64 overflow-y-auto">
               <div className="px-4 py-2.5 border-b border-slate-700 flex items-center justify-between">
-                <span className="text-xs font-black text-slate-400 uppercase tracking-wider">Match Log</span>
-                <span className="text-xs text-slate-500">{match.pointLog.length} events</span>
+                <span className="text-xs font-black text-muted-foreground uppercase tracking-wider">Match Log</span>
+                <span className="text-xs text-muted-foreground">{match.pointLog.length} events</span>
               </div>
               {match.pointLog.length === 0 ? (
-                <div className="px-4 py-6 text-center text-slate-500 text-sm">No points logged yet</div>
+                <div className="px-4 py-6 text-center text-muted-foreground text-sm">No points logged yet</div>
               ) : (
                 <div className="divide-y divide-slate-700/50">
                   {[...match.pointLog].reverse().map((entry, i) => (
@@ -703,8 +703,8 @@ export function UmpireEngine({
                         }`}>
                           {entry.team === 1 ? "T1 +" : entry.team === 2 ? "T2 +" : entry.team === "let" ? "LET" : "FAULT"}
                         </span>
-                        {entry.note && <span className="text-slate-500">{entry.note}</span>}
-                        <span className="text-slate-600">G{entry.gameNum}</span>
+                        {entry.note && <span className="text-muted-foreground">{entry.note}</span>}
+                        <span className="text-muted-foreground">G{entry.gameNum}</span>
                       </div>
                       <div className="font-mono font-bold text-slate-300 shrink-0">
                         {entry.t1Score} — {entry.t2Score}

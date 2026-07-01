@@ -54,10 +54,10 @@ export function UpdateDialog({
       <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-sm w-full p-7 space-y-5">
         <div className="text-center space-y-1">
           <div className="text-4xl mb-2">🏸</div>
-          <h2 className="text-xl font-black text-slate-900 dark:text-white">
+          <h2 className="text-xl font-black text-foreground dark:text-foreground">
             Update Available
           </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-muted-foreground dark:text-muted-foreground">
             Version {info.versionName} is ready
           </p>
         </div>
@@ -66,13 +66,13 @@ export function UpdateDialog({
           <button
             onClick={handleDownloadAndInstall}
             disabled={downloading}
-            className={`w-full ${downloading ? "bg-primary" : "bg-primary hover:bg-primary"} text-white font-bold py-3 rounded-xl text-center transition-colors`}
+            className={`w-full ${downloading ? "bg-primary" : "bg-primary hover:bg-primary"} text-foreground font-bold py-3 rounded-xl text-center transition-colors`}
           >
             {downloading ? "Downloading..." : "Download Update"}
           </button>
           <button
             onClick={onDismiss}
-            className="w-full text-slate-500 dark:text-slate-400 font-medium py-2 text-sm hover:text-slate-700 transition-colors"
+            className="w-full text-muted-foreground dark:text-muted-foreground font-medium py-2 text-sm hover:text-muted-foreground transition-colors"
           >
             Remind me later
           </button>

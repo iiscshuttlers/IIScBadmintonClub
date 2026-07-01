@@ -294,8 +294,8 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
                 onClick={() => setViewStatus(st.id)}
                 className={`flex-1 py-2 px-4 rounded-xl text-sm font-bold transition-all capitalize ${
                   viewStatus === st.id
-                    ? "bg-white dark:bg-slate-700 text-blue-900 dark:text-white shadow-sm"
-                    : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
+                    ? "bg-white dark:bg-slate-700 text-blue-900 dark:text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-muted-foreground dark:text-muted-foreground dark:hover:text-slate-300"
                 }`}
               >
                 {st.label}
@@ -316,8 +316,8 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
                     onClick={() => setActiveTid(event.slug || event.id)}
                     className={`px-4 py-1.5 rounded-xl text-sm font-bold transition-all ${
                       isActive
-                        ? "bg-primary text-white shadow-sm"
-                        : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700/50"
+                        ? "bg-primary text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700/50"
                     }`}
                   >
                     {event.name}
@@ -332,7 +332,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
           <>
             <div className="flex items-center gap-3 mb-8">
               <div className="w-2 h-8 bg-gradient-to-b from-amber-500 to-orange-600 rounded-full" />
-              <h2 className="text-3xl font-black text-blue-900 dark:text-white">
+              <h2 className="text-3xl font-black text-blue-900 dark:text-foreground">
                 {viewStatus === "active" ? "Live: " : viewStatus === "draft" ? "Upcoming: " : "Completed: "}
                 {displayName}
               </h2>
@@ -355,13 +355,13 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
               <div
                 className={`w-11 h-11 rounded-xl ${color} flex items-center justify-center shadow-md`}
               >
-                <Icon className="w-5 h-5 text-white" />
+                <Icon className="w-5 h-5 text-foreground" />
               </div>
               <div>
-                <p className="text-xs font-black text-gray-400 dark:text-slate-500 uppercase tracking-wider">
+                <p className="text-xs font-black text-gray-400 dark:text-muted-foreground uppercase tracking-wider">
                   {label}
                 </p>
-                <p className="text-sm font-bold text-blue-900 dark:text-white mt-0.5">
+                <p className="text-sm font-bold text-blue-900 dark:text-foreground mt-0.5">
                   {value}
                 </p>
               </div>
@@ -372,7 +372,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
         {/* Registration CTA / Form — only when a form is configured */}
         {hasForm && (
           <motion.div custom={4} variants={fadeUp} initial="hidden" animate="visible">
-            <div className="bg-gradient-to-r from-slate-800 to-slate-900 dark:from-slate-900 dark:to-slate-950 rounded-3xl p-8 text-white text-center relative overflow-hidden border border-slate-700/50">
+            <div className="bg-gradient-to-r from-slate-800 to-slate-900 dark:from-slate-900 dark:to-slate-950 rounded-3xl p-8 text-foreground text-center relative overflow-hidden border border-slate-700/50">
               <div className="absolute inset-0 hero-pattern opacity-20" />
               <div className="relative z-10">
                 <div
@@ -398,8 +398,8 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
                   rel="noopener noreferrer"
                   className={`inline-flex items-center gap-2 px-8 py-4 rounded-xl font-black transition shadow-xl ${
                     formClosed
-                      ? "bg-slate-600 text-white opacity-70 cursor-not-allowed pointer-events-none"
-                      : "bg-primary hover:bg-primary text-white"
+                      ? "bg-slate-600 text-foreground opacity-70 cursor-not-allowed pointer-events-none"
+                      : "bg-primary hover:bg-primary text-foreground"
                   }`}
                 >
                   {ctaLabel} <ArrowRight className="w-5 h-5" />
@@ -424,8 +424,8 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-3 rounded-xl text-sm font-bold transition-all whitespace-nowrap flex-1 basis-[45%] sm:basis-auto shrink-0 ${
                 activeTab === tab.id
-                  ? "bg-primary text-white shadow-md shadow-primary/20"
-                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  ? "bg-primary text-foreground shadow-md shadow-primary/20"
+                  : "text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
               }`}
             >
               <tab.icon className="w-4 h-4" />
@@ -452,7 +452,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
               <div className="h-1 bg-gradient-to-r from-primary to-blue-600" />
               <div className="p-7 md:p-9">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                  <h3 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
+                  <h3 className="text-xl font-black text-slate-800 dark:text-foreground flex items-center gap-2">
                     <div className="p-2 bg-primary/15 dark:bg-primary/30 rounded-xl">
                       <FileText className="w-5 h-5 text-primary dark:text-primary" />
                     </div>
@@ -497,11 +497,11 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
                   </div>
                 ) : files.length === 0 ? (
                   <div className="text-center py-14 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
-                    <FileText className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-                    <p className="text-slate-500 dark:text-slate-400 font-semibold">
+                    <FileText className="w-10 h-10 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
+                    <p className="text-muted-foreground dark:text-muted-foreground font-semibold">
                       No notices yet
                     </p>
-                    <p className="text-slate-400 dark:text-slate-600 text-sm mt-1">
+                    <p className="text-muted-foreground dark:text-muted-foreground text-sm mt-1">
                       Check back soon for fixtures and updates.
                     </p>
                   </div>
@@ -520,7 +520,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
                             <p className="font-semibold text-slate-800 dark:text-slate-200 truncate text-sm">
                               {file.name.replace(/^\d+_/, "")}
                             </p>
-                            <p className="text-xs text-slate-400">
+                            <p className="text-xs text-muted-foreground">
                               {(file.metadata?.size / 1024).toFixed(1)} KB ·{" "}
                               {new Date(file.created_at).toLocaleDateString()}
                             </p>
@@ -596,10 +596,10 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
             ) : !liveTournament ? (
               <div className="col-span-full rounded-3xl border-2 border-dashed border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/10 p-14 text-center">
                 <Radio className="w-12 h-12 text-red-400 mx-auto mb-4 animate-pulse" />
-                <h3 className="text-xl font-bold text-blue-900 dark:text-white mb-2">
+                <h3 className="text-xl font-bold text-blue-900 dark:text-foreground mb-2">
                   No live tournaments
                 </h3>
-                <p className="text-gray-500 dark:text-slate-400 max-w-md mx-auto">
+                <p className="text-muted-foreground dark:text-muted-foreground max-w-md mx-auto">
                   There are no ongoing tournaments at the moment. Check the upcoming tab to see what's next!
                 </p>
               </div>
@@ -616,10 +616,10 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
             ) : !liveTournament ? (
               <div className="col-span-full rounded-3xl border-2 border-dashed border-primary/40 dark:border-primary/50 bg-primary/10 dark:bg-primary/10 p-14 text-center">
                 <Calendar className="w-12 h-12 text-primary mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-blue-900 dark:text-white mb-2">
+                <h3 className="text-xl font-bold text-blue-900 dark:text-foreground mb-2">
                   No upcoming tournaments
                 </h3>
-                <p className="text-gray-500 dark:text-slate-400 max-w-md mx-auto">
+                <p className="text-muted-foreground dark:text-muted-foreground max-w-md mx-auto">
                   No events are scheduled right now — check back soon, or browse our completed events.
                 </p>
               </div>
@@ -638,10 +638,10 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
                 ) : (
                   <div className="col-span-full rounded-3xl border-2 border-dashed border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/10 p-14 text-center">
                     <Archive className="w-12 h-12 text-amber-400 mx-auto mb-4" />
-                    <h3 className="text-xl font-bold text-blue-900 dark:text-white mb-2">
+                    <h3 className="text-xl font-bold text-blue-900 dark:text-foreground mb-2">
                       No completed tournaments
                     </h3>
-                    <p className="text-gray-500 dark:text-slate-400 max-w-md mx-auto">
+                    <p className="text-muted-foreground dark:text-muted-foreground max-w-md mx-auto">
                       We don't have any completed tournament records yet.
                     </p>
                   </div>
@@ -716,9 +716,9 @@ function SupabaseScheduleView({ tournamentId }: { tournamentId: string | null })
 
   if (!schedMatches.length) return (
     <div className="py-24 flex flex-col items-center justify-center text-center">
-      <Calendar className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-      <h3 className="text-xl font-black text-slate-700 dark:text-slate-200 mb-2">Schedule Not Yet Available</h3>
-      <p className="text-slate-400 max-w-md">Match schedule will appear here once the admin assigns court times to bracket matches.</p>
+      <Calendar className="w-12 h-12 text-slate-300 dark:text-muted-foreground mx-auto mb-4" />
+      <h3 className="text-xl font-black text-muted-foreground dark:text-slate-200 mb-2">Schedule Not Yet Available</h3>
+      <p className="text-muted-foreground max-w-md">Match schedule will appear here once the admin assigns court times to bracket matches.</p>
     </div>
   );
 
@@ -730,8 +730,8 @@ function SupabaseScheduleView({ tournamentId }: { tournamentId: string | null })
           <button key={cat} onClick={() => setActiveCategory(cat)}
             className={`px-4 py-1.5 rounded-xl text-sm font-black transition-all border ${
               activeCategory === cat
-                ? "bg-primary text-white border-primary shadow"
-                : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-primary"
+                ? "bg-primary text-foreground border-primary shadow"
+                : "border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-muted-foreground hover:border-primary"
             }`}>
             {cat}
           </button>
@@ -742,25 +742,25 @@ function SupabaseScheduleView({ tournamentId }: { tournamentId: string | null })
         <div key={date}>
           <div className="flex items-center gap-3 mb-3">
             <Calendar className="w-4 h-4 text-primary" />
-            <h3 className="font-black text-slate-700 dark:text-slate-200">{date}</h3>
+            <h3 className="font-black text-muted-foreground dark:text-slate-200">{date}</h3>
           </div>
           <div className="space-y-3">
             {dayMatches.map((m) => {
-              const catCls = CAT_COLORS[m.category] ?? "bg-slate-50 dark:bg-slate-800 text-slate-600 border-slate-200";
+              const catCls = CAT_COLORS[m.category] ?? "bg-slate-50 dark:bg-slate-800 text-muted-foreground border-slate-200";
               const isCompleted = m.status === "completed" || m.status === "walkover";
               const isLive = m.status === "in_progress";
               return (
                 <div key={m.id} className={`rounded-2xl border p-4 ${isLive ? "border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/20" : "border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900"}`}>
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
                     <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg border ${catCls}`}>{m.category}</span>
-                    <span className="text-[10px] text-slate-400 font-bold">{m.round_name} · {m.match_code}</span>
+                    <span className="text-[10px] text-muted-foreground font-bold">{m.round_name} · {m.match_code}</span>
                     {m.court_number && (
                       <span className="flex items-center gap-1 text-[10px] font-bold text-blue-500">
                         <MapPin className="w-3 h-3" /> Court {m.court_number}
                       </span>
                     )}
                     {m.scheduled_at && (
-                      <span className="flex items-center gap-1 text-[10px] text-slate-400">
+                      <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
                         <Clock className="w-3 h-3" />
                         {new Date(m.scheduled_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
                       </span>
@@ -769,16 +769,16 @@ function SupabaseScheduleView({ tournamentId }: { tournamentId: string | null })
                     {isCompleted && <span className="text-[10px] font-black text-primary">✓ Done</span>}
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className={`text-sm font-bold flex-1 ${m.winner_side === 1 ? "text-primary dark:text-primary" : "text-slate-700 dark:text-slate-200"}`}>
+                    <span className={`text-sm font-bold flex-1 ${m.winner_side === 1 ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-slate-200"}`}>
                       {m.team1_label ?? "TBD"}
                     </span>
                     <span className="text-[10px] font-black text-rose-400 shrink-0">VS</span>
-                    <span className={`text-sm font-bold flex-1 text-right ${m.winner_side === 2 ? "text-primary dark:text-primary" : "text-slate-700 dark:text-slate-200"}`}>
+                    <span className={`text-sm font-bold flex-1 text-right ${m.winner_side === 2 ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-slate-200"}`}>
                       {m.team2_label ?? "TBD"}
                     </span>
                   </div>
                   {isCompleted && m.sets_history?.length ? (
-                    <p className="mt-1.5 text-xs font-mono text-slate-400">{m.sets_history.join(", ")}</p>
+                    <p className="mt-1.5 text-xs font-mono text-muted-foreground">{m.sets_history.join(", ")}</p>
                   ) : null}
                 </div>
               );
@@ -822,7 +822,7 @@ export function TournamentArchiveBrackets({ tournamentId }: { tournamentId: stri
   if (!matches.length) {
     return (
       <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 p-8 text-center">
-        <p className="text-slate-400">No match results recorded for this tournament.</p>
+        <p className="text-muted-foreground">No match results recorded for this tournament.</p>
       </div>
     );
   }
@@ -832,10 +832,10 @@ export function TournamentArchiveBrackets({ tournamentId }: { tournamentId: stri
       {categories.length > 0 && matches.length > 0 && (
         <div className="space-y-4 border-b border-slate-100 dark:border-slate-700 pb-4">
           <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-fit">
-            <button onClick={() => setViewMode("list")} className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-1.5 text-xs font-black uppercase tracking-widest rounded-lg transition ${viewMode === "list" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}>
+            <button onClick={() => setViewMode("list")} className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-1.5 text-xs font-black uppercase tracking-widest rounded-lg transition ${viewMode === "list" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-foreground shadow" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}>
               <LayoutList className="w-3.5 h-3.5" /> List View
             </button>
-            <button onClick={() => setViewMode("bracket")} className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-1.5 text-xs font-black uppercase tracking-widest rounded-lg transition ${viewMode === "bracket" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}>
+            <button onClick={() => setViewMode("bracket")} className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-1.5 text-xs font-black uppercase tracking-widest rounded-lg transition ${viewMode === "bracket" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-foreground shadow" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}>
               <Tv2 className="w-3.5 h-3.5" /> Bracket Tree
             </button>
           </div>
@@ -845,8 +845,8 @@ export function TournamentArchiveBrackets({ tournamentId }: { tournamentId: stri
               <button key={cat} onClick={() => setActiveCategory(cat)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all border ${
                   activeCategory === cat
-                    ? "bg-primary text-white border-primary shadow"
-                    : "border-slate-200 dark:border-slate-700 text-slate-500 hover:border-primary"
+                    ? "bg-primary text-foreground border-primary shadow"
+                    : "border-slate-200 dark:border-slate-700 text-muted-foreground hover:border-primary"
                 }`}>
                 {cat}
               </button>
@@ -870,25 +870,25 @@ export function TournamentArchiveBrackets({ tournamentId }: { tournamentId: stri
             const rounds = [...new Set(catMatches.map((m) => m.round))].sort((a, b) => a - b);
             return (
               <div key={cat}>
-                <h4 className="text-sm font-black text-slate-700 dark:text-slate-200 mb-3 flex items-center gap-2">
-                  <span className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">{cat}</span>
+                <h4 className="text-sm font-black text-muted-foreground dark:text-slate-200 mb-3 flex items-center gap-2">
+                  <span className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-700 text-muted-foreground dark:text-slate-300">{cat}</span>
                 </h4>
                 <div className="space-y-4">
                   {rounds.map((round) => {
                     const roundMatches = catMatches.filter((m) => m.round === round);
                     return (
                       <div key={round}>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">{roundMatches[0]?.round_name}</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">{roundMatches[0]?.round_name}</p>
                         <div className="grid gap-2">
                           {roundMatches.map((m) => (
                             <div key={m.id} className="bg-slate-50 dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-700">
                               <div className="flex items-center gap-2 mb-2">
-                                <span className="text-[10px] font-black text-slate-400">{m.match_code}</span>
+                                <span className="text-[10px] font-black text-muted-foreground">{m.match_code}</span>
                                 {m.status === "walkover" && (
                                   <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/40 text-blue-600">W/O</span>
                                 )}
                                 {m.status === "scheduled" && !m.scheduled_at && (
-                                  <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500">Not scheduled yet</span>
+                                  <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-muted-foreground">Not scheduled yet</span>
                                 )}
                                 {m.status === "scheduled" && m.scheduled_at && (
                                   <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600">

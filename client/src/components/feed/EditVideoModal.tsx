@@ -48,13 +48,13 @@ export function EditVideoModal({ isOpen, onClose, matchId, initialUrl, onSuccess
           className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800"
         >
           <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <h2 className="text-lg font-black flex items-center gap-2 text-slate-900 dark:text-white">
+            <h2 className="text-lg font-black flex items-center gap-2 text-foreground dark:text-foreground">
               <Video className="w-5 h-5 text-rose-500" />
               Edit Highlights Link
             </h2>
             <button
               onClick={onClose}
-              className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors"
+              className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -62,7 +62,7 @@ export function EditVideoModal({ isOpen, onClose, matchId, initialUrl, onSuccess
           
           <div className="p-6 space-y-4">
             <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+              <label className="block text-sm font-bold text-muted-foreground dark:text-slate-300 mb-2">
                 YouTube or Drive URL
               </label>
               <input
@@ -70,9 +70,9 @@ export function EditVideoModal({ isOpen, onClose, matchId, initialUrl, onSuccess
                 value={url}
                 onChange={e => setUrl(e.target.value)}
                 placeholder="https://youtu.be/..."
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
               />
-              <p className="text-xs text-slate-500 mt-2">
+              <p className="text-xs text-muted-foreground mt-2">
                 Leave blank to remove the highlights link. This link will be visible to everyone on the activity feed.
               </p>
             </div>
@@ -82,14 +82,14 @@ export function EditVideoModal({ isOpen, onClose, matchId, initialUrl, onSuccess
             <button
               onClick={onClose}
               disabled={saving}
-              className="px-6 py-2.5 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="px-6 py-2.5 rounded-xl text-sm font-bold text-muted-foreground dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-primary hover:bg-primary transition-colors flex items-center gap-2 disabled:opacity-50"
+              className="px-6 py-2.5 rounded-xl text-sm font-bold text-foreground bg-primary hover:bg-primary transition-colors flex items-center gap-2 disabled:opacity-50"
             >
               {saving && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
               Save Link

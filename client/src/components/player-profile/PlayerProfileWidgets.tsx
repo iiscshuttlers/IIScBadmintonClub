@@ -45,7 +45,7 @@ export const CircularProgress = ({
           stroke="currentColor"
           strokeWidth={stroke}
           fill="none"
-          className="text-slate-200 dark:text-slate-700"
+          className="text-slate-200 dark:text-muted-foreground"
         />
         <motion.circle
           cx={size / 2}
@@ -68,7 +68,7 @@ export const CircularProgress = ({
         </defs>
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className={`${size <= 48 ? "text-[10px]" : size <= 64 ? "text-sm" : "text-lg"} font-black text-slate-900 dark:text-white`}>
+        <span className={`${size <= 48 ? "text-[10px]" : size <= 64 ? "text-sm" : "text-lg"} font-black text-foreground dark:text-foreground`}>
           {Math.round(value)}%
         </span>
       </div>
@@ -90,8 +90,8 @@ export const FormPill = ({
     className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black shadow-md
       ${
         result === "W"
-          ? "bg-gradient-to-br from-primary to-primary text-white shadow-primary/40"
-          : "bg-gradient-to-br from-rose-400 to-rose-600 text-white shadow-rose-500/40"
+          ? "bg-gradient-to-br from-primary to-primary text-foreground shadow-primary/40"
+          : "bg-gradient-to-br from-rose-400 to-rose-600 text-foreground shadow-rose-500/40"
       }`}
   >
     {result}
@@ -115,17 +115,17 @@ export const CategoryBar = ({
     <div>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
+          <span className="text-sm font-bold text-muted-foreground dark:text-slate-200">
             {label}
           </span>
-          <span className="text-xs text-slate-500 dark:text-slate-400">
+          <span className="text-xs text-muted-foreground dark:text-muted-foreground">
             ({total} matches)
           </span>
         </div>
         <div className="text-sm font-bold text-slate-800 dark:text-slate-100">
           {wins}
-          <span className="text-slate-400 font-normal">W</span> – {losses}
-          <span className="text-slate-400 font-normal">L</span>
+          <span className="text-muted-foreground font-normal">W</span> – {losses}
+          <span className="text-muted-foreground font-normal">L</span>
         </div>
       </div>
       <div className="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex">
@@ -168,17 +168,17 @@ export const KPI = ({
         <div
           className={`w-10 h-10 rounded-2xl flex items-center justify-center ${accent} bg-opacity-15`}
         >
-          <Icon className="w-5 h-5 text-white" />
+          <Icon className="w-5 h-5 text-foreground" />
         </div>
       </div>
-      <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+      <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground dark:text-muted-foreground mb-1">
         {label}
       </div>
-      <div className="text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none">
+      <div className="text-3xl font-black text-foreground dark:text-foreground tracking-tight leading-none">
         {value}
       </div>
       {sub && (
-        <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+        <div className="text-xs text-muted-foreground dark:text-muted-foreground mt-1 font-medium">
           {sub}
         </div>
       )}
@@ -330,14 +330,14 @@ export const Badges = ({
 
   return (
     <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-5 sm:p-6 shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 mt-6 md:mt-8">
-      <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
+      <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground dark:text-muted-foreground mb-4">
         Achievements
       </h3>
       <div className="flex flex-wrap gap-3">
         {badges.map((b) => (
           <div
             key={b.id}
-            className={`flex items-center gap-2 px-3 py-2 rounded-2xl bg-gradient-to-br ${b.color} text-white shadow-md cursor-help`}
+            className={`flex items-center gap-2 px-3 py-2 rounded-2xl bg-gradient-to-br ${b.color} text-foreground shadow-md cursor-help`}
             title={b.desc}
           >
             <span className="text-xl">{b.icon}</span>
@@ -387,10 +387,10 @@ export const ActivityHeatmap = ({ matches }: { matches: any[] }) => {
 
   return (
     <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-5 sm:p-6 shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 mt-6 md:mt-8 overflow-hidden">
-      <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-6 flex justify-between items-center">
+      <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground dark:text-muted-foreground mb-6 flex justify-between items-center">
         <span>Activity Heatmap</span>
         {selectedDateData && (
-          <button onClick={() => setSelectedDateData(null)} className="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+          <button onClick={() => setSelectedDateData(null)} className="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300">
             Clear Selection
           </button>
         )}
@@ -455,19 +455,19 @@ export const ActivityHeatmap = ({ matches }: { matches: any[] }) => {
                     <span className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/10 dark:bg-primary/10 px-2 py-0.5 rounded">
                       {format}
                     </span>
-                    <span className="text-[10px] font-black text-slate-400">
+                    <span className="text-[10px] font-black text-muted-foreground">
                       {new Date(match.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
                   
-                  <div className="flex flex-col text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  <div className="flex flex-col text-sm font-semibold text-muted-foreground dark:text-slate-300">
                     <div className="flex justify-between items-center">
                       <div className="truncate flex-1">
                         {match.player1?.full_name?.split(' ')[0]} {match.partner1 ? `& ${match.partner1?.full_name?.split(' ')[0]}` : ''}
                       </div>
                       {match.winner_id === match.player1_id && <span className="text-amber-500 ml-2 text-xs">👑</span>}
                     </div>
-                    <div className="flex justify-between items-center text-xs font-black text-slate-400 my-0.5">
+                    <div className="flex justify-between items-center text-xs font-black text-muted-foreground my-0.5">
                       <span className="mx-auto bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded">{displayScore}</span>
                     </div>
                     <div className="flex justify-between items-center">
@@ -567,27 +567,27 @@ export const HeadToHeadWidget = ({
 
   return (
     <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-5 shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/50 mt-6 md:mt-8">
-      <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-6 flex items-center gap-2">
+      <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground dark:text-muted-foreground mb-6 flex items-center gap-2">
         ?? HEAD-TO-HEAD
       </h3>
       <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <div className="text-center">
-            <div className="text-xs font-bold text-slate-400 mb-1">YOU</div>
+            <div className="text-xs font-bold text-muted-foreground mb-1">YOU</div>
             <div className="text-3xl font-black text-primary">{wins}</div>
           </div>
-          <div className="text-xl font-black text-slate-300 dark:text-slate-600">
+          <div className="text-xl font-black text-slate-300 dark:text-muted-foreground">
             -
           </div>
           <div className="text-center">
-            <div className="text-xs font-bold text-slate-400 mb-1">THEM</div>
+            <div className="text-xs font-bold text-muted-foreground mb-1">THEM</div>
             <div className="text-3xl font-black text-rose-500">{losses}</div>
           </div>
         </div>
         <div className="flex-1 w-full max-w-xs">
           <div className="flex justify-between text-xs font-bold mb-2">
             <span className="text-primary">{winPct}% Win Rate</span>
-            <span className="text-slate-400">{h2hMatches.length} Matches</span>
+            <span className="text-muted-foreground">{h2hMatches.length} Matches</span>
           </div>
           <div className="h-3 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden flex">
             <div

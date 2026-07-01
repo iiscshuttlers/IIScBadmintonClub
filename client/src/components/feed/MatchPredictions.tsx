@@ -78,14 +78,14 @@ function ProbBar({ t1Pct, t2Pct, t1Label, t2Label, label }: {
 }) {
   return (
     <div className="mt-3">
-      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">{label}</p>
+      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">{label}</p>
       <div className="flex rounded-full overflow-hidden h-4">
         {t1Pct > 0 && (
           <div
             className="bg-primary flex items-center justify-start pl-2 transition-all duration-700"
             style={{ width: `${t1Pct}%` }}
           >
-            {t1Pct >= 20 && <span className="text-[10px] font-black text-white truncate">{t1Pct}%</span>}
+            {t1Pct >= 20 && <span className="text-[10px] font-black text-foreground truncate">{t1Pct}%</span>}
           </div>
         )}
         {t2Pct > 0 && (
@@ -93,7 +93,7 @@ function ProbBar({ t1Pct, t2Pct, t1Label, t2Label, label }: {
             className="bg-sky-400 flex items-center justify-end pr-2 transition-all duration-700"
             style={{ width: `${t2Pct}%` }}
           >
-            {t2Pct >= 20 && <span className="text-[10px] font-black text-white truncate">{t2Pct}%</span>}
+            {t2Pct >= 20 && <span className="text-[10px] font-black text-foreground truncate">{t2Pct}%</span>}
           </div>
         )}
       </div>
@@ -168,7 +168,7 @@ function MatchPredictionCard({ m, myPick, onPick }: {
 
   return (
     <div className="px-5 py-4">
-      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
+      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3">
         {m.isFriendly ? "Friendly" : `Tournament · ${m.matchNumber}`} · {m.inferredCategory || m.category}
       </p>
 
@@ -280,7 +280,7 @@ export function MatchPredictions() {
     <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden mb-6">
       <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
         <TrendingUp className="w-5 h-5 text-violet-500" />
-        <h3 className="font-black text-slate-800 dark:text-white">Who's going to win?</h3>
+        <h3 className="font-black text-slate-800 dark:text-foreground">Who's going to win?</h3>
         <span className="ml-auto text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-1">
           <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse inline-block" /> Live
         </span>

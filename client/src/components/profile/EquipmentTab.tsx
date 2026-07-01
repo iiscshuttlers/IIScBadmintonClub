@@ -38,7 +38,7 @@ export function EquipmentTab({
       {/* Multiple Rackets Arsenal */}
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+          <label className="block text-sm font-semibold text-muted-foreground dark:text-slate-300">
             Rackets in your Bag (Equipment Arsenal)
           </label>
           <button
@@ -73,7 +73,7 @@ export function EquipmentTab({
                     onChange={() => setPrimaryRacketIndex(index)}
                     className="w-4 h-4 text-primary focus:ring-primary border-slate-300"
                   />
-                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <span className="text-xs font-bold text-muted-foreground dark:text-slate-300">
                     Set as Primary Racket
                   </span>
                 </label>
@@ -95,7 +95,7 @@ export function EquipmentTab({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
+                <label className="block text-xs font-semibold text-muted-foreground dark:text-muted-foreground mb-1">
                   Racket Name
                 </label>
                 <input
@@ -107,14 +107,14 @@ export function EquipmentTab({
                     updated[index].name = e.target.value;
                     setRackets(updated);
                   }}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary"
                   placeholder="e.g. Yonex Astrox 99 Pro"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
+                  <label className="block text-xs font-semibold text-muted-foreground dark:text-muted-foreground mb-1">
                     String Model
                   </label>
                   <input
@@ -125,13 +125,13 @@ export function EquipmentTab({
                       updated[index].string = e.target.value;
                       setRackets(updated);
                     }}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary"
                     placeholder="e.g. Yonex BG80"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
+                  <label className="block text-xs font-semibold text-muted-foreground dark:text-muted-foreground mb-1">
                     Tension (lbs)
                   </label>
                   <input
@@ -142,7 +142,7 @@ export function EquipmentTab({
                       updated[index].tension = e.target.value;
                       setRackets(updated);
                     }}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary"
                     placeholder="e.g. 26"
                   />
                 </div>
@@ -155,7 +155,7 @@ export function EquipmentTab({
       {/* Multiple Shoes Arsenal */}
       <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
         <div className="flex justify-between items-center">
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+          <label className="block text-sm font-semibold text-muted-foreground dark:text-slate-300">
             Footwear / Shoes Arsenal
           </label>
           <button
@@ -188,7 +188,7 @@ export function EquipmentTab({
                     onChange={() => setPrimaryShoeIndex(index)}
                     className="w-4 h-4 text-primary focus:ring-primary border-slate-300"
                   />
-                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <span className="text-xs font-bold text-muted-foreground dark:text-slate-300">
                     Set as Primary Shoe
                   </span>
                 </label>
@@ -210,7 +210,7 @@ export function EquipmentTab({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
+                <label className="block text-xs font-semibold text-muted-foreground dark:text-muted-foreground mb-1">
                   Shoe Model Name
                 </label>
                 <input
@@ -222,7 +222,7 @@ export function EquipmentTab({
                     updated[index].name = e.target.value;
                     setShoesList(updated);
                   }}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary"
                   placeholder="e.g. Yonex Power Cushion 65 Z3"
                 />
               </div>
@@ -232,14 +232,14 @@ export function EquipmentTab({
       </div>
 
       <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+        <label className="block text-sm font-semibold text-muted-foreground dark:text-slate-300 mb-2">
           Preferred Apparel / Gear Brand
         </label>
         <input
           type="text"
           value={apparel}
           onChange={(e) => setApparel(e.target.value)}
-          className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none"
+          className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none"
           placeholder="e.g. Yonex, Li-Ning"
         />
       </div>

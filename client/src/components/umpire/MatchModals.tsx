@@ -13,8 +13,8 @@ export function ChangeEndsModal({
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
       <div className="flex flex-col items-center bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 text-center w-full max-w-sm shadow-2xl gap-5">
         <ArrowLeftRight className="w-14 h-14 text-amber-400" />
-        <h2 className="text-2xl font-black text-white uppercase tracking-wider">Change Ends</h2>
-        <p className="text-slate-400 font-bold text-sm max-w-xs">{reason}</p>
+        <h2 className="text-2xl font-black text-foreground uppercase tracking-wider">Change Ends</h2>
+        <p className="text-muted-foreground font-bold text-sm max-w-xs">{reason}</p>
         <div className="flex items-center justify-center gap-2 text-amber-400 text-sm font-bold">
           <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
           Players change sides of the court now
@@ -52,7 +52,7 @@ export function DisciplineCardModal({
         <h2 className="text-lg font-black uppercase tracking-wider flex items-center gap-2">
           <Flag className="w-5 h-5 text-amber-400" /> Issue Discipline Card
         </h2>
-        <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-full text-slate-400">
+        <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-full text-muted-foreground">
           <X className="w-5 h-5" />
         </button>
       </div>
@@ -79,7 +79,7 @@ export function DisciplineCardModal({
 
       {cardTarget && (
         <div className="w-full space-y-3">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Select card for: <span className="text-white">{
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Select card for: <span className="text-foreground">{
             cardTarget === "t1p1" ? match.t1.p1Name
             : cardTarget === "t1p2" ? match.t1.p2Name
             : cardTarget === "t2p1" ? match.t2.p1Name
@@ -92,7 +92,7 @@ export function DisciplineCardModal({
             <button onClick={() => onIssueCard(cardTarget, "red")} className="py-4 rounded-2xl font-black text-sm bg-red-500/20 border border-red-500 text-red-400 hover:bg-red-500/30 transition">
               🟥 Red<br/><span className="text-xs font-normal opacity-70">+1 pt opponent</span>
             </button>
-            <button onClick={() => onIssueCard(cardTarget, "black")} className="py-4 rounded-2xl font-black text-sm bg-slate-700/80 border border-slate-400 text-white hover:bg-slate-600 transition">
+            <button onClick={() => onIssueCard(cardTarget, "black")} className="py-4 rounded-2xl font-black text-sm bg-slate-700/80 border border-slate-400 text-foreground hover:bg-slate-600 transition">
               ⬛ Black<br/><span className="text-xs font-normal opacity-70">Disqualify</span>
             </button>
           </div>
@@ -119,8 +119,8 @@ export function RetireModal({
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
       <div className="flex flex-col items-center justify-center bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 text-center w-full max-w-sm shadow-2xl gap-5">
         <AlertTriangle className="w-12 h-12 text-rose-400" />
-        <h2 className="text-xl font-black text-white uppercase tracking-wider">Match Retirement</h2>
-        <p className="text-slate-400 text-sm">Which team is retiring from the match?</p>
+        <h2 className="text-xl font-black text-foreground uppercase tracking-wider">Match Retirement</h2>
+        <p className="text-muted-foreground text-sm">Which team is retiring from the match?</p>
         <div className="flex flex-col gap-3 w-full">
           <button onClick={() => onRetire(1)} className="w-full py-3 px-4 bg-rose-500/20 border border-rose-500 text-rose-400 rounded-xl font-bold text-sm hover:bg-rose-500/30 transition">
             {t1Name}
@@ -129,7 +129,7 @@ export function RetireModal({
             {t2Name}
           </button>
         </div>
-        <button onClick={onClose} className="text-slate-500 text-sm hover:text-slate-300 transition mt-2">Cancel</button>
+        <button onClick={onClose} className="text-muted-foreground text-sm hover:text-slate-300 transition mt-2">Cancel</button>
       </div>
     </div>
   );
@@ -185,28 +185,28 @@ export function DirectScoreModal({
       <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full shadow-2xl max-h-[75dvh] flex flex-col">
         
         <div className="p-6 pb-4 shrink-0 border-b border-slate-800">
-          <h3 className="text-xl font-black text-white">Enter Final Score</h3>
+          <h3 className="text-xl font-black text-foreground">Enter Final Score</h3>
         </div>
 
         <div className="p-6 overflow-y-auto space-y-6">
           <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Winner</label>
+            <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Winner</label>
             <div className="flex flex-col sm:flex-row gap-2">
-              <button onClick={() => setDirectWinner(1)} className={`flex-1 py-3 px-2 rounded-xl font-bold transition text-sm ${directWinner === 1 ? "bg-primary text-white" : "bg-slate-800 text-slate-400"}`}>{t1Name || "Team 1"}</button>
-              <button onClick={() => setDirectWinner(2)} className={`flex-1 py-3 px-2 rounded-xl font-bold transition text-sm ${directWinner === 2 ? "bg-sky-500 text-white" : "bg-slate-800 text-slate-400"}`}>{t2Name || "Team 2"}</button>
+              <button onClick={() => setDirectWinner(1)} className={`flex-1 py-3 px-2 rounded-xl font-bold transition text-sm ${directWinner === 1 ? "bg-primary text-foreground" : "bg-slate-800 text-muted-foreground"}`}>{t1Name || "Team 1"}</button>
+              <button onClick={() => setDirectWinner(2)} className={`flex-1 py-3 px-2 rounded-xl font-bold transition text-sm ${directWinner === 2 ? "bg-sky-500 text-foreground" : "bg-slate-800 text-muted-foreground"}`}>{t2Name || "Team 2"}</button>
             </div>
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase mb-3">Set Scores</label>
+            <label className="block text-xs font-bold text-muted-foreground uppercase mb-3">Set Scores</label>
             <div className="bg-slate-800/50 rounded-2xl border border-slate-700 overflow-hidden">
-              <div className="grid grid-cols-[auto_1fr_1fr] bg-slate-800 text-xs font-bold text-slate-400 uppercase tracking-widest">
+              <div className="grid grid-cols-[auto_1fr_1fr] bg-slate-800 text-xs font-bold text-muted-foreground uppercase tracking-widest">
                 <div className="p-3 text-center border-r border-slate-700">Set</div>
                 <div className="p-3 text-center border-r border-slate-700 truncate px-2" title={t1Name}>{t1Name || "Team 1"}</div>
                 <div className="p-3 text-center truncate px-2" title={t2Name}>{t2Name || "Team 2"}</div>
               </div>
               {Array.from({ length: setsToShow }).map((_, idx) => (
                 <div key={idx} className="grid grid-cols-[auto_1fr_1fr] border-t border-slate-700/50">
-                  <div className="p-3 flex items-center justify-center font-black text-slate-500 border-r border-slate-700 bg-slate-800/30 w-12">{idx + 1}</div>
+                  <div className="p-3 flex items-center justify-center font-black text-muted-foreground border-r border-slate-700 bg-slate-800/30 w-12">{idx + 1}</div>
                   <div className="p-2 border-r border-slate-700">
                     <input 
                       type="number" 
@@ -230,11 +230,11 @@ export function DirectScoreModal({
         </div>
 
         <div className="p-6 pt-4 border-t border-slate-700 shrink-0 flex gap-2">
-          <button onClick={onClose} className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition">Cancel</button>
+          <button onClick={onClose} className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-foreground rounded-xl font-bold transition">Cancel</button>
           <button onClick={() => {
             if (!directWinner || !directSetsText) { toast.error("Fill winner and at least 1 set"); return; }
             onSave();
-          }} className="flex-[2] py-3 bg-primary hover:bg-primary text-white rounded-xl font-bold transition">Save Score</button>
+          }} className="flex-[2] py-3 bg-primary hover:bg-primary text-foreground rounded-xl font-bold transition">Save Score</button>
         </div>
         
       </div>
@@ -263,13 +263,13 @@ export function ConfirmActionModal({
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
       <div className="flex flex-col items-center bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 text-center w-full max-w-sm shadow-2xl">
         <Icon className="w-12 h-12 text-rose-500 mb-4" />
-        <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-wider mb-2">{title}</h2>
-        <p className="text-slate-400 font-bold text-xs sm:text-sm mb-6">{message}</p>
+        <h2 className="text-xl sm:text-2xl font-black text-foreground uppercase tracking-wider mb-2">{title}</h2>
+        <p className="text-muted-foreground font-bold text-xs sm:text-sm mb-6">{message}</p>
         
         <div className="flex w-full gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold text-sm rounded-2xl transition"
+            className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-foreground font-bold text-sm rounded-2xl transition"
           >
             Cancel
           </button>
@@ -278,7 +278,7 @@ export function ConfirmActionModal({
               onConfirm();
               onClose();
             }}
-            className={`flex-1 py-3 text-white font-bold text-sm rounded-2xl shadow-lg transition ${confirmColor}`}
+            className={`flex-1 py-3 text-foreground font-bold text-sm rounded-2xl shadow-lg transition ${confirmColor}`}
           >
             {confirmLabel}
           </button>

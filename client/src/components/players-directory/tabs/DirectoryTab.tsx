@@ -126,7 +126,7 @@ export function DirectoryTab({
               <h3 className="text-lg font-black text-slate-800 dark:text-slate-100">
                 Recommended Matches
               </h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-muted-foreground dark:text-muted-foreground">
                 Players with similar skill looking to play right now
               </p>
             </div>
@@ -183,19 +183,19 @@ export function DirectoryTab({
         </div>
       ) : fetchError ? (
         <div className="flex flex-col items-center justify-center py-20 space-y-4 text-center">
-          <p className="text-slate-700 dark:text-slate-300 font-bold">
+          <p className="text-muted-foreground dark:text-slate-300 font-bold">
             {isSupabaseConfigured
               ? "No connection to server"
               : "Player directory is not configured"}
           </p>
-          <p className="text-slate-400 text-sm max-w-md">
+          <p className="text-muted-foreground text-sm max-w-md">
             {isSupabaseConfigured
               ? "This app requires internet to load player data."
               : "The deployed site is missing Supabase environment variables."}
           </p>
           <button
             onClick={() => fetchPlayers()}
-            className="mt-2 px-4 py-2 bg-primary hover:bg-primary text-white text-sm font-bold rounded-xl transition"
+            className="mt-2 px-4 py-2 bg-primary hover:bg-primary text-foreground text-sm font-bold rounded-xl transition"
           >
             Retry
           </button>
@@ -203,7 +203,7 @@ export function DirectoryTab({
       ) : filteredPlayers.length > 0 ? (
         <>
           {searchQuery || levelFilter !== "All" || departmentFilter !== "All" ? null : (
-            <h2 className="text-xs uppercase tracking-widest font-black text-slate-400 dark:text-slate-500 mb-4 flex items-center gap-2">
+            <h2 className="text-xs uppercase tracking-widest font-black text-muted-foreground dark:text-muted-foreground mb-4 flex items-center gap-2">
               <Users className="w-4 h-4" /> All Members
             </h2>
           )}
@@ -253,7 +253,7 @@ export function DirectoryTab({
             <div className="mt-12 text-center">
               <button
                 onClick={() => setVisibleCount((prev) => prev + 24)}
-                className="px-8 py-3 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-2xl transition shadow-sm border border-slate-300 dark:border-slate-700"
+                className="px-8 py-3 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-muted-foreground dark:text-slate-300 font-bold rounded-2xl transition shadow-sm border border-slate-300 dark:border-slate-700"
               >
                 Load More Players
               </button>
@@ -263,12 +263,12 @@ export function DirectoryTab({
       ) : (
         <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
           <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
-            <Users className="w-10 h-10 text-slate-400" />
+            <Users className="w-10 h-10 text-muted-foreground" />
           </div>
-          <p className="text-slate-600 dark:text-slate-300 font-bold text-lg">
+          <p className="text-muted-foreground dark:text-slate-300 font-bold text-lg">
             No players found
           </p>
-          <p className="text-slate-400 mt-2 text-sm max-w-sm text-center">
+          <p className="text-muted-foreground mt-2 text-sm max-w-sm text-center">
             {searchQuery
               ? `No one matches "${searchQuery}". Try a different name or department.`
               : "There are no players matching these filters."}

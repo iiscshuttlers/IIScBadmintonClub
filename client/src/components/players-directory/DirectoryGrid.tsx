@@ -84,19 +84,19 @@ export function DirectoryGrid({
   if (fetchError) {
     return (
       <div className="flex flex-col items-center justify-center py-20 space-y-4 text-center">
-        <p className="text-slate-700 dark:text-slate-300 font-bold">
+        <p className="text-muted-foreground dark:text-slate-300 font-bold">
           {isSupabaseConfigured
             ? "No connection to server"
             : "Player directory is not configured"}
         </p>
-        <p className="text-slate-400 text-sm max-w-md">
+        <p className="text-muted-foreground text-sm max-w-md">
           {isSupabaseConfigured
             ? "This app requires internet to load player data."
             : "The deployed site is missing Supabase environment variables."}
         </p>
         <button
           onClick={fetchPlayers}
-          className="mt-2 px-4 py-2 bg-primary hover:bg-primary text-white text-sm font-bold rounded-xl transition"
+          className="mt-2 px-4 py-2 bg-primary hover:bg-primary text-foreground text-sm font-bold rounded-xl transition"
         >
           Retry
         </button>
@@ -107,16 +107,16 @@ export function DirectoryGrid({
   if (players.length === 0) {
     return (
       <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-12 text-center border border-dashed border-slate-200 dark:border-slate-800">
-        <Trophy className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
+        <Trophy className="w-12 h-12 text-slate-300 dark:text-muted-foreground mx-auto mb-4" />
         <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-2">
           No players found
         </h3>
-        <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-6 text-sm">
+        <p className="text-muted-foreground dark:text-muted-foreground max-w-md mx-auto mb-6 text-sm">
           Try adjusting your search or filters.
         </p>
         <button
           onClick={onResetFilters}
-          className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-bold transition text-xs"
+          className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-muted-foreground dark:text-slate-200 rounded-xl font-bold transition text-xs"
         >
           Reset Filters
         </button>
@@ -127,7 +127,7 @@ export function DirectoryGrid({
   return (
     <>
       {!hasActiveFilters && (
-        <h2 className="text-xs uppercase tracking-widest font-black text-slate-400 dark:text-slate-500 mb-4 flex items-center gap-2">
+        <h2 className="text-xs uppercase tracking-widest font-black text-muted-foreground dark:text-muted-foreground mb-4 flex items-center gap-2">
           <Users className="w-4 h-4" /> All Members
         </h2>
       )}

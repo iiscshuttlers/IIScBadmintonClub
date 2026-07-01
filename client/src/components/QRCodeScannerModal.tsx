@@ -177,12 +177,12 @@ export function QRCodeScannerModal({ isOpen, onClose, onScan }: QRCodeScannerMod
             className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl z-[101] overflow-hidden"
           >
             <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800">
-              <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <h2 className="text-lg font-black text-foreground dark:text-foreground flex items-center gap-2">
                 <QrCode className="w-5 h-5 text-primary" /> Scan QR Code
               </h2>
               <button
                 onClick={onClose}
-                className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+                className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-muted-foreground hover:text-foreground dark:hover:text-foreground transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -198,7 +198,7 @@ export function QRCodeScannerModal({ isOpen, onClose, onScan }: QRCodeScannerMod
                   <button
                     onClick={requestCameraPermission}
                     disabled={requestingPermission}
-                    className="bg-primary hover:bg-primary disabled:bg-slate-400 text-white font-bold px-6 py-2 rounded-xl transition-colors"
+                    className="bg-primary hover:bg-primary disabled:bg-slate-400 text-foreground font-bold px-6 py-2 rounded-xl transition-colors"
                   >
                     {requestingPermission ? "Requesting..." : "Try Again"}
                   </button>
@@ -207,17 +207,17 @@ export function QRCodeScannerModal({ isOpen, onClose, onScan }: QRCodeScannerMod
 
               {scanResult ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-primary/10 z-10">
-                  <div className="w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center mb-4">
+                  <div className="w-16 h-16 bg-primary text-foreground rounded-full flex items-center justify-center mb-4">
                     <QrCode className="w-8 h-8" />
                   </div>
                   <p className="text-primary dark:text-primary font-bold text-lg">Player Found!</p>
                 </div>
               ) : null}
 
-              <div id="reader" className="w-full overflow-hidden rounded-2xl [&_button]:bg-primary [&_button]:text-white [&_button]:px-4 [&_button]:py-2 [&_button]:rounded-xl [&_button]:font-bold [&_button]:mt-4 [&_select]:mt-4 [&_select]:p-2 [&_select]:rounded-lg [&_select]:bg-slate-100 dark:[&_select]:bg-slate-800 dark:[&_select]:text-white"></div>
+              <div id="reader" className="w-full overflow-hidden rounded-2xl [&_button]:bg-primary [&_button]:text-foreground [&_button]:px-4 [&_button]:py-2 [&_button]:rounded-xl [&_button]:font-bold [&_button]:mt-4 [&_select]:mt-4 [&_select]:p-2 [&_select]:rounded-lg [&_select]:bg-slate-100 dark:[&_select]:bg-slate-800 dark:[&_select]:text-foreground"></div>
             </div>
             
-            <div className="bg-slate-50 dark:bg-slate-800/50 p-4 text-center text-sm font-medium text-slate-500 dark:text-slate-400">
+            <div className="bg-slate-50 dark:bg-slate-800/50 p-4 text-center text-sm font-medium text-muted-foreground dark:text-muted-foreground">
               Scan a player's profile QR code to quickly log a match with them.
             </div>
           </motion.div>

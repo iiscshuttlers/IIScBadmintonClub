@@ -62,7 +62,7 @@ export function usePlayerStats(
         icon: "⚔️",
         description: "Played 50+ matches",
         color:
-          "bg-slate-500/15 text-slate-400 border-slate-500/30 ring-slate-500/20",
+          "bg-slate-500/15 text-muted-foreground border-slate-500/30 ring-slate-500/20",
       });
     }
 

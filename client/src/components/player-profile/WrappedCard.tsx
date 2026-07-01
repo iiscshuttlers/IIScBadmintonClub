@@ -78,18 +78,18 @@ export function WrappedCard({ playerName, avatarUrl, elo, matches, playerId, yea
   return (
     <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-black text-slate-800 dark:text-white flex items-center gap-2">
+        <h3 className="text-base font-black text-slate-800 dark:text-foreground flex items-center gap-2">
           <Zap className="w-5 h-5 text-amber-500" /> {year} Wrapped
         </h3>
         <button onClick={share} disabled={sharing}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition disabled:opacity-50">
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition disabled:opacity-50">
           <Share2 className="w-3.5 h-3.5" /> Share
         </button>
       </div>
 
       {/* Wrapped card visual */}
       <div ref={cardRef}
-        className="relative overflow-hidden rounded-2xl bg-linear-to-br from-slate-900 via-indigo-950 to-primary/90 p-6 text-white">
+        className="relative overflow-hidden rounded-2xl bg-linear-to-br from-slate-900 via-indigo-950 to-primary/90 p-6 text-foreground">
         <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(ellipse_at_top_right,rgba(16,185,129,0.4),transparent)]" />
 
         <div className="relative z-10">
@@ -102,7 +102,7 @@ export function WrappedCard({ playerName, avatarUrl, elo, matches, playerId, yea
               </div>
             )}
             <div>
-              <p className="font-black text-white text-lg leading-tight">{playerName}</p>
+              <p className="font-black text-foreground text-lg leading-tight">{playerName}</p>
               <p className="text-primary text-xs font-bold uppercase tracking-wider">{year} Season</p>
             </div>
           </div>
@@ -110,41 +110,41 @@ export function WrappedCard({ playerName, avatarUrl, elo, matches, playerId, yea
           <div className="grid grid-cols-2 gap-3 mb-4">
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3">
               <div className="text-3xl font-black text-primary">{wins}</div>
-              <div className="text-xs font-bold text-white/60 uppercase tracking-wider">Wins</div>
+              <div className="text-xs font-bold text-foreground/60 uppercase tracking-wider">Wins</div>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3">
-              <div className="text-3xl font-black text-white/80">{losses}</div>
-              <div className="text-xs font-bold text-white/60 uppercase tracking-wider">Losses</div>
+              <div className="text-3xl font-black text-foreground/80">{losses}</div>
+              <div className="text-xs font-bold text-foreground/60 uppercase tracking-wider">Losses</div>
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-2">
             <div className="bg-white/5 rounded-xl p-2.5 text-center">
               <Target className="w-4 h-4 text-amber-400 mx-auto mb-1" />
-              <div className="text-base font-black text-white">{winRate}%</div>
-              <div className="text-[10px] text-white/50 font-bold">Win Rate</div>
+              <div className="text-base font-black text-foreground">{winRate}%</div>
+              <div className="text-[10px] text-foreground/50 font-bold">Win Rate</div>
             </div>
             <div className="bg-white/5 rounded-xl p-2.5 text-center">
               <Flame className="w-4 h-4 text-orange-400 mx-auto mb-1" />
-              <div className="text-base font-black text-white">{bestStreak}</div>
-              <div className="text-[10px] text-white/50 font-bold">Best Streak</div>
+              <div className="text-base font-black text-foreground">{bestStreak}</div>
+              <div className="text-[10px] text-foreground/50 font-bold">Best Streak</div>
             </div>
             <div className="bg-white/5 rounded-xl p-2.5 text-center">
               <TrendingUp className="w-4 h-4 text-primary mx-auto mb-1" />
-              <div className="text-base font-black text-white">{elo}</div>
-              <div className="text-[10px] text-white/50 font-bold">ELO</div>
+              <div className="text-base font-black text-foreground">{elo}</div>
+              <div className="text-[10px] text-foreground/50 font-bold">ELO</div>
             </div>
           </div>
 
           {busyMonth && (
             <div className="mt-3 bg-white/5 rounded-xl px-3 py-2 flex items-center justify-between">
-              <span className="text-xs text-white/60 font-bold">Busiest Month</span>
+              <span className="text-xs text-foreground/60 font-bold">Busiest Month</span>
               <span className="text-xs font-black text-amber-400">{busyMonthName} ({busyMonth[1]} matches)</span>
             </div>
           )}
 
           <div className="mt-4 text-center">
-            <p className="text-[10px] text-white/30 font-bold uppercase tracking-wider">IISc Badminton Club</p>
+            <p className="text-[10px] text-foreground/30 font-bold uppercase tracking-wider">IISc Badminton Club</p>
           </div>
         </div>
       </div>

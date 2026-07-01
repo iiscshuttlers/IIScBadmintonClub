@@ -20,7 +20,7 @@ const quickLinks = [
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-primary/80 flex flex-col items-center justify-center px-4 text-white relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-primary/80 flex flex-col items-center justify-center px-4 text-foreground relative overflow-hidden">
       {/* Decorative shuttlecock court lines */}
       <div className="absolute inset-0 opacity-5 pointer-events-none">
         <svg
@@ -82,7 +82,7 @@ export default function NotFound() {
       <div className="relative z-10 text-center max-w-2xl mx-auto">
         {/* Shuttlecock icon + 404 */}
         <div className="mb-8 relative inline-block">
-          <div className="text-[120px] font-black leading-none text-white/10 select-none tracking-tighter">
+          <div className="text-[120px] font-black leading-none text-foreground/10 select-none tracking-tighter">
             404
           </div>
           <div className="absolute inset-0 flex items-center justify-center">
@@ -154,7 +154,7 @@ export default function NotFound() {
 
         {/* Primary CTA */}
         <Link href="/">
-          <button className="inline-flex items-center gap-2 bg-primary hover:bg-primary text-white font-bold px-8 py-4 rounded-2xl shadow-lg hover:shadow-primary/30 hover:-translate-y-0.5 transition-all duration-200 mb-10 text-lg">
+          <button className="inline-flex items-center gap-2 bg-primary hover:bg-primary text-foreground font-bold px-8 py-4 rounded-2xl shadow-lg hover:shadow-primary/30 hover:-translate-y-0.5 transition-all duration-200 mb-10 text-lg">
             <Home className="w-5 h-5" />
             Back to Home
           </button>
@@ -170,7 +170,7 @@ export default function NotFound() {
               .filter((l) => l.href !== "/")
               .map(({ href, label, icon: Icon }) => (
                 <Link key={href} href={href}>
-                  <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-200 hover:text-white bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/30 px-4 py-2 rounded-full transition-all duration-200 cursor-pointer">
+                  <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-200 hover:text-foreground bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/30 px-4 py-2 rounded-full transition-all duration-200 cursor-pointer">
                     <Icon className="w-3.5 h-3.5" />
                     {label}
                   </span>

@@ -65,7 +65,7 @@ export const ELO_TIERS: TierInfo[] = [
     name: "Silver",
     color: "from-slate-300 to-gray-400",
     bg: "bg-slate-400/10",
-    text: "text-slate-600 dark:text-slate-300",
+    text: "text-muted-foreground dark:text-slate-300",
     shadow: "shadow-slate-400/50",
     border: "border-slate-300",
     icon: "🥈",

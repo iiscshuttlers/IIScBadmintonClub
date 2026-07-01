@@ -135,7 +135,7 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
   return (
     <DropdownMenu open={open} onOpenChange={(o) => { setOpen(o); if (o) markAllAsRead(); }}>
       <DropdownMenuTrigger asChild>
-        <button className="relative p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all mr-1">
+        <button className="relative p-2 rounded-xl text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all mr-1">
           <Bell className="w-5 h-5" />
           {unreadCount > 0 && (
             <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
@@ -147,7 +147,7 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 p-0 rounded-2xl overflow-hidden shadow-xl">
         <div className="bg-slate-50 dark:bg-slate-900/50 p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
-          <h3 className="font-black text-slate-800 dark:text-white flex items-center gap-2">
+          <h3 className="font-black text-slate-800 dark:text-foreground flex items-center gap-2">
             <Bell className="w-4 h-4 text-primary" /> Notifications
           </h3>
           <div className="flex items-center gap-2">
@@ -159,7 +159,7 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
             {notifications.length > 0 && (
               <button
                 onClick={clearAll}
-                className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 hover:text-rose-500 transition"
+                className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-rose-500 transition"
                 title="Clear all notifications"
               >
                 <Trash2 className="w-3.5 h-3.5" /> Clear
@@ -169,8 +169,8 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
         </div>
         <div className="max-h-[60vh] overflow-y-auto custom-scrollbar">
           {notifications.length === 0 ? (
-            <div className="p-8 text-center text-slate-500 dark:text-slate-400 flex flex-col items-center">
-              <CheckCircle2 className="w-8 h-8 text-slate-300 dark:text-slate-600 mb-2" />
+            <div className="p-8 text-center text-muted-foreground dark:text-muted-foreground flex flex-col items-center">
+              <CheckCircle2 className="w-8 h-8 text-slate-300 dark:text-muted-foreground mb-2" />
               <p className="font-bold text-sm">All caught up!</p>
               <p className="text-xs">You have no new notifications.</p>
             </div>
@@ -186,11 +186,11 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
                 <div className="mt-0.5">{getIcon(n.type)}</div>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-start mb-1 gap-2">
-                    <h4 className="font-bold text-sm text-slate-900 dark:text-white leading-tight">
+                    <h4 className="font-bold text-sm text-foreground dark:text-foreground leading-tight">
                       {n.title}
                     </h4>
                     <div className="flex items-center gap-1.5 shrink-0">
-                      <span className="text-[10px] font-medium text-slate-400 whitespace-nowrap">
+                      <span className="text-[10px] font-medium text-muted-foreground whitespace-nowrap">
                         {new Date(n.created_at).toLocaleString([], {
                           day: "numeric",
                           month: "short",
@@ -207,7 +207,7 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
                       </button>
                     </div>
                   </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">
+                  <p className="text-xs text-muted-foreground dark:text-muted-foreground line-clamp-2">
                     {n.message}
                   </p>
                   {n.link && (

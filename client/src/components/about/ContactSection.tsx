@@ -49,7 +49,7 @@ function FAQItem({ faq }: { faq: (typeof faqs)[0] }) {
         onClick={() => setOpen(!open)}
         aria-expanded={open}
       >
-        <h3 className="font-bold text-blue-900 dark:text-white text-sm md:text-base">
+        <h3 className="font-bold text-blue-900 dark:text-foreground text-sm md:text-base">
           {faq.question}
         </h3>
         <ChevronDown
@@ -67,7 +67,7 @@ function FAQItem({ faq }: { faq: (typeof faqs)[0] }) {
             className="overflow-hidden"
           >
             <div className="px-6 pb-5">
-              <p className="text-gray-600 dark:text-slate-400 text-sm leading-relaxed">
+              <p className="text-muted-foreground dark:text-muted-foreground text-sm leading-relaxed">
                 {faq.answer}
               </p>
             </div>
@@ -88,7 +88,7 @@ export function ContactSection() {
             <Card className="border-0 shadow-md bg-gradient-to-br from-primary/10 to-teal-50 dark:from-primary/30 dark:to-teal-950/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
               <CardHeader>
                 <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-2">
-                  <Mail className="w-6 h-6 text-white" />
+                  <Mail className="w-6 h-6 text-foreground" />
                 </div>
                 <CardTitle className="text-primary dark:text-primary text-base">
                   Email
@@ -97,11 +97,11 @@ export function ContactSection() {
               <CardContent>
                 <a
                   href="mailto:iiscbadmintonclub@gmail.com"
-                  className="font-bold text-gray-900 dark:text-white hover:text-primary transition-colors"
+                  className="font-bold text-foreground dark:text-foreground hover:text-primary transition-colors"
                 >
                   iiscbadmintonclub@gmail.com
                 </a>
-                <p className="text-sm text-gray-500 dark:text-slate-400 mt-2">
+                <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-2">
                   Best for membership and official queries.
                 </p>
               </CardContent>
@@ -110,17 +110,17 @@ export function ContactSection() {
             <Card className="border-0 shadow-md bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
               <CardHeader>
                 <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center mb-2">
-                  <Phone className="w-6 h-6 text-white" />
+                  <Phone className="w-6 h-6 text-foreground" />
                 </div>
                 <CardTitle className="text-orange-700 dark:text-orange-400 text-base">
                   Phone
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="font-bold text-gray-900 dark:text-white">
+                <p className="font-bold text-foreground dark:text-foreground">
                   +91 (080) 2293 xxxx
                 </p>
-                <p className="text-sm text-gray-500 dark:text-slate-400 mt-2">
+                <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-2">
                   IISc Gymkhana Office
                 </p>
               </CardContent>
@@ -129,20 +129,20 @@ export function ContactSection() {
             <Card className="border-0 shadow-md bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
               <CardHeader>
                 <div className="w-12 h-12 rounded-xl bg-blue-900 flex items-center justify-center mb-2">
-                  <MapPin className="w-6 h-6 text-white" />
+                  <MapPin className="w-6 h-6 text-foreground" />
                 </div>
                 <CardTitle className="text-blue-900 dark:text-blue-400 text-base">
                   Location
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="font-bold text-gray-900 dark:text-white">
+                <p className="font-bold text-foreground dark:text-foreground">
                   Gymkhana Office, 2nd Floor
                 </p>
-                <p className="text-sm text-gray-700 dark:text-slate-300">
+                <p className="text-sm text-muted-foreground dark:text-slate-300">
                   Janta Bazar, IISc
                 </p>
-                <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
+                <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-1">
                   Bengaluru — 560012, India
                 </p>
                 <a
@@ -164,7 +164,7 @@ export function ContactSection() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2
-              className="text-3xl font-black text-blue-900 dark:text-white"
+              className="text-3xl font-black text-blue-900 dark:text-foreground"
               style={{ fontFamily: "Playfair Display, serif" }}
             >
               Frequently Asked Questions

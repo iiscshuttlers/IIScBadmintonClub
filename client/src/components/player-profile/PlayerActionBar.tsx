@@ -147,7 +147,7 @@ export function PlayerActionBar({
             return (
               <div className="mt-1 max-w-sm bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  <span className="text-xs font-black uppercase tracking-wider text-muted-foreground dark:text-muted-foreground">
                     Max Tier Reached
                   </span>
                   <span className="text-xs font-black text-amber-500">👑</span>
@@ -172,10 +172,10 @@ export function PlayerActionBar({
           return (
             <div className="mt-1 max-w-sm bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground dark:text-muted-foreground">
                   {remaining} ELO to {nextTier.name}
                 </span>
-                <span className="text-[10px] font-black text-slate-600 dark:text-slate-300">
+                <span className="text-[10px] font-black text-muted-foreground dark:text-slate-300">
                   {Math.round(progress)}%
                 </span>
               </div>
@@ -197,8 +197,8 @@ export function PlayerActionBar({
               onClick={onToggleFollow}
               className={`flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider ${
                 isFollowing
-                  ? "bg-violet-600 text-white hover:bg-rose-500 group"
-                  : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white hover:bg-violet-50 dark:hover:bg-violet-900/30 hover:border-violet-300 dark:hover:border-violet-700"
+                  ? "bg-violet-600 text-foreground hover:bg-rose-500 group"
+                  : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-foreground hover:bg-violet-50 dark:hover:bg-violet-900/30 hover:border-violet-300 dark:hover:border-violet-700"
               }`}
             >
               {isFollowing ? (
@@ -220,15 +220,15 @@ export function PlayerActionBar({
                     onBuddyAction("remove");
                   }
                 }}
-                className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-rose-600 text-white hover:bg-rose-700"
+                className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-rose-600 text-foreground hover:bg-rose-700"
               >
-                <Heart className="w-4 h-4 fill-white text-white" />
+                <Heart className="w-4 h-4 fill-white text-foreground" />
                 Buddy
               </button>
             ) : buddyStatus === 'received' ? (
               <button
                 onClick={() => onBuddyAction("accept")}
-                className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-primary text-white hover:bg-primary"
+                className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-primary text-foreground hover:bg-primary"
               >
                 <Heart className="w-4 h-4" />
                 Accept Request
@@ -240,7 +240,7 @@ export function PlayerActionBar({
                     onBuddyAction("cancel");
                   }
                 }}
-                className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-slate-600 text-white hover:bg-slate-700"
+                className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-slate-600 text-foreground hover:bg-slate-700"
               >
                 <Heart className="w-4 h-4" />
                 Request Sent
@@ -248,7 +248,7 @@ export function PlayerActionBar({
             ) : (
               <button
                 onClick={() => onBuddyAction("send")}
-                className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white hover:bg-rose-50 dark:hover:bg-rose-900/30 hover:border-rose-300 dark:hover:border-rose-700"
+                className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-foreground hover:bg-rose-50 dark:hover:bg-rose-900/30 hover:border-rose-300 dark:hover:border-rose-700"
               >
                 <Heart className="w-4 h-4" />
                 Add Buddy
@@ -260,8 +260,8 @@ export function PlayerActionBar({
               title={player.is_retired ? "Cannot challenge a retired player" : "Challenge"}
               className={`flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider ${
                 player.is_retired
-                  ? "bg-slate-300 dark:bg-slate-700 text-slate-500 cursor-not-allowed border border-slate-300 dark:border-slate-600"
-                  : "bg-orange-500 text-white hover:bg-orange-600 border border-orange-400"
+                  ? "bg-slate-300 dark:bg-slate-700 text-muted-foreground cursor-not-allowed border border-slate-300 dark:border-slate-600"
+                  : "bg-orange-500 text-foreground hover:bg-orange-600 border border-orange-400"
               }`}
             >
               <Swords className="w-4 h-4" />

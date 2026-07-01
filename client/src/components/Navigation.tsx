@@ -79,13 +79,13 @@ function ModeToggle({ isLoggedIn, setLocation, mode, setMode }: { isLoggedIn: bo
     <div className="flex bg-slate-100 dark:bg-slate-900 rounded-full p-1 mr-2 shadow-inner border border-slate-200/60 dark:border-slate-800">
       <button
         onClick={() => handleToggle('club')}
-        className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all ${mode === 'club' ? 'bg-white dark:bg-slate-800 text-primary dark:text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+        className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all ${mode === 'club' ? 'bg-white dark:bg-slate-800 text-primary dark:text-primary shadow-sm' : 'text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300'}`}
       >
         <Users className="w-3.5 h-3.5" /> Club
       </button>
       <button
         onClick={() => handleToggle('personal')}
-        className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all ${mode === 'personal' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+        className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all ${mode === 'personal' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300'}`}
       >
         <User className="w-3.5 h-3.5" /> Personal
       </button>
@@ -254,7 +254,7 @@ export default function Navigation() {
                   }`}
                 />
                 <div>
-                  <span className="font-bold text-slate-900 dark:text-white leading-tight text-sm sm:text-base block whitespace-nowrap tracking-tight">
+                  <span className="font-bold text-foreground dark:text-foreground leading-tight text-sm sm:text-base block whitespace-nowrap tracking-tight">
                     IISc Badminton Club
                   </span>
                   {viewAsRole ? (
@@ -289,7 +289,7 @@ export default function Navigation() {
             <div className="flex lg:hidden items-center gap-1.5 ml-auto flex-shrink-0">
               <button
                 onClick={() => setSearchOpen(true)}
-                className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="p-2 rounded-xl text-muted-foreground dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 aria-label="Search"
               >
                 <Search className="w-4.5 h-4.5" />
@@ -316,7 +316,7 @@ export default function Navigation() {
                     sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
                     setLocation("/join");
                   }} className="cursor-pointer">
-                    <Button className="flex items-center gap-1.5 bg-primary hover:bg-primary text-white font-bold text-xs px-3 rounded-full h-8 shadow-sm cursor-pointer pointer-events-none">
+                    <Button className="flex items-center gap-1.5 bg-primary hover:bg-primary text-foreground font-bold text-xs px-3 rounded-full h-8 shadow-sm cursor-pointer pointer-events-none">
                       <LogIn className="w-3.5 h-3.5" /> Sign In
                     </Button>
                   </div>
@@ -330,7 +330,7 @@ export default function Navigation() {
             {isLoggedIn && (
               <Button
                 onClick={() => window.dispatchEvent(new Event('openLogMatchModal'))}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3 rounded-full h-7 shadow-sm"
+                className="bg-blue-600 hover:bg-blue-700 text-foreground font-bold text-xs px-3 rounded-full h-7 shadow-sm"
               >
                 <Plus className="w-3.5 h-3.5 mr-1" />
                 Log Match
@@ -338,7 +338,7 @@ export default function Navigation() {
             )}
             <button
               onClick={() => setSearchOpen(true)}
-              className="p-1.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="p-1.5 rounded-xl text-muted-foreground dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               aria-label="Search"
             >
               <Search className="w-4 h-4" />
@@ -366,7 +366,7 @@ export default function Navigation() {
                   sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
                   setLocation("/join");
                 }}>
-                  <Button className="flex items-center gap-1.5 bg-primary hover:bg-primary text-white font-bold text-xs px-3 rounded-full h-7 shadow-sm cursor-pointer pointer-events-none">
+                  <Button className="flex items-center gap-1.5 bg-primary hover:bg-primary text-foreground font-bold text-xs px-3 rounded-full h-7 shadow-sm cursor-pointer pointer-events-none">
                     <LogIn className="w-3.5 h-3.5" /> Sign In
                   </Button>
                 </div>
@@ -407,7 +407,7 @@ export default function Navigation() {
                     className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${
                       theme === "light"
                         ? "bg-white shadow-sm text-amber-600 border border-amber-200/60"
-                        : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                        : "text-muted-foreground dark:text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-200"
                     }`}
                   >
                     <Sun className="w-4 h-4" /> Light
@@ -417,7 +417,7 @@ export default function Navigation() {
                     className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${
                       theme === "dark"
                         ? "bg-slate-800 shadow-sm text-indigo-300 border border-indigo-800/60"
-                        : "text-slate-500 hover:text-slate-700"
+                        : "text-muted-foreground hover:text-muted-foreground"
                     }`}
                   >
                     <Moon className="w-4 h-4" /> Dark
@@ -441,14 +441,14 @@ export default function Navigation() {
                 ) : isLoggedIn ? (
                   <div className="space-y-0.5">
                       <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl mb-2 overflow-hidden border border-slate-100 dark:border-slate-800">
-                        <button className="w-full flex items-center gap-2 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer border-b border-slate-100 dark:border-slate-800" onClick={() => { setIsOpen(false); setIsPreferencesOpen(true); }}>
-                          <Settings className="h-4 w-4 text-slate-400" /> App Preferences
+                        <button className="w-full flex items-center gap-2 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer border-b border-slate-100 dark:border-slate-800" onClick={() => { setIsOpen(false); setIsPreferencesOpen(true); }}>
+                          <Settings className="h-4 w-4 text-muted-foreground" /> App Preferences
                         </button>
-                        <Link href="/profile/setup" className="w-full flex items-center gap-2 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
-                          <User className="h-4 w-4 text-slate-400" /> Edit Profile
+                        <Link href="/profile/setup" className="w-full flex items-center gap-2 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
+                          <User className="h-4 w-4 text-muted-foreground" /> Edit Profile
                         </Link>
-                        <Link href="/profile/password" className="w-full flex items-center gap-2 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
-                          <Lock className="h-4 w-4 text-slate-400" /> Change Password
+                        <Link href="/profile/password" className="w-full flex items-center gap-2 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
+                          <Lock className="h-4 w-4 text-muted-foreground" /> Change Password
                         </Link>
                       </div>
 
@@ -458,13 +458,13 @@ export default function Navigation() {
                       </Link>
                     )}
                     <button
-                      className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer"
+                      className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer"
                       onClick={handleInvite}
                     >
                       <UserPlus className="h-4 w-4 text-primary" /> Invite Friends
                     </button>
-                    <Link href="/privacy" className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
-                      <Shield className="h-4 w-4 text-slate-400" /> Privacy Policy
+                    <Link href="/privacy" className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
+                      <Shield className="h-4 w-4 text-muted-foreground" /> Privacy Policy
                     </Link>
                     <button
                       className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-600 font-medium text-sm transition-colors cursor-pointer"
@@ -479,7 +479,7 @@ export default function Navigation() {
                     setIsOpen(false);
                     setLocation("/join");
                   }} className="w-full">
-                    <Button className="w-full flex items-center gap-2 justify-center bg-primary hover:bg-primary text-white font-bold rounded-xl h-11 cursor-pointer mt-1">
+                    <Button className="w-full flex items-center gap-2 justify-center bg-primary hover:bg-primary text-foreground font-bold rounded-xl h-11 cursor-pointer mt-1">
                       <LogIn className="w-4 h-4" /> Sign In to your account
                     </Button>
                   </div>
@@ -495,13 +495,13 @@ export default function Navigation() {
             {mode === 'club' ? (
               <>
                 <Link href="/">
-                  <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/") ? "text-primary dark:text-primary" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}>
+                  <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/") ? "text-primary dark:text-primary" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
                     <Home className={`w-[22px] h-[22px] mb-1 ${isActive("/") ? "fill-primary/20" : ""}`} />
                     <span className="text-[10px] font-bold">Home</span>
                   </button>
                 </Link>
                 <Link href="/feed">
-                  <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/feed") ? "text-primary dark:text-primary" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}>
+                  <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/feed") ? "text-primary dark:text-primary" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
                     <Activity className={`w-[22px] h-[22px] mb-1 ${isActive("/feed") ? "fill-primary/20" : ""}`} />
                     <span className="text-[10px] font-bold">Feed</span>
                     {hasUnreadAnnouncements && (
@@ -515,13 +515,13 @@ export default function Navigation() {
             ) : (
               <>
                 <Link href={myPlayerId ? `/player/${myPlayerId}` : "/join"}>
-                  <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${(location.startsWith("/player/") && location.includes(myPlayerId!)) ? "text-blue-600 dark:text-blue-400" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}>
+                  <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${(location.startsWith("/player/") && location.includes(myPlayerId!)) ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
                     <User className={`w-[22px] h-[22px] mb-1 ${(location.startsWith("/player/") && location.includes(myPlayerId!)) ? "fill-blue-600/20" : ""}`} />
                     <span className="text-[10px] font-bold">My Stats</span>
                   </button>
                 </Link>
                 <Link href="/feed/my-matches">
-                  <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/feed/my-matches") ? "text-blue-600 dark:text-blue-400" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}>
+                  <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/feed/my-matches") ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
                     <Activity className={`w-[22px] h-[22px] mb-1 ${isActive("/feed/my-matches") ? "fill-blue-600/20" : ""}`} />
                     <span className="text-[10px] font-bold">My Feed</span>
                   </button>
@@ -534,7 +534,7 @@ export default function Navigation() {
               {isLoggedIn ? (
                 <button
                   onClick={() => window.dispatchEvent(new Event('openLogMatchModal'))}
-                  className={`w-[52px] h-[52px] ${mode === 'club' ? 'bg-gradient-to-tr from-primary to-teal-500 hover:from-primary hover:to-teal-400 shadow-primary/40' : 'bg-gradient-to-tr from-blue-600 to-indigo-500 hover:from-blue-500 hover:to-indigo-400 shadow-blue-500/40'} rounded-full flex items-center justify-center text-white shadow-xl border-4 border-white dark:border-slate-950 transition-transform active:scale-95 cursor-pointer`}
+                  className={`w-[52px] h-[52px] ${mode === 'club' ? 'bg-gradient-to-tr from-primary to-teal-500 hover:from-primary hover:to-teal-400 shadow-primary/40' : 'bg-gradient-to-tr from-blue-600 to-indigo-500 hover:from-blue-500 hover:to-indigo-400 shadow-blue-500/40'} rounded-full flex items-center justify-center text-foreground shadow-xl border-4 border-white dark:border-slate-950 transition-transform active:scale-95 cursor-pointer`}
                 >
                   <Plus className="w-6 h-6 stroke-[3]" />
                 </button>
@@ -542,7 +542,7 @@ export default function Navigation() {
                 <button onClick={() => {
                   sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
                   setLocation("/join");
-                }} className="w-[52px] h-[52px] bg-slate-800 hover:bg-slate-700 rounded-full flex items-center justify-center text-white shadow-xl border-4 border-white dark:border-slate-950 transition-transform active:scale-95 cursor-pointer">
+                }} className="w-[52px] h-[52px] bg-slate-800 hover:bg-slate-700 rounded-full flex items-center justify-center text-foreground shadow-xl border-4 border-white dark:border-slate-950 transition-transform active:scale-95 cursor-pointer">
                   <LogIn className="w-5 h-5 ml-1" />
                 </button>
               )}
@@ -550,14 +550,14 @@ export default function Navigation() {
 
             {mode === 'club' ? (
               <Link href="/players">
-                <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/players") ? "text-primary dark:text-primary" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}>
+                <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/players") ? "text-primary dark:text-primary" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
                   <Users className={`w-[22px] h-[22px] mb-1 ${isActive("/players") ? "fill-primary/20" : ""}`} />
                   <span className="text-[10px] font-bold">Players</span>
                 </button>
               </Link>
             ) : (
               <Link href="/players?tab=connections">
-                <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/players") ? "text-blue-600 dark:text-blue-400" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}>
+                <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/players") ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
                   <Users className={`w-[22px] h-[22px] mb-1 ${isActive("/players") ? "fill-blue-600/20" : ""}`} />
                   <span className="text-[10px] font-bold">Network</span>
                 </button>
@@ -566,7 +566,7 @@ export default function Navigation() {
 
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className={`relative flex flex-col items-center p-2 min-w-[60px] cursor-pointer ${isOpen ? (mode === 'club' ? "text-primary dark:text-primary" : "text-blue-600 dark:text-blue-400") : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}
+              className={`relative flex flex-col items-center p-2 min-w-[60px] cursor-pointer ${isOpen ? (mode === 'club' ? "text-primary dark:text-primary" : "text-blue-600 dark:text-blue-400") : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}
             >
               {isOpen ? <X className="w-[22px] h-[22px] mb-1" /> : <Menu className="w-[22px] h-[22px] mb-1" />}
               <span className="text-[10px] font-bold">Menu</span>
@@ -600,12 +600,12 @@ function NavLink({ href, label, isActive, badge }: { href: string; label: string
         className={`relative px-3.5 py-2 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer ${
           isActive
             ? "text-primary dark:text-primary bg-primary/10 dark:bg-primary/50"
-            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
+            : "text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-foreground hover:bg-slate-50 dark:hover:bg-slate-800/60"
         }`}
       >
         {label}
         {!!badge && (
-          <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-black text-white px-0.5 shadow ring-2 ring-white dark:ring-slate-950">
+          <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-black text-foreground px-0.5 shadow ring-2 ring-white dark:ring-slate-950">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-50" />
             {badge > 0 && <span className="relative">{badge}</span>}
           </span>
@@ -625,7 +625,7 @@ function MobileNavLink({
         className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-colors duration-150 cursor-pointer ${
           isActive
             ? "text-primary dark:text-primary bg-primary/10 dark:bg-primary/50"
-            : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+            : "text-muted-foreground dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60"
         }`}
       >
         <span>{label}</span>
@@ -648,7 +648,7 @@ function DarkModeToggle({ insideMenu }: { insideMenu?: boolean }) {
     return (
       <button
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleTheme(); }}
-        className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+        className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm font-bold text-muted-foreground dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
       >
         <span className="flex items-center gap-2">
           {isDark ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-indigo-500" />}
@@ -666,7 +666,7 @@ function DarkModeToggle({ insideMenu }: { insideMenu?: boolean }) {
       variant="ghost"
       size="icon"
       onClick={toggleTheme}
-      className="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+      className="text-muted-foreground dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
       title="Toggle dark mode"
     >
       {isDark ? (

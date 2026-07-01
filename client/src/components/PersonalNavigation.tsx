@@ -50,9 +50,9 @@ export function PersonalNavigation() {
           className="flex items-center gap-3 px-2 mb-9 group"
         >
           <div className="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30 group-hover:scale-105 transition-transform">
-            <span className="text-lg font-bold text-white">🏸</span>
+            <span className="text-lg font-bold text-foreground">🏸</span>
           </div>
-          <span className="font-bold text-xl text-slate-900 dark:text-white">
+          <span className="font-bold text-xl text-foreground dark:text-foreground">
             Shuttlers
           </span>
         </button>
@@ -69,7 +69,7 @@ export function PersonalNavigation() {
                   "relative flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-semibold tracking-tight transition-all duration-200 w-full text-left",
                   active
                     ? "text-primary dark:text-primary bg-primary/10 dark:bg-primary/30"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60"
+                    : "text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60"
                 )}
               >
                 {active && (
@@ -90,7 +90,7 @@ export function PersonalNavigation() {
         <div className="flex flex-col gap-2 border-t border-border pt-4 mt-4">
           <button
             onClick={toggleTheme}
-            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all w-full"
+            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all w-full"
           >
             {theme === "dark" ? (
               <>
@@ -115,15 +115,15 @@ export function PersonalNavigation() {
           >
             <Avatar src={profile?.avatar_url} name={profile?.name} size="sm" />
             <div className="flex-1 min-w-0 text-left">
-              <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{profile?.name ?? "Profile"}</p>
-              <p className="text-xs text-slate-600 dark:text-slate-400 truncate">@{profile?.username ?? "user"}</p>
+              <p className="text-sm font-semibold text-foreground dark:text-foreground truncate">{profile?.name ?? "Profile"}</p>
+              <p className="text-xs text-muted-foreground dark:text-muted-foreground truncate">@{profile?.username ?? "user"}</p>
             </div>
           </button>
 
           {/* Back to Club Button */}
           <button
             onClick={handleBackToClub}
-            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all w-full"
+            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all w-full"
           >
             <RotateCcw className="w-5 h-5" />
             Back to Club
@@ -163,7 +163,7 @@ export function PersonalNavigation() {
                     <Icon
                       className={cn(
                         "w-[1.35rem] h-[1.35rem] relative z-10 transition-colors duration-200",
-                        active ? "text-primary dark:text-primary" : "text-slate-600 dark:text-slate-400"
+                        active ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-muted-foreground"
                       )}
                       strokeWidth={active ? 2.4 : 2}
                     />
@@ -171,7 +171,7 @@ export function PersonalNavigation() {
                   <span
                     className={cn(
                       "text-[10px] font-semibold tracking-tight transition-colors duration-200 truncate",
-                      active ? "text-primary dark:text-primary" : "text-slate-600 dark:text-slate-400"
+                      active ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-muted-foreground"
                     )}
                   >
                     {label}
@@ -207,7 +207,7 @@ export function PersonalNavigation() {
               <span
                 className={cn(
                   "text-[10px] font-semibold tracking-tight transition-colors duration-200 truncate",
-                  isActive("/personal/me") ? "text-primary dark:text-primary" : "text-slate-600 dark:text-slate-400"
+                  isActive("/personal/me") ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-muted-foreground"
                 )}
               >
                 Me

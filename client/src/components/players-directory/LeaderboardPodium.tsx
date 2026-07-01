@@ -44,18 +44,18 @@ export function LeaderboardPodium({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <User className="w-full h-full p-4 text-slate-500" />
+                <User className="w-full h-full p-4 text-muted-foreground" />
               )}
             </div>
             <div className="w-full bg-gradient-to-b from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 rounded-t-2xl p-4 md:p-6 text-center border-t border-x border-white/20 shadow-2xl relative transition-colors group-hover:from-slate-300 group-hover:to-slate-400 dark:group-hover:from-slate-600 dark:group-hover:to-slate-700">
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-slate-300 dark:bg-slate-600 text-slate-800 dark:text-white flex items-center justify-center font-black text-sm shadow-md border-2 border-white/20">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-slate-300 dark:bg-slate-600 text-slate-800 dark:text-foreground flex items-center justify-center font-black text-sm shadow-md border-2 border-white/20">
                 2
               </div>
-              <h3 className="font-black text-slate-800 dark:text-white text-lg line-clamp-1 mt-2">
+              <h3 className="font-black text-slate-800 dark:text-foreground text-lg line-clamp-1 mt-2">
                 {top3[1].full_name}
               </h3>
               <div className="flex flex-col items-center justify-center gap-0.5 mt-2">
-                <span className="font-bold text-slate-600 dark:text-slate-300 text-sm">
+                <span className="font-bold text-muted-foreground dark:text-slate-300 text-sm">
                   {activeTab === "elo"
                     ? `${getEloTier(getCategoryElo(top3[1])).name} • ${getCategoryElo(top3[1])} ${eloLabel}`
                     : ironmanFilter === "monthly" 
@@ -72,7 +72,7 @@ export function LeaderboardPodium({
                   </span>
                 )}
                 {activeTab === "elo" && (
-                  <span className="text-xs font-mono font-bold text-slate-500 dark:text-slate-400">
+                  <span className="text-xs font-mono font-bold text-muted-foreground dark:text-muted-foreground">
                     {displayRecord(getCategoryRecord(top3[1]))}
                   </span>
                 )}
@@ -107,7 +107,7 @@ export function LeaderboardPodium({
                 1
               </div>
               <Medal className="w-6 h-6 text-amber-100 absolute top-4 right-4 opacity-50" />
-              <h3 className="font-black text-amber-950 dark:text-white text-xl line-clamp-1 mt-1">
+              <h3 className="font-black text-amber-950 dark:text-foreground text-xl line-clamp-1 mt-1">
                 {top3[0].full_name}
               </h3>
               <div className="flex flex-col items-center justify-center gap-0.5 mt-2">
@@ -157,10 +157,10 @@ export function LeaderboardPodium({
               )}
             </div>
             <div className="w-full bg-gradient-to-b from-orange-200 to-orange-300 dark:from-orange-800 dark:to-orange-900 rounded-t-2xl p-3 md:p-5 text-center border-t border-x border-white/10 shadow-2xl relative transition-colors group-hover:from-orange-300 group-hover:to-orange-400 dark:group-hover:from-orange-700 dark:group-hover:to-orange-800">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-orange-300 dark:bg-orange-700 text-orange-950 dark:text-white flex items-center justify-center font-black text-xs shadow-md border-2 border-white/20">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-orange-300 dark:bg-orange-700 text-orange-950 dark:text-foreground flex items-center justify-center font-black text-xs shadow-md border-2 border-white/20">
                 3
               </div>
-              <h3 className="font-black text-orange-950 dark:text-white text-base line-clamp-1 mt-2">
+              <h3 className="font-black text-orange-950 dark:text-foreground text-base line-clamp-1 mt-2">
                 {top3[2].full_name}
               </h3>
               <div className="flex flex-col items-center justify-center gap-0.5 mt-1">

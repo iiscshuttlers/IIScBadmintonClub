@@ -147,7 +147,7 @@ export function AdminStatsOverview() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
+        <h2 className="text-lg font-black text-slate-800 dark:text-foreground flex items-center gap-2">
           <Activity className="w-5 h-5 text-primary" /> Platform Overview
         </h2>
       </div>
@@ -168,11 +168,11 @@ export function AdminStatsOverview() {
                 <Icon className={`w-5 h-5 ${kpi.color}`} />
                 {kpi.alert && <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />}
               </div>
-              <div className="text-2xl font-black text-slate-800 dark:text-white leading-none mb-1">
+              <div className="text-2xl font-black text-slate-800 dark:text-foreground leading-none mb-1">
                 {kpi.value}
               </div>
-              {kpi.sub && <div className="text-xs font-bold text-slate-400">{kpi.sub}</div>}
-              <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+              {kpi.sub && <div className="text-xs font-bold text-muted-foreground">{kpi.sub}</div>}
+              <div className="text-xs font-semibold text-muted-foreground dark:text-muted-foreground mt-0.5">
                 {kpi.label}
               </div>
             </motion.div>
@@ -182,13 +182,13 @@ export function AdminStatsOverview() {
 
       {/* ELO Distribution Bar Chart */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5">
-        <h3 className="text-sm font-black text-slate-700 dark:text-white mb-4 flex items-center gap-2">
+        <h3 className="text-sm font-black text-muted-foreground dark:text-foreground mb-4 flex items-center gap-2">
           <BarChart3 className="w-4 h-4 text-primary" /> ELO Distribution
         </h3>
         <div className="space-y-2.5">
           {stats.eloDistribution.map((band) => (
             <div key={band.label} className="flex items-center gap-3">
-              <span className="w-24 text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0">
+              <span className="w-24 text-xs font-bold text-muted-foreground dark:text-muted-foreground shrink-0">
                 {band.label}
               </span>
               <div className="flex-1 h-5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
@@ -199,7 +199,7 @@ export function AdminStatsOverview() {
                   className={`h-full rounded-full ${band.color} opacity-80`}
                 />
               </div>
-              <span className="w-6 text-xs font-black text-slate-600 dark:text-slate-300 text-right shrink-0">
+              <span className="w-6 text-xs font-black text-muted-foreground dark:text-slate-300 text-right shrink-0">
                 {band.count}
               </span>
             </div>
@@ -209,7 +209,7 @@ export function AdminStatsOverview() {
       
       {/* Match Volume Over Time */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5">
-        <h3 className="text-sm font-black text-slate-700 dark:text-white mb-6 flex items-center gap-2">
+        <h3 className="text-sm font-black text-muted-foreground dark:text-foreground mb-6 flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-violet-500" /> Match Volume (Last 7 Days)
         </h3>
         <div className="h-64 w-full">

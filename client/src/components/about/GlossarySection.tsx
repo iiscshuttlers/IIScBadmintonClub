@@ -72,7 +72,7 @@ export function GlossarySection() {
               { badge: "CALC", title: "Synergy Score", desc: "A score from 0-100 based on your win-rate when playing alongside a specific partner." },
               { badge: "REQ", title: "Threshold", desc: "You must play at least 3 matches with the same partner before a synergy score is generated." },
             ],
-            footer: <p className="text-xs text-slate-500">Find your best partner and dominate the courts!</p>
+            footer: <p className="text-xs text-muted-foreground">Find your best partner and dominate the courts!</p>
           }
         },
         {
@@ -92,7 +92,7 @@ export function GlossarySection() {
               { badge: "STB", title: "Stabilization", desc: "After 10 matches, your Elo changes become more stable (max ±20 points per match)." },
               { badge: "GLB", title: "Global vs Format", desc: "You have separate Elos for MS, MD, and XD. Your 'Global Elo' (ALL tab) blends these but moves at 1/3 speed to maintain balance." }
             ],
-            footer: <p className="text-[10px] sm:text-xs font-mono bg-slate-100 dark:bg-slate-800 p-2 rounded-lg text-slate-500 dark:text-slate-400 mt-2 text-center overflow-x-auto hide-scrollbar whitespace-nowrap">Expected = 1 / (1 + 10^((OpponentElo - YourElo)/400))</p>
+            footer: <p className="text-[10px] sm:text-xs font-mono bg-slate-100 dark:bg-slate-800 p-2 rounded-lg text-muted-foreground dark:text-muted-foreground mt-2 text-center overflow-x-auto hide-scrollbar whitespace-nowrap">Expected = 1 / (1 + 10^((OpponentElo - YourElo)/400))</p>
           }
         },
         {
@@ -261,7 +261,7 @@ export function GlossarySection() {
               {section.items.map((item, i) => (
                 <div key={i} className="flex gap-4">
                   <div className="mt-1 flex-shrink-0">
-                    <Sparkles className="w-5 h-5 text-slate-400" />
+                    <Sparkles className="w-5 h-5 text-muted-foreground" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
@@ -277,7 +277,7 @@ export function GlossarySection() {
                         />
                       )}
                     </div>
-                    <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 leading-relaxed mt-1">
+                    <p className="text-sm md:text-base text-muted-foreground dark:text-muted-foreground leading-relaxed mt-1">
                       {item.desc}
                     </p>
                   </div>

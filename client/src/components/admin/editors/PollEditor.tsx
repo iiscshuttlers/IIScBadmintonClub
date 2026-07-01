@@ -35,14 +35,14 @@ export function PollEditor({
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-black text-slate-800 dark:text-white">Community Polls</h2>
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+          <h2 className="text-xl font-black text-slate-800 dark:text-foreground">Community Polls</h2>
+          <p className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
             Manage public polls, set active schedules, and review existing poll configurations.
           </p>
         </div>
         <button
           onClick={addPoll}
-          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md hover:bg-indigo-500 active:scale-95 transition-all"
+          className="flex items-center gap-2 bg-indigo-600 text-foreground px-4 py-2 rounded-xl text-sm font-bold shadow-md hover:bg-indigo-500 active:scale-95 transition-all"
         >
           <Plus className="w-4 h-4" /> Add Poll
         </button>
@@ -54,14 +54,14 @@ export function PollEditor({
             <div className="absolute top-4 right-4 flex items-center gap-2">
               <button
                 onClick={() => updatePoll(i, { is_archived: !poll.is_archived })}
-                className="text-slate-400 hover:text-amber-500 transition-colors"
+                className="text-muted-foreground hover:text-amber-500 transition-colors"
                 title={poll.is_archived ? "Unarchive Poll" : "Archive Poll"}
               >
                 {poll.is_archived ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
               </button>
               <button
                 onClick={() => removePoll(i)}
-                className="text-slate-400 hover:text-rose-500 transition-colors"
+                className="text-muted-foreground hover:text-rose-500 transition-colors"
                 title="Delete Poll"
               >
                 <Trash2 className="w-4 h-4" />
@@ -112,7 +112,7 @@ export function PollEditor({
                     {poll.is_active ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Ban className="w-3.5 h-3.5" />}
                     {poll.is_active ? "Active" : "Inactive (Completed)"}
                   </button>
-                  <span className="text-xs font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
+                  <span className="text-xs font-bold text-muted-foreground bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
                     {poll.options.reduce((sum, o) => sum + (o.votes?.length || 0), 0)} Total Votes
                   </span>
                 </div>
@@ -123,7 +123,7 @@ export function PollEditor({
 
         {data.length === 0 && (
           <div className="text-center py-12 bg-white/50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700">
-            <p className="text-slate-500 dark:text-slate-400 font-bold">No polls configured.</p>
+            <p className="text-muted-foreground dark:text-muted-foreground font-bold">No polls configured.</p>
           </div>
         )}
       </div>

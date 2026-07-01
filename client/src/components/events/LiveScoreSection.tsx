@@ -141,7 +141,7 @@ function MatchBroadcastCard({
   const t2Label = match.t2.p1Name + (match.t2.p2Name ? ` & ${match.t2.p2Name}` : "");
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-[2rem] p-6 sm:p-10 text-white max-w-4xl mx-auto shadow-2xl relative overflow-hidden">
+    <div className="bg-slate-900 border border-slate-800 rounded-[2rem] p-6 sm:p-10 text-foreground max-w-4xl mx-auto shadow-2xl relative overflow-hidden">
       <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-primary to-sky-500" />
       
       <div className="flex items-center justify-between mb-8">
@@ -149,7 +149,7 @@ function MatchBroadcastCard({
           <div className="flex items-center gap-2 text-primary font-black uppercase tracking-widest text-sm mb-1">
             <Activity className="w-5 h-5 animate-pulse" /> Live Broadcast
           </div>
-          <div className="text-slate-400 text-xs font-bold">
+          <div className="text-muted-foreground text-xs font-bold">
             {match.isFriendly ? "Friendly" : `Tournament • ${match.matchNumber}`} • {match.inferredCategory || match.category} • Best of {match.bestOfSets} ({match.pointsToWin} pts) • Umpire: {match.umpireName}
           </div>
         </div>
@@ -195,7 +195,7 @@ function MatchBroadcastCard({
             </div>
           </div>
 
-          <div className="text-4xl font-black italic text-slate-700 text-center py-4">VS</div>
+          <div className="text-4xl font-black italic text-muted-foreground text-center py-4">VS</div>
 
           <div className={`p-6 rounded-3xl border-2 transition-all ${match.serverTeam === 2 ? "bg-primary/80/20 border-primary/50 shadow-[0_0_30px_rgba(16,185,129,0.15)]" : "bg-slate-800/50 border-slate-700/50"}`}>
             <div className="text-center mb-6">
@@ -272,18 +272,18 @@ function MatchBroadcastCard({
           ) : (
             <div className="space-y-3 bg-slate-800/50 rounded-2xl p-4">
               <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Winner</label>
+                <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Winner</label>
                 <div className="grid grid-cols-2 gap-2">
-                  <button onClick={() => setAdminWinner(1)} className={`py-2.5 rounded-xl font-bold text-sm border transition truncate ${adminWinner === 1 ? "bg-primary/20 border-primary text-primary/70" : "bg-slate-900 border-slate-700 text-slate-400"}`}>{t1Label}</button>
-                  <button onClick={() => setAdminWinner(2)} className={`py-2.5 rounded-xl font-bold text-sm border transition truncate ${adminWinner === 2 ? "bg-sky-500/20 border-sky-500 text-sky-300" : "bg-slate-900 border-slate-700 text-slate-400"}`}>{t2Label}</button>
+                  <button onClick={() => setAdminWinner(1)} className={`py-2.5 rounded-xl font-bold text-sm border transition truncate ${adminWinner === 1 ? "bg-primary/20 border-primary text-primary/70" : "bg-slate-900 border-slate-700 text-muted-foreground"}`}>{t1Label}</button>
+                  <button onClick={() => setAdminWinner(2)} className={`py-2.5 rounded-xl font-bold text-sm border transition truncate ${adminWinner === 2 ? "bg-sky-500/20 border-sky-500 text-sky-300" : "bg-slate-900 border-slate-700 text-muted-foreground"}`}>{t2Label}</button>
                 </div>
               </div>
               <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Set Scores (e.g. 21-15, 21-18)</label>
-                <input value={adminSets} onChange={(e) => setAdminSets(e.target.value)} placeholder="21-15, 21-18" className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-white text-sm outline-none focus:border-primary transition" />
+                <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Set Scores (e.g. 21-15, 21-18)</label>
+                <input value={adminSets} onChange={(e) => setAdminSets(e.target.value)} placeholder="21-15, 21-18" className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-foreground text-sm outline-none focus:border-primary transition" />
               </div>
               <div className="flex gap-2 pt-1">
-                <button onClick={() => { setShowAdminForm(false); setAdminWinner(null); }} className="flex-1 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-1.5">
+                <button onClick={() => { setShowAdminForm(false); setAdminWinner(null); }} className="flex-1 py-2.5 bg-slate-700 hover:bg-slate-600 text-foreground rounded-xl font-bold text-sm flex items-center justify-center gap-1.5">
                   <X className="w-4 h-4" /> Cancel
                 </button>
                 <button
@@ -292,7 +292,7 @@ function MatchBroadcastCard({
                     if (!adminSets.trim()) { toast.error("Enter set scores"); return; }
                     onSubmit(match, adminWinner, adminSets);
                   }}
-                  className="flex-1 py-2.5 bg-primary hover:bg-primary text-white rounded-xl font-bold text-sm flex items-center justify-center gap-1.5"
+                  className="flex-1 py-2.5 bg-primary hover:bg-primary text-foreground rounded-xl font-bold text-sm flex items-center justify-center gap-1.5"
                 >
                   <Save className="w-4 h-4" /> Submit & Save
                 </button>
@@ -437,16 +437,16 @@ export function LiveScoreSection() {
     <div className="w-full max-w-5xl mx-auto p-4 space-y-8">
       <div className="flex flex-col sm:flex-row items-center justify-between bg-slate-900 rounded-[2rem] p-6 shadow-xl border border-slate-800 gap-4 text-center sm:text-left">
         <div>
-          <h2 className="text-xl font-black text-white flex items-center justify-center sm:justify-start gap-2">
+          <h2 className="text-xl font-black text-foreground flex items-center justify-center sm:justify-start gap-2">
             <Tv2 className="w-6 h-6 text-primary" /> Live Broadcasts
           </h2>
-          <p className="text-slate-400 text-sm mt-1">Watch live matches happening right now.</p>
+          <p className="text-muted-foreground text-sm mt-1">Watch live matches happening right now.</p>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-2 mt-4 sm:mt-0">
           <button
             onClick={() => setVoiceEnabled(!voiceEnabled)}
             className={`flex justify-center items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-bold transition-colors ${
-              voiceEnabled ? 'bg-primary/20 text-primary border-primary/50 hover:bg-primary/30' : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700'
+              voiceEnabled ? 'bg-primary/20 text-primary border-primary/50 hover:bg-primary/30' : 'bg-slate-800 text-muted-foreground border-slate-700 hover:bg-slate-700'
             }`}
           >
             {voiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
@@ -455,7 +455,7 @@ export function LiveScoreSection() {
           <button
             onClick={() => setFlashEnabled(!flashEnabled)}
             className={`flex justify-center items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-bold transition-colors ${
-              flashEnabled ? 'bg-primary/20 text-primary border-primary/50 hover:bg-primary/30' : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700'
+              flashEnabled ? 'bg-primary/20 text-primary border-primary/50 hover:bg-primary/30' : 'bg-slate-800 text-muted-foreground border-slate-700 hover:bg-slate-700'
             }`}
           >
             <Zap className="w-4 h-4" />
@@ -464,7 +464,7 @@ export function LiveScoreSection() {
           <button
             onClick={() => setVibrateEnabled(!vibrateEnabled)}
             className={`flex justify-center items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-bold transition-colors ${
-              vibrateEnabled ? 'bg-primary/20 text-primary border-primary/50 hover:bg-primary/30' : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700'
+              vibrateEnabled ? 'bg-primary/20 text-primary border-primary/50 hover:bg-primary/30' : 'bg-slate-800 text-muted-foreground border-slate-700 hover:bg-slate-700'
             }`}
           >
             <Smartphone className="w-4 h-4" />
@@ -475,9 +475,9 @@ export function LiveScoreSection() {
 
       {activeMatchList.filter(m => m.status !== "setup").length === 0 ? (
         <div className="text-center py-20 bg-slate-900/50 rounded-3xl border border-slate-800 border-dashed">
-          <Activity className="w-16 h-16 mx-auto mb-4 opacity-20 text-slate-400" />
+          <Activity className="w-16 h-16 mx-auto mb-4 opacity-20 text-muted-foreground" />
           <h2 className="text-2xl font-bold text-slate-300">No Live Matches</h2>
-          <p className="mt-2 text-slate-500">Wait for someone to start broadcasting...</p>
+          <p className="mt-2 text-muted-foreground">Wait for someone to start broadcasting...</p>
         </div>
       ) : (
         <div className="space-y-8">

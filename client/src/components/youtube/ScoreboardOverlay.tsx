@@ -37,19 +37,19 @@ export function ScoreboardOverlay({
             )}
           </div>
           <div className="flex-1 flex flex-col justify-center px-3 py-1 bg-gradient-to-r from-black/20 to-transparent">
-            <div className="flex flex-col text-[10px] md:text-xs leading-[1.2] font-black text-white uppercase tracking-wider font-sans">
+            <div className="flex flex-col text-[10px] md:text-xs leading-[1.2] font-black text-foreground uppercase tracking-wider font-sans">
               {teamA.length === 2 ? (
                 <>
-                  <span onClick={() => handleSetServer(0)} className={`cursor-pointer transition-colors ${currentScore?.serverIdx === 0 ? 'text-[#E5FA00]' : 'text-white/90 hover:text-white'}`}>{teamA[0]}</span>
-                  <span onClick={() => handleSetServer(1)} className={`cursor-pointer transition-colors ${currentScore?.serverIdx === 1 ? 'text-[#E5FA00]' : 'text-white/90 hover:text-white'}`}>{teamA[1]}</span>
+                  <span onClick={() => handleSetServer(0)} className={`cursor-pointer transition-colors ${currentScore?.serverIdx === 0 ? 'text-[#E5FA00]' : 'text-foreground/90 hover:text-foreground'}`}>{teamA[0]}</span>
+                  <span onClick={() => handleSetServer(1)} className={`cursor-pointer transition-colors ${currentScore?.serverIdx === 1 ? 'text-[#E5FA00]' : 'text-foreground/90 hover:text-foreground'}`}>{teamA[1]}</span>
                 </>
               ) : (
-                <span onClick={() => handleSetServer(0)} className={`cursor-pointer transition-colors ${currentScore?.serverIdx === 0 ? 'text-[#E5FA00]' : 'text-white/90 hover:text-white'}`}>{teamA[0]}</span>
+                <span onClick={() => handleSetServer(0)} className={`cursor-pointer transition-colors ${currentScore?.serverIdx === 0 ? 'text-[#E5FA00]' : 'text-foreground/90 hover:text-foreground'}`}>{teamA[0]}</span>
               )}
             </div>
           </div>
           <div className="w-12 md:w-14 flex items-center justify-center bg-black/60 border-l border-white/10 shrink-0">
-            <span className={`font-black text-xl md:text-2xl ${currentScore && currentScore.teamA > (currentScore.teamB || 0) ? 'text-white' : 'text-white/80'}`}>{currentScore?.teamA || 0}</span>
+            <span className={`font-black text-xl md:text-2xl ${currentScore && currentScore.teamA > (currentScore.teamB || 0) ? 'text-foreground' : 'text-foreground/80'}`}>{currentScore?.teamA || 0}</span>
           </div>
         </div>
         {/* Team B Row */}
@@ -60,19 +60,19 @@ export function ScoreboardOverlay({
             )}
           </div>
           <div className="flex-1 flex flex-col justify-center px-3 py-1 bg-gradient-to-r from-black/20 to-transparent">
-            <div className="flex flex-col text-[10px] md:text-xs leading-[1.2] font-black text-white uppercase tracking-wider font-sans">
+            <div className="flex flex-col text-[10px] md:text-xs leading-[1.2] font-black text-foreground uppercase tracking-wider font-sans">
               {teamB.length === 2 ? (
                 <>
-                  <span onClick={() => handleSetServer(2)} className={`cursor-pointer transition-colors ${currentScore?.serverIdx === 2 ? 'text-[#E5FA00]' : 'text-white/90 hover:text-white'}`}>{teamB[0]}</span>
-                  <span onClick={() => handleSetServer(3)} className={`cursor-pointer transition-colors ${currentScore?.serverIdx === 3 ? 'text-[#E5FA00]' : 'text-white/90 hover:text-white'}`}>{teamB[1]}</span>
+                  <span onClick={() => handleSetServer(2)} className={`cursor-pointer transition-colors ${currentScore?.serverIdx === 2 ? 'text-[#E5FA00]' : 'text-foreground/90 hover:text-foreground'}`}>{teamB[0]}</span>
+                  <span onClick={() => handleSetServer(3)} className={`cursor-pointer transition-colors ${currentScore?.serverIdx === 3 ? 'text-[#E5FA00]' : 'text-foreground/90 hover:text-foreground'}`}>{teamB[1]}</span>
                 </>
               ) : (
-                <span onClick={() => handleSetServer(2)} className={`cursor-pointer transition-colors ${currentScore?.serverIdx === 2 ? 'text-[#E5FA00]' : 'text-white/90 hover:text-white'}`}>{teamB[0]}</span>
+                <span onClick={() => handleSetServer(2)} className={`cursor-pointer transition-colors ${currentScore?.serverIdx === 2 ? 'text-[#E5FA00]' : 'text-foreground/90 hover:text-foreground'}`}>{teamB[0]}</span>
               )}
             </div>
           </div>
           <div className="w-12 md:w-14 flex items-center justify-center bg-black/60 border-l border-white/10 shrink-0">
-            <span className={`font-black text-xl md:text-2xl ${currentScore && currentScore.teamB > (currentScore.teamA || 0) ? 'text-white' : 'text-white/80'}`}>{currentScore?.teamB || 0}</span>
+            <span className={`font-black text-xl md:text-2xl ${currentScore && currentScore.teamB > (currentScore.teamA || 0) ? 'text-foreground' : 'text-foreground/80'}`}>{currentScore?.teamB || 0}</span>
           </div>
         </div>
       </div>
@@ -81,9 +81,9 @@ export function ScoreboardOverlay({
       {enableScoringMode && (
         <div className="absolute top-20 left-4 z-40 flex flex-col gap-2">
           <div className="flex flex-col gap-1 bg-slate-800/80 backdrop-blur-sm border border-white/10 p-2 rounded-xl">
-            <span className="text-[10px] text-white/50 font-bold uppercase tracking-widest pl-1 mb-1">Score Team A</span>
+            <span className="text-[10px] text-foreground/50 font-bold uppercase tracking-widest pl-1 mb-1">Score Team A</span>
             {teamA.map((name, i) => (
-              <button key={i} onClick={(e) => { e.stopPropagation(); handleAddPoint('A', i); }} className="bg-white/5 hover:bg-white/10 text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow-lg transition-colors flex items-center justify-between gap-3 text-left">
+              <button key={i} onClick={(e) => { e.stopPropagation(); handleAddPoint('A', i); }} className="bg-white/5 hover:bg-white/10 text-foreground font-bold text-xs px-3 py-1.5 rounded-lg shadow-lg transition-colors flex items-center justify-between gap-3 text-left">
                 <span>+1 {name}</span> <span className="opacity-50 text-[10px]">Tap</span>
               </button>
             ))}
@@ -96,7 +96,7 @@ export function ScoreboardOverlay({
               </button>
             ))}
           </div>
-          <button onClick={(e) => { e.stopPropagation(); handleUndoScore(); }} disabled={scoreLogs.length === 0} className="bg-white/5 hover:bg-white/10 disabled:opacity-30 backdrop-blur-sm text-white/80 font-bold text-xs px-3 py-1.5 rounded-xl shadow-lg transition-colors mt-2">
+          <button onClick={(e) => { e.stopPropagation(); handleUndoScore(); }} disabled={scoreLogs.length === 0} className="bg-white/5 hover:bg-white/10 disabled:opacity-30 backdrop-blur-sm text-foreground/80 font-bold text-xs px-3 py-1.5 rounded-xl shadow-lg transition-colors mt-2">
             Undo Last Score
           </button>
           <button onClick={(e) => { 

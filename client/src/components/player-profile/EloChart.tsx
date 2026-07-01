@@ -28,15 +28,15 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     const isWin = data.result === "W";
     return (
       <div className="bg-slate-900/95 border border-slate-700/50 p-3 rounded-xl shadow-xl backdrop-blur-sm">
-        <p className="text-xs text-slate-400 font-medium mb-1">{data.date}</p>
-        <p className="text-sm font-bold text-white mb-2">
+        <p className="text-xs text-muted-foreground font-medium mb-1">{data.date}</p>
+        <p className="text-sm font-bold text-foreground mb-2">
           vs {data.opponent}
         </p>
         <div className="flex items-center gap-3">
           <span className={`text-xs font-black px-2 py-0.5 rounded ${isWin ? 'bg-primary/20 text-primary' : 'bg-rose-500/20 text-rose-400'}`}>
             {data.result}
           </span>
-          <span className="text-sm font-mono text-white font-black">
+          <span className="text-sm font-mono text-foreground font-black">
             {data.elo} <span className={`text-xs ${data.eloChange >= 0 ? 'text-primary' : 'text-rose-400'}`}>({data.eloChange > 0 ? '+' : ''}{data.eloChange})</span>
           </span>
         </div>
@@ -50,7 +50,7 @@ export function EloChart({ data }: EloChartProps) {
   if (!data || data.length === 0) {
     return (
       <div className="h-64 flex items-center justify-center border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
-        <span className="text-slate-400 text-sm">Not enough match data for ELO history.</span>
+        <span className="text-muted-foreground text-sm">Not enough match data for ELO history.</span>
       </div>
     );
   }

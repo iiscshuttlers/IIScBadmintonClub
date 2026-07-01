@@ -16,7 +16,7 @@ export function LeaderboardHighlights({ upsets, activeStreaks }: Props) {
         className="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 relative overflow-hidden"
       >
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-500 to-orange-500" />
-        <h3 className="text-sm font-black text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+        <h3 className="text-sm font-black text-slate-800 dark:text-foreground mb-4 flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-rose-500" /> Biggest Upsets (Recent)
         </h3>
         <div className="space-y-3">
@@ -27,18 +27,18 @@ export function LeaderboardHighlights({ upsets, activeStreaks }: Props) {
               <div key={match.id} className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl border border-slate-100 dark:border-slate-700/50">
                 <img src={winner?.avatar_url || ""} className="w-8 h-8 rounded-full object-cover shrink-0 border-2 border-primary" />
                 <div className="min-w-0 flex-1 flex flex-col">
-                  <div className="text-xs font-bold text-slate-800 dark:text-white truncate flex items-center gap-1.5">
+                  <div className="text-xs font-bold text-slate-800 dark:text-foreground truncate flex items-center gap-1.5">
                     {winner?.full_name?.split(' ')[0]}
                     <span className="text-[10px] bg-primary/15 dark:bg-primary/30 text-primary dark:text-primary px-1 py-0.5 rounded font-black">
                       +{match.upsetScore}
                     </span>
                   </div>
-                  <div className="text-[10px] text-slate-500">def. {loser?.full_name?.split(' ')[0]}</div>
+                  <div className="text-[10px] text-muted-foreground">def. {loser?.full_name?.split(' ')[0]}</div>
                 </div>
               </div>
             )
           }) : (
-            <div className="text-center py-4 text-slate-400 text-xs">No recent upsets found.</div>
+            <div className="text-center py-4 text-muted-foreground text-xs">No recent upsets found.</div>
           )}
         </div>
       </motion.div>
@@ -51,16 +51,16 @@ export function LeaderboardHighlights({ upsets, activeStreaks }: Props) {
         className="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 relative overflow-hidden"
       >
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-400 to-amber-500" />
-        <h3 className="text-sm font-black text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+        <h3 className="text-sm font-black text-slate-800 dark:text-foreground mb-4 flex items-center gap-2">
           <Flame className="w-4 h-4 text-orange-500" /> Hottest Win Streaks
         </h3>
         <div className="space-y-3">
           {activeStreaks.length > 0 ? activeStreaks.map((p: any, i: number) => (
             <div key={p.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700/50">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-4 text-center font-black text-[10px] text-slate-400">#{i + 1}</div>
+                <div className="w-4 text-center font-black text-[10px] text-muted-foreground">#{i + 1}</div>
                 <img src={p.avatar || ""} className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0" />
-                <div className="font-bold text-xs text-slate-800 dark:text-white truncate">
+                <div className="font-bold text-xs text-slate-800 dark:text-foreground truncate">
                   {p.name?.split(' ')[0]}
                 </div>
               </div>
@@ -69,7 +69,7 @@ export function LeaderboardHighlights({ upsets, activeStreaks }: Props) {
               </div>
             </div>
           )) : (
-            <div className="text-center py-4 text-slate-400 text-xs">No active streaks above 1.</div>
+            <div className="text-center py-4 text-muted-foreground text-xs">No active streaks above 1.</div>
           )}
         </div>
       </motion.div>

@@ -49,16 +49,16 @@ export default function ProfileSetup() {
               {setup.isEditing && (setup.playerSlug || setup.paramId) && (
                 <button
                   onClick={() => setLocation(`/player/${setup.playerSlug || setup.paramId}`)}
-                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary mb-3 transition"
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-primary dark:text-muted-foreground dark:hover:text-primary mb-3 transition"
                 >
                   <ArrowLeft className="w-4 h-4" /> Back to Profile
                 </button>
               )}
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white flex items-center justify-center sm:justify-start gap-2 leading-tight">
+              <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground dark:text-foreground flex items-center justify-center sm:justify-start gap-2 leading-tight">
                 <Sparkles className="w-7 h-7 sm:w-8 sm:h-8 text-primary animate-pulse shrink-0" />
                 {setup.isEditing ? "Edit Your Player Profile" : "Complete Your Profile"}
               </h1>
-              <p className="mt-2 text-slate-600 dark:text-slate-400 text-base sm:text-lg">
+              <p className="mt-2 text-muted-foreground dark:text-muted-foreground text-base sm:text-lg">
                 {setup.isEditing
                   ? "Keep your badminton card updated with your latest achievements!"
                   : "Welcome to IISc Badminton Club! Tell us about your game."}
@@ -87,7 +87,7 @@ export default function ProfileSetup() {
                   className={`snap-start shrink-0 flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 font-semibold text-sm rounded-xl transition-all whitespace-nowrap outline-none
                     ${isActive
                       ? "bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary border-b-2 border-primary"
-                      : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900/50"
+                      : "text-muted-foreground hover:text-slate-800 dark:text-muted-foreground dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900/50"
                     }`}
                 >
                   <Icon className="w-4 h-4 shrink-0" />
@@ -173,7 +173,7 @@ export default function ProfileSetup() {
                   <Button
                     type="submit"
                     disabled={setup.loading}
-                    className="w-full min-h-[52px] bg-primary hover:bg-primary text-white font-bold px-5 py-3.5 rounded-xl shadow-lg shadow-primary/25 transition-all text-base sm:text-lg flex items-center justify-center gap-2 disabled:opacity-70"
+                    className="w-full min-h-[52px] bg-primary hover:bg-primary text-foreground font-bold px-5 py-3.5 rounded-xl shadow-lg shadow-primary/25 transition-all text-base sm:text-lg flex items-center justify-center gap-2 disabled:opacity-70"
                   >
                     {setup.loading ? (
                       <>
@@ -195,7 +195,7 @@ export default function ProfileSetup() {
                       setup.setActiveTab(nextTabId as any);
                       window.scrollTo({ top: 0, behavior: "smooth" });
                     }}
-                    className="w-full min-h-[52px] bg-primary hover:bg-primary text-white font-bold px-5 py-3.5 rounded-xl shadow-lg shadow-primary/25 transition-all text-base sm:text-lg flex items-center justify-center gap-2"
+                    className="w-full min-h-[52px] bg-primary hover:bg-primary text-foreground font-bold px-5 py-3.5 rounded-xl shadow-lg shadow-primary/25 transition-all text-base sm:text-lg flex items-center justify-center gap-2"
                   >
                     Save & Next: {nextTabObj?.label} <ArrowRight className="w-5 h-5" />
                   </Button>
@@ -205,7 +205,7 @@ export default function ProfileSetup() {
                   type="button"
                   onClick={(e) => setup.handleSubmit(e as any)}
                   disabled={setup.loading}
-                  className="min-h-[52px] px-6 py-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed text-xs sm:text-sm"
+                  className="min-h-[52px] px-6 py-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-muted-foreground dark:text-slate-200 font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed text-xs sm:text-sm"
                 >
                   Complete profile later, Launch for now
                 </button>

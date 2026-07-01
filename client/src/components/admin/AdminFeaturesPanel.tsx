@@ -19,7 +19,7 @@ const sectionTitle = (icon: React.ReactNode, label: string) => (
     <div className="p-1.5 rounded-lg bg-primary/10 dark:bg-primary/40 text-primary dark:text-primary">
       {icon}
     </div>
-    <h3 className="font-black text-slate-800 dark:text-white text-base">{label}</h3>
+    <h3 className="font-black text-slate-800 dark:text-foreground text-base">{label}</h3>
   </div>
 );
 
@@ -63,25 +63,25 @@ function NotifQueuePanel() {
           <div className="grid grid-cols-2 gap-3 mb-4">
             <div className="bg-amber-50 dark:bg-amber-950/20 rounded-xl p-3 text-center">
               <p className="text-2xl font-black text-amber-600 dark:text-amber-400">{stats.unsent}</p>
-              <p className="text-xs font-bold text-slate-500 mt-0.5">Queued / Unsent</p>
+              <p className="text-xs font-bold text-muted-foreground mt-0.5">Queued / Unsent</p>
             </div>
             <div className="bg-primary/10 dark:bg-primary/20 rounded-xl p-3 text-center">
               <p className="text-2xl font-black text-primary dark:text-primary">{stats.sent}</p>
-              <p className="text-xs font-bold text-slate-500 mt-0.5">Sent (all time)</p>
+              <p className="text-xs font-bold text-muted-foreground mt-0.5">Sent (all time)</p>
             </div>
           </div>
           <div className="flex gap-2">
             <button onClick={flushNow} disabled={flushing || stats.unsent === 0}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-primary hover:bg-primary disabled:opacity-50 text-white text-sm font-black transition">
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-primary hover:bg-primary disabled:opacity-50 text-foreground text-sm font-black transition">
               {flushing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
               Send Now
             </button>
             <button onClick={clearSent} disabled={stats.sent === 0}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50 text-slate-600 dark:text-slate-300 text-sm font-black transition">
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50 text-muted-foreground dark:text-slate-300 text-sm font-black transition">
               <Trash2 className="w-4 h-4" /> Clear sent
             </button>
           </div>
-          <p className="text-xs text-slate-400 mt-2">Auto-runs every 15 min via cron.</p>
+          <p className="text-xs text-muted-foreground mt-2">Auto-runs every 15 min via cron.</p>
         </>
       )}
     </div>
@@ -121,14 +121,14 @@ function LiveMatchesPanel() {
     <div className={cardCls}>
       {sectionTitle(<Circle className="w-4 h-4 fill-red-500 text-red-500" />, "Live Matches")}
       {loading ? <Loader2 className="w-5 h-5 animate-spin text-primary" /> : matches.length === 0 ? (
-        <p className="text-sm text-slate-400">No live or recent matches.</p>
+        <p className="text-sm text-muted-foreground">No live or recent matches.</p>
       ) : (
         <div className="space-y-2">
           {matches.map((m) => (
             <div key={m.id} className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-2.5">
               <div className="flex items-center gap-2 min-w-0">
                 <div className={`w-2 h-2 rounded-full shrink-0 ${m.status === "live" ? "bg-red-500 animate-pulse" : "bg-slate-400"}`} />
-                <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">
+                <p className="text-sm font-bold text-muted-foreground dark:text-slate-200 truncate">
                   {m.player1?.full_name ?? "?"} vs {m.player2?.full_name ?? "?"}
                 </p>
                 <span className="text-xs font-black text-primary">{m.sets_p1}-{m.sets_p2}</span>
@@ -212,13 +212,13 @@ function PredictionsPanel() {
             ].map((s) => (
               <div key={s.label} className="bg-slate-50 dark:bg-slate-800 rounded-xl p-3 text-center">
                 <p className={`text-xl font-black ${s.color}`}>{s.value}</p>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-0.5">{s.label}</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mt-0.5">{s.label}</p>
               </div>
             ))}
           </div>
-          <p className="text-xs text-slate-500 mb-3">🏆 Top points: <strong>{stats.topPlayer}</strong></p>
+          <p className="text-xs text-muted-foreground mb-3">🏆 Top points: <strong>{stats.topPlayer}</strong></p>
           <button onClick={resolveAll}
-            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-black transition">
+            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-foreground text-sm font-black transition">
             <Coins className="w-4 h-4" /> Resolve Pending Predictions
           </button>
         </>
@@ -286,14 +286,14 @@ function ChallengesAdminPanel() {
       {sectionTitle(<Target className="w-4 h-4" />, "Weekly Challenges (This Week)")}
       {loading ? <Loader2 className="w-5 h-5 animate-spin text-primary" /> :
         challenges.length === 0 ? (
-          <p className="text-sm text-slate-400">No challenges this week. They auto-generate when a player opens the Challenges tab.</p>
+          <p className="text-sm text-muted-foreground">No challenges this week. They auto-generate when a player opens the Challenges tab.</p>
         ) : (
           <div className="space-y-2">
             {challenges.map((c) => (
               <div key={c.id} className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-2.5">
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-black text-slate-800 dark:text-white truncate">{c.title}</p>
-                  <p className="text-xs text-slate-400">{c.type} · target {c.target} · {c.points} pts · {(c.completions as any)?.[0]?.count ?? 0} completions</p>
+                  <p className="text-sm font-black text-slate-800 dark:text-foreground truncate">{c.title}</p>
+                  <p className="text-xs text-muted-foreground">{c.type} · target {c.target} · {c.points} pts · {(c.completions as any)?.[0]?.count ?? 0} completions</p>
                 </div>
                 <button onClick={() => deleteChallenge(c.id)}
                   className="p-1.5 rounded-lg bg-rose-100 dark:bg-rose-950/40 text-rose-600 hover:bg-rose-200 transition ml-2 shrink-0">
@@ -328,8 +328,8 @@ function ChallengesAdminPanel() {
             <input type="number" min="5" step="5" placeholder="Points" value={newPoints} onChange={(e) => setNewPoints(Number(e.target.value))} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-primary" required />
           </div>
           <div className="flex justify-end gap-2 pt-1">
-            <button type="button" onClick={() => setIsAdding(false)} className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition">Cancel</button>
-            <button type="submit" className="px-3 py-1.5 text-xs font-bold bg-primary hover:bg-primary text-white rounded-lg transition">Save Challenge</button>
+            <button type="button" onClick={() => setIsAdding(false)} className="px-3 py-1.5 text-xs font-bold text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300 transition">Cancel</button>
+            <button type="submit" className="px-3 py-1.5 text-xs font-bold bg-primary hover:bg-primary text-foreground rounded-lg transition">Save Challenge</button>
           </div>
         </form>
       ) : (
@@ -374,13 +374,13 @@ function PublicApiPanel() {
   return (
     <div className={cardCls}>
       {sectionTitle(<Globe className="w-4 h-4" />, "Public API")}
-      <p className="text-xs text-slate-400 mb-3 font-mono break-all">{base}</p>
+      <p className="text-xs text-muted-foreground mb-3 font-mono break-all">{base}</p>
       <div className="space-y-2">
         {endpoints.map((ep) => (
           <div key={ep.path} className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-2">
             <div>
               <p className="text-xs font-mono font-black text-primary dark:text-primary">{ep.path}</p>
-              <p className="text-xs text-slate-400">{ep.desc}</p>
+              <p className="text-xs text-muted-foreground">{ep.desc}</p>
             </div>
             <button onClick={() => test(ep.path)} disabled={testing === ep.path}
               className="px-3 py-1 rounded-lg bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary text-xs font-black hover:bg-primary/20 transition">
@@ -413,7 +413,7 @@ function DbHealthPanel() {
     <div className={cardCls}>
       {sectionTitle(<ShieldCheck className="w-4 h-4" />, "Database Health Check")}
       <button onClick={run} disabled={loading}
-        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-primary disabled:opacity-50 text-white text-sm font-black transition mb-4">
+        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-primary disabled:opacity-50 text-foreground text-sm font-black transition mb-4">
         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
         Run Health Check
       </button>
@@ -421,12 +421,12 @@ function DbHealthPanel() {
         <div className="space-y-2">
           {Object.entries(health).map(([key, val]: any) => (
             <div key={key} className={`flex ${typeof val === "object" && val !== null ? "flex-col items-start gap-2" : "items-center justify-between"} bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-2`}>
-              <span className="text-sm font-bold text-slate-600 dark:text-slate-300 capitalize">{key.replace(/_/g, " ")}</span>
+              <span className="text-sm font-bold text-muted-foreground dark:text-slate-300 capitalize">{key.replace(/_/g, " ")}</span>
               {typeof val === "object" && val !== null ? (
                 <div className="w-full mt-2 space-y-2 bg-slate-100/50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200/60 dark:border-slate-700/50">
                   {Object.entries(val).map(([subKey, subVal]: any) => (
                     <div key={subKey} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700">
-                      <span className="text-xs font-bold text-slate-600 dark:text-slate-300 capitalize flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-muted-foreground dark:text-slate-300 capitalize flex items-center gap-1.5">
                         <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                         {subKey.replace(/_/g, " ")}
                       </span>
@@ -440,7 +440,7 @@ function DbHealthPanel() {
                                   ? "bg-primary/10 text-primary dark:bg-primary/50 dark:text-primary border border-primary/30 dark:border-primary/80"
                                   : v === false
                                   ? "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400 border border-rose-100 dark:border-rose-800"
-                                  : "bg-slate-50 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600"
+                                  : "bg-slate-50 text-muted-foreground dark:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600"
                               }`}
                             >
                               <span className="opacity-70 font-semibold">{k}:</span>
@@ -454,7 +454,7 @@ function DbHealthPanel() {
                             </div>
                           ))
                         ) : (
-                          <span className="text-[10px] font-black px-2 py-1 rounded-md bg-slate-50 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
+                          <span className="text-[10px] font-black px-2 py-1 rounded-md bg-slate-50 text-muted-foreground dark:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
                             {String(subVal)}
                           </span>
                         )}
@@ -492,14 +492,14 @@ function CronJobsPanel() {
         {jobs.map((job) => (
           <div key={job.name} className="bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-2.5">
             <div className="flex items-center justify-between mb-0.5">
-              <p className="text-sm font-black text-slate-800 dark:text-white">{job.name}</p>
+              <p className="text-sm font-black text-slate-800 dark:text-foreground">{job.name}</p>
               <span className="text-[10px] font-black bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary px-2 py-0.5 rounded-full">Active</span>
             </div>
-            <p className="text-xs text-slate-400">{job.schedule} · {job.desc}</p>
+            <p className="text-xs text-muted-foreground">{job.schedule} · {job.desc}</p>
           </div>
         ))}
       </div>
-      <p className="text-xs text-slate-400 mt-3">Manage schedules in Supabase Dashboard → Database → Cron Jobs.</p>
+      <p className="text-xs text-muted-foreground mt-3">Manage schedules in Supabase Dashboard → Database → Cron Jobs.</p>
     </div>
   );
 }
@@ -537,8 +537,8 @@ export function AdminFeaturesPanel() {
             onClick={() => setSection(s.id)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
               section === s.id
-                ? "bg-primary text-white shadow-md"
-                : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-primary"
+                ? "bg-primary text-foreground shadow-md"
+                : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-300 hover:border-primary"
             }`}
           >
             {s.icon} {s.label}
@@ -551,7 +551,7 @@ export function AdminFeaturesPanel() {
           <LiveMatchesPanel />
           <div className={cardCls}>
             {sectionTitle(<Circle className="w-4 h-4 fill-red-500 text-red-500" />, "Live Feed")}
-            <p className="text-sm text-slate-400">Live matches are broadcast via the Umpire tab.</p>
+            <p className="text-sm text-muted-foreground">Live matches are broadcast via the Umpire tab.</p>
           </div>
         </div>
       )}

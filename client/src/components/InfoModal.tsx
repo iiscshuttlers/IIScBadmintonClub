@@ -28,7 +28,7 @@ export function InfoModal({ title, items, footer, triggerIcon, triggerClassName 
         className={`inline-flex items-center justify-center p-1 rounded-full text-cyan-400 hover:text-cyan-300 hover:bg-cyan-400/10 transition-colors focus:outline-none ${triggerClassName}`}
         aria-label={`More info about ${title}`}
       >
-        {triggerIcon || <HelpCircle className="w-4 h-4 fill-cyan-400 text-slate-900" />}
+        {triggerIcon || <HelpCircle className="w-4 h-4 fill-cyan-400 text-foreground" />}
       </button>
 
       <AnimatePresence>
@@ -63,7 +63,7 @@ export function InfoModal({ title, items, footer, triggerIcon, triggerClassName 
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-2 -mr-2 text-slate-500 hover:text-white hover:bg-slate-800 rounded-full transition-colors focus:outline-none shrink-0"
+                  className="p-2 -mr-2 text-muted-foreground hover:text-foreground hover:bg-slate-800 rounded-full transition-colors focus:outline-none shrink-0"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -87,10 +87,10 @@ export function InfoModal({ title, items, footer, triggerIcon, triggerClassName 
                       ) : null}
                       
                       <div className="text-left">
-                        <h4 className="text-sm font-bold text-white leading-tight">
+                        <h4 className="text-sm font-bold text-foreground leading-tight">
                           {item.title}
                         </h4>
-                        <p className="text-sm text-slate-400 mt-1 leading-relaxed">
+                        <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
                           {item.desc}
                         </p>
                       </div>

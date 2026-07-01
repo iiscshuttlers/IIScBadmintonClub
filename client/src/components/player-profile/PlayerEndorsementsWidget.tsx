@@ -115,8 +115,8 @@ export function PlayerEndorsementsWidget({ playerId }: EndorsementsWidgetProps) 
             ${isVoted 
               ? 'bg-primary/10 border-primary/30 text-primary dark:text-primary' 
               : count > 0
-                ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-primary'
-                : 'bg-transparent border-dashed border-slate-300 dark:border-slate-700 text-slate-500 hover:border-primary hover:text-primary'
+                ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-300 hover:border-primary'
+                : 'bg-transparent border-dashed border-slate-300 dark:border-slate-700 text-muted-foreground hover:border-primary hover:text-primary'
             }
             ${isOwnProfile ? 'cursor-default' : 'cursor-pointer hover:shadow-sm'}
           `}
@@ -137,7 +137,7 @@ export function PlayerEndorsementsWidget({ playerId }: EndorsementsWidgetProps) 
   return (
     <div className="bg-white dark:bg-white/5 rounded-2xl p-5 border border-slate-200 dark:border-white/8">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+        <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground dark:text-foreground/40">
           Skills & Endorsements
         </h3>
         {isOwnProfile && (visibleSkills.length < SKILLS.length || visibleBehaviors.length < BEHAVIORS.length) && (
@@ -153,14 +153,14 @@ export function PlayerEndorsementsWidget({ playerId }: EndorsementsWidgetProps) 
 
       <div className="space-y-4">
         <div>
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Gameplay</div>
+          <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Gameplay</div>
           <div className="flex flex-wrap gap-2">
             {renderChips(visibleSkills, "skill")}
           </div>
         </div>
 
         <div>
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Sportsmanship</div>
+          <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Sportsmanship</div>
           <div className="flex flex-wrap gap-2">
             {renderChips(visibleBehaviors, "behavior")}
           </div>
@@ -168,7 +168,7 @@ export function PlayerEndorsementsWidget({ playerId }: EndorsementsWidgetProps) 
       </div>
       
       {!isOwnProfile && (
-        <p className="text-[9px] text-slate-400 mt-4 text-center">
+        <p className="text-[9px] text-muted-foreground mt-4 text-center">
           You can endorse exactly 1 Gameplay skill and 1 Sportsmanship behavior. Your vote is anonymous.
         </p>
       )}

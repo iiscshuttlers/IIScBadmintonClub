@@ -81,7 +81,7 @@ export default function ComparePlayers() {
   }, [p1, p2]);
 
   if (loading) {
-    return <div className="p-8 text-center text-slate-500">Loading rivalry data...</div>;
+    return <div className="p-8 text-center text-muted-foreground">Loading rivalry data...</div>;
   }
 
   if (!player1 || !player2) {
@@ -155,7 +155,7 @@ export default function ComparePlayers() {
   return (
     <div className="pb-24 max-w-4xl mx-auto px-4 mt-6">
       <Link href="/players">
-        <button className="flex items-center text-slate-500 hover:text-slate-800 dark:hover:text-white mb-6 transition-colors">
+        <button className="flex items-center text-muted-foreground hover:text-slate-800 dark:hover:text-foreground mb-6 transition-colors">
           <ChevronLeft className="w-5 h-5 mr-1" />
           Back to Directory
         </button>
@@ -172,9 +172,9 @@ export default function ComparePlayers() {
             triggerClassName="text-rose-400 hover:text-rose-600 dark:hover:text-rose-200"
           />
         </div>
-        <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white flex items-center justify-center gap-4">
+        <h1 className="text-3xl sm:text-4xl font-black text-foreground dark:text-foreground flex items-center justify-center gap-4">
           <span className="truncate max-w-[40%] text-right">{player1.full_name.split(" ")[0]}</span>
-          <span className="text-slate-300 dark:text-slate-700 text-2xl font-mono italic">VS</span>
+          <span className="text-slate-300 dark:text-muted-foreground text-2xl font-mono italic">VS</span>
           <span className="truncate max-w-[40%] text-left">{player2.full_name.split(" ")[0]}</span>
         </h1>
       </div>
@@ -182,21 +182,21 @@ export default function ComparePlayers() {
       {/* Overview Cards */}
       <div className="grid grid-cols-3 gap-3 sm:gap-6 mb-8 text-center relative z-10">
         <Card className="p-4 sm:p-6 bg-white dark:bg-slate-900 shadow-xl border-t-4 border-t-primary rounded-3xl overflow-hidden relative">
-          <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Wins</div>
-          <div className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white">{p1Wins}</div>
+          <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Wins</div>
+          <div className="text-4xl sm:text-5xl font-black text-foreground dark:text-foreground">{p1Wins}</div>
         </Card>
         
         <div className="flex flex-col items-center justify-center">
           <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-2 shadow-inner border border-slate-200 dark:border-slate-700">
             <Trophy className="w-5 h-5 text-amber-500" />
           </div>
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Encounters</div>
-          <div className="text-xl font-black text-slate-700 dark:text-slate-300">{matches.length}</div>
+          <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Total Encounters</div>
+          <div className="text-xl font-black text-muted-foreground dark:text-slate-300">{matches.length}</div>
         </div>
 
         <Card className="p-4 sm:p-6 bg-white dark:bg-slate-900 shadow-xl border-t-4 border-t-blue-500 rounded-3xl overflow-hidden relative">
-          <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Wins</div>
-          <div className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white">{p2Wins}</div>
+          <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Wins</div>
+          <div className="text-4xl sm:text-5xl font-black text-foreground dark:text-foreground">{p2Wins}</div>
         </Card>
       </div>
 
@@ -213,17 +213,17 @@ export default function ComparePlayers() {
                   setLocation(`/compare/${e.target.value}/${player2.id}`);
                 }
               }}
-              className="text-xl font-black text-slate-900 dark:text-white bg-transparent appearance-none text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-6 py-1 rounded-xl w-full truncate focus:outline-none"
+              className="text-xl font-black text-foreground dark:text-foreground bg-transparent appearance-none text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-6 py-1 rounded-xl w-full truncate focus:outline-none"
             >
               <option value={player1.id} className="hidden">{player1.full_name}</option>
               {allPlayers.map((p) => (
-                <option key={p.id} value={p.id} className="text-sm font-bold bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                <option key={p.id} value={p.id} className="text-sm font-bold bg-white dark:bg-slate-900 text-foreground dark:text-foreground">
                   {p.full_name}
                 </option>
               ))}
             </select>
             <div className="absolute top-1/2 -translate-y-1/2 right-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-              <ChevronDown className="w-4 h-4 text-slate-400" />
+              <ChevronDown className="w-4 h-4 text-muted-foreground" />
             </div>
           </div>
           
@@ -243,17 +243,17 @@ export default function ComparePlayers() {
                   setLocation(`/compare/${player1.id}/${e.target.value}`);
                 }
               }}
-              className="text-xl font-black text-slate-900 dark:text-white bg-transparent appearance-none text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-6 py-1 rounded-xl w-full truncate focus:outline-none"
+              className="text-xl font-black text-foreground dark:text-foreground bg-transparent appearance-none text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-6 py-1 rounded-xl w-full truncate focus:outline-none"
             >
               <option value={player2.id} className="hidden">{player2.full_name}</option>
               {allPlayers.map((p) => (
-                <option key={p.id} value={p.id} className="text-sm font-bold bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                <option key={p.id} value={p.id} className="text-sm font-bold bg-white dark:bg-slate-900 text-foreground dark:text-foreground">
                   {p.full_name}
                 </option>
               ))}
             </select>
             <div className="absolute top-1/2 -translate-y-1/2 right-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-              <ChevronDown className="w-4 h-4 text-slate-400" />
+              <ChevronDown className="w-4 h-4 text-muted-foreground" />
             </div>
           </div>
           
@@ -296,7 +296,7 @@ export default function ComparePlayers() {
 
       {/* Tale of the Tape */}
       <Card className="p-6 bg-white dark:bg-slate-900 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 mb-8 overflow-hidden">
-        <h3 className="text-sm font-black text-slate-800 dark:text-white mb-6 text-center uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-4">
+        <h3 className="text-sm font-black text-slate-800 dark:text-foreground mb-6 text-center uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-4">
           Tale of the Tape
         </h3>
         
@@ -309,12 +309,12 @@ export default function ComparePlayers() {
             { label: "Joined", icon: Calendar, p1Val: player1.joined_year || "N/A", p2Val: player2.joined_year || "N/A" }
           ].map((stat, idx) => (
             <div key={idx} className="flex items-center justify-between py-2 border-b border-slate-50 dark:border-slate-800/50 last:border-0">
-              <div className="flex-1 text-right text-sm font-bold text-slate-700 dark:text-slate-300 pr-4">{stat.p1Val}</div>
+              <div className="flex-1 text-right text-sm font-bold text-muted-foreground dark:text-slate-300 pr-4">{stat.p1Val}</div>
               <div className="w-24 shrink-0 flex flex-col items-center justify-center">
-                 <stat.icon className="w-4 h-4 text-slate-400 mb-1" />
-                 <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider text-center">{stat.label}</span>
+                 <stat.icon className="w-4 h-4 text-muted-foreground mb-1" />
+                 <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider text-center">{stat.label}</span>
               </div>
-              <div className="flex-1 text-left text-sm font-bold text-slate-700 dark:text-slate-300 pl-4">{stat.p2Val}</div>
+              <div className="flex-1 text-left text-sm font-bold text-muted-foreground dark:text-slate-300 pl-4">{stat.p2Val}</div>
             </div>
           ))}
         </div>
@@ -323,7 +323,7 @@ export default function ComparePlayers() {
       {/* Format Breakdown */}
       {formatBreakdown.length > 0 && (
         <Card className="p-6 bg-white dark:bg-slate-900 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 mb-8 overflow-hidden">
-          <h3 className="text-sm font-black text-slate-800 dark:text-white mb-4 text-center uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-4">
+          <h3 className="text-sm font-black text-slate-800 dark:text-foreground mb-4 text-center uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-4">
             Format Breakdown
           </h3>
           <div className="space-y-4">
@@ -333,15 +333,15 @@ export default function ComparePlayers() {
               return (
                 <div key={f.format}>
                   <div className="flex justify-between text-xs font-black mb-1.5">
-                    <span className={f.p1Wins >= f.p2Wins ? fmtColor1 : "text-slate-400"}>{f.p1Wins}W · {p1Pct}%</span>
-                    <span className="text-slate-400 uppercase tracking-widest">{fmtLabel(f.format)}</span>
-                    <span className={f.p2Wins > f.p1Wins ? fmtColor2 : "text-slate-400"}>{p2Pct}% · {f.p2Wins}W</span>
+                    <span className={f.p1Wins >= f.p2Wins ? fmtColor1 : "text-muted-foreground"}>{f.p1Wins}W · {p1Pct}%</span>
+                    <span className="text-muted-foreground uppercase tracking-widest">{fmtLabel(f.format)}</span>
+                    <span className={f.p2Wins > f.p1Wins ? fmtColor2 : "text-muted-foreground"}>{p2Pct}% · {f.p2Wins}W</span>
                   </div>
                   <div className="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex">
                     <div className="h-full bg-primary transition-all duration-700 rounded-l-full" style={{ width: `${p1Pct}%` }} />
                     <div className="h-full bg-blue-500 transition-all duration-700 rounded-r-full" style={{ width: `${p2Pct}%` }} />
                   </div>
-                  <div className="text-[10px] text-slate-400 text-center mt-1">{f.total} match{f.total !== 1 ? "es" : ""}</div>
+                  <div className="text-[10px] text-muted-foreground text-center mt-1">{f.total} match{f.total !== 1 ? "es" : ""}</div>
                 </div>
               );
             })}
@@ -352,7 +352,7 @@ export default function ComparePlayers() {
       {/* Trend Chart */}
       {eloHistory.length > 0 && (
         <Card className="p-6 bg-white dark:bg-slate-900 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800">
-          <h3 className="text-sm font-black text-slate-800 dark:text-white mb-6 flex items-center gap-2">
+          <h3 className="text-sm font-black text-slate-800 dark:text-foreground mb-6 flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-primary" /> Rivalry ELO Trend
           </h3>
           <div className="h-64 w-full">
@@ -376,8 +376,8 @@ export default function ComparePlayers() {
       {/* Recent Matches */}
       {matches.length > 0 && (
         <div className="mt-8">
-          <h3 className="text-sm font-black text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-            <Swords className="w-4 h-4 text-slate-500" /> Recent Encounters
+          <h3 className="text-sm font-black text-slate-800 dark:text-foreground mb-4 flex items-center gap-2">
+            <Swords className="w-4 h-4 text-muted-foreground" /> Recent Encounters
           </h3>
           <div className="space-y-3">
             {[...matches].reverse().slice(0, 5).map((m) => (
@@ -395,7 +395,7 @@ export default function ComparePlayers() {
       )}
 
       {matches.length === 0 && (
-        <div className="text-center p-8 text-slate-500 bg-slate-50 dark:bg-slate-800/50 rounded-3xl mt-6 border border-slate-200 dark:border-slate-700">
+        <div className="text-center p-8 text-muted-foreground bg-slate-50 dark:bg-slate-800/50 rounded-3xl mt-6 border border-slate-200 dark:border-slate-700">
           No head-to-head matches played yet.
         </div>
       )}
@@ -424,7 +424,7 @@ function AiPredictionCard({ player1, player2, p1Wins, p2Wins, matches }: { playe
   };
 
   return (
-    <Card className="p-6 bg-gradient-to-br from-indigo-900 to-violet-900 text-white rounded-3xl shadow-2xl mb-8 relative overflow-hidden border border-indigo-500/30">
+    <Card className="p-6 bg-gradient-to-br from-indigo-900 to-violet-900 text-foreground rounded-3xl shadow-2xl mb-8 relative overflow-hidden border border-indigo-500/30">
       {/* Decorative background flair */}
       <div className="absolute -top-12 -right-12 w-32 h-32 bg-violet-500/20 blur-3xl rounded-full pointer-events-none" />
       <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-indigo-500/20 blur-3xl rounded-full pointer-events-none" />
@@ -464,7 +464,7 @@ function AiPredictionCard({ player1, player2, p1Wins, p2Wins, matches }: { playe
               <button
                 onClick={handleGenerateDeepAnalysis}
                 disabled={isLoading}
-                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-900/50"
+                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-foreground px-4 py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-900/50"
               >
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-amber-300" />}
                 {isLoading ? "Consulting AI..." : "Generate Deep AI Analysis"}

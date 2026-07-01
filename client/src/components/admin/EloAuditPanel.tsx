@@ -235,7 +235,7 @@ export function EloAuditPanel() {
   const renderExpandedTable = (entry: EloLogEntry, highlightPlayerId?: string) => (
     <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs text-slate-500 dark:text-slate-400">
+        <table className="w-full text-left text-xs text-muted-foreground dark:text-muted-foreground">
           <thead className="uppercase tracking-wider text-[10px] bg-slate-50 dark:bg-slate-800/50">
             <tr>
               <th className="px-3 py-2 rounded-l-lg font-bold">Player</th>
@@ -261,7 +261,7 @@ export function EloAuditPanel() {
                   <td className={`px-3 py-2 text-center font-black ${catChange > 0 ? "text-primary" : "text-rose-500"}`}>
                     {catChange > 0 ? "+" : ""}{catChange}
                   </td>
-                  <td className="px-3 py-2 text-center font-bold text-slate-700 dark:text-slate-300">{pl.new_elo}</td>
+                  <td className="px-3 py-2 text-center font-bold text-muted-foreground dark:text-slate-300">{pl.new_elo}</td>
                   <td className={`px-3 py-2 text-center font-bold ${ovChange > 0 ? "text-primary" : "text-rose-400"}`}>
                     {ovChange > 0 ? "+" : ""}{ovChange}
                   </td>
@@ -287,18 +287,18 @@ export function EloAuditPanel() {
             onClick={() => { setSelectedPlayer(null); setEloHistory([]); }}
             className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
           >
-            <ArrowLeft className="w-4 h-4 text-slate-500" />
+            <ArrowLeft className="w-4 h-4 text-muted-foreground" />
           </button>
           <div>
-            <h3 className="font-black text-slate-800 dark:text-white">{selectedPlayer.full_name}</h3>
-            <p className="text-xs text-slate-400">ELO History — last 50 matches</p>
+            <h3 className="font-black text-slate-800 dark:text-foreground">{selectedPlayer.full_name}</h3>
+            <p className="text-xs text-muted-foreground">ELO History — last 50 matches</p>
           </div>
         </div>
 
         {historyLoading && <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>}
 
         {!historyLoading && eloHistory.length === 0 && (
-          <div className={`${cardCls} text-center py-10 text-slate-400 text-sm`}>
+          <div className={`${cardCls} text-center py-10 text-muted-foreground text-sm`}>
             No ELO history found. Run Recalculate ELOs from the history tab.
           </div>
         )}
@@ -326,10 +326,10 @@ export function EloAuditPanel() {
                         {won ? "WIN" : "LOSS"}
                       </span>
                     </div>
-                    <p className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate mt-0.5">
+                    <p className="text-xs font-bold text-muted-foreground dark:text-slate-200 truncate mt-0.5">
                       vs {entry.opponent_name || "Unknown"}
                     </p>
-                    <p className="text-[10px] text-slate-400">
+                    <p className="text-[10px] text-muted-foreground">
                       {entry.match_date ? new Date(entry.match_date).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "—"}
                       {entry.match_score && <span className="ml-2 font-mono">{entry.match_score}</span>}
                     </p>
@@ -337,9 +337,9 @@ export function EloAuditPanel() {
 
                   {/* Category ELO change */}
                   <div className="text-right shrink-0">
-                    <p className="text-[10px] text-slate-400 font-bold">Category ELO</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-                      {entry.previous_elo} → <span className="font-black text-slate-800 dark:text-white">{entry.new_elo}</span>
+                    <p className="text-[10px] text-muted-foreground font-bold">Category ELO</p>
+                    <p className="text-xs text-muted-foreground dark:text-muted-foreground font-mono">
+                      {entry.previous_elo} → <span className="font-black text-slate-800 dark:text-foreground">{entry.new_elo}</span>
                     </p>
                     <p className={`text-sm font-black ${entry.elo_change > 0 ? "text-primary" : "text-rose-500"}`}>
                       {entry.elo_change > 0 ? "+" : ""}{entry.elo_change}
@@ -348,13 +348,13 @@ export function EloAuditPanel() {
 
                   {/* Overall ELO change */}
                   <div className="text-right shrink-0 border-l border-slate-100 dark:border-slate-800 pl-3 ml-1">
-                    <p className="text-[10px] text-slate-400 font-bold">Overall</p>
+                    <p className="text-[10px] text-muted-foreground font-bold">Overall</p>
                     <p className={`text-sm font-black ${overallChange > 0 ? "text-primary" : "text-rose-400"}`}>
                       {overallChange > 0 ? "+" : ""}{overallChange}
                     </p>
                   </div>
 
-                  {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-400 shrink-0" /> : <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />}
+                  {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />}
                 </div>
 
                 {isExpanded && renderExpandedTable(entry, selectedPlayer.id)}
@@ -371,7 +371,7 @@ export function EloAuditPanel() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h3 className="font-black text-slate-800 dark:text-white">ELO Audit Log</h3>
+          <h3 className="font-black text-slate-800 dark:text-foreground">ELO Audit Log</h3>
           <InfoModal
             title="ELO AUDIT & RECALCULATION"
             items={[
@@ -381,14 +381,14 @@ export function EloAuditPanel() {
           />
         </div>
         <button onClick={load} className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
-          <RefreshCw className="w-4 h-4 text-slate-500" />
+          <RefreshCw className="w-4 h-4 text-muted-foreground" />
         </button>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-2">
         {(["history", "snapshot", "matchwise"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)}
-            className={`px-4 py-3 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition text-center ${tab === t ? "bg-primary text-white shadow-md" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-primary/50"}`}>
+            className={`px-4 py-3 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition text-center ${tab === t ? "bg-primary text-foreground shadow-md" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-300 hover:border-primary/50"}`}>
             {t === "history" ? "Recalculation History" : t === "snapshot" ? "Current ELO Snapshot" : "Matchwise ELO"}
           </button>
         ))}
@@ -397,10 +397,10 @@ export function EloAuditPanel() {
       {tab === "matchwise" && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <p className="text-xs text-slate-400 dark:text-slate-500">Most recent confirmed matches</p>
+            <p className="text-xs text-muted-foreground dark:text-muted-foreground">Most recent confirmed matches</p>
           </div>
           {globalMatches.length === 0 && (
-             <div className={`${cardCls} text-center py-10 text-slate-400 text-sm`}>
+             <div className={`${cardCls} text-center py-10 text-muted-foreground text-sm`}>
                No match history available. Run the Recalculate script in the History tab.
              </div>
           )}
@@ -416,15 +416,15 @@ export function EloAuditPanel() {
                       <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full ${catColor}`}>
                         {entry.match_category || entry.category}
                       </span>
-                      <span className="text-[10px] text-slate-400 font-medium">
+                      <span className="text-[10px] text-muted-foreground font-medium">
                         {entry.match_date ? new Date(entry.match_date).toLocaleString() : "—"}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-200">
+                    <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground dark:text-slate-200">
                       <span>{entry.all_players_logs?.length} players updated</span>
                     </div>
                   </div>
-                  {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-400 shrink-0" /> : <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />}
+                  {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />}
                 </div>
                 {isExpanded && renderExpandedTable(entry)}
               </div>
@@ -436,7 +436,7 @@ export function EloAuditPanel() {
       {tab === "history" && (
         <div className="space-y-3">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs text-slate-400 dark:text-slate-500">Log of all manual ELO re-sync actions</p>
+            <p className="text-xs text-muted-foreground dark:text-muted-foreground">Log of all manual ELO re-sync actions</p>
             <button 
               onClick={handleRecalculate}
               disabled={recalcLoading}
@@ -447,7 +447,7 @@ export function EloAuditPanel() {
             </button>
           </div>
           {logs.length === 0 && (
-            <div className={`${cardCls} text-center py-10 text-slate-400 text-sm`}>
+            <div className={`${cardCls} text-center py-10 text-muted-foreground text-sm`}>
               No ELO recalculation events yet.
             </div>
           )}
@@ -463,10 +463,10 @@ export function EloAuditPanel() {
                     <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${isFailed ? "bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400" : "bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary"}`}>
                       {isFailed ? "FAILED" : "SUCCESS"}
                     </span>
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{log.action.replace(/_/g, " ")}</span>
+                    <span className="text-xs font-bold text-muted-foreground dark:text-slate-200">{log.action.replace(/_/g, " ")}</span>
                   </div>
-                  {log.details && <p className="text-xs text-slate-500 dark:text-slate-400">{log.details}</p>}
-                  <p className="text-[10px] text-slate-400 mt-1">{new Date(log.created_at).toLocaleString()}</p>
+                  {log.details && <p className="text-xs text-muted-foreground dark:text-muted-foreground">{log.details}</p>}
+                  <p className="text-[10px] text-muted-foreground mt-1">{new Date(log.created_at).toLocaleString()}</p>
                 </div>
               </div>
             );
@@ -476,7 +476,7 @@ export function EloAuditPanel() {
 
       {tab === "snapshot" && (
         <div className="space-y-2">
-          <p className="text-xs text-slate-400 dark:text-slate-500">Top 30 players — click any row to see full ELO history</p>
+          <p className="text-xs text-muted-foreground dark:text-muted-foreground">Top 30 players — click any row to see full ELO history</p>
           {players.map((p, i) => {
             const total = p.wins + p.losses;
             const winRate = total > 0 ? Math.round((p.wins / total) * 100) : 0;
@@ -486,10 +486,10 @@ export function EloAuditPanel() {
                 onClick={() => loadPlayerHistory(p)}
                 className={`${cardCls} flex items-center gap-3 w-full text-left hover:border-primary hover:shadow-md transition-all group`}
               >
-                <span className={`w-7 text-center text-xs font-black shrink-0 ${i < 3 ? "text-amber-500" : "text-slate-400"}`}>#{i + 1}</span>
+                <span className={`w-7 text-center text-xs font-black shrink-0 ${i < 3 ? "text-amber-500" : "text-muted-foreground"}`}>#{i + 1}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-slate-800 dark:text-white text-sm truncate group-hover:text-primary dark:group-hover:text-primary transition-colors">{p.full_name}</p>
-                  <p className="text-[10px] text-slate-400">{p.wins}W {p.losses}L · {winRate}% WR</p>
+                  <p className="font-bold text-slate-800 dark:text-foreground text-sm truncate group-hover:text-primary dark:group-hover:text-primary transition-colors">{p.full_name}</p>
+                  <p className="text-[10px] text-muted-foreground">{p.wins}W {p.losses}L · {winRate}% WR</p>
                   <div className="flex gap-1.5 mt-1 flex-wrap">
                     {p.singles_elo != null && <span className="text-[9px] font-black bg-sky-50 dark:bg-sky-950/30 text-sky-600 dark:text-sky-400 px-1.5 py-0.5 rounded-full">S: {p.singles_elo}</span>}
                     {p.doubles_elo != null && <span className="text-[9px] font-black bg-violet-50 dark:bg-violet-950/30 text-violet-600 dark:text-violet-400 px-1.5 py-0.5 rounded-full">D: {p.doubles_elo}</span>}
@@ -498,9 +498,9 @@ export function EloAuditPanel() {
                 </div>
                 <div className="text-right shrink-0">
                   <p className="font-black text-primary dark:text-primary text-base">{p.elo_rating}</p>
-                  <p className="text-[10px] text-slate-400 uppercase tracking-wider">Overall</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Overall</p>
                 </div>
-                <TrendingUp className="w-4 h-4 text-slate-300 dark:text-slate-600 shrink-0 group-hover:text-primary transition-colors" />
+                <TrendingUp className="w-4 h-4 text-slate-300 dark:text-muted-foreground shrink-0 group-hover:text-primary transition-colors" />
               </button>
             );
           })}

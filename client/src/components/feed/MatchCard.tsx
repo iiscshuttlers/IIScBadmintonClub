@@ -176,7 +176,7 @@ export function MatchCard({
       {members.map(({ player, eloChange }, i) => {
         const nameEl = (
           <div className="flex-1 min-w-0">
-            <span className={`font-bold text-xs block group-hover/p:underline ${isApp ? "line-clamp-2 whitespace-normal leading-tight" : "truncate"} ${win ? "text-primary dark:text-primary" : "text-slate-700 dark:text-slate-300"}`}>
+            <span className={`font-bold text-xs block group-hover/p:underline ${isApp ? "line-clamp-2 whitespace-normal leading-tight" : "truncate"} ${win ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-slate-300"}`}>
               {player.full_name}
             </span>
             {eloChange != null ? (
@@ -184,7 +184,7 @@ export function MatchCard({
                 {eloChange > 0 ? "+" : ""}{eloChange} ELO
               </span>
             ) : getCategoryElo(player) ? (
-              <span className="block text-[10px] font-bold text-slate-400 dark:text-slate-500">
+              <span className="block text-[10px] font-bold text-muted-foreground dark:text-muted-foreground">
                 {getCategoryElo(player)} ELO
               </span>
             ) : null}
@@ -199,12 +199,12 @@ export function MatchCard({
                 className={`w-7 h-7 rounded-full object-cover shadow-sm ${win ? "ring-2 ring-primary ring-offset-1 dark:ring-offset-slate-900" : dim ? "grayscale opacity-70" : ""}`}
               />
             ) : (
-              <div className={`w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-500 shadow-sm ${win ? "ring-2 ring-primary ring-offset-1 dark:ring-offset-slate-900" : dim ? "grayscale opacity-70" : ""}`}>
+              <div className={`w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-muted-foreground shadow-sm ${win ? "ring-2 ring-primary ring-offset-1 dark:ring-offset-slate-900" : dim ? "grayscale opacity-70" : ""}`}>
                 {player.full_name?.substring(0, 2).toUpperCase() || "??"}
               </div>
             )}
             {win && (
-              <div className="absolute -bottom-1 -right-1 bg-primary text-white rounded-full p-0.5 border border-white dark:border-slate-900 shadow-sm">
+              <div className="absolute -bottom-1 -right-1 bg-primary text-foreground rounded-full p-0.5 border border-white dark:border-slate-900 shadow-sm">
                 <Trophy className="w-2 h-2" />
               </div>
             )}
@@ -259,7 +259,7 @@ export function MatchCard({
     >
       {/* LIVE NOW Badge */}
       {isLiveNow && (
-        <div className="absolute top-0 left-0 bg-gradient-to-r from-red-500 to-rose-600 text-white text-[10px] font-black uppercase tracking-wider px-4 py-1.5 rounded-br-xl shadow-md z-10 flex items-center gap-1.5">
+        <div className="absolute top-0 left-0 bg-gradient-to-r from-red-500 to-rose-600 text-foreground text-[10px] font-black uppercase tracking-wider px-4 py-1.5 rounded-br-xl shadow-md z-10 flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-white animate-ping inline-block" />
           LIVE NOW
         </div>
@@ -277,32 +277,32 @@ export function MatchCard({
 
       {/* Match of the Day Badge */}
       {isMatchOfTheDay && !isLiveNow && (
-        <div className="absolute top-0 left-0 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black uppercase tracking-wider px-4 py-1.5 rounded-br-xl shadow-md z-10 flex items-center gap-1.5">
+        <div className="absolute top-0 left-0 bg-gradient-to-r from-amber-400 to-orange-500 text-foreground text-[10px] font-black uppercase tracking-wider px-4 py-1.5 rounded-br-xl shadow-md z-10 flex items-center gap-1.5">
           <Sparkles className="w-3.5 h-3.5" /> Match of the Day
         </div>
       )}
 
       {/* Upset Badge */}
       {upsetDiff > 0 && (
-        <div className="absolute top-0 right-0 bg-gradient-to-r from-rose-500 to-red-600 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-bl-xl shadow-md z-10 flex items-center gap-1.5">
+        <div className="absolute top-0 right-0 bg-gradient-to-r from-rose-500 to-red-600 text-foreground text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-bl-xl shadow-md z-10 flex items-center gap-1.5">
           <TrendingUp className="w-3.5 h-3.5 animate-bounce" /> MASSIVE UPSET
         </div>
       )}
 
       <div className="flex items-center justify-center gap-2 mb-3 mt-2 md:mt-0 flex-wrap">
-        <span className="flex items-center gap-1 text-xs font-bold text-slate-400 dark:text-slate-500">
+        <span className="flex items-center gap-1 text-xs font-bold text-muted-foreground dark:text-muted-foreground">
           <Swords className="w-3.5 h-3.5" />
           {match.is_friendly === false ? "Tournament" : "Friendly"}
         </span>
         {match.category && (
-          <span className="text-xs font-black text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+          <span className="text-xs font-black text-muted-foreground dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
             {getDisplayCategory()}
           </span>
         )}
       </div>
 
       {/* Date */}
-      <div className="text-[11px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest text-center mb-3">
+      <div className="text-[11px] text-muted-foreground dark:text-muted-foreground font-bold uppercase tracking-widest text-center mb-3">
         {new Date(match.created_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
       </div>
 
@@ -311,7 +311,7 @@ export function MatchCard({
         {/* Teams */}
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 mb-3">
           {renderTeam(team1, team1Win, hasWinner && !team1Win, "left")}
-          <div className="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest text-center px-1">
+          <div className="text-[10px] text-muted-foreground dark:text-muted-foreground font-black uppercase tracking-widest text-center px-1">
             vs
           </div>
           {renderTeam(team2, team2Win, hasWinner && !team2Win, "right")}
@@ -322,22 +322,22 @@ export function MatchCard({
           <div className="text-center border-t border-slate-200 dark:border-slate-700/60 pt-4 mb-4 relative">
             <div className="flex items-center justify-center gap-4">
               <div className={`flex items-center relative transition-all ${team1Win ? "scale-110" : team2Win ? "opacity-60 grayscale" : ""}`}>
-                <span className={`text-4xl sm:text-5xl font-black tracking-tighter leading-none ${team1Win ? "bg-gradient-to-br from-primary to-teal-600 bg-clip-text text-transparent drop-shadow-md" : "text-slate-400 dark:text-slate-500"}`}>
+                <span className={`text-4xl sm:text-5xl font-black tracking-tighter leading-none ${team1Win ? "bg-gradient-to-br from-primary to-teal-600 bg-clip-text text-transparent drop-shadow-md" : "text-muted-foreground dark:text-muted-foreground"}`}>
                   {setsWonP1}
                 </span>
               </div>
               
               <div className="flex flex-col items-center justify-center">
-                <span className="text-slate-300 dark:text-slate-600 text-4xl sm:text-5xl font-black tracking-tighter leading-none mx-2">–</span>
+                <span className="text-slate-300 dark:text-muted-foreground text-4xl sm:text-5xl font-black tracking-tighter leading-none mx-2">–</span>
               </div>
 
               <div className={`flex items-center relative transition-all ${team2Win ? "scale-110" : team1Win ? "opacity-60 grayscale" : ""}`}>
-                <span className={`text-4xl sm:text-5xl font-black tracking-tighter leading-none ${team2Win ? "bg-gradient-to-br from-primary to-teal-600 bg-clip-text text-transparent drop-shadow-md" : "text-slate-400 dark:text-slate-500"}`}>
+                <span className={`text-4xl sm:text-5xl font-black tracking-tighter leading-none ${team2Win ? "bg-gradient-to-br from-primary to-teal-600 bg-clip-text text-transparent drop-shadow-md" : "text-muted-foreground dark:text-muted-foreground"}`}>
                   {setsWonP2}
                 </span>
               </div>
             </div>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mt-2">sets</div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground dark:text-muted-foreground mt-2">sets</div>
           </div>
         )}
 
@@ -348,9 +348,9 @@ export function MatchCard({
               const p1Won = s.p1 > s.p2;
               return (
                 <div key={i} className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                  <span className={`text-2xl text-center tabular-nums tracking-tight ${p1Won ? "font-black text-primary dark:text-primary" : "font-bold text-slate-400 dark:text-slate-500"}`}>{s.p1}</span>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-800 rounded-full px-2.5 py-0.5 border border-slate-200 dark:border-slate-700 whitespace-nowrap">Set {i + 1}</span>
-                  <span className={`text-2xl text-center tabular-nums tracking-tight ${!p1Won ? "font-black text-primary dark:text-primary" : "font-bold text-slate-400 dark:text-slate-500"}`}>{s.p2}</span>
+                  <span className={`text-2xl text-center tabular-nums tracking-tight ${p1Won ? "font-black text-primary dark:text-primary" : "font-bold text-muted-foreground dark:text-muted-foreground"}`}>{s.p1}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground dark:text-muted-foreground bg-white dark:bg-slate-800 rounded-full px-2.5 py-0.5 border border-slate-200 dark:border-slate-700 whitespace-nowrap">Set {i + 1}</span>
+                  <span className={`text-2xl text-center tabular-nums tracking-tight ${!p1Won ? "font-black text-primary dark:text-primary" : "font-bold text-muted-foreground dark:text-muted-foreground"}`}>{s.p2}</span>
                 </div>
               );
             })}
@@ -378,12 +378,12 @@ export function MatchCard({
 
       {/* Result recap */}
       {hasWinner && winnerMembers && loserMembers && (
-        <div className="text-center text-[11px] text-slate-500 dark:text-slate-400 mt-3 px-2 leading-snug">
+        <div className="text-center text-[11px] text-muted-foreground dark:text-muted-foreground mt-3 px-2 leading-snug">
           <span className={isApp ? "block" : undefined}>
-            <span className="font-bold text-slate-700 dark:text-slate-200">{joinNames(winnerMembers)}</span> defeated{" "}
-            <span className="font-bold text-slate-700 dark:text-slate-200">{joinNames(loserMembers)}</span>
+            <span className="font-bold text-muted-foreground dark:text-slate-200">{joinNames(winnerMembers)}</span> defeated{" "}
+            <span className="font-bold text-muted-foreground dark:text-slate-200">{joinNames(loserMembers)}</span>
           </span>{" "}
-          <span className={isApp ? "block font-bold text-slate-700 dark:text-slate-200 mt-0.5" : undefined}>{winnerSetCount}–{loserSetCount}</span>{" "}
+          <span className={isApp ? "block font-bold text-muted-foreground dark:text-slate-200 mt-0.5" : undefined}>{winnerSetCount}–{loserSetCount}</span>{" "}
           {displayScore && <span className={isApp ? "block" : undefined}>({displayScore})</span>}
         </div>
       )}
@@ -417,7 +417,7 @@ export function MatchCard({
       {aiSummary && !isGeneratingSummary && (
         <motion.div 
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-          className="mt-4 p-4 rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-950 text-white shadow-lg border border-indigo-500/30 relative overflow-hidden"
+          className="mt-4 p-4 rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-950 text-foreground shadow-lg border border-indigo-500/30 relative overflow-hidden"
         >
           <div className="absolute -top-6 -right-6 text-indigo-500/20">
             <Sparkles className="w-24 h-24" />
@@ -444,7 +444,7 @@ export function MatchCard({
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${
               aiSummary 
                 ? "text-indigo-500 bg-indigo-50 dark:bg-indigo-500/20 opacity-70" 
-                : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                : "text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
             }`}
           >
             {isGeneratingSummary ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
@@ -454,7 +454,7 @@ export function MatchCard({
           <button
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsScorecardOpen(true); }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
           >
             <BarChart2 className="w-3.5 h-3.5" /> Scorecard
           </button>
@@ -472,7 +472,7 @@ export function MatchCard({
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${
               isKudosed
                 ? "text-rose-500 bg-rose-50 dark:bg-rose-500/20"
-                : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                : "text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
             }`}
           >
             <Heart className="w-4 h-4" fill={isKudosed ? "currentColor" : "none"} stroke="currentColor" />
@@ -486,7 +486,7 @@ export function MatchCard({
               e.stopPropagation();
               if (onShare) onShare();
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
           >
             <Share2 className="w-4 h-4" /> Share
           </button>
@@ -497,7 +497,7 @@ export function MatchCard({
           <div className="flex justify-center">
             <button
               onClick={() => setIsEditVideoOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
             >
               <Edit2 className="w-3.5 h-3.5" />
               {highlightUrl ? "Edit Video" : "Add Video"}

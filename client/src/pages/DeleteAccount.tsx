@@ -31,25 +31,25 @@ export default function DeleteAccount() {
             <div className="w-14 h-14 rounded-full bg-rose-100 dark:bg-rose-950/40 flex items-center justify-center mx-auto">
               <Trash2 className="w-7 h-7 text-rose-600 dark:text-rose-400" />
             </div>
-            <h2 className="text-xl font-black text-slate-900 dark:text-white">Delete Your Account</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <h2 className="text-xl font-black text-foreground dark:text-foreground">Delete Your Account</h2>
+            <p className="text-sm text-muted-foreground dark:text-muted-foreground">
               To delete your account through the app, please sign in first.
             </p>
-            <button onClick={() => navigate("/join")} className="w-full px-5 py-3 bg-primary hover:bg-primary text-white font-bold rounded-xl transition">
+            <button onClick={() => navigate("/join")} className="w-full px-5 py-3 bg-primary hover:bg-primary text-foreground font-bold rounded-xl transition">
               Sign In to Delete
             </button>
             <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
-              <p className="text-xs text-slate-400 dark:text-slate-500 mb-2">
+              <p className="text-xs text-muted-foreground dark:text-muted-foreground mb-2">
                 Can't sign in? You can also request account deletion by emailing us:
               </p>
               <a
                 href="mailto:iiscbadmintonclub@gmail.com?subject=Account%20Deletion%20Request&body=Please%20delete%20my%20account.%20My%20registered%20email%20is%3A%20"
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition"
               >
                 <AlertTriangle className="w-4 h-4 text-amber-500" />
                 Email: iiscbadmintonclub@gmail.com
               </a>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2">
+              <p className="text-[10px] text-muted-foreground dark:text-muted-foreground mt-2">
                 Include your registered email address. We will process your request within 7 business days.
               </p>
             </div>
@@ -116,11 +116,11 @@ export default function DeleteAccount() {
           <div className="w-14 h-14 rounded-full bg-primary/15 dark:bg-primary/40 flex items-center justify-center mx-auto mb-4">
             <ShieldCheck className="w-7 h-7 text-primary dark:text-primary" />
           </div>
-          <h2 className="text-xl font-black text-slate-900 dark:text-white mb-2">Account Deleted</h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+          <h2 className="text-xl font-black text-foreground dark:text-foreground mb-2">Account Deleted</h2>
+          <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-6">
             Your data has been removed. We're sorry to see you go.
           </p>
-          <button onClick={() => navigate("/")} className="w-full py-3 rounded-xl bg-primary hover:bg-primary text-white font-bold transition">
+          <button onClick={() => navigate("/")} className="w-full py-3 rounded-xl bg-primary hover:bg-primary text-foreground font-bold transition">
             Go to Home
           </button>
         </div>
@@ -138,8 +138,8 @@ export default function DeleteAccount() {
               <Trash2 className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="font-black text-slate-900 dark:text-white">Delete My Account</h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400">{session.user.email}</p>
+              <h1 className="font-black text-foreground dark:text-foreground">Delete My Account</h1>
+              <p className="text-xs text-muted-foreground dark:text-muted-foreground">{session.user.email}</p>
             </div>
           </div>
 
@@ -161,7 +161,7 @@ export default function DeleteAccount() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-2">
                     Reason for leaving (optional)
                   </label>
                   <textarea
@@ -170,17 +170,17 @@ export default function DeleteAccount() {
                     placeholder="We'd love to know how we can improve..."
                     rows={3}
                     maxLength={500}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-rose-500 resize-none"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-foreground outline-none focus:ring-2 focus:ring-rose-500 resize-none"
                   />
                 </div>
 
                 <div className="flex gap-3">
                   <button onClick={() => window.history.back()}
-                    className="flex-1 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                    className="flex-1 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-300 font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition">
                     Cancel
                   </button>
                   <button onClick={() => setStep("final")}
-                    className="flex-1 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm transition shadow-md shadow-rose-500/20">
+                    className="flex-1 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-foreground font-bold text-sm transition shadow-md shadow-rose-500/20">
                     Continue
                   </button>
                 </div>
@@ -190,7 +190,7 @@ export default function DeleteAccount() {
             {step === "final" && (
               <>
                 <div className="text-center space-y-2">
-                  <p className="text-sm text-slate-600 dark:text-slate-300">
+                  <p className="text-sm text-muted-foreground dark:text-slate-300">
                     Type <strong className="font-black text-rose-600">delete my account</strong> to confirm permanent deletion.
                   </p>
                 </div>
@@ -205,13 +205,13 @@ export default function DeleteAccount() {
 
                 <div className="flex gap-3">
                   <button onClick={() => setStep("confirm")} disabled={loading}
-                    className="flex-1 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition disabled:opacity-50">
+                    className="flex-1 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-300 font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition disabled:opacity-50">
                     Back
                   </button>
                   <button
                     onClick={handleDelete}
                     disabled={loading || confirmText.trim().toLowerCase() !== "delete my account"}
-                    className="flex-1 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-bold text-sm transition flex items-center justify-center gap-2"
+                    className="flex-1 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-foreground font-bold text-sm transition flex items-center justify-center gap-2"
                   >
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                     {loading ? "Deleting…" : "Delete Forever"}
@@ -220,7 +220,7 @@ export default function DeleteAccount() {
               </>
             )}
 
-            <p className="text-center text-xs text-slate-400 dark:text-slate-500">
+            <p className="text-center text-xs text-muted-foreground dark:text-muted-foreground">
               If you just need a break, consider{" "}
               <button onClick={async () => { await supabase.auth.signOut(); navigate("/"); }}
                 className="text-primary dark:text-primary font-bold hover:underline inline-flex items-center gap-1">

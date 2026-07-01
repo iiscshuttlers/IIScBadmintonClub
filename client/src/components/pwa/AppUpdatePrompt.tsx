@@ -46,14 +46,14 @@ export function AppUpdatePrompt({ updateInfo, onDismiss }: Props) {
               {/* Green accent header */}
               <div className="bg-gradient-to-r from-primary to-primary px-5 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-white" />
-                  <span className="text-white font-bold text-base">
+                  <Sparkles className="w-5 h-5 text-foreground" />
+                  <span className="text-foreground font-bold text-base">
                     Update Available
                   </span>
                 </div>
                 <button
                   onClick={onDismiss}
-                  className="text-white/80 hover:text-white transition-colors"
+                  className="text-foreground/80 hover:text-foreground transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -73,7 +73,7 @@ export function AppUpdatePrompt({ updateInfo, onDismiss }: Props) {
                 <div className="flex gap-3 mt-4">
                   <button
                     onClick={handleUpdate}
-                    className="flex-1 flex items-center justify-center gap-2 bg-primary hover:bg-primary active:scale-95 text-white py-3 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 transition-all"
+                    className="flex-1 flex items-center justify-center gap-2 bg-primary hover:bg-primary active:scale-95 text-foreground py-3 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 transition-all"
                   >
                     <Download className="w-4 h-4" />
                     Update Now

@@ -92,7 +92,7 @@ export function VideoPlayerModal({ video, onClose }: Props) {
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 z-50 text-white/70 hover:text-white bg-black/60 hover:bg-black/80 rounded-full p-2 transition-colors"
+          className="absolute top-3 right-3 z-50 text-foreground/70 hover:text-foreground bg-black/60 hover:bg-black/80 rounded-full p-2 transition-colors"
           aria-label="Close"
         >
           <X className="w-5 h-5" />
@@ -108,13 +108,13 @@ export function VideoPlayerModal({ video, onClose }: Props) {
                   {video.category}
                 </p>
               )}
-              <h2 className="text-white font-bold text-sm md:text-base leading-tight pr-8">
+              <h2 className="text-foreground font-bold text-sm md:text-base leading-tight pr-8">
                 {video.title}
               </h2>
             </div>
             <button 
               onClick={() => setEnableScoringMode(v => !v)}
-              className={`text-xs font-bold px-3 py-1.5 rounded-full transition-colors shrink-0 ${enableScoringMode ? 'bg-rose-500 text-white shadow-[0_0_15px_rgba(244,63,94,0.5)]' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}
+              className={`text-xs font-bold px-3 py-1.5 rounded-full transition-colors shrink-0 ${enableScoringMode ? 'bg-rose-500 text-foreground shadow-[0_0_15px_rgba(244,63,94,0.5)]' : 'bg-white/10 text-foreground/70 hover:bg-white/20'}`}
             >
               {enableScoringMode ? 'Exit Scoring' : 'Score Mode'}
             </button>
@@ -138,7 +138,7 @@ export function VideoPlayerModal({ video, onClose }: Props) {
           </div>
 
           {/* Keyboard shortcuts hint */}
-          <div className="hidden md:flex px-4 py-2 bg-gray-950 gap-4 text-white/30 text-[11px] border-t border-white/5">
+          <div className="hidden md:flex px-4 py-2 bg-gray-950 gap-4 text-foreground/30 text-[11px] border-t border-white/5">
             <span>Space / K — play/pause</span>
             <span>← / → — skip 10s</span>
             <span>F — fullscreen</span>
@@ -150,7 +150,7 @@ export function VideoPlayerModal({ video, onClose }: Props) {
         {chapters.length > 0 && (
           <div className="w-full lg:w-64 bg-gray-950 border-t lg:border-t-0 lg:border-l border-white/5 flex flex-col max-h-52 lg:max-h-none overflow-y-auto">
             <div className="px-4 py-3 border-b border-white/5 sticky top-0 bg-gray-950 z-10">
-              <h3 className="text-white/50 text-xs font-bold uppercase tracking-widest">
+              <h3 className="text-foreground/50 text-xs font-bold uppercase tracking-widest">
                 Chapters
               </h3>
             </div>
@@ -164,15 +164,15 @@ export function VideoPlayerModal({ video, onClose }: Props) {
                     onClick={() => playerRef.current?.seekTo(ch.time)}
                   >
                     <Clock
-                      className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${isActive ? "text-primary" : "text-white/30"}`}
+                      className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${isActive ? "text-primary" : "text-foreground/30"}`}
                     />
                     <div className="min-w-0">
                       <p
-                        className={`text-sm font-semibold leading-snug truncate ${isActive ? "text-primary" : "text-white/70"}`}
+                        className={`text-sm font-semibold leading-snug truncate ${isActive ? "text-primary" : "text-foreground/70"}`}
                       >
                         {ch.title}
                       </p>
-                      <p className="text-white/30 text-xs tabular-nums mt-0.5">
+                      <p className="text-foreground/30 text-xs tabular-nums mt-0.5">
                         {fmt(ch.time)}
                       </p>
                     </div>

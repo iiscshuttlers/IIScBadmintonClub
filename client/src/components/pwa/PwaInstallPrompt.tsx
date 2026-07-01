@@ -81,7 +81,7 @@ export function PwaInstallPrompt() {
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -50 }}
-          className="bg-gradient-to-r from-blue-600 to-indigo-600 shadow-md text-white px-4 py-3 flex items-center justify-between"
+          className="bg-gradient-to-r from-blue-600 to-indigo-600 shadow-md text-foreground px-4 py-3 flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
             <div className="bg-white/20 p-2 rounded-lg">
@@ -112,7 +112,7 @@ export function PwaInstallPrompt() {
             )}
             <button
               onClick={dismissInstall}
-              className="text-white/60 hover:text-white p-1 rounded-md transition-colors"
+              className="text-foreground/60 hover:text-foreground p-1 rounded-md transition-colors"
               title="Dismiss"
             >
               <X className="w-5 h-5" />

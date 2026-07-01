@@ -45,7 +45,7 @@ const STEPS = [
         ].map((t) => (
           <div key={t.name} className={`font-bold ${t.color}`}>
             <div>{t.name}</div>
-            <div className="text-[10px] text-slate-500 font-normal">{t.elo}</div>
+            <div className="text-[10px] text-muted-foreground font-normal">{t.elo}</div>
           </div>
         ))}
       </div>
@@ -59,7 +59,7 @@ const STEPS = [
     accent: "from-violet-500 to-purple-500",
     icon: <Swords className="w-12 h-12 text-violet-400 opacity-80" />,
     detail: (
-      <div className="flex items-center justify-center gap-3 mt-3 text-xs text-slate-400">
+      <div className="flex items-center justify-center gap-3 mt-3 text-xs text-muted-foreground">
         <div className="text-center">
           <div className="w-8 h-8 rounded-full bg-violet-500/20 text-violet-300 flex items-center justify-center font-black mx-auto mb-1">1</div>
           Submit
@@ -154,7 +154,7 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
           {/* Dismiss */}
           <button
             onClick={dismiss}
-            className="absolute top-4 right-4 p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white/60 hover:text-white transition"
+            className="absolute top-4 right-4 p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-foreground/60 hover:text-foreground transition"
           >
             <X className="w-4 h-4" />
           </button>
@@ -165,8 +165,8 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
               <div className="flex justify-center mb-4">{s.icon}</div>
             )}
 
-            <h2 className="text-xl font-black text-white mb-3">{s.title}</h2>
-            <p className="text-sm text-slate-400 leading-relaxed">{s.body}</p>
+            <h2 className="text-xl font-black text-foreground mb-3">{s.title}</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">{s.body}</p>
             {(s as any).detail && (s as any).detail}
           </div>
 
@@ -189,14 +189,14 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
             <button
               onClick={prev}
               disabled={step === 0}
-              className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition font-semibold"
+              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition font-semibold"
             >
               <ChevronLeft className="w-4 h-4" /> Back
             </button>
 
             <button
               onClick={next}
-              className={`flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-gradient-to-r ${s.accent} text-white font-black text-sm shadow-lg transition hover:opacity-90`}
+              className={`flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-gradient-to-r ${s.accent} text-foreground font-black text-sm shadow-lg transition hover:opacity-90`}
             >
               {step === STEPS.length - 1 ? "Let's Go! 🏸" : "Next"}
               {step < STEPS.length - 1 && <ChevronRight className="w-4 h-4" />}

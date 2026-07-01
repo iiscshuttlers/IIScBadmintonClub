@@ -60,9 +60,9 @@ export function LivePlayersSection({ tournamentId, categories }: { tournamentId:
   if (activeCategories.length === 0) {
     return (
       <div className="text-center py-20 bg-white/5 dark:bg-slate-800/50 rounded-3xl border border-slate-200 dark:border-slate-700">
-        <Users className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-        <h3 className="text-lg font-black text-slate-800 dark:text-white">No Players Registered Yet</h3>
-        <p className="text-slate-500 mt-1">Participants will appear here once they are added.</p>
+        <Users className="w-12 h-12 text-slate-300 dark:text-muted-foreground mx-auto mb-4" />
+        <h3 className="text-lg font-black text-slate-800 dark:text-foreground">No Players Registered Yet</h3>
+        <p className="text-muted-foreground mt-1">Participants will appear here once they are added.</p>
       </div>
     );
   }
@@ -79,8 +79,8 @@ export function LivePlayersSection({ tournamentId, categories }: { tournamentId:
             onClick={() => setActiveCat(cat)}
             className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
               activeCat === cat
-                ? "bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 shadow-md"
-                : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                ? "bg-slate-800 dark:bg-slate-200 text-white dark:text-foreground shadow-md"
+                : "bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-muted-foreground hover:bg-slate-200 dark:hover:bg-slate-700"
             }`}
           >
             {cat} <span className="opacity-60 font-normal ml-1">({participants[cat].length})</span>
@@ -90,7 +90,7 @@ export function LivePlayersSection({ tournamentId, categories }: { tournamentId:
 
       <div className="flex items-center gap-2 px-1 pb-2 border-b border-slate-200 dark:border-slate-800">
         <Info className="w-4 h-4 text-primary dark:text-primary" />
-        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+        <p className="text-xs font-semibold text-muted-foreground dark:text-muted-foreground">
           Note: Players are not listed in seeding order.
         </p>
       </div>
@@ -101,10 +101,10 @@ export function LivePlayersSection({ tournamentId, categories }: { tournamentId:
             key={p.id}
             className="flex items-center justify-between p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm hover:shadow-md transition-all hover:border-primary/40 dark:hover:border-primary/50"
           >
-            <span className="font-bold text-slate-700 dark:text-slate-200">
+            <span className="font-bold text-muted-foreground dark:text-slate-200">
               {p.display_name || "Unknown Player"}
             </span>
-            <span className="text-[10px] font-black text-slate-400 bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded-full shrink-0">
+            <span className="text-[10px] font-black text-muted-foreground bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded-full shrink-0">
               #{i + 1}
             </span>
           </div>

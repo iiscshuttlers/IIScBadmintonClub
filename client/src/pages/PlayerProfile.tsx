@@ -305,7 +305,7 @@ export default function PlayerProfile() {
         {/* Navigation Bar */}
         <div className="absolute top-0 left-0 right-0 z-50 px-4 py-4 flex items-center justify-between">
           <Link href="/">
-            <button className="w-10 h-10 md:w-12 md:h-12 bg-black/20 hover:bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center transition-all">
+            <button className="w-10 h-10 md:w-12 md:h-12 bg-black/20 hover:bg-black/40 backdrop-blur-md text-foreground rounded-full flex items-center justify-center transition-all">
               <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
             </button>
           </Link>
@@ -315,20 +315,20 @@ export default function PlayerProfile() {
               <button
                 onClick={handleReport}
                 title="Report User"
-                className="w-10 h-10 md:w-12 md:h-12 bg-black/20 hover:bg-rose-500/80 backdrop-blur-md text-white rounded-full flex items-center justify-center transition-all"
+                className="w-10 h-10 md:w-12 md:h-12 bg-black/20 hover:bg-rose-500/80 backdrop-blur-md text-foreground rounded-full flex items-center justify-center transition-all"
               >
                 <Flag className="w-4 h-4 md:w-5 md:h-5" />
               </button>
             )}
             <button
               onClick={handleShare}
-              className="w-10 h-10 md:w-12 md:h-12 bg-black/20 hover:bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center transition-all"
+              className="w-10 h-10 md:w-12 md:h-12 bg-black/20 hover:bg-black/40 backdrop-blur-md text-foreground rounded-full flex items-center justify-center transition-all"
             >
               <Share2 className="w-4 h-4 md:w-5 md:h-5" />
             </button>
             <button
               onClick={handleWrapped}
-              className="px-3 md:px-5 py-2 md:py-2.5 h-10 md:h-12 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 shadow-lg text-white font-black text-xs md:text-sm uppercase tracking-wider rounded-full flex items-center gap-2 transition-all border border-white/20 hover:scale-105 active:scale-95 whitespace-nowrap"
+              className="px-3 md:px-5 py-2 md:py-2.5 h-10 md:h-12 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 shadow-lg text-foreground font-black text-xs md:text-sm uppercase tracking-wider rounded-full flex items-center gap-2 transition-all border border-white/20 hover:scale-105 active:scale-95 whitespace-nowrap"
             >
               <Sparkles className="w-4 h-4" />
               <span className="hidden sm:inline">2024 Wrapped</span>
@@ -398,14 +398,14 @@ export default function PlayerProfile() {
                   };
                 })
               })}
-              className="px-3 md:px-5 py-2 md:py-2.5 h-10 md:h-12 bg-black/20 hover:bg-black/40 backdrop-blur-md text-white font-black text-xs md:text-sm uppercase tracking-wider rounded-full flex items-center gap-2 transition-all border border-white/20 whitespace-nowrap"
+              className="px-3 md:px-5 py-2 md:py-2.5 h-10 md:h-12 bg-black/20 hover:bg-black/40 backdrop-blur-md text-foreground font-black text-xs md:text-sm uppercase tracking-wider rounded-full flex items-center gap-2 transition-all border border-white/20 whitespace-nowrap"
             >
               <span className="hidden sm:inline">Export PDF</span>
               <span className="sm:hidden">PDF</span>
             </button>
             {currentUser && currentUser.id === player.userId && (
               <Link href="/profile/setup">
-                <button className="w-10 h-10 md:w-12 md:h-12 bg-black/20 hover:bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center transition-all">
+                <button className="w-10 h-10 md:w-12 md:h-12 bg-black/20 hover:bg-black/40 backdrop-blur-md text-foreground rounded-full flex items-center justify-center transition-all">
                   <Settings className="w-4 h-4 md:w-5 md:h-5" />
                 </button>
               </Link>
@@ -413,7 +413,7 @@ export default function PlayerProfile() {
             {currentUser && currentUser.id === player.userId && (
               <button
                 onClick={() => signOut()}
-                className="w-10 h-10 md:w-12 md:h-12 bg-black/20 hover:bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center transition-all"
+                className="w-10 h-10 md:w-12 md:h-12 bg-black/20 hover:bg-black/40 backdrop-blur-md text-foreground rounded-full flex items-center justify-center transition-all"
               >
                 <LogOut className="w-4 h-4 md:w-5 md:h-5" />
               </button>
@@ -446,7 +446,7 @@ export default function PlayerProfile() {
                   className={`py-3 md:py-4 text-xs md:text-sm font-black tracking-widest uppercase transition-colors relative ${
                     activeTab === tab
                       ? "text-amber-600 dark:text-amber-400"
-                      : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-300"
+                      : "text-muted-foreground hover:text-foreground dark:hover:text-slate-300"
                   }`}
                 >
                   {tab}
@@ -489,7 +489,7 @@ export default function PlayerProfile() {
                     key={m.id}
                     className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-black/25 p-4 rounded-xl border border-amber-500/20"
                   >
-                    <div className="text-sm font-semibold text-slate-700 dark:text-white/80 text-center sm:text-left">
+                    <div className="text-sm font-semibold text-muted-foreground dark:text-foreground/80 text-center sm:text-left">
                       <span className="font-bold">{m.player1?.full_name}</span>
                       <span className="text-amber-400 font-black italic mx-2">VS</span>
                       <span className="font-bold">{m.player2?.full_name}</span>
@@ -497,13 +497,13 @@ export default function PlayerProfile() {
                     <div className="flex gap-2 w-full sm:w-auto">
                       <button
                         onClick={() => handleConfirmMatch(m.id)}
-                        className="flex-1 sm:flex-none px-4 py-2 bg-primary hover:bg-primary text-white text-xs font-black rounded-xl transition"
+                        className="flex-1 sm:flex-none px-4 py-2 bg-primary hover:bg-primary text-foreground text-xs font-black rounded-xl transition"
                       >
                         Confirm
                       </button>
                       <button
                         onClick={() => handleRejectMatch(m.id)}
-                        className="flex-1 sm:flex-none px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-black rounded-xl transition"
+                        className="flex-1 sm:flex-none px-4 py-2 bg-white/10 hover:bg-white/20 text-foreground text-xs font-black rounded-xl transition"
                       >
                         Reject
                       </button>

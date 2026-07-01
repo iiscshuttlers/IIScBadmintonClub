@@ -39,7 +39,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="relative bg-slate-950 text-white mt-20 overflow-hidden">
+    <footer className="relative bg-slate-950 text-foreground mt-20 overflow-hidden">
       {/* Top gradient bar */}
       <div className="h-[3px] bg-gradient-to-r from-primary via-teal-400 to-orange-500" />
 
@@ -70,11 +70,11 @@ export default function Footer() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-bold text-white text-base leading-tight">IISc Badminton Club</h3>
+                <h3 className="font-bold text-foreground text-base leading-tight">IISc Badminton Club</h3>
                 <p className="text-[11px] text-primary/80 font-medium uppercase tracking-wider mt-0.5">Shuttlers · Est. 2018</p>
               </div>
             </div>
-            <p className="text-slate-400 text-sm leading-relaxed">
+            <p className="text-muted-foreground text-sm leading-relaxed">
               Promoting excellence in badminton through competitive play, training, and community engagement at the Indian Institute of Science, Bangalore.
             </p>
 
@@ -87,7 +87,7 @@ export default function Footer() {
                 aria-label="Instagram"
                 className="group w-9 h-9 rounded-xl bg-white/5 border border-white/8 hover:bg-pink-500/15 hover:border-pink-500/30 flex items-center justify-center transition-all duration-200"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-slate-500 group-hover:text-pink-400 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-muted-foreground group-hover:text-pink-400 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
                   <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
                   <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
@@ -100,7 +100,7 @@ export default function Footer() {
                 aria-label="YouTube"
                 className="group w-9 h-9 rounded-xl bg-white/5 border border-white/8 hover:bg-red-600/15 hover:border-red-600/30 flex items-center justify-center transition-all duration-200"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-slate-500 group-hover:text-red-400 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-muted-foreground group-hover:text-red-400 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17" />
                   <path d="m10 15 5-3-5-3z" />
                 </svg>
@@ -115,7 +115,7 @@ export default function Footer() {
               {quickLinks.map(({ href, label }) => (
                 <li key={href}>
                   <Link href={href}>
-                    <span className="group flex items-center gap-2 text-slate-400 hover:text-primary transition-colors text-sm cursor-pointer">
+                    <span className="group flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors text-sm cursor-pointer">
                       <span className="w-1.5 h-1.5 rounded-full bg-slate-700 group-hover:bg-primary transition-colors flex-shrink-0" />
                       {label}
                     </span>
@@ -133,7 +133,7 @@ export default function Footer() {
                 <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <MapPin className="w-3.5 h-3.5 text-primary" />
                 </div>
-                <span className="text-slate-400 leading-relaxed">
+                <span className="text-muted-foreground leading-relaxed">
                   IISc Gymkhana, Bangalore<br />560012, India
                 </span>
               </div>
@@ -143,7 +143,7 @@ export default function Footer() {
                 </div>
                 <a
                   href="mailto:iiscbadmintonclub@gmail.com"
-                  className="text-slate-400 hover:text-primary transition-colors"
+                  className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   iiscbadmintonclub@gmail.com
                 </a>
@@ -155,7 +155,7 @@ export default function Footer() {
               <h4 className="font-bold text-xs text-primary uppercase tracking-widest mb-4">Facilities</h4>
               <ul className="space-y-2">
                 {facilities.map((f) => (
-                  <li key={f} className="flex items-center gap-2 text-sm text-slate-400">
+                  <li key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
                     <span className="w-4 h-4 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
                       <svg className="w-2.5 h-2.5 text-primary" fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth="2.5">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M2 6l3 3 5-5" />
@@ -186,12 +186,12 @@ export default function Footer() {
                 </svg>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[11px] text-slate-500 font-medium">Download for</div>
-                <div className="text-sm font-bold text-white">Android App</div>
+                <div className="text-[11px] text-muted-foreground font-medium">Download for</div>
+                <div className="text-sm font-bold text-foreground">Android App</div>
               </div>
-              <ArrowUpRight className="w-4 h-4 text-slate-600 group-hover:text-primary transition-colors flex-shrink-0" />
+              <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
             </a>
-            <p className="text-slate-500 text-xs leading-relaxed px-1">
+            <p className="text-muted-foreground text-xs leading-relaxed px-1">
               Full-featured native app with live scores, match logging, tournaments, and player profiles.
             </p>
           </div>
@@ -201,20 +201,20 @@ export default function Footer() {
         {/* ── Bottom Bar ── */}
         <div className="border-t border-white/5 pt-6">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
-            <p className="text-slate-600 text-xs">
+            <p className="text-muted-foreground text-xs">
               © {new Date().getFullYear()} IISc Badminton Club. All rights reserved.
               {/* Hidden admin doorway */}
               <Link href="/admin">
-                <span className="text-slate-950 ml-1 select-none">·</span>
+                <span className="text-foreground ml-1 select-none">·</span>
               </Link>
             </p>
             <div className="flex items-center gap-3">
-              <p className="text-slate-600 text-xs flex items-center gap-1">
+              <p className="text-muted-foreground text-xs flex items-center gap-1">
                 Built with
                 <span className="text-rose-500/70">♥</span>
               </p>
               {versionName && (
-                <span className="text-slate-700 text-xs font-mono bg-slate-800 px-2 py-0.5 rounded-md">
+                <span className="text-muted-foreground text-xs font-mono bg-slate-800 px-2 py-0.5 rounded-md">
                   v{versionName}
                 </span>
               )}

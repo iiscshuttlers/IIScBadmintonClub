@@ -83,7 +83,7 @@ export default function DoublesPairProfile() {
 
   if (!player1 || !player2) return (
     <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-      <p className="text-slate-500">Players not found</p>
+      <p className="text-muted-foreground">Players not found</p>
       <Link href="/players" className="text-primary font-bold">Browse Players</Link>
     </div>
   );
@@ -111,10 +111,10 @@ export default function DoublesPairProfile() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 lg:pb-8">
       {/* Hero */}
-      <div className="bg-linear-to-br from-slate-900 via-blue-950 to-slate-900 text-white py-12 relative overflow-hidden">
+      <div className="bg-linear-to-br from-slate-900 via-blue-950 to-slate-900 text-foreground py-12 relative overflow-hidden">
         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.5),transparent)] pointer-events-none" />
         <div className="container mx-auto px-4 max-w-3xl relative z-10">
-          <Link href="/players" className="inline-flex items-center gap-1.5 text-white/60 hover:text-white text-sm font-bold mb-6 transition">
+          <Link href="/players" className="inline-flex items-center gap-1.5 text-foreground/60 hover:text-foreground text-sm font-bold mb-6 transition">
             <ArrowLeft className="w-4 h-4" /> Back to Players
           </Link>
           <div className="flex flex-col items-center gap-6">
@@ -122,19 +122,19 @@ export default function DoublesPairProfile() {
               <Link href={`/player/${p1}`}><Avatar player={player1} size="lg" /></Link>
               <div className="flex flex-col items-center gap-1">
                 <Users className="w-6 h-6 text-blue-400" />
-                <span className="text-xs font-black text-white/50 uppercase tracking-widest">Pair</span>
+                <span className="text-xs font-black text-foreground/50 uppercase tracking-widest">Pair</span>
               </div>
               <Link href={`/player/${p2}`}><Avatar player={player2} size="lg" /></Link>
             </div>
             <div className="text-center">
               <div className="flex items-center justify-center gap-2">
-                <h1 className="text-2xl font-black text-white">{player1.full_name} & {player2.full_name}</h1>
+                <h1 className="text-2xl font-black text-foreground">{player1.full_name} & {player2.full_name}</h1>
                 <InfoModal
                   title="DOUBLES PAIR"
                   items={[
                     { badge: "STATS", title: "Combined Stats", desc: "This page shows statistics specifically for when these two players play together as a team on the same side of the court." }
                   ]}
-                  triggerClassName="text-blue-300 hover:text-white"
+                  triggerClassName="text-blue-300 hover:text-foreground"
                 />
               </div>
               <p className="text-blue-300 text-sm mt-1">Doubles Pair Profile · {totalMatches} matches together</p>
@@ -149,7 +149,7 @@ export default function DoublesPairProfile() {
           {stats.map((s) => (
             <div key={s.label} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 text-center shadow-sm">
               <div className={`text-3xl font-black ${s.color}`}>{s.value}</div>
-              <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">{s.label}</div>
+              <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-1">{s.label}</div>
             </div>
           ))}
         </div>
@@ -158,10 +158,10 @@ export default function DoublesPairProfile() {
         {eloHistory.length >= 2 && (
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
             <div className="flex items-center justify-between mb-1">
-              <h3 className="font-black text-slate-800 dark:text-white">Pair ELO Journey</h3>
-              <span className="text-[10px] text-slate-400 font-medium">Estimated from match results</span>
+              <h3 className="font-black text-slate-800 dark:text-foreground">Pair ELO Journey</h3>
+              <span className="text-[10px] text-muted-foreground font-medium">Estimated from match results</span>
             </div>
-            <p className="text-xs text-slate-400 mb-4">Starting from 1200 · ±18 per match</p>
+            <p className="text-xs text-muted-foreground mb-4">Starting from 1200 · ±18 per match</p>
             <ResponsiveContainer width="100%" height={160}>
               <AreaChart data={eloHistory} margin={{ top: 4, right: 8, left: -24, bottom: 0 }}>
                 <defs>
@@ -186,7 +186,7 @@ export default function DoublesPairProfile() {
         {/* Match history */}
         {pairMatches.length > 0 && (
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
-            <h3 className="font-black text-slate-800 dark:text-white mb-4">Recent Matches Together</h3>
+            <h3 className="font-black text-slate-800 dark:text-foreground mb-4">Recent Matches Together</h3>
             <div className="space-y-2">
               {pairMatches.slice(0, 10).map((m) => {
                 const won = m.winner_id === p1 || m.winner_id === p2;
@@ -195,10 +195,10 @@ export default function DoublesPairProfile() {
                     <span className={`text-xs font-black px-2 py-0.5 rounded-full ${won ? "bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary" : "bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400"}`}>
                       {won ? "W" : "L"}
                     </span>
-                    <span className="text-xs text-slate-600 dark:text-slate-300 flex-1 font-mono">
+                    <span className="text-xs text-muted-foreground dark:text-slate-300 flex-1 font-mono">
                       {m.match_score?.split("[")[0]?.trim() ?? "—"}
                     </span>
-                    <span className="text-[10px] text-slate-400">{new Date(m.created_at!).toLocaleDateString()}</span>
+                    <span className="text-[10px] text-muted-foreground">{new Date(m.created_at!).toLocaleDateString()}</span>
                   </div>
                 );
               })}
@@ -208,8 +208,8 @@ export default function DoublesPairProfile() {
 
         {pairMatches.length === 0 && (
           <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
-            <Users className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-            <p className="font-bold text-slate-600 dark:text-slate-300">No confirmed doubles matches found together yet.</p>
+            <Users className="w-12 h-12 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
+            <p className="font-bold text-muted-foreground dark:text-slate-300">No confirmed doubles matches found together yet.</p>
           </div>
         )}
       </div>

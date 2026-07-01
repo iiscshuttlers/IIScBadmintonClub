@@ -41,14 +41,14 @@ const CAT_LABELS: Record<string, string> = {
 };
 
 const CAT_COLORS: Record<string, { bg: string; active: string; dot: string }> = {
-  MS: { bg: "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300", active: "bg-blue-600 text-white border-blue-600", dot: "bg-blue-500" },
-  WS: { bg: "bg-pink-50 dark:bg-pink-950/30 border-pink-200 dark:border-pink-800 text-pink-700 dark:text-pink-300", active: "bg-pink-600 text-white border-pink-600", dot: "bg-pink-500" },
-  MD: { bg: "bg-primary/10 dark:bg-primary/30 border-primary/40 dark:border-primary/80 text-primary dark:text-primary/70", active: "bg-primary text-white border-primary", dot: "bg-primary" },
-  WD: { bg: "bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300", active: "bg-purple-600 text-white border-purple-600", dot: "bg-purple-500" },
-  XD: { bg: "bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-300", active: "bg-orange-600 text-white border-orange-600", dot: "bg-orange-500" },
+  MS: { bg: "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300", active: "bg-blue-600 text-foreground border-blue-600", dot: "bg-blue-500" },
+  WS: { bg: "bg-pink-50 dark:bg-pink-950/30 border-pink-200 dark:border-pink-800 text-pink-700 dark:text-pink-300", active: "bg-pink-600 text-foreground border-pink-600", dot: "bg-pink-500" },
+  MD: { bg: "bg-primary/10 dark:bg-primary/30 border-primary/40 dark:border-primary/80 text-primary dark:text-primary/70", active: "bg-primary text-foreground border-primary", dot: "bg-primary" },
+  WD: { bg: "bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300", active: "bg-purple-600 text-foreground border-purple-600", dot: "bg-purple-500" },
+  XD: { bg: "bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-300", active: "bg-orange-600 text-foreground border-orange-600", dot: "bg-orange-500" },
 };
 
-const DEFAULT_COLORS = { bg: "bg-slate-700 border-slate-600 text-slate-300", active: "bg-slate-600 text-white border-slate-600", dot: "bg-slate-400" };
+const DEFAULT_COLORS = { bg: "bg-slate-700 border-slate-600 text-slate-300", active: "bg-slate-600 text-foreground border-slate-600", dot: "bg-slate-400" };
 
 export function UmpireTournamentTab({ onStartMatch }: Props) {
   const [allMatches, setAllMatches] = useState<TournamentMatchForUmpire[]>([]);
@@ -114,9 +114,9 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
 
   if (!allMatches.length) return (
     <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
-      <Swords className="w-12 h-12 text-slate-600" />
-      <p className="text-slate-400 font-bold">No tournament matches need umpiring right now.</p>
-      <p className="text-slate-500 text-sm">Matches appear here when an active tournament has scheduled or in-progress matches.</p>
+      <Swords className="w-12 h-12 text-muted-foreground" />
+      <p className="text-muted-foreground font-bold">No tournament matches need umpiring right now.</p>
+      <p className="text-muted-foreground text-sm">Matches appear here when an active tournament has scheduled or in-progress matches.</p>
     </div>
   );
 
@@ -126,7 +126,7 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <Trophy className="w-5 h-5 text-amber-400" />
-          <h3 className="text-sm font-black text-white">Select Format</h3>
+          <h3 className="text-sm font-black text-foreground">Select Format</h3>
         </div>
 
         <div className="grid grid-cols-1 gap-3">
@@ -145,13 +145,13 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
                   {cat}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-black text-white">{CAT_LABELS[cat] ?? cat}</p>
-                  <p className="text-sm text-slate-400">
+                  <p className="font-black text-foreground">{CAT_LABELS[cat] ?? cat}</p>
+                  <p className="text-sm text-muted-foreground">
                     {catMatches.length} match{catMatches.length !== 1 ? "es" : ""} pending
                     {inProgress > 0 && <span className="ml-2 text-amber-400 font-bold">· {inProgress} live</span>}
                   </p>
                 </div>
-                <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-primary transition-colors shrink-0" />
+                <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
               </button>
             );
           })}
@@ -172,12 +172,12 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
         <div className="flex items-center gap-3">
           <button
             onClick={() => { setStep("format"); setSelectedCategory(null); }}
-            className="p-2 rounded-xl bg-slate-800 border border-slate-700 hover:border-slate-500 transition text-slate-400 hover:text-white"
+            className="p-2 rounded-xl bg-slate-800 border border-slate-700 hover:border-slate-500 transition text-muted-foreground hover:text-foreground"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
           <div className={`px-3 py-1.5 rounded-xl font-black text-sm border ${colors.active}`}>{selectedCategory}</div>
-          <span className="text-slate-400 text-sm">{CAT_LABELS[selectedCategory] ?? selectedCategory}</span>
+          <span className="text-muted-foreground text-sm">{CAT_LABELS[selectedCategory] ?? selectedCategory}</span>
         </div>
 
         <div className="space-y-4">
@@ -185,7 +185,7 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
             const roundMatches = matchesForCategory.filter((m) => m.round_name === roundName);
             return (
               <div key={roundName}>
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">{roundName}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">{roundName}</p>
                 <div className="space-y-2">
                   {roundMatches.map((m) => {
                     const isLive = m.status === "in_progress";
@@ -205,7 +205,7 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
                         }`}
                       >
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{m.match_code}</span>
+                          <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">{m.match_code}</span>
                           {isLive && <span className="text-[10px] font-black text-amber-400 animate-pulse">● IN PROGRESS</span>}
                           {m.court_number && (
                             <span className="flex items-center gap-1 text-[10px] text-blue-400 font-bold">
@@ -213,26 +213,26 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
                             </span>
                           )}
                           {m.scheduled_at && (
-                            <span className="flex items-center gap-1 text-[10px] text-slate-500">
+                            <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
                               <Clock className="w-2.5 h-2.5" />
                               {new Date(m.scheduled_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
                             </span>
                           )}
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="text-white font-bold text-sm flex-1 truncate">
+                          <span className="text-foreground font-bold text-sm flex-1 truncate">
                             {m.team1_label ?? "TBD"}
                           </span>
                           <span className="text-[10px] font-black text-rose-400 shrink-0">VS</span>
-                          <span className="text-white font-bold text-sm flex-1 truncate text-right">
+                          <span className="text-foreground font-bold text-sm flex-1 truncate text-right">
                             {m.team2_label ?? "TBD"}
                           </span>
                           {!noPlayers && (
-                            <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-primary transition-colors shrink-0 ml-1" />
+                            <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0 ml-1" />
                           )}
                         </div>
                         {noPlayers && (
-                          <p className="text-[10px] text-slate-500 mt-1">Waiting for previous round results</p>
+                          <p className="text-[10px] text-muted-foreground mt-1">Waiting for previous round results</p>
                         )}
                       </button>
                     );
@@ -255,11 +255,11 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
         <div className="flex items-center gap-3">
           <button
             onClick={() => { setStep("match"); setSelectedMatch(null); }}
-            className="p-2 rounded-xl bg-slate-800 border border-slate-700 hover:border-slate-500 transition text-slate-400 hover:text-white"
+            className="p-2 rounded-xl bg-slate-800 border border-slate-700 hover:border-slate-500 transition text-muted-foreground hover:text-foreground"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <span className="text-slate-400 text-sm">Match Details</span>
+          <span className="text-muted-foreground text-sm">Match Details</span>
         </div>
 
         <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
@@ -280,11 +280,11 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
               ].map(({ label, side }, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-xl bg-slate-700 flex items-center justify-center">
-                    <Users className="w-4 h-4 text-slate-400" />
+                    <Users className="w-4 h-4 text-muted-foreground" />
                   </div>
                   <div>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{side}</p>
-                    <p className="text-white font-black text-sm">{label ?? "TBD"}</p>
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{side}</p>
+                    <p className="text-foreground font-black text-sm">{label ?? "TBD"}</p>
                   </div>
                 </div>
               ))}
@@ -292,24 +292,24 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
 
             {/* Scoring config */}
             <div className="bg-slate-900 rounded-xl p-3 flex items-center gap-4 flex-wrap">
-              <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                 <Settings2 className="w-3.5 h-3.5 text-primary" />
                 <span className="font-bold text-primary">{selectedMatch.points_to_win}</span>
                 <span>pts to win</span>
               </div>
-              <div className="text-slate-600">·</div>
-              <div className="text-[11px] text-slate-400">
-                Best of <span className="font-bold text-white">{selectedMatch.best_of_sets}</span> sets
+              <div className="text-muted-foreground">·</div>
+              <div className="text-[11px] text-muted-foreground">
+                Best of <span className="font-bold text-foreground">{selectedMatch.best_of_sets}</span> sets
               </div>
-              <div className="text-slate-600">·</div>
-              <div className="text-[11px] text-slate-400">
-                Golden point @ <span className="font-bold text-white">{selectedMatch.golden_point}</span>
+              <div className="text-muted-foreground">·</div>
+              <div className="text-[11px] text-muted-foreground">
+                Golden point @ <span className="font-bold text-foreground">{selectedMatch.golden_point}</span>
               </div>
             </div>
 
             {/* Court / time */}
             {(selectedMatch.court_number || selectedMatch.scheduled_at) && (
-              <div className="flex items-center gap-4 text-sm text-slate-400">
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 {selectedMatch.court_number && (
                   <span className="flex items-center gap-1.5">
                     <MapPin className="w-4 h-4 text-blue-400" />
@@ -326,14 +326,14 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
             )}
 
             {/* Tournament name */}
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
               {selectedMatch.tournament_name}
             </p>
 
             {/* Start button */}
             <button
               onClick={() => onStartMatch(selectedMatch)}
-              className="w-full py-4 rounded-xl bg-primary hover:bg-primary text-white font-black text-base transition flex items-center justify-center gap-2 shadow-lg shadow-primary/50/30"
+              className="w-full py-4 rounded-xl bg-primary hover:bg-primary text-foreground font-black text-base transition flex items-center justify-center gap-2 shadow-lg shadow-primary/50/30"
             >
               <Play className="w-5 h-5 fill-white" />
               {selectedMatch.status === "in_progress" ? "Resume Match" : "Start Umpiring"}

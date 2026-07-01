@@ -6,7 +6,7 @@ interface BeautifulScoreDisplayProps {
 }
 
 export const BeautifulScoreDisplay = memo(function BeautifulScoreDisplay({ score, className = "" }: BeautifulScoreDisplayProps) {
-  if (!score) return <span className="text-slate-400">—</span>;
+  if (!score) return <span className="text-muted-foreground">—</span>;
 
   // Extract set scores (e.g., "15-21, 22-20, 19-21 [Mixed Doubles: ...]")
   // By using parseInt, it safely strips out the trailing string because parseInt stops at non-numeric characters.
@@ -25,7 +25,7 @@ export const BeautifulScoreDisplay = memo(function BeautifulScoreDisplay({ score
     .filter(Boolean) as { p1: number; p2: number }[];
 
   if (parsedSets.length === 0) {
-    return <span className={`text-slate-500 font-medium ${className}`}>{score.replace(/\s*\[.*\]/, "")}</span>;
+    return <span className={`text-muted-foreground font-medium ${className}`}>{score.replace(/\s*\[.*\]/, "")}</span>;
   }
 
   return (
@@ -36,13 +36,13 @@ export const BeautifulScoreDisplay = memo(function BeautifulScoreDisplay({ score
         return (
           <span
             key={idx}
-            className="font-mono text-[11px] font-black tracking-widest px-2 py-0.5 rounded-md border shadow-sm bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-400 flex items-center"
+            className="font-mono text-[11px] font-black tracking-widest px-2 py-0.5 rounded-md border shadow-sm bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-muted-foreground flex items-center"
           >
-            <span className={p1Won ? "text-primary dark:text-primary" : "text-slate-500 dark:text-slate-400 opacity-80"}>
+            <span className={p1Won ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-muted-foreground opacity-80"}>
               {s.p1}
             </span>
             <span className="opacity-40 mx-0.5">-</span>
-            <span className={p2Won ? "text-primary dark:text-primary" : "text-slate-500 dark:text-slate-400 opacity-80"}>
+            <span className={p2Won ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-muted-foreground opacity-80"}>
               {s.p2}
             </span>
           </span>

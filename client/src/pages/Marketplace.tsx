@@ -189,7 +189,7 @@ export default function Marketplace() {
             className={`px-5 py-2 rounded-xl font-black text-sm transition-all ${
               activeTab === "marketplace" 
                 ? "bg-white dark:bg-slate-800 text-primary dark:text-primary shadow-sm" 
-                : "text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800/80"
+                : "text-muted-foreground hover:bg-slate-200 dark:hover:bg-slate-800/80"
             }`}
           >
             🛍️ Buy & Sell
@@ -202,7 +202,7 @@ export default function Marketplace() {
             className={`px-5 py-2 rounded-xl font-black text-sm transition-all ${
               activeTab === "findlost" 
                 ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm" 
-                : "text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800/80"
+                : "text-muted-foreground hover:bg-slate-200 dark:hover:bg-slate-800/80"
             }`}
           >
             🔍 Lost & Found
@@ -219,7 +219,7 @@ export default function Marketplace() {
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Store className="w-5 h-5 text-primary" />
                 </div>
-                <h1 className="text-lg font-black text-slate-800 dark:text-white tracking-tight">Marketplace</h1>
+                <h1 className="text-lg font-black text-slate-800 dark:text-foreground tracking-tight">Marketplace</h1>
                 <InfoModal
                   title="MARKETPLACE EXCHANGE"
                   items={[
@@ -231,7 +231,7 @@ export default function Marketplace() {
               </div>
               <button 
                 onClick={() => setIsCreateModalOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary text-white rounded-lg text-sm font-bold shadow-sm shadow-primary/20 transition-all active:scale-95"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary text-foreground rounded-lg text-sm font-bold shadow-sm shadow-primary/20 transition-all active:scale-95"
               >
                 <Plus className="w-4 h-4" /> Create Listing
               </button>
@@ -244,19 +244,19 @@ export default function Marketplace() {
                 <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-full shrink-0">
                   <button
                     onClick={() => setTypeFilter('all')}
-                    className={`px-3 py-1 text-xs font-black rounded-full transition-all ${typeFilter === 'all' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                    className={`px-3 py-1 text-xs font-black rounded-full transition-all ${typeFilter === 'all' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-foreground shadow-sm' : 'text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300'}`}
                   >
                     All
                   </button>
                   <button
                     onClick={() => setTypeFilter('sell')}
-                    className={`px-3 py-1 text-xs font-black rounded-full transition-all ${typeFilter === 'sell' ? 'bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                    className={`px-3 py-1 text-xs font-black rounded-full transition-all ${typeFilter === 'sell' ? 'bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary shadow-sm' : 'text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300'}`}
                   >
                     Selling
                   </button>
                   <button
                     onClick={() => setTypeFilter('buy')}
-                    className={`px-3 py-1 text-xs font-black rounded-full transition-all ${typeFilter === 'buy' ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                    className={`px-3 py-1 text-xs font-black rounded-full transition-all ${typeFilter === 'buy' ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 shadow-sm' : 'text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300'}`}
                   >
                     Requests
                   </button>
@@ -267,8 +267,8 @@ export default function Marketplace() {
                   onClick={() => setShowSold(s => !s)}
                   className={`px-4 py-1.5 rounded-full text-xs font-black whitespace-nowrap transition-all ${
                     showSold
-                      ? 'bg-slate-500 text-white shadow-sm'
-                      : 'bg-slate-100 text-slate-400 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:hover:bg-slate-700'
+                      ? 'bg-slate-500 text-foreground shadow-sm'
+                      : 'bg-slate-100 text-muted-foreground hover:bg-slate-200 dark:bg-slate-800 dark:text-muted-foreground dark:hover:bg-slate-700'
                   }`}
                 >
                   {showSold ? "✓ Showing Sold" : "Show Sold"}
@@ -283,8 +283,8 @@ export default function Marketplace() {
                     onClick={() => setFilter(cat)}
                     className={`px-1 sm:px-4 py-1.5 rounded-full text-xs font-black transition-all truncate text-center ${
                       filter === cat
-                        ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900 shadow-sm'
-                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700'
+                        ? 'bg-slate-800 text-white dark:bg-white dark:text-foreground shadow-sm'
+                        : 'bg-slate-100 text-muted-foreground hover:bg-slate-200 dark:bg-slate-800 dark:text-muted-foreground dark:hover:bg-slate-700'
                     }`}
                   >
                     {cat}
@@ -303,9 +303,9 @@ export default function Marketplace() {
           </div>
         ) : filteredListings.length === 0 ? (
           <div className="text-center py-20">
-            <Package className="w-16 h-16 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2">No items found</h3>
-            <p className="text-slate-500 dark:text-slate-400">Be the first to list an item in this category!</p>
+            <Package className="w-16 h-16 text-slate-300 dark:text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-slate-800 dark:text-foreground mb-2">No items found</h3>
+            <p className="text-muted-foreground dark:text-muted-foreground">Be the first to list an item in this category!</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -339,14 +339,14 @@ export default function Marketplace() {
                     {item.image_url ? (
                       <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
                     ) : (
-                      <ImageIcon className="w-10 h-10 text-slate-300 dark:text-slate-700" />
+                      <ImageIcon className="w-10 h-10 text-slate-300 dark:text-muted-foreground" />
                     )}
-                    <div className="absolute top-3 left-3 bg-white/90 dark:bg-black/80 backdrop-blur px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 z-20">
+                    <div className="absolute top-3 left-3 bg-white/90 dark:bg-black/80 backdrop-blur px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider text-muted-foreground dark:text-slate-300 z-20">
                       {item.condition}
                     </div>
                     {item.listing_type === 'buy' && (
                       <div className="absolute inset-0 z-10 bg-indigo-900/10 backdrop-blur-[1px] flex items-center justify-center pointer-events-none">
-                        <div className="bg-indigo-600 text-white text-lg font-black px-4 py-1.5 rounded-lg shadow-lg rotate-[-10deg] tracking-widest border-2 border-white/20">
+                        <div className="bg-indigo-600 text-foreground text-lg font-black px-4 py-1.5 rounded-lg shadow-lg rotate-[-10deg] tracking-widest border-2 border-white/20">
                           WANT TO BUY
                         </div>
                       </div>
@@ -356,7 +356,7 @@ export default function Marketplace() {
                   {/* Content Area */}
                   <div className="p-5 flex-1 flex flex-col">
                     <div className="flex items-start justify-between gap-4 mb-2">
-                      <h3 className="font-bold text-slate-800 dark:text-white leading-tight line-clamp-2 text-lg">
+                      <h3 className="font-bold text-slate-800 dark:text-foreground leading-tight line-clamp-2 text-lg">
                         {item.title}
                       </h3>
                       <div className="font-black text-primary dark:text-primary text-lg whitespace-nowrap">
@@ -365,7 +365,7 @@ export default function Marketplace() {
                           : (item.price === 0 ? "Giveaway" : `₹${item.price}`)}
                       </div>
                     </div>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mb-4 flex-1">
+                    <p className="text-sm text-muted-foreground dark:text-muted-foreground line-clamp-2 mb-4 flex-1">
                       {item.description}
                     </p>
 
@@ -379,8 +379,8 @@ export default function Marketplace() {
                             className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 object-cover"
                           />
                           <div>
-                            <p className="text-xs font-bold text-slate-800 dark:text-white">{safeName}</p>
-                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                            <p className="text-xs font-bold text-slate-800 dark:text-foreground">{safeName}</p>
+                            <p className="text-[10px] text-muted-foreground dark:text-muted-foreground font-medium">
                               {new Date(item.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                             </p>
                           </div>
@@ -393,14 +393,14 @@ export default function Marketplace() {
                             <div className="flex gap-2">
                               <a
                                 href={`mailto:${safeName.replace(/\s+/g, '.').toLowerCase()}@iisc.ac.in?subject=Marketplace: ${encodeURIComponent(item.title)}`}
-                                className="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-colors"
+                                className="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-muted-foreground dark:text-slate-300 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-colors"
                               >
                                 <Mail className="w-3.5 h-3.5" /> Contact
                               </a>
                               <button
                                 onClick={() => reportListing(item.id, item.title)}
                                 title="Report this listing"
-                                className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-center transition-colors ${reportedIds.has(item.id) ? "bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-default" : "bg-rose-50 dark:bg-rose-950/30 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/50"}`}
+                                className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-center transition-colors ${reportedIds.has(item.id) ? "bg-slate-100 dark:bg-slate-800 text-muted-foreground cursor-default" : "bg-rose-50 dark:bg-rose-950/30 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/50"}`}
                               >
                                 <Flag className="w-3.5 h-3.5" />
                               </button>
@@ -418,7 +418,7 @@ export default function Marketplace() {
                               <button
                                 onClick={() => reportListing(item.id, item.title)}
                                 title="Report this listing"
-                                className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-center transition-colors ${reportedIds.has(item.id) ? "bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-default" : "bg-rose-50 dark:bg-rose-950/30 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/50"}`}
+                                className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-center transition-colors ${reportedIds.has(item.id) ? "bg-slate-100 dark:bg-slate-800 text-muted-foreground cursor-default" : "bg-rose-50 dark:bg-rose-950/30 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/50"}`}
                               >
                                 <Flag className="w-3.5 h-3.5" />
                               </button>
@@ -441,7 +441,7 @@ export default function Marketplace() {
                           <button
                             disabled={busyId === item.id}
                             onClick={() => setMenuOpenId(menuOpenId === item.id ? null : item.id)}
-                            className="w-full flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 py-2 rounded-xl text-xs font-black transition disabled:opacity-50"
+                            className="w-full flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-muted-foreground dark:text-slate-300 py-2 rounded-xl text-xs font-black transition disabled:opacity-50"
                           >
                             <MoreVertical className="w-3.5 h-3.5" /> Manage Listing
                           </button>

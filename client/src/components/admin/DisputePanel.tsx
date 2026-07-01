@@ -75,15 +75,15 @@ export function DisputePanel() {
   if (matches.length === 0) return (
     <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800">
       <CheckCircle className="w-12 h-12 text-primary mx-auto mb-3" />
-      <h3 className="text-lg font-black text-slate-700 dark:text-slate-300">No open disputes</h3>
-      <p className="text-slate-400 text-sm mt-1">All match results are confirmed.</p>
+      <h3 className="text-lg font-black text-muted-foreground dark:text-slate-300">No open disputes</h3>
+      <p className="text-muted-foreground text-sm mt-1">All match results are confirmed.</p>
     </div>
   );
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-2">
-        <h2 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
+        <h2 className="text-lg font-black text-slate-800 dark:text-foreground flex items-center gap-2">
           <AlertTriangle className="w-5 h-5 text-rose-500" /> Disputed Matches
           <span className="text-sm font-bold bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 px-2 py-0.5 rounded-full">{matches.length}</span>
           <InfoModal
@@ -94,7 +94,7 @@ export function DisputePanel() {
             ]}
           />
         </h2>
-        <button onClick={load} className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition px-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
+        <button onClick={load} className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-slate-800 dark:hover:text-foreground transition px-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
           <RefreshCw className="w-3.5 h-3.5" /> Refresh
         </button>
       </div>
@@ -117,28 +117,28 @@ export function DisputePanel() {
                 {p1?.avatar_url ? (
                   <img src={p1.avatar_url} className="w-9 h-9 rounded-full object-cover border-2 border-slate-100 dark:border-slate-800" />
                 ) : (
-                  <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center"><User className="w-4 h-4 text-slate-400" /></div>
+                  <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center"><User className="w-4 h-4 text-muted-foreground" /></div>
                 )}
                 <div>
-                  <p className="font-black text-sm text-slate-800 dark:text-white truncate">{p1?.full_name}</p>
-                  {m.partner1 && <p className="text-[10px] text-slate-400">+ {m.partner1.full_name}</p>}
+                  <p className="font-black text-sm text-slate-800 dark:text-foreground truncate">{p1?.full_name}</p>
+                  {m.partner1 && <p className="text-[10px] text-muted-foreground">+ {m.partner1.full_name}</p>}
                 </div>
               </div>
 
               <div className="text-center shrink-0">
-                <div className="text-xs font-black font-mono text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">{displayScore}</div>
-                <div className="text-[10px] text-slate-400 uppercase tracking-wider mt-1">{m.category || "Friendly"}</div>
+                <div className="text-xs font-black font-mono text-muted-foreground dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">{displayScore}</div>
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">{m.category || "Friendly"}</div>
               </div>
 
               <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
                 <div className="text-right">
-                  <p className="font-black text-sm text-slate-800 dark:text-white truncate">{p2?.full_name}</p>
-                  {m.partner2 && <p className="text-[10px] text-slate-400">+ {m.partner2.full_name}</p>}
+                  <p className="font-black text-sm text-slate-800 dark:text-foreground truncate">{p2?.full_name}</p>
+                  {m.partner2 && <p className="text-[10px] text-muted-foreground">+ {m.partner2.full_name}</p>}
                 </div>
                 {p2?.avatar_url ? (
                   <img src={p2.avatar_url} className="w-9 h-9 rounded-full object-cover border-2 border-slate-100 dark:border-slate-800" />
                 ) : (
-                  <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center"><User className="w-4 h-4 text-slate-400" /></div>
+                  <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center"><User className="w-4 h-4 text-muted-foreground" /></div>
                 )}
               </div>
             </div>
@@ -148,9 +148,9 @@ export function DisputePanel() {
               <p className="text-xs font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5 mb-1">
                 <AlertTriangle className="w-3.5 h-3.5" /> Dispute Reason
               </p>
-              <p className="text-sm text-slate-700 dark:text-slate-300">{m.dispute_reason || "No reason provided"}</p>
-              <p className="text-[10px] text-slate-400 mt-1">
-                Filed: {new Date(m.created_at).toLocaleDateString()} · Current winner: <span className="font-bold text-slate-600 dark:text-slate-300">{currentWinner?.full_name}</span>
+              <p className="text-sm text-muted-foreground dark:text-slate-300">{m.dispute_reason || "No reason provided"}</p>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Filed: {new Date(m.created_at).toLocaleDateString()} · Current winner: <span className="font-bold text-muted-foreground dark:text-slate-300">{currentWinner?.full_name}</span>
               </p>
             </div>
 
@@ -159,7 +159,7 @@ export function DisputePanel() {
               <button
                 disabled={isProcessing}
                 onClick={() => resolve(m.id, "uphold")}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary hover:bg-primary text-white text-sm font-bold transition disabled:opacity-50"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary hover:bg-primary text-foreground text-sm font-bold transition disabled:opacity-50"
               >
                 {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
                 Uphold Result ({currentWinner?.full_name?.split(" ")[0]} wins)
@@ -167,7 +167,7 @@ export function DisputePanel() {
               <button
                 disabled={isProcessing}
                 onClick={() => resolve(m.id, "override", otherPlayer?.id)}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold transition disabled:opacity-50"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-foreground text-sm font-bold transition disabled:opacity-50"
               >
                 {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trophy className="w-4 h-4" />}
                 Override → {otherPlayer?.full_name?.split(" ")[0]} wins

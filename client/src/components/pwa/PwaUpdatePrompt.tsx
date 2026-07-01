@@ -33,7 +33,7 @@ export function PwaUpdatePrompt() {
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-2xl rounded-full -mr-16 -mt-16 pointer-events-none" />
 
           <div className="relative">
-            <h3 className="text-white font-bold text-lg mb-1 flex items-center gap-2">
+            <h3 className="text-foreground font-bold text-lg mb-1 flex items-center gap-2">
               <RefreshCw className="w-5 h-5 text-primary" />
               Update Available!
             </h3>
@@ -45,7 +45,7 @@ export function PwaUpdatePrompt() {
             <div className="flex gap-3">
               <button
                 onClick={() => updateServiceWorker(true)}
-                className="flex-1 bg-primary hover:bg-primary text-white py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 transition-all active:scale-95"
+                className="flex-1 bg-primary hover:bg-primary text-foreground py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 transition-all active:scale-95"
               >
                 Reload & Update
               </button>

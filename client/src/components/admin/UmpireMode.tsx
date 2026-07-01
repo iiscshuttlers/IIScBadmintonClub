@@ -28,7 +28,7 @@ import {
 } from "firebase/auth";
 
 const inputCls =
-  "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-primary transition";
+  "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary transition";
 
 type ScoreSet = { p1: number; p2: number };
 type HistoryEntry = { scores: ScoreSet[]; activeSet: number; server: string };
@@ -279,7 +279,7 @@ export function UmpireMode() {
   if (!fbUser)
     return (
       <div className="flex items-center justify-center py-16">
-        <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 font-bold animate-pulse">
+        <div className="flex items-center gap-3 text-muted-foreground dark:text-muted-foreground font-bold animate-pulse">
           <Loader2 className="w-5 h-5 animate-spin" /> Connecting to live
           data...
         </div>
@@ -288,7 +288,7 @@ export function UmpireMode() {
   if (!data)
     return (
       <div className="flex items-center justify-center py-16">
-        <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 font-bold animate-pulse">
+        <div className="flex items-center gap-3 text-muted-foreground dark:text-muted-foreground font-bold animate-pulse">
           <Loader2 className="w-5 h-5 animate-spin" /> Loading live data...
         </div>
       </div>
@@ -298,10 +298,10 @@ export function UmpireMode() {
   if (!data.formats || data.formats.length === 0)
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
-        <Activity className="w-10 h-10 text-slate-300 dark:text-slate-600" />
+        <Activity className="w-10 h-10 text-slate-300 dark:text-muted-foreground" />
         <div>
-          <p className="font-black text-slate-700 dark:text-slate-200">No Active Tournament</p>
-          <p className="text-sm text-slate-400 mt-1">Live data will appear here when a tournament is in progress.</p>
+          <p className="font-black text-muted-foreground dark:text-slate-200">No Active Tournament</p>
+          <p className="text-sm text-muted-foreground mt-1">Live data will appear here when a tournament is in progress.</p>
         </div>
       </div>
     );
@@ -331,7 +331,7 @@ export function UmpireMode() {
           </span>
           <button
             onClick={() => signOut(auth)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition border border-slate-200 dark:border-slate-700"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-muted-foreground hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition border border-slate-200 dark:border-slate-700"
           >
             <LogOut className="w-3.5 h-3.5" /> Sign Out
           </button>
@@ -347,7 +347,7 @@ export function UmpireMode() {
               setFormat(f);
               setMatchId("");
             }}
-            className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition ${selectedFormat === f ? "bg-primary text-white shadow-md" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"}`}
+            className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition ${selectedFormat === f ? "bg-primary text-foreground shadow-md" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-300"}`}
           >
             {f}
           </button>
@@ -377,7 +377,7 @@ export function UmpireMode() {
               <button
                 key={idx}
                 onClick={() => setActiveSet(idx)}
-                className={`px-4 py-2 rounded-full font-bold text-sm whitespace-nowrap transition-all ${activeSet === idx ? "bg-blue-600 text-white shadow-md scale-105" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"}`}
+                className={`px-4 py-2 rounded-full font-bold text-sm whitespace-nowrap transition-all ${activeSet === idx ? "bg-blue-600 text-foreground shadow-md scale-105" : "bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-muted-foreground"}`}
               >
                 Set {idx + 1}
               </button>
@@ -395,7 +395,7 @@ export function UmpireMode() {
 
           {/* Service Indicator */}
           <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 p-3 space-y-2">
-            <div className="text-center text-xs font-black text-slate-400 uppercase tracking-wider">
+            <div className="text-center text-xs font-black text-muted-foreground uppercase tracking-wider">
               🏸 Service
             </div>
             {isDoubles ? (
@@ -409,7 +409,7 @@ export function UmpireMode() {
                         pushHistory();
                         setServer(`p1-${idx}`);
                       }}
-                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${server === `p1-${idx}` ? "bg-amber-400 text-amber-900 shadow-md" : "bg-white dark:bg-slate-800 text-slate-400 hover:text-slate-600 border border-slate-200 dark:border-slate-700"}`}
+                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${server === `p1-${idx}` ? "bg-amber-400 text-amber-900 shadow-md" : "bg-white dark:bg-slate-800 text-muted-foreground hover:text-muted-foreground border border-slate-200 dark:border-slate-700"}`}
                     >
                       <Circle
                         className={`w-2.5 h-2.5 shrink-0 ${server === `p1-${idx}` ? "fill-amber-900" : ""}`}
@@ -427,7 +427,7 @@ export function UmpireMode() {
                         pushHistory();
                         setServer(`p2-${idx}`);
                       }}
-                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${server === `p2-${idx}` ? "bg-amber-400 text-amber-900 shadow-md" : "bg-white dark:bg-slate-800 text-slate-400 hover:text-slate-600 border border-slate-200 dark:border-slate-700"}`}
+                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${server === `p2-${idx}` ? "bg-amber-400 text-amber-900 shadow-md" : "bg-white dark:bg-slate-800 text-muted-foreground hover:text-muted-foreground border border-slate-200 dark:border-slate-700"}`}
                     >
                       <Circle
                         className={`w-2.5 h-2.5 shrink-0 ${server === `p2-${idx}` ? "fill-amber-900" : ""}`}
@@ -444,7 +444,7 @@ export function UmpireMode() {
                     pushHistory();
                     setServer("p1-0");
                   }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${serverSide === "p1" ? "bg-amber-400 text-amber-900 shadow-md scale-105" : "text-slate-400 hover:text-slate-600"}`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${serverSide === "p1" ? "bg-amber-400 text-amber-900 shadow-md scale-105" : "text-muted-foreground hover:text-muted-foreground"}`}
                 >
                   <Circle
                     className={`w-3 h-3 ${serverSide === "p1" ? "fill-amber-900" : ""}`}
@@ -456,7 +456,7 @@ export function UmpireMode() {
                     pushHistory();
                     setServer("p2-0");
                   }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${serverSide === "p2" ? "bg-amber-400 text-amber-900 shadow-md scale-105" : "text-slate-400 hover:text-slate-600"}`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${serverSide === "p2" ? "bg-amber-400 text-amber-900 shadow-md scale-105" : "text-muted-foreground hover:text-muted-foreground"}`}
                 >
                   {p2Name.split(" ")[0]} serves
                   <Circle
@@ -476,7 +476,7 @@ export function UmpireMode() {
               ] as const
             ).map(([player, name]) => (
               <div key={player} className="space-y-2">
-                <div className="text-center font-bold text-slate-700 dark:text-slate-200 h-10 line-clamp-2 leading-tight text-sm flex items-center justify-center gap-1.5">
+                <div className="text-center font-bold text-muted-foreground dark:text-slate-200 h-10 line-clamp-2 leading-tight text-sm flex items-center justify-center gap-1.5">
                   {serverSide === player && (
                     <span
                       className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0"
@@ -489,8 +489,8 @@ export function UmpireMode() {
                   onClick={() => updateScore(player, 1)}
                   className={`w-full aspect-square rounded-2xl flex flex-col items-center justify-center transition shadow-sm active:scale-95 ${
                     serverSide === player
-                      ? "bg-amber-50 dark:bg-amber-950/20 border-2 border-amber-400 text-amber-700 dark:text-amber-400 active:bg-amber-500 active:text-white"
-                      : "bg-primary/10 dark:bg-primary/20 border-2 border-primary text-primary dark:text-primary active:bg-primary active:text-white"
+                      ? "bg-amber-50 dark:bg-amber-950/20 border-2 border-amber-400 text-amber-700 dark:text-amber-400 active:bg-amber-500 active:text-foreground"
+                      : "bg-primary/10 dark:bg-primary/20 border-2 border-primary text-primary dark:text-primary active:bg-primary active:text-foreground"
                   }`}
                 >
                   <Plus className="w-8 h-8 opacity-40 mb-1" />
@@ -500,7 +500,7 @@ export function UmpireMode() {
                 </button>
                 <button
                   onClick={() => updateScore(player, -1)}
-                  className="w-full py-3 bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-500 font-bold flex justify-center active:bg-slate-300 dark:active:bg-slate-700"
+                  className="w-full py-3 bg-slate-100 dark:bg-slate-800 rounded-xl text-muted-foreground font-bold flex justify-center active:bg-slate-300 dark:active:bg-slate-700"
                 >
                   <Minus className="w-5 h-5" />
                 </button>
@@ -511,14 +511,14 @@ export function UmpireMode() {
           {/* Score summary across sets */}
           {scores.length > 1 && (
             <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 border border-slate-200 dark:border-slate-700">
-              <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 text-center">
+              <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 text-center">
                 All Sets
               </div>
               <div className="flex justify-center gap-3">
                 {scores.map((s, idx) => (
                   <div
                     key={idx}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-black text-center ${activeSet === idx ? "bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400" : "text-slate-500"}`}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-black text-center ${activeSet === idx ? "bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400" : "text-muted-foreground"}`}
                   >
                     {s.p1}-{s.p2}
                   </div>
@@ -532,13 +532,13 @@ export function UmpireMode() {
             <button
               onClick={undo}
               disabled={history.length === 0}
-              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-sm hover:border-amber-400 hover:text-amber-600 transition disabled:opacity-30 disabled:cursor-not-allowed"
+              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-300 font-bold text-sm hover:border-amber-400 hover:text-amber-600 transition disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <Undo2 className="w-4 h-4" /> Undo ({history.length})
             </button>
             <button
               onClick={pushUpdate}
-              className="flex-[2] flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm shadow-lg active:scale-95 transition-transform"
+              className="flex-[2] flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-foreground font-black text-sm shadow-lg active:scale-95 transition-transform"
             >
               <Save className="w-4 h-4" /> PUSH TO LIVE
             </button>
@@ -548,7 +548,7 @@ export function UmpireMode() {
           <button
             onClick={sendMatchStartPush}
             disabled={sendingPush}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm shadow-lg active:scale-95 transition disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-foreground font-bold text-sm shadow-lg active:scale-95 transition disabled:opacity-50"
           >
             {sendingPush ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bell className="w-4 h-4" />}
             {sendingPush ? "Sending…" : "Notify All Players (Push)"}
@@ -556,13 +556,13 @@ export function UmpireMode() {
 
           {/* Break Timer */}
           <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 space-y-3">
-            <div className="flex items-center gap-2 text-xs font-black text-slate-400 uppercase tracking-wider">
+            <div className="flex items-center gap-2 text-xs font-black text-muted-foreground uppercase tracking-wider">
               <Timer className="w-4 h-4" /> Break Timer
             </div>
             {timerActive || timerSeconds > 0 ? (
               <div className="text-center space-y-3">
                 <div
-                  className={`text-5xl font-black tabular-nums ${timerSeconds <= 10 && timerSeconds > 0 ? "text-rose-500 animate-pulse" : "text-slate-800 dark:text-white"}`}
+                  className={`text-5xl font-black tabular-nums ${timerSeconds <= 10 && timerSeconds > 0 ? "text-rose-500 animate-pulse" : "text-slate-800 dark:text-foreground"}`}
                 >
                   {formatTime(timerSeconds)}
                 </div>
@@ -586,7 +586,7 @@ export function UmpireMode() {
                       setTimerActive(false);
                       setTimerSeconds(0);
                     }}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-bold hover:bg-slate-300 transition"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 text-muted-foreground dark:text-slate-300 text-sm font-bold hover:bg-slate-300 transition"
                   >
                     <RotateCcw className="w-4 h-4" /> Reset
                   </button>
@@ -602,7 +602,7 @@ export function UmpireMode() {
                   <button
                     key={p.secs}
                     onClick={() => startTimer(p.secs)}
-                    className="flex-1 py-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-bold text-sm hover:border-primary hover:text-primary transition active:scale-95"
+                    className="flex-1 py-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-muted-foreground dark:text-slate-200 font-bold text-sm hover:border-primary hover:text-primary transition active:scale-95"
                   >
                     {p.label}
                   </button>

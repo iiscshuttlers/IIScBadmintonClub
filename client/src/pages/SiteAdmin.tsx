@@ -222,8 +222,8 @@ function SiteAdminInner() {
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 px-4">
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-10 text-center border border-slate-200 dark:border-slate-800 shadow-xl max-w-md">
           <Shield className="w-16 h-16 text-rose-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Admin Access Required</h1>
-          <p className="text-slate-500 dark:text-slate-400 mb-6">
+          <h1 className="text-2xl font-black text-foreground dark:text-foreground mb-2">Admin Access Required</h1>
+          <p className="text-muted-foreground dark:text-muted-foreground mb-6">
             {session ? "Your account does not have admin privileges." : "You need to be signed in with an admin account."}
           </p>
           {!session ? (
@@ -232,14 +232,14 @@ function SiteAdminInner() {
                 sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
                 setLocation("/join");
               }}
-              className="px-6 py-3 bg-primary hover:bg-primary text-white font-bold rounded-xl transition shadow-lg shadow-primary/20"
+              className="px-6 py-3 bg-primary hover:bg-primary text-foreground font-bold rounded-xl transition shadow-lg shadow-primary/20"
             >
               Sign In
             </button>
           ) : (
             <button
               onClick={() => setLocation("/")}
-              className="px-6 py-3 bg-slate-600 hover:bg-slate-700 text-white font-bold rounded-xl transition shadow-lg shadow-slate-500/20"
+              className="px-6 py-3 bg-slate-600 hover:bg-slate-700 text-foreground font-bold rounded-xl transition shadow-lg shadow-slate-500/20"
             >
               Back to Home
             </button>
@@ -256,7 +256,7 @@ function SiteAdminInner() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-safe pb-24 lg:pb-8">
       {/* Header */}
-      <section className="bg-gradient-to-r from-slate-900 via-slate-800 to-primary/80 text-white py-10 md:sticky md:top-[48px] lg:top-[88px] md:z-40 shadow-xl border-b border-slate-900">
+      <section className="bg-gradient-to-r from-slate-900 via-slate-800 to-primary/80 text-foreground py-10 md:sticky md:top-[48px] lg:top-[88px] md:z-40 shadow-xl border-b border-slate-900">
         <div className="container mx-auto px-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
@@ -271,7 +271,7 @@ function SiteAdminInner() {
                     title="All admin sections"
                     className={`p-2 rounded-xl transition border ${waffleOpen ? "bg-white/20 border-white/30" : "bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30"}`}
                   >
-                    <LayoutGrid className="w-6 h-6 text-white" />
+                    <LayoutGrid className="w-6 h-6 text-foreground" />
                   </button>
 
                   <AnimatePresence>
@@ -284,7 +284,7 @@ function SiteAdminInner() {
                         className="absolute left-0 top-full mt-2 z-50 w-80 max-h-[80vh] overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl"
                       >
                         <div className="p-3 border-b border-slate-100 dark:border-slate-800">
-                          <p className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Admin Sections</p>
+                          <p className="text-xs font-black text-muted-foreground dark:text-muted-foreground uppercase tracking-widest">Admin Sections</p>
                         </div>
                         <div className="p-3 space-y-4">
                           {TAB_GROUPS.map((group) => {
@@ -292,7 +292,7 @@ function SiteAdminInner() {
                             if (visibleTabs.length === 0) return null;
                             return (
                               <div key={group.title}>
-                                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1 mb-2">{group.title}</p>
+                                <p className="text-[10px] font-black text-muted-foreground dark:text-muted-foreground uppercase tracking-widest px-1 mb-2">{group.title}</p>
                                 <div className="grid grid-cols-3 gap-1.5">
                                   {visibleTabs.map((tab) => {
                                     const Icon = tab.icon;
@@ -305,13 +305,13 @@ function SiteAdminInner() {
                                         className={`relative flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl text-[11px] font-bold transition-all ${
                                           active
                                             ? "bg-primary/10 dark:bg-primary/40 text-primary dark:text-primary border border-primary/40 dark:border-primary/80"
-                                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent"
+                                            : "text-muted-foreground dark:text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent"
                                         }`}
                                       >
-                                        <Icon className={`w-5 h-5 ${active ? "text-primary" : "text-slate-400"}`} />
+                                        <Icon className={`w-5 h-5 ${active ? "text-primary" : "text-muted-foreground"}`} />
                                         <span className="text-center leading-tight">{tab.label}</span>
                                         {count !== null && (
-                                          <span className="absolute top-1 right-1 text-[9px] px-1 py-0.5 rounded-full font-black bg-primary text-white leading-none">{count}</span>
+                                          <span className="absolute top-1 right-1 text-[9px] px-1 py-0.5 rounded-full font-black bg-primary text-foreground leading-none">{count}</span>
                                         )}
                                       </button>
                                     );
@@ -378,16 +378,16 @@ function SiteAdminInner() {
           const activeTabMeta = TABS.find(t => t.id === activeTab);
           const ActiveIcon = activeTabMeta?.icon;
           return (
-            <div className="flex items-center gap-2 mb-6 text-sm text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-2 mb-6 text-sm text-muted-foreground dark:text-muted-foreground">
               <button 
                 onClick={() => setWaffleOpen(true)}
-                className="text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-primary transition-colors cursor-pointer"
+                className="text-muted-foreground dark:text-muted-foreground hover:text-primary dark:hover:text-primary transition-colors cursor-pointer"
                 title="View all admin sections"
               >
                 {activeGroup?.title ?? ""}
               </button>
-              <span className="text-slate-300 dark:text-slate-600">›</span>
-              <span className="font-bold text-slate-700 dark:text-slate-200">{activeTabMeta?.label}</span>
+              <span className="text-slate-300 dark:text-muted-foreground">›</span>
+              <span className="font-bold text-muted-foreground dark:text-slate-200">{activeTabMeta?.label}</span>
             </div>
           );
         })()}

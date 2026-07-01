@@ -73,7 +73,7 @@ export function EquipmentArsenalSection({
     <section className="py-8 relative" ref={containerRef}>
       <div className="flex items-center gap-3 mb-16 px-4">
         <div className="h-px flex-1 bg-linear-to-r from-transparent to-slate-300 dark:to-white/10" />
-        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500 dark:text-white/35 shrink-0 flex items-center gap-2">
+        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground dark:text-foreground/35 shrink-0 flex items-center gap-2">
           <Zap className="w-3.5 h-3.5 text-violet-500" /> Equipment Arsenal
           <InfoModal
             title="EQUIPMENT ARSENAL"
@@ -298,7 +298,7 @@ export function EquipmentArsenalSection({
                     <div className="flex items-center gap-4">
                       {/* Racket illustration */}
                       <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner relative overflow-hidden ${item.isMain ? "bg-violet-500/15" : "bg-slate-50 dark:bg-white/8 shadow-sm dark:shadow-none"}`}>
-                        <svg viewBox="0 0 40 40" className={`w-9 h-9 ${item.isMain ? "text-violet-400" : "text-slate-400"}`} fill="none">
+                        <svg viewBox="0 0 40 40" className={`w-9 h-9 ${item.isMain ? "text-violet-400" : "text-muted-foreground"}`} fill="none">
                           {/* Racket head */}
                           <ellipse cx="20" cy="15" rx="10" ry="12" stroke="currentColor" strokeWidth="2" />
                           {/* String pattern */}
@@ -317,14 +317,14 @@ export function EquipmentArsenalSection({
                       </div>
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-black text-lg text-slate-800 dark:text-white">{item.data.name}</h3>
+                          <h3 className="font-black text-lg text-slate-800 dark:text-foreground">{item.data.name}</h3>
                           {item.isMain && (
-                            <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 bg-violet-500 text-white rounded-lg">Primary</span>
+                            <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 bg-violet-500 text-foreground rounded-lg">Primary</span>
                           )}
                         </div>
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-500 dark:text-white/45 font-medium">
-                          <span className="flex items-center gap-1.5"><Dna className="w-3.5 h-3.5 text-blue-500" /> String: <span className="font-bold text-slate-700 dark:text-white/80">{item.data.string}</span></span>
-                          <span className="flex items-center gap-1.5"><Activity className="w-3.5 h-3.5 text-rose-500" /> Tension: <span className="font-bold text-slate-700 dark:text-white/80">{item.data.tension}</span></span>
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground dark:text-foreground/45 font-medium">
+                          <span className="flex items-center gap-1.5"><Dna className="w-3.5 h-3.5 text-blue-500" /> String: <span className="font-bold text-muted-foreground dark:text-foreground/80">{item.data.string}</span></span>
+                          <span className="flex items-center gap-1.5"><Activity className="w-3.5 h-3.5 text-rose-500" /> Tension: <span className="font-bold text-muted-foreground dark:text-foreground/80">{item.data.tension}</span></span>
                         </div>
                       </div>
                     </div>
@@ -361,11 +361,11 @@ export function EquipmentArsenalSection({
                       </div>
                       <div className="min-w-0">
                         <div className="text-[9px] uppercase tracking-[0.15em] text-blue-400 font-black mb-0.5">Footwear</div>
-                        <div className="font-bold text-base text-slate-800 dark:text-white/90 truncate">{item.data.name}</div>
+                        <div className="font-bold text-base text-slate-800 dark:text-foreground/90 truncate">{item.data.name}</div>
                       </div>
                     </div>
                     {item.data.primary && (
-                      <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 bg-blue-500 text-white rounded-lg shrink-0">Primary</span>
+                      <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 bg-blue-500 text-foreground rounded-lg shrink-0">Primary</span>
                     )}
                   </div>
                 </div>
@@ -396,7 +396,7 @@ export function EquipmentArsenalSection({
                     </div>
                     <div>
                       <div className="text-[9px] uppercase tracking-[0.15em] text-violet-400 font-black mb-0.5">Apparel</div>
-                      <div className="font-bold text-base text-slate-800 dark:text-white/90">{item.data.name}</div>
+                      <div className="font-bold text-base text-slate-800 dark:text-foreground/90">{item.data.name}</div>
                     </div>
                   </div>
                 </div>
@@ -446,7 +446,7 @@ export function CareerHighlightsSection({ player }: { player: any }) {
     <motion.section variants={itemVariants}>
       <div className="flex items-center gap-3 mb-5">
         <div className="h-px flex-1 bg-slate-50 dark:bg-white/8 shadow-sm dark:shadow-none" />
-        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500 dark:text-white/35 shrink-0">
+        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground dark:text-foreground/35 shrink-0">
           Career Highlights
         </span>
         <div className="h-px flex-1 bg-slate-50 dark:bg-white/8 shadow-sm dark:shadow-none" />
@@ -477,14 +477,14 @@ export function CareerHighlightsSection({ player }: { player: any }) {
                   </div>
                   {/* Card */}
                   <div className="flex-1 bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-xl p-4 border border-slate-200 dark:border-white/8 hover:border-white/15 hover:bg-slate-50 dark:bg-white/8 shadow-sm dark:shadow-none hover:-translate-y-0.5 transition-all duration-300">
-                    <div className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-500 dark:text-white/35 mb-1">
+                    <div className="text-[9px] font-black uppercase tracking-[0.18em] text-muted-foreground dark:text-foreground/35 mb-1">
                       {h.year}
                     </div>
-                    <div className="text-sm font-black text-slate-800 dark:text-white leading-snug">
+                    <div className="text-sm font-black text-slate-800 dark:text-foreground leading-snug">
                       {h.title}
                     </div>
                     {h.description && (
-                      <div className="text-xs text-slate-500 dark:text-white/45 mt-1.5 leading-relaxed">
+                      <div className="text-xs text-muted-foreground dark:text-foreground/45 mt-1.5 leading-relaxed">
                         {h.description}
                       </div>
                     )}

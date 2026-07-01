@@ -57,7 +57,7 @@ export default function ChangePassword() {
       <div className="max-w-md w-full mx-auto">
         <button
           onClick={() => setLocation("/")}
-          className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white mb-8 transition-colors"
+          className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-foreground mb-8 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Back to home
         </button>
@@ -67,10 +67,10 @@ export default function ChangePassword() {
             <Lock className="w-6 h-6 text-primary dark:text-primary" />
           </div>
           
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white mb-2">
+          <h1 className="text-2xl font-black text-foreground dark:text-foreground mb-2">
             Change Password
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">
+          <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-8">
             Create a new, strong password to secure your account.
           </p>
 
@@ -83,16 +83,16 @@ export default function ChangePassword() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wider">
+                <label className="block text-xs font-bold text-muted-foreground dark:text-slate-300 mb-2 uppercase tracking-wider">
                   New Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-slate-900 dark:text-white"
+                    className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-foreground dark:text-foreground"
                     placeholder="Min. 6 characters"
                   />
                 </div>
@@ -117,16 +117,16 @@ export default function ChangePassword() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wider">
+                <label className="block text-xs font-bold text-muted-foreground dark:text-slate-300 mb-2 uppercase tracking-wider">
                   Confirm Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-slate-900 dark:text-white"
+                    className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-foreground dark:text-foreground"
                     placeholder="Type password again"
                   />
                 </div>
@@ -135,7 +135,7 @@ export default function ChangePassword() {
               <Button
                 type="submit"
                 disabled={loading || !newPassword || !confirmPassword || newPassword !== confirmPassword}
-                className="w-full bg-primary hover:bg-primary text-white font-bold py-3 rounded-xl transition-all h-auto"
+                className="w-full bg-primary hover:bg-primary text-foreground font-bold py-3 rounded-xl transition-all h-auto"
               >
                 {loading ? "Updating..." : "Update Password"}
               </Button>

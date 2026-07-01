@@ -144,7 +144,7 @@ export default function StatusBanner() {
               });
               msgs.push({
                 text: `📅 Courts closed on ${readable} — ${h.name}`,
-                colorClass: "text-white",
+                colorClass: "text-foreground",
               });
             }
           }
@@ -159,13 +159,13 @@ export default function StatusBanner() {
           if (diff >= 0 && diff <= 7) {
             msgs.push({
               text: `🎉 Upcoming: ${e.title}`,
-              colorClass: "text-white",
+              colorClass: "text-foreground",
             });
           }
           if (e.registrationDeadline === today) {
             msgs.push({
               text: `⚡ Last day to register — ${e.title}`,
-              colorClass: "text-white",
+              colorClass: "text-foreground",
             });
           }
         });
@@ -205,14 +205,14 @@ export default function StatusBanner() {
   return (
     <div className="flex flex-col">
       {maintenance.mode && (
-        <div className="bg-rose-600 text-white p-3 text-center text-sm font-bold shadow-md z-50 relative flex items-center justify-center gap-2">
+        <div className="bg-rose-600 text-foreground p-3 text-center text-sm font-bold shadow-md z-50 relative flex items-center justify-center gap-2">
           <span className="animate-pulse">🔴</span>
           {maintenance.msg}
         </div>
       )}
 
       {location === "/" && !isClosed && messages.length > 0 && (
-    <div className="relative bg-gradient-to-r from-primary to-primary text-white py-2.5 overflow-hidden flex items-center z-20 shadow-md">
+    <div className="relative bg-gradient-to-r from-primary to-primary text-foreground py-2.5 overflow-hidden flex items-center z-20 shadow-md">
       <Link href="/feed" className="flex-1 overflow-hidden min-w-0 pr-10">
         <div className="marquee-anim flex gap-8 font-semibold tracking-wide text-sm md:text-base whitespace-nowrap hover:opacity-90 transition-opacity cursor-pointer">
           {Array(2)
@@ -243,7 +243,7 @@ export default function StatusBanner() {
         className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-black/10 rounded-full transition-colors z-30"
         aria-label="Close banner"
       >
-        <X className="w-5 h-5 text-white/90" />
+        <X className="w-5 h-5 text-foreground/90" />
       </button>
     </div>
   )}
@@ -291,7 +291,7 @@ export default function StatusBanner() {
             return (
               <div
                 key={flyer.id}
-                className={`relative ${bgIsCss ? "" : flyer.bgColorClass} text-white py-2.5 overflow-hidden flex items-center z-20 shadow-md`}
+                className={`relative ${bgIsCss ? "" : flyer.bgColorClass} text-foreground py-2.5 overflow-hidden flex items-center z-20 shadow-md`}
                 style={bgIsCss ? { background: flyer.bgColorClass } : undefined}
               >
                 {flyer.url ? (
@@ -310,7 +310,7 @@ export default function StatusBanner() {
                   className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-black/10 rounded-full transition-colors z-30"
                   aria-label="Close flyer"
                 >
-                  <X className="w-5 h-5 text-white/90" />
+                  <X className="w-5 h-5 text-foreground/90" />
                 </button>
               </div>
             );

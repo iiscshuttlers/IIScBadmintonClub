@@ -122,8 +122,8 @@ interface RoundRule {
 // ── Shared styles ──────────────────────────────────────────────────────────────
 
 const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm";
-const inputCls = "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-primary transition";
-const labelCls = "block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5";
+const inputCls = "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary transition";
+const labelCls = "block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-1.5";
 const CATEGORIES = ["MS", "WS", "MD", "WD", "XD"];
 const STATUS_FLOW = ["draft", "active", "completed"] as const;
 
@@ -131,7 +131,7 @@ const STATUS_FLOW = ["draft", "active", "completed"] as const;
 
 function StatusChip({ status }: { status: string }) {
   const map: Record<string, string> = {
-    draft: "bg-slate-100 dark:bg-slate-800 text-slate-500",
+    draft: "bg-slate-100 dark:bg-slate-800 text-muted-foreground",
     active: "bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary",
     completed: "bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400",
     archived: "bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400",
@@ -157,7 +157,7 @@ function MatchStatusChip({ match }: { match: { status: string, scheduled_at?: st
     );
   }
 
-  return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500">Not scheduled yet</span>;
+  return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-muted-foreground">Not scheduled yet</span>;
 }
 
 // ── TournamentManager ──────────────────────────────────────────────────────────
@@ -249,7 +249,7 @@ export function TournamentManager() {
                 const t = tournaments.find((t) => t.id === e.target.value);
                 if (t) { setSelected(t); setTab("setup"); }
               }}
-              className="text-sm font-black text-slate-800 dark:text-white bg-transparent border-none outline-none cursor-pointer"
+              className="text-sm font-black text-slate-800 dark:text-foreground bg-transparent border-none outline-none cursor-pointer"
             >
               {tournaments.map((t) => (
                 <option key={t.id} value={t.id}>{t.name} [{t.status}]</option>
@@ -260,7 +260,7 @@ export function TournamentManager() {
           <button
             onClick={createTournament}
             disabled={creating}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary hover:bg-primary text-white text-xs font-black transition disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary hover:bg-primary text-foreground text-xs font-black transition disabled:opacity-50"
           >
             {creating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
             New Tournament
@@ -278,8 +278,8 @@ export function TournamentManager() {
                 onClick={() => setTab(tab)}
                 className={`px-3 py-2 rounded-xl text-sm font-black transition-all w-full sm:w-auto text-center ${
                   activeTab === tab
-                    ? "bg-primary text-white shadow"
-                    : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-primary"
+                    ? "bg-primary text-foreground shadow"
+                    : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-muted-foreground dark:text-slate-300 hover:border-primary"
                 }`}
               >
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -309,8 +309,8 @@ export function TournamentManager() {
 
       {!selected && !loading && (
         <div className={`${cardCls} text-center py-10`}>
-          <Trophy className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
-          <p className="text-slate-500 font-bold">No tournaments yet. Create one above.</p>
+          <Trophy className="w-12 h-12 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
+          <p className="text-muted-foreground font-bold">No tournaments yet. Create one above.</p>
         </div>
       )}
     </div>
@@ -387,41 +387,41 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
       {/* Status transitions */}
       <div className={cardCls}>
         <div className="flex items-center gap-3 flex-wrap">
-          <span className="text-sm font-bold text-slate-600 dark:text-slate-300">Status:</span>
+          <span className="text-sm font-bold text-muted-foreground dark:text-slate-300">Status:</span>
           <StatusChip status={form.status} />
           {form.status === "draft" && (
             <button onClick={() => transition("active")} disabled={transitioning}
-              className="px-3 py-1 text-xs font-black rounded-xl bg-primary hover:bg-primary text-white disabled:opacity-50 transition">
+              className="px-3 py-1 text-xs font-black rounded-xl bg-primary hover:bg-primary text-foreground disabled:opacity-50 transition">
               {transitioning ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "→ Activate"}
             </button>
           )}
           {form.status === "active" && (
             <>
               <button onClick={() => transition("completed")} disabled={transitioning}
-                className="px-3 py-1 text-xs font-black rounded-xl bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50 transition">
+                className="px-3 py-1 text-xs font-black rounded-xl bg-blue-600 hover:bg-blue-500 text-foreground disabled:opacity-50 transition">
                 {transitioning ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "→ Mark Completed"}
               </button>
               <button onClick={() => transition("draft")} disabled={transitioning}
-                className="px-3 py-1 text-xs font-black rounded-xl bg-slate-600 hover:bg-slate-500 text-white disabled:opacity-50 transition">
+                className="px-3 py-1 text-xs font-black rounded-xl bg-slate-600 hover:bg-slate-500 text-foreground disabled:opacity-50 transition">
                 {transitioning ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "↺ Revert to Draft"}
               </button>
             </>
           )}
           {form.status === "completed" && (
             <button onClick={() => transition("active")} disabled={transitioning}
-              className="px-3 py-1 text-xs font-black rounded-xl bg-amber-600 hover:bg-amber-500 text-white disabled:opacity-50 transition">
+              className="px-3 py-1 text-xs font-black rounded-xl bg-amber-600 hover:bg-amber-500 text-foreground disabled:opacity-50 transition">
               {transitioning ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "↺ Re-Activate (Live)"}
             </button>
           )}
           {form.status === "draft" && (
-            <span className="text-[10px] text-slate-400">Drafts are only visible to admins</span>
+            <span className="text-[10px] text-muted-foreground">Drafts are only visible to admins</span>
           )}
         </div>
       </div>
 
       {/* Details */}
       <div className={cardCls}>
-        <h3 className="font-black text-slate-800 dark:text-white mb-4">Details</h3>
+        <h3 className="font-black text-slate-800 dark:text-foreground mb-4">Details</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
             <label className={labelCls}>Tournament Name</label>
@@ -455,7 +455,7 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
                 return (
                   <button key={cat} type="button"
                     onClick={() => upd("categories", active ? form.categories.filter((c) => c !== cat) : [...form.categories, cat])}
-                    className={`px-4 py-1.5 rounded-xl text-sm font-black border transition-all ${active ? "bg-primary text-white border-primary" : "border-slate-200 dark:border-slate-700 text-slate-500 hover:border-primary"}`}>
+                    className={`px-4 py-1.5 rounded-xl text-sm font-black border transition-all ${active ? "bg-primary text-foreground border-primary" : "border-slate-200 dark:border-slate-700 text-muted-foreground hover:border-primary"}`}>
                     {cat}
                   </button>
                 );
@@ -475,7 +475,7 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
 
       {/* Registration */}
       <div className={cardCls}>
-        <h3 className="font-black text-slate-800 dark:text-white mb-4">Registration Form</h3>
+        <h3 className="font-black text-slate-800 dark:text-foreground mb-4">Registration Form</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
             <label className={labelCls}>Form URL</label>
@@ -509,7 +509,7 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
           )}
         </div>
         <button onClick={save} disabled={saving}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary hover:bg-primary disabled:opacity-50 text-white font-black transition shadow-lg">
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary hover:bg-primary disabled:opacity-50 text-foreground font-black transition shadow-lg">
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           Save Details
         </button>
@@ -550,7 +550,7 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
                 if (onDelete) onDelete(); // Close setup tab view by clearing selected
               }
             }}
-            className="shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black transition shadow"
+            className="shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-foreground font-black transition shadow"
           >
             Trash Tournament
           </button>
@@ -844,10 +844,10 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
             <button onClick={() => setOpenCat(openCat === cat ? "" : cat)}
               className="w-full flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <span className="text-sm font-black px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">{cat}</span>
-                <span className="text-sm text-slate-500">{parts.length} participants</span>
+                <span className="text-sm font-black px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300">{cat}</span>
+                <span className="text-sm text-muted-foreground">{parts.length} participants</span>
               </div>
-              {openCat === cat ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+              {openCat === cat ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
             </button>
 
             {openCat === cat && (
@@ -862,10 +862,10 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                           value={p.seed ?? i + 1}
                           onChange={(e) => updateSeed(p.id, parseInt(e.target.value))}
                           className="w-12 text-center text-sm font-black rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 py-1 outline-none" />
-                        <div className="flex-1 text-sm font-bold text-slate-800 dark:text-white">
+                        <div className="flex-1 text-sm font-bold text-slate-800 dark:text-foreground">
                           {p.display_name ?? player?.full_name ?? "Unknown"}
                           {doubles && (partner || p.display_name) && (
-                            <span className="text-slate-400 font-medium"> & {partner?.full_name ?? "partner"}</span>
+                            <span className="text-muted-foreground font-medium"> & {partner?.full_name ?? "partner"}</span>
                           )}
                           {!p.player_id && (
                             <span className="ml-2 text-[10px] font-black text-amber-500 bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.5 rounded">external</span>
@@ -874,7 +874,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                         <button
                           onClick={() => { setLinkingId(linkingId === p.id ? null : p.id); setLinkSearch(""); }}
                           title={p.player_id ? "Change linked player" : "Link to registered player"}
-                          className={`p-1 transition ${p.player_id ? "text-blue-400 hover:text-blue-300" : "text-slate-400 hover:text-blue-500"}`}>
+                          className={`p-1 transition ${p.player_id ? "text-blue-400 hover:text-blue-300" : "text-muted-foreground hover:text-blue-500"}`}>
                           <Link className="w-4 h-4" />
                         </button>
                         {p.player_id && (
@@ -886,7 +886,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                           </button>
                         )}
                         <button onClick={() => removeParticipant(p.id)}
-                          className="p-1 text-slate-400 hover:text-rose-500 transition"><X className="w-4 h-4" /></button>
+                          className="p-1 text-muted-foreground hover:text-rose-500 transition"><X className="w-4 h-4" /></button>
                       </div>
                       {linkingId === p.id && (
                         <div className="ml-14 relative">
@@ -921,7 +921,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                 {adding === cat ? (
                   <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 space-y-2">
                     <div className="relative">
-                      <Search className="w-4 h-4 absolute left-2.5 top-2.5 text-slate-400" />
+                      <Search className="w-4 h-4 absolute left-2.5 top-2.5 text-muted-foreground" />
                       <input
                         value={catSearch}
                         onChange={(e) => setSearch((p) => ({ ...p, [cat]: e.target.value }))}
@@ -949,7 +949,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                     </div>
                     {doubles && (
                       <div className="relative">
-                        <Search className="w-4 h-4 absolute left-2.5 top-2.5 text-slate-400" />
+                        <Search className="w-4 h-4 absolute left-2.5 top-2.5 text-muted-foreground" />
                         <input
                           value={catPartnerSearch}
                           onChange={(e) => setPartnerSearch((p) => ({ ...p, [cat]: e.target.value }))}
@@ -985,17 +985,17 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                       {externalName && (
                         <button
                           onClick={() => addParticipant(cat, null, null, externalName)}
-                          className="mt-2 w-full py-1.5 text-xs font-black rounded-lg bg-slate-700 hover:bg-slate-600 text-white transition">
+                          className="mt-2 w-full py-1.5 text-xs font-black rounded-lg bg-slate-700 hover:bg-slate-600 text-foreground transition">
                           Add "{externalName}" as external player
                         </button>
                       )}
                     </div>
-                    <button onClick={() => setAdding(null)} className="text-xs text-slate-400 hover:text-slate-600 transition">Cancel</button>
+                    <button onClick={() => setAdding(null)} className="text-xs text-muted-foreground hover:text-muted-foreground transition">Cancel</button>
                   </div>
                 ) : bulkCat === cat ? (
                   <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 space-y-3">
                     <div className="flex items-start justify-between gap-2">
-                      <p className="text-xs font-bold text-slate-500">
+                      <p className="text-xs font-bold text-muted-foreground">
                         Paste names — one per line.
                         {isDoubles(cat) && ' For doubles, use two columns (tab-separated) or "Name1 & Name2".'}
                       </p>
@@ -1015,7 +1015,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                         </button>
                         <button
                           onClick={() => downloadParticipantTemplate(cat)}
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-[10px] font-black text-slate-500 hover:text-primary hover:border-primary transition"
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-[10px] font-black text-muted-foreground hover:text-primary hover:border-primary transition"
                         >
                           <Download className="w-3 h-3" /> CSV Template
                         </button>
@@ -1029,7 +1029,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                       placeholder={isDoubles(cat) ? "Rahul Sharma\tPriya Nair\nArun K\tMeena R" : "Rahul Sharma\nPriya Nair\nArun Kumar"}
                       className="w-full px-3 py-2 text-sm font-mono rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-1 focus:ring-primary resize-none"
                     />
-                    <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-400 hover:text-blue-500 transition w-fit">
+                    <label className="flex items-center gap-2 cursor-pointer text-xs text-muted-foreground hover:text-blue-500 transition w-fit">
                       <Upload className="w-3.5 h-3.5" />
                       <span>Upload CSV instead</span>
                       <input type="file" accept=".csv" className="hidden"
@@ -1042,7 +1042,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                           {entries.map((e, i) => (
                             <div key={i} className="flex items-center gap-2 text-xs py-1 border-b border-slate-100 dark:border-slate-800 last:border-0">
                               <span className={`w-2 h-2 rounded-full shrink-0 ${e.match1 ? "bg-primary" : "bg-amber-400"}`} />
-                              <span className="flex-1 text-slate-700 dark:text-slate-300 truncate">{e.raw}</span>
+                              <span className="flex-1 text-muted-foreground dark:text-slate-300 truncate">{e.raw}</span>
                               <span className={`text-[10px] font-black uppercase ${e.match1 ? "text-primary" : "text-amber-500"}`}>
                                 {e.match1 ? "matched" : "external"}
                               </span>
@@ -1055,21 +1055,21 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                       <button
                         onClick={() => runBulkImport(cat)}
                         disabled={bulkImporting || !bulkText.trim()}
-                        className="flex-1 py-2 text-xs font-black rounded-lg bg-primary hover:bg-primary text-white transition disabled:opacity-50 flex items-center justify-center gap-1">
+                        className="flex-1 py-2 text-xs font-black rounded-lg bg-primary hover:bg-primary text-foreground transition disabled:opacity-50 flex items-center justify-center gap-1">
                         {bulkImporting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
                         Import {bulkText.trim() ? parseBulkLines(bulkText, cat).length : 0} Participants
                       </button>
-                      <button onClick={() => { setBulkCat(null); setBulkText(""); }} className="text-xs text-slate-400 hover:text-slate-600 transition px-2">Cancel</button>
+                      <button onClick={() => { setBulkCat(null); setBulkText(""); }} className="text-xs text-muted-foreground hover:text-muted-foreground transition px-2">Cancel</button>
                     </div>
                   </div>
                 ) : (
                   <div className="flex gap-2">
                     <button onClick={() => setAdding(cat)}
-                      className="flex-1 py-2 text-xs font-black rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 hover:border-primary hover:text-primary transition flex items-center justify-center gap-1">
+                      className="flex-1 py-2 text-xs font-black rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-muted-foreground hover:border-primary hover:text-primary transition flex items-center justify-center gap-1">
                       <Plus className="w-3.5 h-3.5" /> Add Participant
                     </button>
                     <button onClick={() => { setBulkCat(cat); setBulkText(""); setAdding(null); }}
-                      className="px-3 py-2 text-xs font-black rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 hover:border-blue-400 hover:text-blue-600 transition flex items-center justify-center gap-1">
+                      className="px-3 py-2 text-xs font-black rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-muted-foreground hover:border-blue-400 hover:text-blue-600 transition flex items-center justify-center gap-1">
                       <Upload className="w-3.5 h-3.5" /> Bulk / CSV
                     </button>
                   </div>
@@ -1077,7 +1077,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
 
                 {/* Per-category 3rd place toggle */}
                 <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                  <span className="text-xs text-slate-500 font-bold">3rd Place Playoff</span>
+                  <span className="text-xs text-muted-foreground font-bold">3rd Place Playoff</span>
                   <button
                     onClick={() => setThirdPlacePerCat((p) => ({ ...p, [cat]: !p[cat] }))}
                     className={`relative w-9 h-5 rounded-full transition-colors ${thirdPlacePerCat[cat] ? "bg-primary" : "bg-slate-300 dark:bg-slate-600"}`}
@@ -1087,11 +1087,11 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                 </div>
                 <div className="flex justify-end gap-2 pt-2">
                   <button onClick={() => saveSeeds(cat)}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-primary text-white text-xs font-black shadow transition">
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-primary text-foreground text-xs font-black shadow transition">
                     Save
                   </button>
                   <button onClick={() => generateBracket(cat)}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black shadow transition">
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-foreground text-xs font-black shadow transition">
                     <Swords className="w-3.5 h-3.5" /> Generate Bracket
                   </button>
                 </div>
@@ -1407,7 +1407,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
   if (!matches.length) return (
     <div className={`${cardCls} text-center py-10`}>
       <Swords className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-      <p className="text-slate-500 font-bold">No bracket yet. Go to Participants tab and click Generate Bracket.</p>
+      <p className="text-muted-foreground font-bold">No bracket yet. Go to Participants tab and click Generate Bracket.</p>
     </div>
   );
 
@@ -1421,7 +1421,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
         <div className="flex flex-wrap gap-2">
           {tournament.categories.map((cat) => (
             <button key={cat} onClick={() => setActiveCategory(cat)}
-              className={`px-4 py-1.5 rounded-xl text-sm font-black transition-all ${activeCategory === cat ? "bg-primary text-white" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-primary"}`}>
+              className={`px-4 py-1.5 rounded-xl text-sm font-black transition-all ${activeCategory === cat ? "bg-primary text-foreground" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-muted-foreground dark:text-slate-300 hover:border-primary"}`}>
               {cat}
             </button>
           ))}
@@ -1429,16 +1429,16 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
         <div className="grid grid-cols-2 gap-2 w-full sm:w-auto">
           <div className="flex rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden text-xs font-black w-full">
             <button onClick={() => setViewMode("visual")}
-              className={`flex-1 px-3 py-1.5 transition ${viewMode === "visual" ? "bg-slate-800 text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}>
+              className={`flex-1 px-3 py-1.5 transition ${viewMode === "visual" ? "bg-slate-800 text-foreground" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}>
               Visual
             </button>
             <button onClick={() => setViewMode("list")}
-              className={`flex-1 px-3 py-1.5 transition ${viewMode === "list" ? "bg-slate-800 text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}>
+              className={`flex-1 px-3 py-1.5 transition ${viewMode === "list" ? "bg-slate-800 text-foreground" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}>
               List
             </button>
           </div>
           <button onClick={() => setShowRules((v) => !v)}
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-black text-slate-600 dark:text-slate-300 hover:border-primary transition w-full">
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-black text-muted-foreground dark:text-slate-300 hover:border-primary transition w-full">
             <Settings2 className="w-3.5 h-3.5 shrink-0" /> Round Rules
           </button>
           <button onClick={() => { setShowBulkSchedule(true); setBulkPreview([]); setBulkText(""); }}
@@ -1486,7 +1486,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
           </button>
           {isMasterAdmin && (
             <button onClick={batchAdvance}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black transition w-full">
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-foreground text-xs font-black transition w-full">
               <SkipForward className="w-3.5 h-3.5 shrink-0" /> Batch Advance
             </button>
           )}
@@ -1496,7 +1496,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
       {/* Round rules panel */}
       {showRules && (
         <div className={cardCls}>
-          <h3 className="font-black text-slate-800 dark:text-white mb-3 text-sm">Round Scoring Rules — {activeCategory}</h3>
+          <h3 className="font-black text-slate-800 dark:text-foreground mb-3 text-sm">Round Scoring Rules — {activeCategory}</h3>
           <div className="space-y-2">
             {rounds.map((round) => {
               const rule = roundRules.find((r) => r.category === activeCategory && r.round === round) ?? {
@@ -1508,7 +1508,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                 <div key={round} className="grid grid-cols-[1.5fr_1fr_1fr_1fr_auto] gap-2 items-end mb-2 pb-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
                   <div>
                     <label className={labelCls}>Round</label>
-                    <div className="text-sm font-bold text-slate-700 dark:text-slate-300 py-2 truncate">{rule.round_name ?? `R${round}`}</div>
+                    <div className="text-sm font-bold text-muted-foreground dark:text-slate-300 py-2 truncate">{rule.round_name ?? `R${round}`}</div>
                   </div>
                   {(["points_to_win", "best_of_sets", "golden_point"] as const).map((field) => (
                     <div key={field}>
@@ -1527,7 +1527,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                         const gp = parseInt((document.getElementById(`rule-${activeCategory}-${round}-golden_point`) as HTMLInputElement)?.value || "30");
                         saveRoundRule({ ...rule, points_to_win: ptw, best_of_sets: bos, golden_point: gp });
                       }}
-                      className="px-3 py-2 rounded-xl bg-primary hover:bg-primary text-white text-xs font-black transition shadow-sm mb-[1px]"
+                      className="px-3 py-2 rounded-xl bg-primary hover:bg-primary text-foreground text-xs font-black transition shadow-sm mb-[1px]"
                     >
                       Save
                     </button>
@@ -1550,7 +1550,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
         const roundName = roundMatches[0]?.round_name ?? `Round ${round}`;
         return (
           <div key={round}>
-            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">{roundName}</h3>
+            <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">{roundName}</h3>
             <div className="space-y-2">
               {roundMatches.map((m) => {
                 const busy = actingOn === m.id;
@@ -1565,23 +1565,23 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                       <div className="flex-1 min-w-0">
                         {/* Match header */}
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-[10px] font-black text-slate-400 uppercase">{m.match_code}</span>
+                          <span className="text-[10px] font-black text-muted-foreground uppercase">{m.match_code}</span>
                           <MatchStatusChip match={m} />
                           {m.locked && <Lock className="w-3 h-3 text-amber-500" aria-label="Locked — master_admin only" />}
                           {m.court_number && (
                             <span className="text-[10px] text-blue-500 font-bold">Court {m.court_number}</span>
                           )}
                           {m.scheduled_at && (
-                            <span className="text-[10px] text-slate-400">{new Date(m.scheduled_at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })}</span>
+                            <span className="text-[10px] text-muted-foreground">{new Date(m.scheduled_at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })}</span>
                           )}
                         </div>
 
                         {/* Teams */}
-                        <div className={`text-sm font-bold ${m.winner_side === 1 ? "text-primary dark:text-primary" : "text-slate-700 dark:text-slate-200"}`}>
+                        <div className={`text-sm font-bold ${m.winner_side === 1 ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-slate-200"}`}>
                           {m.team1_label ?? "TBD"}
                         </div>
-                        <div className="text-[10px] text-slate-400 my-0.5">vs</div>
-                        <div className={`text-sm font-bold ${m.winner_side === 2 ? "text-primary dark:text-primary" : "text-slate-700 dark:text-slate-200"}`}>
+                        <div className="text-[10px] text-muted-foreground my-0.5">vs</div>
+                        <div className={`text-sm font-bold ${m.winner_side === 2 ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-slate-200"}`}>
                           {m.team2_label ?? "TBD"}
                         </div>
 
@@ -1620,11 +1620,11 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                             <Trophy className="w-3.5 h-3.5" /> Enter Score
                           </button>
                           <button onClick={() => submitWalkover(m.id, 1)} disabled={busy}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-lg border border-slate-200 dark:border-slate-700 text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 transition">
                             <SkipForward className="w-3.5 h-3.5" /> W/O T1
                           </button>
                           <button onClick={() => submitWalkover(m.id, 2)} disabled={busy}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-lg border border-slate-200 dark:border-slate-700 text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 transition">
                             <SkipForward className="w-3.5 h-3.5" /> W/O T2
                           </button>
                         </>
@@ -1651,7 +1651,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                       )}
                       {!isByeMatch && (
                         <button onClick={() => setEditSchedule({ matchId: m.id, court: m.court_number ?? "", at: m.scheduled_at ?? "" })}
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition ml-auto">
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-lg border border-slate-200 dark:border-slate-700 text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 transition ml-auto">
                           <CalendarDays className="w-3.5 h-3.5" /> Schedule
                         </button>
                       )}
@@ -1684,7 +1684,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                       )}
                       {isMasterAdmin && !isByeMatch && (
                         <div className={`${m.status === "scheduled" ? "ml-auto" : ""} flex items-center gap-2`}>
-                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Force Status:</label>
+                          <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Force Status:</label>
                           <select
                             value={m.status}
                             onChange={async (e) => {
@@ -1712,7 +1712,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                               if (!res.error) setMatches((res.data as TournamentMatch[]) ?? []);
                             }}
                             disabled={busy}
-                            className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-black uppercase text-slate-600 dark:text-slate-300 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-primary outline-none transition cursor-pointer"
+                            className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-black uppercase text-muted-foreground dark:text-slate-300 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-primary outline-none transition cursor-pointer"
                           >
                             <option value="scheduled">Scheduled</option>
                             <option value="in_progress">In Progress</option>
@@ -1758,7 +1758,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                       return (
                         <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
                           {/* Scoring rules indicator */}
-                          <div className="flex items-center justify-center gap-2 mb-1 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 dark:bg-slate-800/50 py-1.5 rounded-lg border border-slate-100 dark:border-slate-700/50">
+                          <div className="flex items-center justify-center gap-2 mb-1 text-[10px] font-black text-muted-foreground uppercase tracking-widest bg-slate-50 dark:bg-slate-800/50 py-1.5 rounded-lg border border-slate-100 dark:border-slate-700/50">
                             <span title="Points required to win a set">Win at {editScore!.pointsToWin}</span>
                             <span className="opacity-30">•</span>
                             <span title="Best of X sets">Best of {editScore!.bestOfSets}</span>
@@ -1768,7 +1768,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                           {/* Header row */}
                           <div className="grid grid-cols-[3rem_1fr_1.5rem_1fr] gap-x-2 items-center">
                             <div />
-                            <div className="text-center text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1">
+                            <div className="text-center text-[10px] font-black uppercase tracking-wider text-muted-foreground dark:text-muted-foreground px-1">
                               {(() => {
                                 const l = m.team1_label ?? "Team 1";
                                 if (!l.includes("&")) return <div className="break-words whitespace-normal leading-[1.1]">{l}</div>;
@@ -1783,7 +1783,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                               })()}
                             </div>
                             <div />
-                            <div className="text-center text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1">
+                            <div className="text-center text-[10px] font-black uppercase tracking-wider text-muted-foreground dark:text-muted-foreground px-1">
                               {(() => {
                                 const l = m.team2_label ?? "Team 2";
                                 if (!l.includes("&")) return <div className="break-words whitespace-normal leading-[1.1]">{l}</div>;
@@ -1810,7 +1810,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                             const t2Won = !isNaN(t1n) && !isNaN(t2n) && t2n > t1n;
                             return (
                               <div key={i} className={`grid grid-cols-[3rem_1fr_1.5rem_1fr] gap-x-2 items-center ${isDisabled ? "opacity-40 pointer-events-none grayscale" : ""}`}>
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">G{i + 1}</span>
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">G{i + 1}</span>
                                 <input
                                   type="text" inputMode="numeric" value={s.t1}
                                   onChange={(e) => updateSet(i, "t1", e.target.value)}
@@ -1818,10 +1818,10 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                                   placeholder="—"
                                   className={`text-center font-black text-base rounded-xl border-2 py-2 outline-none transition w-full
                                     ${t1Won ? "border-primary bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary/70"
-                                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"}
+                                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-foreground"}
                                     focus:border-primary`}
                                 />
-                                <span className="text-center text-xs font-bold text-slate-400">–</span>
+                                <span className="text-center text-xs font-bold text-muted-foreground">–</span>
                                 <input
                                   type="text" inputMode="numeric" value={s.t2}
                                   onChange={(e) => updateSet(i, "t2", e.target.value)}
@@ -1829,7 +1829,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                                   placeholder="—"
                                   className={`text-center font-black text-base rounded-xl border-2 py-2 outline-none transition w-full
                                     ${t2Won ? "border-primary bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary/70"
-                                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"}
+                                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-foreground"}
                                     focus:border-primary`}
                                 />
                               </div>
@@ -1837,12 +1837,12 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                           })}
                           {/* Winner row */}
                           <div className="flex items-center gap-2 pt-1">
-                            <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 shrink-0">Winner</span>
+                            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground shrink-0">Winner</span>
                             {autoWinner ? (
                               <span className="flex items-center gap-1.5 text-xs font-black text-primary dark:text-primary">
                                 <Trophy className="w-3 h-3" />
                                 {editScore!.side === 1 ? (m.team1_label ?? "Team 1") : (m.team2_label ?? "Team 2")}
-                                <span className="text-slate-400 dark:text-slate-500 font-normal">(auto-detected)</span>
+                                <span className="text-muted-foreground dark:text-muted-foreground font-normal">(auto-detected)</span>
                               </span>
                             ) : (
                               <select value={editScore!.side} onChange={(e) => setEditScore((p) => p && ({ ...p, side: parseInt(e.target.value) as 1 | 2 }))}
@@ -1855,10 +1855,10 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                           {/* Actions */}
                           <div className="flex gap-2 pt-1">
                             <button onClick={submitEditScore}
-                              className="px-4 py-1.5 rounded-xl bg-primary hover:bg-primary text-white text-xs font-black transition">
+                              className="px-4 py-1.5 rounded-xl bg-primary hover:bg-primary text-foreground text-xs font-black transition">
                               Save
                             </button>
-                            <button onClick={() => setEditScore(null)} className="text-xs text-slate-400 hover:text-slate-600 transition">Cancel</button>
+                            <button onClick={() => setEditScore(null)} className="text-xs text-muted-foreground hover:text-muted-foreground transition">Cancel</button>
                           </div>
                         </div>
                       );
@@ -1911,8 +1911,8 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <button onClick={saveSchedule} className="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-black transition">Save</button>
-                          <button onClick={() => setEditSchedule(null)} className="text-xs text-slate-400 hover:text-slate-600 transition">Cancel</button>
+                          <button onClick={saveSchedule} className="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-foreground text-xs font-black transition">Save</button>
+                          <button onClick={() => setEditSchedule(null)} className="text-xs text-muted-foreground hover:text-muted-foreground transition">Cancel</button>
                         </div>
                       </div>
                     )}
@@ -1929,9 +1929,9 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col gap-4 p-6">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-black text-slate-800 dark:text-white text-base">Bulk Schedule — {activeCategory}</h3>
-                <p className="text-xs text-slate-500 mt-0.5">One match per line. Supported text formats:</p>
-                <div className="mt-1 text-xs text-slate-400 font-mono space-y-0.5">
+                <h3 className="font-black text-slate-800 dark:text-foreground text-base">Bulk Schedule — {activeCategory}</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">One match per line. Supported text formats:</p>
+                <div className="mt-1 text-xs text-muted-foreground font-mono space-y-0.5">
                   <p>MS_QF_01: Court 3, 2026-06-30 10:00</p>
                   <p>MS_QF_02 court=4 date=2026-06-30 time=11:30</p>
                   <p>MS_SF_01, Court 1, 30/06/2026 14:00</p>
@@ -1940,10 +1940,10 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
               <div className="flex items-center gap-2">
                 <button
                   onClick={downloadScheduleTemplate}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-black text-slate-500 hover:text-blue-600 hover:border-blue-400 transition">
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-black text-muted-foreground hover:text-blue-600 hover:border-blue-400 transition">
                   <Download className="w-3.5 h-3.5" /> CSV Template
                 </button>
-                <button onClick={() => setShowBulkSchedule(false)} className="text-slate-400 hover:text-slate-600 transition">
+                <button onClick={() => setShowBulkSchedule(false)} className="text-muted-foreground hover:text-muted-foreground transition">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -1960,10 +1960,10 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
             <div className="flex items-center gap-3">
               <button
                 onClick={() => parseBulkSchedule(bulkText)}
-                className="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-black transition">
+                className="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-foreground text-xs font-black transition">
                 Preview
               </button>
-              <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs text-slate-400 hover:text-blue-500 transition">
+              <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground hover:text-blue-500 transition">
                 <Upload className="w-3.5 h-3.5" />
                 <span>Upload CSV</span>
                 <input type="file" accept=".csv" className="hidden"
@@ -1973,14 +1973,14 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
 
             {bulkPreview.length > 0 && (
               <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden text-xs">
-                <div className="grid grid-cols-4 gap-0 bg-slate-50 dark:bg-slate-800 px-3 py-2 font-black text-slate-500 uppercase tracking-wider text-[10px]">
+                <div className="grid grid-cols-4 gap-0 bg-slate-50 dark:bg-slate-800 px-3 py-2 font-black text-muted-foreground uppercase tracking-wider text-[10px]">
                   <span>Match</span><span>Court</span><span>Date & Time</span><span>Status</span>
                 </div>
                 {bulkPreview.map((row, i) => (
                   <div key={i} className={`grid grid-cols-4 gap-0 px-3 py-2 border-t border-slate-100 dark:border-slate-800 ${!row.found ? "bg-red-50 dark:bg-red-950/20" : ""}`}>
-                    <span className="font-bold text-slate-700 dark:text-slate-300">{row.matchCode}</span>
-                    <span className="text-slate-600 dark:text-slate-400">{row.court || <span className="text-slate-300">—</span>}</span>
-                    <span className="text-slate-600 dark:text-slate-400">{row.at ? new Date(row.at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : <span className="text-slate-300">—</span>}</span>
+                    <span className="font-bold text-muted-foreground dark:text-slate-300">{row.matchCode}</span>
+                    <span className="text-muted-foreground dark:text-muted-foreground">{row.court || <span className="text-slate-300">—</span>}</span>
+                    <span className="text-muted-foreground dark:text-muted-foreground">{row.at ? new Date(row.at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : <span className="text-slate-300">—</span>}</span>
                     <span className={row.found ? "text-primary font-bold" : "text-red-500 font-bold"}>
                       {row.found ? "✓ Found" : "✗ Not found"}
                     </span>
@@ -1993,11 +1993,11 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
               <button
                 onClick={saveBulkSchedule}
                 disabled={bulkSaving || bulkPreview.length === 0 || bulkPreview.every((r) => !r.found)}
-                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-black transition disabled:opacity-40 disabled:cursor-not-allowed">
+                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-foreground text-xs font-black transition disabled:opacity-40 disabled:cursor-not-allowed">
                 {bulkSaving ? "Saving…" : `Save ${bulkPreview.filter((r) => r.found).length} Match${bulkPreview.filter((r) => r.found).length !== 1 ? "es" : ""}`}
               </button>
               <button onClick={() => { setShowBulkSchedule(false); setBulkText(""); setBulkPreview([]); }}
-                className="text-xs text-slate-400 hover:text-slate-600 transition">
+                className="text-xs text-muted-foreground hover:text-muted-foreground transition">
                 Cancel
               </button>
             </div>
@@ -2046,11 +2046,11 @@ function ArchiveTab({ tournament, isMasterAdmin, onArchived }: {
         <div className={cardCls}>
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-black text-slate-800 dark:text-white">Archive Tournament</h3>
-              <p className="text-sm text-slate-500 mt-1">Freeze all results and make this a historical record. Cannot be undone.</p>
+              <h3 className="font-black text-slate-800 dark:text-foreground">Archive Tournament</h3>
+              <p className="text-sm text-muted-foreground mt-1">Freeze all results and make this a historical record. Cannot be undone.</p>
             </div>
             <button onClick={archive} disabled={archiving}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-black transition disabled:opacity-50">
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-foreground font-black transition disabled:opacity-50">
               {archiving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Archive className="w-4 h-4" />}
               Archive
             </button>
@@ -2071,7 +2071,7 @@ function ArchiveTab({ tournament, isMasterAdmin, onArchived }: {
               if (error) { toast.error(error.message); setArchiving(false); return; }
               toast.success("Tournament unarchived");
               onArchived();
-            }} disabled={archiving} className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-widest font-black px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition disabled:opacity-50">
+            }} disabled={archiving} className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-widest font-black px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition disabled:opacity-50">
               {archiving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
               Unarchive
             </button>
@@ -2085,18 +2085,18 @@ function ArchiveTab({ tournament, isMasterAdmin, onArchived }: {
         const rounds = [...new Set(catMatches.map((m) => m.round))].sort((a, b) => a - b);
         return (
           <div key={cat} className={cardCls}>
-            <h3 className="font-black text-slate-800 dark:text-white mb-4">{cat} — Full Fixtures</h3>
+            <h3 className="font-black text-slate-800 dark:text-foreground mb-4">{cat} — Full Fixtures</h3>
             <div className="space-y-4">
               {rounds.map((round) => {
                 const roundMatches = catMatches.filter((m) => m.round === round);
                 return (
                   <div key={round}>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">{roundMatches[0]?.round_name}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">{roundMatches[0]?.round_name}</p>
                     <div className="space-y-2">
                       {roundMatches.map((m) => (
                         <div key={m.id} className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3">
                           <div className="flex items-center gap-2 mb-2">
-                            <span className="text-[10px] font-black text-slate-400">{m.match_code}</span>
+                            <span className="text-[10px] font-black text-muted-foreground">{m.match_code}</span>
                             <MatchStatusChip match={m} />
                           </div>
                           <MatchScoreDisplay
@@ -2119,7 +2119,7 @@ function ArchiveTab({ tournament, isMasterAdmin, onArchived }: {
 
       {!matches.length && (
         <div className={`${cardCls} text-center py-10`}>
-          <p className="text-slate-400">No matches recorded yet.</p>
+          <p className="text-muted-foreground">No matches recorded yet.</p>
         </div>
       )}
     </div>

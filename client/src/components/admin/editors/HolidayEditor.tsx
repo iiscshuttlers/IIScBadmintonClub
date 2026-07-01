@@ -59,7 +59,7 @@ export function HolidayEditor({
       ))}
       <button
         onClick={add}
-        className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 text-slate-500 hover:border-primary hover:text-primary transition text-sm font-bold w-full justify-center"
+        className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 text-muted-foreground hover:border-primary hover:text-primary transition text-sm font-bold w-full justify-center"
       >
         <Plus className="w-4 h-4" /> Add Holiday
       </button>
