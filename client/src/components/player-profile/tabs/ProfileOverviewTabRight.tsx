@@ -123,7 +123,7 @@ export function ProfileOverviewTabRight({
         {tournamentRuns && tournamentRuns.length > 0 && (
           <div className="mb-6">
             <h3 className="text-[9px] uppercase tracking-[0.18em] font-black text-slate-500 dark:text-white/35 mb-3 flex items-center gap-1.5">
-              <Swords className="w-3 h-3 text-emerald-500" /> Bracket Record
+              <Swords className="w-3 h-3 text-primary" /> Bracket Record
             </h3>
             <div className="space-y-2">
               {tournamentRuns.map((run) => {
@@ -146,14 +146,14 @@ export function ProfileOverviewTabRight({
                           {run.category}
                         </p>
                       </div>
-                      <span className={`text-[9px] font-bold shrink-0 px-2 py-0.5 rounded-full ${run.eliminated ? "bg-slate-200 dark:bg-white/8 text-slate-500 dark:text-white/40" : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"}`}>
+                      <span className={`text-[9px] font-bold shrink-0 px-2 py-0.5 rounded-full ${run.eliminated ? "bg-slate-200 dark:bg-white/8 text-slate-500 dark:text-white/40" : "bg-primary/15 text-primary dark:text-primary"}`}>
                         {resultLabel}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 mt-1.5">
                       <div className="flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-white/8 overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-emerald-500"
+                          className="h-full rounded-full bg-primary"
                           style={{ width: `${winPct}%` }}
                         />
                       </div>
@@ -211,7 +211,7 @@ export function ProfileOverviewTabRight({
                     ? "bg-slate-200 dark:bg-white/8 ring-white/20"
                     : isBronze
                     ? "bg-orange-500/10 ring-orange-500/25"
-                    : "bg-emerald-500/10 ring-emerald-500/25";
+                    : "bg-primary/10 ring-primary/25";
                   return (
                     <div key={idx} className="relative flex gap-3 items-start">
                       <div

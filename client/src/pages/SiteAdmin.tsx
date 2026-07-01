@@ -213,7 +213,7 @@ function SiteAdminInner() {
   if (authState === "loading")
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <div className="w-8 h-8 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin" />
+        <div className="w-8 h-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
       </div>
     );
 
@@ -232,7 +232,7 @@ function SiteAdminInner() {
                 sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
                 setLocation("/join");
               }}
-              className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition shadow-lg shadow-emerald-500/20"
+              className="px-6 py-3 bg-primary hover:bg-primary text-white font-bold rounded-xl transition shadow-lg shadow-primary/20"
             >
               Sign In
             </button>
@@ -256,11 +256,11 @@ function SiteAdminInner() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-safe pb-24 lg:pb-8">
       {/* Header */}
-      <section className="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-900 text-white py-10 md:sticky md:top-[48px] lg:top-[88px] md:z-40 shadow-xl border-b border-slate-900">
+      <section className="bg-gradient-to-r from-slate-900 via-slate-800 to-primary/80 text-white py-10 md:sticky md:top-[48px] lg:top-[88px] md:z-40 shadow-xl border-b border-slate-900">
         <div className="container mx-auto px-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2 text-emerald-400 text-xs font-black uppercase tracking-widest mb-2">
+              <div className="flex items-center gap-2 text-primary text-xs font-black uppercase tracking-widest mb-2">
                 <Shield className="w-4 h-4" /> Admin Panel
               </div>
               <div className="flex items-center gap-3">
@@ -304,14 +304,14 @@ function SiteAdminInner() {
                                         onClick={() => { handleTabChange(tab.id); setWaffleOpen(false); }}
                                         className={`relative flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl text-[11px] font-bold transition-all ${
                                           active
-                                            ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
+                                            ? "bg-primary/10 dark:bg-primary/40 text-primary dark:text-primary border border-primary/40 dark:border-primary/80"
                                             : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent"
                                         }`}
                                       >
-                                        <Icon className={`w-5 h-5 ${active ? "text-emerald-500" : "text-slate-400"}`} />
+                                        <Icon className={`w-5 h-5 ${active ? "text-primary" : "text-slate-400"}`} />
                                         <span className="text-center leading-tight">{tab.label}</span>
                                         {count !== null && (
-                                          <span className="absolute top-1 right-1 text-[9px] px-1 py-0.5 rounded-full font-black bg-emerald-500 text-white leading-none">{count}</span>
+                                          <span className="absolute top-1 right-1 text-[9px] px-1 py-0.5 rounded-full font-black bg-primary text-white leading-none">{count}</span>
                                         )}
                                       </button>
                                     );
@@ -332,15 +332,15 @@ function SiteAdminInner() {
             </div>
             <div className="flex flex-col sm:items-end items-start gap-1 w-full sm:w-auto mt-2 sm:mt-0">
               <div className="flex flex-wrap items-center gap-2">
-                <a
-                  href="/tournament-admin"
+                <button
+                  onClick={() => setLocation("/tournament-admin")}
                   className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-sm font-bold transition"
                   title="Open full Tournament Manager"
                 >
                   <Trophy className="w-4 h-4" />
                   <span className="hidden sm:inline">Tournaments</span>
                   <ExternalLink className="w-3 h-3 opacity-60" />
-                </a>
+                </button>
                 <button
                   onClick={undo}
                   disabled={!canUndo}
@@ -361,7 +361,7 @@ function SiteAdminInner() {
                 </button>
               </div>
               {(canUndo || canRedo) && (
-                <div className="text-[10px] text-emerald-300 font-medium w-full sm:max-w-[300px] sm:text-right text-left leading-tight break-words">
+                <div className="text-[10px] text-primary/70 font-medium w-full sm:max-w-[300px] sm:text-right text-left leading-tight break-words">
                   {canUndo && <div><span className="opacity-70">Undo:</span> {lastAction?.label}</div>}
                   {canRedo && <div><span className="opacity-70">Redo:</span> {nextRedoAction?.label}</div>}
                 </div>
@@ -381,7 +381,7 @@ function SiteAdminInner() {
             <div className="flex items-center gap-2 mb-6 text-sm text-slate-500 dark:text-slate-400">
               <button 
                 onClick={() => setWaffleOpen(true)}
-                className="text-slate-400 dark:text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
+                className="text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-primary transition-colors cursor-pointer"
                 title="View all admin sections"
               >
                 {activeGroup?.title ?? ""}

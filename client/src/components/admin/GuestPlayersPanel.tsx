@@ -304,11 +304,11 @@ export function GuestPlayersPanel() {
 
         {loading ? (
           <div className="flex justify-center py-10">
-            <Loader2 className="w-7 h-7 animate-spin text-emerald-500" />
+            <Loader2 className="w-7 h-7 animate-spin text-primary" />
           </div>
         ) : pending.length === 0 ? (
           <div className="text-center py-10 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
-            <CheckCircle className="w-10 h-10 text-emerald-400 mx-auto mb-2" />
+            <CheckCircle className="w-10 h-10 text-primary mx-auto mb-2" />
             <p className="text-sm font-bold text-slate-500">No guest matches awaiting approval.</p>
           </div>
         ) : (
@@ -341,7 +341,7 @@ export function GuestPlayersPanel() {
                     <button
                       disabled={isBusy}
                       onClick={() => approveMatch(m)}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition disabled:opacity-50"
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary hover:bg-primary text-white text-sm font-bold transition disabled:opacity-50"
                     >
                       {isBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trophy className="w-4 h-4" />}
                       Approve & apply ELO

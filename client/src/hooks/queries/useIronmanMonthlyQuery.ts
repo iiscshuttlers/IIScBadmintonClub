@@ -7,17 +7,23 @@ export function useIronmanMonthlyQuery(eloMode: "club" | "tournament", enabled: 
     queryFn: async () => {
       const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
       const tableName = eloMode === "tournament" ? "tournament_matches" : "matches";
-      const { data, error } = await supabase
-        .from(tableName)
-        .select("player1_id, player2_id, team1_partner_id, team2_partner_id, player3_id, player4_id")
-        .eq("status", eloMode === "tournament" ? "completed" : "confirmed")
-        .gte("created_at", startOfMonth);
+      const { data, error } = eloMode === "tournament"
+        ? await supabase
+            .from("tournament_matches")
+            .select("player1_id, player2_id, player3_id, player4_id")
+            .eq("status", "completed")
+            .gte("created_at", startOfMonth)
+        : await supabase
+            .from("matches")
+            .select("player1_id, player2_id, team1_partner_id, team2_partner_id")
+            .eq("status", "confirmed")
+            .gte("created_at", startOfMonth);
 
       if (error) throw error;
       
       const counts: Record<string, number> = {};
       if (data) {
-        for (const match of data) {
+        for (const match of (data as any[])) {
           const ids = eloMode === "tournament" 
             ? [match.player1_id, match.player2_id, match.player3_id, match.player4_id]
             : [match.player1_id, match.player2_id, match.team1_partner_id, match.team2_partner_id];

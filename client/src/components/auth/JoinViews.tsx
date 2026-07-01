@@ -5,7 +5,7 @@ import { Mail, Lock, Eye, EyeOff, UserPlus, LogIn, ArrowRight, KeyRound } from "
 import { Button } from "@/components/ui/button";
 import { getPasswordStrength, type useJoinAuth } from "@/hooks/useJoinAuth";
 
-const inputClass = "block w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm";
+const inputClass = "block w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm";
 
 type JoinAuthContext = ReturnType<typeof useJoinAuth>;
 
@@ -24,10 +24,10 @@ export function WelcomeView({ auth }: { auth: JoinAuthContext }) {
         <p className="text-base font-bold text-slate-700 dark:text-slate-200">Your campus shuttlers hub</p>
         <p className="text-xs text-slate-400 dark:text-slate-500">Track matches · Climb the ladder · Connect with players</p>
       </div>
-      <button onClick={() => { auth.reset(); auth.setMode("signin"); }} className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-lg shadow-emerald-500/25 transition">
+      <button onClick={() => { auth.reset(); auth.setMode("signin"); }} className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-primary hover:bg-primary text-white font-bold text-sm shadow-lg shadow-primary/25 transition">
         <LogIn className="w-4 h-4" /> Sign In
       </button>
-      <button onClick={() => { auth.reset(); auth.setMode("signup"); }} className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold text-sm hover:border-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-400 transition">
+      <button onClick={() => { auth.reset(); auth.setMode("signup"); }} className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold text-sm hover:border-primary hover:text-primary dark:hover:text-primary transition">
         <UserPlus className="w-4 h-4" /> Create Account
       </button>
       <div className="pt-1 text-center">
@@ -59,7 +59,7 @@ export function SignInView({ auth }: { auth: JoinAuthContext }) {
           </button>
         </div>
       </div>
-      <Button type="submit" disabled={auth.loading} className="w-full py-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all text-base flex items-center justify-center gap-2">
+      <Button type="submit" disabled={auth.loading} className="w-full py-6 bg-primary hover:bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 transition-all text-base flex items-center justify-center gap-2">
         {auth.loading ? <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : <><LogIn className="w-5 h-5" /> Sign In</>}
       </Button>
       {auth.errorMsg === "Email not confirmed" && (
@@ -70,7 +70,7 @@ export function SignInView({ auth }: { auth: JoinAuthContext }) {
       )}
       <div className="text-center pt-1 flex items-center justify-between">
         <button type="button" onClick={() => { auth.setMode("welcome"); auth.reset(); }} className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition font-semibold">← Back</button>
-        <button type="button" onClick={() => { auth.setMode("otp-email"); auth.reset(); }} className="text-xs text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition font-semibold">Forgot password? OTP →</button>
+        <button type="button" onClick={() => { auth.setMode("otp-email"); auth.reset(); }} className="text-xs text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition font-semibold">Forgot password? OTP →</button>
       </div>
     </motion.form>
   );
@@ -105,7 +105,7 @@ export function SignUpView({ auth }: { auth: JoinAuthContext }) {
                   if (strength <= 1) color = "bg-rose-500";
                   else if (strength === 2) color = "bg-orange-500";
                   else if (strength === 3) color = "bg-amber-500";
-                  else color = "bg-emerald-500";
+                  else color = "bg-primary";
                 }
                 return <div key={level} className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${color}`} />;
               })}
@@ -116,7 +116,7 @@ export function SignUpView({ auth }: { auth: JoinAuthContext }) {
                 if (s <= 1) return <span className="text-rose-500">Weak</span>;
                 if (s === 2) return <span className="text-orange-500">Fair</span>;
                 if (s === 3) return <span className="text-amber-500">Good</span>;
-                return <span className="text-emerald-500">Strong</span>;
+                return <span className="text-primary">Strong</span>;
               })()}
             </p>
           </div>
@@ -130,12 +130,12 @@ export function SignUpView({ auth }: { auth: JoinAuthContext }) {
         </div>
       </div>
       <label className="flex items-start gap-3 cursor-pointer group">
-        <input type="checkbox" checked={auth.agreedToTerms} onChange={e => auth.setAgreedToTerms(e.target.checked)} className="mt-1 w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-emerald-600 focus:ring-emerald-500 accent-emerald-600 shrink-0" />
+        <input type="checkbox" checked={auth.agreedToTerms} onChange={e => auth.setAgreedToTerms(e.target.checked)} className="mt-1 w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary accent-primary shrink-0" />
         <span className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-          I agree to the <Link href="/privacy"><span className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline">Privacy Policy</span></Link> and <Link href="/terms"><span className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline">Terms of Service</span></Link>.
+          I agree to the <Link href="/privacy"><span className="text-primary dark:text-primary font-bold hover:underline">Privacy Policy</span></Link> and <Link href="/terms"><span className="text-primary dark:text-primary font-bold hover:underline">Terms of Service</span></Link>.
         </span>
       </label>
-      <Button type="submit" disabled={auth.loading || !auth.agreedToTerms} className="w-full py-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all text-base flex items-center justify-center gap-2 disabled:opacity-50">
+      <Button type="submit" disabled={auth.loading || !auth.agreedToTerms} className="w-full py-6 bg-primary hover:bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 transition-all text-base flex items-center justify-center gap-2 disabled:opacity-50">
         {auth.loading ? <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : <><UserPlus className="w-5 h-5" /> Create Account</>}
       </Button>
       <div className="text-center">
@@ -159,11 +159,11 @@ export function OtpEmailView({ auth }: { auth: JoinAuthContext }) {
           <input required type="email" value={auth.email} onChange={e => auth.setEmail(e.target.value)} placeholder="your@email.com" className={`${inputClass} pl-10`} />
         </div>
       </div>
-      <Button type="submit" disabled={auth.loading} className="w-full py-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all text-base flex items-center justify-center gap-2">
+      <Button type="submit" disabled={auth.loading} className="w-full py-6 bg-primary hover:bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 transition-all text-base flex items-center justify-center gap-2">
         {auth.loading ? <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : <>Send Login Code <ArrowRight className="w-5 h-5" /></>}
       </Button>
       <div className="text-center">
-        <button type="button" onClick={() => { auth.setMode("signin"); auth.reset(); }} className="text-xs text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition font-semibold">← Back to Sign In</button>
+        <button type="button" onClick={() => { auth.setMode("signin"); auth.reset(); }} className="text-xs text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition font-semibold">← Back to Sign In</button>
       </div>
     </motion.form>
   );
@@ -180,11 +180,11 @@ export function OtpVerifyView({ auth }: { auth: JoinAuthContext }) {
         <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <input required type="text" maxLength={8} value={auth.otp} onChange={e => auth.setOtp(e.target.value)} placeholder="Enter code" autoComplete="one-time-code" className={`${inputClass} pl-10 text-center tracking-[0.4em] text-xl font-bold`} />
       </div>
-      <Button type="submit" disabled={auth.loading} className="w-full py-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all text-base flex items-center justify-center gap-2">
+      <Button type="submit" disabled={auth.loading} className="w-full py-6 bg-primary hover:bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 transition-all text-base flex items-center justify-center gap-2">
         {auth.loading ? <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : "Verify & Log In"}
       </Button>
       <div className="text-center">
-        <button type="button" onClick={() => { auth.setMode("otp-email"); auth.reset(); }} className="text-xs text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition font-semibold">← Change email / resend code</button>
+        <button type="button" onClick={() => { auth.setMode("otp-email"); auth.reset(); }} className="text-xs text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition font-semibold">← Change email / resend code</button>
       </div>
     </motion.form>
   );

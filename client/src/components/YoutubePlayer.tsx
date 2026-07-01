@@ -77,7 +77,7 @@ export const YoutubePlayer = forwardRef<YoutubePlayerHandle, Props>(
         {/* Loading spinner */}
         {!ready && (
           <div className="absolute inset-0 flex items-center justify-center bg-black z-10">
-            <div className="w-10 h-10 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin" />
+            <div className="w-10 h-10 rounded-full border-4 border-primary border-t-transparent animate-spin" />
           </div>
         )}
 

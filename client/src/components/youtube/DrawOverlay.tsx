@@ -32,7 +32,7 @@ export function DrawOverlay({
       <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/60 backdrop-blur-md px-4 py-2 rounded-full shadow-xl pointer-events-auto">
         <span className="text-white font-bold text-sm mr-2 tracking-wide">DRAW MODE</span>
         <button onClick={(e) => { e.stopPropagation(); setDrawLines([]); setCurrentLine([]); }} className="text-white/80 hover:text-white bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-full text-xs font-bold transition-colors">Clear</button>
-        <button onClick={(e) => { e.stopPropagation(); setIsDrawMode(false); setDrawLines([]); setCurrentLine([]); }} className="text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 px-3 py-1.5 rounded-full text-xs font-bold transition-colors">Exit</button>
+        <button onClick={(e) => { e.stopPropagation(); setIsDrawMode(false); setDrawLines([]); setCurrentLine([]); }} className="text-primary hover:text-primary/70 bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-full text-xs font-bold transition-colors">Exit</button>
       </div>
     </div>
   );

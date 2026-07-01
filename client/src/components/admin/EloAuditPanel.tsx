@@ -252,17 +252,17 @@ export function EloAuditPanel() {
               const ovChange = Math.round(catChange / 3);
               const isHighlight = pl.player_id === highlightPlayerId;
               return (
-                <tr key={pl.id} className={isHighlight ? "bg-emerald-50/30 dark:bg-emerald-950/10" : ""}>
+                <tr key={pl.id} className={isHighlight ? "bg-primary/10/30 dark:bg-primary/10" : ""}>
                   <td className="px-3 py-2 font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 whitespace-nowrap">
                     {pl.player?.full_name || "Unknown"}
-                    {isWin ? <span className="text-[9px] bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 px-1 py-0.5 rounded uppercase font-black">W</span> : <span className="text-[9px] bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 px-1 py-0.5 rounded uppercase font-black">L</span>}
+                    {isWin ? <span className="text-[9px] bg-primary/15 dark:bg-primary/30 text-primary dark:text-primary px-1 py-0.5 rounded uppercase font-black">W</span> : <span className="text-[9px] bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 px-1 py-0.5 rounded uppercase font-black">L</span>}
                   </td>
                   <td className="px-3 py-2 text-center">{pl.previous_elo}</td>
-                  <td className={`px-3 py-2 text-center font-black ${catChange > 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                  <td className={`px-3 py-2 text-center font-black ${catChange > 0 ? "text-primary" : "text-rose-500"}`}>
                     {catChange > 0 ? "+" : ""}{catChange}
                   </td>
                   <td className="px-3 py-2 text-center font-bold text-slate-700 dark:text-slate-300">{pl.new_elo}</td>
-                  <td className={`px-3 py-2 text-center font-bold ${ovChange > 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                  <td className={`px-3 py-2 text-center font-bold ${ovChange > 0 ? "text-primary" : "text-rose-400"}`}>
                     {ovChange > 0 ? "+" : ""}{ovChange}
                   </td>
                 </tr>
@@ -274,7 +274,7 @@ export function EloAuditPanel() {
     </div>
   );
 
-  if (loading) return <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>;
+  if (loading) return <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
 
   const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm";
 
@@ -295,7 +295,7 @@ export function EloAuditPanel() {
           </div>
         </div>
 
-        {historyLoading && <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-emerald-500" /></div>}
+        {historyLoading && <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>}
 
         {!historyLoading && eloHistory.length === 0 && (
           <div className={`${cardCls} text-center py-10 text-slate-400 text-sm`}>
@@ -315,14 +315,14 @@ export function EloAuditPanel() {
                 onClick={() => setExpandedMatch(isExpanded ? null : `${entry.match_uuid}-${i}`)}>
                 {/* Row summary */}
                 <div className="flex items-center gap-3">
-                  <div className={`w-2 h-8 rounded-full shrink-0 ${won ? "bg-emerald-400" : "bg-rose-400"}`} />
+                  <div className={`w-2 h-8 rounded-full shrink-0 ${won ? "bg-primary" : "bg-rose-400"}`} />
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full ${catColor}`}>
                         {entry.match_category || entry.category}
                       </span>
-                      <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full ${won ? "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" : "bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400"}`}>
+                      <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full ${won ? "bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary" : "bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400"}`}>
                         {won ? "WIN" : "LOSS"}
                       </span>
                     </div>
@@ -341,7 +341,7 @@ export function EloAuditPanel() {
                     <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
                       {entry.previous_elo} → <span className="font-black text-slate-800 dark:text-white">{entry.new_elo}</span>
                     </p>
-                    <p className={`text-sm font-black ${entry.elo_change > 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                    <p className={`text-sm font-black ${entry.elo_change > 0 ? "text-primary" : "text-rose-500"}`}>
                       {entry.elo_change > 0 ? "+" : ""}{entry.elo_change}
                     </p>
                   </div>
@@ -349,7 +349,7 @@ export function EloAuditPanel() {
                   {/* Overall ELO change */}
                   <div className="text-right shrink-0 border-l border-slate-100 dark:border-slate-800 pl-3 ml-1">
                     <p className="text-[10px] text-slate-400 font-bold">Overall</p>
-                    <p className={`text-sm font-black ${overallChange > 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                    <p className={`text-sm font-black ${overallChange > 0 ? "text-primary" : "text-rose-400"}`}>
                       {overallChange > 0 ? "+" : ""}{overallChange}
                     </p>
                   </div>
@@ -388,7 +388,7 @@ export function EloAuditPanel() {
       <div className="flex flex-col sm:flex-row gap-2">
         {(["history", "snapshot", "matchwise"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)}
-            className={`px-4 py-3 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition text-center ${tab === t ? "bg-emerald-600 text-white shadow-md" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-emerald-300"}`}>
+            className={`px-4 py-3 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition text-center ${tab === t ? "bg-primary text-white shadow-md" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-primary/50"}`}>
             {t === "history" ? "Recalculation History" : t === "snapshot" ? "Current ELO Snapshot" : "Matchwise ELO"}
           </button>
         ))}
@@ -408,7 +408,7 @@ export function EloAuditPanel() {
             const catColor = CATEGORY_COLORS[entry.match_category || entry.category] || CATEGORY_COLORS["Singles"];
             const isExpanded = expandedMatch === `global-${entry.match_uuid}-${i}`;
             return (
-              <div key={`global-${entry.match_uuid}-${i}`} className={`${cardCls} cursor-pointer hover:border-emerald-300 transition-colors`}
+              <div key={`global-${entry.match_uuid}-${i}`} className={`${cardCls} cursor-pointer hover:border-primary/50 transition-colors`}
                 onClick={() => setExpandedMatch(isExpanded ? null : `global-${entry.match_uuid}-${i}`)}>
                 <div className="flex items-center gap-3">
                   <div className="flex-1 min-w-0">
@@ -440,7 +440,7 @@ export function EloAuditPanel() {
             <button 
               onClick={handleRecalculate}
               disabled={recalcLoading}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-black uppercase tracking-wider hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/15 dark:bg-primary/30 text-primary dark:text-primary text-[10px] font-black uppercase tracking-wider hover:bg-primary/20 dark:hover:bg-primary/80/50 transition-colors disabled:opacity-50"
             >
               {recalcLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
               Recalculate All ELOs
@@ -455,12 +455,12 @@ export function EloAuditPanel() {
             const isFailed = log.action.includes("failed");
             return (
               <div key={log.id} className={`${cardCls} flex items-start gap-3`}>
-                <div className={`p-2 rounded-xl shrink-0 ${isFailed ? "bg-rose-50 dark:bg-rose-950/30 text-rose-500" : "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-500"}`}>
+                <div className={`p-2 rounded-xl shrink-0 ${isFailed ? "bg-rose-50 dark:bg-rose-950/30 text-rose-500" : "bg-primary/10 dark:bg-primary/30 text-primary"}`}>
                   {isFailed ? <TrendingDown className="w-4 h-4" /> : <RotateCcw className="w-4 h-4" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                    <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${isFailed ? "bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400" : "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400"}`}>
+                    <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${isFailed ? "bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400" : "bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary"}`}>
                       {isFailed ? "FAILED" : "SUCCESS"}
                     </span>
                     <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{log.action.replace(/_/g, " ")}</span>
@@ -484,11 +484,11 @@ export function EloAuditPanel() {
               <button
                 key={p.id}
                 onClick={() => loadPlayerHistory(p)}
-                className={`${cardCls} flex items-center gap-3 w-full text-left hover:border-emerald-400 hover:shadow-md transition-all group`}
+                className={`${cardCls} flex items-center gap-3 w-full text-left hover:border-primary hover:shadow-md transition-all group`}
               >
                 <span className={`w-7 text-center text-xs font-black shrink-0 ${i < 3 ? "text-amber-500" : "text-slate-400"}`}>#{i + 1}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-slate-800 dark:text-white text-sm truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{p.full_name}</p>
+                  <p className="font-bold text-slate-800 dark:text-white text-sm truncate group-hover:text-primary dark:group-hover:text-primary transition-colors">{p.full_name}</p>
                   <p className="text-[10px] text-slate-400">{p.wins}W {p.losses}L · {winRate}% WR</p>
                   <div className="flex gap-1.5 mt-1 flex-wrap">
                     {p.singles_elo != null && <span className="text-[9px] font-black bg-sky-50 dark:bg-sky-950/30 text-sky-600 dark:text-sky-400 px-1.5 py-0.5 rounded-full">S: {p.singles_elo}</span>}
@@ -497,10 +497,10 @@ export function EloAuditPanel() {
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="font-black text-emerald-600 dark:text-emerald-400 text-base">{p.elo_rating}</p>
+                  <p className="font-black text-primary dark:text-primary text-base">{p.elo_rating}</p>
                   <p className="text-[10px] text-slate-400 uppercase tracking-wider">Overall</p>
                 </div>
-                <TrendingUp className="w-4 h-4 text-slate-300 dark:text-slate-600 shrink-0 group-hover:text-emerald-400 transition-colors" />
+                <TrendingUp className="w-4 h-4 text-slate-300 dark:text-slate-600 shrink-0 group-hover:text-primary transition-colors" />
               </button>
             );
           })}

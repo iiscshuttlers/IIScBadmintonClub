@@ -37,6 +37,7 @@ function PlayerSelect({
 }: { value: string; onChange: (v: string) => void; players: Player[]; placeholder?: string }) {
   const [search, setSearch] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -62,6 +63,34 @@ function PlayerSelect({
 
   const filtered = players.filter((p) => p.full_name.toLowerCase().includes(search.toLowerCase()));
 
+  useEffect(() => {
+    setSelectedIndex(-1);
+  }, [search, isOpen]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!isOpen) {
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") setIsOpen(true);
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev < filtered.length - 1 ? prev + 1 : prev));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : 0));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (selectedIndex >= 0 && selectedIndex < filtered.length) {
+        const p = filtered[selectedIndex];
+        onChange(p.id);
+        setSearch(p.full_name);
+        setIsOpen(false);
+      }
+    } else if (e.key === "Escape") {
+      setIsOpen(false);
+    }
+  };
+
   return (
     <div className="relative w-full" ref={wrapperRef}>
       <input
@@ -70,18 +99,24 @@ function PlayerSelect({
         value={search}
         onChange={(e) => { setSearch(e.target.value); setIsOpen(true); onChange(""); }}
         onFocus={() => setIsOpen(true)}
-        className="w-full text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-1.5 outline-none focus:ring-2 focus:ring-emerald-500"
+        onKeyDown={handleKeyDown}
+        className="w-full text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-1.5 outline-none focus:ring-2 focus:ring-primary"
       />
       {isOpen && (
         <div className="absolute z-60 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl max-h-48 overflow-y-auto">
           {filtered.length === 0 ? (
             <div className="p-2 text-xs text-slate-500 text-center">No players found</div>
           ) : (
-            filtered.map((p) => (
+            filtered.map((p, idx) => (
               <div
                 key={p.id}
+                onMouseEnter={() => setSelectedIndex(idx)}
                 onClick={() => { onChange(p.id); setSearch(p.full_name); setIsOpen(false); }}
-                className="p-2 text-xs font-bold hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer text-slate-700 dark:text-slate-200 flex items-center justify-between gap-2"
+                className={`p-2 text-xs font-bold cursor-pointer flex items-center justify-between gap-2 ${
+                  selectedIndex === idx 
+                    ? "bg-primary/15 dark:bg-primary/60 text-primary dark:text-primary/30" 
+                    : "hover:bg-primary/10 dark:hover:bg-primary/80/30 text-slate-700 dark:text-slate-200"
+                }`}
               >
                 <span className="truncate">{p.full_name}</span>
                 {p.is_guest && (
@@ -117,11 +152,11 @@ function StepBar({ step }: { step: number }) {
     <div className="flex items-center gap-1 px-6 pt-4 pb-2">
       {steps.map((label, i) => (
         <div key={i} className="flex items-center gap-1 flex-1">
-          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 transition-all ${i < step ? "bg-emerald-500 text-white" : i === step ? "bg-emerald-600 text-white ring-2 ring-emerald-300 dark:ring-emerald-700" : "bg-slate-200 dark:bg-slate-700 text-slate-400"}`}>
+          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 transition-all ${i < step ? "bg-primary text-white" : i === step ? "bg-primary text-white ring-2 ring-primary/50 dark:ring-primary" : "bg-slate-200 dark:bg-slate-700 text-slate-400"}`}>
             {i < step ? <Check className="w-3 h-3" /> : i + 1}
           </div>
-          <span className={`text-[10px] font-bold whitespace-nowrap ${i === step ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"}`}>{label}</span>
-          {i < steps.length - 1 && <div className={`flex-1 h-0.5 mx-1 rounded transition-all ${i < step ? "bg-emerald-400" : "bg-slate-200 dark:bg-slate-700"}`} />}
+          <span className={`text-[10px] font-bold whitespace-nowrap ${i === step ? "text-primary dark:text-primary" : "text-slate-400"}`}>{label}</span>
+          {i < steps.length - 1 && <div className={`flex-1 h-0.5 mx-1 rounded transition-all ${i < step ? "bg-primary" : "bg-slate-200 dark:bg-slate-700"}`} />}
         </div>
       ))}
     </div>
@@ -205,10 +240,7 @@ export default function LogMatchModal({
     const num = val.replace(/\D/g, "").slice(0, 2);
     setSets(sets.map((s, i) => {
       if (i !== idx) return s;
-      const next = { ...s, [field]: num };
-      if (num.length >= 2 && field === "p1" && !s.p2) next.p2 = "0";
-      if (num.length >= 2 && field === "p2" && !s.p1) next.p1 = "0";
-      return next;
+      return { ...s, [field]: num };
     }));
   };
 
@@ -431,7 +463,7 @@ export default function LogMatchModal({
             {/* Header */}
             <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Sword className="w-5 h-5 text-emerald-500" />
+                <Sword className="w-5 h-5 text-primary" />
                 Log {matchCategory === "tournament" ? "Tournament" : "Friendly"} Match
                 <InfoModal
                   title="LOGGING MATCHES"
@@ -470,7 +502,7 @@ export default function LogMatchModal({
                   {/* Friendly / Tournament */}
                   <div className="grid grid-cols-2 gap-2">
                     <button type="button" onClick={() => { setMatchCategory("friendly"); setError(null); }}
-                      className={`flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold border transition ${matchCategory === "friendly" ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 text-emerald-700 dark:text-emerald-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"}`}>
+                      className={`flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold border transition ${matchCategory === "friendly" ? "bg-primary/10 dark:bg-primary/30 border-primary text-primary dark:text-primary" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"}`}>
                       🏸 Friendly
                     </button>
                     <button type="button" onClick={() => { if (isAdmin) { setMatchCategory("tournament"); setError(null); } }} disabled={!isAdmin}
@@ -482,7 +514,7 @@ export default function LogMatchModal({
                   {/* Singles / Doubles / Hybrid */}
                   <div className="grid grid-cols-3 gap-2">
                     <button type="button" onClick={() => { setMatchType("singles"); setError(null); }}
-                      className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold border transition ${matchType === "singles" ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 text-emerald-700 dark:text-emerald-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"}`}>
+                      className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold border transition ${matchType === "singles" ? "bg-primary/10 dark:bg-primary/30 border-primary text-primary dark:text-primary" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500"}`}>
                       <User className="w-4 h-4" /> Singles
                     </button>
                     <button type="button" onClick={() => { setMatchType("doubles"); setError(null); }}
@@ -501,11 +533,11 @@ export default function LogMatchModal({
                   {matchType === "singles" ? (
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex-1 flex flex-col items-center text-center">
-                        <div className="w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-800 border-2 border-emerald-500 overflow-hidden mb-2 shadow-md">
+                        <div className="w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-800 border-2 border-primary overflow-hidden mb-2 shadow-md">
                           <PlayerAvatar player={currentUser} />
                         </div>
                         <span className="text-sm font-bold text-slate-900 dark:text-white line-clamp-1">{currentUser.full_name}</span>
-                        <span className="text-[10px] uppercase font-bold text-emerald-500">You</span>
+                        <span className="text-[10px] uppercase font-bold text-primary">You</span>
                       </div>
                       <div className="text-xl font-black italic text-slate-300 dark:text-slate-700">VS</div>
                       <div className="flex-1 flex flex-col items-center text-center">
@@ -539,12 +571,12 @@ export default function LogMatchModal({
                       <p className="text-xs font-bold text-slate-400 uppercase tracking-wider text-center">Your Team</p>
                       <div className="grid grid-cols-2 gap-3">
                         <div className="flex flex-col items-center gap-1.5">
-                          <div className="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-800 border-2 border-emerald-500 overflow-hidden shadow-md"><PlayerAvatar player={currentUser} /></div>
+                          <div className="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-800 border-2 border-primary overflow-hidden shadow-md"><PlayerAvatar player={currentUser} /></div>
                           <span className="text-xs font-bold text-slate-700 dark:text-slate-200 line-clamp-1">{currentUser.full_name}</span>
-                          <span className="text-[10px] uppercase font-bold text-emerald-500">You</span>
+                          <span className="text-[10px] uppercase font-bold text-primary">You</span>
                         </div>
                         <div className="flex flex-col items-center gap-1.5">
-                          <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-emerald-300 overflow-hidden shadow-md"><PlayerAvatar player={otherPlayers.find((p) => p.id === partnerId)} /></div>
+                          <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-primary/50 overflow-hidden shadow-md"><PlayerAvatar player={otherPlayers.find((p) => p.id === partnerId)} /></div>
                           <PlayerSelect value={partnerId} onChange={setPartnerId} players={availableAsPartner} placeholder="Your partner" />
                         </div>
                       </div>
@@ -578,11 +610,11 @@ export default function LogMatchModal({
                       <span className="text-xs font-bold text-slate-400 dark:text-slate-500 w-12 shrink-0">Set {idx + 1}</span>
                       <div className="flex-1 flex items-center gap-2">
                         <input type="text" inputMode="numeric" maxLength={2} value={set.p1}
-                          onChange={(e) => updateSet(idx, "p1", e.target.value)} placeholder="0"
-                          className="w-14 text-center px-2 py-2.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl text-sm font-black text-emerald-700 dark:text-emerald-400 outline-none focus:ring-2 focus:ring-emerald-500" />
+                          onChange={(e) => updateSet(idx, "p1", e.target.value)} placeholder=""
+                          className="w-14 text-center px-2 py-2.5 bg-primary/10 dark:bg-primary/20 border border-primary/40 dark:border-primary/80 rounded-xl text-sm font-black text-primary dark:text-primary outline-none focus:ring-2 focus:ring-primary" />
                         <span className="text-lg font-black text-slate-300 dark:text-slate-600">—</span>
                         <input type="text" inputMode="numeric" maxLength={2} value={set.p2}
-                          onChange={(e) => updateSet(idx, "p2", e.target.value)} placeholder="0"
+                          onChange={(e) => updateSet(idx, "p2", e.target.value)} placeholder=""
                           className="w-14 text-center px-2 py-2.5 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-xl text-sm font-black text-rose-700 dark:text-rose-400 outline-none focus:ring-2 focus:ring-rose-500" />
                       </div>
                       {sets.length > 1 && (
@@ -594,7 +626,7 @@ export default function LogMatchModal({
                   ))}
 
                   {sets.length < 3 && (
-                    <button type="button" onClick={addSet} className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 transition px-2 py-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20">
+                    <button type="button" onClick={addSet} className="flex items-center gap-1.5 text-xs font-bold text-primary dark:text-primary hover:text-primary transition px-2 py-1.5 rounded-lg hover:bg-primary/10 dark:hover:bg-primary/80/20">
                       <Plus className="w-3.5 h-3.5" /> Add Set
                     </button>
                   )}
@@ -610,11 +642,11 @@ export default function LogMatchModal({
                     <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Who won?</label>
                     <div className="grid grid-cols-2 gap-3">
                       <button type="button" onClick={() => setMyTeamWon(true)}
-                        className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition border ${myTeamWon ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 text-emerald-700 dark:text-emerald-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"}`}>
+                        className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition border ${myTeamWon ? "bg-primary/10 dark:bg-primary/30 border-primary text-primary dark:text-primary" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"}`}>
                         {myTeamWon && <Trophy className="w-4 h-4" />} {(matchType === "doubles" || matchType === "hybrid") ? "My Team Won" : "I Won"}
                       </button>
                       <button type="button" onClick={() => setMyTeamWon(false)} disabled={!opponentId}
-                        className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition border ${!myTeamWon ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 text-emerald-700 dark:text-emerald-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"} ${!opponentId ? "opacity-50 cursor-not-allowed" : ""}`}>
+                        className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition border ${!myTeamWon ? "bg-primary/10 dark:bg-primary/30 border-primary text-primary dark:text-primary" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"} ${!opponentId ? "opacity-50 cursor-not-allowed" : ""}`}>
                         {!myTeamWon && <Trophy className="w-4 h-4" />} {(matchType === "doubles" || matchType === "hybrid") ? "They Won" : "Opponent Won"}
                       </button>
                     </div>
@@ -646,7 +678,7 @@ export default function LogMatchModal({
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-slate-500 dark:text-slate-400">Result</span>
-                      <span className={`font-black ${myTeamWon ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                      <span className={`font-black ${myTeamWon ? "text-primary dark:text-primary" : "text-rose-600 dark:text-rose-400"}`}>
                         {myTeamWon ? "🏆 Win" : "Defeat"}
                       </span>
                     </div>
@@ -664,13 +696,13 @@ export default function LogMatchModal({
                   <div>
                     <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Match Highlight (Optional)</label>
                     <input type="url" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="YouTube or Video Link"
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500" />
+                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Match Note (Optional)</label>
                     <textarea value={matchNotes} onChange={(e) => setMatchNotes(e.target.value)}
                       placeholder="Epic 3-setter! Great comeback... (max 120 chars)" maxLength={120} rows={2}
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 resize-none" />
+                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary resize-none" />
                     {matchNotes.length > 0 && <p className="text-[10px] text-slate-400 mt-1 text-right">{matchNotes.length}/120</p>}
                   </div>
 
@@ -700,7 +732,7 @@ export default function LogMatchModal({
                 )}
                 {step < 2 && (
                   <button type="button" onClick={goNext}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition shadow-md shadow-emerald-500/20">
+                    className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary text-white font-bold text-sm transition shadow-md shadow-primary/20">
                     Next <ChevronRight className="w-4 h-4" />
                   </button>
                 )}

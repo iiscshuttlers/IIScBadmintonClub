@@ -23,7 +23,7 @@ export default function TournamentAdmin() {
   if (isInitializing) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#060d1b]">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -35,7 +35,7 @@ export default function TournamentAdmin() {
         <h1 className="text-2xl font-black text-slate-800 dark:text-white">Access Denied</h1>
         <p className="text-slate-500">You need admin permissions to access Tournament Manager.</p>
         <button onClick={() => navigate("/")}
-          className="mt-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black transition">
+          className="mt-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary text-white font-black transition">
           Go Home
         </button>
       </div>

@@ -54,7 +54,7 @@ export function AdminActivityLog() {
   const getActionColor = (action: string) => {
     if (action.toLowerCase().includes("delete") || action.toLowerCase().includes("remove")) return "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-900/50";
     if (action.toLowerCase().includes("override") || action.toLowerCase().includes("uphold")) return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/50";
-    if (action.toLowerCase().includes("approved") || action.toLowerCase().includes("saved") || action.toLowerCase().includes("updated")) return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900/50";
+    if (action.toLowerCase().includes("approved") || action.toLowerCase().includes("saved") || action.toLowerCase().includes("updated")) return "bg-primary/15 text-primary border-primary/40 dark:bg-primary/40 dark:text-primary dark:border-primary/50";
     return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-900/50";
   };
 
@@ -110,7 +110,7 @@ export function AdminActivityLog() {
       </div>
 
       {loading && logs.length === 0 ? (
-        <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>
+        <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
       ) : logs.length === 0 ? (
         <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800">
           <ClipboardList className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />

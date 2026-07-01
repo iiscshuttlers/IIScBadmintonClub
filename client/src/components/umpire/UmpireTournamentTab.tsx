@@ -43,7 +43,7 @@ const CAT_LABELS: Record<string, string> = {
 const CAT_COLORS: Record<string, { bg: string; active: string; dot: string }> = {
   MS: { bg: "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300", active: "bg-blue-600 text-white border-blue-600", dot: "bg-blue-500" },
   WS: { bg: "bg-pink-50 dark:bg-pink-950/30 border-pink-200 dark:border-pink-800 text-pink-700 dark:text-pink-300", active: "bg-pink-600 text-white border-pink-600", dot: "bg-pink-500" },
-  MD: { bg: "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300", active: "bg-emerald-600 text-white border-emerald-600", dot: "bg-emerald-500" },
+  MD: { bg: "bg-primary/10 dark:bg-primary/30 border-primary/40 dark:border-primary/80 text-primary dark:text-primary/70", active: "bg-primary text-white border-primary", dot: "bg-primary" },
   WD: { bg: "bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300", active: "bg-purple-600 text-white border-purple-600", dot: "bg-purple-500" },
   XD: { bg: "bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-300", active: "bg-orange-600 text-white border-orange-600", dot: "bg-orange-500" },
 };
@@ -108,7 +108,7 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
 
   if (loading) return (
     <div className="flex justify-center py-16">
-      <Loader2 className="w-7 h-7 animate-spin text-emerald-500" />
+      <Loader2 className="w-7 h-7 animate-spin text-primary" />
     </div>
   );
 
@@ -139,7 +139,7 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
               <button
                 key={cat}
                 onClick={() => { setSelectedCategory(cat); setStep("match"); }}
-                className="flex items-center gap-4 p-4 rounded-2xl bg-slate-800 border border-slate-700 hover:border-emerald-500 hover:bg-slate-750 transition-all group text-left"
+                className="flex items-center gap-4 p-4 rounded-2xl bg-slate-800 border border-slate-700 hover:border-primary hover:bg-slate-750 transition-all group text-left"
               >
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-lg ${colors.active} shrink-0`}>
                   {cat}
@@ -151,7 +151,7 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
                     {inProgress > 0 && <span className="ml-2 text-amber-400 font-bold">· {inProgress} live</span>}
                   </p>
                 </div>
-                <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-emerald-400 transition-colors shrink-0" />
+                <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-primary transition-colors shrink-0" />
               </button>
             );
           })}
@@ -201,7 +201,7 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
                             ? "bg-amber-950/20 border-amber-700 hover:border-amber-500"
                             : noPlayers
                               ? "bg-slate-800/50 border-slate-800 opacity-50 cursor-not-allowed"
-                              : "bg-slate-800 border-slate-700 hover:border-emerald-500"
+                              : "bg-slate-800 border-slate-700 hover:border-primary"
                         }`}
                       >
                         <div className="flex items-center gap-2 mb-2">
@@ -228,7 +228,7 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
                             {m.team2_label ?? "TBD"}
                           </span>
                           {!noPlayers && (
-                            <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-emerald-400 transition-colors shrink-0 ml-1" />
+                            <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-primary transition-colors shrink-0 ml-1" />
                           )}
                         </div>
                         {noPlayers && (
@@ -293,8 +293,8 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
             {/* Scoring config */}
             <div className="bg-slate-900 rounded-xl p-3 flex items-center gap-4 flex-wrap">
               <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
-                <Settings2 className="w-3.5 h-3.5 text-emerald-500" />
-                <span className="font-bold text-emerald-400">{selectedMatch.points_to_win}</span>
+                <Settings2 className="w-3.5 h-3.5 text-primary" />
+                <span className="font-bold text-primary">{selectedMatch.points_to_win}</span>
                 <span>pts to win</span>
               </div>
               <div className="text-slate-600">·</div>
@@ -333,7 +333,7 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
             {/* Start button */}
             <button
               onClick={() => onStartMatch(selectedMatch)}
-              className="w-full py-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-black text-base transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/30"
+              className="w-full py-4 rounded-xl bg-primary hover:bg-primary text-white font-black text-base transition flex items-center justify-center gap-2 shadow-lg shadow-primary/50/30"
             >
               <Play className="w-5 h-5 fill-white" />
               {selectedMatch.status === "in_progress" ? "Resume Match" : "Start Umpiring"}

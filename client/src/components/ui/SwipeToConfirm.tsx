@@ -61,7 +61,7 @@ export function SwipeToConfirm({ onConfirm, isLoading, disabled, text = "Swipe t
 
   if (isSuccess || isLoading) {
     return (
-      <div className="w-full h-14 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold shadow-lg shadow-emerald-500/20 transition-all">
+      <div className="w-full h-14 rounded-full bg-primary text-white flex items-center justify-center font-bold shadow-lg shadow-primary/20 transition-all">
         {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Check className="w-5 h-5 mr-2" /> Match Submitted!</>}
       </div>
     );
@@ -73,7 +73,7 @@ export function SwipeToConfirm({ onConfirm, isLoading, disabled, text = "Swipe t
       className={`relative w-full h-14 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center p-1 overflow-hidden transition-opacity ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
       <motion.div
-        className="absolute left-1 top-1 bottom-1 bg-emerald-500/20 rounded-full z-0"
+        className="absolute left-1 top-1 bottom-1 bg-primary/20 rounded-full z-0"
         style={{ width: progressWidth }}
       />
       
@@ -96,8 +96,8 @@ export function SwipeToConfirm({ onConfirm, isLoading, disabled, text = "Swipe t
         className="h-12 w-16 bg-white dark:bg-slate-700 rounded-full shadow-md flex items-center justify-center z-10 cursor-grab active:cursor-grabbing border border-slate-200 dark:border-slate-600"
       >
         <div className="flex -space-x-1">
-          <ChevronRight className="w-5 h-5 text-emerald-500 opacity-60" />
-          <ChevronRight className="w-5 h-5 text-emerald-500" />
+          <ChevronRight className="w-5 h-5 text-primary opacity-60" />
+          <ChevronRight className="w-5 h-5 text-primary" />
         </div>
       </motion.div>
     </div>

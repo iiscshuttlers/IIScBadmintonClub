@@ -68,13 +68,13 @@ export function DisputePanel() {
 
   if (loading) return (
     <div className="flex justify-center py-20">
-      <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+      <Loader2 className="w-8 h-8 animate-spin text-primary" />
     </div>
   );
 
   if (matches.length === 0) return (
     <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800">
-      <CheckCircle className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
+      <CheckCircle className="w-12 h-12 text-primary mx-auto mb-3" />
       <h3 className="text-lg font-black text-slate-700 dark:text-slate-300">No open disputes</h3>
       <p className="text-slate-400 text-sm mt-1">All match results are confirmed.</p>
     </div>
@@ -159,7 +159,7 @@ export function DisputePanel() {
               <button
                 disabled={isProcessing}
                 onClick={() => resolve(m.id, "uphold")}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition disabled:opacity-50"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary hover:bg-primary text-white text-sm font-bold transition disabled:opacity-50"
               >
                 {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
                 Uphold Result ({currentWinner?.full_name?.split(" ")[0]} wins)

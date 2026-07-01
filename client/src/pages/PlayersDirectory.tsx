@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useMemo, lazy, Suspense } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSocialActions } from "@/hooks/useSocial";
 import { useLocation } from "wouter";
@@ -45,6 +46,8 @@ export default function PlayersDirectory() {
   }, [authSession, profile]);
 
   /* Directory state */
+  const queryClient = useQueryClient();
+  const [processingMatches, setProcessingMatches] = useState<Set<string>>(new Set());
   const { data: rawPlayers, isLoading: loading, isError: fetchError, refetch: fetchPlayers } = usePlayers();
   const players = rawPlayers || [];
 
@@ -112,29 +115,65 @@ export default function PlayersDirectory() {
   };
 
   const handleConfirmMatch = async (matchId: string) => {
+    if (processingMatches.has(matchId)) return;
+    setProcessingMatches((prev) => new Set(prev).add(matchId));
     try {
-      const { error } = await supabase.rpc("confirm_friendly_match", {
+      const { data, error } = await supabase.rpc("accept_friendly_match", {
         match_uuid: matchId,
         confirmer_id: ownProfile?.id,
       });
-      if (error) throw error;
-      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ["#10b981", "#3b82f6", "#f59e0b"] });
-      toast.success("Match Confirmed! Elo Ratings Updated. 🎉");
+      if (error) {
+        if (error.message.includes("Match is already") || error.message.includes("already accepted")) {
+          toast.success("Match was already confirmed!");
+        } else {
+          throw error;
+        }
+      } else if (data?.confirmed === false) {
+        // Doubles — quorum not yet reached
+        toast.success(`Accepted! ${data.accepted} of ${data.required} players have agreed.`);
+      } else {
+        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ["#10b981", "#3b82f6", "#f59e0b"] });
+        toast.success("Match Confirmed! Elo Ratings Updated. 🎉");
+      }
+      queryClient.invalidateQueries({ queryKey: ["matches", "pending"] });
+      queryClient.invalidateQueries({ queryKey: ["matches", "all_completed"] });
     } catch (e: any) {
       toast.error("Error confirming match: " + e.message);
+    } finally {
+      setProcessingMatches((prev) => {
+        const next = new Set(prev);
+        next.delete(matchId);
+        return next;
+      });
     }
   };
 
   const handleRejectMatch = async (matchId: string) => {
+    if (processingMatches.has(matchId)) return;
+    setProcessingMatches((prev) => new Set(prev).add(matchId));
     try {
       const { error } = await supabase.rpc("reject_friendly_match", {
         match_uuid: matchId,
         rejecter_id: ownProfile?.id,
       });
-      if (error) throw error;
-      toast.success("Match Rejected.");
+      if (error) {
+        if (error.message.includes("Match is already")) {
+          toast.success("Match was already processed!");
+        } else {
+          throw error;
+        }
+      } else {
+        toast.success("Match Rejected.");
+      }
+      queryClient.invalidateQueries({ queryKey: ["matches", "pending"] });
     } catch (e: any) {
       toast.error("Error rejecting match: " + e.message);
+    } finally {
+      setProcessingMatches((prev) => {
+        const next = new Set(prev);
+        next.delete(matchId);
+        return next;
+      });
     }
   };
 
@@ -143,7 +182,7 @@ export default function PlayersDirectory() {
       try {
         const { error } = await supabase.rpc("soft_delete_player", {
           player_id: playerId,
-          admin_email: session?.user?.email,
+          admin_id: session?.user?.id,
         });
         if (error) throw error;
         toast.success("Player successfully soft-deleted.");
@@ -160,7 +199,7 @@ export default function PlayersDirectory() {
   /* ── Render ─────────────────────────────────────────────────────── */
   return (
     <div className="flex-1 w-full flex flex-col bg-slate-50 dark:bg-slate-950">
-      <section className="bg-gradient-to-r from-blue-900 via-indigo-950 to-emerald-900 text-white py-6 sm:py-8 relative overflow-hidden shrink-0">
+      <section className="bg-gradient-to-r from-blue-900 via-indigo-950 to-primary/80 text-white py-6 sm:py-8 relative overflow-hidden shrink-0">
         <div className="container mx-auto px-4 relative z-10">
           <div className="flex flex-col items-center justify-center gap-6">
             <div className="w-full md:w-auto flex justify-center">
@@ -168,7 +207,7 @@ export default function PlayersDirectory() {
                 <button
                   onClick={() => setActiveTab("directory")}
                   className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-sm font-black transition-all ${
-                    effectiveTab === "directory" ? "bg-white text-emerald-700 shadow-md" : "text-white/80 hover:text-white hover:bg-white/10"
+                    effectiveTab === "directory" ? "bg-white text-primary shadow-md" : "text-white/80 hover:text-white hover:bg-white/10"
                   }`}
                 >
                   <Users className="w-4 h-4 shrink-0" /> Directory
@@ -176,7 +215,7 @@ export default function PlayersDirectory() {
                 <button
                   onClick={() => setActiveTab("leaderboard")}
                   className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-sm font-black transition-all ${
-                    effectiveTab === "leaderboard" ? "bg-white text-emerald-700 shadow-md" : "text-white/80 hover:text-white hover:bg-white/10"
+                    effectiveTab === "leaderboard" ? "bg-white text-primary shadow-md" : "text-white/80 hover:text-white hover:bg-white/10"
                   }`}
                 >
                   <Trophy className="w-4 h-4 shrink-0" /> Rankings
@@ -221,6 +260,7 @@ export default function PlayersDirectory() {
           pendingMatches={pendingMatches}
           onConfirmMatch={handleConfirmMatch}
           onRejectMatch={handleRejectMatch}
+          processingMatches={processingMatches}
         />
 
         {effectiveTab === "h2h" ? (

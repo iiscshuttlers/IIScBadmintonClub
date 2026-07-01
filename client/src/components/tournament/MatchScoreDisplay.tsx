@@ -60,17 +60,17 @@ export function MatchScoreDisplay({ sets_history, team1_label, team2_label, winn
           </tr>
         </thead>
         <tbody>
-          <tr className={winner_side === 1 ? "text-emerald-600 dark:text-emerald-400 font-black" : "text-slate-400 dark:text-slate-500"}>
+          <tr className={winner_side === 1 ? "text-primary dark:text-primary font-black" : "text-slate-400 dark:text-slate-500"}>
             <td className="py-1 pr-3 align-middle">{renderLabel(team1_label || "Team 1")}</td>
             {parsed.map((s, i) => (
-              <td key={i} className={`text-center py-1 px-2 rounded align-middle ${s.a > s.b ? "bg-emerald-50 dark:bg-emerald-950/30" : ""}`}>{s.a}</td>
+              <td key={i} className={`text-center py-1 px-2 rounded align-middle ${s.a > s.b ? "bg-primary/10 dark:bg-primary/30" : ""}`}>{s.a}</td>
             ))}
             <td className="text-center py-1 px-2 font-black align-middle">{t1Sets}</td>
           </tr>
-          <tr className={winner_side === 2 ? "text-emerald-600 dark:text-emerald-400 font-black" : "text-slate-400 dark:text-slate-500"}>
+          <tr className={winner_side === 2 ? "text-primary dark:text-primary font-black" : "text-slate-400 dark:text-slate-500"}>
             <td className="py-1 pr-3 align-middle">{renderLabel(team2_label || "Team 2")}</td>
             {parsed.map((s, i) => (
-              <td key={i} className={`text-center py-1 px-2 rounded align-middle ${s.b > s.a ? "bg-emerald-50 dark:bg-emerald-950/30" : ""}`}>{s.b}</td>
+              <td key={i} className={`text-center py-1 px-2 rounded align-middle ${s.b > s.a ? "bg-primary/10 dark:bg-primary/30" : ""}`}>{s.b}</td>
             ))}
             <td className="text-center py-1 px-2 font-black align-middle">{t2Sets}</td>
           </tr>

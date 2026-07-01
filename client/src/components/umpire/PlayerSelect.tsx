@@ -7,11 +7,13 @@ export function PlayerSelect({
   onChange,
   players,
   placeholder,
+  fallbackName,
 }: {
   value: string;
   onChange: (v: string) => void;
   players: Player[];
   placeholder?: string;
+  fallbackName?: string;
 }) {
   const [search, setSearch] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -24,9 +26,9 @@ export function PlayerSelect({
       const p = players.find((p) => p.id === value);
       setSearch(p ? p.full_name : value);
     } else {
-      setSearch("");
+      setSearch(fallbackName || "");
     }
-  }, [value, players]);
+  }, [value, players, fallbackName]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -41,7 +43,7 @@ export function PlayerSelect({
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [value, players]);
+  }, [value, players, fallbackName]);
 
   const filtered = players.filter((p) =>
     p.full_name.toLowerCase().includes(search.toLowerCase())
@@ -96,13 +98,13 @@ export function PlayerSelect({
         onChange={(e) => { setSearch(e.target.value); setIsOpen(true); onChange(e.target.value); }}
         onFocus={() => setIsOpen(true)}
         onKeyDown={handleKeyDown}
-        className="w-full text-sm font-bold bg-slate-900/50 border border-slate-700 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-emerald-500 text-white placeholder:text-slate-500"
+        className="w-full text-sm font-bold bg-slate-900/50 border border-slate-700 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-primary text-white placeholder:text-slate-500"
       />
       {isOpen && search.length > 0 && (
         <div ref={listboxRef} className="absolute z-60 w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl max-h-48 overflow-y-auto">
           {filtered.length === 0 ? (
             <div
-              className={`p-3 text-sm font-bold cursor-pointer text-emerald-400 ${activeIndex === 0 ? "bg-emerald-900/50" : "hover:bg-emerald-900/30"}`}
+              className={`p-3 text-sm font-bold cursor-pointer text-primary ${activeIndex === 0 ? "bg-primary/80/50" : "hover:bg-primary/80/30"}`}
               onClick={() => { onChange(search); setIsOpen(false); }}
             >
               Use "{search}" as Guest
@@ -112,7 +114,7 @@ export function PlayerSelect({
               <div
                 key={p.id}
                 onClick={() => { onChange(p.id); setSearch(p.full_name); setIsOpen(false); }}
-                className={`p-3 text-sm font-bold cursor-pointer transition-colors ${activeIndex === idx ? "bg-emerald-500/20 text-emerald-400" : "hover:bg-emerald-900/30 text-slate-200"}`}
+                className={`p-3 text-sm font-bold cursor-pointer transition-colors ${activeIndex === idx ? "bg-primary/20 text-primary" : "hover:bg-primary/80/30 text-slate-200"}`}
               >
                 {p.full_name}
               </div>
@@ -122,4 +124,4 @@ export function PlayerSelect({
       )}
     </div>
   );
-}
+}

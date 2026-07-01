@@ -59,8 +59,8 @@ export function GlossarySection() {
     },
     {
       category: "Player Analytics",
-      icon: <BarChart3 className="w-8 h-8 text-emerald-500" />,
-      color: "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-900/50",
+      icon: <BarChart3 className="w-8 h-8 text-primary" />,
+      color: "bg-primary/10 dark:bg-primary/20 border-primary/30 dark:border-primary/50",
       items: [
         {
           title: "Doubles Synergy",

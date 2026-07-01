@@ -411,9 +411,9 @@ export function EquipmentArsenalSection({
 
 const TIMELINE_COLORS = [
   {
-    ring: "ring-emerald-500/25",
-    bg: "bg-emerald-500/10",
-    icon: "text-emerald-400",
+    ring: "ring-primary/25",
+    bg: "bg-primary/10",
+    icon: "text-primary",
   },
   {
     ring: "ring-blue-500/25",
@@ -454,7 +454,7 @@ export function CareerHighlightsSection({ player }: { player: any }) {
 
       <div className="relative ml-6">
         {/* Vertical timeline line */}
-        <div className="absolute left-0 top-3 bottom-3 w-px bg-linear-to-b from-emerald-500/50 via-blue-500/50 to-purple-500/50 rounded-full" />
+        <div className="absolute left-0 top-3 bottom-3 w-px bg-linear-to-b from-primary/50 via-blue-500/50 to-purple-500/50 rounded-full" />
 
         <div className="space-y-5">
           {[...player.careerHighlights]

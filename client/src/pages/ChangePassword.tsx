@@ -63,8 +63,8 @@ export default function ChangePassword() {
         </button>
 
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-slate-800">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-6">
-            <Lock className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+          <div className="w-12 h-12 rounded-2xl bg-primary/15 dark:bg-primary/30 flex items-center justify-center mb-6">
+            <Lock className="w-6 h-6 text-primary dark:text-primary" />
           </div>
           
           <h1 className="text-2xl font-black text-slate-900 dark:text-white mb-2">
@@ -75,7 +75,7 @@ export default function ChangePassword() {
           </p>
 
           {success ? (
-            <div className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 p-6 rounded-2xl flex flex-col items-center justify-center gap-3 text-center border border-emerald-100 dark:border-emerald-800/30">
+            <div className="bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary p-6 rounded-2xl flex flex-col items-center justify-center gap-3 text-center border border-primary/30 dark:border-primary/80/30">
               <CheckCircle2 className="w-10 h-10" />
               <div className="font-bold">Password Updated</div>
               <p className="text-sm opacity-80">Taking you back home...</p>
@@ -92,7 +92,7 @@ export default function ChangePassword() {
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-slate-900 dark:text-white"
+                    className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-slate-900 dark:text-white"
                     placeholder="Min. 6 characters"
                   />
                 </div>
@@ -107,7 +107,7 @@ export default function ChangePassword() {
                               ? "bg-rose-500"
                               : strength < 3
                                 ? "bg-amber-500"
-                                : "bg-emerald-500"
+                                : "bg-primary"
                             : "bg-slate-200 dark:bg-slate-800"
                         }`}
                       />
@@ -126,7 +126,7 @@ export default function ChangePassword() {
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-slate-900 dark:text-white"
+                    className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-slate-900 dark:text-white"
                     placeholder="Type password again"
                   />
                 </div>
@@ -135,7 +135,7 @@ export default function ChangePassword() {
               <Button
                 type="submit"
                 disabled={loading || !newPassword || !confirmPassword || newPassword !== confirmPassword}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition-all h-auto"
+                className="w-full bg-primary hover:bg-primary text-white font-bold py-3 rounded-xl transition-all h-auto"
               >
                 {loading ? "Updating..." : "Update Password"}
               </Button>

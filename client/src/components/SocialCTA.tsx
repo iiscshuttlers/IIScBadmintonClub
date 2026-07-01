@@ -46,7 +46,7 @@ export function SocialCTA({
 
   // card variant — dark gradient card with hero-pattern
   return (
-    <div className="bg-gradient-to-br from-blue-900 to-emerald-900 text-white p-8 md:p-10 rounded-3xl shadow-xl relative overflow-hidden">
+    <div className="bg-gradient-to-br from-blue-900 to-primary/80 text-white p-8 md:p-10 rounded-3xl shadow-xl relative overflow-hidden">
       <div className="absolute inset-0 hero-pattern" />
       <div className="relative z-10">
         <h2

@@ -81,7 +81,7 @@ export function PerformanceTrends({ matches, playerId }: Props) {
     <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-base font-black text-slate-800 dark:text-white flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-emerald-500" /> Performance Trends
+          <TrendingUp className="w-5 h-5 text-primary" /> Performance Trends
         </h3>
         <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-black ${formConfig.bg} ${formConfig.color}`}>
           <FormIcon className="w-3.5 h-3.5" />
@@ -103,7 +103,7 @@ export function PerformanceTrends({ matches, playerId }: Props) {
         <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-3">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">ELO Movement</p>
           <SparkLine values={data.cumulativeElo} color={eloTrend >= 0 ? "#10b981" : "#f43f5e"} />
-          <p className={`text-xs font-bold mt-1 ${eloTrend >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+          <p className={`text-xs font-bold mt-1 ${eloTrend >= 0 ? "text-primary dark:text-primary" : "text-rose-600 dark:text-rose-400"}`}>
             {eloTrend >= 0 ? "+" : ""}{eloTrend} pts overall
           </p>
         </div>
@@ -120,7 +120,7 @@ export function PerformanceTrends({ matches, playerId }: Props) {
               const won = m.winner_id === playerId;
               return (
                 <div key={i} title={won ? "Win" : "Loss"}
-                  className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black ${won ? "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" : "bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400"}`}>
+                  className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black ${won ? "bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary" : "bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400"}`}>
                   {won ? "W" : "L"}
                 </div>
               );

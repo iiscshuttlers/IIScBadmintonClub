@@ -43,169 +43,195 @@
 }
 
 :root {
-  /* Dynamic Sports Energy Theme */
-  /* Primary: Deep Navy - professionalism and sport */
-  --primary: #1a2a4a;
-  --primary-foreground: #f0f4f8;
+  /* VOLT Athletic Design System (Brainy Theme) - Default (Lime/Volt) */
+  --primary: #84cc16;
+  --primary-foreground: #0a0a0b;
+  --sidebar-primary: #84cc16;
+  --sidebar-primary-foreground: #0a0a0b;
 
-  /* Accent: Emerald Green - energy and vitality */
-  --accent: #10b981;
+  /* Accent: Electric Cyan - data and secondary action */
+  --accent: #0891b2;
   --accent-foreground: #ffffff;
 
-  /* Secondary Accent: Bright Orange - dynamism and passion */
-  --secondary: #ff6b35;
+  /* Secondary Accent: Ember Orange - streaks and warmth */
+  --secondary: #ea580c;
   --secondary-foreground: #ffffff;
 
-  --sidebar-primary: #1a2a4a;
-  --sidebar-primary-foreground: #f0f4f8;
+  --chart-1: #84cc16;
+  --chart-2: #0891b2;
+  --chart-3: #ea580c;
+  --chart-4: #7c3aed;
+  --chart-5: #db2777;
 
-  --chart-1: #10b981;
-  --chart-2: #ff6b35;
-  --chart-3: #1a2a4a;
-  --chart-4: #0891b2;
-  --chart-5: #7c3aed;
-
-  --radius: 0.65rem;
-  --background: #ffffff;
-  --foreground: #1a2a4a;
-  --card: #f9fafb;
-  --card-foreground: #1a2a4a;
+  --radius: 0.875rem;
+  --background: #f7f8f4;
+  --foreground: #0c0d10;
+  --card: #ffffff;
+  --card-foreground: #0c0d10;
   --popover: #ffffff;
-  --popover-foreground: #1a2a4a;
-  --muted: #e5e7eb;
-  --muted-foreground: #6b7280;
-  --destructive: #ef4444;
+  --popover-foreground: #0c0d10;
+  --muted: #eceee7;
+  --muted-foreground: #64655e;
+  --destructive: #dc2626;
   --destructive-foreground: #ffffff;
-  --border: #e5e7eb;
-  --input: #f3f4f6;
-  --ring: #10b981;
-  --sidebar: #f9fafb;
-  --sidebar-foreground: #1a2a4a;
-  --sidebar-accent: #10b981;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #e5e7eb;
-  --sidebar-ring: #10b981;
+  --border: #e2e4dc;
+  --input: #eef0e9;
+  --ring: #84cc16;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0c0d10;
+  --sidebar-accent: #84cc16;
+  --sidebar-accent-foreground: #0a0a0b;
+  --sidebar-border: #e2e4dc;
+  --sidebar-ring: #84cc16;
+
+  --grad-from: #4d7c0f;
+  --grad-to: #059669;
+  --grad-warm-from: #ea580c;
+  --grad-warm-to: #db2777;
 }
 
 .dark {
-  --primary: #1a2a4a;
-  --primary-foreground: #f0f4f8;
-  --sidebar-primary: #0f766e;
-  --sidebar-primary-foreground: #f0f4f8;
-  --background: #000000;
-  --foreground: #f0f4f8;
-  --card: #0a0a0a;
-  --card-foreground: #f0f4f8;
-  --popover: #0a0a0a;
-  --popover-foreground: #f0f4f8;
-  --secondary: #ff6b35;
-  --secondary-foreground: #ffffff;
-  --muted: #1a1a1a;
-  --muted-foreground: #cbd5e1;
-  --accent: #10b981;
-  --accent-foreground: #0f172a;
-  --destructive: #f87171;
-  --destructive-foreground: #0f172a;
-  --border: #1a1a1a;
-  --input: #0a0a0a;
-  --ring: #10b981;
-  --chart-1: #10b981;
-  --chart-2: #ff6b35;
-  --chart-3: #0891b2;
-  --chart-4: #7c3aed;
-  --chart-5: #ec4899;
-  --sidebar: #0a0a0a;
-  --sidebar-foreground: #f0f4f8;
-  --sidebar-accent: #10b981;
-  --sidebar-accent-foreground: #0f172a;
-  --sidebar-border: #1a1a1a;
-  --sidebar-ring: #10b981;
+  /* VOLT Dark Mode (Hero Theme) - Default (Neon Lime/Volt) */
+  --primary: #ccff00;
+  --primary-foreground: #0a0a0b;
+  --sidebar-primary: #ccff00;
+  --sidebar-primary-foreground: #0a0a0b;
+  --background: #0a0a0b;
+  --foreground: #f4f5f0;
+  --card: #131417;
+  --card-foreground: #f4f5f0;
+  --popover: #1b1c20;
+  --popover-foreground: #f4f5f0;
+  --secondary: #ff7a45;
+  --secondary-foreground: #1a0a05;
+  --muted: #1d1e22;
+  --muted-foreground: #8b8e97;
+  --accent: #35e0f5;
+  --accent-foreground: #05121a;
+  --destructive: #ff5a5a;
+  --destructive-foreground: #0a0a0b;
+  --border: #26272d;
+  --input: #16171a;
+  --ring: #ccff00;
+  --chart-1: #ccff00;
+  --chart-2: #35e0f5;
+  --chart-3: #ff7a45;
+  --chart-4: #a78bfa;
+  --chart-5: #f472b6;
+  --sidebar: #131417;
+  --sidebar-foreground: #f4f5f0;
+  --sidebar-accent: #ccff00;
+  --sidebar-accent-foreground: #0a0a0b;
+  --sidebar-border: #26272d;
+  --sidebar-ring: #ccff00;
+
+  --grad-from: #ccff00;
+  --grad-to: #6ee7a8;
+  --grad-warm-from: #ff7a45;
+  --grad-warm-to: #f43f8e;
 }
 
-:root[data-accent="violet"],
+/* Theme accent overrides: set --primary and --primary-foreground per data-accent */
+:root[data-accent="violet"] {
+  --primary: #7c3aed;
+  --primary-foreground: #ffffff;
+  --sidebar-primary: #7c3aed;
+  --sidebar-accent: #7c3aed;
+  --ring: #7c3aed;
+  --sidebar-ring: #7c3aed;
+  --chart-1: #7c3aed;
+}
+
 .dark[data-accent="violet"] {
-  --color-emerald-50: var(--color-violet-50);
-  --color-emerald-100: var(--color-violet-100);
-  --color-emerald-200: var(--color-violet-200);
-  --color-emerald-300: var(--color-violet-300);
-  --color-emerald-400: var(--color-violet-400);
-  --color-emerald-500: var(--color-violet-500);
-  --color-emerald-600: var(--color-violet-600);
-  --color-emerald-700: var(--color-violet-700);
-  --color-emerald-800: var(--color-violet-800);
-  --color-emerald-900: var(--color-violet-900);
-  --color-emerald-950: var(--color-violet-950);
+  --primary: #a78bfa;
+  --primary-foreground: #1f1f2e;
+  --sidebar-primary: #a78bfa;
+  --sidebar-accent: #a78bfa;
+  --ring: #a78bfa;
+  --sidebar-ring: #a78bfa;
+  --chart-1: #a78bfa;
 }
 
-:root[data-accent="rose"],
+:root[data-accent="rose"] {
+  --primary: #e11d48;
+  --primary-foreground: #ffffff;
+  --sidebar-primary: #e11d48;
+  --sidebar-accent: #e11d48;
+  --ring: #e11d48;
+  --sidebar-ring: #e11d48;
+  --chart-1: #e11d48;
+}
+
 .dark[data-accent="rose"] {
-  --color-emerald-50: var(--color-rose-50);
-  --color-emerald-100: var(--color-rose-100);
-  --color-emerald-200: var(--color-rose-200);
-  --color-emerald-300: var(--color-rose-300);
-  --color-emerald-400: var(--color-rose-400);
-  --color-emerald-500: var(--color-rose-500);
-  --color-emerald-600: var(--color-rose-600);
-  --color-emerald-700: var(--color-rose-700);
-  --color-emerald-800: var(--color-rose-800);
-  --color-emerald-900: var(--color-rose-900);
-  --color-emerald-950: var(--color-rose-950);
+  --primary: #f43f5e;
+  --primary-foreground: #230f18;
+  --sidebar-primary: #f43f5e;
+  --sidebar-accent: #f43f5e;
+  --ring: #f43f5e;
+  --sidebar-ring: #f43f5e;
+  --chart-1: #f43f5e;
 }
 
-:root[data-accent="amber"],
+:root[data-accent="amber"] {
+  --primary: #d97706;
+  --primary-foreground: #ffffff;
+  --sidebar-primary: #d97706;
+  --sidebar-accent: #d97706;
+  --ring: #d97706;
+  --sidebar-ring: #d97706;
+  --chart-1: #d97706;
+}
+
 .dark[data-accent="amber"] {
-  --color-emerald-50: var(--color-amber-50);
-  --color-emerald-100: var(--color-amber-100);
-  --color-emerald-200: var(--color-amber-200);
-  --color-emerald-300: var(--color-amber-300);
-  --color-emerald-400: var(--color-amber-400);
-  --color-emerald-500: var(--color-amber-500);
-  --color-emerald-600: var(--color-amber-600);
-  --color-emerald-700: var(--color-amber-700);
-  --color-emerald-800: var(--color-amber-800);
-  --color-emerald-900: var(--color-amber-900);
-  --color-emerald-950: var(--color-amber-950);
+  --primary: #fbbf24;
+  --primary-foreground: #1f1409;
+  --sidebar-primary: #fbbf24;
+  --sidebar-accent: #fbbf24;
+  --ring: #fbbf24;
+  --sidebar-ring: #fbbf24;
+  --chart-1: #fbbf24;
 }
 
-:root[data-accent="blue"],
+:root[data-accent="blue"] {
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --sidebar-primary: #2563eb;
+  --sidebar-accent: #2563eb;
+  --ring: #2563eb;
+  --sidebar-ring: #2563eb;
+  --chart-1: #2563eb;
+}
+
 .dark[data-accent="blue"] {
-  --color-emerald-50: var(--color-blue-50);
-  --color-emerald-100: var(--color-blue-100);
-  --color-emerald-200: var(--color-blue-200);
-  --color-emerald-300: var(--color-blue-300);
-  --color-emerald-400: var(--color-blue-400);
-  --color-emerald-500: var(--color-blue-500);
-  --color-emerald-600: var(--color-blue-600);
-  --color-emerald-700: var(--color-blue-700);
-  --color-emerald-800: var(--color-blue-800);
-  --color-emerald-900: var(--color-blue-900);
-  --color-emerald-950: var(--color-blue-950);
+  --primary: #60a5fa;
+  --primary-foreground: #0f172a;
+  --sidebar-primary: #60a5fa;
+  --sidebar-accent: #60a5fa;
+  --ring: #60a5fa;
+  --sidebar-ring: #60a5fa;
+  --chart-1: #60a5fa;
 }
 
-:root[data-accent="cyberpunk"],
-.dark[data-accent="cyberpunk"] {
-  --color-emerald-50: #052e26;
-  --color-emerald-100: #044b3c;
-  --color-emerald-200: #036b55;
-  --color-emerald-300: #00a67d;
-  --color-emerald-400: #00ffcc;
-  --color-emerald-500: #00ffcc;
-  --color-emerald-600: #ff00ff;
-  --color-emerald-700: #cc00cc;
-  --color-emerald-800: #880088;
-  --color-emerald-900: #550055;
-  --color-emerald-950: #330033;
+:root[data-accent="cyberpunk"] {
+  --primary: #00ffcc;
+  --primary-foreground: #000000;
+  --sidebar-primary: #00ffcc;
+  --sidebar-accent: #00ffcc;
+  --ring: #00ffcc;
+  --sidebar-ring: #00ffcc;
+  --chart-1: #00ffcc;
 }
 
 .dark[data-accent="cyberpunk"] {
-  --color-slate-900: #000000;
-  --color-slate-950: #000000;
-  --color-slate-800: #0a0a0a;
-  --color-slate-700: #1a1a1a;
-  --color-slate-100: #1a1a1a;
-  --color-slate-50: #000000;
-  color-scheme: dark;
+  --primary: #00ffcc;
+  --primary-foreground: #000000;
+  --sidebar-primary: #00ffcc;
+  --sidebar-accent: #00ffcc;
+  --ring: #00ffcc;
+  --sidebar-ring: #00ffcc;
+  --chart-1: #00ffcc;
 }
+
 
 @layer base {
   * {
@@ -302,7 +328,17 @@
 
   /* Dynamic Sports Energy custom components */
   .accent-bar {
-    @apply bg-gradient-to-r from-emerald-500 via-teal-400 to-orange-500 h-1;
+    @apply h-1;
+    background: linear-gradient(90deg, var(--grad-from) 0%, var(--grad-to) 60%, var(--secondary) 100%);
+  }
+
+  /* Brainy-style solid volt gradient background */
+  .gradient-bg {
+    background: linear-gradient(115deg, var(--grad-from) 0%, var(--grad-to) 100%);
+  }
+
+  .gradient-bg-warm {
+    background: linear-gradient(115deg, var(--grad-warm-from) 0%, var(--grad-warm-to) 100%);
   }
 
   .hero-section {
@@ -343,7 +379,8 @@
 
   /* Gradient text */
   .gradient-text {
-    @apply bg-gradient-to-r from-emerald-500 to-teal-400 bg-clip-text;
+    background: linear-gradient(115deg, var(--grad-from) 0%, var(--grad-to) 100%);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
@@ -357,14 +394,14 @@
   /* Hero pattern overlay */
   .hero-pattern {
     background-image:
-      radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.12) 0%, transparent 45%),
-      radial-gradient(circle at 80% 80%, rgba(255, 107, 53, 0.08) 0%, transparent 45%),
-      radial-gradient(circle at 60% 10%, rgba(26, 42, 74, 0.05) 0%, transparent 35%);
+      radial-gradient(circle at 20% 20%, color-mix(in srgb, var(--primary) 12%, transparent) 0%, transparent 45%),
+      radial-gradient(circle at 80% 80%, color-mix(in srgb, var(--secondary) 8%, transparent) 0%, transparent 45%),
+      radial-gradient(circle at 60% 10%, color-mix(in srgb, var(--accent) 5%, transparent) 0%, transparent 35%);
   }
 
   /* Dot grid pattern */
   .dot-pattern {
-    background-image: radial-gradient(circle, rgba(16,185,129,0.15) 1px, transparent 1px);
+    background-image: radial-gradient(circle, color-mix(in srgb, var(--primary) 15%, transparent) 1px, transparent 1px);
     background-size: 28px 28px;
   }
 
@@ -383,13 +420,13 @@
     @apply relative px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200;
   }
 
-  /* Glow effect for CTAs */
+  /* Glow effect for CTAs (Brainy "glow-volt") */
   .glow-emerald {
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.35), 0 4px 12px rgba(16, 185, 129, 0.2);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 30%, transparent), 0 8px 30px color-mix(in srgb, var(--primary) 28%, transparent);
   }
 
   .glow-emerald:hover {
-    box-shadow: 0 0 28px rgba(16, 185, 129, 0.5), 0 6px 20px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 45%, transparent), 0 10px 36px color-mix(in srgb, var(--primary) 40%, transparent);
   }
 
   /* Section heading underline accent */
@@ -399,7 +436,8 @@
 
   .section-heading::after {
     content: '';
-    @apply absolute -bottom-2 left-0 h-1 w-16 rounded-full bg-gradient-to-r from-emerald-500 to-teal-400;
+    @apply absolute -bottom-2 left-0 h-1 w-16 rounded-full;
+    background: linear-gradient(90deg, var(--grad-from) 0%, var(--grad-to) 100%);
   }
 
   /* Badge pill */

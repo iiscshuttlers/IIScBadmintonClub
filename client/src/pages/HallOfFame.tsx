@@ -11,7 +11,7 @@ export default function HallOfFame() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans">
-      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-emerald-950 text-white py-20 relative overflow-hidden">
+      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-primary/90 text-white py-20 relative overflow-hidden">
         <div className="absolute inset-0 hero-pattern" />
         <div className="container mx-auto px-4 text-center relative z-10">
           <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 px-4 py-2 rounded-full text-sm font-semibold mb-5">

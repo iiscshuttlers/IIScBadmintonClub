@@ -60,7 +60,7 @@ export function AnnouncementEditor({
     <div className="space-y-4">
       <button
         onClick={add}
-        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition shadow-md shadow-emerald-500/20"
+        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary text-white text-sm font-bold transition shadow-md shadow-primary/20"
       >
         <Plus className="w-4 h-4" /> New Announcement
       </button>
@@ -204,7 +204,7 @@ export function AnnouncementEditor({
                     update(i, "flyer", {
                       ...(a.flyer || {
                         id: `ann_flyer_${Date.now()}`,
-                        bgColorClass: "bg-gradient-to-r from-emerald-600 to-teal-600",
+                        bgColorClass: "bg-gradient-to-r from-primary to-teal-600",
                         items: [{ text: a.title || "New Event", colorClass: "text-white" }]
                       }),
                       enabled: true
@@ -213,13 +213,13 @@ export function AnnouncementEditor({
                     update(i, "flyer", { ...a.flyer, enabled: false });
                   }
                 }}
-                className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
+                className="w-4 h-4 text-primary rounded focus:ring-primary"
               />
               Show as Custom Flyer Banner
             </label>
             
             {a.flyer && a.flyer.enabled && (
-              <div className="pl-6 border-l-2 border-emerald-500">
+              <div className="pl-6 border-l-2 border-primary">
                 <FlyerConfigBuilder
                   f={a.flyer}
                   onChange={(next) => update(i, "flyer", next)}

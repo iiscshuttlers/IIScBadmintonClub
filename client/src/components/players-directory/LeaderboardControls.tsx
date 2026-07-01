@@ -25,7 +25,7 @@ export function LeaderboardControls({
           <div
             onClick={() => setActiveTab("elo")}
             role="button"
-            className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === "elo" ? "bg-white dark:bg-slate-900 text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+            className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === "elo" ? "bg-white dark:bg-slate-900 text-primary shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
           >
             <div className="flex items-center"><Crown className="w-4 h-4 mr-1.5" />ELO Rankings</div>
             <InfoModal

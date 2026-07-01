@@ -74,9 +74,9 @@ export function VideoEditor({
   return (
     <div className="space-y-4">
       {/* Admin Guide */}
-      <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 rounded-2xl p-5 text-sm text-emerald-800 dark:text-emerald-300">
-        <h4 className="font-black flex items-center gap-2 mb-3 text-emerald-900 dark:text-emerald-400"><Activity className="w-5 h-5" /> Live Scoreboard & Scoring Mode Guide</h4>
-        <ul className="list-disc list-inside space-y-2 opacity-90 marker:text-emerald-500">
+      <div className="bg-primary/10 dark:bg-primary/20 border border-primary/40 dark:border-primary/50 rounded-2xl p-5 text-sm text-primary dark:text-primary/70">
+        <h4 className="font-black flex items-center gap-2 mb-3 text-primary dark:text-primary"><Activity className="w-5 h-5" /> Live Scoreboard & Scoring Mode Guide</h4>
+        <ul className="list-disc list-inside space-y-2 opacity-90 marker:text-primary">
           <li><strong>Auto-Extracting Names:</strong> Name your video title with exactly this format: <code className="bg-black/10 dark:bg-black/30 px-1.5 py-0.5 rounded font-bold">Player A and Player B vs Player C and Player D || Match Title</code> to automatically populate the BWF player names on the live scoreboard.</li>
           <li><strong>Scoring a Match:</strong> Open any video in the front-end Gallery. Click the "Score Mode" toggle in the top right of the title bar. Click the player buttons as you watch to record timestamps.</li>
           <li><strong>Importing Scores:</strong> When finished, click the red "Copy JSON Data" button in the player. Come back here, find the video, and click the <strong>"Paste from Clipboard"</strong> button below to instantly attach the live scoreboard!</li>
@@ -155,7 +155,7 @@ export function VideoEditor({
               </label>
               <button
                 onClick={() => addChapter(i)}
-                className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 transition font-semibold"
+                className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary hover:bg-primary/15 transition font-semibold"
               >
                 <Plus className="w-3 h-3" /> Add chapter
               </button>
@@ -209,7 +209,7 @@ export function VideoEditor({
                        toast.error("Clipboard does not contain valid score data array.");
                     }
                   } catch(e) { toast.error("No valid JSON found in clipboard"); }
-               }} className="text-xs font-bold px-4 py-2 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/60 transition shadow-sm">
+               }} className="text-xs font-bold px-4 py-2 rounded-xl bg-primary/15 text-primary dark:bg-primary/40 dark:text-primary hover:bg-primary/20 dark:hover:bg-primary/80/60 transition shadow-sm">
                  Paste from Clipboard
                </button>
                {v.scoreLogs && v.scoreLogs.length > 0 && (
@@ -223,7 +223,7 @@ export function VideoEditor({
       ))}
       <button
         onClick={add}
-        className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 text-slate-500 hover:border-emerald-400 hover:text-emerald-600 transition text-sm font-bold w-full justify-center"
+        className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 text-slate-500 hover:border-primary hover:text-primary transition text-sm font-bold w-full justify-center"
       >
         <Plus className="w-4 h-4" /> Add Video
       </button>

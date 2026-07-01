@@ -58,7 +58,7 @@ export function LeaderboardTable({
                     <div className="flex flex-col items-center gap-0.5">
                       <span className="font-black text-slate-400 dark:text-slate-500">#{index + 4}</span>
                       {trend === "up" && (
-                        <span className="inline-flex items-center gap-0.5 text-emerald-500 text-[10px] font-black leading-none bg-emerald-50 dark:bg-emerald-950/30 px-1 rounded">▲ HOT</span>
+                        <span className="inline-flex items-center gap-0.5 text-primary text-[10px] font-black leading-none bg-primary/10 dark:bg-primary/30 px-1 rounded">▲ HOT</span>
                       )}
                       {trend === "down" && (
                         <span className="inline-flex items-center gap-0.5 text-rose-500 text-[10px] font-black leading-none bg-rose-50 dark:bg-rose-950/30 px-1 rounded">▼ DIP</span>
@@ -71,7 +71,7 @@ export function LeaderboardTable({
                           {hist.slice().reverse().map((v, i) => (
                             <div
                               key={i}
-                              className={`w-1 rounded-sm ${v >= 0 ? "bg-emerald-400" : "bg-rose-400"}`}
+                              className={`w-1 rounded-sm ${v >= 0 ? "bg-primary" : "bg-rose-400"}`}
                               style={{ height: `${Math.min(12, 4 + Math.abs(v) / 3)}px` }}
                             />
                           ))}
@@ -82,7 +82,7 @@ export function LeaderboardTable({
                   <td className="p-4">
                     <Link href={`/player/${player.id}`}>
                       <div className="flex items-center gap-3 cursor-pointer">
-                        <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0 border-2 border-transparent group-hover:border-emerald-400 transition-colors">
+                        <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0 border-2 border-transparent group-hover:border-primary transition-colors">
                           {player.avatar_url ? (
                             <img
                               src={player.avatar_url}
@@ -95,7 +95,7 @@ export function LeaderboardTable({
                         </div>
                         <div>
                           <div className="flex items-center gap-1.5">
-                            <span className="font-black text-slate-800 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                            <span className="font-black text-slate-800 dark:text-slate-200 group-hover:text-primary dark:group-hover:text-primary transition-colors">
                               {player.full_name}
                             </span>
                             {allStreaks[player.id] >= 5 && (
@@ -140,7 +140,7 @@ export function LeaderboardTable({
                         {lastEloChange[player.id] != null && (
                           <span className={`text-[9px] font-black px-1 py-0.5 rounded ${
                             lastEloChange[player.id] >= 0
-                              ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-300"
+                              ? "bg-primary/20 text-primary dark:text-primary/70"
                               : "bg-rose-500/20 text-rose-600 dark:text-rose-300"
                           }`}>
                             {lastEloChange[player.id] >= 0 ? "+" : ""}{lastEloChange[player.id]}
@@ -148,7 +148,7 @@ export function LeaderboardTable({
                         )}
                       </div>
                     ) : (
-                      <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50">
+                      <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-xl bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary border border-primary/40 dark:border-primary/50">
                         <Swords className="w-3.5 h-3.5 shrink-0 opacity-70" />
                         <div className="flex flex-col items-end leading-none gap-0.5">
                           <span className="text-[9px] uppercase font-black tracking-wider opacity-70">

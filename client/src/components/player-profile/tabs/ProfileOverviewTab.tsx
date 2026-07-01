@@ -23,7 +23,7 @@ function FormPill({ result, index }: { result: "W" | "L"; index: number }) {
   return (
     <div
       className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-black
-        ${isWin ? "bg-emerald-500 text-white" : "bg-slate-200 dark:bg-white/10 text-slate-500 dark:text-white/40"}
+        ${isWin ? "bg-primary text-white" : "bg-slate-200 dark:bg-white/10 text-slate-500 dark:text-white/40"}
       `}
       style={{ opacity }}
     >
@@ -109,7 +109,7 @@ function CircularProgress({
           initial={{ strokeDashoffset: circumference }}
           animate={{ strokeDashoffset: offset }}
           transition={{ duration: 1.5, ease: "easeOut" }}
-          className="text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+          className="text-primary drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]"
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center flex-col">
@@ -166,7 +166,7 @@ export function ProfileOverviewTab({
             {/* Overall */}
             <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden group hover:shadow-md transition-shadow">
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500" />
-              <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-emerald-500/[0.05] rounded-full blur-2xl" />
+              <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-primary/[0.05] rounded-full blur-2xl" />
               <div className="relative z-10">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500 dark:text-white/35 flex items-center gap-1.5">
@@ -186,7 +186,7 @@ export function ProfileOverviewTab({
                   />
                 </div>
                 <div className="text-3xl font-black text-white tabular-nums mb-1">
-                  <span className="text-emerald-500">{splitStats.all.wins}W</span>
+                  <span className="text-primary">{splitStats.all.wins}W</span>
                   <span className="text-white/20 mx-1.5 font-light">·</span>
                   <span className="text-rose-500">{splitStats.all.losses}L</span>
                 </div>
@@ -197,7 +197,7 @@ export function ProfileOverviewTab({
                   <div
                     className={`mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black ${
                       isWinStreak
-                        ? "bg-emerald-500/15 text-emerald-400"
+                        ? "bg-primary/15 text-primary"
                         : "bg-rose-500/15 text-rose-400"
                     }`}
                   >
@@ -223,14 +223,14 @@ export function ProfileOverviewTab({
 
             {/* Friendly */}
             <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden group hover:shadow-md transition-shadow">
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-300 to-emerald-500" />
-              <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-emerald-500/[0.04] rounded-full blur-2xl" />
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary/50 to-primary" />
+              <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-primary/[0.04] rounded-full blur-2xl" />
               <div className="relative z-10">
                 <div className="flex items-center gap-2.5 mb-4">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-500/[0.12] flex items-center justify-center text-base shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-primary/[0.12] flex items-center justify-center text-base shrink-0">
                     🏸
                   </div>
-                  <span className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-400">
+                  <span className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">
                     Friendly
                   </span>
                 </div>
@@ -244,7 +244,7 @@ export function ProfileOverviewTab({
                 </div>
                 <div className="h-1.5 rounded-full bg-slate-200 dark:bg-white/8 overflow-hidden mb-3">
                   <motion.div
-                    className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-500"
+                    className="h-full rounded-full bg-gradient-to-r from-primary to-teal-500"
                     initial={{ width: 0 }}
                     animate={{ width: `${splitStats.friendly.winPct}%` }}
                     transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
@@ -485,9 +485,9 @@ export function ProfileOverviewTab({
                 Icon: Activity,
                 label: "Favorite Format",
                 value: player.favoriteFormat,
-                accent: "from-emerald-400 to-teal-500",
-                iconBg: "bg-emerald-500/[0.12]",
-                iconColor: "text-emerald-500",
+                accent: "from-primary to-teal-500",
+                iconBg: "bg-primary/[0.12]",
+                iconColor: "text-primary",
               },
             ] as const
           ).map((attr) => (
@@ -531,7 +531,7 @@ export function ProfileOverviewTab({
                 label="Singles"
                 wins={player.stats.categoryStats.singles.wins}
                 losses={player.stats.categoryStats.singles.losses}
-                color="bg-emerald-500"
+                color="bg-primary"
               />
             )}
             {player.stats.categoryStats.doubles && (

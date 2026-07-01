@@ -178,7 +178,7 @@ export function QRCodeScannerModal({ isOpen, onClose, onScan }: QRCodeScannerMod
           >
             <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <QrCode className="w-5 h-5 text-emerald-500" /> Scan QR Code
+                <QrCode className="w-5 h-5 text-primary" /> Scan QR Code
               </h2>
               <button
                 onClick={onClose}
@@ -198,7 +198,7 @@ export function QRCodeScannerModal({ isOpen, onClose, onScan }: QRCodeScannerMod
                   <button
                     onClick={requestCameraPermission}
                     disabled={requestingPermission}
-                    className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-400 text-white font-bold px-6 py-2 rounded-xl transition-colors"
+                    className="bg-primary hover:bg-primary disabled:bg-slate-400 text-white font-bold px-6 py-2 rounded-xl transition-colors"
                   >
                     {requestingPermission ? "Requesting..." : "Try Again"}
                   </button>
@@ -206,15 +206,15 @@ export function QRCodeScannerModal({ isOpen, onClose, onScan }: QRCodeScannerMod
               )}
 
               {scanResult ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-emerald-500/10 z-10">
-                  <div className="w-16 h-16 bg-emerald-500 text-white rounded-full flex items-center justify-center mb-4">
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-primary/10 z-10">
+                  <div className="w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center mb-4">
                     <QrCode className="w-8 h-8" />
                   </div>
-                  <p className="text-emerald-600 dark:text-emerald-400 font-bold text-lg">Player Found!</p>
+                  <p className="text-primary dark:text-primary font-bold text-lg">Player Found!</p>
                 </div>
               ) : null}
 
-              <div id="reader" className="w-full overflow-hidden rounded-2xl [&_button]:bg-emerald-500 [&_button]:text-white [&_button]:px-4 [&_button]:py-2 [&_button]:rounded-xl [&_button]:font-bold [&_button]:mt-4 [&_select]:mt-4 [&_select]:p-2 [&_select]:rounded-lg [&_select]:bg-slate-100 dark:[&_select]:bg-slate-800 dark:[&_select]:text-white"></div>
+              <div id="reader" className="w-full overflow-hidden rounded-2xl [&_button]:bg-primary [&_button]:text-white [&_button]:px-4 [&_button]:py-2 [&_button]:rounded-xl [&_button]:font-bold [&_button]:mt-4 [&_select]:mt-4 [&_select]:p-2 [&_select]:rounded-lg [&_select]:bg-slate-100 dark:[&_select]:bg-slate-800 dark:[&_select]:text-white"></div>
             </div>
             
             <div className="bg-slate-50 dark:bg-slate-800/50 p-4 text-center text-sm font-medium text-slate-500 dark:text-slate-400">

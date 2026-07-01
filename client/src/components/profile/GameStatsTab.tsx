@@ -55,7 +55,7 @@ export function GameStatsTab({
           <select
             value={playingLevel}
             onChange={(e) => setPlayingLevel(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none"
           >
             <option value="Beginner">Beginner</option>
             <option value="Intermediate">Intermediate</option>
@@ -72,7 +72,7 @@ export function GameStatsTab({
             type="text"
             value={playingStyle}
             onChange={(e) => setPlayingStyle(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none"
             placeholder="e.g. Aggressive, Defensive, All-round"
           />
         </div>
@@ -86,7 +86,7 @@ export function GameStatsTab({
           <select
             value={dominantHand}
             onChange={(e) => setDominantHand(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none"
           >
             <option value="Right-handed">Right-handed</option>
             <option value="Left-handed">Left-handed</option>
@@ -101,7 +101,7 @@ export function GameStatsTab({
             type="text"
             value={favoriteShot}
             onChange={(e) => setFavoriteShot(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none"
             placeholder="e.g. Net Cross Drop, Jump Smash"
           />
         </div>
@@ -116,7 +116,7 @@ export function GameStatsTab({
             type="number"
             value={yearsPlaying}
             onChange={(e) => setYearsPlaying(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none"
             placeholder="e.g. 5"
           />
         </div>
@@ -129,7 +129,7 @@ export function GameStatsTab({
             type="text"
             value={coach}
             onChange={(e) => setCoach(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none"
             placeholder="e.g. Self-coached or Academy Name"
           />
         </div>
@@ -144,7 +144,7 @@ export function GameStatsTab({
             type="text"
             value={favoriteIdol}
             onChange={(e) => setFavoriteIdol(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none"
             placeholder="e.g. Lin Dan, Viktor Axelsen"
           />
         </div>
@@ -157,7 +157,7 @@ export function GameStatsTab({
             required
             value={favoriteFormat}
             onChange={(e) => setFavoriteFormat(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none"
           >
             <option value="" disabled>Select your favorite format</option>
             <option value="Singles">Singles</option>

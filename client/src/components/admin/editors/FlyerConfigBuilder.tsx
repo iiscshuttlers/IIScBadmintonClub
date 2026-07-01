@@ -58,7 +58,7 @@ export function FlyerConfigBuilder({
                 type="checkbox"
                 checked={f.enabled}
                 onChange={(e) => update("enabled", e.target.checked)}
-                className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"
+                className="w-4 h-4 text-primary rounded focus:ring-primary"
               />
               Enabled
             </label>
@@ -170,7 +170,7 @@ export function FlyerConfigBuilder({
         ))}
         <button
           onClick={addItem}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 rounded-lg transition"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/90/30 rounded-lg transition"
         >
           <Plus className="w-3.5 h-3.5" /> Add Item
         </button>

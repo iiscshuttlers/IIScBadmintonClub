@@ -110,8 +110,8 @@ export function PlayerActionBar({
           </span>
         )}
         {player.singles_elo != null && (
-          <span className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-900/50 text-slate-800 dark:text-slate-200 text-sm font-bold shadow-sm flex items-center gap-1.5">
-            <User className="w-4 h-4 text-emerald-500" /> S: {player.singles_elo}
+          <span className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-primary/40 dark:border-primary/50 text-slate-800 dark:text-slate-200 text-sm font-bold shadow-sm flex items-center gap-1.5">
+            <User className="w-4 h-4 text-primary" /> S: {player.singles_elo}
           </span>
         )}
         {player.doubles_elo != null && (
@@ -181,7 +181,7 @@ export function PlayerActionBar({
               </div>
               <div className="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-400 transition-all duration-700"
+                  className="h-full rounded-full bg-gradient-to-r from-primary to-teal-400 transition-all duration-700"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -215,7 +215,11 @@ export function PlayerActionBar({
             </button>
             {buddyStatus === 'accepted' ? (
               <button
-                onClick={() => onBuddyAction("remove")}
+                onClick={() => {
+                  if (confirm("Are you sure you want to remove this buddy?")) {
+                    onBuddyAction("remove");
+                  }
+                }}
                 className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-rose-600 text-white hover:bg-rose-700"
               >
                 <Heart className="w-4 h-4 fill-white text-white" />
@@ -224,14 +228,18 @@ export function PlayerActionBar({
             ) : buddyStatus === 'received' ? (
               <button
                 onClick={() => onBuddyAction("accept")}
-                className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-emerald-600 text-white hover:bg-emerald-700"
+                className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-primary text-white hover:bg-primary"
               >
                 <Heart className="w-4 h-4" />
                 Accept Request
               </button>
             ) : buddyStatus === 'sent' ? (
               <button
-                onClick={() => onBuddyAction("cancel")}
+                onClick={() => {
+                  if (confirm("Are you sure you want to cancel the buddy request?")) {
+                    onBuddyAction("cancel");
+                  }
+                }}
                 className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-slate-600 text-white hover:bg-slate-700"
               >
                 <Heart className="w-4 h-4" />

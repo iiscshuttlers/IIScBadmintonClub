@@ -10,7 +10,7 @@ import { BracketVisual } from "@/components/tournament/BracketVisual";
 import {
   Loader2, Save, Trophy, Users, Swords, Archive, Plus, X, Search,
   ChevronDown, ChevronUp, Lock, Unlock, Play, SkipForward, Settings2,
-  CalendarDays, MapPin, Link, Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle
+  CalendarDays, MapPin, Link, Unlink, Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw
 } from "lucide-react";
 import { InfoModal } from "@/components/InfoModal";
 
@@ -122,7 +122,7 @@ interface RoundRule {
 // ── Shared styles ──────────────────────────────────────────────────────────────
 
 const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm";
-const inputCls = "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500 transition";
+const inputCls = "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-primary transition";
 const labelCls = "block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5";
 const CATEGORIES = ["MS", "WS", "MD", "WD", "XD"];
 const STATUS_FLOW = ["draft", "active", "completed"] as const;
@@ -132,7 +132,7 @@ const STATUS_FLOW = ["draft", "active", "completed"] as const;
 function StatusChip({ status }: { status: string }) {
   const map: Record<string, string> = {
     draft: "bg-slate-100 dark:bg-slate-800 text-slate-500",
-    active: "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400",
+    active: "bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary",
     completed: "bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400",
     archived: "bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400",
   };
@@ -145,7 +145,7 @@ function StatusChip({ status }: { status: string }) {
 
 function MatchStatusChip({ match }: { match: { status: string, scheduled_at?: string | null, court_number?: string | null } }) {
   if (match.status === "walkover") return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/40 text-blue-600">W/O</span>;
-  if (match.status === "completed") return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600">COMPLETED</span>;
+  if (match.status === "completed") return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-primary/15 dark:bg-primary/40 text-primary">COMPLETED</span>;
   if (match.status === "in_progress") return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-600">IN PROGRESS</span>;
   
   if (match.scheduled_at) {
@@ -227,7 +227,7 @@ export function TournamentManager() {
     setCreating(false);
   };
 
-  if (loading) return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>;
+  if (loading) return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
 
   return (
     <div className="space-y-5">
@@ -260,7 +260,7 @@ export function TournamentManager() {
           <button
             onClick={createTournament}
             disabled={creating}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black transition disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary hover:bg-primary text-white text-xs font-black transition disabled:opacity-50"
           >
             {creating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
             New Tournament
@@ -278,8 +278,8 @@ export function TournamentManager() {
                 onClick={() => setTab(tab)}
                 className={`px-3 py-2 rounded-xl text-sm font-black transition-all w-full sm:w-auto text-center ${
                   activeTab === tab
-                    ? "bg-emerald-600 text-white shadow"
-                    : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-emerald-400"
+                    ? "bg-primary text-white shadow"
+                    : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-primary"
                 }`}
               >
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -391,7 +391,7 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
           <StatusChip status={form.status} />
           {form.status === "draft" && (
             <button onClick={() => transition("active")} disabled={transitioning}
-              className="px-3 py-1 text-xs font-black rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-50 transition">
+              className="px-3 py-1 text-xs font-black rounded-xl bg-primary hover:bg-primary text-white disabled:opacity-50 transition">
               {transitioning ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "→ Activate"}
             </button>
           )}
@@ -455,7 +455,7 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
                 return (
                   <button key={cat} type="button"
                     onClick={() => upd("categories", active ? form.categories.filter((c) => c !== cat) : [...form.categories, cat])}
-                    className={`px-4 py-1.5 rounded-xl text-sm font-black border transition-all ${active ? "bg-emerald-600 text-white border-emerald-600" : "border-slate-200 dark:border-slate-700 text-slate-500 hover:border-emerald-400"}`}>
+                    className={`px-4 py-1.5 rounded-xl text-sm font-black border transition-all ${active ? "bg-primary text-white border-primary" : "border-slate-200 dark:border-slate-700 text-slate-500 hover:border-primary"}`}>
                     {cat}
                   </button>
                 );
@@ -509,7 +509,7 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
           )}
         </div>
         <button onClick={save} disabled={saving}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-black transition shadow-lg">
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary hover:bg-primary disabled:opacity-50 text-white font-black transition shadow-lg">
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           Save Details
         </button>
@@ -646,23 +646,36 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
     });
   };
 
-  const linkParticipantToPlayer = async (participantId: string, playerId: string, playerName: string) => {
+  const linkParticipantToPlayer = async (participantId: string, playerId: string | null, playerName: string) => {
+    // Determine the new display name if it's doubles (preserve the partner's name)
+    const p = participants[Object.keys(participants).find(cat => participants[cat].some(p => p.id === participantId)) || ""]?.find(p => p.id === participantId);
+    let newDisplayName = playerName;
+    if (p && p.category && ["MD", "WD", "XD"].includes(p.category)) {
+      const partner = allPlayers?.find((pl) => pl.id === p.partner_id);
+      if (partner) newDisplayName = `${playerName} & ${partner.full_name}`;
+      else if (p.display_name && p.display_name.includes('&')) {
+        const parts = p.display_name.split('&');
+        newDisplayName = `${playerName} & ${parts[1].trim()}`;
+      }
+    }
+
     const { error } = await supabase.from("tournament_participants")
-      .update({ player_id: playerId, display_name: playerName })
+      .update({ player_id: playerId, display_name: newDisplayName })
       .eq("id", participantId);
     if (error) { toast.error(error.message); return; }
+    
     setParticipants((prev) => {
       const updated = { ...prev };
       for (const cat of Object.keys(updated)) {
         updated[cat] = updated[cat].map((p) =>
-          p.id === participantId ? { ...p, player_id: playerId, display_name: playerName } : p
+          p.id === participantId ? { ...p, player_id: playerId, display_name: newDisplayName } : p
         );
       }
       return updated;
     });
     setLinkingId(null);
     setLinkSearch("");
-    toast.success(`Linked to ${playerName}`);
+    toast.success(`Linked to ${playerName}. Hint: Go to Bracket tab and click "Sync Names" to update bracket!`);
   };
 
   const saveSeeds = async (cat: string) => {
@@ -804,7 +817,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
     toast.success(`Bracket generated — ${allRows.length} matches created${byeMatches.length ? `, ${byeMatches.length} bye(s) advanced` : ""}`);
   };
 
-  if (loading) return <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-emerald-500" /></div>;
+  if (loading) return <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
 
   return (
     <div className="space-y-4">
@@ -858,12 +871,18 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                             <span className="ml-2 text-[10px] font-black text-amber-500 bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.5 rounded">external</span>
                           )}
                         </div>
-                        {!p.player_id && (
+                        <button
+                          onClick={() => { setLinkingId(linkingId === p.id ? null : p.id); setLinkSearch(""); }}
+                          title={p.player_id ? "Change linked player" : "Link to registered player"}
+                          className={`p-1 transition ${p.player_id ? "text-blue-400 hover:text-blue-300" : "text-slate-400 hover:text-blue-500"}`}>
+                          <Link className="w-4 h-4" />
+                        </button>
+                        {p.player_id && (
                           <button
-                            onClick={() => { setLinkingId(linkingId === p.id ? null : p.id); setLinkSearch(""); }}
-                            title="Link to registered player"
-                            className="p-1 text-slate-400 hover:text-blue-500 transition">
-                            <Link className="w-4 h-4" />
+                            onClick={() => linkParticipantToPlayer(p.id, null, p.display_name?.split(' &')[0] || "")}
+                            title="Unlink player"
+                            className="p-1 text-amber-500 hover:text-amber-400 transition">
+                            <Unlink className="w-4 h-4" />
                           </button>
                         )}
                         <button onClick={() => removeParticipant(p.id)}
@@ -907,12 +926,12 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                         value={catSearch}
                         onChange={(e) => setSearch((p) => ({ ...p, [cat]: e.target.value }))}
                         placeholder="Search registered player…"
-                        className="w-full pl-8 pr-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-1 focus:ring-emerald-500"
+                        className="w-full pl-8 pr-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-1 focus:ring-primary"
                       />
                       {catSearch && (
                         <div className="absolute z-10 top-full mt-1 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg max-h-40 overflow-y-auto">
                           {filteredPlayers.slice(0, 8).map((pl) => (
-                            <button key={pl.id} className="w-full text-left px-3 py-2 text-sm hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition"
+                            <button key={pl.id} className="w-full text-left px-3 py-2 text-sm hover:bg-primary/10 dark:hover:bg-primary/90/30 transition"
                               onClick={() => {
                                 if (!doubles) {
                                   addParticipant(cat, pl.id, null, pl.full_name);
@@ -935,12 +954,12 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                           value={catPartnerSearch}
                           onChange={(e) => setPartnerSearch((p) => ({ ...p, [cat]: e.target.value }))}
                           placeholder="Search partner…"
-                          className="w-full pl-8 pr-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-1 focus:ring-emerald-500"
+                          className="w-full pl-8 pr-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-1 focus:ring-primary"
                         />
                         {catPartnerSearch && (
                           <div className="absolute z-10 top-full mt-1 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg max-h-40 overflow-y-auto">
                             {filteredPartners.slice(0, 8).map((pl) => (
-                              <button key={pl.id} className="w-full text-left px-3 py-2 text-sm hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition"
+                              <button key={pl.id} className="w-full text-left px-3 py-2 text-sm hover:bg-primary/10 dark:hover:bg-primary/90/30 transition"
                                 onClick={() => {
                                   const p1Data = sessionStorage.getItem(`tp_p1_${cat}`);
                                   if (p1Data) {
@@ -961,7 +980,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                         value={externalName}
                         onChange={(e) => setExternalName(e.target.value)}
                         placeholder="Or type external player name…"
-                        className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-1 focus:ring-emerald-500"
+                        className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-1 focus:ring-primary"
                       />
                       {externalName && (
                         <button
@@ -996,7 +1015,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                         </button>
                         <button
                           onClick={() => downloadParticipantTemplate(cat)}
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-[10px] font-black text-slate-500 hover:text-emerald-600 hover:border-emerald-400 transition"
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-[10px] font-black text-slate-500 hover:text-primary hover:border-primary transition"
                         >
                           <Download className="w-3 h-3" /> CSV Template
                         </button>
@@ -1008,7 +1027,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                       value={bulkText}
                       onChange={(e) => setBulkText(e.target.value)}
                       placeholder={isDoubles(cat) ? "Rahul Sharma\tPriya Nair\nArun K\tMeena R" : "Rahul Sharma\nPriya Nair\nArun Kumar"}
-                      className="w-full px-3 py-2 text-sm font-mono rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-1 focus:ring-emerald-500 resize-none"
+                      className="w-full px-3 py-2 text-sm font-mono rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-1 focus:ring-primary resize-none"
                     />
                     <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-400 hover:text-blue-500 transition w-fit">
                       <Upload className="w-3.5 h-3.5" />
@@ -1022,9 +1041,9 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                         <div className="space-y-1 max-h-48 overflow-y-auto">
                           {entries.map((e, i) => (
                             <div key={i} className="flex items-center gap-2 text-xs py-1 border-b border-slate-100 dark:border-slate-800 last:border-0">
-                              <span className={`w-2 h-2 rounded-full shrink-0 ${e.match1 ? "bg-emerald-500" : "bg-amber-400"}`} />
+                              <span className={`w-2 h-2 rounded-full shrink-0 ${e.match1 ? "bg-primary" : "bg-amber-400"}`} />
                               <span className="flex-1 text-slate-700 dark:text-slate-300 truncate">{e.raw}</span>
-                              <span className={`text-[10px] font-black uppercase ${e.match1 ? "text-emerald-600" : "text-amber-500"}`}>
+                              <span className={`text-[10px] font-black uppercase ${e.match1 ? "text-primary" : "text-amber-500"}`}>
                                 {e.match1 ? "matched" : "external"}
                               </span>
                             </div>
@@ -1036,7 +1055,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                       <button
                         onClick={() => runBulkImport(cat)}
                         disabled={bulkImporting || !bulkText.trim()}
-                        className="flex-1 py-2 text-xs font-black rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition disabled:opacity-50 flex items-center justify-center gap-1">
+                        className="flex-1 py-2 text-xs font-black rounded-lg bg-primary hover:bg-primary text-white transition disabled:opacity-50 flex items-center justify-center gap-1">
                         {bulkImporting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
                         Import {bulkText.trim() ? parseBulkLines(bulkText, cat).length : 0} Participants
                       </button>
@@ -1046,7 +1065,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                 ) : (
                   <div className="flex gap-2">
                     <button onClick={() => setAdding(cat)}
-                      className="flex-1 py-2 text-xs font-black rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 hover:border-emerald-400 hover:text-emerald-600 transition flex items-center justify-center gap-1">
+                      className="flex-1 py-2 text-xs font-black rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 hover:border-primary hover:text-primary transition flex items-center justify-center gap-1">
                       <Plus className="w-3.5 h-3.5" /> Add Participant
                     </button>
                     <button onClick={() => { setBulkCat(cat); setBulkText(""); setAdding(null); }}
@@ -1061,14 +1080,14 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                   <span className="text-xs text-slate-500 font-bold">3rd Place Playoff</span>
                   <button
                     onClick={() => setThirdPlacePerCat((p) => ({ ...p, [cat]: !p[cat] }))}
-                    className={`relative w-9 h-5 rounded-full transition-colors ${thirdPlacePerCat[cat] ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"}`}
+                    className={`relative w-9 h-5 rounded-full transition-colors ${thirdPlacePerCat[cat] ? "bg-primary" : "bg-slate-300 dark:bg-slate-600"}`}
                   >
                     <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${thirdPlacePerCat[cat] ? "translate-x-4" : ""}`} />
                   </button>
                 </div>
                 <div className="flex justify-end gap-2 pt-2">
                   <button onClick={() => saveSeeds(cat)}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black shadow transition">
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-primary text-white text-xs font-black shadow transition">
                     Save
                   </button>
                   <button onClick={() => generateBracket(cat)}
@@ -1089,6 +1108,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
 // ── Bracket Tab ────────────────────────────────────────────────────────────────
 
 function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isMasterAdmin: boolean }) {
+  const { data: allPlayers } = usePlayers();
   const [matches, setMatches] = useState<TournamentMatch[]>([]);
   const [roundRules, setRoundRules] = useState<RoundRule[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1383,7 +1403,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
     toast.success("All winners advanced");
   };
 
-  if (loading) return <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-emerald-500" /></div>;
+  if (loading) return <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
   if (!matches.length) return (
     <div className={`${cardCls} text-center py-10`}>
       <Swords className="w-10 h-10 text-slate-300 mx-auto mb-3" />
@@ -1401,7 +1421,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
         <div className="flex flex-wrap gap-2">
           {tournament.categories.map((cat) => (
             <button key={cat} onClick={() => setActiveCategory(cat)}
-              className={`px-4 py-1.5 rounded-xl text-sm font-black transition-all ${activeCategory === cat ? "bg-emerald-600 text-white" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-emerald-400"}`}>
+              className={`px-4 py-1.5 rounded-xl text-sm font-black transition-all ${activeCategory === cat ? "bg-primary text-white" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-primary"}`}>
               {cat}
             </button>
           ))}
@@ -1418,12 +1438,51 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
             </button>
           </div>
           <button onClick={() => setShowRules((v) => !v)}
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-black text-slate-600 dark:text-slate-300 hover:border-emerald-400 transition w-full">
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-black text-slate-600 dark:text-slate-300 hover:border-primary transition w-full">
             <Settings2 className="w-3.5 h-3.5 shrink-0" /> Round Rules
           </button>
           <button onClick={() => { setShowBulkSchedule(true); setBulkPreview([]); setBulkText(""); }}
             className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-blue-300 dark:border-blue-700 text-xs font-black text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition w-full">
             <CalendarDays className="w-3.5 h-3.5 shrink-0" /> Bulk Schedule
+          </button>
+          <button onClick={async () => {
+            if (!confirm("This will synchronize Round 1 bracket match names with the latest Participants list. Continue?")) return;
+            const { data: parts, error: partsErr } = await supabase
+              .from("tournament_participants")
+              .select("*")
+              .eq("tournament_id", tournament.id)
+              .eq("category", activeCategory);
+            if (partsErr) { toast.error(partsErr.message); return; }
+            if (!parts || parts.length < 2) { toast.error("Not enough participants"); return; }
+            
+            const mapped = parts.map((p) => ({
+              playerId: p.player_id,
+              partnerId: p.partner_id,
+              displayName: p.display_name ?? (allPlayers?.find((pl) => pl.id === p.player_id)?.full_name ?? "Unknown"),
+              seed: p.seed ?? 99,
+            }));
+            
+            // Generate virtual bracket to find where seeds land
+            const newRows = generateSingleElimBracket(mapped, activeCategory, tournament.id, false);
+            
+            let updatedCount = 0;
+            // Only update Round 1 matches in the DB
+            for (const row of newRows.filter(r => r.round === 1)) {
+              const { error } = await supabase.from("tournament_matches").update({
+                player1_id: row.player1_id,
+                team1_label: row.team1_label,
+                player3_id: row.player3_id,
+                player2_id: row.player2_id,
+                team2_label: row.team2_label,
+                player4_id: row.player4_id,
+              }).eq("tournament_id", tournament.id).eq("match_code", row.match_code);
+              if (!error) updatedCount++;
+            }
+            toast.success(`Synced ${updatedCount} matches in Round 1`);
+            load();
+          }}
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700 text-xs font-black text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition w-full">
+            <RefreshCw className="w-3.5 h-3.5 shrink-0" /> Sync Names
           </button>
           {isMasterAdmin && (
             <button onClick={batchAdvance}
@@ -1468,7 +1527,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                         const gp = parseInt((document.getElementById(`rule-${activeCategory}-${round}-golden_point`) as HTMLInputElement)?.value || "30");
                         saveRoundRule({ ...rule, points_to_win: ptw, best_of_sets: bos, golden_point: gp });
                       }}
-                      className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black transition shadow-sm mb-[1px]"
+                      className="px-3 py-2 rounded-xl bg-primary hover:bg-primary text-white text-xs font-black transition shadow-sm mb-[1px]"
                     >
                       Save
                     </button>
@@ -1518,11 +1577,11 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                         </div>
 
                         {/* Teams */}
-                        <div className={`text-sm font-bold ${m.winner_side === 1 ? "text-emerald-600 dark:text-emerald-400" : "text-slate-700 dark:text-slate-200"}`}>
+                        <div className={`text-sm font-bold ${m.winner_side === 1 ? "text-primary dark:text-primary" : "text-slate-700 dark:text-slate-200"}`}>
                           {m.team1_label ?? "TBD"}
                         </div>
                         <div className="text-[10px] text-slate-400 my-0.5">vs</div>
-                        <div className={`text-sm font-bold ${m.winner_side === 2 ? "text-emerald-600 dark:text-emerald-400" : "text-slate-700 dark:text-slate-200"}`}>
+                        <div className={`text-sm font-bold ${m.winner_side === 2 ? "text-primary dark:text-primary" : "text-slate-700 dark:text-slate-200"}`}>
                           {m.team2_label ?? "TBD"}
                         </div>
 
@@ -1557,7 +1616,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                             const ptw = m.points_to_win ?? 21;
                             setEditScore({ matchId: m.id, side: 1, sets: "", bestOfSets: bo, goldenPoint: gp, pointsToWin: ptw, setsData: Array.from({ length: bo }, () => ({ t1: "", t2: "" })) });
                           }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-lg bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 hover:bg-emerald-200 transition">
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-lg bg-primary/15 dark:bg-primary/40 text-primary hover:bg-primary/20 transition">
                             <Trophy className="w-3.5 h-3.5" /> Enter Score
                           </button>
                           <button onClick={() => submitWalkover(m.id, 1)} disabled={busy}
@@ -1653,7 +1712,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                               if (!res.error) setMatches((res.data as TournamentMatch[]) ?? []);
                             }}
                             disabled={busy}
-                            className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-black uppercase text-slate-600 dark:text-slate-300 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-emerald-500 outline-none transition cursor-pointer"
+                            className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-black uppercase text-slate-600 dark:text-slate-300 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-primary outline-none transition cursor-pointer"
                           >
                             <option value="scheduled">Scheduled</option>
                             <option value="in_progress">In Progress</option>
@@ -1674,7 +1733,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                           if (!res.error) setMatches((res.data as TournamentMatch[]) ?? []);
                         }}
                           disabled={busy}
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-lg bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 hover:bg-emerald-200 transition ml-auto">
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-lg bg-primary/15 dark:bg-primary/40 text-primary hover:bg-primary/20 transition ml-auto">
                           <RotateCcw className="w-3.5 h-3.5" /> Restore BYE
                         </button>
                       )}
@@ -1758,9 +1817,9 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                                   disabled={isDisabled}
                                   placeholder="—"
                                   className={`text-center font-black text-base rounded-xl border-2 py-2 outline-none transition w-full
-                                    ${t1Won ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300"
+                                    ${t1Won ? "border-primary bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary/70"
                                             : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"}
-                                    focus:border-emerald-400`}
+                                    focus:border-primary`}
                                 />
                                 <span className="text-center text-xs font-bold text-slate-400">–</span>
                                 <input
@@ -1769,9 +1828,9 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                                   disabled={isDisabled}
                                   placeholder="—"
                                   className={`text-center font-black text-base rounded-xl border-2 py-2 outline-none transition w-full
-                                    ${t2Won ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300"
+                                    ${t2Won ? "border-primary bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary/70"
                                             : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"}
-                                    focus:border-emerald-400`}
+                                    focus:border-primary`}
                                 />
                               </div>
                             );
@@ -1780,14 +1839,14 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                           <div className="flex items-center gap-2 pt-1">
                             <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 shrink-0">Winner</span>
                             {autoWinner ? (
-                              <span className="flex items-center gap-1.5 text-xs font-black text-emerald-600 dark:text-emerald-400">
+                              <span className="flex items-center gap-1.5 text-xs font-black text-primary dark:text-primary">
                                 <Trophy className="w-3 h-3" />
                                 {editScore!.side === 1 ? (m.team1_label ?? "Team 1") : (m.team2_label ?? "Team 2")}
                                 <span className="text-slate-400 dark:text-slate-500 font-normal">(auto-detected)</span>
                               </span>
                             ) : (
                               <select value={editScore!.side} onChange={(e) => setEditScore((p) => p && ({ ...p, side: parseInt(e.target.value) as 1 | 2 }))}
-                                className="text-sm px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 outline-none focus:ring-1 focus:ring-emerald-500">
+                                className="text-sm px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 outline-none focus:ring-1 focus:ring-primary">
                                 <option value={1}>{m.team1_label ?? "Team 1"}</option>
                                 <option value={2}>{m.team2_label ?? "Team 2"}</option>
                               </select>
@@ -1796,7 +1855,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                           {/* Actions */}
                           <div className="flex gap-2 pt-1">
                             <button onClick={submitEditScore}
-                              className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black transition">
+                              className="px-4 py-1.5 rounded-xl bg-primary hover:bg-primary text-white text-xs font-black transition">
                               Save
                             </button>
                             <button onClick={() => setEditScore(null)} className="text-xs text-slate-400 hover:text-slate-600 transition">Cancel</button>
@@ -1922,7 +1981,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                     <span className="font-bold text-slate-700 dark:text-slate-300">{row.matchCode}</span>
                     <span className="text-slate-600 dark:text-slate-400">{row.court || <span className="text-slate-300">—</span>}</span>
                     <span className="text-slate-600 dark:text-slate-400">{row.at ? new Date(row.at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : <span className="text-slate-300">—</span>}</span>
-                    <span className={row.found ? "text-emerald-600 font-bold" : "text-red-500 font-bold"}>
+                    <span className={row.found ? "text-primary font-bold" : "text-red-500 font-bold"}>
                       {row.found ? "✓ Found" : "✗ Not found"}
                     </span>
                   </div>
@@ -1977,7 +2036,7 @@ function ArchiveTab({ tournament, isMasterAdmin, onArchived }: {
     setArchiving(false);
   };
 
-  if (loading) return <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-emerald-500" /></div>;
+  if (loading) return <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
 
   const categories = [...new Set(matches.map((m) => m.category))];
 

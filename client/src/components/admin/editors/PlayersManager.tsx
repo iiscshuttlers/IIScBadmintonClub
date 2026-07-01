@@ -320,7 +320,7 @@ export function PlayersManager() {
   if (loading)
     return (
       <div className="flex items-center justify-center py-16">
-        <div className="w-8 h-8 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin" />
+        <div className="w-8 h-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
       </div>
     );
 
@@ -337,7 +337,7 @@ export function PlayersManager() {
           {
             label: "Profiles",
             value: players.length,
-            color: "bg-emerald-50 text-emerald-700",
+            color: "bg-primary/10 text-primary",
           },
           {
             label: "No Profile",
@@ -377,7 +377,7 @@ export function PlayersManager() {
           <button 
              onClick={approveAllPending}
              disabled={pending === 0}
-             className="px-3 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 font-bold text-xs hover:bg-emerald-100 disabled:opacity-50 transition mr-2"
+             className="px-3 py-2.5 rounded-xl border border-primary/40 dark:border-primary/80 bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary font-bold text-xs hover:bg-primary/15 disabled:opacity-50 transition mr-2"
           >
              <UserCheck className="w-3.5 h-3.5 inline mr-1" />
              Approve All ({pending})
@@ -393,7 +393,7 @@ export function PlayersManager() {
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-3 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${filter === f ? "bg-emerald-600 text-white" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-emerald-300"}`}
+                className={`px-3 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${filter === f ? "bg-primary text-white" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-primary/50"}`}
               >
                 {f === "profile"
                   ? "Profile Created"
@@ -462,7 +462,7 @@ export function PlayersManager() {
                       <button
                         onClick={() => forceVerify(u.id, u.email)}
                         disabled={busy}
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-emerald-600 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 text-xs font-bold transition disabled:opacity-50"
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-primary bg-primary/10 hover:bg-primary/15 dark:bg-primary/30 dark:hover:bg-primary/80/50 text-xs font-bold transition disabled:opacity-50"
                       >
                         Force Verify
                       </button>
@@ -488,7 +488,7 @@ export function PlayersManager() {
                     {p.full_name}
                   </span>
                   <span
-                    className={`text-xs px-2 py-0.5 rounded-full font-bold ${p.is_approved ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400" : "bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400"}`}
+                    className={`text-xs px-2 py-0.5 rounded-full font-bold ${p.is_approved ? "bg-primary/15 text-primary dark:bg-primary/30 dark:text-primary" : "bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400"}`}
                   >
                     {p.is_approved ? "Approved" : "Pending"}
                   </span>
@@ -516,7 +516,7 @@ export function PlayersManager() {
                     value={p.role || "player"}
                     onChange={(e) => handleRoleChange(p.id, p.full_name, e.target.value)}
                     disabled={busy}
-                    className="px-2 py-2 rounded-xl text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 outline-none focus:ring-2 focus:ring-emerald-500 transition disabled:opacity-50"
+                    className="px-2 py-2 rounded-xl text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 outline-none focus:ring-2 focus:ring-primary transition disabled:opacity-50"
                   >
                     <option value="player">Regular</option>
                     <option value="umpire">Umpire</option>
@@ -528,7 +528,7 @@ export function PlayersManager() {
                   <button
                     onClick={() => approve(p.id)}
                     disabled={busy}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary hover:bg-primary text-white text-xs font-bold transition disabled:opacity-50"
                   >
                     {busy ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />

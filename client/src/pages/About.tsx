@@ -18,21 +18,21 @@ export default function About() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 lg:pb-8 font-sans selection:bg-emerald-500/30">
-      <div className="bg-gradient-to-r from-blue-950 via-blue-900 to-emerald-950 text-white py-12 lg:py-16 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 lg:pb-8 font-sans selection:bg-primary/30">
+      <div className="bg-gradient-to-r from-blue-950 via-blue-900 to-primary/90 text-white py-12 lg:py-16 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(16,185,129,0.15),transparent)] pointer-events-none" />
         <div className="absolute inset-0 hero-pattern opacity-50" />
         
         <div className="container mx-auto px-4 max-w-4xl relative z-10 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-black uppercase tracking-widest mb-4">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" /> Club Info
+            <ShieldCheck className="w-4 h-4 text-primary" /> Club Info
             <InfoModal
               title="ABOUT THE CLUB"
               items={[
                 { badge: "HELP", title: "Support", desc: "If you have issues with the app, check the FAQ or contact the admins here." },
                 { badge: "GUIDE", title: "Glossary", desc: "Confused by some terms? The glossary explains all the badminton jargon we use." }
               ]}
-              triggerClassName="text-white hover:text-emerald-200"
+              triggerClassName="text-white hover:text-primary/30"
             />
           </div>
           <h1 className="text-3xl sm:text-5xl font-black mb-4 tracking-tight" style={{ fontFamily: "Playfair Display, serif" }}>

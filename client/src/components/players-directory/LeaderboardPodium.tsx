@@ -65,7 +65,7 @@ export function LeaderboardPodium({
                 {activeTab === "elo" && lastEloChange[top3[1].id] != null && (
                   <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
                     lastEloChange[top3[1].id] >= 0
-                      ? "bg-emerald-100 text-emerald-700"
+                      ? "bg-primary/15 text-primary"
                       : "bg-rose-100 text-rose-700"
                   }`}>
                     {lastEloChange[top3[1].id] >= 0 ? "+" : ""}{lastEloChange[top3[1].id]}
@@ -119,7 +119,7 @@ export function LeaderboardPodium({
                 {activeTab === "elo" && lastEloChange[top3[0].id] != null && (
                   <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
                     lastEloChange[top3[0].id] >= 0
-                      ? "bg-emerald-200/80 text-emerald-800"
+                      ? "bg-primary/20/80 text-primary"
                       : "bg-rose-200/80 text-rose-800"
                   }`}>
                     {lastEloChange[top3[0].id] >= 0 ? "+" : ""}{lastEloChange[top3[0].id]}
@@ -172,7 +172,7 @@ export function LeaderboardPodium({
                 {activeTab === "elo" && lastEloChange[top3[2].id] != null && (
                   <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
                     lastEloChange[top3[2].id] >= 0
-                      ? "bg-emerald-100 text-emerald-700"
+                      ? "bg-primary/15 text-primary"
                       : "bg-rose-100 text-rose-700"
                   }`}>
                     {lastEloChange[top3[2].id] >= 0 ? "+" : ""}{lastEloChange[top3[2].id]}

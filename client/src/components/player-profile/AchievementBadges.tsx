@@ -100,7 +100,7 @@ const BADGES: BadgeDef[] = [
     label: "ELO 1300",
     description: "Reach 1300 ELO rating",
     icon: TrendingUp,
-    color: "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400",
+    color: "bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary",
     getProgress: ({ elo }) => ({ earned: elo >= 1300, current: Math.min(Math.floor(elo), 1300), max: 1300 }),
   },
   {

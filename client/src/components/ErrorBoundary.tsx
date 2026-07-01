@@ -55,7 +55,7 @@ class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError && this.state.isChunkError) {
       return (
         <div className="flex items-center justify-center min-h-screen">
-          <div className="w-8 h-8 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin" />
+          <div className="w-8 h-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
         </div>
       );
     }

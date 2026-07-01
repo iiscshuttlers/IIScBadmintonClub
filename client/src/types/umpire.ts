@@ -3,6 +3,7 @@ import type { PlayerSlim as Player } from "@/types";
 // Shape of a DB match row passed into edit mode (distinct from BwfMatchState)
 export type MatchEditState = {
   is_edit_mode: true;
+  is_tournament_match?: boolean;
   id: string;
   player1_id: string;
   player2_id: string;
@@ -35,6 +36,7 @@ export type BwfMatchState = {
   id: string;
   umpireName: string;
   isFriendly: boolean;
+  isTournamentMatch?: boolean;
   matchNumber?: string;
   category: string;
   inferredCategory?: string;

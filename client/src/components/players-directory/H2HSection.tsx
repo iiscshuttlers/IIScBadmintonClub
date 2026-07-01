@@ -180,7 +180,7 @@ export function H2HSection() {
   if (loading)
     return (
       <div className="flex justify-center py-20">
-        <Activity className="w-8 h-8 animate-spin text-emerald-500" />
+        <Activity className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
 
@@ -192,7 +192,7 @@ export function H2HSection() {
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="text-center">
           <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white flex items-center justify-center gap-2">
-            <Swords className="w-8 h-8 text-emerald-500" /> Head-to-Head
+            <Swords className="w-8 h-8 text-primary" /> Head-to-Head
           </h1>
           <p className="text-slate-500 font-medium mt-2">
             Compare player records
@@ -220,7 +220,7 @@ export function H2HSection() {
                 ))}
               </select>
               <div className="text-sm font-black text-slate-400">
-                ELO: <span className="text-emerald-500">{p1?.elo_rating}</span>
+                ELO: <span className="text-primary">{p1?.elo_rating}</span>
               </div>
             </div>
 
@@ -237,7 +237,7 @@ export function H2HSection() {
               {/* Link to Deep Analytics */}
               {p1Id && p2Id && (
                 <Link href={`/compare/${p1Id}/${p2Id}`}>
-                  <button className="flex items-center gap-2 px-4 py-2 bg-slate-900 dark:bg-emerald-600 text-white rounded-full text-xs font-black uppercase tracking-wider mb-4 hover:scale-105 transition-transform shadow-md">
+                  <button className="flex items-center gap-2 px-4 py-2 bg-slate-900 dark:bg-primary text-white rounded-full text-xs font-black uppercase tracking-wider mb-4 hover:scale-105 transition-transform shadow-md">
                     <BarChart3 className="w-4 h-4" /> View Deep Analytics
                   </button>
                 </Link>
@@ -248,7 +248,7 @@ export function H2HSection() {
                 <div className="w-full mb-4" aria-label={`Head to head wins: ${p1?.full_name} ${p1Wins} vs ${p2?.full_name} ${p2Wins}`}>
                   <div className="flex h-4 rounded-full overflow-hidden w-full shadow-inner bg-slate-100 dark:bg-slate-800">
                     <div
-                      className="h-full bg-emerald-500 transition-all duration-1000 ease-out"
+                      className="h-full bg-primary transition-all duration-1000 ease-out"
                       style={{ width: `${h2hMatches.length > 0 ? (p1Wins / h2hMatches.length) * 100 : 50}%` }}
                     />
                     <div
@@ -257,7 +257,7 @@ export function H2HSection() {
                     />
                   </div>
                   <div className="flex justify-between text-[10px] font-bold mt-1 px-0.5">
-                    <span className="text-emerald-500">{p1Wins} W</span>
+                    <span className="text-primary">{p1Wins} W</span>
                     <span className="text-indigo-500">{p2Wins} W</span>
                   </div>
                 </div>
@@ -282,7 +282,7 @@ export function H2HSection() {
                   Probability
                 </div>
                 <div className="flex justify-between text-xs font-bold mb-1.5 px-1">
-                  <span className="text-emerald-600 dark:text-emerald-400">
+                  <span className="text-primary dark:text-primary">
                     {p1WinProb}%
                   </span>
                   <span className="text-indigo-600 dark:text-indigo-400">
@@ -291,7 +291,7 @@ export function H2HSection() {
                 </div>
                 <div className="h-2.5 w-full bg-indigo-500/20 rounded-full overflow-hidden flex">
                   <div
-                    className="h-full bg-emerald-500 transition-all duration-1000 ease-out"
+                    className="h-full bg-primary transition-all duration-1000 ease-out"
                     style={{ width: `${p1WinProb}%` }}
                   />
                   <div
@@ -321,7 +321,7 @@ export function H2HSection() {
                 ))}
               </select>
               <div className="text-sm font-black text-slate-400">
-                ELO: <span className="text-emerald-500">{p2?.elo_rating}</span>
+                ELO: <span className="text-primary">{p2?.elo_rating}</span>
               </div>
             </div>
           </div>
@@ -370,11 +370,11 @@ export function H2HSection() {
                     <span className="text-[10px] text-slate-400">{m.match_code}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className={`text-sm font-bold ${p1Won ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500"}`}>
+                    <span className={`text-sm font-bold ${p1Won ? "text-primary dark:text-primary" : "text-slate-500"}`}>
                       {p1?.full_name} {p1Won && <Trophy className="inline w-3.5 h-3.5 text-amber-500 ml-1" />}
                     </span>
                     <span className="text-xs font-mono font-bold text-slate-500">{m.score}</span>
-                    <span className={`text-sm font-bold ${!p1Won ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500"}`}>
+                    <span className={`text-sm font-bold ${!p1Won ? "text-primary dark:text-primary" : "text-slate-500"}`}>
                       {!p1Won && <Trophy className="inline w-3.5 h-3.5 text-amber-500 mr-1" />}{p2?.full_name}
                     </span>
                   </div>
@@ -428,17 +428,17 @@ export function H2HSection() {
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div className="flex flex-col gap-1">
                       <p className="text-sm font-bold text-slate-800 dark:text-slate-300 flex items-center gap-2 flex-wrap">
-                        <span className={team1Won ? "text-emerald-600 dark:text-emerald-400" : ""}>
+                        <span className={team1Won ? "text-primary dark:text-primary" : ""}>
                           {mp1?.full_name} {mp3 ? `& ${mp3.full_name}` : ""}
                         </span>
                         <span className="text-[10px] font-black uppercase text-rose-500 shrink-0">vs</span>
-                        <span className={!team1Won ? "text-emerald-600 dark:text-emerald-400" : ""}>
+                        <span className={!team1Won ? "text-primary dark:text-primary" : ""}>
                           {mp2?.full_name} {mp4 ? `& ${mp4.full_name}` : ""}
                         </span>
                         {team1Won ? (
-                          <Trophy className="w-4 h-4 text-emerald-500 ml-1" />
+                          <Trophy className="w-4 h-4 text-primary ml-1" />
                         ) : (
-                          <Trophy className="w-4 h-4 text-emerald-500 ml-1 order-last sm:order-none" />
+                          <Trophy className="w-4 h-4 text-primary ml-1 order-last sm:order-none" />
                         )}
                       </p>
                     </div>

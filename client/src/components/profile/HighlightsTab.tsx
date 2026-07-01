@@ -72,7 +72,7 @@ export function HighlightsTab({
           rows={3}
           value={bio}
           onChange={(e) => setBio(e.target.value)}
-          className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+          className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none transition-all"
           placeholder="PhD researcher at IISc. Known for aggressive net play and quick reflexes..."
         />
       </div>
@@ -85,7 +85,7 @@ export function HighlightsTab({
           type="text"
           value={quote}
           onChange={(e) => setQuote(e.target.value)}
-          className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+          className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none"
           placeholder="e.g. Enjoying the Game is the best strategy"
         />
       </div>
@@ -187,7 +187,7 @@ export function HighlightsTab({
                 .map((ach, idx) => (
                   <span
                     key={idx}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs font-bold"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 dark:bg-primary/30 border border-primary/40 dark:border-primary/80 text-primary dark:text-primary text-xs font-bold"
                   >
                     🏆 {ach}
                     <button
@@ -200,7 +200,7 @@ export function HighlightsTab({
                           .filter((item) => item !== ach);
                         setAchievementsRaw(updated.join(", "));
                       }}
-                      className="ml-0.5 text-emerald-500 hover:text-rose-500 transition font-black text-sm leading-none"
+                      className="ml-0.5 text-primary hover:text-rose-500 transition font-black text-sm leading-none"
                     >
                       ×
                     </button>
@@ -212,7 +212,7 @@ export function HighlightsTab({
             <select
               value={achCategory}
               onChange={(e) => setAchCategory(e.target.value)}
-              className="w-full sm:w-auto shrink-0 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full sm:w-auto shrink-0 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="Men's">Men's</option>
               <option value="Women's">Women's</option>
@@ -221,7 +221,7 @@ export function HighlightsTab({
             <select
               value={achEventType}
               onChange={(e) => setAchEventType(e.target.value)}
-              className="w-full sm:w-auto shrink-0 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full sm:w-auto shrink-0 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="Singles">Singles</option>
               <option value="Doubles">Doubles</option>
@@ -230,7 +230,7 @@ export function HighlightsTab({
               <select
                 value={achMedal}
                 onChange={(e) => setAchMedal(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="Gold">🥇 Gold / Winner</option>
                 <option value="Silver">🥈 Silver / Runner-up</option>
@@ -244,13 +244,13 @@ export function HighlightsTab({
                 value={achCustomMedal}
                 onChange={(e) => setAchCustomMedal(e.target.value)}
                 placeholder="e.g. Quarter-Finalist"
-                className="w-full sm:w-32 shrink-0 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full sm:w-32 shrink-0 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-primary"
               />
             )}
             <select
               value={achTournament}
               onChange={(e) => setAchTournament(e.target.value)}
-              className="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500"
+              className="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="">-- Select Tournament Played --</option>
               {tournamentsRaw
@@ -286,7 +286,7 @@ export function HighlightsTab({
               disabled={
                 !(achMedal === "Other" ? achCustomMedal.trim() : true) || !achTournament.trim()
               }
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition shrink-0"
+              className="px-4 py-2 bg-primary hover:bg-primary disabled:opacity-50 text-white rounded-xl text-xs font-bold transition shrink-0"
             >
               Add
             </button>

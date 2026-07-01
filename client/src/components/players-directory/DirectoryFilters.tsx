@@ -44,7 +44,7 @@ export function DirectoryFilters({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by name, nickname, or department..."
-            className="w-full pl-12 pr-10 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm font-semibold"
+            className="w-full pl-12 pr-10 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none transition-all text-sm font-semibold"
           />
           {searchQuery && (
             <button
@@ -63,7 +63,7 @@ export function DirectoryFilters({
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="pl-9 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500 appearance-none cursor-pointer"
+              className="pl-9 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer"
             >
               <option value="elo">By ELO</option>
               <option value="winpct">By Win %</option>
@@ -78,14 +78,14 @@ export function DirectoryFilters({
             className={`flex items-center gap-2 px-4 py-3 rounded-2xl border text-sm font-bold transition
           ${
             showFilters
-              ? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400"
+              ? "bg-primary/10 dark:bg-primary/20 border-primary/50 dark:border-primary text-primary dark:text-primary"
               : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600"
           }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
             Filters
             {(levelFilter !== "All" || departmentFilter !== "All") && (
-              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+              <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
             )}
           </button>
         </div>
@@ -109,7 +109,7 @@ export function DirectoryFilters({
                 <select
                   value={levelFilter}
                   onChange={(e) => setLevelFilter(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500 font-semibold"
+                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-primary font-semibold"
                 >
                   <option value="All">All Levels</option>
                   <option value="Beginner">Beginner</option>
@@ -125,7 +125,7 @@ export function DirectoryFilters({
                 <select
                   value={departmentFilter}
                   onChange={(e) => setDepartmentFilter(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500 font-semibold"
+                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-primary font-semibold"
                 >
                   <option value="All">All Departments</option>
                   {allDepartments.map((dept) => (
@@ -157,7 +157,7 @@ export function DirectoryFilters({
       {(searchQuery || levelFilter !== "All" || departmentFilter !== "All") && (
         <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-5">
           Showing{" "}
-          <span className="text-emerald-600 dark:text-emerald-400">
+          <span className="text-primary dark:text-primary">
             {filteredPlayersCount}
           </span>{" "}
           of {otherPlayersCount} players

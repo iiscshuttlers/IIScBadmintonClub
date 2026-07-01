@@ -77,12 +77,12 @@ export function FacilitiesSection() {
                 whileInView="visible"
                 viewport={{ once: true }}
               >
-                <div className="h-full rounded-3xl border-2 border-emerald-100 dark:border-emerald-900/50 shadow-md bg-white dark:bg-slate-800 overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="h-1.5 bg-gradient-to-r from-emerald-500 to-teal-600" />
+                <div className="h-full rounded-3xl border-2 border-primary/30 dark:border-primary/50 shadow-md bg-white dark:bg-slate-800 overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="h-1.5 bg-gradient-to-r from-primary to-teal-600" />
                   <div className="p-8">
                     <div className="flex items-center gap-3 mb-5">
-                      <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950/30 flex items-center justify-center">
-                        <Trophy className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                      <div className="w-12 h-12 rounded-2xl bg-primary/15 dark:bg-primary/30 flex items-center justify-center">
+                        <Trophy className="w-6 h-6 text-primary dark:text-primary" />
                       </div>
                       <h2 className="text-2xl font-black text-blue-900 dark:text-white">
                         Indoor Courts
@@ -96,7 +96,7 @@ export function FacilitiesSection() {
                     <ul className="space-y-3">
                       {courtDetails.map((detail, i) => (
                         <li key={i} className="flex gap-3 items-start">
-                          <CheckCircle className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                          <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                           <span className="text-gray-700 dark:text-slate-300 text-sm">
                             {detail}
                           </span>
@@ -132,13 +132,13 @@ export function FacilitiesSection() {
                           key={idx}
                           className={`flex items-center justify-between p-4 rounded-2xl ${
                             idx === 0
-                              ? "bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 border border-emerald-100 dark:border-emerald-900/50"
+                              ? "bg-gradient-to-r from-primary/10 to-teal-50 dark:from-primary/20 dark:to-teal-950/20 border border-primary/30 dark:border-primary/50"
                               : "bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 border border-red-100 dark:border-red-900/50"
                           }`}
                         >
                           <div>
                             <p
-                              className={`font-bold text-sm ${idx === 0 ? "text-emerald-800 dark:text-emerald-300" : "text-red-700 dark:text-red-400"}`}
+                              className={`font-bold text-sm ${idx === 0 ? "text-primary dark:text-primary/70" : "text-red-700 dark:text-red-400"}`}
                             >
                               {slot.day}
                             </p>
@@ -147,7 +147,7 @@ export function FacilitiesSection() {
                             </p>
                           </div>
                           <span
-                            className={`font-black text-sm tabular-nums ${idx === 0 ? "text-emerald-700 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}
+                            className={`font-black text-sm tabular-nums ${idx === 0 ? "text-primary dark:text-primary" : "text-red-600 dark:text-red-400"}`}
                           >
                             {slot.hours}
                           </span>
@@ -314,7 +314,7 @@ export function FacilitiesSection() {
                       href="https://maps.app.goo.gl/pBTtJGYEPwnu6qd78"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-3 rounded-xl font-bold text-sm transition-all hover:-translate-y-0.5 shadow-md shadow-emerald-500/20"
+                      className="inline-flex items-center gap-2 bg-primary hover:bg-primary text-white px-5 py-3 rounded-xl font-bold text-sm transition-all hover:-translate-y-0.5 shadow-md shadow-primary/20"
                     >
                       <MapPin className="w-4 h-4" />
                       Open in Google Maps
@@ -333,19 +333,19 @@ export function FacilitiesSection() {
                 viewport={{ once: true }}
               >
                 <div className="h-full rounded-3xl border border-slate-100 dark:border-slate-700 shadow-md bg-white dark:bg-slate-800 overflow-hidden">
-                  <div className="h-1.5 bg-gradient-to-r from-emerald-500 to-teal-600" />
+                  <div className="h-1.5 bg-gradient-to-r from-primary to-teal-600" />
                   <div className="p-8">
                     <div className="flex items-center gap-3 mb-5">
-                      <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950/30 flex items-center justify-center">
-                        <Users className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                      <div className="w-12 h-12 rounded-2xl bg-primary/15 dark:bg-primary/30 flex items-center justify-center">
+                        <Users className="w-6 h-6 text-primary dark:text-primary" />
                       </div>
                       <h2 className="text-2xl font-black text-blue-900 dark:text-white">
                         Membership & Access
                       </h2>
                     </div>
 
-                    <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 rounded-2xl p-5 mb-5">
-                      <h3 className="font-black text-emerald-700 dark:text-emerald-400 text-sm uppercase tracking-wider mb-2">
+                    <div className="bg-primary/10 dark:bg-primary/20 border border-primary/40 dark:border-primary/50 rounded-2xl p-5 mb-5">
+                      <h3 className="font-black text-primary dark:text-primary text-sm uppercase tracking-wider mb-2">
                         IISc Members
                       </h3>
                       <p className="text-gray-600 dark:text-slate-400 text-sm leading-relaxed">
@@ -362,7 +362,7 @@ export function FacilitiesSection() {
                         "Join the IISc badminton community online",
                       ].map((item, i) => (
                         <li key={i} className="flex gap-3 items-start">
-                          <CheckCircle className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                          <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                           <span className="text-gray-700 dark:text-slate-300 text-sm">
                             {item}
                           </span>

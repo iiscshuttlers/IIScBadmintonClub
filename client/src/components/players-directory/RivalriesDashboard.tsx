@@ -92,7 +92,7 @@ export function RivalriesDashboard() {
                     )}
                   </div>
                   <span className="text-xs font-bold text-white text-center line-clamp-1">{r.p1Name.split(" ")[0]}</span>
-                  <span className="text-xl font-black text-emerald-400">{r.m1Wins}</span>
+                  <span className="text-xl font-black text-primary">{r.m1Wins}</span>
                 </Link>
 
                 <div className="text-slate-600">
@@ -108,7 +108,7 @@ export function RivalriesDashboard() {
                     )}
                   </div>
                   <span className="text-xs font-bold text-white text-center line-clamp-1">{r.p2Name.split(" ")[0]}</span>
-                  <span className="text-xl font-black text-emerald-400">{r.m2Wins}</span>
+                  <span className="text-xl font-black text-primary">{r.m2Wins}</span>
                 </Link>
               </div>
 

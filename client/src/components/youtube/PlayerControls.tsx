@@ -57,7 +57,7 @@ export function PlayerControls({ player, videoId, chapters, scoreLogs }: PlayerC
           {/* Track */}
           <div className="absolute inset-0 bg-white/20 rounded-full" />
           {/* Played */}
-          <div className="absolute left-0 top-0 h-full bg-emerald-500 rounded-full" style={{ width: `${progress * 100}%` }} />
+          <div className="absolute left-0 top-0 h-full bg-primary rounded-full" style={{ width: `${progress * 100}%` }} />
           {/* Chapter ticks */}
           {duration > 0 &&
             chapters.map((ch) => (
@@ -78,7 +78,7 @@ export function PlayerControls({ player, videoId, chapters, scoreLogs }: PlayerC
         {/* Controls row */}
         <div className={`flex items-center gap-1 ${showControls || !playing ? "pointer-events-auto" : ""}`}>
           {/* Play / Pause */}
-          <button onClick={togglePlay} className="text-white hover:text-emerald-400 transition-colors p-1.5 rounded-lg hover:bg-white/10" aria-label={playing ? "Pause" : "Play"}>
+          <button onClick={togglePlay} className="text-white hover:text-primary transition-colors p-1.5 rounded-lg hover:bg-white/10" aria-label={playing ? "Pause" : "Play"}>
             {playing ? <Pause className="w-5 h-5" fill="currentColor" stroke="none" /> : <Play className="w-5 h-5" fill="currentColor" stroke="none" />}
           </button>
 
@@ -106,7 +106,7 @@ export function PlayerControls({ player, videoId, chapters, scoreLogs }: PlayerC
           </button>
 
           {/* Slow Mo Replay */}
-          <button onClick={triggerSlowMoReplay} className="text-emerald-400 hover:text-emerald-300 transition-colors px-2 py-1.5 rounded-lg hover:bg-emerald-500/10 flex items-center gap-1 mx-1 border border-emerald-500/20" title="5s Slow-Mo Replay">
+          <button onClick={triggerSlowMoReplay} className="text-primary hover:text-primary/70 transition-colors px-2 py-1.5 rounded-lg hover:bg-primary/10 flex items-center gap-1 mx-1 border border-primary/20" title="5s Slow-Mo Replay">
             <RotateCcw className="w-3.5 h-3.5" />
             <span className="text-[10px] font-bold leading-none">5s</span>
             <span className="text-[10px] font-bold leading-none opacity-60">@0.5x</span>
@@ -139,7 +139,7 @@ export function PlayerControls({ player, videoId, chapters, scoreLogs }: PlayerC
                       <button
                         key={s}
                         onClick={() => { setPlaybackRate(s); setShowClubControls(false); }}
-                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${speed === s ? 'bg-emerald-500 text-white' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${speed === s ? 'bg-primary text-white' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}
                       >
                         {s}x
                       </button>

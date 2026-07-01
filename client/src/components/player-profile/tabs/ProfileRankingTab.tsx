@@ -97,7 +97,7 @@ export function ProfileRankingTab({
         <div className="bg-slate-900 dark:bg-black/50 rounded-2xl p-4 flex flex-col border border-slate-800 dark:border-white/10 text-white col-span-2 md:col-span-1">
           <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Peak ELO</span>
           <span className="text-2xl font-black text-white">{peakElo}</span>
-          <span className="text-xs font-bold text-emerald-400 mt-1">Career Best</span>
+          <span className="text-xs font-bold text-primary mt-1">Career Best</span>
         </div>
       </div>
 

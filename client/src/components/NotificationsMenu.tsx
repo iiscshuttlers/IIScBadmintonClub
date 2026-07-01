@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Bell, Swords, UserPlus, Info, CheckCircle2, Sword, X, Trash2, BellRing, PackageSearch, Users, Trophy } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { playSmashSound, playPointSound, playServeSound, playWhistleSound, playVictorySound } from "@/lib/sounds";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,6 +49,14 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
         (payload) => {
           setNotifications((prev) => [payload.new, ...prev]);
           setUnreadCount((prev) => prev + 1);
+
+          // Play sound based on notification type
+          const type = payload.new.type || "";
+          if (type === "match_confirmation") playVictorySound();
+          else if (type === "new_match" || type === "match_logged") playServeSound();
+          else if (type === "serve" || type === "kudos" || type === "buddy_request") playServeSound();
+          else if (type === "elo_milestone" || type === "top10") playVictorySound();
+          else playWhistleSound();
         }
       )
       .subscribe();
@@ -105,7 +114,7 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
         return <Swords className="w-5 h-5 text-orange-500" />;
       case "match_logged":
       case "match_confirmation":
-        return <Sword className="w-5 h-5 text-emerald-500" />;
+        return <Sword className="w-5 h-5 text-primary" />;
       case "buddy_request":
       case "buddy_acceptance":
         return <UserPlus className="w-5 h-5 text-violet-500" />;
@@ -139,11 +148,11 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
       <DropdownMenuContent align="end" className="w-80 p-0 rounded-2xl overflow-hidden shadow-xl">
         <div className="bg-slate-50 dark:bg-slate-900/50 p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
           <h3 className="font-black text-slate-800 dark:text-white flex items-center gap-2">
-            <Bell className="w-4 h-4 text-emerald-500" /> Notifications
+            <Bell className="w-4 h-4 text-primary" /> Notifications
           </h3>
           <div className="flex items-center gap-2">
             {unreadCount > 0 && (
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/15 dark:bg-primary/30 px-2 py-0.5 rounded-full">
                 {unreadCount} New
               </span>
             )}
@@ -171,7 +180,7 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
                 key={n.id}
                 onClick={() => handleNotificationClick(n)}
                 className={`group p-4 border-b border-slate-50 dark:border-slate-800/50 flex gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition cursor-pointer ${
-                  !n.is_read ? "bg-emerald-50/50 dark:bg-emerald-900/10" : ""
+                  !n.is_read ? "bg-primary/10/50 dark:bg-primary/10" : ""
                 }`}
               >
                 <div className="mt-0.5">{getIcon(n.type)}</div>
@@ -202,7 +211,7 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
                     {n.message}
                   </p>
                   {n.link && (
-                    <span className="inline-block mt-2 text-xs font-bold text-emerald-600 group-hover:text-emerald-700">
+                    <span className="inline-block mt-2 text-xs font-bold text-primary group-hover:text-primary">
                       View details →
                     </span>
                   )}

@@ -66,7 +66,7 @@ export function UpdateDialog({
           <button
             onClick={handleDownloadAndInstall}
             disabled={downloading}
-            className={`w-full ${downloading ? "bg-emerald-800" : "bg-emerald-600 hover:bg-emerald-700"} text-white font-bold py-3 rounded-xl text-center transition-colors`}
+            className={`w-full ${downloading ? "bg-primary" : "bg-primary hover:bg-primary"} text-white font-bold py-3 rounded-xl text-center transition-colors`}
           >
             {downloading ? "Downloading..." : "Download Update"}
           </button>

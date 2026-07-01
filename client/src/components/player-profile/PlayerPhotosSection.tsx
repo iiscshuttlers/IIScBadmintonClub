@@ -113,7 +113,7 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
                 {lightboxIndex + 1} / {photos.length}
               </div>
               <button
-                className="absolute top-4 right-2 md:right-4 text-white hover:text-emerald-400 transition-colors p-2 z-50"
+                className="absolute top-4 right-2 md:right-4 text-white hover:text-primary transition-colors p-2 z-50"
                 onClick={() => setLightboxIndex(null)}
                 aria-label="Close"
               >
@@ -121,7 +121,7 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
               </button>
               
               <button
-                className="absolute left-1 md:left-3 top-1/2 -translate-y-1/2 text-white hover:text-emerald-400 transition-colors p-2 z-50"
+                className="absolute left-1 md:left-3 top-1/2 -translate-y-1/2 text-white hover:text-primary transition-colors p-2 z-50"
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate(-1);
@@ -139,7 +139,7 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
               />
 
               <button
-                className="absolute right-1 md:right-3 top-1/2 -translate-y-1/2 text-white hover:text-emerald-400 transition-colors p-2 z-50"
+                className="absolute right-1 md:right-3 top-1/2 -translate-y-1/2 text-white hover:text-primary transition-colors p-2 z-50"
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate(1);

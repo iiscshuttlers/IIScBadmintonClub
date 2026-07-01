@@ -40,7 +40,7 @@ export function MediaTab({
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-            <ImageIcon className="w-5 h-5 text-emerald-500" />
+            <ImageIcon className="w-5 h-5 text-primary" />
             Game Photos Showcase
           </label>
           <button
@@ -48,7 +48,7 @@ export function MediaTab({
             onClick={() =>
               setMediaImages([...mediaImages, { url: "", caption: "" }])
             }
-            className="text-xs font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/20 px-3 py-1.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30 transition shadow-sm"
+            className="text-xs font-bold text-primary hover:text-primary dark:text-primary flex items-center gap-1 bg-primary/10 dark:bg-primary/20 px-3 py-1.5 rounded-lg border border-primary/30 dark:border-primary/30 transition shadow-sm"
           >
             + Add Photo Link
           </button>
@@ -89,7 +89,7 @@ export function MediaTab({
                       });
                     }}
                     onBlur={(e) => handleImageBlur(idx, e.target.value)}
-                    className={`w-full px-3 py-2 rounded-xl border bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500
+                    className={`w-full px-3 py-2 rounded-xl border bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-primary
                       ${
                         imagePreviewStatus[idx] === "error"
                           ? "border-rose-400 dark:border-rose-500"
@@ -98,7 +98,7 @@ export function MediaTab({
                     placeholder="e.g. https://images.unsplash.com/photo-..."
                   />
                   {imagePreviewStatus[idx] === "ok" && img.url && (
-                    <div className="mt-2 rounded-xl overflow-hidden border border-emerald-200 dark:border-emerald-800 w-full aspect-video bg-slate-100 dark:bg-slate-800">
+                    <div className="mt-2 rounded-xl overflow-hidden border border-primary/40 dark:border-primary/80 w-full aspect-video bg-slate-100 dark:bg-slate-800">
                       <img
                         src={img.url}
                         alt="preview"
@@ -124,7 +124,7 @@ export function MediaTab({
                       updated[idx].caption = e.target.value;
                       setMediaImages(updated);
                     }}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-primary"
                     placeholder="e.g. Winning Smash in Doubles Final"
                   />
                 </div>
@@ -151,7 +151,7 @@ export function MediaTab({
             onClick={() =>
               setMediaVideos([...mediaVideos, { url: "", caption: "" }])
             }
-            className="text-xs font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/20 px-3 py-1.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30 transition shadow-sm"
+            className="text-xs font-bold text-primary hover:text-primary dark:text-primary flex items-center gap-1 bg-primary/10 dark:bg-primary/20 px-3 py-1.5 rounded-lg border border-primary/30 dark:border-primary/30 transition shadow-sm"
           >
             + Add Video Link
           </button>
@@ -192,11 +192,11 @@ export function MediaTab({
                       });
                     }}
                     onBlur={(e) => handleVideoBlur(idx, e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-primary"
                     placeholder="e.g. https://youtube.com/watch?v=..."
                   />
                   {videoPreviewIds[idx] && (
-                    <div className="mt-2 rounded-xl overflow-hidden border border-emerald-200 dark:border-emerald-800 w-full aspect-video bg-black">
+                    <div className="mt-2 rounded-xl overflow-hidden border border-primary/40 dark:border-primary/80 w-full aspect-video bg-black">
                       <iframe
                         src={`https://www.youtube.com/embed/${videoPreviewIds[idx]}`}
                         title="YouTube video player"
@@ -224,7 +224,7 @@ export function MediaTab({
                       updated[idx].caption = e.target.value;
                       setMediaVideos(updated);
                     }}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-primary"
                     placeholder="e.g. IISc Shuttlers Open 2024"
                   />
                 </div>

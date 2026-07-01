@@ -184,7 +184,7 @@ export function LiveScoreWidget({ onClose }: Props) {
   return (
     <>
     {liveMatches.length > 0 && (
-    <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl border border-emerald-800/40 shadow-xl overflow-hidden mb-6">
+    <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl border border-primary/40 shadow-xl overflow-hidden mb-6">
       <div className="px-5 py-4 border-b border-slate-700 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Circle className="w-2.5 h-2.5 fill-red-500 text-red-500 animate-pulse" />
@@ -214,11 +214,11 @@ export function LiveScoreWidget({ onClose }: Props) {
                 {/* Team 1 */}
                 <div className="flex-1 text-center">
                   <p className="text-sm font-black text-white truncate">{team1Label}</p>
-                  <p className="text-3xl font-black text-emerald-400 mt-1">{m.score_p1}</p>
+                  <p className="text-3xl font-black text-primary mt-1">{m.score_p1}</p>
                   {isScorer && scoring === m.id && (
                     <div className="flex gap-2 justify-center mt-1">
                       <button onClick={() => updateScore(m.id, "p1", 1)}
-                        className="p-1 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-400 transition">
+                        className="p-1 rounded-lg bg-primary/30 hover:bg-primary/50 text-primary transition">
                         <Plus className="w-3.5 h-3.5" />
                       </button>
                       <button onClick={() => updateScore(m.id, "p1", -1)}
@@ -227,7 +227,7 @@ export function LiveScoreWidget({ onClose }: Props) {
                       </button>
                     </div>
                   )}
-                  <p className="text-xs text-emerald-600 font-black mt-0.5">{m.sets_p1} sets</p>
+                  <p className="text-xs text-primary font-black mt-0.5">{m.sets_p1} sets</p>
                 </div>
 
                 {/* Middle */}
@@ -259,7 +259,7 @@ export function LiveScoreWidget({ onClose }: Props) {
               {isScorer && scoring !== m.id && (
                 <button
                   onClick={() => setScoring(m.id)}
-                  className="mt-3 w-full py-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 text-xs font-black transition"
+                  className="mt-3 w-full py-2 rounded-xl bg-primary/20 hover:bg-primary/30 text-primary text-xs font-black transition"
                 >
                   Control Score
                 </button>
@@ -314,7 +314,7 @@ export function LiveScoreWidget({ onClose }: Props) {
               <button
                 onClick={submitForElo}
                 disabled={submittingElo}
-                className="flex-1 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-black text-sm transition flex items-center justify-center gap-2"
+                className="flex-1 py-3 rounded-2xl bg-primary hover:bg-primary disabled:opacity-60 text-white font-black text-sm transition flex items-center justify-center gap-2"
               >
                 {submittingElo ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trophy className="w-4 h-4" />}
                 {submittingElo ? "Submitting…" : "Yes, submit!"}
@@ -388,7 +388,7 @@ export function StartLiveScoringButton() {
 
   const otherIds = [player1Id, partner1Id, player2Id, partner2Id].filter(Boolean);
 
-  const selectCls = "w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500";
+  const selectCls = "w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary";
 
   return (
     <>

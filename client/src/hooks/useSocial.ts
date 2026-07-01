@@ -26,6 +26,30 @@ export function useSocialActions() {
           break;
       }
     },
+    onMutate: async ({ playerId, action }) => {
+      if (!ownProfile) return;
+      await queryClient.cancelQueries({ queryKey: ["buddy-requests", ownProfile.id] });
+      const previousRequests = queryClient.getQueryData(["buddy-requests", ownProfile.id]);
+
+      queryClient.setQueryData(["buddy-requests", ownProfile.id], (old: any) => {
+        const list = old || [];
+        if (action === 'send') {
+          return [...list, { id: 'temp-' + Date.now(), status: 'pending', sender_id: ownProfile.id, receiver_id: playerId }];
+        }
+        if (action === 'cancel') {
+          return list.filter((r: any) => !(r.sender_id === ownProfile.id && r.receiver_id === playerId));
+        }
+        if (action === 'accept') {
+          return list.map((r: any) => (r.sender_id === playerId && r.receiver_id === ownProfile.id) ? { ...r, status: 'accepted' } : r);
+        }
+        if (action === 'remove') {
+          return list.filter((r: any) => !(r.sender_id === ownProfile.id && r.receiver_id === playerId) && !(r.sender_id === playerId && r.receiver_id === ownProfile.id));
+        }
+        return list;
+      });
+
+      return { previousRequests };
+    },
     onSuccess: (_, { action }) => {
       queryClient.invalidateQueries({ queryKey: ["buddy-requests"] });
       if (action === 'send') toast.success("Buddy request sent!");
@@ -38,9 +62,12 @@ export function useSocialActions() {
         refreshProfile();
       }
     },
-    onError: (error) => {
+    onError: (error: any, _variables, context: any) => {
       console.error(error);
-      toast.error("Failed to perform action");
+      if (context?.previousRequests && ownProfile) {
+        queryClient.setQueryData(["buddy-requests", ownProfile.id], context.previousRequests);
+      }
+      toast.error("Failed to perform action: " + (error.message || error.toString()));
     }
   });
 
@@ -55,9 +82,9 @@ export function useSocialActions() {
       queryClient.invalidateQueries({ queryKey: ["followers"] });
       refreshProfile(); // to update own following list
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error(error);
-      toast.error("Failed to toggle follow");
+      toast.error("Failed to toggle follow: " + (error.message || error.toString()));
     }
   });
 

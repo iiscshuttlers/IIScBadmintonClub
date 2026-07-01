@@ -16,7 +16,7 @@ import { WeeklyChallenges } from "@/components/feed/WeeklyChallenges";
 const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm";
 const sectionTitle = (icon: React.ReactNode, label: string) => (
   <div className="flex items-center gap-2 mb-4">
-    <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
+    <div className="p-1.5 rounded-lg bg-primary/10 dark:bg-primary/40 text-primary dark:text-primary">
       {icon}
     </div>
     <h3 className="font-black text-slate-800 dark:text-white text-base">{label}</h3>
@@ -58,21 +58,21 @@ function NotifQueuePanel() {
   return (
     <div className={cardCls}>
       {sectionTitle(<Bell className="w-4 h-4" />, "Notification Queue")}
-      {loading ? <Loader2 className="w-5 h-5 animate-spin text-emerald-500" /> : (
+      {loading ? <Loader2 className="w-5 h-5 animate-spin text-primary" /> : (
         <>
           <div className="grid grid-cols-2 gap-3 mb-4">
             <div className="bg-amber-50 dark:bg-amber-950/20 rounded-xl p-3 text-center">
               <p className="text-2xl font-black text-amber-600 dark:text-amber-400">{stats.unsent}</p>
               <p className="text-xs font-bold text-slate-500 mt-0.5">Queued / Unsent</p>
             </div>
-            <div className="bg-emerald-50 dark:bg-emerald-950/20 rounded-xl p-3 text-center">
-              <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{stats.sent}</p>
+            <div className="bg-primary/10 dark:bg-primary/20 rounded-xl p-3 text-center">
+              <p className="text-2xl font-black text-primary dark:text-primary">{stats.sent}</p>
               <p className="text-xs font-bold text-slate-500 mt-0.5">Sent (all time)</p>
             </div>
           </div>
           <div className="flex gap-2">
             <button onClick={flushNow} disabled={flushing || stats.unsent === 0}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-sm font-black transition">
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-primary hover:bg-primary disabled:opacity-50 text-white text-sm font-black transition">
               {flushing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
               Send Now
             </button>
@@ -120,7 +120,7 @@ function LiveMatchesPanel() {
   return (
     <div className={cardCls}>
       {sectionTitle(<Circle className="w-4 h-4 fill-red-500 text-red-500" />, "Live Matches")}
-      {loading ? <Loader2 className="w-5 h-5 animate-spin text-emerald-500" /> : matches.length === 0 ? (
+      {loading ? <Loader2 className="w-5 h-5 animate-spin text-primary" /> : matches.length === 0 ? (
         <p className="text-sm text-slate-400">No live or recent matches.</p>
       ) : (
         <div className="space-y-2">
@@ -131,7 +131,7 @@ function LiveMatchesPanel() {
                 <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">
                   {m.player1?.full_name ?? "?"} vs {m.player2?.full_name ?? "?"}
                 </p>
-                <span className="text-xs font-black text-emerald-600">{m.sets_p1}-{m.sets_p2}</span>
+                <span className="text-xs font-black text-primary">{m.sets_p1}-{m.sets_p2}</span>
               </div>
               <div className="flex gap-1.5 shrink-0">
                 {m.status === "live" && (
@@ -202,12 +202,12 @@ function PredictionsPanel() {
   return (
     <div className={cardCls}>
       {sectionTitle(<TrendingUp className="w-4 h-4" />, "Match Predictions")}
-      {loading ? <Loader2 className="w-5 h-5 animate-spin text-emerald-500" /> : (
+      {loading ? <Loader2 className="w-5 h-5 animate-spin text-primary" /> : (
         <>
           <div className="grid grid-cols-3 gap-2 mb-4">
             {[
               { label: "Total Predictions", value: stats.total, color: "text-violet-600" },
-              { label: "Correct", value: stats.correct, color: "text-emerald-600" },
+              { label: "Correct", value: stats.correct, color: "text-primary" },
               { label: "Accuracy", value: stats.total > 0 ? `${Math.round((stats.correct / stats.total) * 100)}%` : "—", color: "text-amber-600" },
             ].map((s) => (
               <div key={s.label} className="bg-slate-50 dark:bg-slate-800 rounded-xl p-3 text-center">
@@ -284,7 +284,7 @@ function ChallengesAdminPanel() {
   return (
     <div className={cardCls}>
       {sectionTitle(<Target className="w-4 h-4" />, "Weekly Challenges (This Week)")}
-      {loading ? <Loader2 className="w-5 h-5 animate-spin text-emerald-500" /> :
+      {loading ? <Loader2 className="w-5 h-5 animate-spin text-primary" /> :
         challenges.length === 0 ? (
           <p className="text-sm text-slate-400">No challenges this week. They auto-generate when a player opens the Challenges tab.</p>
         ) : (
@@ -313,27 +313,27 @@ function ChallengesAdminPanel() {
             placeholder="Challenge Title (e.g., Weekend Warrior)"
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
-            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-emerald-500"
+            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-primary"
             required
           />
           <div className="grid grid-cols-3 gap-2">
-            <select value={newType} onChange={(e) => setNewType(e.target.value)} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-emerald-500">
+            <select value={newType} onChange={(e) => setNewType(e.target.value)} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-primary">
               <option value="matches">Matches</option>
               <option value="wins">Wins</option>
               <option value="singles">Singles</option>
               <option value="doubles">Doubles</option>
               <option value="streak">Streak</option>
             </select>
-            <input type="number" min="1" placeholder="Target" value={newTarget} onChange={(e) => setNewTarget(Number(e.target.value))} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-emerald-500" required />
-            <input type="number" min="5" step="5" placeholder="Points" value={newPoints} onChange={(e) => setNewPoints(Number(e.target.value))} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-emerald-500" required />
+            <input type="number" min="1" placeholder="Target" value={newTarget} onChange={(e) => setNewTarget(Number(e.target.value))} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-primary" required />
+            <input type="number" min="5" step="5" placeholder="Points" value={newPoints} onChange={(e) => setNewPoints(Number(e.target.value))} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-primary" required />
           </div>
           <div className="flex justify-end gap-2 pt-1">
             <button type="button" onClick={() => setIsAdding(false)} className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition">Cancel</button>
-            <button type="submit" className="px-3 py-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition">Save Challenge</button>
+            <button type="submit" className="px-3 py-1.5 text-xs font-bold bg-primary hover:bg-primary text-white rounded-lg transition">Save Challenge</button>
           </div>
         </form>
       ) : (
-        <button onClick={() => setIsAdding(true)} className="w-full mt-4 py-2 border border-dashed border-emerald-300 dark:border-emerald-800 text-emerald-600 dark:text-emerald-500 rounded-xl text-sm font-bold hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition">
+        <button onClick={() => setIsAdding(true)} className="w-full mt-4 py-2 border border-dashed border-primary/50 dark:border-primary/80 text-primary dark:text-primary rounded-xl text-sm font-bold hover:bg-primary/10 dark:hover:bg-primary/90/20 transition">
           + Add Custom Challenge
         </button>
       )}
@@ -379,18 +379,18 @@ function PublicApiPanel() {
         {endpoints.map((ep) => (
           <div key={ep.path} className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-2">
             <div>
-              <p className="text-xs font-mono font-black text-emerald-600 dark:text-emerald-400">{ep.path}</p>
+              <p className="text-xs font-mono font-black text-primary dark:text-primary">{ep.path}</p>
               <p className="text-xs text-slate-400">{ep.desc}</p>
             </div>
             <button onClick={() => test(ep.path)} disabled={testing === ep.path}
-              className="px-3 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 text-xs font-black hover:bg-emerald-200 transition">
+              className="px-3 py-1 rounded-lg bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary text-xs font-black hover:bg-primary/20 transition">
               {testing === ep.path ? <Loader2 className="w-3 h-3 animate-spin" /> : "Test"}
             </button>
           </div>
         ))}
       </div>
       {result && (
-        <pre className="mt-3 p-3 bg-slate-900 text-emerald-400 rounded-xl text-[10px] overflow-auto max-h-32 font-mono">{result}</pre>
+        <pre className="mt-3 p-3 bg-slate-900 text-primary rounded-xl text-[10px] overflow-auto max-h-32 font-mono">{result}</pre>
       )}
     </div>
   );
@@ -413,7 +413,7 @@ function DbHealthPanel() {
     <div className={cardCls}>
       {sectionTitle(<ShieldCheck className="w-4 h-4" />, "Database Health Check")}
       <button onClick={run} disabled={loading}
-        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-sm font-black transition mb-4">
+        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-primary disabled:opacity-50 text-white text-sm font-black transition mb-4">
         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
         Run Health Check
       </button>
@@ -427,7 +427,7 @@ function DbHealthPanel() {
                   {Object.entries(val).map(([subKey, subVal]: any) => (
                     <div key={subKey} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700">
                       <span className="text-xs font-bold text-slate-600 dark:text-slate-300 capitalize flex items-center gap-1.5">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                         {subKey.replace(/_/g, " ")}
                       </span>
                       <div className="flex flex-wrap items-center gap-1.5">
@@ -437,7 +437,7 @@ function DbHealthPanel() {
                               key={k}
                               className={`text-[10px] font-black px-2 py-1 rounded-md flex items-center gap-1.5 ${
                                 v === true || (typeof v === "number" && v > 0)
-                                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800"
+                                  ? "bg-primary/10 text-primary dark:bg-primary/50 dark:text-primary border border-primary/30 dark:border-primary/80"
                                   : v === false
                                   ? "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400 border border-rose-100 dark:border-rose-800"
                                   : "bg-slate-50 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600"
@@ -465,7 +465,7 @@ function DbHealthPanel() {
               ) : (
                 <span className={`text-xs font-black px-2 py-0.5 rounded-full ${
                   val === true || (typeof val === "number" && val > 0)
-                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                    ? "bg-primary/15 text-primary dark:bg-primary/40 dark:text-primary"
                     : "bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400"
                 }`}>{String(val)}</span>
               )}
@@ -493,7 +493,7 @@ function CronJobsPanel() {
           <div key={job.name} className="bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-2.5">
             <div className="flex items-center justify-between mb-0.5">
               <p className="text-sm font-black text-slate-800 dark:text-white">{job.name}</p>
-              <span className="text-[10px] font-black bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full">Active</span>
+              <span className="text-[10px] font-black bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary px-2 py-0.5 rounded-full">Active</span>
             </div>
             <p className="text-xs text-slate-400">{job.schedule} · {job.desc}</p>
           </div>
@@ -537,8 +537,8 @@ export function AdminFeaturesPanel() {
             onClick={() => setSection(s.id)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
               section === s.id
-                ? "bg-emerald-600 text-white shadow-md"
-                : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-emerald-400"
+                ? "bg-primary text-white shadow-md"
+                : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-primary"
             }`}
           >
             {s.icon} {s.label}

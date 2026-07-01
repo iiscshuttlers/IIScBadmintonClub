@@ -104,7 +104,7 @@ export default function TournamentDetail() {
   }
 
   if (isLoading && !tournament) {
-    return <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>;
+    return <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   }
 
   if (!tournament) {
@@ -124,7 +124,7 @@ export default function TournamentDetail() {
             This tournament page doesn't exist or hasn't been archived yet.
           </p>
           <Link href="/events">
-            <button className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-6 py-3 rounded-xl transition-all hover:-translate-y-0.5">
+            <button className="inline-flex items-center gap-2 bg-primary hover:bg-primary text-white font-bold px-6 py-3 rounded-xl transition-all hover:-translate-y-0.5">
               <ArrowLeft className="w-4 h-4" />
               Back to Events
             </button>
@@ -142,7 +142,7 @@ export default function TournamentDetail() {
         : "Special Event";
   const typeColor =
     tournament.type === "open"
-      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+      ? "bg-primary/15 text-primary dark:bg-primary/40 dark:text-primary"
       : tournament.type === "team"
         ? "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400"
         : "bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400";
@@ -150,7 +150,7 @@ export default function TournamentDetail() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-emerald-950 text-white py-24 relative overflow-hidden">
+      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-primary/90 text-white py-24 relative overflow-hidden">
         <div className="absolute inset-0 hero-pattern" />
         <div className="container mx-auto px-4 text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-400/20 border border-amber-400/30 text-amber-300 text-sm font-bold mb-5">
@@ -199,8 +199,8 @@ export default function TournamentDetail() {
             initial="hidden"
             animate="visible"
           >
-            <Card className="rounded-3xl shadow-md border border-emerald-100 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
-              <div className="h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-blue-600" />
+            <Card className="rounded-3xl shadow-md border border-primary/30 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
+              <div className="h-1.5 bg-gradient-to-r from-primary via-teal-500 to-blue-600" />
               <CardContent className="p-8 sm:p-10 space-y-8">
                 {/* Status + description */}
                 <div>
@@ -347,7 +347,7 @@ export default function TournamentDetail() {
           >
             {/* Highlights */}
             <Card className="rounded-3xl shadow-md border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
-              <div className="h-1 bg-gradient-to-r from-emerald-500 to-teal-600" />
+              <div className="h-1 bg-gradient-to-r from-primary to-teal-600" />
               <CardContent className="p-7">
                 <h2 className="text-lg font-black text-blue-900 dark:text-white mb-5">
                   Event Highlights
@@ -356,7 +356,7 @@ export default function TournamentDetail() {
                   <div className="space-y-3">
                     {tournament.highlights.map((item, i) => (
                       <div key={i} className="flex gap-3 items-start">
-                        <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                        <CheckCircle className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
                         <p className="text-sm text-gray-600 dark:text-slate-400 leading-relaxed">
                           {item}
                         </p>
@@ -400,8 +400,8 @@ export default function TournamentDetail() {
                     <span className="text-gray-500 dark:text-slate-400 font-medium">
                       Status
                     </span>
-                    <span className="flex items-center gap-1.5 font-bold text-emerald-600 dark:text-emerald-400">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <span className="flex items-center gap-1.5 font-bold text-primary dark:text-primary">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                       Completed
                     </span>
                   </div>
@@ -425,7 +425,7 @@ export default function TournamentDetail() {
                           Medalists
                         </span>
                         <span className="font-bold text-blue-900 dark:text-white flex items-center gap-1.5">
-                          <Users className="w-3.5 h-3.5 text-emerald-500" />
+                          <Users className="w-3.5 h-3.5 text-primary" />
                           {tournament.winners.reduce(
                             (sum, w) =>
                               sum +
@@ -444,7 +444,7 @@ export default function TournamentDetail() {
                         Teams Placed
                       </span>
                       <span className="font-bold text-blue-900 dark:text-white flex items-center gap-1.5">
-                        <Users className="w-3.5 h-3.5 text-emerald-500" />
+                        <Users className="w-3.5 h-3.5 text-primary" />
                         {tournament.podium.length}
                       </span>
                     </div>
@@ -456,7 +456,7 @@ export default function TournamentDetail() {
                     <Link
                       href={`/gallery?filter=${encodeURIComponent(tournament.galleryFolder)}`}
                     >
-                      <button className="w-full flex items-center justify-center gap-2 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/40 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-400 font-bold px-4 py-3 rounded-xl text-sm transition-all hover:-translate-y-0.5">
+                      <button className="w-full flex items-center justify-center gap-2 bg-primary/15 hover:bg-primary/20 dark:bg-primary/40 dark:hover:bg-primary/80/60 text-primary dark:text-primary font-bold px-4 py-3 rounded-xl text-sm transition-all hover:-translate-y-0.5">
                         <ImageIcon className="w-4 h-4" />
                         View Gallery
                       </button>

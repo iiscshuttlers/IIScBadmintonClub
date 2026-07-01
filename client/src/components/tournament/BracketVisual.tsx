@@ -85,7 +85,7 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
   const cardW = isMobile ? 155 : 200;
 
   const statusIcon = (m: BracketMatch) => {
-    if (m.status === "completed") return <CheckCircle2 size={12} className="text-emerald-400 shrink-0" />;
+    if (m.status === "completed") return <CheckCircle2 size={12} className="text-primary shrink-0" />;
     if (m.status === "in_progress") return <Play size={12} className="text-red-400 shrink-0 animate-pulse" />;
     return <Clock size={12} className="text-slate-500 shrink-0" />;
   };
@@ -120,7 +120,7 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0">
           <div className="min-w-0">
             <p className="text-[9px] text-slate-500 uppercase tracking-widest mb-0.5">Player Roadmap</p>
-            <p className={`font-black text-emerald-400 truncate ${isMobile ? "text-sm" : "text-sm"}`}>{player}</p>
+            <p className={`font-black text-primary truncate ${isMobile ? "text-sm" : "text-sm"}`}>{player}</p>
           </div>
           <button
             onClick={onClose}
@@ -167,8 +167,9 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
               const playerWon = isCompleted && ((effectivePlayerIsT1 && m.winner_side === 1) || (!effectivePlayerIsT1 && m.winner_side === 2));
               const playerLost = isCompleted && !playerWon;
 
-              const sets = m.sets_history?.length
+              const sets = m.sets_history?.length && Array.isArray(m.sets_history)
                 ? m.sets_history.map((s) => {
+                    if (typeof s !== "string") return { me: 0, opp: 0 };
                     const [a, b] = s.split("-").map(Number);
                     return effectivePlayerIsT1 ? { me: a, opp: b } : { me: b, opp: a };
                   })
@@ -177,7 +178,7 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
               const borderColor = isLive
                 ? "border-red-500 ring-1 ring-red-500"
                 : playerWon
-                ? "border-emerald-600"
+                ? "border-primary"
                 : "border-slate-700";
 
               return (
@@ -202,14 +203,14 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
                       </div>
                       <div className="flex items-center gap-0.5 shrink-0">
                         {statusIcon(m)}
-                        <span className={`text-[8px] font-bold ${isLive ? "text-red-400" : isCompleted ? "text-emerald-400" : "text-slate-500"}`}>
+                        <span className={`text-[8px] font-bold ${isLive ? "text-red-400" : isCompleted ? "text-primary" : "text-slate-500"}`}>
                           {statusLabel(m)}
                         </span>
                       </div>
                     </div>
 
                     {/* Player row */}
-                    <div className={`px-2.5 flex items-center justify-between gap-1 border-b border-slate-700/30 ${playerWon ? "bg-emerald-500/10" : ""}`} style={{ minHeight: 36 }}>
+                    <div className={`px-2.5 flex items-center justify-between gap-1 border-b border-slate-700/30 ${playerWon ? "bg-primary/10" : ""}`} style={{ minHeight: 36 }}>
                       <div className="flex items-center gap-1 min-w-0">
                         {playerWon && <Trophy size={9} className="text-amber-400 shrink-0" />}
                         <span className={`text-[10px] font-black truncate ${playerWon ? "text-amber-300" : playerLost ? "text-slate-500" : "text-white"}`}>
@@ -303,7 +304,42 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
 
 // ── Main BracketVisual ────────────────────────────────────────────────────────
 
-export function BracketVisual({ matches, rounds, enablePathHighlight = false }: BracketVisualProps) {
+class BracketVisualErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-4 bg-red-900/50 text-red-200 font-mono text-xs whitespace-pre-wrap">
+          BracketVisual Crash: {this.state.error?.message}
+          <br />
+          {this.state.error?.stack}
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+export function BracketVisual(props: BracketVisualProps) {
+  return (
+    <BracketVisualErrorBoundary>
+      <BracketVisualInner {...props} />
+    </BracketVisualErrorBoundary>
+  );
+}
+
+function BracketVisualInner({ matches, rounds, enablePathHighlight = false }: BracketVisualProps) {
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
   const [scale, setScale] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -359,13 +395,13 @@ export function BracketVisual({ matches, rounds, enablePathHighlight = false }: 
       const m2 = cur.positions[i + 1];
       const nm = roundData[ri + 1]?.positions[Math.floor(i / 2)];
       if (!nm) continue;
-      lines.push(<line key={`a-${ri}-${i}`} x1={x1} y1={m1.cy} x2={xMid} y2={m1.cy} stroke="#444" strokeWidth={1.5} />);
+      lines.push(<line key={`a-${ri}-${i}`} x1={x1} y1={m1?.cy || 0} x2={xMid} y2={m1?.cy || 0} stroke="#444" strokeWidth={1.5} />);
       if (m2) {
-        lines.push(<line key={`b-${ri}-${i}`} x1={x1} y1={m2.cy} x2={xMid} y2={m2.cy} stroke="#444" strokeWidth={1.5} />);
-        lines.push(<line key={`c-${ri}-${i}`} x1={xMid} y1={m1.cy} x2={xMid} y2={m2.cy} stroke="#444" strokeWidth={1.5} />);
+        lines.push(<line key={`b-${ri}-${i}`} x1={x1} y1={m2.cy || 0} x2={xMid} y2={m2.cy || 0} stroke="#444" strokeWidth={1.5} />);
+        lines.push(<line key={`c-${ri}-${i}`} x1={xMid} y1={m1?.cy || 0} x2={xMid} y2={m2.cy || 0} stroke="#444" strokeWidth={1.5} />);
       }
       const x2 = ri + 1 < roundData.length - 1 ? (ri + 1) * COL_W : xMid + COL_GAP / 2;
-      lines.push(<line key={`d-${ri}-${i}`} x1={xMid} y1={nm.cy} x2={x2} y2={nm.cy} stroke="#444" strokeWidth={1.5} />);
+      lines.push(<line key={`d-${ri}-${i}`} x1={xMid} y1={nm.cy || 0} x2={x2} y2={nm.cy || 0} stroke="#444" strokeWidth={1.5} />);
     }
   }
 
@@ -401,7 +437,7 @@ export function BracketVisual({ matches, rounds, enablePathHighlight = false }: 
       <div className="flex items-center justify-between px-3 py-2 border-b border-slate-800">
         <span className="text-[10px] text-slate-500 uppercase tracking-widest truncate mr-2">
           {enablePathHighlight && selectedPlayer
-            ? <><span className="text-emerald-400 font-black">{selectedPlayer}</span><span className="text-slate-600"> · roadmap open</span></>
+            ? <><span className="text-primary font-black">{selectedPlayer}</span><span className="text-slate-600"> · roadmap open</span></>
             : enablePathHighlight ? "Tap a player to see roadmap" : "Bracket"
           }
         </span>
@@ -478,8 +514,12 @@ export function BracketVisual({ matches, rounds, enablePathHighlight = false }: 
               const t2 = m.team2_label ?? "TBD";
               const t1Won = isCompleted && m.winner_side === 1;
               const t2Won = isCompleted && m.winner_side === 2;
-              const sets = m.sets_history?.length
-                ? m.sets_history.map((s) => { const [a, b] = s.split("-").map(Number); return { t1: a, t2: b }; })
+              const sets = m.sets_history?.length && Array.isArray(m.sets_history)
+                ? m.sets_history.map((s) => {
+                    if (typeof s !== "string") return { t1: 0, t2: 0 };
+                    const [a, b] = s.split("-").map(Number);
+                    return { t1: isNaN(a) ? 0 : a, t2: isNaN(b) ? 0 : b };
+                  })
                 : null;
 
               const isOnPath = pathSet.has(m.id);
@@ -487,8 +527,8 @@ export function BracketVisual({ matches, rounds, enablePathHighlight = false }: 
 
               const borderCls = isLive
                 ? "border-red-500 shadow-red-900/40 shadow-lg ring-1 ring-red-500"
-                : isDirectMatch ? "border-emerald-500 ring-2 ring-emerald-500"
-                : isOnPath ? "border-emerald-700 ring-1 ring-emerald-700"
+                : isDirectMatch ? "border-primary ring-2 ring-primary"
+                : isOnPath ? "border-primary ring-1 ring-primary"
                 : "border-slate-700";
 
               return (

@@ -470,7 +470,7 @@ export default function Gallery() {
   return (
     <div className="min-h-screen font-sans">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-emerald-950 text-white py-20 relative overflow-hidden">
+      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-primary/90 text-white py-20 relative overflow-hidden">
         <div className="absolute inset-0 hero-pattern" />
         <div className="container mx-auto px-4 text-center relative z-10">
           <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 px-4 py-2 rounded-full text-sm font-semibold mb-5">
@@ -544,7 +544,7 @@ export default function Gallery() {
                     }}
                     className={`px-6 py-2 rounded-full font-bold transition-all duration-300 flex items-center gap-2 ${
                       selectedCategory === cat.id
-                        ? "bg-emerald-500 text-white shadow-lg scale-105"
+                        ? "bg-primary text-white shadow-lg scale-105"
                         : "bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700"
                     }`}
                   >
@@ -595,8 +595,8 @@ export default function Gallery() {
                     onClick={(e) => handleSubscribe(e, sub)}
                     className={`absolute right-1.5 p-1.5 rounded-full transition-colors ${
                       subscribedTags.has(sub) 
-                        ? "text-emerald-400 hover:text-emerald-500 bg-emerald-500/10" 
-                        : "text-gray-400 hover:text-emerald-500 hover:bg-emerald-500/10 opacity-0 group-hover:opacity-100"
+                        ? "text-primary hover:text-primary bg-primary/10" 
+                        : "text-gray-400 hover:text-primary hover:bg-primary/10 opacity-0 group-hover:opacity-100"
                     }`}
                     title={subscribedTags.has(sub) ? "Unsubscribe" : "Subscribe to notifications"}
                   >
@@ -654,7 +654,7 @@ export default function Gallery() {
                       {item.title}
                     </h3>
                     {item.subfolder && (
-                      <p className="text-emerald-300 font-bold text-xs mt-1 uppercase tracking-widest drop-shadow">
+                      <p className="text-primary/70 font-bold text-xs mt-1 uppercase tracking-widest drop-shadow">
                         {formatText(item.subfolder)}
                       </p>
                     )}
@@ -723,7 +723,7 @@ export default function Gallery() {
                       </div>
                     </div>
                     <div className="p-5 sm:p-7">
-                      <h3 className="text-lg sm:text-xl font-bold text-blue-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-2">
+                      <h3 className="text-lg sm:text-xl font-bold text-blue-900 dark:text-white group-hover:text-primary dark:group-hover:text-primary transition-colors line-clamp-2">
                         {video.title}
                       </h3>
                     </div>
@@ -788,7 +788,7 @@ export default function Gallery() {
                 </div>
                 <div className="p-7">
                   <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-xs uppercase tracking-widest">
+                    <div className="flex items-center gap-2 text-primary dark:text-primary font-bold text-xs uppercase tracking-widest">
                       <PlayCircle className="w-4 h-4" />
                       {video.category || "Match Highlight"}
                     </div>
@@ -803,7 +803,7 @@ export default function Gallery() {
                       <span>YouTube</span>
                     </a>
                   </div>
-                  <h3 className="text-xl font-bold text-blue-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                  <h3 className="text-xl font-bold text-blue-900 dark:text-white group-hover:text-primary dark:group-hover:text-primary transition-colors">
                     {video.title}
                   </h3>
                   {(video.chapters?.length ?? 0) > 0 && (
@@ -863,7 +863,7 @@ export default function Gallery() {
             {selectedIndex + 1} / {filteredItems.length}
           </div>
           <button
-            className="absolute top-4 right-2 md:right-4 text-white hover:text-emerald-400 transition-colors p-2 z-50"
+            className="absolute top-4 right-2 md:right-4 text-white hover:text-primary transition-colors p-2 z-50"
             onClick={() => {
               setSelectedIndex(null);
               setLightboxSrc(null);
@@ -873,7 +873,7 @@ export default function Gallery() {
             <X className="w-8 h-8" />
           </button>
           <button
-            className="absolute left-1 md:left-3 top-1/2 -translate-y-1/2 text-white hover:text-emerald-400 transition-colors p-2 z-50"
+            className="absolute left-1 md:left-3 top-1/2 -translate-y-1/2 text-white hover:text-primary transition-colors p-2 z-50"
             onClick={(e) => {
               e.stopPropagation();
               navigate(-1);
@@ -896,7 +896,7 @@ export default function Gallery() {
           )}
 
           <button
-            className="absolute right-1 md:right-3 top-1/2 -translate-y-1/2 text-white hover:text-emerald-400 transition-colors p-2 z-50"
+            className="absolute right-1 md:right-3 top-1/2 -translate-y-1/2 text-white hover:text-primary transition-colors p-2 z-50"
             onClick={(e) => {
               e.stopPropagation();
               navigate(1);
@@ -937,7 +937,7 @@ export default function Gallery() {
                       </motion.button>
                     </div>
                     {item?.subfolder && (
-                      <p className="text-emerald-300 font-medium text-xs uppercase tracking-widest drop-shadow-md">
+                      <p className="text-primary/70 font-medium text-xs uppercase tracking-widest drop-shadow-md">
                         {formatText(item.subfolder)}
                       </p>
                     )}
@@ -1012,7 +1012,7 @@ export default function Gallery() {
             <div className="bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 animate-in slide-in-from-bottom-5">
               <span className="font-bold">{selectedPaths.size} selected</span>
               <button
-                className="text-emerald-400 hover:text-emerald-300 font-bold transition flex items-center gap-2 text-sm whitespace-nowrap"
+                className="text-primary hover:text-primary/70 font-bold transition flex items-center gap-2 text-sm whitespace-nowrap"
                 onClick={() => {
                   const remotePaths = filteredItems.filter(i => i.url).map(i => i.path);
                   if (selectedPaths.size === remotePaths.length && remotePaths.length > 0) {

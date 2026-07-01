@@ -90,28 +90,28 @@ export function EloAuditModal({ isOpen, onClose, matches, playerId }: EloAuditMo
           <div className="bg-slate-100 dark:bg-slate-800/50 px-6 py-3 shrink-0 flex gap-4 overflow-x-auto hide-scrollbar border-b border-slate-200 dark:border-slate-800">
             <div className="flex flex-col">
               <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Overall</span>
-              <span className={`text-sm font-black ${totalChange >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+              <span className={`text-sm font-black ${totalChange >= 0 ? 'text-primary' : 'text-rose-500'}`}>
                 {totalChange > 0 ? "+" : ""}{totalChange}
               </span>
             </div>
             <div className="w-px bg-slate-300 dark:bg-slate-700 my-1" />
             <div className="flex flex-col">
               <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Singles</span>
-              <span className={`text-sm font-black ${singlesChange >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+              <span className={`text-sm font-black ${singlesChange >= 0 ? 'text-primary' : 'text-rose-500'}`}>
                 {singlesChange > 0 ? "+" : ""}{singlesChange}
               </span>
             </div>
             <div className="w-px bg-slate-300 dark:bg-slate-700 my-1" />
             <div className="flex flex-col">
               <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Doubles</span>
-              <span className={`text-sm font-black ${doublesChange >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+              <span className={`text-sm font-black ${doublesChange >= 0 ? 'text-primary' : 'text-rose-500'}`}>
                 {doublesChange > 0 ? "+" : ""}{doublesChange}
               </span>
             </div>
             <div className="w-px bg-slate-300 dark:bg-slate-700 my-1" />
             <div className="flex flex-col">
               <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Mixed</span>
-              <span className={`text-sm font-black ${mixedChange >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+              <span className={`text-sm font-black ${mixedChange >= 0 ? 'text-primary' : 'text-rose-500'}`}>
                 {mixedChange > 0 ? "+" : ""}{mixedChange}
               </span>
             </div>
@@ -189,7 +189,7 @@ export function EloAuditModal({ isOpen, onClose, matches, playerId }: EloAuditMo
                     </div>
                     <div className={`shrink-0 flex items-center justify-center min-w-[3.5rem] px-3 py-1.5 rounded-xl font-black text-sm border shadow-sm ${
                       isPositive 
-                        ? "bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400" 
+                        ? "bg-primary/10 border-primary/40 text-primary dark:bg-primary/20 dark:border-primary/80 dark:text-primary" 
                         : "bg-rose-50 border-rose-200 text-rose-600 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-400"
                     }`}>
                       {isPositive ? "+" : ""}{change}

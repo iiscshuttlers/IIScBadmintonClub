@@ -62,7 +62,7 @@ export function RegistrationsManager() {
   if (loading)
     return (
       <div className="flex items-center justify-center py-16">
-        <div className="w-8 h-8 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin" />
+        <div className="w-8 h-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
       </div>
     );
 
@@ -84,7 +84,7 @@ export function RegistrationsManager() {
           {
             label: "Approved",
             value: registrations.filter((r) => r.status === "approved").length,
-            color: "bg-emerald-50 text-emerald-700",
+            color: "bg-primary/10 text-primary",
           },
           {
             label: "Rejected",
@@ -143,7 +143,7 @@ export function RegistrationsManager() {
                     {r.full_name}
                   </span>
                   <span
-                    className={`text-xs px-2 py-0.5 rounded-full font-bold uppercase ${r.status === "approved" ? "bg-emerald-100 text-emerald-700" : r.status === "rejected" ? "bg-rose-100 text-rose-700" : "bg-amber-100 text-amber-700"}`}
+                    className={`text-xs px-2 py-0.5 rounded-full font-bold uppercase ${r.status === "approved" ? "bg-primary/15 text-primary" : r.status === "rejected" ? "bg-rose-100 text-rose-700" : "bg-amber-100 text-amber-700"}`}
                   >
                     {r.status}
                   </span>
@@ -188,7 +188,7 @@ export function RegistrationsManager() {
                     <button
                       onClick={() => updateStatus(r.id, "approved")}
                       disabled={busy}
-                      className="flex-1 md:flex-none px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition disabled:opacity-50"
+                      className="flex-1 md:flex-none px-3 py-2 rounded-xl bg-primary hover:bg-primary text-white text-xs font-bold transition disabled:opacity-50"
                     >
                       Approve
                     </button>

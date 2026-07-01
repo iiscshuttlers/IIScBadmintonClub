@@ -149,7 +149,7 @@ export default function ComparePlayers() {
 
   // Single format labels: "Singles" → "S", "Doubles" → "D", "Mixed Doubles" → "XD"
   const fmtLabel = (f: string) => f === "Singles" ? "Singles" : f === "Doubles" ? "Doubles" : "Mixed";
-  const fmtColor1 = "text-emerald-600 dark:text-emerald-400";
+  const fmtColor1 = "text-primary dark:text-primary";
   const fmtColor2 = "text-blue-600 dark:text-blue-400";
 
   return (
@@ -181,7 +181,7 @@ export default function ComparePlayers() {
 
       {/* Overview Cards */}
       <div className="grid grid-cols-3 gap-3 sm:gap-6 mb-8 text-center relative z-10">
-        <Card className="p-4 sm:p-6 bg-white dark:bg-slate-900 shadow-xl border-t-4 border-t-emerald-500 rounded-3xl overflow-hidden relative">
+        <Card className="p-4 sm:p-6 bg-white dark:bg-slate-900 shadow-xl border-t-4 border-t-primary rounded-3xl overflow-hidden relative">
           <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Wins</div>
           <div className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white">{p1Wins}</div>
         </Card>
@@ -204,7 +204,7 @@ export default function ComparePlayers() {
       <div className="grid grid-cols-2 gap-4 sm:gap-8 mb-8">
         {/* Player 1 */}
         <div className="flex flex-col items-center text-center">
-          <img src={player1.avatar_url || ""} className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-emerald-100 dark:border-emerald-900 shadow-lg mb-4" />
+          <img src={player1.avatar_url || ""} className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-primary/30 dark:border-primary shadow-lg mb-4" />
           <div className="relative group w-full max-w-[200px] mx-auto">
             <select
               value={player1.id}
@@ -267,11 +267,11 @@ export default function ComparePlayers() {
       {totalMatches > 0 && (
         <div className="mb-12">
           <div className="flex justify-between text-xs font-black uppercase tracking-widest mb-2 px-2">
-            <span className="text-emerald-600 dark:text-emerald-400">{p1WinRate}% Win Rate</span>
+            <span className="text-primary dark:text-primary">{p1WinRate}% Win Rate</span>
             <span className="text-blue-600 dark:text-blue-400">{p2WinRate}% Win Rate</span>
           </div>
           <div className="h-4 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden flex shadow-inner">
-            <div className="h-full bg-emerald-500 transition-all duration-1000" style={{ width: `${p1WinRate}%` }} />
+            <div className="h-full bg-primary transition-all duration-1000" style={{ width: `${p1WinRate}%` }} />
             <div className="h-full bg-blue-500 transition-all duration-1000" style={{ width: `${p2WinRate}%` }} />
           </div>
           
@@ -338,7 +338,7 @@ export default function ComparePlayers() {
                     <span className={f.p2Wins > f.p1Wins ? fmtColor2 : "text-slate-400"}>{p2Pct}% · {f.p2Wins}W</span>
                   </div>
                   <div className="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex">
-                    <div className="h-full bg-emerald-500 transition-all duration-700 rounded-l-full" style={{ width: `${p1Pct}%` }} />
+                    <div className="h-full bg-primary transition-all duration-700 rounded-l-full" style={{ width: `${p1Pct}%` }} />
                     <div className="h-full bg-blue-500 transition-all duration-700 rounded-r-full" style={{ width: `${p2Pct}%` }} />
                   </div>
                   <div className="text-[10px] text-slate-400 text-center mt-1">{f.total} match{f.total !== 1 ? "es" : ""}</div>
@@ -353,7 +353,7 @@ export default function ComparePlayers() {
       {eloHistory.length > 0 && (
         <Card className="p-6 bg-white dark:bg-slate-900 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800">
           <h3 className="text-sm font-black text-slate-800 dark:text-white mb-6 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-emerald-500" /> Rivalry ELO Trend
+            <TrendingUp className="w-4 h-4 text-primary" /> Rivalry ELO Trend
           </h3>
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -436,7 +436,7 @@ function AiPredictionCard({ player1, player2, p1Wins, p2Wins, matches }: { playe
 
       <div className="mb-6 flex items-end justify-between">
         <div className="text-left">
-          <div className="text-3xl font-black text-emerald-400">{prediction.p1WinProbability}%</div>
+          <div className="text-3xl font-black text-primary">{prediction.p1WinProbability}%</div>
           <div className="text-xs font-bold text-indigo-300 tracking-wider uppercase mt-1">{player1.full_name.split(" ")[0]} Win Prob</div>
         </div>
         <div className="text-center text-indigo-400 font-black italic pb-1 px-4">
@@ -450,7 +450,7 @@ function AiPredictionCard({ player1, player2, p1Wins, p2Wins, matches }: { playe
 
       {deepAnalysis ? (
         <div className="bg-indigo-950/80 backdrop-blur border border-indigo-500/50 rounded-2xl p-5 text-sm leading-relaxed text-indigo-50 shadow-inner">
-          <div className="flex items-center gap-2 mb-3 text-emerald-400 font-bold">
+          <div className="flex items-center gap-2 mb-3 text-primary font-bold">
             <Sparkles className="w-4 h-4" /> Gemini Deep Analysis
           </div>
           <div className="whitespace-pre-wrap">{deepAnalysis}</div>

@@ -129,14 +129,14 @@ export function AdminStatsOverview() {
   if (!stats) return null;
 
   const kpis = [
-    { label: "Approved Players", value: stats.approvedPlayers, icon: Users, color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-950/20" },
+    { label: "Approved Players", value: stats.approvedPlayers, icon: Users, color: "text-primary", bg: "bg-primary/10 dark:bg-primary/20" },
     { label: "Pending Approval", value: stats.pendingPlayers, icon: AlertTriangle, color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-950/20", alert: stats.pendingPlayers > 0 },
     { label: "Total Matches", value: stats.totalMatches, icon: Trophy, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-950/20" },
     { label: "Matches This Week", value: stats.matchesThisWeek, icon: Activity, color: "text-violet-500", bg: "bg-violet-50 dark:bg-violet-950/20" },
     { label: "Pending Matches", value: stats.pendingMatches, icon: Clock, color: "text-rose-500", bg: "bg-rose-50 dark:bg-rose-950/20", alert: stats.pendingMatches > 0 },
     { label: "Avg ELO", value: stats.avgElo, icon: BarChart3, color: "text-teal-500", bg: "bg-teal-50 dark:bg-teal-950/20" },
     { label: "Top Player", value: stats.topPlayer?.name?.split(" ")[0] ?? "—", sub: stats.topPlayer ? `${stats.topPlayer.elo} ELO` : "", icon: Zap, color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-950/20" },
-    { label: "Biggest Gainer (7d)", value: stats.biggestGainerWeek?.name?.split(" ")[0] ?? "—", sub: stats.biggestGainerWeek ? `+${stats.biggestGainerWeek.gain} ELO` : "No matches yet", icon: TrendingUp, color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-950/20" },
+    { label: "Biggest Gainer (7d)", value: stats.biggestGainerWeek?.name?.split(" ")[0] ?? "—", sub: stats.biggestGainerWeek ? `+${stats.biggestGainerWeek.gain} ELO` : "No matches yet", icon: TrendingUp, color: "text-primary", bg: "bg-primary/10 dark:bg-primary/20" },
     { label: "DB Latency", value: `${stats.dbLatency}ms`, icon: Database, color: stats.dbLatency > 500 ? "text-rose-500" : "text-sky-500", bg: stats.dbLatency > 500 ? "bg-rose-50 dark:bg-rose-950/20" : "bg-sky-50 dark:bg-sky-950/20" },
   ];
 
@@ -148,7 +148,7 @@ export function AdminStatsOverview() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
-          <Activity className="w-5 h-5 text-emerald-500" /> Platform Overview
+          <Activity className="w-5 h-5 text-primary" /> Platform Overview
         </h2>
       </div>
 
@@ -183,7 +183,7 @@ export function AdminStatsOverview() {
       {/* ELO Distribution Bar Chart */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5">
         <h3 className="text-sm font-black text-slate-700 dark:text-white mb-4 flex items-center gap-2">
-          <BarChart3 className="w-4 h-4 text-emerald-500" /> ELO Distribution
+          <BarChart3 className="w-4 h-4 text-primary" /> ELO Distribution
         </h3>
         <div className="space-y-2.5">
           {stats.eloDistribution.map((band) => (

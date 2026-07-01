@@ -28,7 +28,7 @@ import {
 } from "firebase/auth";
 
 const inputCls =
-  "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500 transition";
+  "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-primary transition";
 
 type ScoreSet = { p1: number; p2: number };
 type HistoryEntry = { scores: ScoreSet[]; activeSet: number; server: string };
@@ -320,7 +320,7 @@ export function UmpireMode() {
     <div className="max-w-lg mx-auto space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 text-sm font-bold">
+        <div className="flex items-center gap-2 text-primary dark:text-primary text-sm font-bold">
           <Activity className="w-4 h-4 animate-pulse" /> Live Umpire
         </div>
         <div className="flex items-center gap-2">
@@ -347,7 +347,7 @@ export function UmpireMode() {
               setFormat(f);
               setMatchId("");
             }}
-            className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition ${selectedFormat === f ? "bg-emerald-600 text-white shadow-md" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"}`}
+            className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition ${selectedFormat === f ? "bg-primary text-white shadow-md" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"}`}
           >
             {f}
           </button>
@@ -385,7 +385,7 @@ export function UmpireMode() {
             {scores.length < 5 && (
               <button
                 onClick={addSet}
-                className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 ml-auto"
+                className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-primary hover:bg-primary/10 dark:hover:bg-primary/90/20 ml-auto"
                 title="Add Set"
               >
                 <PlusCircle className="w-5 h-5" />
@@ -490,7 +490,7 @@ export function UmpireMode() {
                   className={`w-full aspect-square rounded-2xl flex flex-col items-center justify-center transition shadow-sm active:scale-95 ${
                     serverSide === player
                       ? "bg-amber-50 dark:bg-amber-950/20 border-2 border-amber-400 text-amber-700 dark:text-amber-400 active:bg-amber-500 active:text-white"
-                      : "bg-emerald-50 dark:bg-emerald-950/20 border-2 border-emerald-500 text-emerald-700 dark:text-emerald-400 active:bg-emerald-500 active:text-white"
+                      : "bg-primary/10 dark:bg-primary/20 border-2 border-primary text-primary dark:text-primary active:bg-primary active:text-white"
                   }`}
                 >
                   <Plus className="w-8 h-8 opacity-40 mb-1" />
@@ -569,7 +569,7 @@ export function UmpireMode() {
                 <div className="flex justify-center gap-2">
                   <button
                     onClick={() => setTimerActive(!timerActive)}
-                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition ${timerActive ? "bg-amber-100 text-amber-700 hover:bg-amber-200" : "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"}`}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition ${timerActive ? "bg-amber-100 text-amber-700 hover:bg-amber-200" : "bg-primary/15 text-primary hover:bg-primary/20"}`}
                   >
                     {timerActive ? (
                       <>
@@ -602,7 +602,7 @@ export function UmpireMode() {
                   <button
                     key={p.secs}
                     onClick={() => startTimer(p.secs)}
-                    className="flex-1 py-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-bold text-sm hover:border-emerald-400 hover:text-emerald-600 transition active:scale-95"
+                    className="flex-1 py-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-bold text-sm hover:border-primary hover:text-primary transition active:scale-95"
                   >
                     {p.label}
                   </button>

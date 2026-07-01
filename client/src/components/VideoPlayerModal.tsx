@@ -104,7 +104,7 @@ export function VideoPlayerModal({ video, onClose }: Props) {
           <div className="px-4 py-3 bg-gray-950 border-b border-white/5 flex justify-between items-center">
             <div>
               {video.category && (
-                <p className="text-emerald-400 text-xs font-bold uppercase tracking-widest mb-0.5">
+                <p className="text-primary text-xs font-bold uppercase tracking-widest mb-0.5">
                   {video.category}
                 </p>
               )}
@@ -160,15 +160,15 @@ export function VideoPlayerModal({ video, onClose }: Props) {
                 return (
                   <button
                     key={ch.time}
-                    className={`w-full text-left px-4 py-3 flex items-start gap-3 transition-colors border-b border-white/5 last:border-0 ${isActive ? "bg-emerald-500/10" : "hover:bg-white/5"}`}
+                    className={`w-full text-left px-4 py-3 flex items-start gap-3 transition-colors border-b border-white/5 last:border-0 ${isActive ? "bg-primary/10" : "hover:bg-white/5"}`}
                     onClick={() => playerRef.current?.seekTo(ch.time)}
                   >
                     <Clock
-                      className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${isActive ? "text-emerald-400" : "text-white/30"}`}
+                      className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${isActive ? "text-primary" : "text-white/30"}`}
                     />
                     <div className="min-w-0">
                       <p
-                        className={`text-sm font-semibold leading-snug truncate ${isActive ? "text-emerald-400" : "text-white/70"}`}
+                        className={`text-sm font-semibold leading-snug truncate ${isActive ? "text-primary" : "text-white/70"}`}
                       >
                         {ch.title}
                       </p>

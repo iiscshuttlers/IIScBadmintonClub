@@ -20,24 +20,10 @@ export function MyMatchesTab() {
   const [kudosState, setKudosState] = useState<Record<string, boolean>>({});
   
   // Sub-tab — synced to URL hash for back/forward support
-  const SUB_TABS = ["all", "requested", "accepted"] as const;
+  const SUB_TABS = ["all", "friendly-accepted", "friendly-requested", "tournament"] as const;
   const [subTab, setSubTab] = useHashTab(SUB_TABS, "all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get("format") || "All";
-  });
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (categoryFilter === "All") {
-      params.delete("format");
-    } else {
-      params.set("format", categoryFilter);
-    }
-    const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}${window.location.hash}`;
-    window.history.replaceState(null, "", newUrl);
-  }, [categoryFilter]);
 
   useEffect(() => {
     if (!profile?.id) return;
@@ -76,13 +62,16 @@ export function MyMatchesTab() {
   const filteredMatches = useMemo(() => {
     let result = matches;
     
-    // Sub-tab filter — "requested" = pending matches, "accepted" = confirmed
-    if (subTab === "requested") result = result.filter(m => m.status === "pending");
-    if (subTab === "accepted") result = result.filter(m => m.status === "confirmed");
-    
-    // Category filter
-    if (categoryFilter !== "All") {
-      result = result.filter(m => m.category && m.category.includes(categoryFilter));
+    // Sub-tab filter
+    if (subTab === "friendly-requested") {
+      result = result.filter(m => m.is_friendly !== false && m.status === "pending");
+    } else if (subTab === "friendly-accepted") {
+      result = result.filter(m => m.is_friendly !== false && m.status === "confirmed");
+    } else if (subTab === "tournament") {
+      result = result.filter(m => m.is_friendly === false);
+    } else {
+      // all
+      result = result.filter(m => m.status === "confirmed");
     }
     
     // Search query filter
@@ -98,7 +87,7 @@ export function MyMatchesTab() {
     }
     
     return result;
-  }, [matches, subTab, searchQuery, categoryFilter]);
+  }, [matches, subTab, searchQuery]);
 
   const isKudosed = (m: any) => {
     if (kudosState.hasOwnProperty(m.id)) return kudosState[m.id];
@@ -163,9 +152,12 @@ export function MyMatchesTab() {
         }
       }
     } else {
-      const { error } = await supabase.from("matches").delete().eq("id", matchId);
-      if (error) toast.error("Failed to reject match");
-      else toast.success("Match rejected and removed.");
+      const { error } = await supabase.rpc("reject_friendly_match", {
+        match_uuid: matchId,
+        rejecter_id: profile.id,
+      });
+      if (error) toast.error("Failed to reject match: " + error.message);
+      else toast.success("Match rejected.");
     }
   };
 
@@ -179,7 +171,7 @@ export function MyMatchesTab() {
             sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
             setLocation("/join");
           }}
-          className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition shadow-lg shadow-emerald-500/20"
+          className="px-6 py-3 bg-primary hover:bg-primary text-white font-bold rounded-xl transition shadow-lg shadow-primary/20"
         >
           Sign In
         </button>
@@ -190,57 +182,76 @@ export function MyMatchesTab() {
   return (
     <div className="w-full max-w-3xl mx-auto pb-12">
       {/* Controls */}
-      <div className="sticky top-[56px] z-30 mb-6 bg-slate-50 dark:bg-slate-950 -mx-4 px-4 pt-2 pb-0">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-slate-200 dark:border-slate-800 pb-4">
+      <div className="sticky top-[56px] z-30 bg-slate-50 dark:bg-slate-950 -mx-4 px-4 py-4 mb-4">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-slate-200 dark:border-slate-800">
         
-        {/* Tabs */}
-        <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-2xl mb-4">
-          <button 
-            onClick={() => setSubTab("all")}
-            className={`flex-1 py-2 text-sm font-bold rounded-xl transition-colors ${subTab === "all" ? "bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
-          >
-            All Matches
-          </button>
-          <button 
-            onClick={() => setSubTab("requested")}
-            className={`flex-1 py-2 text-sm font-bold rounded-xl transition-colors relative ${subTab === "requested" ? "bg-white dark:bg-slate-700 shadow-sm text-amber-600 dark:text-amber-400" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
-          >
-            Requested
-            {matches.some(m => m.status === "pending" && m.submitted_by !== profile.id) && (
-              <span className="absolute top-2 right-4 w-2 h-2 bg-amber-500 rounded-full" />
-            )}
-          </button>
-          <button 
-            onClick={() => setSubTab("accepted")}
-            className={`flex-1 py-2 text-sm font-bold rounded-xl transition-colors ${subTab === "accepted" ? "bg-white dark:bg-slate-700 shadow-sm text-emerald-600 dark:text-emerald-400" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
-          >
-            Accepted
-          </button>
+        {/* Tabs - 3 Rows */}
+        <div className="flex flex-col gap-2 mb-4">
+          
+          {/* Row 1: All */}
+          <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-2xl">
+            <button 
+              onClick={() => setSubTab("all")}
+              className={`flex-1 py-2 text-[11px] sm:text-xs font-bold rounded-xl transition-colors ${subTab === "all" ? "bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+            >
+              All
+            </button>
+          </div>
+
+          {/* Row 2: Friendly | Tournament */}
+          <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-2xl">
+            <button 
+              onClick={() => setSubTab("friendly-accepted")}
+              className={`flex-1 py-2 text-[11px] sm:text-xs font-bold rounded-xl transition-colors relative ${subTab.startsWith("friendly") ? "bg-white dark:bg-slate-700 shadow-sm text-primary dark:text-primary" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+            >
+              Friendly
+              {matches.some((m: any) => m.is_friendly !== false && m.status === "pending" && m.submitted_by !== profile.id) && (
+                <span className="absolute top-1 right-1 sm:right-2 w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+              )}
+            </button>
+            <button 
+              onClick={() => setSubTab("tournament")}
+              className={`flex-1 py-2 text-[11px] sm:text-xs font-bold rounded-xl transition-colors relative ${subTab === "tournament" ? "bg-white dark:bg-slate-700 shadow-sm text-amber-600 dark:text-amber-400" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+            >
+              Tournament
+            </button>
+          </div>
+
+          {/* Row 3: Requested | Accepted (Only visible if Friendly is selected) */}
+          {subTab.startsWith("friendly") && (
+            <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-2xl animate-in fade-in slide-in-from-top-2">
+              <button 
+                onClick={() => setSubTab("friendly-requested")}
+                className={`flex-1 py-2 text-[11px] sm:text-xs font-bold rounded-xl transition-colors relative ${subTab === "friendly-requested" ? "bg-white dark:bg-slate-700 shadow-sm text-amber-600 dark:text-amber-400" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+              >
+                Requested
+                {matches.some((m: any) => m.is_friendly !== false && m.status === "pending" && m.submitted_by !== profile.id) && (
+                  <span className="absolute top-1 right-1 sm:right-2 w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                )}
+              </button>
+              <button 
+                onClick={() => setSubTab("friendly-accepted")}
+                className={`flex-1 py-2 text-[11px] sm:text-xs font-bold rounded-xl transition-colors relative ${subTab === "friendly-accepted" ? "bg-white dark:bg-slate-700 shadow-sm text-primary dark:text-primary" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+              >
+                Accepted
+              </button>
+            </div>
+          )}
+
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3">
+        {/* Search */}
+        <div className="flex gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="Search opponent name..." 
+            <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search opponents, partners..."
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all dark:text-white"
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-11 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-400 dark:text-white"
             />
           </div>
-          <select 
-            value={categoryFilter}
-            onChange={e => setCategoryFilter(e.target.value)}
-            className="px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 outline-none focus:ring-2 focus:ring-emerald-500/20"
-          >
-            <option value="All">All Formats</option>
-            <option value="Singles">Singles</option>
-            <option value="Doubles">Doubles</option>
-            <option value="Mixed Doubles">Mixed Doubles</option>
-            <option value="Hybrid">Hybrid</option>
-          </select>
         </div>
       </div>
       </div>
@@ -271,7 +282,7 @@ export function MyMatchesTab() {
             <Calendar className="w-8 h-8 text-slate-400" />
           </div>
           <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2">No Matches Found</h3>
-          <p className="text-slate-500 text-sm">You don't have any {subTab !== "all" ? subTab === "requested" ? "requested" : "accepted" : ""} matches matching your filters.</p>
+          <p className="text-slate-500 text-sm">You don't have any {subTab !== "all" ? subTab === "friendly-requested" ? "requested" : "accepted" : ""} matches matching your filters.</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -312,7 +323,7 @@ export function MyMatchesTab() {
                       <Clock className="w-3.5 h-3.5" /> Pending
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-black uppercase tracking-wider rounded-lg">
+                    <span className="flex items-center gap-1.5 px-2.5 py-1 bg-primary/15 dark:bg-primary/30 text-primary dark:text-primary text-xs font-black uppercase tracking-wider rounded-lg">
                       <CheckCircle2 className="w-3.5 h-3.5" /> Accepted
                     </span>
                   )}
@@ -334,7 +345,7 @@ export function MyMatchesTab() {
                         <button onClick={() => handleAction(match.id, "reject")} className="flex-1 sm:flex-none px-4 py-2 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-sm font-bold rounded-xl transition-colors">
                           Reject
                         </button>
-                        <button onClick={() => handleAction(match.id, "confirm")} className="flex-1 sm:flex-none px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-colors">
+                        <button onClick={() => handleAction(match.id, "confirm")} className="flex-1 sm:flex-none px-6 py-2 bg-primary hover:bg-primary text-white text-sm font-bold rounded-xl shadow-lg shadow-primary/20 transition-colors">
                           Accept Match
                         </button>
                       </div>

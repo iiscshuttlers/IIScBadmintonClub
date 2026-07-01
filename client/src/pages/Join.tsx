@@ -9,10 +9,10 @@ export default function Join() {
   const auth = useJoinAuth();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-emerald-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-primary/90 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Decorative background */}
       <div className="absolute inset-0 hero-pattern opacity-50" />
-      <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 left-1/4 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
       {/* Subtle court lines */}
       <div className="absolute inset-0 opacity-5 pointer-events-none">
@@ -28,7 +28,7 @@ export default function Join() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-white/10 border border-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg backdrop-blur-sm">
-            <ShieldCheck className="w-8 h-8 text-emerald-400" />
+            <ShieldCheck className="w-8 h-8 text-primary" />
           </div>
           <div className="flex items-center justify-center gap-2">
             <h1 className="text-3xl font-black text-white tracking-tight" style={{ fontFamily: "Playfair Display, serif" }}>IISc Badminton Club</h1>
@@ -38,7 +38,7 @@ export default function Join() {
                 { badge: "ACCESS", title: "Club Members Only", desc: "You must be an approved club member to access the internal platform." },
                 { badge: "GUESTS", title: "Guest Access", desc: "If you are a guest, you don't need an account. Your host will log matches on your behalf." }
               ]}
-              triggerClassName="text-white hover:text-emerald-300"
+              triggerClassName="text-white hover:text-primary/70"
             />
           </div>
           <p className="mt-2 text-sm text-blue-300">Member portal · Campus Badminton Community</p>
@@ -57,17 +57,17 @@ export default function Join() {
           {/* Mode tabs (only for signin/signup) */}
           {(auth.mode === "signin" || auth.mode === "signup") && (
             <div className="flex rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
-              <button onClick={() => { auth.setMode("signin"); auth.reset(); }} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold transition-all ${auth.mode === "signin" ? "bg-emerald-600 text-white" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
+              <button onClick={() => { auth.setMode("signin"); auth.reset(); }} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold transition-all ${auth.mode === "signin" ? "bg-primary text-white" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
                 <LogIn className="w-4 h-4" /> Sign In
               </button>
-              <button onClick={() => { auth.setMode("signup"); auth.reset(); }} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold transition-all ${auth.mode === "signup" ? "bg-emerald-600 text-white" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
+              <button onClick={() => { auth.setMode("signup"); auth.reset(); }} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold transition-all ${auth.mode === "signup" ? "bg-primary text-white" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
                 <UserPlus className="w-4 h-4" /> Create Account
               </button>
             </div>
           )}
 
           {/* Info / Error messages */}
-          {auth.infoMsg && <div className="mb-4 px-4 py-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-sm font-medium">{auth.infoMsg}</div>}
+          {auth.infoMsg && <div className="mb-4 px-4 py-3 rounded-xl bg-primary/10 dark:bg-primary/20 border border-primary/40 dark:border-primary/80 text-primary dark:text-primary text-sm font-medium">{auth.infoMsg}</div>}
           {auth.errorMsg && <div className="mb-4 px-4 py-3 rounded-xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400 text-sm font-medium">{auth.errorMsg}</div>}
 
           <AnimatePresence mode="wait">

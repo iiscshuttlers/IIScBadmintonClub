@@ -20,6 +20,7 @@ interface UmpireStoreState {
   // Timer State
   showFullTimer: boolean;
   breakSecondsLeft: number | null;
+  breakTotalSeconds: number | null;
   breakLabel: string;
   
   // Direct Score edits
@@ -44,6 +45,7 @@ interface UmpireStoreState {
   
   setShowFullTimer: (show: boolean) => void;
   setBreakSecondsLeft: (seconds: number | null) => void;
+  setBreakTotalSeconds: (seconds: number | null) => void;
   setBreakLabel: (label: string) => void;
   
   setDirectSetsText: (text: string) => void;
@@ -69,6 +71,7 @@ const initialState = {
   
   showFullTimer: false,
   breakSecondsLeft: null,
+  breakTotalSeconds: null,
   breakLabel: "",
   
   directSetsText: "",
@@ -97,6 +100,7 @@ export const useUmpireStore = create<UmpireStoreState>((set) => ({
   
   setShowFullTimer: (showFullTimer) => set({ showFullTimer }),
   setBreakSecondsLeft: (breakSecondsLeft) => set({ breakSecondsLeft }),
+  setBreakTotalSeconds: (breakTotalSeconds) => set({ breakTotalSeconds }),
   setBreakLabel: (breakLabel) => set({ breakLabel }),
   
   setDirectSetsText: (directSetsText) => set({ directSetsText }),

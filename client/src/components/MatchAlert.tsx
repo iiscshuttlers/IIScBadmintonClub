@@ -57,7 +57,7 @@ export default function MatchAlert() {
               initial={{ scale: 0.5, opacity: 0.8 }}
               animate={{ scale: 2.5, opacity: 0 }}
               transition={{ duration: 1.5, repeat: 2, ease: "easeOut" }}
-              className="absolute w-32 h-32 rounded-full border-4 border-emerald-400/60"
+              className="absolute w-32 h-32 rounded-full border-4 border-primary/60"
             />
 
             {/* Message */}
@@ -65,7 +65,7 @@ export default function MatchAlert() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg rounded-2xl px-8 py-4 shadow-2xl border border-emerald-200 dark:border-emerald-800 text-center max-w-xs"
+              className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg rounded-2xl px-8 py-4 shadow-2xl border border-primary/40 dark:border-primary/80 text-center max-w-xs"
             >
               <p className="text-lg font-black text-slate-900 dark:text-white mb-1">
                 New Match Alert!
@@ -75,7 +75,7 @@ export default function MatchAlert() {
                   ? `${notification.opponentName} logged a match with you`
                   : "A match was just logged involving you"}
               </p>
-              <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold mt-2">
+              <p className="text-xs text-primary dark:text-primary font-bold mt-2">
                 Check your profile to confirm 🏸
               </p>
             </motion.div>

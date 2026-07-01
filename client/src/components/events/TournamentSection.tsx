@@ -249,7 +249,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
   const displayCategories = liveTournament?.categories?.join(" · ") ?? config.categories;
 
   const infoCards = [
-    { icon: Calendar, label: "Dates", value: displayDates, color: "bg-emerald-500" },
+    { icon: Calendar, label: "Dates", value: displayDates, color: "bg-primary" },
     { icon: MapPin, label: "Venue", value: displayVenue, color: "bg-blue-600" },
     { icon: Users, label: "Categories", value: displayCategories, color: "bg-purple-600" },
     { icon: UserCheck, label: "Eligibility", value: displayEligibility, color: "bg-orange-500" },
@@ -261,7 +261,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
   const formClosed = status === "closed";
   const badge =
     status === "open"
-      ? { cls: "bg-emerald-500/20 border-emerald-500/30 text-emerald-300", text: "Registrations Open" }
+      ? { cls: "bg-primary/20 border-primary/30 text-primary/70", text: "Registrations Open" }
       : status === "closing_soon"
         ? { cls: "bg-amber-500/20 border-amber-500/30 text-amber-300", text: "Registrations Closing Soon" }
         : { cls: "bg-rose-500/20 border-rose-500/30 text-rose-300", text: "Registrations Closed" };
@@ -316,7 +316,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
                     onClick={() => setActiveTid(event.slug || event.id)}
                     className={`px-4 py-1.5 rounded-xl text-sm font-bold transition-all ${
                       isActive
-                        ? "bg-emerald-500 text-white shadow-sm"
+                        ? "bg-primary text-white shadow-sm"
                         : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700/50"
                     }`}
                   >
@@ -399,7 +399,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
                   className={`inline-flex items-center gap-2 px-8 py-4 rounded-xl font-black transition shadow-xl ${
                     formClosed
                       ? "bg-slate-600 text-white opacity-70 cursor-not-allowed pointer-events-none"
-                      : "bg-emerald-600 hover:bg-emerald-500 text-white"
+                      : "bg-primary hover:bg-primary text-white"
                   }`}
                 >
                   {ctaLabel} <ArrowRight className="w-5 h-5" />
@@ -424,7 +424,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-3 rounded-xl text-sm font-bold transition-all whitespace-nowrap flex-1 basis-[45%] sm:basis-auto shrink-0 ${
                 activeTab === tab.id
-                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
+                  ? "bg-primary text-white shadow-md shadow-primary/20"
                   : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
               }`}
             >
@@ -449,18 +449,18 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
               animate="visible"
               className="bg-white dark:bg-slate-800 rounded-3xl shadow-md border border-slate-100 dark:border-slate-700 overflow-hidden"
             >
-              <div className="h-1 bg-gradient-to-r from-emerald-500 to-blue-600" />
+              <div className="h-1 bg-gradient-to-r from-primary to-blue-600" />
               <div className="p-7 md:p-9">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                   <h3 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
-                    <div className="p-2 bg-emerald-100 dark:bg-emerald-950/30 rounded-xl">
-                      <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                    <div className="p-2 bg-primary/15 dark:bg-primary/30 rounded-xl">
+                      <FileText className="w-5 h-5 text-primary dark:text-primary" />
                     </div>
                     Official Notices
                   </h3>
 
                   {isAdmin && (
-                    <label className="cursor-pointer inline-flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/20 hover:bg-emerald-100 dark:hover:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 px-4 py-2.5 rounded-xl text-sm font-bold transition-colors border border-emerald-200 dark:border-emerald-800">
+                    <label className="cursor-pointer inline-flex items-center gap-2 bg-primary/10 dark:bg-primary/20 hover:bg-primary/15 dark:hover:bg-primary/90/40 text-primary dark:text-primary px-4 py-2.5 rounded-xl text-sm font-bold transition-colors border border-primary/40 dark:border-primary/80">
                       {uploading ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
@@ -493,7 +493,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
 
                 {loadingFiles ? (
                   <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
                   </div>
                 ) : files.length === 0 ? (
                   <div className="text-center py-14 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
@@ -510,10 +510,10 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
                     {files.map((file, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-700 hover:border-emerald-200 dark:hover:border-emerald-800 transition-colors"
+                        className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-700 hover:border-primary/40 dark:hover:border-primary transition-colors"
                       >
                         <div className="flex items-center gap-3 overflow-hidden min-w-0">
-                          <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 flex-shrink-0">
+                          <div className="w-10 h-10 rounded-xl bg-primary/15 dark:bg-primary/30 flex items-center justify-center text-primary dark:text-primary flex-shrink-0">
                             <FileText className="w-5 h-5" />
                           </div>
                           <div className="truncate min-w-0">
@@ -535,7 +535,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
                             }
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-2 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 rounded-xl transition-colors"
+                            className="p-2 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/90/30 rounded-xl transition-colors"
                             title="Download / View"
                           >
                             <Download className="w-4 h-4" />
@@ -614,8 +614,8 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
                 {upcomingEvents.filter(e => e.id !== liveTournament?.id).map((item) => renderCard?.(item, false))}
               </div>
             ) : !liveTournament ? (
-              <div className="col-span-full rounded-3xl border-2 border-dashed border-emerald-200 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-950/10 p-14 text-center">
-                <Calendar className="w-12 h-12 text-emerald-400 mx-auto mb-4" />
+              <div className="col-span-full rounded-3xl border-2 border-dashed border-primary/40 dark:border-primary/50 bg-primary/10 dark:bg-primary/10 p-14 text-center">
+                <Calendar className="w-12 h-12 text-primary mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-blue-900 dark:text-white mb-2">
                   No upcoming tournaments
                 </h3>
@@ -660,7 +660,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
 const CAT_COLORS: Record<string, string> = {
   MS: "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-100 dark:border-blue-800",
   WS: "bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 border-pink-100 dark:border-pink-800",
-  MD: "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-800",
+  MD: "bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary/70 border-primary/30 dark:border-primary/80",
   WD: "bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-100 dark:border-purple-800",
   XD: "bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-100 dark:border-orange-800",
 };
@@ -699,7 +699,7 @@ function SupabaseScheduleView({ tournamentId }: { tournamentId: string | null })
       });
   }, [tournamentId]);
 
-  if (loading) return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>;
+  if (loading) return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
 
   const categories = ["ALL", ...new Set(schedMatches.map((m) => m.category))];
   const filtered = activeCategory === "ALL" ? schedMatches : schedMatches.filter((m) => m.category === activeCategory);
@@ -730,8 +730,8 @@ function SupabaseScheduleView({ tournamentId }: { tournamentId: string | null })
           <button key={cat} onClick={() => setActiveCategory(cat)}
             className={`px-4 py-1.5 rounded-xl text-sm font-black transition-all border ${
               activeCategory === cat
-                ? "bg-emerald-600 text-white border-emerald-600 shadow"
-                : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-emerald-400"
+                ? "bg-primary text-white border-primary shadow"
+                : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-primary"
             }`}>
             {cat}
           </button>
@@ -741,7 +741,7 @@ function SupabaseScheduleView({ tournamentId }: { tournamentId: string | null })
       {Object.entries(grouped).map(([date, dayMatches]) => (
         <div key={date}>
           <div className="flex items-center gap-3 mb-3">
-            <Calendar className="w-4 h-4 text-emerald-500" />
+            <Calendar className="w-4 h-4 text-primary" />
             <h3 className="font-black text-slate-700 dark:text-slate-200">{date}</h3>
           </div>
           <div className="space-y-3">
@@ -766,14 +766,14 @@ function SupabaseScheduleView({ tournamentId }: { tournamentId: string | null })
                       </span>
                     )}
                     {isLive && <span className="text-[10px] font-black text-red-500 animate-pulse">● LIVE</span>}
-                    {isCompleted && <span className="text-[10px] font-black text-emerald-500">✓ Done</span>}
+                    {isCompleted && <span className="text-[10px] font-black text-primary">✓ Done</span>}
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className={`text-sm font-bold flex-1 ${m.winner_side === 1 ? "text-emerald-600 dark:text-emerald-400" : "text-slate-700 dark:text-slate-200"}`}>
+                    <span className={`text-sm font-bold flex-1 ${m.winner_side === 1 ? "text-primary dark:text-primary" : "text-slate-700 dark:text-slate-200"}`}>
                       {m.team1_label ?? "TBD"}
                     </span>
                     <span className="text-[10px] font-black text-rose-400 shrink-0">VS</span>
-                    <span className={`text-sm font-bold flex-1 text-right ${m.winner_side === 2 ? "text-emerald-600 dark:text-emerald-400" : "text-slate-700 dark:text-slate-200"}`}>
+                    <span className={`text-sm font-bold flex-1 text-right ${m.winner_side === 2 ? "text-primary dark:text-primary" : "text-slate-700 dark:text-slate-200"}`}>
                       {m.team2_label ?? "TBD"}
                     </span>
                   </div>
@@ -815,7 +815,7 @@ export function TournamentArchiveBrackets({ tournamentId }: { tournamentId: stri
       });
   }, [tournamentId]);
 
-  if (loading) return <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-emerald-500" /></div>;
+  if (loading) return <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
 
   const categories = [...new Set(matches.map((m) => m.category))];
 
@@ -845,8 +845,8 @@ export function TournamentArchiveBrackets({ tournamentId }: { tournamentId: stri
               <button key={cat} onClick={() => setActiveCategory(cat)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all border ${
                   activeCategory === cat
-                    ? "bg-emerald-600 text-white border-emerald-600 shadow"
-                    : "border-slate-200 dark:border-slate-700 text-slate-500 hover:border-emerald-400"
+                    ? "bg-primary text-white border-primary shadow"
+                    : "border-slate-200 dark:border-slate-700 text-slate-500 hover:border-primary"
                 }`}>
                 {cat}
               </button>
@@ -900,7 +900,7 @@ export function TournamentArchiveBrackets({ tournamentId }: { tournamentId: stri
                                   <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-600">In Progress</span>
                                 )}
                                 {m.status === "completed" && (
-                                  <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600">Completed</span>
+                                  <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-primary/15 dark:bg-primary/40 text-primary">Completed</span>
                                 )}
                               </div>
                               <MatchScoreDisplay

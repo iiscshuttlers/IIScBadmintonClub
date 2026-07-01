@@ -67,7 +67,7 @@ export function LiveBracketsSection({ tournamentId }: { tournamentId: string | n
   if (loading) {
     return (
       <div className="py-32 flex flex-col items-center justify-center space-y-4">
-        <div className="w-12 h-12 rounded-full border-4 border-emerald-500/30 border-t-emerald-500 animate-spin" />
+        <div className="w-12 h-12 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />
         <p className="text-sm font-bold text-slate-500 uppercase tracking-widest animate-pulse">
           Loading Brackets
         </p>
@@ -101,7 +101,7 @@ export function LiveBracketsSection({ tournamentId }: { tournamentId: string | n
             onClick={() => setActiveFormat(fmt)}
             className={`px-6 py-2 rounded-full font-bold transition-all shadow-sm ${
               activeFormat === fmt
-                ? "bg-emerald-600 text-white"
+                ? "bg-primary text-white"
                 : "bg-white dark:bg-slate-900 text-gray-600 dark:text-slate-400 hover:bg-gray-50 border border-gray-200 dark:border-slate-700"
             }`}
           >

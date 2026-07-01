@@ -20,7 +20,7 @@ const quickLinks = [
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-emerald-900 flex flex-col items-center justify-center px-4 text-white relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-primary/80 flex flex-col items-center justify-center px-4 text-white relative overflow-hidden">
       {/* Decorative shuttlecock court lines */}
       <div className="absolute inset-0 opacity-5 pointer-events-none">
         <svg
@@ -75,7 +75,7 @@ export default function NotFound() {
       </div>
 
       {/* Glowing orbs */}
-      <div className="absolute top-20 left-20 w-64 h-64 bg-emerald-500 rounded-full opacity-10 blur-3xl" />
+      <div className="absolute top-20 left-20 w-64 h-64 bg-primary rounded-full opacity-10 blur-3xl" />
       <div className="absolute bottom-20 right-20 w-80 h-80 bg-blue-400 rounded-full opacity-10 blur-3xl" />
 
       {/* Main card */}
@@ -89,7 +89,7 @@ export default function NotFound() {
             <div className="bg-white/10 backdrop-blur-sm rounded-full p-6 border border-white/20 shadow-2xl">
               <svg
                 viewBox="0 0 64 64"
-                className="w-16 h-16 text-emerald-400"
+                className="w-16 h-16 text-primary"
                 fill="currentColor"
               >
                 {/* Shuttlecock feathers */}
@@ -147,14 +147,14 @@ export default function NotFound() {
         </p>
 
         <div className="flex items-center justify-center gap-2 mb-10">
-          <div className="h-px w-12 bg-emerald-500/50" />
-          <Layers className="w-4 h-4 text-emerald-400" />
-          <div className="h-px w-12 bg-emerald-500/50" />
+          <div className="h-px w-12 bg-primary/50" />
+          <Layers className="w-4 h-4 text-primary" />
+          <div className="h-px w-12 bg-primary/50" />
         </div>
 
         {/* Primary CTA */}
         <Link href="/">
-          <button className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white font-bold px-8 py-4 rounded-2xl shadow-lg hover:shadow-emerald-500/30 hover:-translate-y-0.5 transition-all duration-200 mb-10 text-lg">
+          <button className="inline-flex items-center gap-2 bg-primary hover:bg-primary text-white font-bold px-8 py-4 rounded-2xl shadow-lg hover:shadow-primary/30 hover:-translate-y-0.5 transition-all duration-200 mb-10 text-lg">
             <Home className="w-5 h-5" />
             Back to Home
           </button>

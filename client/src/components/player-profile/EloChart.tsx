@@ -33,11 +33,11 @@ const CustomTooltip = ({ active, payload, label }: any) => {
           vs {data.opponent}
         </p>
         <div className="flex items-center gap-3">
-          <span className={`text-xs font-black px-2 py-0.5 rounded ${isWin ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+          <span className={`text-xs font-black px-2 py-0.5 rounded ${isWin ? 'bg-primary/20 text-primary' : 'bg-rose-500/20 text-rose-400'}`}>
             {data.result}
           </span>
           <span className="text-sm font-mono text-white font-black">
-            {data.elo} <span className={`text-xs ${data.eloChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>({data.eloChange > 0 ? '+' : ''}{data.eloChange})</span>
+            {data.elo} <span className={`text-xs ${data.eloChange >= 0 ? 'text-primary' : 'text-rose-400'}`}>({data.eloChange > 0 ? '+' : ''}{data.eloChange})</span>
           </span>
         </div>
       </div>

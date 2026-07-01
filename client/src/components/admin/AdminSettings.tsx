@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { InfoModal } from "@/components/InfoModal";
 
 const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm";
-const inputCls = "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500 transition";
+const inputCls = "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-primary transition";
 const labelCls = "block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5";
 
 interface ClubSettings {
@@ -71,7 +71,7 @@ export function AdminSettings() {
 
 
 
-  if (loading) return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>;
+  if (loading) return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
 
   return (
     <div className="space-y-6">
@@ -123,7 +123,7 @@ export function AdminSettings() {
       {/* ELO Configuration */}
       <div className={cardCls}>
         <div className="flex items-center gap-2 mb-4">
-          <Zap className="w-5 h-5 text-emerald-500" />
+          <Zap className="w-5 h-5 text-primary" />
           <h3 className="font-black text-slate-800 dark:text-white">ELO Rating Configuration</h3>
           <InfoModal
             title="ELO CONFIGURATION"
@@ -186,7 +186,7 @@ export function AdminSettings() {
             </div>
             <button
               onClick={() => update("matchAnnouncementPush", !settings.matchAnnouncementPush)}
-              className={`relative w-12 h-6 rounded-full transition-colors ${settings.matchAnnouncementPush ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"}`}
+              className={`relative w-12 h-6 rounded-full transition-colors ${settings.matchAnnouncementPush ? "bg-primary" : "bg-slate-300 dark:bg-slate-600"}`}
             >
               <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${settings.matchAnnouncementPush ? "left-6" : "left-0.5"}`} />
             </button>
@@ -235,7 +235,7 @@ export function AdminSettings() {
           <button
             onClick={save}
             disabled={saving}
-            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-500/20 transition disabled:opacity-50"
+            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary hover:bg-primary text-white font-bold shadow-lg shadow-primary/20 transition disabled:opacity-50"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {saving ? "Saving…" : "Save Settings"}

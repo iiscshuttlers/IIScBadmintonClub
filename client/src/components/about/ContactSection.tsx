@@ -10,7 +10,7 @@ const faqs = [
     question: "How do I join the club?",
     answer:
       "IISc students, faculty and staff can access facilities through Gymkhana membership. Visit the Gymkhana office on the 2nd floor of Janta Bazar, IISc.",
-    color: "border-emerald-500",
+    color: "border-primary",
   },
   {
     question: "Do you offer coaching?",
@@ -85,19 +85,19 @@ export function ContactSection() {
       <section className="py-16 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            <Card className="border-0 shadow-md bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            <Card className="border-0 shadow-md bg-gradient-to-br from-primary/10 to-teal-50 dark:from-primary/30 dark:to-teal-950/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
               <CardHeader>
-                <div className="w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center mb-2">
+                <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-2">
                   <Mail className="w-6 h-6 text-white" />
                 </div>
-                <CardTitle className="text-emerald-700 dark:text-emerald-400 text-base">
+                <CardTitle className="text-primary dark:text-primary text-base">
                   Email
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <a
                   href="mailto:iiscbadmintonclub@gmail.com"
-                  className="font-bold text-gray-900 dark:text-white hover:text-emerald-600 transition-colors"
+                  className="font-bold text-gray-900 dark:text-white hover:text-primary transition-colors"
                 >
                   iiscbadmintonclub@gmail.com
                 </a>
@@ -169,7 +169,7 @@ export function ContactSection() {
             >
               Frequently Asked Questions
             </h2>
-            <div className="w-12 h-1 bg-gradient-to-r from-emerald-500 to-orange-500 mx-auto mt-3 rounded-full" />
+            <div className="w-12 h-1 bg-gradient-to-r from-primary to-orange-500 mx-auto mt-3 rounded-full" />
           </div>
 
           <div className="max-w-3xl mx-auto space-y-3">

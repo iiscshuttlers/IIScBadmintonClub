@@ -209,7 +209,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
   };
 
   const iconFor = (type: SearchResult["type"]) => {
-    if (type === "player") return <User className="w-4 h-4 shrink-0 text-emerald-500" />;
+    if (type === "player") return <User className="w-4 h-4 shrink-0 text-primary" />;
     if (type === "match") return <Swords className="w-4 h-4 shrink-0 text-blue-500" />;
     if (type === "event") return <CalendarDays className="w-4 h-4 shrink-0 text-violet-500" />;
     if (type === "team") return <Users className="w-4 h-4 shrink-0 text-pink-500" />;
@@ -287,7 +287,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
                     <button
                       key={r.id}
                       onClick={() => handleSelect(r.href)}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors group text-left"
+                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-primary/10 dark:hover:bg-primary/80/20 transition-colors group text-left"
                     >
                       {r.avatar ? (
                         <img src={r.avatar} className="w-8 h-8 rounded-full object-cover shrink-0 border border-slate-200 dark:border-slate-700" />
@@ -297,14 +297,14 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-bold text-slate-800 dark:text-white truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                        <div className="text-sm font-bold text-slate-800 dark:text-white truncate group-hover:text-primary dark:group-hover:text-primary transition-colors">
                           {r.title}
                         </div>
                         {r.subtitle && (
                           <div className="text-[11px] text-slate-400 truncate">{r.subtitle}</div>
                         )}
                       </div>
-                      <ArrowRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-emerald-500 transition-colors shrink-0" />
+                      <ArrowRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-primary transition-colors shrink-0" />
                     </button>
                   ))}
                 </div>

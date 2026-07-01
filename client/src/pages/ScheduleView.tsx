@@ -35,10 +35,10 @@ const FORMAT_COLORS: Record<
     dot: "bg-pink-500",
   },
   MD: {
-    bg: "bg-emerald-50 dark:bg-emerald-900/30",
-    text: "text-emerald-700 dark:text-emerald-400",
-    border: "border-emerald-100 dark:border-emerald-900/50",
-    dot: "bg-emerald-500",
+    bg: "bg-primary/10 dark:bg-primary/30",
+    text: "text-primary dark:text-primary",
+    border: "border-primary/30 dark:border-primary/50",
+    dot: "bg-primary",
   },
   WD: {
     bg: "bg-purple-50 dark:bg-purple-900/30",
@@ -60,7 +60,7 @@ const POOL_COLORS: Record<string, string> = {
   "League A":
     "from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-100 dark:border-blue-900/50",
   "League B":
-    "from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 border-emerald-100 dark:border-emerald-900/50",
+    "from-primary/10 to-teal-50 dark:from-primary/30 dark:to-teal-950/30 border-primary/30 dark:border-primary/50",
   League:
     "from-slate-50 dark:from-slate-900 to-gray-50 border-slate-200 dark:border-slate-700",
   KO: "from-rose-50 to-red-50 dark:from-rose-950/30 dark:to-red-950/30 border-rose-100 dark:border-rose-900/50",
@@ -296,7 +296,7 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
                               LIVE
                             </span>
                           ) : isDone ? (
-                            <span className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[8px] sm:text-[10px] font-black">
+                            <span className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[8px] sm:text-[10px] font-black">
                               <CheckCircle2
                                 size={8}
                                 className="sm:w-2.5 sm:h-2.5"

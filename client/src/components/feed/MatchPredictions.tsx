@@ -82,7 +82,7 @@ function ProbBar({ t1Pct, t2Pct, t1Label, t2Label, label }: {
       <div className="flex rounded-full overflow-hidden h-4">
         {t1Pct > 0 && (
           <div
-            className="bg-emerald-400 flex items-center justify-start pl-2 transition-all duration-700"
+            className="bg-primary flex items-center justify-start pl-2 transition-all duration-700"
             style={{ width: `${t1Pct}%` }}
           >
             {t1Pct >= 20 && <span className="text-[10px] font-black text-white truncate">{t1Pct}%</span>}
@@ -98,7 +98,7 @@ function ProbBar({ t1Pct, t2Pct, t1Label, t2Label, label }: {
         )}
       </div>
       <div className="flex justify-between mt-1">
-        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold truncate max-w-[45%]">{t1Label}</span>
+        <span className="text-[10px] text-primary dark:text-primary font-bold truncate max-w-[45%]">{t1Label}</span>
         <span className="text-[10px] text-sky-600 dark:text-sky-400 font-bold truncate max-w-[45%] text-right">{t2Label}</span>
       </div>
     </div>
@@ -203,7 +203,7 @@ function MatchPredictionCard({ m, myPick, onPick }: {
         <div className="flex gap-2">
           <button
             onClick={() => onPick(1)}
-            className="flex-1 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 text-sm font-black text-emerald-700 dark:text-emerald-400 transition truncate"
+            className="flex-1 py-2.5 rounded-xl bg-primary/10 dark:bg-primary/20 hover:bg-primary/15 dark:hover:bg-primary/80/30 border border-primary/40 dark:border-primary/80 text-sm font-black text-primary dark:text-primary transition truncate"
           >
             {t1Label}
           </button>
@@ -281,8 +281,8 @@ export function MatchPredictions() {
       <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
         <TrendingUp className="w-5 h-5 text-violet-500" />
         <h3 className="font-black text-slate-800 dark:text-white">Who's going to win?</h3>
-        <span className="ml-auto text-[10px] font-black uppercase tracking-widest text-emerald-500 flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" /> Live
+        <span className="ml-auto text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse inline-block" /> Live
         </span>
       </div>
 

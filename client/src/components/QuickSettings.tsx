@@ -98,14 +98,14 @@ export function QuickSettingsContent({ onClose }: { onClose?: () => void }) {
   };
 
   const statusConfig = [
-    { id: "looking",  label: "Available to play",  short: "Available",  color: "text-emerald-500 bg-emerald-50 dark:bg-emerald-950" },
+    { id: "looking",  label: "Available to play",  short: "Available",  color: "text-primary bg-primary/10 dark:bg-primary" },
     { id: "playing",  label: "Playing Right Now", short: "Playing",  color: "text-amber-500 bg-amber-50 dark:bg-amber-950" },
     { id: "resting",  label: "Taking a break",   short: "Resting",  color: "text-indigo-500 bg-indigo-50 dark:bg-indigo-950" },
     { id: "injured",  label: "Injured",           short: "Injured",  color: "text-rose-500 bg-rose-50 dark:bg-rose-950" },
   ];
 
   const themes = [
-    { id: "emerald", bg: "bg-emerald-500" },
+    { id: "emerald", bg: "bg-primary" },
     { id: "violet", bg: "bg-violet-500" },
     { id: "rose", bg: "bg-rose-500" },
     { id: "amber", bg: "bg-amber-500" },
@@ -211,7 +211,7 @@ export function QuickSettingsContent({ onClose }: { onClose?: () => void }) {
                       className="w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-bold transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60"
                     >
                       <span className={val ? "text-slate-700 dark:text-slate-200" : "text-slate-400 dark:text-slate-500"}>{label}</span>
-                      <div className={`w-8 h-4.5 rounded-full relative transition-colors shrink-0 ${val ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"}`}>
+                      <div className={`w-8 h-4.5 rounded-full relative transition-colors shrink-0 ${val ? "bg-primary" : "bg-slate-300 dark:bg-slate-600"}`}>
                         <div className={`absolute top-0.5 w-3.5 h-3.5 bg-white rounded-full shadow transition-all ${val ? "left-4.5" : "left-0.5"}`} />
                       </div>
                     </button>
@@ -281,7 +281,7 @@ export function PreferencesModal({ isOpen, onClose }: { isOpen: boolean; onClose
       <DialogContent className="sm:max-w-md bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-2xl w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto p-0">
         <DialogHeader className="p-4 pb-2 border-b border-slate-100 dark:border-slate-800">
           <DialogTitle className="flex items-center gap-2 text-slate-800 dark:text-white font-black text-xl">
-            <Settings className="w-5 h-5 text-emerald-500" />
+            <Settings className="w-5 h-5 text-primary" />
             App Preferences
           </DialogTitle>
         </DialogHeader>

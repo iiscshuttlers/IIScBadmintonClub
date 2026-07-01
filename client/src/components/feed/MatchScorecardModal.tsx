@@ -90,7 +90,7 @@ export function MatchScorecardModal({ match, isOpen, onClose, currentUser }: Mat
             {/* Header */}
             <div className="sticky top-0 z-10 bg-white dark:bg-slate-900 px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Swords className="w-5 h-5 text-emerald-500" />
+                <Swords className="w-5 h-5 text-primary" />
                 <h2 className="font-black text-slate-800 dark:text-white text-base">Match Scorecard</h2>
               </div>
               <button onClick={onClose} className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition">
@@ -113,7 +113,7 @@ export function MatchScorecardModal({ match, isOpen, onClose, currentUser }: Mat
               {/* Players */}
               <div className="flex items-center justify-between gap-3">
                 {/* Team 1 */}
-                <div className={`flex-1 flex flex-col items-center text-center p-3 rounded-2xl transition-all ${isP1Winner ? "bg-emerald-50 dark:bg-emerald-900/20 ring-2 ring-emerald-400" : "bg-slate-50 dark:bg-slate-800/50"}`}>
+                <div className={`flex-1 flex flex-col items-center text-center p-3 rounded-2xl transition-all ${isP1Winner ? "bg-primary/10 dark:bg-primary/20 ring-2 ring-primary" : "bg-slate-50 dark:bg-slate-800/50"}`}>
                   {p1?.avatar_url ? (
                     <img src={p1.avatar_url} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow mb-2" />
                   ) : (
@@ -121,7 +121,7 @@ export function MatchScorecardModal({ match, isOpen, onClose, currentUser }: Mat
                   )}
                   <span className="font-black text-sm text-slate-800 dark:text-white line-clamp-1">{p1?.full_name}</span>
                   {partner1 && <span className="text-[10px] text-slate-400 mt-0.5">& {partner1.full_name}</span>}
-                  {isP1Winner && <span className="mt-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-600 flex items-center gap-1"><Trophy className="w-3 h-3" /> Winner</span>}
+                  {isP1Winner && <span className="mt-1.5 text-[10px] font-black uppercase tracking-wider text-primary flex items-center gap-1"><Trophy className="w-3 h-3" /> Winner</span>}
                 </div>
 
                 {/* Score */}
@@ -157,9 +157,9 @@ export function MatchScorecardModal({ match, isOpen, onClose, currentUser }: Mat
                     const p1Won = s.p1 > s.p2;
                     return (
                       <div key={i} className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-700/50 last:border-0">
-                        <span className={`text-lg font-black w-10 text-center ${p1Won ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"}`}>{s.p1}</span>
+                        <span className={`text-lg font-black w-10 text-center ${p1Won ? "text-primary dark:text-primary" : "text-slate-400"}`}>{s.p1}</span>
                         <div className="flex items-center gap-2 px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
-                          {p1Won && <Trophy className="w-3 h-3 text-emerald-500" />}
+                          {p1Won && <Trophy className="w-3 h-3 text-primary" />}
                           <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">SET {i + 1}</span>
                           {!p1Won && <Trophy className="w-3 h-3 text-blue-500" />}
                         </div>
@@ -174,17 +174,17 @@ export function MatchScorecardModal({ match, isOpen, onClose, currentUser }: Mat
               {(match.elo_change_p1 != null || match.elo_change_p2 != null) && (
                 <div className="flex gap-3">
                   {match.elo_change_p1 != null && (
-                    <div className={`flex-1 flex flex-col items-center py-3 rounded-2xl text-center ${match.elo_change_p1 >= 0 ? "bg-emerald-50 dark:bg-emerald-900/20" : "bg-rose-50 dark:bg-rose-900/20"}`}>
+                    <div className={`flex-1 flex flex-col items-center py-3 rounded-2xl text-center ${match.elo_change_p1 >= 0 ? "bg-primary/10 dark:bg-primary/20" : "bg-rose-50 dark:bg-rose-900/20"}`}>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{p1?.full_name?.split(" ")[0]} ELO</span>
-                      <span className={`text-xl font-black ${match.elo_change_p1 >= 0 ? "text-emerald-600" : "text-rose-500"}`}>
+                      <span className={`text-xl font-black ${match.elo_change_p1 >= 0 ? "text-primary" : "text-rose-500"}`}>
                         {match.elo_change_p1 >= 0 ? "+" : ""}{match.elo_change_p1}
                       </span>
                     </div>
                   )}
                   {match.elo_change_p2 != null && (
-                    <div className={`flex-1 flex flex-col items-center py-3 rounded-2xl text-center ${match.elo_change_p2 >= 0 ? "bg-emerald-50 dark:bg-emerald-900/20" : "bg-rose-50 dark:bg-rose-900/20"}`}>
+                    <div className={`flex-1 flex flex-col items-center py-3 rounded-2xl text-center ${match.elo_change_p2 >= 0 ? "bg-primary/10 dark:bg-primary/20" : "bg-rose-50 dark:bg-rose-900/20"}`}>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{p2?.full_name?.split(" ")[0]} ELO</span>
-                      <span className={`text-xl font-black ${match.elo_change_p2 >= 0 ? "text-emerald-600" : "text-rose-500"}`}>
+                      <span className={`text-xl font-black ${match.elo_change_p2 >= 0 ? "text-primary" : "text-rose-500"}`}>
                         {match.elo_change_p2 >= 0 ? "+" : ""}{match.elo_change_p2}
                       </span>
                     </div>
@@ -229,7 +229,7 @@ export function MatchScorecardModal({ match, isOpen, onClose, currentUser }: Mat
                 </div>
               )}
               {disputed && (
-                <div className="flex items-center gap-2 p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-sm font-bold">
+                <div className="flex items-center gap-2 p-4 bg-primary/10 dark:bg-primary/20 rounded-2xl border border-primary/40 dark:border-primary/80 text-primary dark:text-primary text-sm font-bold">
                   <CheckCircle2 className="w-4 h-4" /> Dispute filed — admins will review.
                 </div>
               )}

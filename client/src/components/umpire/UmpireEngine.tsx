@@ -34,6 +34,8 @@ export type MatchEditState = {
   player2?: { full_name: string } | null;
   partner1?: { full_name: string } | null;
   partner2?: { full_name: string } | null;
+  team1_label?: string | null;
+  team2_label?: string | null;
 };
 
 export type PointLogEntry = {
@@ -78,7 +80,7 @@ type CardType = "yellow" | "red" | "black";
 type CardTarget = "t1p1" | "t1p2" | "t2p1" | "t2p2";
 
 import { CourtVisual } from "./CourtVisual";
-import { ChangeEndsModal, DisciplineCardModal, RetireModal, DirectScoreModal, BreakTimerOverlay } from "./MatchModals";
+import { ChangeEndsModal, DisciplineCardModal, RetireModal, DirectScoreModal, ConfirmActionModal } from "./MatchModals";
 import { useUmpireState } from "@/hooks/useUmpireState";
 
 // ── Player Select ─────────────────────────────────────────────────────────────
@@ -105,6 +107,8 @@ export function UmpireEngine({
   initialMatchState?: BwfMatchState | MatchEditState | null;
   tournamentMatch?: TournamentMatchForUmpire | null;
 }) {
+  const [confirmAction, setConfirmAction] = useState<{ title: string; message: string; onConfirm: () => void; confirmLabel?: string; confirmColor?: string } | null>(null);
+
   const umpireState = useUmpireState({
     userId,
     userEmail,
@@ -120,7 +124,7 @@ export function UmpireEngine({
     players, match, cards, showLog, showChangeEnds, changeEndsReason,
     pendingBreakAfterEnds, showCardPanel, cardTarget, showRetireModal,
     isEditSetupOpen, showToolsMenu, isDirectScoreOpen, showFullTimer,
-    directSetsText, directWinner, myBuddies, breakSecondsLeft, breakLabel,
+    directSetsText, directWinner, myBuddies, breakSecondsLeft, breakTotalSeconds, breakLabel,
     setPlayers, setMatch, setCards, setShowLog, setShowChangeEnds, setChangeEndsReason,
     setPendingBreakAfterEnds, setShowCardPanel, setCardTarget, setShowRetireModal,
     setIsEditSetupOpen, setShowToolsMenu, setIsDirectScoreOpen, setShowFullTimer,
@@ -141,14 +145,14 @@ export function UmpireEngine({
     const tm = tournamentMatch;
     const isDoublesMatch = ["MD", "WD", "XD"].includes(tm.category);
     const CAT_BADGE: Record<string, string> = {
-      MS: "bg-blue-600", WS: "bg-pink-600", MD: "bg-emerald-600",
+      MS: "bg-blue-600", WS: "bg-pink-600", MD: "bg-primary",
       WD: "bg-purple-600", XD: "bg-orange-600",
     };
     const badgeCls = CAT_BADGE[tm.category] ?? "bg-slate-600";
 
     return (
       <div className="bg-slate-900 border border-slate-800 rounded-4xl p-5 sm:p-8 text-white max-w-lg mx-auto shadow-2xl">
-        <div className="absolute top-0 inset-x-0 h-1.5 bg-linear-to-r from-emerald-500 to-sky-500 rounded-t-4xl" />
+        <div className="absolute top-0 inset-x-0 h-1.5 bg-linear-to-r from-primary to-sky-500 rounded-t-4xl" />
 
         {/* Header */}
         <div className="flex items-start justify-between mb-6">
@@ -192,7 +196,7 @@ export function UmpireEngine({
             {[11, 15, 21].map((pts) => (
               <button key={pts}
                 onClick={() => setMatch({ ...match, pointsToWin: pts, goldenPoint: pts === 21 ? 30 : pts === 15 ? 21 : 15 })}
-                className={`flex-1 py-2 rounded-xl font-black text-sm border transition ${match.pointsToWin === pts ? "bg-emerald-500/20 border-emerald-500 text-emerald-400" : "bg-slate-700/50 border-slate-700 text-slate-400 hover:border-slate-500"}`}>
+                className={`flex-1 py-2 rounded-xl font-black text-sm border transition ${match.pointsToWin === pts ? "bg-primary/20 border-primary text-primary" : "bg-slate-700/50 border-slate-700 text-slate-400 hover:border-slate-500"}`}>
                 {pts}
               </button>
             ))}
@@ -218,7 +222,7 @@ export function UmpireEngine({
                 onClick={() => setMatch({ ...match, serverTeam: team as 1 | 2, serverPlayerIndex: 0 })}
                 className={`py-3 px-3 rounded-xl font-black text-sm border transition text-center ${
                   match.serverTeam === team
-                    ? "bg-emerald-500/20 border-emerald-500 text-emerald-400"
+                    ? "bg-primary/20 border-primary text-primary"
                     : "bg-slate-700/50 border-slate-700 text-slate-400 hover:border-slate-500"
                 }`}>
                 {label}
@@ -251,7 +255,7 @@ export function UmpireEngine({
         {/* Start */}
         <button
           onClick={startTournamentMatch}
-          className="w-full py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-black text-lg transition shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2">
+          className="w-full py-4 rounded-2xl bg-primary hover:bg-primary text-white font-black text-lg transition shadow-lg shadow-primary/50/30 flex items-center justify-center gap-2">
           <Play className="w-5 h-5 fill-white" /> Start Match
         </button>
       </div>
@@ -301,9 +305,8 @@ export function UmpireEngine({
   // ── PLAYING / FINISHED SCREEN ──────────────────────────────────────────────
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-4xl p-4 sm:p-8 text-white max-w-4xl lg:max-w-5xl mx-auto shadow-2xl relative overflow-hidden">
-      <div className="absolute top-0 inset-x-0 h-1.5 bg-linear-to-r from-emerald-500 to-sky-500" />
+      <div className="absolute top-0 inset-x-0 h-1.5 bg-linear-to-r from-primary to-sky-500" />
       {renderSetupOverlay()}
-      {/* ── Change Ends Overlay ── */}
       {/* ── Change Ends Overlay ── */}
       {showChangeEnds && (
         <ChangeEndsModal reason={changeEndsReason} onConfirm={confirmChangeEnds} />
@@ -323,7 +326,7 @@ export function UmpireEngine({
 
       {/* ── Retirement Modal ── */}
       {showRetireModal && (
-        <RetireModal onRetire={retireTeam} onClose={() => setShowRetireModal(false)} />
+        <RetireModal match={match} onRetire={retireTeam} onClose={() => setShowRetireModal(false)} />
       )}
 
       {/* ── Direct Score Modal ── */}
@@ -334,61 +337,41 @@ export function UmpireEngine({
           directSetsText={directSetsText} 
           setDirectSetsText={setDirectSetsText} 
           onSave={() => {
-            updateMatch({ status: "finished", winner: directWinner, setsHistory: directSetsText.split(",").map(s => s.trim()) });
+            updateMatch({ status: "finished", winner: directWinner, setsHistory: directSetsText.split(",").map(s => s.trim()).filter(s => s !== "0-0" && s !== "-") });
             setIsDirectScoreOpen(false);
           }} 
           onClose={() => setIsDirectScoreOpen(false)} 
+          match={match}
+        />
+      )}
+
+      {confirmAction && (
+        <ConfirmActionModal 
+          {...confirmAction} 
+          onClose={() => setConfirmAction(null)} 
         />
       )}
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between gap-3 mb-4">
-        <div className="min-w-0">
-          <div className="flex items-center gap-1.5 text-emerald-400 font-black uppercase tracking-widest text-xs mb-0.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Live Umpire
-          </div>
-          <div className="text-slate-400 text-[11px] font-bold truncate">
-            {match.isFriendly ? "Friendly" : `Tournament • ${match.matchNumber || "—"}`} • {match.inferredCategory || match.category} • BO{match.bestOfSets} ({match.pointsToWin}pts) • Game {currentGameNum}
-          </div>
-        </div>
-        <div className="relative shrink-0">
-          <button
-            onClick={() => setShowToolsMenu(!showToolsMenu)}
-            className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl flex items-center gap-1.5 border border-slate-700"
-          >
-            <Settings className="w-4 h-4" /> Tools
-            {showToolsMenu ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-          </button>
-          {showToolsMenu && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setShowToolsMenu(false)} />
-              <div className="absolute right-0 mt-2 w-48 bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl z-50 overflow-hidden py-1">
-                {match.status === "playing" && (
-                  <>
-                    <button onClick={() => { updateMatch({ endsSwapped: !match.endsSwapped }); setShowToolsMenu(false); }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-bold text-slate-200 hover:bg-slate-700 transition">
-                      <ArrowLeftRight className="w-4 h-4 text-slate-400" /> Swap Ends
-                    </button>
-                    {match.t1.p2Id && (
-                      <button onClick={() => { updateMatch({ serverPlayerIndex: match.serverPlayerIndex === 0 ? 1 : 0 }); setShowToolsMenu(false); }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-bold text-slate-200 hover:bg-slate-700 transition">
-                        <Repeat className="w-4 h-4 text-slate-400" /> Switch Server
-                      </button>
-                    )}
-                    <button onClick={() => { setIsDirectScoreOpen(true); setShowToolsMenu(false); }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-bold text-slate-200 hover:bg-slate-700 transition">
-                      <Flag className="w-4 h-4 text-slate-400" /> Direct Score
-                    </button>
-                    <button onClick={() => { setIsEditSetupOpen(true); setShowToolsMenu(false); }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-bold text-slate-200 hover:bg-slate-700 transition">
-                      <Settings className="w-4 h-4 text-slate-400" /> Edit Setup
-                    </button>
-                    <div className="h-px bg-slate-700 my-1" />
-                  </>
-                )}
-                <button onClick={() => { handleClose(); setShowToolsMenu(false); }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-bold text-rose-400 hover:bg-rose-500/10 transition">
-                  <X className="w-4 h-4" /> Abort Match
-                </button>
-              </div>
-            </>
-          )}
-        </div>
+      <div className="grid grid-cols-3 sm:flex sm:flex-wrap items-center gap-2 mb-4">
+        {match.status === "playing" && (
+          <>
+            <button onClick={() => updateMatch({ endsSwapped: !match.endsSwapped })} className="shrink-0 px-1 py-2 sm:px-3 sm:py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border border-slate-700 transition">
+              <ArrowLeftRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400" /> Swap Ends
+            </button>
+            {match.t1.p2Id && (
+              <button onClick={() => updateMatch({ serverPlayerIndex: match.serverPlayerIndex === 0 ? 1 : 0 })} className="shrink-0 px-1 py-2 sm:px-3 sm:py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border border-slate-700 transition">
+                <Repeat className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400" /> Switch Server
+              </button>
+            )}
+            <button onClick={() => setIsDirectScoreOpen(true)} className="shrink-0 px-1 py-2 sm:px-3 sm:py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border border-slate-700 transition">
+              <Flag className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400" /> Direct Score
+            </button>
+            <button onClick={() => setIsEditSetupOpen(true)} className="shrink-0 px-1 py-2 sm:px-3 sm:py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border border-slate-700 transition">
+              <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400" /> Edit Setup
+            </button>
+          </>
+        )}
       </div>
 
       {/* ── Finished Screen ── */}
@@ -405,7 +388,7 @@ export function UmpireEngine({
               : (match.t2.p1Name + (match.t2.p2Name ? ` / ${match.t2.p2Name}` : ""))
             } Won
           </p>
-          <p className="text-emerald-400 font-bold mb-8 text-2xl">{match.setsHistory.join(", ")}{match.retiredTeam ? ` (T${match.retiredTeam} Retired)` : ""}</p>
+          <p className="text-primary font-bold mb-8 text-2xl">{match.setsHistory.join(", ")}{match.retiredTeam ? ` (T${match.retiredTeam} Retired)` : ""}</p>
           <button onClick={saveMatchToProfile} className="px-8 py-4 bg-linear-to-r from-amber-500 to-orange-500 text-white rounded-2xl font-black uppercase tracking-wider shadow-xl flex items-center gap-2 mx-auto">
             <Save className="w-5 h-5" /> Save to Profile & Notify
           </button>
@@ -415,29 +398,46 @@ export function UmpireEngine({
         </div>
       ) : (
         <>
-        {/* ── Break Timer mini-banner (always visible when timer running) ── */}
-        {breakSecondsLeft !== null && (
-          <button
-            onClick={() => setShowFullTimer(true)}
-            className="w-full flex items-center justify-between px-4 py-3 bg-amber-400/10 border border-amber-400/40 rounded-2xl mb-4 hover:bg-amber-400/20 transition"
-          >
-            <div className="flex items-center gap-2">
-              <Timer className="w-4 h-4 text-amber-400 animate-pulse" />
-              <span className="text-amber-400 font-black text-sm uppercase tracking-widest">{breakLabel || "Break"}</span>
+        <div className="flex items-center justify-between gap-3 mb-4 mt-2">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 text-primary font-black uppercase tracking-widest text-xs mb-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" /> Live Umpire
             </div>
-            <span className="text-amber-400 font-black text-xl tabular-nums">
-              {Math.floor(breakSecondsLeft / 60).toString().padStart(2, "0")}:{(breakSecondsLeft % 60).toString().padStart(2, "0")}
-            </span>
-          </button>
-        )}
-        {/* ── Full-screen timer overlay ── */}
-        {showFullTimer && breakSecondsLeft !== null && (
-          <BreakTimerOverlay 
-            breakSecondsLeft={breakSecondsLeft} 
-            breakLabel={breakLabel} 
-            onEndBreak={endBreak} 
-            onClose={() => setShowFullTimer(false)} 
-          />
+            <div className="text-slate-400 text-[11px] font-bold truncate">
+              {match.isFriendly ? "Friendly" : `Tournament • ${match.matchNumber || "—"}`} • {match.inferredCategory || match.category} • BO{match.bestOfSets} ({match.pointsToWin}pts) • Game {currentGameNum}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Break Timer Banner (always visible when timer running) ── */}
+        {breakSecondsLeft !== null && (
+          <div className="w-full flex flex-col px-4 py-3 bg-amber-400/10 border border-amber-400/40 rounded-2xl mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <Timer className="w-4 h-4 text-amber-400 animate-pulse" />
+                  <span className="text-amber-400 font-black text-sm uppercase tracking-widest">{breakLabel || "Break"}</span>
+                </div>
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Elapsed: {
+                    (() => {
+                      const elapsed = (breakTotalSeconds ?? breakSecondsLeft) - breakSecondsLeft;
+                      return `${Math.floor(elapsed / 60).toString().padStart(2, "0")}:${(elapsed % 60).toString().padStart(2, "0")}`;
+                    })()
+                  }
+                </div>
+              </div>
+              <span className={`font-black text-2xl tabular-nums ${breakSecondsLeft < 0 ? 'text-rose-500 drop-shadow-[0_0_8px_rgba(244,63,94,0.5)]' : 'text-amber-400'}`}>
+                {breakSecondsLeft < 0 ? "-" : ""}
+                {Math.floor(Math.abs(breakSecondsLeft) / 60).toString().padStart(2, "0")}:{(Math.abs(breakSecondsLeft) % 60).toString().padStart(2, "0")}
+              </span>
+            </div>
+            <div className="flex justify-center">
+              <button onClick={endBreak} className="w-full sm:w-1/2 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl border border-slate-700 transition">
+                End Break
+              </button>
+            </div>
+          </div>
         )}
 
         <>
@@ -446,9 +446,9 @@ export function UmpireEngine({
             {([1, 2] as const).map((team) => {
               const t = team === 1 ? match.t1 : match.t2;
               const isServing = match.serverTeam === team;
-              const scoreColor = team === 1 ? "text-emerald-300" : "text-sky-300";
-              const servingText = team === 1 ? "text-emerald-400" : "text-sky-400";
-              const servingDot = team === 1 ? "bg-emerald-400" : "bg-sky-400";
+              const scoreColor = team === 1 ? "text-primary/70" : "text-sky-300";
+              const servingText = team === 1 ? "text-primary" : "text-sky-400";
+              const servingDot = team === 1 ? "bg-primary" : "bg-sky-400";
               const order = team === 1 ? (match.endsSwapped ? 2 : 1) : (match.endsSwapped ? 1 : 2);
               return (
                 <div
@@ -458,7 +458,7 @@ export function UmpireEngine({
                   className={`relative cursor-pointer select-none active:scale-[0.97] rounded-3xl border-2 p-3 sm:p-5 md:p-7 flex flex-col items-center transition-all ${
                     isServing
                       ? team === 1
-                        ? "bg-emerald-500/10 border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.25)]"
+                        ? "bg-primary/10 border-primary shadow-[0_0_30px_rgba(16,185,129,0.25)]"
                         : "bg-sky-500/10 border-sky-500 shadow-[0_0_30px_rgba(14,165,233,0.25)]"
                       : "bg-slate-800/40 border-slate-700/70"
                   }`}
@@ -520,8 +520,8 @@ export function UmpireEngine({
 
           {/* ── Score Announcement (server-first, BWF style) ── */}
           <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 mt-4 text-[11px] font-black uppercase tracking-widest">
-            <span className="text-emerald-400">{serverName}</span>
-            <span className="text-emerald-400 text-base tabular-nums">{serverScore}</span>
+            <span className="text-primary">{serverName}</span>
+            <span className="text-primary text-base tabular-nums">{serverScore}</span>
             <span className="text-slate-600">—</span>
             <span className="text-slate-300 text-base tabular-nums">{receiverScore}</span>
             <span className="text-slate-500">{receiverName}</span>
@@ -546,46 +546,48 @@ export function UmpireEngine({
           </div>
 
           {/* ── Break shortcuts ── */}
-          <div className="flex gap-2 justify-center mt-5 flex-wrap">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest self-center">Break:</span>
-            {[["30s", 30, "Short Break"], ["1 min", 60, "1-min Interval"], ["90s", 90, "Set 1→2 Interval"], ["2 min", 120, "Set 2→3 Interval"]].map(([label, secs, lbl]) => (
-              <button key={label as string} onClick={() => startBreak(secs as number, lbl as string)}
-                className={`px-2.5 py-1.5 font-bold text-xs rounded-xl transition-all flex items-center gap-1 ${
-                  label === "1 min"
-                    ? "bg-amber-500/20 border border-amber-500/50 text-amber-300"
-                    : "bg-slate-800 hover:bg-amber-500/20 border border-slate-700 hover:border-amber-500/50 text-slate-300 hover:text-amber-300"
-                }`}>
-                <Timer className="w-3 h-3" />{label as string}
-              </button>
-            ))}
+          <div className="mt-5">
+            <div className="text-center text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 sm:hidden">Break Timers</div>
+            <div className="grid grid-cols-2 sm:flex gap-2 justify-center">
+              <span className="hidden sm:inline-flex text-[10px] font-bold text-slate-500 uppercase tracking-widest self-center mr-1">Break:</span>
+              {[["30s", 30, "Short Break"], ["1 min", 60, "1-min Interval"], ["90s", 90, "Set 1→2 Interval"], ["2 min", 120, "Set 2→3 Interval"]].map(([label, secs, lbl]) => (
+                <button key={label as string} onClick={() => startBreak(secs as number, lbl as string)}
+                  className={`px-2.5 py-2 font-bold text-xs rounded-xl transition-all flex justify-center items-center gap-1.5 shadow-sm ${
+                    label === "1 min"
+                      ? "bg-amber-500/20 border border-amber-500/50 text-amber-300"
+                      : "bg-slate-800 hover:bg-amber-500/20 border border-slate-700 hover:border-amber-500/50 text-slate-300 hover:text-amber-300"
+                  }`}>
+                  <Timer className="w-3.5 h-3.5" />{label as string}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* ── Action Bar ── */}
-          <div className="mt-3 flex flex-wrap justify-center gap-2">
+          <div className="mt-3 grid grid-cols-3 sm:flex sm:flex-wrap sm:justify-center gap-2">
             <button onClick={forceEndSet}
-              className="px-3.5 py-2 bg-slate-800 hover:bg-emerald-500/20 border border-slate-700 hover:border-emerald-500/50 text-slate-300 hover:text-emerald-300 font-bold text-xs rounded-xl transition flex items-center gap-1.5">
-              <Plus className="w-4 h-4" /> Add Set
+              className="shrink-0 px-1 py-2 sm:px-3 sm:py-2 bg-slate-800 hover:bg-primary/20 border border-slate-700 hover:border-primary/50 text-slate-300 hover:text-primary/70 font-bold text-[10px] sm:text-xs rounded-xl transition flex justify-center items-center gap-1 sm:gap-1.5">
+              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Add Set
             </button>
             <button onClick={callLet}
-              className="px-3.5 py-2 bg-slate-800 hover:bg-blue-500/20 border border-slate-700 hover:border-blue-500/50 text-slate-300 hover:text-blue-300 font-bold text-xs rounded-xl transition flex items-center gap-1.5">
+              className="shrink-0 px-1 py-2 sm:px-3 sm:py-2 bg-slate-800 hover:bg-blue-500/20 border border-slate-700 hover:border-blue-500/50 text-slate-300 hover:text-blue-300 font-bold text-[10px] sm:text-xs rounded-xl transition flex justify-center items-center gap-1 sm:gap-1.5">
               ↩ Let
             </button>
             <button onClick={() => callServiceFault(match.serverTeam)}
-              className="px-3.5 py-2 bg-slate-800 hover:bg-orange-500/20 border border-slate-700 hover:border-orange-500/50 text-slate-300 hover:text-orange-300 font-bold text-xs rounded-xl transition flex items-center gap-1.5">
-              ✗ Service Fault
+              className="shrink-0 px-1 py-2 sm:px-3 sm:py-2 bg-slate-800 hover:bg-orange-500/20 border border-slate-700 hover:border-orange-500/50 text-slate-300 hover:text-orange-300 font-bold text-[10px] sm:text-xs rounded-xl transition flex justify-center items-center gap-1 sm:gap-1.5">
+              ✗ Fault
             </button>
             <button onClick={() => { setShowCardPanel(true); setCardTarget(null); }}
-              className="px-3.5 py-2 bg-slate-800 hover:bg-yellow-500/20 border border-slate-700 hover:border-yellow-500/50 text-slate-300 hover:text-yellow-300 font-bold text-xs rounded-xl transition flex items-center gap-1.5">
-              <Flag className="w-3.5 h-3.5" /> Cards
+              className="shrink-0 px-1 py-2 sm:px-3 sm:py-2 bg-slate-800 hover:bg-yellow-500/20 border border-slate-700 hover:border-yellow-500/50 text-slate-300 hover:text-yellow-300 font-bold text-[10px] sm:text-xs rounded-xl transition flex justify-center items-center gap-1 sm:gap-1.5">
+              <Flag className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Cards
             </button>
             <button onClick={() => setShowRetireModal(true)}
-              className="px-3.5 py-2 bg-slate-800 hover:bg-rose-500/20 border border-slate-700 hover:border-rose-500/50 text-slate-300 hover:text-rose-300 font-bold text-xs rounded-xl transition flex items-center gap-1.5">
-              <AlertTriangle className="w-3.5 h-3.5" /> Retire
+              className="shrink-0 px-1 py-2 sm:px-3 sm:py-2 bg-slate-800 hover:bg-rose-500/20 border border-slate-700 hover:border-rose-500/50 text-slate-300 hover:text-rose-300 font-bold text-[10px] sm:text-xs rounded-xl transition flex justify-center items-center gap-1 sm:gap-1.5">
+              <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Retire
             </button>
             <button onClick={() => setShowLog(!showLog)}
-              className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-bold text-xs rounded-xl transition flex items-center gap-1.5">
-              <BookOpen className="w-3.5 h-3.5" /> Log ({match.pointLog.length})
-              {showLog ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+              className="shrink-0 px-1 py-2 sm:px-3 sm:py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-bold text-[10px] sm:text-xs rounded-xl transition flex justify-center items-center gap-1 sm:gap-1.5">
+              <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Log ({match.pointLog.length})
             </button>
           </div>
         </>
@@ -599,41 +601,19 @@ export function UmpireEngine({
                 <thead className="bg-slate-800/80 text-xs uppercase text-slate-400">
                   <tr>
                     <th className="px-4 py-3 border-b border-slate-700 font-black"></th>
-                    <th colSpan={match.t1.p2Id ? 2 : 1} className="px-4 py-3 border-b border-slate-700 text-center font-black text-emerald-400">Team 1</th>
-                    <th colSpan={match.t2.p2Id ? 2 : 1} className="px-4 py-3 border-b border-slate-700 text-center font-black text-sky-400">Team 2</th>
+                    <th className="px-4 py-3 border-b border-slate-700 text-center font-black text-primary">
+                      <div className="flex flex-col items-center justify-center gap-0.5">
+                        <span className="whitespace-nowrap">{match.t1.p1Name}</span>
+                        {match.t1.p2Name && <span className="whitespace-nowrap">& {match.t1.p2Name}</span>}
+                      </div>
+                    </th>
+                    <th className="px-4 py-3 border-b border-slate-700 text-center font-black text-sky-400">
+                      <div className="flex flex-col items-center justify-center gap-0.5">
+                        <span className="whitespace-nowrap">{match.t2.p1Name}</span>
+                        {match.t2.p2Name && <span className="whitespace-nowrap">& {match.t2.p2Name}</span>}
+                      </div>
+                    </th>
                     <th className="px-4 py-3 border-b border-slate-700 font-black text-center text-amber-400">Winner</th>
-                  </tr>
-                  <tr>
-                    <th className="px-4 py-2 border-b border-slate-700 bg-slate-800/50"></th>
-                    <th className="px-4 py-2 border-b border-slate-700 bg-slate-800/50">
-                      <div className="flex flex-col items-center gap-1.5">
-                        <img src={players.find(p => p.id === match.t1.p1Id)?.avatar_url || undefined} className="w-8 h-8 rounded-full object-cover shadow-sm bg-slate-700" />
-                        <span>{match.t1.p1Name}</span>
-                      </div>
-                    </th>
-                    {match.t1.p2Id && (
-                      <th className="px-4 py-2 border-b border-slate-700 bg-slate-800/50">
-                        <div className="flex flex-col items-center gap-1.5">
-                          <img src={players.find(p => p.id === match.t1.p2Id)?.avatar_url || undefined} className="w-8 h-8 rounded-full object-cover shadow-sm bg-slate-700" />
-                          <span>{match.t1.p2Name}</span>
-                        </div>
-                      </th>
-                    )}
-                    <th className="px-4 py-2 border-b border-slate-700 bg-slate-800/50">
-                      <div className="flex flex-col items-center gap-1.5">
-                        <img src={players.find(p => p.id === match.t2.p1Id)?.avatar_url || undefined} className="w-8 h-8 rounded-full object-cover shadow-sm bg-slate-700" />
-                        <span>{match.t2.p1Name}</span>
-                      </div>
-                    </th>
-                    {match.t2.p2Id && (
-                      <th className="px-4 py-2 border-b border-slate-700 bg-slate-800/50">
-                        <div className="flex flex-col items-center gap-1.5">
-                          <img src={players.find(p => p.id === match.t2.p2Id)?.avatar_url || undefined} className="w-8 h-8 rounded-full object-cover shadow-sm bg-slate-700" />
-                          <span>{match.t2.p2Name}</span>
-                        </div>
-                      </th>
-                    )}
-                    <th className="px-4 py-2 border-b border-slate-700 bg-slate-800/50"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-700/50 text-slate-300">
@@ -652,7 +632,7 @@ export function UmpireEngine({
                     return (
                       <tr key={i} className="hover:bg-slate-800/30 transition-colors">
                         <td className="px-4 py-3 font-bold text-slate-400 whitespace-nowrap">Set {i + 1}</td>
-                        <td colSpan={match.t1.p2Id ? 2 : 1} className="px-4 py-3 text-center">
+                        <td className="px-4 py-3 text-center">
                           <input 
                             type="text" 
                             maxLength={2}
@@ -662,10 +642,10 @@ export function UmpireEngine({
                               const capped = raw && parseInt(raw) > match.goldenPoint ? match.goldenPoint.toString() : raw;
                               handleEditSet(i, capped, s2);
                             }}
-                            className="w-16 bg-slate-900 border border-slate-600 rounded-lg px-2 py-1 text-center font-bold text-emerald-400 outline-none focus:border-emerald-500 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-16 bg-slate-900 border border-slate-600 rounded-lg px-2 py-1 text-center font-bold text-primary outline-none focus:border-primary transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                         </td>
-                        <td colSpan={match.t2.p2Id ? 2 : 1} className="px-4 py-3 text-center">
+                        <td className="px-4 py-3 text-center">
                           <input 
                             type="text" 
                             maxLength={2}
@@ -683,7 +663,7 @@ export function UmpireEngine({
                     );
                   })}
                   {!!match.winner && (
-                    <tr className="bg-emerald-900/20">
+                    <tr className="bg-primary/80/20">
                       <td colSpan={1 + (match.t1.p2Id ? 2 : 1) + (match.t2.p2Id ? 2 : 1)} className="px-4 py-4 font-black text-amber-500 text-right pr-6 uppercase tracking-widest text-xs">
                         Match Winner
                       </td>
@@ -716,7 +696,7 @@ export function UmpireEngine({
                     <div key={i} className="px-4 py-2 flex items-center justify-between gap-3 text-xs">
                       <div className="flex items-center gap-2">
                         <span className={`font-black ${
-                          entry.team === 1 ? "text-emerald-400"
+                          entry.team === 1 ? "text-primary"
                           : entry.team === 2 ? "text-sky-400"
                           : entry.team === "let" ? "text-blue-400"
                           : "text-orange-400"
@@ -728,7 +708,7 @@ export function UmpireEngine({
                       </div>
                       <div className="font-mono font-bold text-slate-300 shrink-0">
                         {entry.t1Score} — {entry.t2Score}
-                        <span className={`ml-1.5 text-[9px] ${entry.serverTeam === 1 ? "text-emerald-500" : "text-sky-500"}`}>
+                        <span className={`ml-1.5 text-[9px] ${entry.serverTeam === 1 ? "text-primary" : "text-sky-500"}`}>
                           🏸T{entry.serverTeam}
                         </span>
                       </div>
@@ -736,6 +716,39 @@ export function UmpireEngine({
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* ── Match Action Buttons (Bottom) ── */}
+          {match.status === "playing" && (
+            <div className="grid grid-cols-3 gap-2 mt-8 mb-4">
+              <button onClick={() => setConfirmAction({
+                title: "Cancel Match",
+                message: "Are you sure you want to exit without saving? Any unsaved progress will be lost.",
+                confirmLabel: "Cancel Match",
+                confirmColor: "bg-rose-600 hover:bg-rose-500",
+                onConfirm: () => handleClose()
+              })} className="px-1 py-3 bg-slate-800 hover:bg-rose-500/20 text-rose-400 font-bold text-[10px] sm:text-xs rounded-xl flex flex-col sm:flex-row justify-center items-center gap-1 sm:gap-1.5 border border-slate-700 hover:border-rose-500/30 transition shadow-sm">
+                <X className="w-4 h-4 sm:w-4 sm:h-4" /> Cancel
+              </button>
+              <button onClick={() => setConfirmAction({
+                title: "Finish Match",
+                message: "Are you sure you want to forcefully finish this match?",
+                confirmLabel: "Finish Match",
+                confirmColor: "bg-primary hover:bg-primary",
+                onConfirm: () => updateMatch({ status: 'finished', winner: match.t1.games >= match.t2.games ? 1 : 2 })
+              })} className="px-1 py-3 bg-slate-800 hover:bg-primary/20 text-primary font-bold text-[10px] sm:text-xs rounded-xl flex flex-col sm:flex-row justify-center items-center gap-1 sm:gap-1.5 border border-slate-700 hover:border-primary/30 transition shadow-sm">
+                <Save className="w-4 h-4 sm:w-4 sm:h-4" /> Finish
+              </button>
+              <button onClick={() => setConfirmAction({
+                title: "Abort Match",
+                message: "Are you sure you want to permanently abort this match and delete its records?",
+                confirmLabel: "Abort Match",
+                confirmColor: "bg-rose-600 hover:bg-rose-500",
+                onConfirm: () => handleClose()
+              })} className="px-1 py-3 bg-slate-800 hover:bg-rose-500/20 text-rose-400 font-bold text-[10px] sm:text-xs rounded-xl flex flex-col sm:flex-row justify-center items-center gap-1 sm:gap-1.5 border border-slate-700 hover:border-rose-500/30 transition shadow-sm">
+                <AlertTriangle className="w-4 h-4 sm:w-4 sm:h-4" /> Abort
+              </button>
             </div>
           )}
     </div>

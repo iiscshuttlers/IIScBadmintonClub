@@ -19,7 +19,7 @@ export default function ProfileSetup() {
   if (setup.isInitializing) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin" />
+        <div className="w-8 h-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
       </div>
     );
   }
@@ -49,13 +49,13 @@ export default function ProfileSetup() {
               {setup.isEditing && (setup.playerSlug || setup.paramId) && (
                 <button
                   onClick={() => setLocation(`/player/${setup.playerSlug || setup.paramId}`)}
-                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 mb-3 transition"
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary mb-3 transition"
                 >
                   <ArrowLeft className="w-4 h-4" /> Back to Profile
                 </button>
               )}
               <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white flex items-center justify-center sm:justify-start gap-2 leading-tight">
-                <Sparkles className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-500 animate-pulse shrink-0" />
+                <Sparkles className="w-7 h-7 sm:w-8 sm:h-8 text-primary animate-pulse shrink-0" />
                 {setup.isEditing ? "Edit Your Player Profile" : "Complete Your Profile"}
               </h1>
               <p className="mt-2 text-slate-600 dark:text-slate-400 text-base sm:text-lg">
@@ -86,7 +86,7 @@ export default function ProfileSetup() {
                   onClick={() => setup.setActiveTab(tab.id as any)}
                   className={`snap-start shrink-0 flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 font-semibold text-sm rounded-xl transition-all whitespace-nowrap outline-none
                     ${isActive
-                      ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-500"
+                      ? "bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary border-b-2 border-primary"
                       : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900/50"
                     }`}
                 >
@@ -173,7 +173,7 @@ export default function ProfileSetup() {
                   <Button
                     type="submit"
                     disabled={setup.loading}
-                    className="w-full min-h-[52px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-3.5 rounded-xl shadow-lg shadow-emerald-500/25 transition-all text-base sm:text-lg flex items-center justify-center gap-2 disabled:opacity-70"
+                    className="w-full min-h-[52px] bg-primary hover:bg-primary text-white font-bold px-5 py-3.5 rounded-xl shadow-lg shadow-primary/25 transition-all text-base sm:text-lg flex items-center justify-center gap-2 disabled:opacity-70"
                   >
                     {setup.loading ? (
                       <>
@@ -195,7 +195,7 @@ export default function ProfileSetup() {
                       setup.setActiveTab(nextTabId as any);
                       window.scrollTo({ top: 0, behavior: "smooth" });
                     }}
-                    className="w-full min-h-[52px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-3.5 rounded-xl shadow-lg shadow-emerald-500/25 transition-all text-base sm:text-lg flex items-center justify-center gap-2"
+                    className="w-full min-h-[52px] bg-primary hover:bg-primary text-white font-bold px-5 py-3.5 rounded-xl shadow-lg shadow-primary/25 transition-all text-base sm:text-lg flex items-center justify-center gap-2"
                   >
                     Save & Next: {nextTabObj?.label} <ArrowRight className="w-5 h-5" />
                   </Button>

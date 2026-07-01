@@ -89,27 +89,27 @@ export function WrappedCard({ playerName, avatarUrl, elo, matches, playerId, yea
 
       {/* Wrapped card visual */}
       <div ref={cardRef}
-        className="relative overflow-hidden rounded-2xl bg-linear-to-br from-slate-900 via-indigo-950 to-emerald-950 p-6 text-white">
+        className="relative overflow-hidden rounded-2xl bg-linear-to-br from-slate-900 via-indigo-950 to-primary/90 p-6 text-white">
         <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(ellipse_at_top_right,rgba(16,185,129,0.4),transparent)]" />
 
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-5">
             {avatarUrl ? (
-              <img src={avatarUrl} className="w-12 h-12 rounded-full object-cover border-2 border-emerald-400/50" />
+              <img src={avatarUrl} className="w-12 h-12 rounded-full object-cover border-2 border-primary/50" />
             ) : (
-              <div className="w-12 h-12 rounded-full bg-emerald-600/30 border-2 border-emerald-400/50 flex items-center justify-center text-lg font-black text-emerald-300">
+              <div className="w-12 h-12 rounded-full bg-primary/30 border-2 border-primary/50 flex items-center justify-center text-lg font-black text-primary/70">
                 {playerName[0]}
               </div>
             )}
             <div>
               <p className="font-black text-white text-lg leading-tight">{playerName}</p>
-              <p className="text-emerald-400 text-xs font-bold uppercase tracking-wider">{year} Season</p>
+              <p className="text-primary text-xs font-bold uppercase tracking-wider">{year} Season</p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3 mb-4">
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3">
-              <div className="text-3xl font-black text-emerald-400">{wins}</div>
+              <div className="text-3xl font-black text-primary">{wins}</div>
               <div className="text-xs font-bold text-white/60 uppercase tracking-wider">Wins</div>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3">
@@ -130,7 +130,7 @@ export function WrappedCard({ playerName, avatarUrl, elo, matches, playerId, yea
               <div className="text-[10px] text-white/50 font-bold">Best Streak</div>
             </div>
             <div className="bg-white/5 rounded-xl p-2.5 text-center">
-              <TrendingUp className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
+              <TrendingUp className="w-4 h-4 text-primary mx-auto mb-1" />
               <div className="text-base font-black text-white">{elo}</div>
               <div className="text-[10px] text-white/50 font-bold">ELO</div>
             </div>

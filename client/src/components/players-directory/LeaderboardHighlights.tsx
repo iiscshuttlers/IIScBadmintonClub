@@ -25,11 +25,11 @@ export function LeaderboardHighlights({ upsets, activeStreaks }: Props) {
             const loser = match.winner_id === match.player1_id ? match.player2 : match.player1;
             return (
               <div key={match.id} className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl border border-slate-100 dark:border-slate-700/50">
-                <img src={winner?.avatar_url || ""} className="w-8 h-8 rounded-full object-cover shrink-0 border-2 border-emerald-500" />
+                <img src={winner?.avatar_url || ""} className="w-8 h-8 rounded-full object-cover shrink-0 border-2 border-primary" />
                 <div className="min-w-0 flex-1 flex flex-col">
                   <div className="text-xs font-bold text-slate-800 dark:text-white truncate flex items-center gap-1.5">
                     {winner?.full_name?.split(' ')[0]}
-                    <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 px-1 py-0.5 rounded font-black">
+                    <span className="text-[10px] bg-primary/15 dark:bg-primary/30 text-primary dark:text-primary px-1 py-0.5 rounded font-black">
                       +{match.upsetScore}
                     </span>
                   </div>

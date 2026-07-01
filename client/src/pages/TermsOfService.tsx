@@ -9,7 +9,7 @@ export default function TermsOfService() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans pb-24 pt-4 lg:pt-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         <Link href="/">
-          <span className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors cursor-pointer mb-6">
+          <span className="inline-flex items-center gap-2 text-sm font-semibold text-primary dark:text-primary hover:text-primary dark:hover:text-primary/70 transition-colors cursor-pointer mb-6">
             <ArrowLeft className="w-4 h-4" /> Back to Home
           </span>
         </Link>
@@ -87,7 +87,7 @@ export default function TermsOfService() {
               You may delete your account at any time through the app's "Delete Account" feature or by contacting us. We reserve the right to 
               suspend or terminate your account if we reasonably believe you have violated these Terms. Upon termination, your right to use the 
               Service will immediately cease, and your data will be handled in accordance with our{" "}
-              <Link href="/privacy"><span className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer">Privacy Policy</span></Link>.
+              <Link href="/privacy"><span className="text-primary dark:text-primary font-bold hover:underline cursor-pointer">Privacy Policy</span></Link>.
             </p>
 
             <h3 className="text-xl font-bold text-slate-900 dark:text-white mt-8 mb-4">8. Disclaimers</h3>
@@ -107,7 +107,7 @@ export default function TermsOfService() {
             <h3 className="text-xl font-bold text-slate-900 dark:text-white mt-8 mb-4">10. Privacy</h3>
             <p>
               Your use of the Service is also governed by our{" "}
-              <Link href="/privacy"><span className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer">Privacy Policy</span></Link>, 
+              <Link href="/privacy"><span className="text-primary dark:text-primary font-bold hover:underline cursor-pointer">Privacy Policy</span></Link>, 
               which is incorporated into these Terms by reference.
             </p>
 
@@ -129,7 +129,7 @@ export default function TermsOfService() {
               <br /><br />
               <strong>IISc Badminton Club</strong><br />
               Indian Institute of Science, Bangalore 560012<br />
-              Email: <a href="mailto:iiscbadmintonclub@gmail.com" className="text-emerald-600 dark:text-emerald-400 hover:underline">iiscbadmintonclub@gmail.com</a>
+              Email: <a href="mailto:iiscbadmintonclub@gmail.com" className="text-primary dark:text-primary hover:underline">iiscbadmintonclub@gmail.com</a>
             </p>
           </div>
         </div>

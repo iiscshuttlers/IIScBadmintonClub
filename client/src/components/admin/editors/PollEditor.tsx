@@ -105,7 +105,7 @@ export function PollEditor({
                     onClick={() => updatePoll(i, { is_active: !poll.is_active })}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
                       poll.is_active
-                        ? "bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-800"
+                        ? "bg-primary/10 text-primary border border-primary/40 dark:bg-primary/30 dark:border-primary/80"
                         : "bg-rose-50 text-rose-600 border border-rose-200 dark:bg-rose-900/30 dark:border-rose-800"
                     }`}
                   >

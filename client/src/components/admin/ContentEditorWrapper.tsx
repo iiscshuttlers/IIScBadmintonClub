@@ -49,7 +49,7 @@ export function ContentEditorWrapper<T>({
   if (isLoading || data === null) {
     return (
       <div className="py-20 flex justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -89,7 +89,7 @@ export function ContentEditorWrapper<T>({
               <button
                 onClick={() => setShowConfirm(true)}
                 disabled={isSaving}
-                className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition disabled:opacity-50 shadow-md w-full sm:w-auto min-w-[140px]"
+                className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-primary text-white text-sm font-bold transition disabled:opacity-50 shadow-md w-full sm:w-auto min-w-[140px]"
               >
                 {isSaving ? (
                   <Loader2 className="w-4 h-4 animate-spin shrink-0" />
@@ -119,7 +119,7 @@ export function ContentEditorWrapper<T>({
             >
               <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50 shrink-0">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2 capitalize">
-                  <Save className="w-5 h-5 text-emerald-500" /> Review Changes: {editorName}
+                  <Save className="w-5 h-5 text-primary" /> Review Changes: {editorName}
                 </h2>
                 <button
                   onClick={() => setShowConfirm(false)}
@@ -142,10 +142,10 @@ export function ContentEditorWrapper<T>({
                     </div>
                   </div>
                   <div className="flex flex-col">
-                    <div className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 font-bold px-3 py-2 rounded-t-lg border-b border-emerald-200 dark:border-emerald-800/50">
+                    <div className="bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary/70 font-bold px-3 py-2 rounded-t-lg border-b border-primary/40 dark:border-primary/50">
                       Your New Changes
                     </div>
-                    <div className="bg-emerald-50/50 dark:bg-emerald-950/20 p-4 rounded-b-lg text-slate-700 dark:text-slate-300 whitespace-pre overflow-x-auto border border-emerald-100 dark:border-emerald-900/30 border-t-0 h-[400px] overflow-y-auto shadow-inner">
+                    <div className="bg-primary/10/50 dark:bg-primary/20 p-4 rounded-b-lg text-slate-700 dark:text-slate-300 whitespace-pre overflow-x-auto border border-primary/30 dark:border-primary/30 border-t-0 h-[400px] overflow-y-auto shadow-inner">
                       {JSON.stringify(data, null, 2)}
                     </div>
                   </div>
@@ -161,7 +161,7 @@ export function ContentEditorWrapper<T>({
                 <button
                   onClick={handleSaveClick}
                   disabled={isSaving}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 sm:py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-500/20 transition disabled:opacity-50"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 sm:py-2.5 rounded-xl bg-primary hover:bg-primary text-white font-bold shadow-lg shadow-primary/20 transition disabled:opacity-50"
                 >
                   {isSaving ? (
                     <Loader2 className="w-5 h-5 animate-spin shrink-0" />

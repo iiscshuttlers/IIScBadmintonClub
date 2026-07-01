@@ -41,7 +41,7 @@ export function ConfigEditor({
       {/* Stats */}
       <div className={cardCls}>
         <h3 className="text-lg font-black text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-          <Activity className="w-5 h-5 text-emerald-500" /> Global Stats (Home &
+          <Activity className="w-5 h-5 text-primary" /> Global Stats (Home &
           About)
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

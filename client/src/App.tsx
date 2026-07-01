@@ -39,8 +39,7 @@ import { PageErrorFallback } from "./components/layout/PageErrorFallback";
 import { BackToTop } from "./components/layout/BackToTop";
 import { ScrollProgress } from "./components/layout/ScrollProgress";
 import { ScrollToTop } from "./components/layout/ScrollToTop";
-
-
+import { AppModeProvider, useAppMode } from "./contexts/AppModeContext";
 
 // NotFound is eagerly loaded (tiny, always needed as fallback)
 import NotFound from "./pages/NotFound";
@@ -71,7 +70,28 @@ const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const Marketplace = lazy(() => import("./pages/Marketplace"));
 const TournamentAdmin = lazy(() => import("./pages/TournamentAdmin"));
 
+// Personal Mode Pages (Brainy-style navigation)
+const PersonalHomePage = lazy(() => import("./pages/personal/PersonalHomePage"));
+const PersonalTrainPage = lazy(() => import("./pages/personal/PersonalTrainPage"));
+const PersonalGrowthPage = lazy(() => import("./pages/personal/PersonalGrowthPage"));
+const PersonalStatsPage = lazy(() => import("./pages/personal/PersonalStatsPage"));
+const PersonalCirclePage = lazy(() => import("./pages/personal/PersonalCirclePage"));
+const PersonalProfilePage = lazy(() => import("./pages/personal/PersonalProfilePage"));
 
+function PersonalModeRoute({ children }: { children: React.ReactNode }) {
+  const { session, isInitializing } = useAuth();
+  const [, setLocation] = useLocation();
+
+  if (isInitializing) return <PageSkeleton />;
+
+  if (!session) {
+    // Redirect to login
+    setLocation("/join");
+    return null;
+  }
+
+  return <>{children}</>;
+}
 
 function AppRoutes() {
   return (
@@ -118,11 +138,19 @@ function AppRoutes() {
           <Route path="/admin"><ProtectedRoute><SiteAdmin /></ProtectedRoute></Route>
           <Route path="/tournament-admin"><ProtectedRoute><TournamentAdmin /></ProtectedRoute></Route>
           <Route path="/profile/setup"><ProtectedRoute><ProfileSetup /></ProtectedRoute></Route>
-          <Route path="/players"><ProtectedRoute><PlayersDirectory /></ProtectedRoute></Route>
+          <Route path="/players" component={PlayersDirectory} />
           <Route path="/player/:id/edit"><ProtectedRoute><ProfileSetup /></ProtectedRoute></Route>
           <Route path="/profile/password"><ProtectedRoute><ChangePassword /></ProtectedRoute></Route>
           <Route path="/find-lost"><ProtectedRoute><Marketplace /></ProtectedRoute></Route>
           <Route path="/delete-account"><ProtectedRoute><DeleteAccount /></ProtectedRoute></Route>
+
+          {/* Personal Mode Routes (Brainy-style navigation) */}
+          <Route path="/personal"><PersonalModeRoute><PersonalHomePage /></PersonalModeRoute></Route>
+          <Route path="/personal/train"><PersonalModeRoute><PersonalTrainPage /></PersonalModeRoute></Route>
+          <Route path="/personal/growth"><PersonalModeRoute><PersonalGrowthPage /></PersonalModeRoute></Route>
+          <Route path="/personal/stats"><PersonalModeRoute><PersonalStatsPage /></PersonalModeRoute></Route>
+          <Route path="/personal/circle"><PersonalModeRoute><PersonalCirclePage /></PersonalModeRoute></Route>
+          <Route path="/personal/me"><PersonalModeRoute><PersonalProfilePage /></PersonalModeRoute></Route>
 
           <Route path="/404" component={NotFound} />
           <Route component={NotFound} />
@@ -173,8 +201,9 @@ function AppContent() {
   const { updateInfo, isDialogOpen, dismissUpdate } = useAppUpdate();
   const [isLogMatchOpen, setIsLogMatchOpen] = useState(false);
   const [defaultOpponentId, setDefaultOpponentId] = useState<string | undefined>(undefined);
-  const { profile } = useAuth();
+  const { profile, session } = useAuth();
   const [, setLocation] = useLocation();
+  const { mode } = useAppMode();
 
   useInactivityLogout();
   useNativeBackButton();
@@ -248,11 +277,11 @@ function AppContent() {
             >
               <ScrollToTop />
               <ScrollProgress />
-              <div className="flex flex-col min-h-screen">
+              <div className={`flex flex-col min-h-screen ${session && mode === "personal" ? "lg:ml-64" : ""}`}>
                 {/* Skip-to-content for keyboard / screen-reader users */}
                 <a
                   href="#main-content"
-                  className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-emerald-600 focus:text-white focus:rounded-xl focus:font-bold focus:shadow-lg"
+                  className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-xl focus:font-bold focus:shadow-lg"
                 >
                   Skip to content
                 </a>
@@ -260,7 +289,7 @@ function AppContent() {
                 <PwaInstallPrompt />
                 <Navigation />
                 <StatusBanner />
-                <main id="main-content" className="flex-1 flex flex-col pb-20 lg:pb-0">
+                <main id="main-content" className={`flex-1 flex flex-col ${mode === "club" ? "pb-20 lg:pb-0" : ""}`}>
                   <AppRoutes />
                 </main>
                 <Footer />
@@ -307,7 +336,9 @@ function App() {
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <AppUpdateProvider>
-              <AppContent />
+              <AppModeProvider>
+                <AppContent />
+              </AppModeProvider>
             </AppUpdateProvider>
           </AuthProvider>
           {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}

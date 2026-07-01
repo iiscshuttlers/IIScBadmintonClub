@@ -69,7 +69,7 @@ export function MatchHistorySection({
     const g = gender?.toLowerCase() || '';
     if (g === 'female') return 'text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300';
     if (g === 'male') return 'text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300';
-    return 'text-slate-800 dark:text-slate-100 hover:text-emerald-600 dark:hover:text-emerald-400';
+    return 'text-slate-800 dark:text-slate-100 hover:text-primary dark:hover:text-primary';
   };
 
   const filteredMatches =
@@ -152,7 +152,7 @@ export function MatchHistorySection({
                     </div>
                     <div className="w-px h-10 bg-slate-200 dark:bg-slate-700 mx-4" />
                     <div className="text-center flex-1">
-                      <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400">
+                      <div className="text-3xl font-black text-primary dark:text-primary">
                         {h2hLosses}
                       </div>
                       <div className="text-[10px] font-bold text-slate-400 uppercase mt-1">
@@ -171,7 +171,7 @@ export function MatchHistorySection({
                       style={{
                         width: `${(h2hLosses / h2hMatches.length) * 100}%`,
                       }}
-                      className="bg-emerald-500 transition-all duration-1000"
+                      className="bg-primary transition-all duration-1000"
                     />
                   </div>
                 </div>
@@ -189,7 +189,7 @@ export function MatchHistorySection({
                           ? tab === "tournament"
                             ? "bg-amber-50 dark:bg-amber-900/30 border-amber-400 text-amber-700 dark:text-amber-400"
                             : tab === "friendly"
-                              ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-400 text-emerald-700 dark:text-emerald-400"
+                              ? "bg-primary/10 dark:bg-primary/30 border-primary text-primary dark:text-primary"
                               : "bg-blue-50 dark:bg-blue-900/30 border-blue-400 text-blue-700 dark:text-blue-400"
                           : "border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
                       }`}
@@ -324,7 +324,7 @@ export function MatchHistorySection({
                                 {handleResendRequest && (
                                   <button
                                     onClick={() => handleResendRequest(m)}
-                                    className="flex-1 sm:flex-none text-xs font-bold px-3 py-1.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:hover:bg-emerald-800/40 text-emerald-700 dark:text-emerald-400 transition-colors border border-emerald-200 dark:border-emerald-800/50"
+                                    className="flex-1 sm:flex-none text-xs font-bold px-3 py-1.5 rounded-lg bg-primary/15 hover:bg-primary/20 dark:bg-primary/30 dark:hover:bg-primary/40 text-primary dark:text-primary transition-colors border border-primary/40 dark:border-primary/50"
                                   >
                                     Resend Request
                                   </button>
@@ -337,7 +337,7 @@ export function MatchHistorySection({
                                 <>
                                   <button
                                     onClick={() => handleConfirmMatch(m.id)}
-                                    className="flex-1 sm:flex-none text-xs font-bold px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white transition-colors"
+                                    className="flex-1 sm:flex-none text-xs font-bold px-3 py-1.5 rounded-lg bg-primary hover:bg-primary text-white transition-colors"
                                   >
                                     Confirm
                                   </button>
@@ -426,7 +426,7 @@ export function MatchHistorySection({
                       }
 
                       const scoreBg = won 
-                        ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/40" 
+                        ? "bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary border-primary/40 dark:border-primary/80/40" 
                         : "bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800/40";
 
                       return (
@@ -440,7 +440,7 @@ export function MatchHistorySection({
                               className={`w-10 h-10 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center font-black text-sm shadow-md
                             ${
                               won
-                                ? "bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-emerald-500/30"
+                                ? "bg-gradient-to-br from-primary to-primary text-white shadow-primary/30"
                                 : "bg-gradient-to-br from-rose-400 to-rose-600 text-white shadow-rose-500/30"
                             }`}
                             >
@@ -453,7 +453,7 @@ export function MatchHistorySection({
                             <span
                               className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${
                                 isFriendly
-                                  ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/30"
+                                  ? "bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary border border-primary/40 dark:border-primary/80/30"
                                   : "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/30"
                               }`}
                             >
@@ -535,7 +535,7 @@ export function MatchHistorySection({
                                 e.stopPropagation();
                                 await shareMatch(m);
                               }}
-                              className="p-1.5 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/20 rounded-lg transition-colors"
+                              className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/20 rounded-lg transition-colors"
                               title="Share Match Result"
                             >
                               <Share2 className="w-4 h-4" />

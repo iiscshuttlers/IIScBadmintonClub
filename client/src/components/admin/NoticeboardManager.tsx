@@ -46,7 +46,7 @@ export function NoticeboardManager({
               onClick={() => setActiveTab(t.id)}
               className={`flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 px-2 sm:px-5 py-2 rounded-xl text-[11px] sm:text-sm font-bold whitespace-nowrap transition-all ${
                 active
-                  ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 shadow-sm"
+                  ? "bg-primary/10 dark:bg-primary/40 text-primary dark:text-primary shadow-sm"
                   : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
               }`}
             >

@@ -52,7 +52,7 @@ const MILESTONES = [
     .map((t, i) => {
       const colors = [
         "border-amber-400",
-        "border-emerald-500",
+        "border-primary",
         "border-blue-500",
         "border-purple-500",
         "border-orange-400",
@@ -101,8 +101,8 @@ function EventSkeleton() {
 
 function NoUpcomingEvents() {
   return (
-    <div className="rounded-3xl border-2 border-dashed border-emerald-200 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-950/10 p-14 text-center">
-      <Calendar className="w-12 h-12 text-emerald-400 mx-auto mb-4" />
+    <div className="rounded-3xl border-2 border-dashed border-primary/40 dark:border-primary/50 bg-primary/10 dark:bg-primary/10 p-14 text-center">
+      <Calendar className="w-12 h-12 text-primary mx-auto mb-4" />
       <h3 className="text-xl font-bold text-blue-900 dark:text-white mb-2">
         No upcoming tournaments
       </h3>
@@ -139,11 +139,11 @@ function UpcomingCountdown({ event }: { event: any }) {
   if (!time) return null;
 
   return (
-    <div className="rounded-3xl bg-gradient-to-br from-blue-950 to-emerald-950 text-white p-8 mb-8 shadow-2xl relative overflow-hidden">
+    <div className="rounded-3xl bg-gradient-to-br from-blue-950 to-primary/90 text-white p-8 mb-8 shadow-2xl relative overflow-hidden">
       <div className="absolute inset-0 hero-pattern" />
       <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-6">
         <div className="flex-1">
-          <div className="flex items-center gap-2 text-emerald-400 font-black text-xs uppercase tracking-widest mb-2">
+          <div className="flex items-center gap-2 text-primary font-black text-xs uppercase tracking-widest mb-2">
             <Clock className="w-4 h-4" />
             Next Tournament
           </div>
@@ -164,7 +164,7 @@ function UpcomingCountdown({ event }: { event: any }) {
               <div className="text-3xl font-black tabular-nums">
                 {String(val).padStart(2, "0")}
               </div>
-              <div className="text-xs text-emerald-300 font-bold mt-1">
+              <div className="text-xs text-primary/70 font-bold mt-1">
                 {label}
               </div>
             </div>
@@ -240,10 +240,10 @@ export default function Events() {
     const isUpcoming = item.status === "draft";
 
     const cardContent = (
-      <Card className="rounded-3xl border border-emerald-100 dark:border-slate-700 shadow-md bg-white dark:bg-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer h-full overflow-hidden">
+      <Card className="rounded-3xl border border-primary/30 dark:border-slate-700 shadow-md bg-white dark:bg-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer h-full overflow-hidden">
         {/* Top accent strip based on status */}
         <div
-          className={`h-1 w-full ${liveMode ? "bg-gradient-to-r from-red-500 to-orange-500 animate-pulse" : isUpcoming ? "bg-gradient-to-r from-emerald-500 to-teal-500" : "bg-gradient-to-r from-slate-300 to-slate-400"}`}
+          className={`h-1 w-full ${liveMode ? "bg-gradient-to-r from-red-500 to-orange-500 animate-pulse" : isUpcoming ? "bg-gradient-to-r from-primary to-teal-500" : "bg-gradient-to-r from-slate-300 to-slate-400"}`}
         />
         <CardContent className="p-8 space-y-5">
           <div className="flex flex-wrap items-center gap-3">
@@ -265,7 +265,7 @@ export default function Events() {
             <span
               className={`px-3 py-1 rounded-full text-xs font-semibold ${
                 item.type === "open"
-                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                  ? "bg-primary/15 text-primary dark:bg-primary/40 dark:text-primary"
                   : item.type === "team"
                     ? "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400"
                     : "bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400"
@@ -332,7 +332,7 @@ export default function Events() {
             </div>
           )}
 
-          <div className="flex items-center gap-2 pt-1 font-bold text-emerald-600 dark:text-emerald-400 text-sm">
+          <div className="flex items-center gap-2 pt-1 font-bold text-primary dark:text-primary text-sm">
             {isUpcoming
               ? "View details"
               : item.status === "active"
@@ -356,7 +356,7 @@ export default function Events() {
         <a 
           href={cardLink} 
           key={item.id}
-          className="block h-full group focus:outline-none focus:ring-4 focus:ring-emerald-500/20 rounded-3xl transition-all"
+          className="block h-full group focus:outline-none focus:ring-4 focus:ring-primary/20 rounded-3xl transition-all"
         >
           {cardContent}
         </a>
@@ -367,7 +367,7 @@ export default function Events() {
       <Link 
         href={cardLink} 
         key={item.id}
-        className="block h-full group focus:outline-none focus:ring-4 focus:ring-emerald-500/20 rounded-3xl transition-all"
+        className="block h-full group focus:outline-none focus:ring-4 focus:ring-primary/20 rounded-3xl transition-all"
       >
         {cardContent}
       </Link>
@@ -376,11 +376,11 @@ export default function Events() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 lg:pb-8">
-      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-emerald-950 text-white py-24 relative overflow-hidden">
+      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-primary/90 text-white py-24 relative overflow-hidden">
         <div className="absolute inset-0 hero-pattern" />
         <div className="container mx-auto px-4 text-center relative z-10">
           <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 px-4 py-2 rounded-full text-sm font-semibold mb-5">
-            <Calendar className="w-4 h-4 text-emerald-400" />
+            <Calendar className="w-4 h-4 text-primary" />
             Tournaments & Events
             <InfoModal
               title="EVENTS & CHAMPIONSHIPS"
@@ -388,7 +388,7 @@ export default function Events() {
                 { badge: "LIVE", title: "Live Tournaments", desc: "View real-time brackets, fixtures, and results during active championships." },
                 { badge: "ARCHIVE", title: "Hall of Fame", desc: "Look back at the history of previous tournaments and our champions." }
               ]}
-              triggerClassName="text-white hover:text-emerald-200"
+              triggerClassName="text-white hover:text-primary/30"
             />
           </div>
           <h1
@@ -476,7 +476,7 @@ export default function Events() {
 
             <div className="max-w-3xl mx-auto">
               <div className="relative">
-                <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-emerald-500 via-blue-500 to-purple-500 opacity-30" />
+                <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-blue-500 to-purple-500 opacity-30" />
                 <div className="space-y-8">
                   {[
                     ...events,
@@ -485,7 +485,7 @@ export default function Events() {
                     .map((t, i) => {
                       const colors = [
                         "border-amber-400",
-                        "border-emerald-500",
+                        "border-primary",
                         "border-blue-500",
                         "border-purple-500",
                         "border-orange-400",
@@ -516,7 +516,7 @@ export default function Events() {
                     .map((m, i) => {
                       const cardBody = (
                         <div
-                          className={`flex-1 rounded-2xl p-5 hover:-translate-y-1 transition-all ${m.live ? "bg-red-50 dark:bg-red-950/20 border-2 border-red-300 dark:border-red-800" : m.upcoming ? "bg-emerald-50 dark:bg-emerald-950/20 border-2 border-emerald-300 dark:border-emerald-800" : "bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 hover:shadow-md cursor-pointer"}`}
+                          className={`flex-1 rounded-2xl p-5 hover:-translate-y-1 transition-all ${m.live ? "bg-red-50 dark:bg-red-950/20 border-2 border-red-300 dark:border-red-800" : m.upcoming ? "bg-primary/10 dark:bg-primary/20 border-2 border-primary/50 dark:border-primary/80" : "bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 hover:shadow-md cursor-pointer"}`}
                         >
                           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                             <span className="text-xs font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest">
@@ -528,7 +528,7 @@ export default function Events() {
                                 LIVE
                               </span>
                             ) : m.upcoming ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-wider">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/15 text-primary dark:bg-primary/40 dark:text-primary text-[10px] font-bold uppercase tracking-wider">
                                 Upcoming
                               </span>
                             ) : (
@@ -538,14 +538,14 @@ export default function Events() {
                             )}
                           </div>
                           <h3
-                            className={`font-black text-base mb-1 ${m.live ? "text-red-800 dark:text-red-300" : m.upcoming ? "text-emerald-800 dark:text-emerald-300" : "text-blue-900 dark:text-white"}`}
+                            className={`font-black text-base mb-1 ${m.live ? "text-red-800 dark:text-red-300" : m.upcoming ? "text-primary dark:text-primary/70" : "text-blue-900 dark:text-white"}`}
                           >
                             {m.title}
                           </h3>
                           <p className="text-gray-600 dark:text-slate-400 text-sm leading-relaxed">
                             {m.desc}
                           </p>
-                          <div className={`flex items-center gap-2 mt-3 font-bold text-xs ${m.live ? "text-red-600 dark:text-red-400" : m.upcoming ? "text-emerald-600 dark:text-emerald-400" : "text-blue-600 dark:text-blue-400"}`}>
+                          <div className={`flex items-center gap-2 mt-3 font-bold text-xs ${m.live ? "text-red-600 dark:text-red-400" : m.upcoming ? "text-primary dark:text-primary" : "text-blue-600 dark:text-blue-400"}`}>
                             {m.upcoming
                               ? "View details"
                               : m.live
@@ -566,7 +566,7 @@ export default function Events() {
                           className="flex gap-5 relative group"
                         >
                           <div
-                            className={`flex-shrink-0 w-12 h-12 rounded-2xl ${m.live ? "bg-red-50 dark:bg-red-950/30" : m.upcoming ? "bg-emerald-50 dark:bg-emerald-950/30" : "bg-white dark:bg-slate-800"} border-2 ${m.color} flex items-center justify-center text-xl shadow-sm z-10`}
+                            className={`flex-shrink-0 w-12 h-12 rounded-2xl ${m.live ? "bg-red-50 dark:bg-red-950/30" : m.upcoming ? "bg-primary/10 dark:bg-primary/30" : "bg-white dark:bg-slate-800"} border-2 ${m.color} flex items-center justify-center text-xl shadow-sm z-10`}
                           >
                             <m.icon className="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:scale-110 transition-transform" />
                           </div>

@@ -116,7 +116,7 @@ export function AnnouncementsSection() {
     {
       id: "tournament",
       label: "Tournament",
-      color: "bg-emerald-100 text-emerald-800",
+      color: "bg-primary/15 text-primary",
       icon: "🏆",
     },
     {
@@ -188,7 +188,7 @@ export function AnnouncementsSection() {
   }
 
   function getStatusColor(status: string) {
-    if (status === "upcoming") return "bg-emerald-100 text-emerald-700";
+    if (status === "upcoming") return "bg-primary/15 text-primary";
     if (status === "ongoing") return "bg-blue-100 text-blue-700";
     if (status === "past") return "bg-gray-100 text-gray-600";
     return "bg-gray-100 text-gray-600";
@@ -257,7 +257,7 @@ export function AnnouncementsSection() {
                                   href={item.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="hover:text-emerald-600 dark:hover:text-emerald-400 transition flex items-center gap-2"
+                                  className="hover:text-primary dark:hover:text-primary transition flex items-center gap-2"
                                 >
                                   {item.title}
                                   <svg className="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
@@ -270,7 +270,7 @@ export function AnnouncementsSection() {
                             <div className="flex flex-wrap gap-2 text-sm text-gray-600 mt-3">
                               {item.date && (
                                 <div className="flex items-center gap-1.5">
-                                  <Calendar className="w-4 h-4 text-emerald-500" />
+                                  <Calendar className="w-4 h-4 text-primary" />
                                   <span className="text-gray-500 dark:text-slate-400 text-sm">
                                     Published: {item.date}
                                   </span>
@@ -331,7 +331,7 @@ export function AnnouncementsSection() {
                       onClick={() => setSelectedCategory(cat.id)}
                       className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
                         selectedCategory === cat.id
-                          ? "bg-emerald-500 text-white shadow-md shadow-emerald-200 dark:shadow-emerald-900/40 scale-105"
+                          ? "bg-primary text-white shadow-md shadow-primary/20 dark:shadow-primary/50/40 scale-105"
                           : `${cat.color} hover:shadow-sm dark:bg-slate-800 dark:text-slate-300`
                       }`}
                     >
@@ -346,12 +346,12 @@ export function AnnouncementsSection() {
             <section className="py-14 dark:bg-slate-950">
               <div className="container mx-auto px-4">
                 <div className="flex items-center gap-3 mb-8">
-                  <div className="w-2 h-8 bg-gradient-to-b from-emerald-500 to-teal-600 rounded-full" />
+                  <div className="w-2 h-8 bg-gradient-to-b from-primary to-teal-600 rounded-full" />
                   <h2
                     className="text-2xl font-black text-blue-900 dark:text-white flex items-center gap-2"
                     style={{ fontFamily: "Playfair Display, serif" }}
                   >
-                    <Bell className="w-6 h-6 text-emerald-500" />
+                    <Bell className="w-6 h-6 text-primary" />
                     Recent Updates
                   </h2>
                 </div>
@@ -376,7 +376,7 @@ export function AnnouncementsSection() {
                           <div
                             className={`h-0.5 w-full ${
                               status === "upcoming"
-                                ? "bg-emerald-400"
+                                ? "bg-primary"
                                 : status === "ongoing"
                                   ? "bg-blue-400"
                                   : "bg-gray-200 dark:bg-slate-600"
@@ -389,7 +389,7 @@ export function AnnouncementsSection() {
                                   href={item.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="hover:text-emerald-600 dark:hover:text-emerald-400 transition flex items-center gap-2"
+                                  className="hover:text-primary dark:hover:text-primary transition flex items-center gap-2"
                                 >
                                   {item.title}
                                   <svg className="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
@@ -402,7 +402,7 @@ export function AnnouncementsSection() {
                             <div className="flex flex-wrap gap-2 text-sm text-gray-600 mt-2">
                               {item.date && (
                                 <div className="flex items-center gap-1.5">
-                                  <Calendar className="w-3.5 h-3.5 text-emerald-500" />
+                                  <Calendar className="w-3.5 h-3.5 text-primary" />
                                   <span className="text-gray-500 dark:text-slate-400 text-xs">
                                     Published: {item.date}
                                   </span>
@@ -453,7 +453,7 @@ export function AnnouncementsSection() {
                   
                   {visibleCount < filteredRecent.length && (
                     <div ref={observerRef} className="h-20 w-full flex items-center justify-center mt-6">
-                      <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                      <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                     </div>
                   )}
                   </>
@@ -462,7 +462,7 @@ export function AnnouncementsSection() {
             </section>
 
             {/* Stay Informed */}
-            <section className="py-14 bg-gradient-to-br from-blue-50 to-emerald-50 dark:from-slate-900 dark:to-slate-800">
+            <section className="py-14 bg-gradient-to-br from-blue-50 to-primary/5 dark:from-slate-900 dark:to-slate-800">
               <div className="container mx-auto px-4">
                 <div className="max-w-4xl mx-auto">
                   <SocialCTA />

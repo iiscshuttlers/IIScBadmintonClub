@@ -55,7 +55,7 @@ export function CourtVisual({
 
   const nameColor = (side: "left" | "right", pIdx: 0 | 1) => {
     const sideIsServer = side === "left" ? leftIsServer : !leftIsServer;
-    if (sideIsServer && serverPlayerIndex === pIdx) return "text-emerald-400";
+    if (sideIsServer && serverPlayerIndex === pIdx) return "text-primary";
     if (!sideIsServer && (!isDoubles || pIdx === activeReceiverIndex)) return "text-amber-400/80";
     return "text-slate-500";
   };
@@ -110,7 +110,7 @@ export function CourtVisual({
             onClick={onSwitchServer && leftIsServer ? onSwitchServer : undefined}
           >
             {leftP1Name || "T1"}
-            {leftIsServer && serverPlayerIndex === 0 && <span className="block text-[7px] text-emerald-500">SERVER</span>}
+            {leftIsServer && serverPlayerIndex === 0 && <span className="block text-[7px] text-primary">SERVER</span>}
             {!leftIsServer && (!isDoubles || activeReceiverIndex === 0) && <span className="block text-[7px] text-amber-500">RECEIVER</span>}
           </div>
           {isDoubles && leftP2Name && (
@@ -120,7 +120,7 @@ export function CourtVisual({
               onClick={onSwitchServer && leftIsServer ? onSwitchServer : undefined}
             >
               {leftP2Name}
-              {leftIsServer && serverPlayerIndex === 1 && <span className="block text-[7px] text-emerald-500">SERVER</span>}
+              {leftIsServer && serverPlayerIndex === 1 && <span className="block text-[7px] text-primary">SERVER</span>}
               {!leftIsServer && activeReceiverIndex === 1 && <span className="block text-[7px] text-amber-500">RECEIVER</span>}
             </div>
           )}
@@ -133,7 +133,7 @@ export function CourtVisual({
             onClick={onSwitchServer && !leftIsServer ? onSwitchServer : undefined}
           >
             {rightP1Name || "T2"}
-            {!leftIsServer && serverPlayerIndex === 0 && <span className="block text-[7px] text-emerald-500">SERVER</span>}
+            {!leftIsServer && serverPlayerIndex === 0 && <span className="block text-[7px] text-primary">SERVER</span>}
             {leftIsServer && (!isDoubles || activeReceiverIndex === 0) && <span className="block text-[7px] text-amber-500">RECEIVER</span>}
           </div>
           {isDoubles && rightP2Name && (
@@ -143,7 +143,7 @@ export function CourtVisual({
               onClick={onSwitchServer && !leftIsServer ? onSwitchServer : undefined}
             >
               {rightP2Name}
-              {!leftIsServer && serverPlayerIndex === 1 && <span className="block text-[7px] text-emerald-500">SERVER</span>}
+              {!leftIsServer && serverPlayerIndex === 1 && <span className="block text-[7px] text-primary">SERVER</span>}
               {leftIsServer && activeReceiverIndex === 1 && <span className="block text-[7px] text-amber-500">RECEIVER</span>}
             </div>
           )}
@@ -154,4 +154,4 @@ export function CourtVisual({
     </div>
   );
 }
-
+

@@ -188,7 +188,7 @@ export default function Marketplace() {
             }} 
             className={`px-5 py-2 rounded-xl font-black text-sm transition-all ${
               activeTab === "marketplace" 
-                ? "bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm" 
+                ? "bg-white dark:bg-slate-800 text-primary dark:text-primary shadow-sm" 
                 : "text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800/80"
             }`}
           >
@@ -216,8 +216,8 @@ export default function Marketplace() {
           <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-14 z-30 shadow-sm">
             <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                  <Store className="w-5 h-5 text-emerald-500" />
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Store className="w-5 h-5 text-primary" />
                 </div>
                 <h1 className="text-lg font-black text-slate-800 dark:text-white tracking-tight">Marketplace</h1>
                 <InfoModal
@@ -231,7 +231,7 @@ export default function Marketplace() {
               </div>
               <button 
                 onClick={() => setIsCreateModalOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-bold shadow-sm shadow-emerald-500/20 transition-all active:scale-95"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary text-white rounded-lg text-sm font-bold shadow-sm shadow-primary/20 transition-all active:scale-95"
               >
                 <Plus className="w-4 h-4" /> Create Listing
               </button>
@@ -250,7 +250,7 @@ export default function Marketplace() {
                   </button>
                   <button
                     onClick={() => setTypeFilter('sell')}
-                    className={`px-3 py-1 text-xs font-black rounded-full transition-all ${typeFilter === 'sell' ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                    className={`px-3 py-1 text-xs font-black rounded-full transition-all ${typeFilter === 'sell' ? 'bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                   >
                     Selling
                   </button>
@@ -359,7 +359,7 @@ export default function Marketplace() {
                       <h3 className="font-bold text-slate-800 dark:text-white leading-tight line-clamp-2 text-lg">
                         {item.title}
                       </h3>
-                      <div className="font-black text-emerald-600 dark:text-emerald-400 text-lg whitespace-nowrap">
+                      <div className="font-black text-primary dark:text-primary text-lg whitespace-nowrap">
                         {item.listing_type === 'buy' 
                           ? (item.price === 0 ? "Open Budget" : `Max ₹${item.price}`) 
                           : (item.price === 0 ? "Giveaway" : `₹${item.price}`)}
@@ -450,7 +450,7 @@ export default function Marketplace() {
                               {item.status !== 'sold' && (
                                 <button
                                   onClick={() => markAsSold(item.id)}
-                                  className="w-full flex items-center gap-2 px-4 py-3 text-sm font-bold text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition"
+                                  className="w-full flex items-center gap-2 px-4 py-3 text-sm font-bold text-primary hover:bg-primary/10 dark:hover:bg-primary/80/20 transition"
                                 >
                                   <CheckCircle2 className="w-4 h-4" /> Mark as Sold
                                 </button>

@@ -53,7 +53,7 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
       <DialogContent className="sm:max-w-md bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full rounded-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-slate-800 dark:text-white font-black text-xl">
-            <Package className={`w-5 h-5 ${listingType === 'sell' ? 'text-emerald-500' : 'text-indigo-500'}`} />
+            <Package className={`w-5 h-5 ${listingType === 'sell' ? 'text-primary' : 'text-indigo-500'}`} />
             {listingType === 'sell' ? 'Sell Equipment' : 'Request Equipment'}
           </DialogTitle>
         </DialogHeader>
@@ -62,7 +62,7 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
           <button
             type="button"
             onClick={() => setListingType('sell')}
-            className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${listingType === 'sell' ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+            className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${listingType === 'sell' ? 'bg-white dark:bg-slate-700 text-primary dark:text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
           >
             Selling an Item
           </button>
@@ -83,7 +83,7 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
             <input 
               {...register("title", { required: true })} 
               placeholder={listingType === 'sell' ? "e.g. Yonex Astrox 99 Pro" : "e.g. Size 9 Yonex Shoes"}
-              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
             {errors.title && <span className="text-xs text-rose-500 mt-1 block">Title is required</span>}
           </div>
@@ -95,7 +95,7 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
                   {listingType === 'sell' ? 'Price (₹)' : 'Max Budget (₹)'}
                 </label>
                 <label className="flex items-center gap-1.5 cursor-pointer">
-                  <input type="checkbox" className={`rounded ${listingType === 'sell' ? 'text-emerald-500 focus:ring-emerald-500' : 'text-indigo-500 focus:ring-indigo-500'} border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800`} onChange={(e) => {
+                  <input type="checkbox" className={`rounded ${listingType === 'sell' ? 'text-primary focus:ring-primary' : 'text-indigo-500 focus:ring-indigo-500'} border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800`} onChange={(e) => {
                     const isFree = e.target.checked;
                     setIsGiveaway(isFree);
                     if (isFree) reset({ ...getValues(), price: 0 });
@@ -112,7 +112,7 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
                   disabled={isGiveaway}
                   {...register("price", { required: !isGiveaway, min: { value: 0, message: "Price cannot be negative" } })} 
                   placeholder={isGiveaway ? "0 (Free)" : "2500"}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-4 py-3 text-slate-800 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:opacity-50"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-4 py-3 text-slate-800 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
                 />
               </div>
               {errors.price && <span className="text-xs text-rose-500 mt-1 block">{(errors.price as any).message || "Invalid price"}</span>}
@@ -123,7 +123,7 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
               </label>
               <select 
                 {...register("condition", { required: true })}
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none"
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none"
               >
                 <option value="New">New</option>
                 <option value="Like New">Like New</option>
@@ -138,7 +138,7 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
               {['Racket', 'Shoes', 'Shuttlecocks', 'Accessories', 'Other'].map(cat => (
                 <label key={cat} className="cursor-pointer">
                   <input type="radio" value={cat} {...register("category", { required: true })} className="peer sr-only" defaultChecked={cat === 'Racket'} />
-                  <div className={`px-4 py-2 rounded-xl text-sm font-bold border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 ${listingType === 'sell' ? 'peer-checked:bg-emerald-500 peer-checked:border-emerald-500' : 'peer-checked:bg-indigo-500 peer-checked:border-indigo-500'} peer-checked:text-white transition-all`}>
+                  <div className={`px-4 py-2 rounded-xl text-sm font-bold border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 ${listingType === 'sell' ? 'peer-checked:bg-primary peer-checked:border-primary' : 'peer-checked:bg-indigo-500 peer-checked:border-indigo-500'} peer-checked:text-white transition-all`}>
                     {cat}
                   </div>
                 </label>
@@ -152,7 +152,7 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
               {...register("description", { required: true })} 
               placeholder="Describe the item (age, any stringing details, exact condition, why selling...)"
               rows={3}
-              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none"
+              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
             />
           </div>
 
@@ -163,7 +163,7 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
               <input 
                 {...register("image_url")} 
                 placeholder="https://example.com/image.jpg"
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-4 py-3 text-slate-800 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-4 py-3 text-slate-800 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
             </div>
           </div>
@@ -171,7 +171,7 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
           <button 
             type="submit" 
             disabled={isSubmitting}
-            className={`w-full mt-4 text-white font-black py-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 ${listingType === 'sell' ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/25' : 'bg-indigo-500 hover:bg-indigo-600 shadow-indigo-500/25'}`}
+            className={`w-full mt-4 text-white font-black py-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 ${listingType === 'sell' ? 'bg-primary hover:bg-primary shadow-primary/25' : 'bg-indigo-500 hover:bg-indigo-600 shadow-indigo-500/25'}`}
           >
             {isSubmitting ? (
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

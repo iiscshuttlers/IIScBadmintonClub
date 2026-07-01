@@ -91,7 +91,9 @@ export default function Feed() {
     categoryFilter,
     setCategoryFilter,
     timeFilter,
-    setTimeFilter
+    setTimeFilter,
+    typeFilter,
+    setTypeFilter
   } = useFeedMatches(ownProfile);
 
   usePullToRefresh();
@@ -123,12 +125,12 @@ export default function Feed() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-safe pb-24 lg:pb-8 font-sans selection:bg-emerald-500/30">
-      <div className="bg-gradient-to-r from-blue-900 via-indigo-950 to-emerald-900 text-white py-12 lg:py-16 relative overflow-hidden shrink-0">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-safe pb-24 lg:pb-8 font-sans selection:bg-primary/30">
+      <div className="bg-gradient-to-r from-blue-900 via-indigo-950 to-primary/80 text-white py-12 lg:py-16 relative overflow-hidden shrink-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(16,185,129,0.15),transparent)] pointer-events-none" />
         <div className="container mx-auto px-4 max-w-3xl relative z-10 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-black uppercase tracking-widest mb-4">
-            <Activity className="w-4 h-4 text-emerald-400" /> Global Feed
+            <Activity className="w-4 h-4 text-primary" /> Global Feed
           </div>
           <h1 className="text-3xl sm:text-5xl font-black mb-4 tracking-tight">
             Activity Feed
@@ -143,7 +145,7 @@ export default function Feed() {
                 href="/feed/activity"
                 onClick={() => handleTabChange("matches")}
                 className={`flex justify-center items-center gap-2 px-4 py-3 md:px-6 md:py-2.5 rounded-xl text-xs md:text-sm font-black transition-all ${activeTab === "matches"
-                  ? "bg-white text-emerald-900 shadow-md"
+                  ? "bg-white text-primary shadow-md"
                   : "bg-white/10 md:bg-transparent text-white/90 md:text-white/80 hover:bg-white/20 md:hover:bg-white/10"
                   }`}
               >
@@ -157,7 +159,7 @@ export default function Feed() {
                   window.dispatchEvent(new Event("announcements-read"));
                 }}
                 className={`flex justify-center items-center gap-2 px-4 py-3 md:px-6 md:py-2.5 rounded-xl text-xs md:text-sm font-black transition-all ${activeTab === "announcements"
-                  ? "bg-white text-emerald-900 shadow-md"
+                  ? "bg-white text-primary shadow-md"
                   : "bg-white/10 md:bg-transparent text-white/90 md:text-white/80 hover:bg-white/20 md:hover:bg-white/10"
                   }`}
               >
@@ -169,7 +171,7 @@ export default function Feed() {
                     href="/feed/my-matches"
                     onClick={() => handleTabChange("my_matches")}
                     className={`flex justify-center items-center gap-2 px-4 py-3 md:px-6 md:py-2.5 rounded-xl text-xs md:text-sm font-black transition-all ${activeTab === "my_matches"
-                      ? "bg-white text-emerald-900 shadow-md"
+                      ? "bg-white text-primary shadow-md"
                       : "bg-white/10 md:bg-transparent text-white/90 md:text-white/80 hover:bg-white/20 md:hover:bg-white/10"
                       }`}
                   >
@@ -179,7 +181,7 @@ export default function Feed() {
                     href="/feed/challenges"
                     onClick={() => handleTabChange("challenges")}
                     className={`flex justify-center items-center gap-2 px-4 py-3 md:px-6 md:py-2.5 rounded-xl text-xs md:text-sm font-black transition-all ${activeTab === "challenges"
-                      ? "bg-white text-emerald-900 shadow-md"
+                      ? "bg-white text-primary shadow-md"
                       : "bg-white/10 md:bg-transparent text-white/90 md:text-white/80 hover:bg-white/20 md:hover:bg-white/10"
                       }`}
                   >
@@ -192,7 +194,7 @@ export default function Feed() {
                   href="/feed/umpire"
                   onClick={() => handleTabChange("umpire")}
                   className={`col-span-full md:col-span-1 flex justify-center items-center gap-2 px-4 py-3 md:px-6 md:py-2.5 rounded-xl text-xs md:text-sm font-black transition-all ${activeTab === "umpire"
-                    ? "bg-white text-emerald-900 shadow-md"
+                    ? "bg-white text-primary shadow-md"
                     : "bg-white/10 md:bg-transparent text-white/90 md:text-white/80 hover:bg-white/20 md:hover:bg-white/10"
                     }`}
                 >
@@ -229,7 +231,7 @@ export default function Feed() {
                 </div>
                 <div className="mb-6 bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden">
                   <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
-                    <BarChart3 className="w-4 h-4 text-emerald-500" /> Court
+                    <BarChart3 className="w-4 h-4 text-primary" /> Court
                     Utilization (Recent)
                     <InfoModal
                       title="COURT UTILIZATION"
@@ -302,7 +304,7 @@ export default function Feed() {
                       <div className="text-base font-bold text-white line-clamp-1">
                         {weeklyRecap.mostActive.name}
                       </div>
-                      <div className="text-sm font-black text-emerald-400">
+                      <div className="text-sm font-black text-primary">
                         {weeklyRecap.mostActive.matches} Matches Played
                       </div>
                     </div>
@@ -347,7 +349,7 @@ export default function Feed() {
                 <button
                   onClick={() => setFeedFilter("global")}
                   className={`shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all ${feedFilter === "global"
-                    ? "bg-emerald-600 text-white shadow-md"
+                    ? "bg-primary text-white shadow-md"
                     : "bg-transparent text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                     }`}
                 >
@@ -380,9 +382,18 @@ export default function Feed() {
               {/* Advanced Filters */}
               <div className="flex items-center gap-2 pl-2 sm:pl-4 sm:border-l sm:border-slate-200 dark:sm:border-slate-700">
                 <select
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value as any)}
+                  className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-lg px-2 py-1.5 outline-none border-none focus:ring-2 focus:ring-primary cursor-pointer hidden sm:block"
+                >
+                  <option value="all">All Matches</option>
+                  <option value="friendly">Friendly</option>
+                  <option value="tournament">Tournament</option>
+                </select>
+                <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value as any)}
-                  className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-lg px-2 py-1.5 outline-none border-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                  className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-lg px-2 py-1.5 outline-none border-none focus:ring-2 focus:ring-primary cursor-pointer"
                 >
                   <option value="all">All Modes</option>
                   <option value="singles">Singles</option>
@@ -392,7 +403,7 @@ export default function Feed() {
                 <select
                   value={timeFilter}
                   onChange={(e) => setTimeFilter(e.target.value as any)}
-                  className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-lg px-2 py-1.5 outline-none border-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                  className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-lg px-2 py-1.5 outline-none border-none focus:ring-2 focus:ring-primary cursor-pointer"
                 >
                   <option value="all">All Time</option>
                   <option value="today">Today</option>
@@ -425,14 +436,15 @@ export default function Feed() {
                 {displayMatches.map((match: any, i: number) => {
                   const p1 = match.player1;
                   const p2 = match.player2;
-                  const isP1Winner = match.winner_id === p1.id;
+                  const isP1Winner = match.winner_id === p1?.id;
 
 
                   // Determine Elo difference before match
                   let upsetDiff = 0;
                   if (
                     match.elo_change_p1 !== undefined &&
-                    match.elo_change_p2 !== undefined
+                    match.elo_change_p2 !== undefined &&
+                    p1 && p2
                   ) {
                     // If the player who had lower ELO won
                     const eloDiff = p1.elo_rating - p2.elo_rating;

@@ -134,7 +134,7 @@ export function TeamsTab() {
                   </div>
 
                   <div className="flex flex-col items-end text-right">
-                    <div className="flex items-center gap-1.5 text-lg font-black text-emerald-600 dark:text-emerald-400">
+                    <div className="flex items-center gap-1.5 text-lg font-black text-primary dark:text-primary">
                       <Trophy className="w-4 h-4" />
                       {team.elo_rating}
                     </div>

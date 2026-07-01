@@ -12,14 +12,14 @@ interface EndorsementsWidgetProps {
 const SKILLS = [
   { id: "Smash", label: "Powerful Smash", icon: <Zap className="w-3.5 h-3.5 text-amber-500" /> },
   { id: "Defense", label: "Iron Defense", icon: <Shield className="w-3.5 h-3.5 text-blue-500" /> },
-  { id: "Agility", label: "Court Coverage", icon: <Target className="w-3.5 h-3.5 text-emerald-500" /> },
+  { id: "Agility", label: "Court Coverage", icon: <Target className="w-3.5 h-3.5 text-primary" /> },
   { id: "Net Play", label: "Net Play", icon: <Swords className="w-3.5 h-3.5 text-rose-500" /> },
   { id: "Stamina", label: "Endless Stamina", icon: <Heart className="w-3.5 h-3.5 text-pink-500" /> },
   { id: "Tactics", label: "Tactical Genius", icon: <Brain className="w-3.5 h-3.5 text-purple-500" /> }
 ];
 
 const BEHAVIORS = [
-  { id: "Fair Play", label: "Fair Play", icon: <Award className="w-3.5 h-3.5 text-emerald-500" /> },
+  { id: "Fair Play", label: "Fair Play", icon: <Award className="w-3.5 h-3.5 text-primary" /> },
   { id: "Great Attitude", label: "Great Attitude", icon: <Star className="w-3.5 h-3.5 text-amber-400" /> },
   { id: "Team Player", label: "Good Partner", icon: <ThumbsUp className="w-3.5 h-3.5 text-blue-400" /> }
 ];
@@ -113,10 +113,10 @@ export function PlayerEndorsementsWidget({ playerId }: EndorsementsWidgetProps) 
           disabled={isOwnProfile}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border
             ${isVoted 
-              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400' 
+              ? 'bg-primary/10 border-primary/30 text-primary dark:text-primary' 
               : count > 0
-                ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-emerald-400'
-                : 'bg-transparent border-dashed border-slate-300 dark:border-slate-700 text-slate-500 hover:border-emerald-400 hover:text-emerald-500'
+                ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-primary'
+                : 'bg-transparent border-dashed border-slate-300 dark:border-slate-700 text-slate-500 hover:border-primary hover:text-primary'
             }
             ${isOwnProfile ? 'cursor-default' : 'cursor-pointer hover:shadow-sm'}
           `}
@@ -124,7 +124,7 @@ export function PlayerEndorsementsWidget({ playerId }: EndorsementsWidgetProps) 
           {item.icon}
           {item.label}
           {count > 0 && (
-            <span className={`ml-1 px-1.5 py-0.5 rounded-md text-[10px] ${isVoted ? 'bg-emerald-500/20' : 'bg-slate-100 dark:bg-slate-700'}`}>
+            <span className={`ml-1 px-1.5 py-0.5 rounded-md text-[10px] ${isVoted ? 'bg-primary/20' : 'bg-slate-100 dark:bg-slate-700'}`}>
               {count}
             </span>
           )}
@@ -143,7 +143,7 @@ export function PlayerEndorsementsWidget({ playerId }: EndorsementsWidgetProps) 
         {isOwnProfile && (visibleSkills.length < SKILLS.length || visibleBehaviors.length < BEHAVIORS.length) && (
           <button 
             onClick={() => setIsExpanded(!isExpanded)}
-            className="text-xs text-emerald-500 hover:underline flex items-center gap-1"
+            className="text-xs text-primary hover:underline flex items-center gap-1"
           >
             {isExpanded ? "Show Less" : "Show All"}
             <ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />

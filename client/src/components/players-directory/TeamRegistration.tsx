@@ -128,7 +128,7 @@ export function TeamRegistration({ onTeamRegistered }: { onTeamRegistered: () =>
             
             <div className="flex items-center justify-center gap-4">
               <div className="flex flex-col items-center gap-2">
-                <div className="w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden ring-4 ring-emerald-500/20">
+                <div className="w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden ring-4 ring-primary/20">
                   {currentUser.avatar_url ? (
                     <img src={currentUser.avatar_url} alt="You" className="w-full h-full object-cover" />
                   ) : (

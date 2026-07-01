@@ -35,7 +35,7 @@ export default function DeleteAccount() {
             <p className="text-sm text-slate-500 dark:text-slate-400">
               To delete your account through the app, please sign in first.
             </p>
-            <button onClick={() => navigate("/join")} className="w-full px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition">
+            <button onClick={() => navigate("/join")} className="w-full px-5 py-3 bg-primary hover:bg-primary text-white font-bold rounded-xl transition">
               Sign In to Delete
             </button>
             <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
@@ -113,14 +113,14 @@ export default function DeleteAccount() {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-sm w-full text-center shadow-xl border border-slate-200 dark:border-slate-800">
-          <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center mx-auto mb-4">
-            <ShieldCheck className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+          <div className="w-14 h-14 rounded-full bg-primary/15 dark:bg-primary/40 flex items-center justify-center mx-auto mb-4">
+            <ShieldCheck className="w-7 h-7 text-primary dark:text-primary" />
           </div>
           <h2 className="text-xl font-black text-slate-900 dark:text-white mb-2">Account Deleted</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
             Your data has been removed. We're sorry to see you go.
           </p>
-          <button onClick={() => navigate("/")} className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition">
+          <button onClick={() => navigate("/")} className="w-full py-3 rounded-xl bg-primary hover:bg-primary text-white font-bold transition">
             Go to Home
           </button>
         </div>
@@ -223,7 +223,7 @@ export default function DeleteAccount() {
             <p className="text-center text-xs text-slate-400 dark:text-slate-500">
               If you just need a break, consider{" "}
               <button onClick={async () => { await supabase.auth.signOut(); navigate("/"); }}
-                className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline inline-flex items-center gap-1">
+                className="text-primary dark:text-primary font-bold hover:underline inline-flex items-center gap-1">
                 <LogOut className="w-3 h-3" /> signing out
               </button>{" "}
               instead.

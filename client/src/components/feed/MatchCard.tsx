@@ -140,16 +140,20 @@ export function MatchCard({
   const setsWonP1 = parsedSets.filter((s) => s.p1 > s.p2).length;
   const setsWonP2 = parsedSets.filter((s) => s.p2 > s.p1).length;
 
-  const hasWinner = !!match.winner_id;
-  const team1Win = hasWinner && isP1Winner;
-  const team2Win = hasWinner && !isP1Winner;
+  const mockPlayer = (label: string | null) => label ? { id: `mock-${label}`, full_name: label, avatar_url: null, gender: "Unknown" } : null;
+  const actualP1 = p1 || mockPlayer(match.team1_label);
+  const actualP2 = p2 || mockPlayer(match.team2_label);
+
+  const hasWinner = !!match.winner_id || !!match.winner_side;
+  const team1Win = hasWinner && (match.winner_side === 1 || match.winner_id === p1?.id || match.winner_id === match.partner1?.id);
+  const team2Win = hasWinner && !team1Win;
 
   const team1 = [
-    { player: p1, eloChange: match.elo_change_p1 },
+    { player: actualP1, eloChange: match.elo_change_p1 },
     ...(match.partner1 ? [{ player: match.partner1, eloChange: match.elo_change_p3 }] : []),
   ].filter((m) => m.player);
   const team2 = [
-    { player: p2, eloChange: match.elo_change_p2 },
+    { player: actualP2, eloChange: match.elo_change_p2 },
     ...(match.partner2 ? [{ player: match.partner2, eloChange: match.elo_change_p4 }] : []),
   ].filter((m) => m.player);
 
@@ -172,11 +176,11 @@ export function MatchCard({
       {members.map(({ player, eloChange }, i) => {
         const nameEl = (
           <div className="flex-1 min-w-0">
-            <span className={`font-bold text-xs block group-hover/p:underline ${isApp ? "line-clamp-2 whitespace-normal leading-tight" : "truncate"} ${win ? "text-emerald-700 dark:text-emerald-400" : "text-slate-700 dark:text-slate-300"}`}>
+            <span className={`font-bold text-xs block group-hover/p:underline ${isApp ? "line-clamp-2 whitespace-normal leading-tight" : "truncate"} ${win ? "text-primary dark:text-primary" : "text-slate-700 dark:text-slate-300"}`}>
               {player.full_name}
             </span>
             {eloChange != null ? (
-              <span className={`block text-[10px] font-bold ${eloChange > 0 ? "text-emerald-500" : "text-rose-500"}`}>
+              <span className={`block text-[10px] font-bold ${eloChange > 0 ? "text-primary" : "text-rose-500"}`}>
                 {eloChange > 0 ? "+" : ""}{eloChange} ELO
               </span>
             ) : getCategoryElo(player) ? (
@@ -192,15 +196,15 @@ export function MatchCard({
               <img
                 src={player.avatar_url}
                 loading="lazy"
-                className={`w-7 h-7 rounded-full object-cover shadow-sm ${win ? "ring-2 ring-emerald-500 ring-offset-1 dark:ring-offset-slate-900" : dim ? "grayscale opacity-70" : ""}`}
+                className={`w-7 h-7 rounded-full object-cover shadow-sm ${win ? "ring-2 ring-primary ring-offset-1 dark:ring-offset-slate-900" : dim ? "grayscale opacity-70" : ""}`}
               />
             ) : (
-              <div className={`w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-500 shadow-sm ${win ? "ring-2 ring-emerald-500 ring-offset-1 dark:ring-offset-slate-900" : dim ? "grayscale opacity-70" : ""}`}>
+              <div className={`w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-500 shadow-sm ${win ? "ring-2 ring-primary ring-offset-1 dark:ring-offset-slate-900" : dim ? "grayscale opacity-70" : ""}`}>
                 {player.full_name?.substring(0, 2).toUpperCase() || "??"}
               </div>
             )}
             {win && (
-              <div className="absolute -bottom-1 -right-1 bg-emerald-500 text-white rounded-full p-0.5 border border-white dark:border-slate-900 shadow-sm">
+              <div className="absolute -bottom-1 -right-1 bg-primary text-white rounded-full p-0.5 border border-white dark:border-slate-900 shadow-sm">
                 <Trophy className="w-2 h-2" />
               </div>
             )}
@@ -219,7 +223,8 @@ export function MatchCard({
     e.preventDefault();
     e.stopPropagation();
     if (!confirm("Are you sure you want to permanently delete this match?")) return;
-    const { error } = await supabase.from("matches").delete().eq("id", match.id);
+    const tableName = match.is_friendly === false ? "tournament_matches" : "matches";
+    const { error } = await supabase.from(tableName).delete().eq("id", match.id);
     if (error) {
       toast.error("Failed to delete match");
     } else {
@@ -317,7 +322,7 @@ export function MatchCard({
           <div className="text-center border-t border-slate-200 dark:border-slate-700/60 pt-4 mb-4 relative">
             <div className="flex items-center justify-center gap-4">
               <div className={`flex items-center relative transition-all ${team1Win ? "scale-110" : team2Win ? "opacity-60 grayscale" : ""}`}>
-                <span className={`text-4xl sm:text-5xl font-black tracking-tighter leading-none ${team1Win ? "bg-gradient-to-br from-emerald-400 to-teal-600 bg-clip-text text-transparent drop-shadow-md" : "text-slate-400 dark:text-slate-500"}`}>
+                <span className={`text-4xl sm:text-5xl font-black tracking-tighter leading-none ${team1Win ? "bg-gradient-to-br from-primary to-teal-600 bg-clip-text text-transparent drop-shadow-md" : "text-slate-400 dark:text-slate-500"}`}>
                   {setsWonP1}
                 </span>
               </div>
@@ -327,7 +332,7 @@ export function MatchCard({
               </div>
 
               <div className={`flex items-center relative transition-all ${team2Win ? "scale-110" : team1Win ? "opacity-60 grayscale" : ""}`}>
-                <span className={`text-4xl sm:text-5xl font-black tracking-tighter leading-none ${team2Win ? "bg-gradient-to-br from-emerald-400 to-teal-600 bg-clip-text text-transparent drop-shadow-md" : "text-slate-400 dark:text-slate-500"}`}>
+                <span className={`text-4xl sm:text-5xl font-black tracking-tighter leading-none ${team2Win ? "bg-gradient-to-br from-primary to-teal-600 bg-clip-text text-transparent drop-shadow-md" : "text-slate-400 dark:text-slate-500"}`}>
                   {setsWonP2}
                 </span>
               </div>
@@ -343,9 +348,9 @@ export function MatchCard({
               const p1Won = s.p1 > s.p2;
               return (
                 <div key={i} className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                  <span className={`text-2xl text-center tabular-nums tracking-tight ${p1Won ? "font-black text-emerald-600 dark:text-emerald-400" : "font-bold text-slate-400 dark:text-slate-500"}`}>{s.p1}</span>
+                  <span className={`text-2xl text-center tabular-nums tracking-tight ${p1Won ? "font-black text-primary dark:text-primary" : "font-bold text-slate-400 dark:text-slate-500"}`}>{s.p1}</span>
                   <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-800 rounded-full px-2.5 py-0.5 border border-slate-200 dark:border-slate-700 whitespace-nowrap">Set {i + 1}</span>
-                  <span className={`text-2xl text-center tabular-nums tracking-tight ${!p1Won ? "font-black text-emerald-600 dark:text-emerald-400" : "font-bold text-slate-400 dark:text-slate-500"}`}>{s.p2}</span>
+                  <span className={`text-2xl text-center tabular-nums tracking-tight ${!p1Won ? "font-black text-primary dark:text-primary" : "font-bold text-slate-400 dark:text-slate-500"}`}>{s.p2}</span>
                 </div>
               );
             })}
@@ -403,7 +408,7 @@ export function MatchCard({
 
       {/* AI Summary Block */}
       {isGeneratingSummary && (
-        <div className="mt-4 p-4 rounded-2xl bg-gradient-to-br from-indigo-50 to-emerald-50 dark:from-indigo-950/30 dark:to-emerald-950/30 border border-indigo-100 dark:border-indigo-900/50 flex flex-col items-center justify-center min-h-[80px]">
+        <div className="mt-4 p-4 rounded-2xl bg-gradient-to-br from-indigo-50 to-primary/5 dark:from-indigo-950/30 dark:to-primary/90/30 border border-indigo-100 dark:border-indigo-900/50 flex flex-col items-center justify-center min-h-[80px]">
           <Loader2 className="w-5 h-5 text-indigo-500 animate-spin mb-2" />
           <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-400 animate-pulse">Gemini is analyzing the match...</span>
         </div>

@@ -55,8 +55,8 @@ const TYPE_STYLES: Record<PostType, { bg: string; badge: string; icon: any; labe
     label: "LOST",
   },
   found: {
-    bg: "border-emerald-200 dark:border-emerald-900/40",
-    badge: "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400",
+    bg: "border-primary/40 dark:border-primary/40",
+    badge: "bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary",
     icon: Package,
     label: "FOUND",
   },
@@ -316,7 +316,7 @@ export default function FindLost() {
     load();
   };
 
-  const inputCls = "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500 transition";
+  const inputCls = "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-primary transition";
   const labelCls = "block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5";
 
   return (
@@ -374,7 +374,7 @@ export default function FindLost() {
                   <button
                     key={t}
                     onClick={() => setForm((f) => ({ ...f, type: t }))}
-                    className={`flex-1 py-2 rounded-xl text-sm font-black uppercase tracking-wider transition ${form.type === t ? (t === "lost" ? "bg-rose-600 text-white" : "bg-emerald-600 text-white") : "bg-slate-100 dark:bg-slate-800 text-slate-500"}`}
+                    className={`flex-1 py-2 rounded-xl text-sm font-black uppercase tracking-wider transition ${form.type === t ? (t === "lost" ? "bg-rose-600 text-white" : "bg-primary text-white") : "bg-slate-100 dark:bg-slate-800 text-slate-500"}`}
                   >
                     {t === "lost" ? "I Lost Something" : "I Found Something"}
                   </button>
@@ -589,7 +589,7 @@ export default function FindLost() {
                           {/* Resolved status (replaces the "Mark as Resolved" action) */}
                           <span
                             title="This post has been resolved"
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 cursor-default"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary cursor-default"
                           >
                             <CheckCircle className="w-4 h-4" /> Resolved
                           </span>
@@ -611,7 +611,7 @@ export default function FindLost() {
                               <button
                                 onClick={() => resolve(post)}
                                 title="Mark as resolved"
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/60 transition"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary hover:bg-primary/20 dark:hover:bg-primary/80/60 transition"
                               >
                                 <CheckCircle className="w-4 h-4" /> Mark as Resolved
                               </button>
@@ -703,7 +703,7 @@ export default function FindLost() {
               <button
                 onClick={() => setZoom((z) => Math.max(1, +(z - 0.5).toFixed(2)))}
                 disabled={zoom <= 1}
-                className="text-white hover:text-emerald-400 disabled:opacity-30 transition p-2"
+                className="text-white hover:text-primary disabled:opacity-30 transition p-2"
                 aria-label="Zoom out"
               >
                 <ZoomOut className="w-7 h-7" />
@@ -711,7 +711,7 @@ export default function FindLost() {
               <button
                 onClick={() => setZoom((z) => Math.min(4, +(z + 0.5).toFixed(2)))}
                 disabled={zoom >= 4}
-                className="text-white hover:text-emerald-400 disabled:opacity-30 transition p-2"
+                className="text-white hover:text-primary disabled:opacity-30 transition p-2"
                 aria-label="Zoom in"
               >
                 <ZoomIn className="w-7 h-7" />
@@ -729,7 +729,7 @@ export default function FindLost() {
             {lightbox.images.length > 1 && (
               <button
                 onClick={(e) => { e.stopPropagation(); setZoom(1); setLightbox((lb) => lb ? { ...lb, index: (lb.index - 1 + lb.images.length) % lb.images.length } : lb); }}
-                className="absolute left-1 md:left-3 top-1/2 -translate-y-1/2 text-white hover:text-emerald-400 transition p-2 z-50"
+                className="absolute left-1 md:left-3 top-1/2 -translate-y-1/2 text-white hover:text-primary transition p-2 z-50"
                 aria-label="Previous"
               >
                 <ChevronLeft className="w-9 h-9 md:w-10 md:h-10" />
@@ -750,7 +750,7 @@ export default function FindLost() {
             {lightbox.images.length > 1 && (
               <button
                 onClick={(e) => { e.stopPropagation(); setZoom(1); setLightbox((lb) => lb ? { ...lb, index: (lb.index + 1) % lb.images.length } : lb); }}
-                className="absolute right-1 md:right-3 top-1/2 -translate-y-1/2 text-white hover:text-emerald-400 transition p-2 z-50"
+                className="absolute right-1 md:right-3 top-1/2 -translate-y-1/2 text-white hover:text-primary transition p-2 z-50"
                 aria-label="Next"
               >
                 <ChevronRight className="w-9 h-9 md:w-10 md:h-10" />

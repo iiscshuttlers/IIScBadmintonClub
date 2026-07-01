@@ -14,7 +14,7 @@ import type { PlayerRow } from "@/types";
 export type Player = PlayerRow;
 
 const AVATAR_GRADIENTS = [
-  "from-emerald-400 to-teal-500",
+  "from-primary to-teal-500",
   "from-blue-400 to-indigo-500",
   "from-violet-400 to-purple-500",
   "from-amber-400 to-orange-500",
@@ -60,7 +60,7 @@ const levelColor: Record<string, string> = {
   Professional:
     "bg-amber-50   dark:bg-amber-950/20  text-amber-700   dark:text-amber-400  border border-amber-100  dark:border-amber-900/30",
   Intermediate:
-    "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30",
+    "bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary border border-primary/30 dark:border-primary/30",
   Beginner:
     "bg-slate-100  dark:bg-slate-800      text-slate-600   dark:text-slate-300",
 };
@@ -150,7 +150,7 @@ export function PlayerCard({
       toast.success(
         `Ping sent to ${player.full_name}! They will be notified.`,
         {
-          icon: <BellRing className="w-4 h-4 text-emerald-500" />,
+          icon: <BellRing className="w-4 h-4 text-primary" />,
         },
       );
     }
@@ -204,7 +204,7 @@ export function PlayerCard({
         transition-all duration-300 flex flex-col items-center text-center relative p-6 rounded-3xl border
         ${
           isOwn
-            ? "border-emerald-400 dark:border-emerald-600 ring-2 ring-emerald-400/20 shadow-emerald-100 dark:shadow-none"
+            ? "border-primary dark:border-primary ring-2 ring-primary/20 shadow-primary/10 dark:shadow-none"
             : "border-slate-100 dark:border-slate-800 shadow-sm"
         }`}
       >
@@ -243,7 +243,7 @@ export function PlayerCard({
             <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-amber-500 border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" />
           )}
           {(player.status === "looking" || player.is_looking_to_play) && (
-            <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" />
+            <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-primary border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" />
           )}
         </div>
 
@@ -265,7 +265,7 @@ export function PlayerCard({
               ELO {player.elo_rating ?? "—"}
             </span>
             {winPct !== null && (
-              <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2.5 py-1 rounded-md">
+              <span className="text-[10px] font-bold text-primary dark:text-primary bg-primary/15 dark:bg-primary/30 px-2.5 py-1 rounded-md">
                 {winPct}% WIN
               </span>
             )}
@@ -292,16 +292,25 @@ export function PlayerCard({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (isBuddy) onBuddyAction(player.id, 'remove');
-                    else if (hasReceivedRequest) onBuddyAction(player.id, 'accept');
-                    else if (hasSentRequest) onBuddyAction(player.id, 'cancel');
-                    else onBuddyAction(player.id, 'send');
+                    if (isBuddy) {
+                      if (confirm("Are you sure you want to remove this buddy?")) {
+                        onBuddyAction(player.id, 'remove');
+                      }
+                    } else if (hasReceivedRequest) {
+                      onBuddyAction(player.id, 'accept');
+                    } else if (hasSentRequest) {
+                      if (confirm("Are you sure you want to cancel the buddy request?")) {
+                        onBuddyAction(player.id, 'cancel');
+                      }
+                    } else {
+                      onBuddyAction(player.id, 'send');
+                    }
                   }}
                   className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-[11px] font-bold border transition-colors ${
                     isBuddy
                       ? "text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/30 border-violet-200 dark:border-violet-800/50"
                       : hasReceivedRequest
-                      ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/50"
+                      ? "text-primary dark:text-primary bg-primary/10 dark:bg-primary/30 border-primary/40 dark:border-primary/50"
                       : hasSentRequest
                       ? "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/50"
                       : "text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:text-violet-600 hover:border-violet-300 hover:bg-violet-50 dark:hover:bg-violet-950/20"
@@ -355,7 +364,7 @@ export function PlayerCard({
             <div className="flex items-center gap-1">
               <button
                 onClick={handleShare}
-                className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/90/30 transition-colors"
                 title="Share profile"
               >
                 <Share2 className="w-3.5 h-3.5" />
@@ -387,7 +396,7 @@ export function PlayerCard({
         
         {/* 'You' badge */}
         {isOwn && (
-          <span className="absolute top-4 left-4 bg-emerald-500 text-white px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest shadow-sm">
+          <span className="absolute top-4 left-4 bg-primary text-white px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest shadow-sm">
             You
           </span>
         )}

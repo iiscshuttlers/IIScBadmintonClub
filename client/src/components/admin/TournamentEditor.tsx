@@ -13,7 +13,7 @@ import {
 const cardCls =
   "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm";
 const inputCls =
-  "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500 transition";
+  "w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-primary transition";
 const labelCls =
   "block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5";
 
@@ -76,7 +76,7 @@ export function TournamentEditor() {
   if (loading)
     return (
       <div className="flex justify-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
 
@@ -91,7 +91,7 @@ export function TournamentEditor() {
         <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
           <div className="flex items-center gap-2">
             {config.enabled ? (
-              <Eye className="w-4 h-4 text-emerald-500" />
+              <Eye className="w-4 h-4 text-primary" />
             ) : (
               <EyeOff className="w-4 h-4 text-slate-400" />
             )}
@@ -106,7 +106,7 @@ export function TournamentEditor() {
           </div>
           <button
             onClick={() => update("enabled", !config.enabled)}
-            className={`relative w-12 h-6 rounded-full transition-colors ${config.enabled ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"}`}
+            className={`relative w-12 h-6 rounded-full transition-colors ${config.enabled ? "bg-primary" : "bg-slate-300 dark:bg-slate-600"}`}
           >
             <div
               className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${config.enabled ? "left-6" : "left-0.5"}`}
@@ -264,7 +264,7 @@ export function TournamentEditor() {
         <button
           onClick={save}
           disabled={saving || !dirty}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold transition shadow-lg shadow-emerald-500/20"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary hover:bg-primary disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold transition shadow-lg shadow-primary/20"
         >
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           {saving ? "Saving…" : "Save Tournament Details"}

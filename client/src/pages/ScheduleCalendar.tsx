@@ -351,7 +351,7 @@ export default function ScheduleCalendar() {
                                     className="flex items-center gap-2"
                                   >
                                     <span
-                                      className={`w-2 h-2 rounded-full ${e.type === "holiday" ? getHolidayColor(e.title).solid : "bg-emerald-500"}`}
+                                      className={`w-2 h-2 rounded-full ${e.type === "holiday" ? getHolidayColor(e.title).solid : "bg-primary"}`}
                                     />
                                     <span className="font-semibold text-xs">
                                       {e.title}
@@ -450,21 +450,21 @@ export default function ScheduleCalendar() {
                               ? `${holidayColor?.bg} ${holidayColor?.border}`
                               : isMultiDayStart
                                 ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
-                                : "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800"
+                                : "bg-primary/10 dark:bg-primary/20 border-primary/40 dark:border-primary/80"
                           }`}
                         >
                           <span
-                            className={`text-[9px] font-black uppercase ${isHoliday ? holidayColor?.text : isMultiDayStart ? "text-blue-600" : "text-emerald-600"}`}
+                            className={`text-[9px] font-black uppercase ${isHoliday ? holidayColor?.text : isMultiDayStart ? "text-blue-600" : "text-primary"}`}
                           >
                             {d.toLocaleString("default", { weekday: "short" })}
                           </span>
                           <span
-                            className={`text-xl font-black leading-none my-0.5 ${isHoliday ? holidayColor?.textDark : isMultiDayStart ? "text-blue-700 dark:text-blue-400" : "text-emerald-700 dark:text-emerald-400"}`}
+                            className={`text-xl font-black leading-none my-0.5 ${isHoliday ? holidayColor?.textDark : isMultiDayStart ? "text-blue-700 dark:text-blue-400" : "text-primary dark:text-primary"}`}
                           >
                             {d.getDate()}
                           </span>
                           <span
-                            className={`text-[10px] font-bold uppercase ${isHoliday ? holidayColor?.text : isMultiDayStart ? "text-blue-500" : "text-emerald-500"}`}
+                            className={`text-[10px] font-bold uppercase ${isHoliday ? holidayColor?.text : isMultiDayStart ? "text-blue-500" : "text-primary"}`}
                           >
                             {d.toLocaleString("default", { month: "short" })}
                           </span>
@@ -540,7 +540,7 @@ export default function ScheduleCalendar() {
                           className={`p-4 md:p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden group ${isHoliday ? "opacity-80" : ""}`}
                         >
                           <div
-                            className={`absolute left-0 top-0 bottom-0 w-1.5 ${isHoliday ? holidayColor?.solid : "bg-emerald-500"}`}
+                            className={`absolute left-0 top-0 bottom-0 w-1.5 ${isHoliday ? holidayColor?.solid : "bg-primary"}`}
                           />
                           <div className="flex items-center gap-2 mb-3 flex-wrap">
                             <h3 className="text-xl font-bold text-slate-900 dark:text-white">
@@ -595,13 +595,13 @@ export default function ScheduleCalendar() {
                           <div className="flex flex-wrap gap-4 mb-4">
                             {event.time && (
                               <div className="flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300">
-                                <Clock className="w-4 h-4 text-emerald-500" />{" "}
+                                <Clock className="w-4 h-4 text-primary" />{" "}
                                 {event.time}
                               </div>
                             )}
                             {event.location && (
                               <div className="flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-300">
-                                <MapPin className="w-4 h-4 text-emerald-500" />{" "}
+                                <MapPin className="w-4 h-4 text-primary" />{" "}
                                 {event.location}
                               </div>
                             )}
@@ -616,7 +616,7 @@ export default function ScheduleCalendar() {
 
                           {event.link && (
                             <Link href={event.link}>
-                              <button className="flex items-center gap-2 text-sm font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 transition group-hover:underline">
+                              <button className="flex items-center gap-2 text-sm font-bold text-primary dark:text-primary hover:text-primary transition group-hover:underline">
                                 View Event Details{" "}
                                 <ArrowRight className="w-4 h-4" />
                               </button>
@@ -627,7 +627,7 @@ export default function ScheduleCalendar() {
                               href={event.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-2 text-sm font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 transition group-hover:underline mt-2"
+                              className="flex items-center gap-2 text-sm font-bold text-primary dark:text-primary hover:text-primary transition group-hover:underline mt-2"
                             >
                               External Link{" "}
                               <ExternalLink className="w-4 h-4" />
@@ -660,7 +660,7 @@ export default function ScheduleCalendar() {
               <Card className="rounded-3xl shadow-xl border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl mt-6 overflow-hidden">
                 <div className="bg-slate-50 dark:bg-slate-800/50 p-5 md:p-8 border-b border-slate-100 dark:border-slate-800">
                   <h3 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
-                    <Trophy className="w-5 h-5 text-emerald-500" />
+                    <Trophy className="w-5 h-5 text-primary" />
                     Tournament Matches
                   </h3>
                 </div>

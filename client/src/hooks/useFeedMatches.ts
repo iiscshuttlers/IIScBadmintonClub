@@ -8,6 +8,7 @@ export function useFeedMatches(ownProfile: any) {
   const [feedFilter, setFeedFilter] = useState<"global" | "following" | "buddies">("global");
   const [categoryFilter, setCategoryFilter] = useState<"all" | "singles" | "doubles" | "mixed">("all");
   const [timeFilter, setTimeFilter] = useState<"all" | "today" | "week">("all");
+  const [typeFilter, setTypeFilter] = useState<"all" | "friendly" | "tournament">("all");
 
   const fetchFeed = useCallback(
     async (silent = false) => {
@@ -95,8 +96,17 @@ export function useFeedMatches(ownProfile: any) {
       });
     }
 
+    // 4. Type Filter
+    if (typeFilter !== "all") {
+      filtered = filtered.filter((m: any) => {
+        if (typeFilter === "friendly") return m.is_friendly === true;
+        if (typeFilter === "tournament") return m.is_friendly === false;
+        return true;
+      });
+    }
+
     return filtered;
-  }, [matches, feedFilter, categoryFilter, timeFilter, followingIds, buddyIds]);
+  }, [matches, feedFilter, categoryFilter, timeFilter, typeFilter, followingIds, buddyIds]);
 
   const courtUtil = useMemo(() => {
     const hours = new Array(24).fill(0);
@@ -187,6 +197,8 @@ export function useFeedMatches(ownProfile: any) {
     categoryFilter,
     setCategoryFilter,
     timeFilter,
-    setTimeFilter
+    setTimeFilter,
+    typeFilter,
+    setTypeFilter
   };
 }

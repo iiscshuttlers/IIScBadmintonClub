@@ -42,9 +42,9 @@ export function AppUpdatePrompt({ updateInfo, onDismiss }: Props) {
             transition={{ type: "spring", damping: 20, stiffness: 300 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-6 pointer-events-none"
           >
-            <div className="pointer-events-auto w-full max-w-sm bg-slate-900 border border-emerald-500/40 rounded-2xl shadow-2xl shadow-emerald-900/30 overflow-hidden">
+            <div className="pointer-events-auto w-full max-w-sm bg-slate-900 border border-primary/40 rounded-2xl shadow-2xl shadow-primary/50/30 overflow-hidden">
               {/* Green accent header */}
-              <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 px-5 py-4 flex items-center justify-between">
+              <div className="bg-gradient-to-r from-primary to-primary px-5 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-white" />
                   <span className="text-white font-bold text-base">
@@ -62,7 +62,7 @@ export function AppUpdatePrompt({ updateInfo, onDismiss }: Props) {
               <div className="px-5 py-4">
                 <p className="text-slate-200 text-sm mb-1">
                   Version{" "}
-                  <span className="font-bold text-emerald-400">
+                  <span className="font-bold text-primary">
                     {updateInfo.versionName}
                   </span>{" "}
                   is now available.
@@ -73,7 +73,7 @@ export function AppUpdatePrompt({ updateInfo, onDismiss }: Props) {
                 <div className="flex gap-3 mt-4">
                   <button
                     onClick={handleUpdate}
-                    className="flex-1 flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white py-3 rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/20 transition-all"
+                    className="flex-1 flex items-center justify-center gap-2 bg-primary hover:bg-primary active:scale-95 text-white py-3 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 transition-all"
                   >
                     <Download className="w-4 h-4" />
                     Update Now

@@ -27,14 +27,14 @@ export function PwaUpdatePrompt() {
           initial={{ opacity: 0, y: 50, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 50, scale: 0.95 }}
-          className="fixed bottom-24 right-4 sm:bottom-8 sm:right-8 z-50 w-[calc(100vw-2rem)] sm:w-80 bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md border border-emerald-500/50 shadow-2xl shadow-emerald-900/20 rounded-2xl p-5 overflow-hidden"
+          className="fixed bottom-24 right-4 sm:bottom-8 sm:right-8 z-50 w-[calc(100vw-2rem)] sm:w-80 bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md border border-primary/50 shadow-2xl shadow-primary/50/20 rounded-2xl p-5 overflow-hidden"
         >
           {/* Decorative glowing orb */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-2xl rounded-full -mr-16 -mt-16 pointer-events-none" />
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-2xl rounded-full -mr-16 -mt-16 pointer-events-none" />
 
           <div className="relative">
             <h3 className="text-white font-bold text-lg mb-1 flex items-center gap-2">
-              <RefreshCw className="w-5 h-5 text-emerald-400" />
+              <RefreshCw className="w-5 h-5 text-primary" />
               Update Available!
             </h3>
             <p className="text-slate-300 text-sm mb-5 leading-relaxed">
@@ -45,7 +45,7 @@ export function PwaUpdatePrompt() {
             <div className="flex gap-3">
               <button
                 onClick={() => updateServiceWorker(true)}
-                className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/20 transition-all active:scale-95"
+                className="flex-1 bg-primary hover:bg-primary text-white py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 transition-all active:scale-95"
               >
                 Reload & Update
               </button>

@@ -50,7 +50,7 @@ export function LivePlayersSection({ tournamentId, categories }: { tournamentId:
   if (loading) {
     return (
       <div className="flex justify-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -89,7 +89,7 @@ export function LivePlayersSection({ tournamentId, categories }: { tournamentId:
       </div>
 
       <div className="flex items-center gap-2 px-1 pb-2 border-b border-slate-200 dark:border-slate-800">
-        <Info className="w-4 h-4 text-emerald-600 dark:text-emerald-500" />
+        <Info className="w-4 h-4 text-primary dark:text-primary" />
         <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
           Note: Players are not listed in seeding order.
         </p>
@@ -99,7 +99,7 @@ export function LivePlayersSection({ tournamentId, categories }: { tournamentId:
         {currentParticipants.map((p, i) => (
           <div 
             key={p.id}
-            className="flex items-center justify-between p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm hover:shadow-md transition-all hover:border-emerald-200 dark:hover:border-emerald-800/50"
+            className="flex items-center justify-between p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm hover:shadow-md transition-all hover:border-primary/40 dark:hover:border-primary/50"
           >
             <span className="font-bold text-slate-700 dark:text-slate-200">
               {p.display_name || "Unknown Player"}

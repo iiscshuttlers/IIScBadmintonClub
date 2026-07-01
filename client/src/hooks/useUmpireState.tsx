@@ -54,6 +54,7 @@ export function useUmpireState({
     directSetsText, setDirectSetsText,
     directWinner, setDirectWinner,
     breakSecondsLeft, setBreakSecondsLeft,
+    breakTotalSeconds, setBreakTotalSeconds,
     breakLabel, setBreakLabel
   } = useUmpireStore();
 
@@ -82,19 +83,36 @@ export function useUmpireState({
           const [a, b] = s.split("-").map(Number);
           return b > a;
         }).length;
-  
+        const t1Names = ((editState as any).team1_label || "").split(" & ");
+        const t2Names = ((editState as any).team2_label || "").split(" & ");
+        
         return {
           id: userId,
           dbId: editState.id,
           umpireName: userName,
           isFriendly: editState.is_friendly ?? true,
+          isTournamentMatch: editState.is_tournament_match,
           matchNumber: editState.round ?? "",
           category: editState.category ?? "Singles",
           pointsToWin: 21,
           bestOfSets: 3,
           goldenPoint: 30,
-          t1: { p1Id: editState.player1_id, p1Name: editState.player1?.full_name ?? "", p2Id: editState.team1_partner_id ?? undefined, p2Name: editState.partner1?.full_name ?? "", score: 0, games: t1GamesWon },
-          t2: { p1Id: editState.player2_id, p1Name: editState.player2?.full_name ?? "", p2Id: editState.team2_partner_id ?? undefined, p2Name: editState.partner2?.full_name ?? "", score: 0, games: t2GamesWon },
+          t1: { 
+            p1Id: editState.player1_id, 
+            p1Name: editState.player1?.full_name || t1Names[0] || "Team 1", 
+            p2Id: editState.team1_partner_id ?? undefined, 
+            p2Name: editState.partner1?.full_name || t1Names[1] || "", 
+            score: 0, 
+            games: t1GamesWon 
+          },
+          t2: { 
+            p1Id: editState.player2_id, 
+            p1Name: editState.player2?.full_name || t2Names[0] || "Team 2", 
+            p2Id: editState.team2_partner_id ?? undefined, 
+            p2Name: editState.partner2?.full_name || t2Names[1] || "", 
+            score: 0, 
+            games: t2GamesWon 
+          },
           serverTeam: 1,
           serverPlayerIndex: 0,
           receiverPlayerIndex: 0,
@@ -103,8 +121,8 @@ export function useUmpireState({
           t2LastServedBy: 1,
           endsSwapped: false,
           pointLog: [],
-          status: "playing",
-          winner: undefined,
+          status: "finished",
+          winner: t1GamesWon > t2GamesWon ? 1 : t2GamesWon > t1GamesWon ? 2 : undefined,
           setsHistory: setsHistory,
         } as BwfMatchState;
       }
@@ -234,15 +252,15 @@ export function useUmpireState({
       if (breakIntervalRef.current) clearInterval(breakIntervalRef.current);
       setBreakLabel(label);
       setBreakSecondsLeft(seconds);
-      setShowFullTimer(true);
+      setBreakTotalSeconds(seconds);
+      setShowFullTimer(false);
       breakIntervalRef.current = setInterval(() => {
         const prev = useUmpireStore.getState().breakSecondsLeft;
-        if (prev === null || prev <= 1) {
+        if (prev === null) {
           clearInterval(breakIntervalRef.current!);
           breakIntervalRef.current = null;
-          playTimerEndEffect();
-          setBreakSecondsLeft(null);
         } else {
+          if (prev === 1) playTimerEndEffect();
           setBreakSecondsLeft(prev - 1);
         }
       }, 1000);
@@ -252,11 +270,31 @@ export function useUmpireState({
       if (breakIntervalRef.current) clearInterval(breakIntervalRef.current);
       breakIntervalRef.current = null;
       setBreakSecondsLeft(null);
+      setBreakTotalSeconds(null);
       setBreakLabel("");
       setShowFullTimer(false);
     };
   
-    useEffect(() => () => { if (breakIntervalRef.current) clearInterval(breakIntervalRef.current); }, []);
+    useEffect(() => {
+    if (breakSecondsLeft !== null && !breakIntervalRef.current) {
+      breakIntervalRef.current = setInterval(() => {
+        const prev = useUmpireStore.getState().breakSecondsLeft;
+        if (prev === null) {
+          clearInterval(breakIntervalRef.current!);
+          breakIntervalRef.current = null;
+        } else {
+          if (prev === 1) playTimerEndEffect();
+          setBreakSecondsLeft(prev - 1);
+        }
+      }, 1000);
+    }
+    return () => {
+      if (breakIntervalRef.current) {
+        clearInterval(breakIntervalRef.current);
+        breakIntervalRef.current = null;
+      }
+    };
+  }, [breakSecondsLeft]);
   
     const { data: playersData } = usePlayers();
     useEffect(() => {
@@ -334,6 +372,50 @@ export function useUmpireState({
       updateMatch(updates);
     };
   
+    const undoSetFinish = () => {
+      if (match.setsHistory.length === 0) return;
+      const history = [...match.setsHistory];
+      const lastSet = history.pop()!;
+      const [s1, s2] = lastSet.split("-").map(Number);
+      
+      let newT1Games = match.t1.games;
+      let newT2Games = match.t2.games;
+      if (s1 > s2) newT1Games = Math.max(0, newT1Games - 1);
+      else if (s2 > s1) newT2Games = Math.max(0, newT2Games - 1);
+
+      updateMatch({
+        status: "playing",
+        winner: undefined,
+        retiredTeam: undefined,
+        setsHistory: history,
+        t1: { ...match.t1, score: s1, games: newT1Games },
+        t2: { ...match.t2, score: s2, games: newT2Games },
+      });
+      toast.success("Set finish undone!");
+    };
+    
+    const deleteSet = (index: number) => {
+      if (index < 0 || index >= match.setsHistory.length) return;
+      const history = [...match.setsHistory];
+      const removedSet = history.splice(index, 1)[0];
+      const [s1, s2] = removedSet.split("-").map(Number);
+      
+      let newT1Games = match.t1.games;
+      let newT2Games = match.t2.games;
+      if (s1 > s2) newT1Games = Math.max(0, newT1Games - 1);
+      else if (s2 > s1) newT2Games = Math.max(0, newT2Games - 1);
+
+      updateMatch({
+        setsHistory: history,
+        t1: { ...match.t1, games: newT1Games },
+        t2: { ...match.t2, games: newT2Games },
+        status: "playing",
+        winner: undefined,
+        retiredTeam: undefined
+      });
+      toast.success(`Set ${index + 1} deleted!`);
+    };
+
     const forceEndSet = () => {
       const updates = computeForceEndSet(match);
       if (updates) {
@@ -440,12 +522,15 @@ export function useUmpireState({
       if (match.status !== "finished") return;
 
       // Tournament match path — submit to tournament_matches, no ELO impact
-      if (tournamentMatch) {
+      if (tournamentMatch || match.isTournamentMatch) {
+        const matchId = tournamentMatch?.id || match.dbId;
+        if (!matchId) return toast.error("Match ID missing");
+        
         const winnerSide: 1 | 2 = match.winner === 1 ? 1 : 2;
         const scoreStr = match.setsHistory.join(", ");
         try {
           const { error } = await supabase.rpc("submit_tournament_match", {
-            p_match_id: tournamentMatch.id,
+            p_match_id: matchId,
             p_winner_side: winnerSide,
             p_score: scoreStr,
             p_sets: match.setsHistory,
@@ -581,6 +666,7 @@ export function useUmpireState({
     directWinner,
     myBuddies,
     breakSecondsLeft,
+    breakTotalSeconds,
     breakLabel,
     setPlayers,
     setMatch,
@@ -599,6 +685,7 @@ export function useUmpireState({
     setDirectSetsText,
     setDirectWinner,
     setBreakSecondsLeft,
+    setBreakTotalSeconds,
     setBreakLabel,
     updateMatch,
     startMatch,
@@ -607,6 +694,8 @@ export function useUmpireState({
     addPoint,
     deductPoint,
     forceEndSet,
+    undoSetFinish,
+    deleteSet,
     confirmChangeEnds,
     callLet,
     callServiceFault,

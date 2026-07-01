@@ -231,7 +231,7 @@ export function RecycleBin() {
                   <button
                     onClick={() => restore(item)}
                     disabled={isLoading}
-                    className="flex-1 sm:flex-none justify-center flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 text-xs font-bold hover:bg-emerald-100 dark:hover:bg-emerald-950/50 transition disabled:opacity-50"
+                    className="flex-1 sm:flex-none justify-center flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary border border-primary/40 dark:border-primary/80 text-xs font-bold hover:bg-primary/15 dark:hover:bg-primary/90/50 transition disabled:opacity-50"
                   >
                     {isLoading ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />

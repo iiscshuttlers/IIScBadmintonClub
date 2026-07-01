@@ -10,7 +10,7 @@ const STEPS = [
     title: "Welcome to IISc Badminton Club!",
     body: "Your one-stop hub for badminton at IISc. Track matches, compete on leaderboards, and rise through the ranks.",
     cta: null,
-    accent: "from-emerald-500 to-teal-500",
+    accent: "from-primary to-teal-500",
     icon: null,
   },
   {
@@ -71,7 +71,7 @@ const STEPS = [
         </div>
         <ChevronRight className="w-4 h-4 shrink-0" />
         <div className="text-center">
-          <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-black mx-auto mb-1">✓</div>
+          <div className="w-8 h-8 rounded-full bg-primary/20 text-primary/70 flex items-center justify-center font-black mx-auto mb-1">✓</div>
           ELO Updates
         </div>
       </div>
@@ -91,8 +91,8 @@ const STEPS = [
     body: "Head to the Leaderboard to see where you stand, log your first match, and start climbing the ranks. Good luck on court!",
     cta: "Go to Leaderboard",
     ctaHref: "/",
-    accent: "from-emerald-500 to-cyan-500",
-    icon: <CheckCircle className="w-12 h-12 text-emerald-400 opacity-80" />,
+    accent: "from-primary to-cyan-500",
+    icon: <CheckCircle className="w-12 h-12 text-primary opacity-80" />,
   },
 ];
 

@@ -297,7 +297,7 @@ export default function PlayerProfile() {
     <div className="min-h-screen bg-slate-50 dark:bg-[#0a1628] selection:bg-amber-500/30 overflow-x-hidden">
       {/* Background patterns */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/10 dark:bg-emerald-500/5 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen opacity-70" />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 dark:bg-primary/5 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen opacity-70" />
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-500/10 dark:bg-blue-500/5 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen opacity-70" />
       </div>
 
@@ -497,7 +497,7 @@ export default function PlayerProfile() {
                     <div className="flex gap-2 w-full sm:w-auto">
                       <button
                         onClick={() => handleConfirmMatch(m.id)}
-                        className="flex-1 sm:flex-none px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black rounded-xl transition"
+                        className="flex-1 sm:flex-none px-4 py-2 bg-primary hover:bg-primary text-white text-xs font-black rounded-xl transition"
                       >
                         Confirm
                       </button>

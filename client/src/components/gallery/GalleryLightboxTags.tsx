@@ -49,7 +49,7 @@ export function GalleryLightboxTags({
               className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 backdrop-blur-sm border border-white/20 text-white text-xs font-bold px-3 py-1 rounded-full cursor-pointer transition-colors group"
               onClick={(e) => { e.stopPropagation(); setLocation(`/player/${tag.id}`); }}
             >
-              <Tag className="w-3 h-3 text-emerald-400" />
+              <Tag className="w-3 h-3 text-primary" />
               {tag.name}
               {isAdmin && (
                 <button
@@ -73,7 +73,7 @@ export function GalleryLightboxTags({
               <div key={pt.id} className="flex items-center gap-1.5 bg-amber-500/20 border border-amber-500/40 text-white text-xs font-bold px-3 py-1 rounded-full">
                 {pt.name}
                 <div className="flex items-center ml-1 border-l border-amber-500/30 pl-1.5 gap-1">
-                  <button onClick={(e) => { e.stopPropagation(); approveTag(itemPath, pt); }} className="p-0.5 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-400/20 rounded-full transition-colors" title="Approve">
+                  <button onClick={(e) => { e.stopPropagation(); approveTag(itemPath, pt); }} className="p-0.5 text-primary hover:text-primary/70 hover:bg-primary/20 rounded-full transition-colors" title="Approve">
                     <Check className="w-3.5 h-3.5" />
                   </button>
                   <button onClick={(e) => { e.stopPropagation(); rejectTag(itemPath, pt); }} className="p-0.5 text-red-400 hover:text-red-300 hover:bg-red-400/20 rounded-full transition-colors" title="Reject">
@@ -144,10 +144,10 @@ export function GalleryLightboxTags({
                     filteredPlayers.map((p) => (
                       <button
                         key={p.id}
-                        className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-emerald-600/20 transition-colors flex items-center gap-2"
+                        className="w-full text-left px-4 py-2.5 text-sm text-white hover:bg-primary/20 transition-colors flex items-center gap-2"
                         onClick={() => { saveTag(itemPath, p); setShowTagPanel(false); }}
                       >
-                        <UserPlus className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        <UserPlus className="w-3.5 h-3.5 text-primary shrink-0" />
                         {p.full_name}
                       </button>
                     ))

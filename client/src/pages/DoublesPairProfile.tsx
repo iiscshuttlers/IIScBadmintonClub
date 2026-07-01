@@ -24,7 +24,7 @@ function Avatar({ player, size = "md" }: { player: Player | null; size?: "sm" | 
   const sz = size === "lg" ? "w-20 h-20 text-2xl" : size === "sm" ? "w-10 h-10 text-sm" : "w-14 h-14 text-lg";
   if (!player) return <div className={`${sz} rounded-full bg-slate-200 dark:bg-slate-700`} />;
   if (player.avatar_url) return <img src={player.avatar_url} className={`${sz} rounded-full object-cover`} />;
-  return <div className={`${sz} rounded-full bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center font-black text-emerald-700 dark:text-emerald-400`}>{player.full_name[0]}</div>;
+  return <div className={`${sz} rounded-full bg-primary/15 dark:bg-primary/40 flex items-center justify-center font-black text-primary dark:text-primary`}>{player.full_name[0]}</div>;
 }
 
 export default function DoublesPairProfile() {
@@ -35,56 +35,6 @@ export default function DoublesPairProfile() {
   const [loading, setLoading] = useState(true);
 
   usePageMeta({ title: "Doubles Pair Profile", description: "Head-to-head doubles stats" });
-
-  useEffect(() => {
-    if (!p1 || !p2) return;
-    const load = async () => {
-      setLoading(true);
-      const [r1, r2, matchRes] = await Promise.all([
-        supabase.from("players").select("id,full_name,avatar_url,elo_rating").eq("id", p1).single(),
-        supabase.from("players").select("id,full_name,avatar_url,elo_rating").eq("id", p2).single(),
-        supabase
-          .from("matches")
-          .select("id,winner_id,player1_id,player2_id,team1_partner_id,team2_partner_id,match_score,status,created_at")
-          .eq("status", "confirmed")
-          .or(
-            `and(player1_id.eq.${p1},team1_partner_id.eq.${p2}),and(player1_id.eq.${p2},team1_partner_id.eq.${p1}),and(player2_id.eq.${p1},team2_partner_id.eq.${p2}),and(player2_id.eq.${p2},team2_partner_id.eq.${p1})`
-          )
-          .order("created_at", { ascending: false })
-          .limit(50),
-      ]);
-      if (r1.data) setPlayer1(r1.data as any);
-      if (r2.data) setPlayer2(r2.data as any);
-      if (matchRes.data) setPairMatches(matchRes.data);
-      setLoading(false);
-    };
-    load();
-  }, [p1, p2]);
-
-  if (loading) return (
-    <div className="flex items-center justify-center min-h-screen">
-      <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
-    </div>
-  );
-
-  if (!player1 || !player2) return (
-    <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-      <p className="text-slate-500">Players not found</p>
-      <Link href="/players" className="text-emerald-600 font-bold">Browse Players</Link>
-    </div>
-  );
-
-  const totalMatches = pairMatches.length;
-  // A win for the pair = winner is either p1 or p2 (since they're on the same team)
-  const wins = pairMatches.filter((m) => m.winner_id === p1 || m.winner_id === p2).length;
-  const losses = totalMatches - wins;
-  const winRate = totalMatches > 0 ? Math.round((wins / totalMatches) * 100) : 0;
-
-  let bestStreak = 0, currentStreak = 0;
-  for (const m of [...pairMatches].reverse()) {
-    if (m.winner_id === p1 || m.winner_id === p2) { currentStreak++; bestStreak = Math.max(bestStreak, currentStreak); }
-    else currentStreak = 0;
-  }
 
   const eloHistory = useMemo(() => {
     const chronological = [...pairMatches].reverse();
@@ -100,9 +50,59 @@ export default function DoublesPairProfile() {
     });
   }, [pairMatches, p1, p2]);
 
+  useEffect(() => {
+    if (!p1 || !p2) return;
+    const load = async () => {
+      setLoading(true);
+      const [r1, r2, matchRes] = await Promise.all([
+        supabase.from("players").select("id,full_name,avatar_url,elo_rating").eq("id", p1).single(),
+        supabase.from("players").select("id,full_name,avatar_url,elo_rating").eq("id", p2).single(),
+        supabase
+          .from("matches")
+          .select("id,winner_id,player1_id,player2_id,team1_partner_id,team2_partner_id,match_score,status,created_at")
+          .eq("status", "confirmed")
+          .or(
+            `and(player1_id.eq."${p1}",team1_partner_id.eq."${p2}"),and(player1_id.eq."${p2}",team1_partner_id.eq."${p1}"),and(player2_id.eq."${p1}",team2_partner_id.eq."${p2}"),and(player2_id.eq."${p2}",team2_partner_id.eq."${p1}")`
+          )
+          .order("created_at", { ascending: false })
+          .limit(50),
+      ]);
+      if (r1.data) setPlayer1(r1.data as any);
+      if (r2.data) setPlayer2(r2.data as any);
+      if (matchRes.data) setPairMatches(matchRes.data);
+      setLoading(false);
+    };
+    load();
+  }, [p1, p2]);
+
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-screen">
+      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    </div>
+  );
+
+  if (!player1 || !player2) return (
+    <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+      <p className="text-slate-500">Players not found</p>
+      <Link href="/players" className="text-primary font-bold">Browse Players</Link>
+    </div>
+  );
+
+  const totalMatches = pairMatches.length;
+  // A win for the pair = winner is either p1 or p2 (since they're on the same team)
+  const wins = pairMatches.filter((m) => m.winner_id === p1 || m.winner_id === p2).length;
+  const losses = totalMatches - wins;
+  const winRate = totalMatches > 0 ? Math.round((wins / totalMatches) * 100) : 0;
+
+  let bestStreak = 0, currentStreak = 0;
+  for (const m of [...pairMatches].reverse()) {
+    if (m.winner_id === p1 || m.winner_id === p2) { currentStreak++; bestStreak = Math.max(bestStreak, currentStreak); }
+    else currentStreak = 0;
+  }
+
   const stats = [
     { label: "Matches Together", value: totalMatches, icon: Swords, color: "text-blue-600" },
-    { label: "Wins", value: wins, icon: Trophy, color: "text-emerald-600" },
+    { label: "Wins", value: wins, icon: Trophy, color: "text-primary" },
     { label: "Losses", value: losses, icon: TrendingUp, color: "text-rose-500" },
     { label: "Win Rate", value: `${winRate}%`, icon: TrendingUp, color: "text-amber-600" },
     { label: "Best Streak", value: bestStreak, icon: TrendingUp, color: "text-orange-500" },
@@ -192,7 +192,7 @@ export default function DoublesPairProfile() {
                 const won = m.winner_id === p1 || m.winner_id === p2;
                 return (
                   <div key={m.id} className="flex items-center gap-3 py-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
-                    <span className={`text-xs font-black px-2 py-0.5 rounded-full ${won ? "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" : "bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400"}`}>
+                    <span className={`text-xs font-black px-2 py-0.5 rounded-full ${won ? "bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary" : "bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400"}`}>
                       {won ? "W" : "L"}
                     </span>
                     <span className="text-xs text-slate-600 dark:text-slate-300 flex-1 font-mono">

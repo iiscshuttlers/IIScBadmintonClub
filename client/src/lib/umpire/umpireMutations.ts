@@ -84,7 +84,7 @@ export function computeAddPoint(match: BwfMatchState, team: 1 | 2, note?: string
       newReceiverP0AtTop = true;
       newEndsSwapped = !newEndsSwapped;
       const gamesPlayed = newT1.games + newT2.games;
-      const breakSecs = gamesPlayed === 1 ? 90 : 120;
+      const breakSecs = 60;
       const reason = `End of Game ${gamesPlayed} — Change Ends`;
       specialEvent = { _changeEnds: true, _reason: reason, _break: breakSecs };
     }

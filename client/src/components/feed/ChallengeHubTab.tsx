@@ -81,7 +81,7 @@ export function ChallengeHubTab({ currentUser }: { currentUser: any }) {
                   </div>
                 </div>
                 <div className="flex gap-2 w-full sm:w-auto">
-                  <button onClick={() => handleAction(c.id, "accepted")} className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-emerald-500 text-white font-bold text-xs rounded-xl hover:bg-emerald-600 transition">
+                  <button onClick={() => handleAction(c.id, "accepted")} className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-primary text-white font-bold text-xs rounded-xl hover:bg-primary transition">
                     <Check className="w-3.5 h-3.5" /> Accept
                   </button>
                   <button onClick={() => handleAction(c.id, "declined")} className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-xs rounded-xl hover:bg-slate-300 dark:hover:bg-slate-700 transition">
@@ -133,7 +133,7 @@ export function ChallengeHubTab({ currentUser }: { currentUser: any }) {
                   <span className="font-bold">{c.challenger_id === currentUser.id ? "You" : c.challenger.full_name}</span> challenged <span className="font-bold">{c.challenged_id === currentUser.id ? "You" : c.challenged.full_name}</span>
                 </div>
                 <div className={`font-bold uppercase tracking-wider px-2 py-1 rounded-md ${
-                  c.status === "accepted" ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30" : 
+                  c.status === "accepted" ? "bg-primary/15 text-primary dark:bg-primary/30" : 
                   c.status === "declined" ? "bg-rose-100 text-rose-600 dark:bg-rose-900/30" : 
                   "bg-slate-200 text-slate-500 dark:bg-slate-700"
                 }`}>

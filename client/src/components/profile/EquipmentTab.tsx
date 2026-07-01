@@ -46,7 +46,7 @@ export function EquipmentTab({
             onClick={() =>
               setRackets([...rackets, { name: "", string: "", tension: "" }])
             }
-            className="text-xs font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/20 px-3 py-1.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30 transition shadow-sm"
+            className="text-xs font-bold text-primary hover:text-primary dark:text-primary flex items-center gap-1 bg-primary/10 dark:bg-primary/20 px-3 py-1.5 rounded-lg border border-primary/30 dark:border-primary/30 transition shadow-sm"
           >
             + Add Racket
           </button>
@@ -59,7 +59,7 @@ export function EquipmentTab({
               className={`p-4 border rounded-2xl relative space-y-4 shadow-sm transition-all
               ${
                 index === primaryRacketIndex
-                  ? "bg-emerald-50/30 dark:bg-emerald-950/10 border-emerald-300 dark:border-emerald-800"
+                  ? "bg-primary/10/30 dark:bg-primary/10 border-primary/50 dark:border-primary/80"
                   : "bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800"
               }`}
             >
@@ -71,7 +71,7 @@ export function EquipmentTab({
                     name="primaryRacket"
                     checked={index === primaryRacketIndex}
                     onChange={() => setPrimaryRacketIndex(index)}
-                    className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 border-slate-300"
+                    className="w-4 h-4 text-primary focus:ring-primary border-slate-300"
                   />
                   <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
                     Set as Primary Racket
@@ -107,7 +107,7 @@ export function EquipmentTab({
                     updated[index].name = e.target.value;
                     setRackets(updated);
                   }}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-primary"
                   placeholder="e.g. Yonex Astrox 99 Pro"
                 />
               </div>
@@ -125,7 +125,7 @@ export function EquipmentTab({
                       updated[index].string = e.target.value;
                       setRackets(updated);
                     }}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-primary"
                     placeholder="e.g. Yonex BG80"
                   />
                 </div>
@@ -142,7 +142,7 @@ export function EquipmentTab({
                       updated[index].tension = e.target.value;
                       setRackets(updated);
                     }}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-primary"
                     placeholder="e.g. 26"
                   />
                 </div>
@@ -161,7 +161,7 @@ export function EquipmentTab({
           <button
             type="button"
             onClick={() => setShoesList([...shoesList, { name: "" }])}
-            className="text-xs font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/20 px-3 py-1.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30 transition shadow-sm"
+            className="text-xs font-bold text-primary hover:text-primary dark:text-primary flex items-center gap-1 bg-primary/10 dark:bg-primary/20 px-3 py-1.5 rounded-lg border border-primary/30 dark:border-primary/30 transition shadow-sm"
           >
             + Add Shoe
           </button>
@@ -174,7 +174,7 @@ export function EquipmentTab({
               className={`p-4 border rounded-2xl relative space-y-4 shadow-sm transition-all
               ${
                 index === primaryShoeIndex
-                  ? "bg-emerald-50/30 dark:bg-emerald-950/10 border-emerald-300 dark:border-emerald-800"
+                  ? "bg-primary/10/30 dark:bg-primary/10 border-primary/50 dark:border-primary/80"
                   : "bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800"
               }`}
             >
@@ -186,7 +186,7 @@ export function EquipmentTab({
                     name="primaryShoe"
                     checked={index === primaryShoeIndex}
                     onChange={() => setPrimaryShoeIndex(index)}
-                    className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 border-slate-300"
+                    className="w-4 h-4 text-primary focus:ring-primary border-slate-300"
                   />
                   <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
                     Set as Primary Shoe
@@ -222,7 +222,7 @@ export function EquipmentTab({
                     updated[index].name = e.target.value;
                     setShoesList(updated);
                   }}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-primary"
                   placeholder="e.g. Yonex Power Cushion 65 Z3"
                 />
               </div>
@@ -239,7 +239,7 @@ export function EquipmentTab({
           type="text"
           value={apparel}
           onChange={(e) => setApparel(e.target.value)}
-          className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+          className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none"
           placeholder="e.g. Yonex, Li-Ning"
         />
       </div>

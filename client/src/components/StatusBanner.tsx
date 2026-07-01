@@ -212,7 +212,7 @@ export default function StatusBanner() {
       )}
 
       {location === "/" && !isClosed && messages.length > 0 && (
-    <div className="relative bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-2.5 overflow-hidden flex items-center z-20 shadow-md">
+    <div className="relative bg-gradient-to-r from-primary to-primary text-white py-2.5 overflow-hidden flex items-center z-20 shadow-md">
       <Link href="/feed" className="flex-1 overflow-hidden min-w-0 pr-10">
         <div className="marquee-anim flex gap-8 font-semibold tracking-wide text-sm md:text-base whitespace-nowrap hover:opacity-90 transition-opacity cursor-pointer">
           {Array(2)

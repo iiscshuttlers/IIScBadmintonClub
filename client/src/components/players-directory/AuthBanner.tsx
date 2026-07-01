@@ -10,6 +10,7 @@ interface AuthBannerProps {
   pendingMatches: any[];
   onConfirmMatch: (matchId: string) => void;
   onRejectMatch: (matchId: string) => void;
+  processingMatches?: Set<string>;
 }
 
 export function AuthBanner({
@@ -19,6 +20,7 @@ export function AuthBanner({
   pendingMatches,
   onConfirmMatch,
   onRejectMatch,
+  processingMatches = new Set(),
 }: AuthBannerProps) {
   const [, setLocation] = useLocation();
 
@@ -54,7 +56,7 @@ export function AuthBanner({
                     <div className="text-xs text-slate-500 mt-1">
                       Score: <span className="font-bold">{m.score}</span> •
                       Winner:{" "}
-                      <span className="font-bold text-emerald-600">
+                      <span className="font-bold text-primary">
                         {m.winner_id === m.player1_id
                           ? m.player1.full_name
                           : m.player2.full_name}
@@ -64,13 +66,21 @@ export function AuthBanner({
                   <div className="flex gap-2 w-full sm:w-auto">
                     <button
                       onClick={() => onConfirmMatch(m.id)}
-                      className="flex-1 sm:flex-none px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition"
+                      disabled={processingMatches.has(m.id)}
+                      className={`flex-1 sm:flex-none px-4 py-2 text-white text-xs font-bold rounded-lg transition ${
+                        processingMatches.has(m.id) ? "bg-primary cursor-not-allowed opacity-70" : "bg-primary hover:bg-primary"
+                      }`}
                     >
-                      Confirm
+                      {processingMatches.has(m.id) ? "Confirming..." : "Confirm"}
                     </button>
                     <button
                       onClick={() => onRejectMatch(m.id)}
-                      className="flex-1 sm:flex-none px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-lg transition"
+                      disabled={processingMatches.has(m.id)}
+                      className={`flex-1 sm:flex-none px-4 py-2 text-xs font-bold rounded-lg transition ${
+                        processingMatches.has(m.id)
+                          ? "bg-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-800/50 dark:text-slate-600"
+                          : "bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300"
+                      }`}
                     >
                       Reject
                     </button>
@@ -83,14 +93,14 @@ export function AuthBanner({
 
         <div>
           <h2 className="text-xs uppercase tracking-widest font-black text-slate-400 dark:text-slate-500 mb-4 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-emerald-500" /> Your Profile
+            <Sparkles className="w-4 h-4 text-primary" /> Your Profile
           </h2>
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-emerald-300 dark:border-emerald-700 shadow-xl shadow-emerald-100/50 dark:shadow-none p-6 flex flex-col sm:flex-row items-center gap-6">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-primary/50 dark:border-primary shadow-xl shadow-primary/10/50 dark:shadow-none p-6 flex flex-col sm:flex-row items-center gap-6">
             <Link
               href={`/player/${ownProfile.id}`}
               className="flex items-center gap-4 flex-1 group min-w-0"
             >
-              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-emerald-400 shadow-md shrink-0">
+              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-primary shadow-md shrink-0">
                 {ownProfile.avatar_url ? (
                   <img
                     loading="lazy"
@@ -99,13 +109,13 @@ export function AuthBanner({
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-2xl font-black text-emerald-600">
+                  <div className="w-full h-full bg-primary/15 dark:bg-primary/30 flex items-center justify-center text-2xl font-black text-primary">
                     {ownProfile.full_name.charAt(0)}
                   </div>
                 )}
               </div>
               <div className="min-w-0">
-                <div className="text-xl font-black text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                <div className="text-xl font-black text-slate-900 dark:text-white group-hover:text-primary dark:group-hover:text-primary transition-colors">
                   {ownProfile.full_name}
                   {ownProfile.nickname && (
                     <span className="ml-2 text-sm font-semibold text-slate-400 italic whitespace-nowrap">
@@ -116,7 +126,7 @@ export function AuthBanner({
                 <div className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                   {ownProfile.department} · Class of {ownProfile.joined_year}
                 </div>
-                <div className="flex items-center gap-1.5 mt-1 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
+                <div className="flex items-center gap-1.5 mt-1 text-primary dark:text-primary text-xs font-bold">
                   View full profile <ChevronRight className="w-3.5 h-3.5" />
                 </div>
               </div>
@@ -135,7 +145,7 @@ export function AuthBanner({
         animate={{ opacity: 1, y: 0 }}
         className="mb-10"
       >
-        <div className="relative overflow-hidden bg-gradient-to-r from-emerald-600 to-teal-700 rounded-3xl p-8 text-white shadow-xl shadow-emerald-500/20">
+        <div className="relative overflow-hidden bg-gradient-to-r from-primary to-teal-700 rounded-3xl p-8 text-white shadow-xl shadow-primary/20">
           <div className="absolute -right-10 -top-10 w-48 h-48 bg-white/5 rounded-full blur-3xl" />
           <div className="relative z-10 flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
             <div className="w-16 h-16 rounded-2xl bg-white/15 flex items-center justify-center shrink-0">
@@ -145,7 +155,7 @@ export function AuthBanner({
               <div className="text-lg font-black mb-1">
                 You're in! Now create your player card 🏸
               </div>
-              <div className="text-emerald-100 text-sm font-medium">
+              <div className="text-primary/30 text-sm font-medium">
                 You're signed in as{" "}
                 <span className="font-bold text-white">
                   {session.user.email}
@@ -155,7 +165,7 @@ export function AuthBanner({
             </div>
             <button
               onClick={() => setLocation("/profile/setup")}
-              className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-white text-emerald-700 font-black text-sm hover:bg-emerald-50 transition shadow-lg shrink-0"
+              className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-white text-primary font-black text-sm hover:bg-primary/10 transition shadow-lg shrink-0"
             >
               <PlusCircle className="w-5 h-5" /> Create My Profile
             </button>
@@ -174,10 +184,10 @@ export function AuthBanner({
       className="mb-10"
     >
       <div className="relative overflow-hidden bg-gradient-to-r from-slate-800 to-slate-900 dark:from-slate-900 dark:to-slate-950 rounded-3xl p-8 text-white shadow-xl border border-slate-700/50">
-        <div className="absolute -right-10 -top-10 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl" />
+        <div className="absolute -right-10 -top-10 w-48 h-48 bg-primary/5 rounded-full blur-3xl" />
         <div className="relative z-10 flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
-          <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-            <UserCircle className="w-9 h-9 text-emerald-400" />
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+            <UserCircle className="w-9 h-9 text-primary" />
           </div>
           <div className="flex-1">
             <div className="text-lg font-black mb-1">
@@ -185,7 +195,7 @@ export function AuthBanner({
             </div>
             <div className="text-slate-300 text-sm font-medium">
               Sign in with your{" "}
-              <span className="font-black text-emerald-400">
+              <span className="font-black text-primary">
                 preferred personal Gmail account
               </span>{" "}
               to create and manage your profile.
@@ -196,7 +206,7 @@ export function AuthBanner({
               sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
               setLocation("/join");
             }}
-            className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm transition shadow-lg shadow-emerald-500/20 shrink-0"
+            className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-primary hover:bg-primary text-white font-black text-sm transition shadow-lg shadow-primary/20 shrink-0"
           >
             <LogIn className="w-5 h-5" /> Sign In / Join
           </button>

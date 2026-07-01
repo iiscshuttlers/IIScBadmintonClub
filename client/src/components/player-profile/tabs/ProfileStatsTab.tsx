@@ -45,7 +45,7 @@ export function ProfileStatsTabLeft({
     <motion.section variants={itemVariants} className="space-y-6 md:space-y-8">
       <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-3xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden">
         <h2 className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-white/45 flex items-center gap-2 mb-6">
-          <Target className="w-4 h-4 text-emerald-500 dark:text-emerald-400" /> Player
+          <Target className="w-4 h-4 text-primary dark:text-primary" /> Player
           Type Analysis
           <div className="group relative inline-flex ml-auto md:ml-2">
             <HelpCircle className="w-4 h-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-help" />
@@ -53,9 +53,9 @@ export function ProfileStatsTabLeft({
             {/* Tooltip positioned to drop DOWNWARD so it doesn't get clipped by the container's overflow-hidden */}
             <div className="absolute right-0 md:left-1/2 md:-translate-x-1/2 top-full mt-2 w-64 bg-slate-900 text-white text-[10px] sm:text-xs p-3 rounded-xl shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 normal-case tracking-normal font-medium leading-relaxed">
               <ul className="space-y-1">
-                <li><strong className="text-emerald-400">Singles/Doubles/Mixed:</strong> Win % in each format</li>
-                <li><strong className="text-emerald-400">Activity:</strong> Based on total matches logged</li>
-                <li><strong className="text-emerald-400">Synergy:</strong> Overall rating in team formats</li>
+                <li><strong className="text-primary">Singles/Doubles/Mixed:</strong> Win % in each format</li>
+                <li><strong className="text-primary">Activity:</strong> Based on total matches logged</li>
+                <li><strong className="text-primary">Synergy:</strong> Overall rating in team formats</li>
               </ul>
             </div>
           </div>
@@ -168,7 +168,7 @@ export function ProfileStatsTabRight({
       variants={itemVariants}
       className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden"
     >
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-teal-400 to-emerald-500" />
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-teal-400 to-primary" />
       <h2 className="text-[10px] font-black text-slate-500 dark:text-white/35 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
         <Users className="w-3.5 h-3.5 text-amber-400" /> Frequent Partners
       </h2>
@@ -196,7 +196,7 @@ export function ProfileStatsTabRight({
               </div>
             </div>
             <div className="text-right shrink-0 ml-3">
-              <div className="text-xs font-black text-emerald-500">
+              <div className="text-xs font-black text-primary">
                 {p.winRate}%
               </div>
               <div className="text-[9px] uppercase tracking-wider text-slate-400 dark:text-white/30">

@@ -70,7 +70,7 @@ export function AdminAllFeaturesPanel() {
   });
 
   const statusColors = {
-    active: "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800",
+    active: "bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary border-primary/40 dark:border-primary/80",
     beta: "bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800",
     "coming-soon": "bg-slate-50 dark:bg-slate-900/30 text-slate-700 dark:text-slate-400 border-slate-200 dark:border-slate-700",
   };
@@ -97,9 +97,9 @@ export function AdminAllFeaturesPanel() {
       </div>
       {/* Stats Overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-emerald-50 dark:bg-emerald-950/30 rounded-xl p-4 border border-emerald-200 dark:border-emerald-800">
-          <div className="text-2xl font-black text-emerald-700 dark:text-emerald-400">{stats.active}</div>
-          <div className="text-xs font-bold text-emerald-600 dark:text-emerald-500 uppercase">Active</div>
+        <div className="bg-primary/10 dark:bg-primary/30 rounded-xl p-4 border border-primary/40 dark:border-primary/80">
+          <div className="text-2xl font-black text-primary dark:text-primary">{stats.active}</div>
+          <div className="text-xs font-bold text-primary dark:text-primary uppercase">Active</div>
         </div>
         <div className="bg-blue-50 dark:bg-blue-950/30 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
           <div className="text-2xl font-black text-blue-700 dark:text-blue-400">{stats.total}</div>
@@ -126,19 +126,19 @@ export function AdminAllFeaturesPanel() {
               placeholder="Search features..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+              className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:ring-2 focus:ring-primary outline-none"
             />
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => setViewMode("grid")}
-              className={`p-2 rounded-lg border transition ${viewMode === "grid" ? "bg-emerald-100 dark:bg-emerald-950 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"}`}
+              className={`p-2 rounded-lg border transition ${viewMode === "grid" ? "bg-primary/15 dark:bg-primary border-primary/50 dark:border-primary text-primary dark:text-primary" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"}`}
             >
               <Grid className="w-5 h-5" />
             </button>
             <button
               onClick={() => setViewMode("list")}
-              className={`p-2 rounded-lg border transition ${viewMode === "list" ? "bg-emerald-100 dark:bg-emerald-950 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"}`}
+              className={`p-2 rounded-lg border transition ${viewMode === "list" ? "bg-primary/15 dark:bg-primary border-primary/50 dark:border-primary text-primary dark:text-primary" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"}`}
             >
               <List className="w-5 h-5" />
             </button>
@@ -154,7 +154,7 @@ export function AdminAllFeaturesPanel() {
                 onClick={() => setStatusFilter(status)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
                   statusFilter === status
-                    ? "bg-emerald-100 dark:bg-emerald-950 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400"
+                    ? "bg-primary/15 dark:bg-primary border-primary/50 dark:border-primary text-primary dark:text-primary"
                     : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400"
                 }`}
               >
@@ -255,7 +255,7 @@ export function AdminAllFeaturesPanel() {
               setSelectedCategory(null);
               setStatusFilter("all");
             }}
-            className="text-sm font-bold text-emerald-600 dark:text-emerald-400 hover:underline"
+            className="text-sm font-bold text-primary dark:text-primary hover:underline"
           >
             Clear filters
           </button>

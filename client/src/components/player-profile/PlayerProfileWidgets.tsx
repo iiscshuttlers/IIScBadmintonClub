@@ -90,7 +90,7 @@ export const FormPill = ({
     className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black shadow-md
       ${
         result === "W"
-          ? "bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-emerald-500/40"
+          ? "bg-gradient-to-br from-primary to-primary text-white shadow-primary/40"
           : "bg-gradient-to-br from-rose-400 to-rose-600 text-white shadow-rose-500/40"
       }`}
   >
@@ -418,7 +418,7 @@ export const ActivityHeatmap = ({ matches }: { matches: any[] }) => {
                 classes = `color-scale-${value.count}`;
               }
               if (value && selectedDateData && value.date === selectedDateData.date) {
-                classes += " ring-2 ring-emerald-500 ring-offset-1 dark:ring-offset-slate-800";
+                classes += " ring-2 ring-primary ring-offset-1 dark:ring-offset-slate-800";
               }
               return classes;
             }}
@@ -439,7 +439,7 @@ export const ActivityHeatmap = ({ matches }: { matches: any[] }) => {
         >
           <div className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center justify-between">
             <span>Matches on {new Date(selectedDateData.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</span>
-            <span className="text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded text-xs">{selectedDateData.count} Total</span>
+            <span className="text-primary bg-primary/10 dark:bg-primary/10 px-2 py-0.5 rounded text-xs">{selectedDateData.count} Total</span>
           </div>
           <div className="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
             {selectedDateData.dayMatches.map((match: any) => {
@@ -452,7 +452,7 @@ export const ActivityHeatmap = ({ matches }: { matches: any[] }) => {
               return (
                 <div key={match.id} className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800 flex flex-col gap-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/10 dark:bg-primary/10 px-2 py-0.5 rounded">
                       {format}
                     </span>
                     <span className="text-[10px] font-black text-slate-400">
@@ -502,7 +502,7 @@ export const ActivityHeatmap = ({ matches }: { matches: any[] }) => {
 
 export function LoadingScreen() {
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#070d1a] selection:bg-emerald-500/30 font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#070d1a] selection:bg-primary/30 font-sans">
       <div
         className="relative overflow-hidden bg-slate-950"
         style={{ minHeight: "88vh" }}
@@ -574,7 +574,7 @@ export const HeadToHeadWidget = ({
         <div className="flex items-center gap-4">
           <div className="text-center">
             <div className="text-xs font-bold text-slate-400 mb-1">YOU</div>
-            <div className="text-3xl font-black text-emerald-500">{wins}</div>
+            <div className="text-3xl font-black text-primary">{wins}</div>
           </div>
           <div className="text-xl font-black text-slate-300 dark:text-slate-600">
             -
@@ -586,12 +586,12 @@ export const HeadToHeadWidget = ({
         </div>
         <div className="flex-1 w-full max-w-xs">
           <div className="flex justify-between text-xs font-bold mb-2">
-            <span className="text-emerald-500">{winPct}% Win Rate</span>
+            <span className="text-primary">{winPct}% Win Rate</span>
             <span className="text-slate-400">{h2hMatches.length} Matches</span>
           </div>
           <div className="h-3 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden flex">
             <div
-              className="h-full bg-emerald-500"
+              className="h-full bg-primary"
               style={{ width: `${winPct}%` }}
             />
             <div
@@ -665,7 +665,7 @@ export const DoublesSynergyWidget = ({
   const runnerUps = synergy.slice(1, 3);
 
   return (
-    <div className="bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-950/40 dark:to-emerald-950/40 rounded-3xl p-5 border border-teal-100 dark:border-teal-800/50 shadow-sm relative overflow-hidden mt-6">
+    <div className="bg-gradient-to-br from-teal-50 to-primary/5 dark:from-teal-950/40 dark:to-primary/90/40 rounded-3xl p-5 border border-teal-100 dark:border-teal-800/50 shadow-sm relative overflow-hidden mt-6">
       <div className="absolute top-0 right-0 p-4 opacity-10">
         <Users className="w-24 h-24 text-teal-500" />
       </div>

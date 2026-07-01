@@ -96,7 +96,7 @@ export function DirectoryGrid({
         </p>
         <button
           onClick={fetchPlayers}
-          className="mt-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition"
+          className="mt-2 px-4 py-2 bg-primary hover:bg-primary text-white text-sm font-bold rounded-xl transition"
         >
           Retry
         </button>
@@ -171,7 +171,7 @@ export function DirectoryGrid({
         <div className="mt-12 flex justify-center">
           <button
             onClick={() => setVisibleCount((v) => v + 24)}
-            className="px-8 py-3 bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400 font-bold rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all flex items-center gap-2"
+            className="px-8 py-3 bg-white dark:bg-slate-800 border border-primary/40 dark:border-primary/50 text-primary dark:text-primary font-bold rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:bg-primary/10 dark:hover:bg-primary/80/20 transition-all flex items-center gap-2"
           >
             Load More Players
           </button>

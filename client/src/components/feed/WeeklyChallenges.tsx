@@ -163,7 +163,7 @@ export function WeeklyChallenges() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-emerald-500" /></div>
+        <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
       ) : (
         <div className="divide-y divide-slate-100 dark:divide-slate-800">
           {challenges.map((c) => {
@@ -173,19 +173,19 @@ export function WeeklyChallenges() {
             const pct = Math.min(100, Math.round((current / c.target) * 100));
 
             return (
-              <div key={c.id} className={`px-5 py-4 flex items-center gap-3 ${completed ? "bg-emerald-50/50 dark:bg-emerald-950/10" : ""}`}>
-                <div className={`p-2 rounded-xl shrink-0 ${completed ? "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" : "bg-slate-100 dark:bg-slate-800 text-slate-400"}`}>
+              <div key={c.id} className={`px-5 py-4 flex items-center gap-3 ${completed ? "bg-primary/10/50 dark:bg-primary/10" : ""}`}>
+                <div className={`p-2 rounded-xl shrink-0 ${completed ? "bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary" : "bg-slate-100 dark:bg-slate-800 text-slate-400"}`}>
                   {completed ? <CheckCircle className="w-4 h-4" /> : <Target className="w-4 h-4" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <p className={`text-sm font-black ${completed ? "text-emerald-700 dark:text-emerald-400" : "text-slate-800 dark:text-white"}`}>{c.title}</p>
+                    <p className={`text-sm font-black ${completed ? "text-primary dark:text-primary" : "text-slate-800 dark:text-white"}`}>{c.title}</p>
                     <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.5 rounded-full">+{c.points} pts</span>
                   </div>
                   <p className="text-xs text-slate-400 dark:text-slate-500">{c.description}</p>
                   <div className="mt-2 flex items-center gap-2">
                     <div className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                      <div className={`h-full rounded-full transition-all ${completed ? "bg-emerald-500" : "bg-amber-400"}`} style={{ width: `${pct}%` }} />
+                      <div className={`h-full rounded-full transition-all ${completed ? "bg-primary" : "bg-amber-400"}`} style={{ width: `${pct}%` }} />
                     </div>
                     <span className="text-[10px] font-black text-slate-400 shrink-0">{current}/{c.target}</span>
                   </div>

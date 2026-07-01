@@ -95,15 +95,15 @@ export default function Home() {
           {/* Mobile photo bg */}
           <div className="lg:hidden absolute inset-0 z-0">
             <img src={iiscTeam} alt="IISc Badminton Team" className="w-full h-full object-cover object-[25%_center]" />
-            <div className="absolute inset-0 bg-gradient-to-b from-slate-950/92 via-slate-900/85 to-emerald-950/95" />
+            <div className="absolute inset-0 bg-gradient-to-b from-slate-950/92 via-slate-900/85 to-primary/90/95" />
           </div>
 
           {/* Desktop bg */}
           <div className="hidden lg:block absolute inset-0 z-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-blue-950/90 to-emerald-950" />
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-blue-950/90 to-primary/90" />
             <div className="absolute inset-0 hero-pattern" />
             {/* decorative glow orbs */}
-            <div className="absolute top-1/4 right-[15%] w-[500px] h-[500px] bg-emerald-500/6 rounded-full blur-[100px]" />
+            <div className="absolute top-1/4 right-[15%] w-[500px] h-[500px] bg-primary/6 rounded-full blur-[100px]" />
             <div className="absolute bottom-1/3 left-[10%] w-[400px] h-[400px] bg-blue-500/6 rounded-full blur-[80px]" />
             <div className="absolute top-1/3 left-[40%] w-[300px] h-[300px] bg-orange-500/4 rounded-full blur-[60px]" />
             {/* dot grid */}
@@ -116,10 +116,10 @@ export default function Home() {
               {/* Left Content */}
               <motion.div variants={fadeUp} initial="hidden" animate="visible" className="space-y-8">
                 {/* Live badge */}
-                <div className="inline-flex items-center gap-2.5 bg-white/8 border border-white/15 backdrop-blur-sm text-emerald-300 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider">
+                <div className="inline-flex items-center gap-2.5 bg-white/8 border border-white/15 backdrop-blur-sm text-primary/70 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider">
                   <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
                   </span>
                   Welcome to IISc Badminton Club
                 </div>
@@ -129,7 +129,7 @@ export default function Home() {
                   <h1 className="text-5xl lg:text-6xl xl:text-7xl font-black leading-[1.05] tracking-tight" style={{ fontFamily: "Playfair Display, serif" }}>
                     Where{" "}
                     <span className="relative inline-block">
-                      <span className="text-emerald-400">Champions</span>
+                      <span className="text-primary">Champions</span>
                     </span>
                     <br />
                     Are Forged
@@ -141,13 +141,13 @@ export default function Home() {
 
                 <p className="text-lg text-slate-300 leading-relaxed max-w-lg">
                   Experience world-class badminton at IISc. Join our vibrant community of{" "}
-                  <span className="text-emerald-400 font-semibold">350+ players</span> — from beginners to national champions — competing, training, and growing together.
+                  <span className="text-primary font-semibold">350+ players</span> — from beginners to national champions — competing, training, and growing together.
                 </p>
 
                 {/* CTAs */}
                 <div className="flex flex-col sm:flex-row gap-3.5 pt-1">
                   <Link href="/events">
-                    <Button className="bg-emerald-500 hover:bg-emerald-400 text-white px-8 py-6 text-sm font-bold flex items-center gap-2 w-full sm:w-auto justify-center rounded-xl shadow-lg shadow-emerald-500/25 hover:-translate-y-0.5 transition-all duration-300 glow-emerald cursor-pointer">
+                    <Button className="bg-primary hover:bg-primary text-white px-8 py-6 text-sm font-bold flex items-center gap-2 w-full sm:w-auto justify-center rounded-xl shadow-lg shadow-primary/25 hover:-translate-y-0.5 transition-all duration-300 glow-emerald cursor-pointer">
                       Explore Events <ArrowRight className="w-4 h-4" />
                     </Button>
                   </Link>
@@ -201,7 +201,7 @@ export default function Home() {
               className="text-center mb-12"
               variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}
             >
-              <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-3">Quick Access</p>
+              <p className="text-xs font-bold text-primary dark:text-primary uppercase tracking-widest mb-3">Quick Access</p>
               <div className="flex items-center justify-center gap-2">
                 <h2 className="text-3xl lg:text-4xl font-black text-slate-900 dark:text-white" style={{ fontFamily: "Playfair Display, serif" }}>
                   What are you looking for?
@@ -224,12 +224,12 @@ export default function Home() {
                 {
                   href: "/events", title: "Events", description: "Browse live, upcoming and archived tournaments.",
                   Icon: CalendarDays,
-                  iconBg: "bg-emerald-100 dark:bg-emerald-900/40",
-                  iconColor: "text-emerald-600 dark:text-emerald-400",
-                  accentColor: "text-emerald-600 dark:text-emerald-400",
-                  hoverBorder: "hover:border-emerald-200 dark:hover:border-emerald-800",
+                  iconBg: "bg-primary/15 dark:bg-primary/40",
+                  iconColor: "text-primary dark:text-primary",
+                  accentColor: "text-primary dark:text-primary",
+                  hoverBorder: "hover:border-primary/40 dark:hover:border-primary",
                   tag: "Live Now",
-                  tagColor: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400",
+                  tagColor: "bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary",
                 },
                 {
                   href: "/hall-of-fame", title: "Winners Wall", description: "See champions and podiums from all club events.",
@@ -284,7 +284,7 @@ export default function Home() {
               variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }}
             >
               {[
-                { Icon: Users, value: config?.stats?.members || "350+", label: "Active Members", desc: "Across all skill levels", gradient: "from-emerald-500 to-teal-500" },
+                { Icon: Users, value: config?.stats?.members || "350+", label: "Active Members", desc: "Across all skill levels", gradient: "from-primary to-teal-500" },
                 { Icon: Trophy, value: config?.stats?.tournaments || "20+", label: "Tournaments Held", desc: "Competitive events organized", gradient: "from-amber-500 to-orange-500" },
                 { Icon: Medal, value: config?.stats?.trophies || "10+", label: "IISM Trophies", desc: "National stage medals", gradient: "from-blue-500 to-indigo-500" },
               ].map(({ Icon, value, label, desc, gradient }) => (
@@ -313,12 +313,12 @@ export default function Home() {
               className="mb-16"
               variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}
             >
-              <div className="inline-flex items-center gap-2 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/25 text-emerald-600 dark:text-emerald-400 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider mb-5">
+              <div className="inline-flex items-center gap-2 bg-primary/10 dark:bg-primary/10 border border-primary/40 dark:border-primary/25 text-primary dark:text-primary px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider mb-5">
                 <Zap className="w-3.5 h-3.5" /> Our Story
               </div>
               <h2 className="text-4xl lg:text-5xl font-black text-slate-900 dark:text-white mb-4 leading-tight" style={{ fontFamily: "Playfair Display, serif" }}>
                 About IISc
-                <span className="text-emerald-500 dark:text-emerald-400"> Badminton Club</span>
+                <span className="text-primary dark:text-primary"> Badminton Club</span>
               </h2>
               <p className="text-slate-600 dark:text-slate-300 max-w-2xl text-lg leading-relaxed">
                 A thriving community of 350+ badminton enthusiasts at the Indian Institute of Science — competing, connecting, and celebrating the sport year-round.
@@ -333,7 +333,7 @@ export default function Home() {
               <motion.div variants={fadeUp} className="space-y-6">
                 <div>
                   <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-1 flex items-center gap-3" style={{ fontFamily: "Playfair Display, serif" }}>
-                    <span className="w-1.5 h-7 bg-gradient-to-b from-emerald-400 to-teal-500 rounded-full inline-block" />
+                    <span className="w-1.5 h-7 bg-gradient-to-b from-primary to-teal-500 rounded-full inline-block" />
                     Our Mission
                   </h3>
                 </div>
@@ -364,8 +364,8 @@ export default function Home() {
                       key={title}
                       className="group relative rounded-2xl p-5 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-800 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
                     >
-                      <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center mb-3">
-                        <Icon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      <div className="w-8 h-8 rounded-xl bg-primary/15 dark:bg-primary/40 flex items-center justify-center mb-3">
+                        <Icon className="w-4 h-4 text-primary dark:text-primary" />
                       </div>
                       <h4 className="font-black text-slate-900 dark:text-white text-sm mb-1.5">{title}</h4>
                       <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed">{desc}</p>
@@ -420,7 +420,7 @@ export default function Home() {
               variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }}
             >
               {teamMembers.map((member, idx) => {
-                const gradients = ["from-emerald-500 to-teal-600", "from-blue-600 to-indigo-700"];
+                const gradients = ["from-primary to-teal-600", "from-blue-600 to-indigo-700"];
                 const initials = member.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
                 return (
                   <motion.div
@@ -443,7 +443,7 @@ export default function Home() {
                       )}
                     </div>
                     <div className="min-w-0">
-                      <span className="inline-block text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1.5 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-900/40 rounded-full">
+                      <span className="inline-block text-[10px] font-black text-primary dark:text-primary uppercase tracking-widest mb-1.5 px-2.5 py-1 bg-primary/10 dark:bg-primary/40 rounded-full">
                         {member.role}
                       </span>
                       <h3 className="text-xl font-black text-slate-900 dark:text-white leading-tight">{member.name}</h3>
@@ -463,12 +463,12 @@ export default function Home() {
             variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}
           >
             <div className="container mx-auto px-4">
-              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-950 via-slate-900 to-emerald-950 p-8 md:p-12 shadow-2xl">
+              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-950 via-slate-900 to-primary/90 p-8 md:p-12 shadow-2xl">
                 {/* Decorative elements */}
                 <div className="absolute inset-0 hero-pattern opacity-40" />
-                <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/8 rounded-full blur-3xl" />
+                <div className="absolute top-0 right-0 w-80 h-80 bg-primary/8 rounded-full blur-3xl" />
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/8 rounded-full blur-3xl" />
-                <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-emerald-500 via-teal-400 to-orange-500" />
+                <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-primary via-teal-400 to-orange-500" />
 
                 <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-8">
                   <div className="flex-1 space-y-4">
@@ -502,26 +502,26 @@ export default function Home() {
         <section className="py-24 relative overflow-hidden bg-slate-900 dark:bg-slate-950">
           {/* Background */}
           <div className="absolute inset-0 hero-pattern opacity-50" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/6 rounded-full blur-[100px]" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/6 rounded-full blur-[100px]" />
 
           <motion.div
             className="container mx-auto px-4 text-center relative z-10"
             variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}
           >
             <div className="max-w-2xl mx-auto space-y-6">
-              <div className="inline-flex items-center gap-2 bg-white/8 border border-white/12 text-emerald-400 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider">
+              <div className="inline-flex items-center gap-2 bg-white/8 border border-white/12 text-primary px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider">
                 <Zap className="w-3.5 h-3.5" /> Join the Community
               </div>
               <h2 className="text-4xl lg:text-5xl font-black text-white leading-tight" style={{ fontFamily: "Playfair Display, serif" }}>
                 Ready to Pick Up<br />
-                <span className="text-emerald-400">the Racket?</span>
+                <span className="text-primary">the Racket?</span>
               </h2>
               <p className="text-slate-400 text-base leading-relaxed">
                 Whether you're a seasoned player or just starting out, there's a court and a community waiting for you at IISc.
               </p>
               <div className="flex flex-col sm:flex-row gap-3.5 justify-center pt-2">
                 <Link href="/join">
-                  <Button className="bg-emerald-500 hover:bg-emerald-400 text-white px-10 py-6 text-sm font-bold rounded-xl shadow-lg shadow-emerald-500/20 hover:-translate-y-0.5 transition-all duration-300 glow-emerald cursor-pointer">
+                  <Button className="bg-primary hover:bg-primary text-white px-10 py-6 text-sm font-bold rounded-xl shadow-lg shadow-primary/20 hover:-translate-y-0.5 transition-all duration-300 glow-emerald cursor-pointer">
                     Get Started Today
                   </Button>
                 </Link>

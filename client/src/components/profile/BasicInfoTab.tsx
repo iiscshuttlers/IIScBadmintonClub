@@ -66,7 +66,7 @@ export function BasicInfoTab({
       {/* Avatar Upload / URL picker */}
       <div className="p-5 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-4">
         <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-          <UserCircle className="w-5 h-5 text-emerald-500" />
+          <UserCircle className="w-5 h-5 text-primary" />
           Profile Picture (Avatar)
         </h3>
 
@@ -104,14 +104,14 @@ export function BasicInfoTab({
                 type="text"
                 value={avatarUrl}
                 onChange={(e) => setAvatarUrl(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-primary"
                 placeholder="e.g. https://images.unsplash.com/... or your custom avatar URL"
               />
             </div>
 
             <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
               <span>or</span>
-              <label className="flex items-center gap-1 cursor-pointer font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400">
+              <label className="flex items-center gap-1 cursor-pointer font-bold text-primary hover:text-primary dark:text-primary">
                 <Upload className="w-3.5 h-3.5" />
                 Upload Image File
                 <input
@@ -136,7 +136,7 @@ export function BasicInfoTab({
             type="text"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none transition-all"
             placeholder="e.g. Tanu Singh"
           />
         </div>
@@ -149,7 +149,7 @@ export function BasicInfoTab({
             type="text"
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none transition-all"
             placeholder="e.g. Tanya"
           />
         </div>
@@ -165,7 +165,7 @@ export function BasicInfoTab({
             type="email"
             value={iiscEmail}
             onChange={(e) => setIiscEmail(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none transition-all"
             placeholder="e.g. tanu@iisc.ac.in"
           />
         </div>
@@ -184,7 +184,7 @@ export function BasicInfoTab({
                 e.target.value.replace(/\D/g, "").slice(0, 10),
               )
             }
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none transition-all"
             placeholder="e.g. 9876543210"
           />
         </div>
@@ -199,7 +199,7 @@ export function BasicInfoTab({
             required
             value={gender}
             onChange={(e) => setGender(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none transition-all"
           >
             <option value="" disabled>Select gender</option>
             <option value="Male">Male</option>
@@ -215,7 +215,7 @@ export function BasicInfoTab({
             required
             value={joinedYear}
             onChange={(e) => setJoinedYear(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none transition-all"
           >
             <option value="" disabled>
               Select year
@@ -243,7 +243,7 @@ export function BasicInfoTab({
                 setDepartment("");
               }
             }}
-            className="w-5 h-5 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500 bg-white dark:bg-slate-900"
+            className="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary bg-white dark:bg-slate-900"
           />
           <label htmlFor="isGuest" className="text-sm font-semibold text-slate-700 dark:text-slate-300 cursor-pointer">
             I am a Guest / Project Assistant / Intern
@@ -276,7 +276,7 @@ export function BasicInfoTab({
               required
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none transition-all"
             >
               <option value="" disabled>
                 Select your department
@@ -304,7 +304,7 @@ export function BasicInfoTab({
                 type="text"
                 value={customDepartment}
                 onChange={(e) => setCustomDepartment(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none transition-all"
                 placeholder="e.g. Center for Nano Science"
               />
             </motion.div>

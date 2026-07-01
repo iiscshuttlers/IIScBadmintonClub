@@ -4,6 +4,7 @@ import { getTournaments } from "@/lib/tournaments";
 import { fetchSiteData } from "@/lib/siteData";
 import { NotificationsMenu } from "@/components/NotificationsMenu";
 import UserDropdown from "@/components/navigation/UserDropdown";
+import { PersonalNavigation } from "@/components/PersonalNavigation";
 import {
   Menu,
   X,
@@ -42,11 +43,12 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useNavigationAuth } from "@/hooks/useNavigationAuth";
 import { useAuth, type ViewAsRole } from "@/contexts/AuthContext";
 import { useAppUpdate } from "@/hooks/useAppUpdate";
+import { useAppMode } from "@/contexts/AppModeContext";
 import { PreferencesModal } from "@/components/QuickSettings";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
-const TOP_LEVEL_LINKS = [
+const CLUB_LINKS = [
   { href: "/feed", label: "Feed" },
   { href: "/players", label: "Players" },
   { href: "/events", label: "Events" },
@@ -55,6 +57,41 @@ const TOP_LEVEL_LINKS = [
   { href: "/exchange", label: "Exchange" },
   { href: "/about", label: "Club" },
 ];
+
+const PERSONAL_LINKS = [
+  { href: "/my-feed", label: "My Matches" },
+  { href: "/my-network", label: "My Network" },
+  { href: "/my-stats", label: "My Stats" },
+  { href: "/settings", label: "Settings" }
+];
+
+function ModeToggle({ isLoggedIn, setLocation, mode, setMode }: { isLoggedIn: boolean, setLocation: any, mode: 'club' | 'personal', setMode: any }) {
+  const handleToggle = (newMode: 'club' | 'personal') => {
+    if (newMode === 'personal' && !isLoggedIn) {
+      sessionStorage.setItem("return_url", "/feed/my-matches");
+      setLocation("/join");
+      return;
+    }
+    setMode(newMode);
+  };
+
+  return (
+    <div className="flex bg-slate-100 dark:bg-slate-900 rounded-full p-1 mr-2 shadow-inner border border-slate-200/60 dark:border-slate-800">
+      <button
+        onClick={() => handleToggle('club')}
+        className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all ${mode === 'club' ? 'bg-white dark:bg-slate-800 text-primary dark:text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+      >
+        <Users className="w-3.5 h-3.5" /> Club
+      </button>
+      <button
+        onClick={() => handleToggle('personal')}
+        className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all ${mode === 'personal' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+      >
+        <User className="w-3.5 h-3.5" /> Personal
+      </button>
+    </div>
+  );
+}
 
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
@@ -81,6 +118,9 @@ export default function Navigation() {
   const { theme, toggleTheme } = useTheme();
   const { viewAsRole, setViewAsRole, isMasterAdmin: isTrulyMainAdmin } = useAuth();
   const { updateInfo, openUpdateDialog } = useAppUpdate();
+  const { mode, setMode } = useAppMode();
+
+  const currentLinks = mode === "club" ? CLUB_LINKS : PERSONAL_LINKS;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -186,13 +226,18 @@ export default function Navigation() {
     setIsOpen(false);
   };
 
+  // Render Personal mode navigation if in Personal mode
+  if (mode === "personal" && isLoggedIn) {
+    return <PersonalNavigation />;
+  }
+
   return (
     <>
       <nav
         className={`pt-[max(env(safe-area-inset-top),36px)] md:pt-[max(env(safe-area-inset-top),16px)] sticky top-0 z-50 transition-all duration-300 ${
           scrolled
-            ? "bg-gradient-to-r from-emerald-50/95 to-white/95 dark:from-emerald-950/40 dark:to-slate-950/95 backdrop-blur-xl shadow-lg shadow-emerald-900/5 dark:shadow-slate-900/40 border-b border-emerald-100/50 dark:border-slate-800/60"
-            : "bg-gradient-to-r from-emerald-50/60 to-white dark:from-emerald-950/20 dark:to-slate-950 border-b border-transparent"
+            ? "bg-gradient-to-r from-primary/10 to-white/95 dark:from-primary/40 dark:to-slate-950/95 backdrop-blur-xl shadow-lg shadow-primary/20 dark:shadow-slate-900/40 border-b border-primary/30 dark:border-slate-800/60"
+            : "bg-gradient-to-r from-primary/10 to-white dark:from-primary/20 dark:to-slate-950 border-b border-transparent"
         }`}
       >
         <div className={`container mx-auto px-4 transition-all duration-300 ${scrolled ? "py-1.5" : "py-2"}`}>
@@ -217,7 +262,7 @@ export default function Navigation() {
                       Viewing as: {viewAsRole.replace("_", " ")}
                     </span>
                   ) : (
-                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold uppercase tracking-widest hidden sm:block">
+                    <span className="text-[10px] text-primary dark:text-primary font-semibold uppercase tracking-widest hidden sm:block">
                       Shuttlers · Bangalore
                     </span>
                   )}
@@ -227,8 +272,9 @@ export default function Navigation() {
 
             {/* Desktop Nav Links */}
             <div className="hidden lg:flex items-center gap-0.5 flex-1 justify-center">
+              <ModeToggle isLoggedIn={isLoggedIn} setLocation={setLocation} mode={mode} setMode={setMode} />
               <NavLink href="/" label="Home" isActive={isActive("/")} />
-              {TOP_LEVEL_LINKS.map((link) => (
+              {currentLinks.map((link) => (
                 <NavLink
                   key={link.href}
                   href={link.href}
@@ -270,7 +316,7 @@ export default function Navigation() {
                     sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
                     setLocation("/join");
                   }} className="cursor-pointer">
-                    <Button className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 rounded-full h-8 shadow-sm cursor-pointer pointer-events-none">
+                    <Button className="flex items-center gap-1.5 bg-primary hover:bg-primary text-white font-bold text-xs px-3 rounded-full h-8 shadow-sm cursor-pointer pointer-events-none">
                       <LogIn className="w-3.5 h-3.5" /> Sign In
                     </Button>
                   </div>
@@ -320,7 +366,7 @@ export default function Navigation() {
                   sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
                   setLocation("/join");
                 }}>
-                  <Button className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 rounded-full h-7 shadow-sm cursor-pointer pointer-events-none">
+                  <Button className="flex items-center gap-1.5 bg-primary hover:bg-primary text-white font-bold text-xs px-3 rounded-full h-7 shadow-sm cursor-pointer pointer-events-none">
                     <LogIn className="w-3.5 h-3.5" /> Sign In
                   </Button>
                 </div>
@@ -341,7 +387,7 @@ export default function Navigation() {
           >
               <div className="px-4 py-4 space-y-1">
                 <div className="w-10 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mb-4" />
-                {TOP_LEVEL_LINKS.filter(l => l.href !== "/feed" && l.href !== "/players").map((link) => (
+                {currentLinks.filter(l => l.href !== "/feed" && l.href !== "/players").map((link) => (
                   <MobileNavLink
                     key={link.href}
                     href={link.href}
@@ -381,7 +427,7 @@ export default function Navigation() {
                 {updateInfo && (
                   <button
                     onClick={() => { openUpdateDialog(); setIsOpen(false); }}
-                    className="w-full flex items-center justify-between px-4 py-3 mb-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 hover:bg-emerald-100 dark:hover:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 font-bold text-sm transition-colors cursor-pointer border border-emerald-200/60 dark:border-emerald-900/50"
+                    className="w-full flex items-center justify-between px-4 py-3 mb-2 rounded-xl bg-primary/10 dark:bg-primary/30 hover:bg-primary/15 dark:hover:bg-primary/90/50 text-primary dark:text-primary font-bold text-sm transition-colors cursor-pointer border border-primary/40/60 dark:border-primary/50"
                   >
                     <span className="flex items-center gap-2">
                       <Download className="h-4 w-4" /> Update Available
@@ -415,7 +461,7 @@ export default function Navigation() {
                       className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer"
                       onClick={handleInvite}
                     >
-                      <UserPlus className="h-4 w-4 text-emerald-500" /> Invite Friends
+                      <UserPlus className="h-4 w-4 text-primary" /> Invite Friends
                     </button>
                     <Link href="/privacy" className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
                       <Shield className="h-4 w-4 text-slate-400" /> Privacy Policy
@@ -433,7 +479,7 @@ export default function Navigation() {
                     setIsOpen(false);
                     setLocation("/join");
                   }} className="w-full">
-                    <Button className="w-full flex items-center gap-2 justify-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl h-11 cursor-pointer mt-1">
+                    <Button className="w-full flex items-center gap-2 justify-center bg-primary hover:bg-primary text-white font-bold rounded-xl h-11 cursor-pointer mt-1">
                       <LogIn className="w-4 h-4" /> Sign In to your account
                     </Button>
                   </div>
@@ -446,33 +492,49 @@ export default function Navigation() {
 
       {/* ── Mobile Bottom Navigation Bar (outside nav to ensure fixed positioning) ─────────────────────────────── */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-white/95 dark:bg-slate-950/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 flex justify-around items-end px-2 pb-safe pt-1 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]">
-            <Link href="/">
-              <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/") ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}>
-                <Home className={`w-[22px] h-[22px] mb-1 ${isActive("/") ? "fill-emerald-600/20" : ""}`} />
-                <span className="text-[10px] font-bold">Home</span>
-              </button>
-            </Link>
-            <Link href="/feed">
-              <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/feed") ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}>
-                <Activity className={`w-[22px] h-[22px] mb-1 ${isActive("/feed") ? "fill-emerald-600/20" : ""}`} />
-                <span className="text-[10px] font-bold">Feed</span>
-                {hasUnreadAnnouncements && (
-                  <span
-                    title="New announcements"
-                    className="absolute top-1 right-2.5 flex items-center justify-center"
-                  >
-                    <span className="w-2 h-2 bg-red-500 rounded-full border border-white dark:border-slate-950" />
-                  </span>
-                )}
-              </button>
-            </Link>
+            {mode === 'club' ? (
+              <>
+                <Link href="/">
+                  <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/") ? "text-primary dark:text-primary" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}>
+                    <Home className={`w-[22px] h-[22px] mb-1 ${isActive("/") ? "fill-primary/20" : ""}`} />
+                    <span className="text-[10px] font-bold">Home</span>
+                  </button>
+                </Link>
+                <Link href="/feed">
+                  <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/feed") ? "text-primary dark:text-primary" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}>
+                    <Activity className={`w-[22px] h-[22px] mb-1 ${isActive("/feed") ? "fill-primary/20" : ""}`} />
+                    <span className="text-[10px] font-bold">Feed</span>
+                    {hasUnreadAnnouncements && (
+                      <span title="New announcements" className="absolute top-1 right-2.5 flex items-center justify-center">
+                        <span className="w-2 h-2 bg-red-500 rounded-full border border-white dark:border-slate-950" />
+                      </span>
+                    )}
+                  </button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href={myPlayerId ? `/player/${myPlayerId}` : "/join"}>
+                  <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${(location.startsWith("/player/") && location.includes(myPlayerId!)) ? "text-blue-600 dark:text-blue-400" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}>
+                    <User className={`w-[22px] h-[22px] mb-1 ${(location.startsWith("/player/") && location.includes(myPlayerId!)) ? "fill-blue-600/20" : ""}`} />
+                    <span className="text-[10px] font-bold">My Stats</span>
+                  </button>
+                </Link>
+                <Link href="/feed/my-matches">
+                  <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/feed/my-matches") ? "text-blue-600 dark:text-blue-400" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}>
+                    <Activity className={`w-[22px] h-[22px] mb-1 ${isActive("/feed/my-matches") ? "fill-blue-600/20" : ""}`} />
+                    <span className="text-[10px] font-bold">My Feed</span>
+                  </button>
+                </Link>
+              </>
+            )}
 
             {/* Center Log Match FAB */}
             <div className="relative -top-5 mx-1">
               {isLoggedIn ? (
                 <button
                   onClick={() => window.dispatchEvent(new Event('openLogMatchModal'))}
-                  className="w-[52px] h-[52px] bg-gradient-to-tr from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 rounded-full flex items-center justify-center text-white shadow-xl shadow-emerald-500/40 border-4 border-white dark:border-slate-950 transition-transform active:scale-95 cursor-pointer"
+                  className={`w-[52px] h-[52px] ${mode === 'club' ? 'bg-gradient-to-tr from-primary to-teal-500 hover:from-primary hover:to-teal-400 shadow-primary/40' : 'bg-gradient-to-tr from-blue-600 to-indigo-500 hover:from-blue-500 hover:to-indigo-400 shadow-blue-500/40'} rounded-full flex items-center justify-center text-white shadow-xl border-4 border-white dark:border-slate-950 transition-transform active:scale-95 cursor-pointer`}
                 >
                   <Plus className="w-6 h-6 stroke-[3]" />
                 </button>
@@ -486,15 +548,25 @@ export default function Navigation() {
               )}
             </div>
 
-            <Link href="/players">
-              <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/players") ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}>
-                <Users className={`w-[22px] h-[22px] mb-1 ${isActive("/players") ? "fill-emerald-600/20" : ""}`} />
-                <span className="text-[10px] font-bold">Players</span>
-              </button>
-            </Link>
+            {mode === 'club' ? (
+              <Link href="/players">
+                <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/players") ? "text-primary dark:text-primary" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}>
+                  <Users className={`w-[22px] h-[22px] mb-1 ${isActive("/players") ? "fill-primary/20" : ""}`} />
+                  <span className="text-[10px] font-bold">Players</span>
+                </button>
+              </Link>
+            ) : (
+              <Link href="/players?tab=connections">
+                <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/players") ? "text-blue-600 dark:text-blue-400" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}>
+                  <Users className={`w-[22px] h-[22px] mb-1 ${isActive("/players") ? "fill-blue-600/20" : ""}`} />
+                  <span className="text-[10px] font-bold">Network</span>
+                </button>
+              </Link>
+            )}
+
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className={`relative flex flex-col items-center p-2 min-w-[60px] cursor-pointer ${isOpen ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}
+              className={`relative flex flex-col items-center p-2 min-w-[60px] cursor-pointer ${isOpen ? (mode === 'club' ? "text-primary dark:text-primary" : "text-blue-600 dark:text-blue-400") : "text-slate-500 hover:text-slate-900 dark:hover:text-white"}`}
             >
               {isOpen ? <X className="w-[22px] h-[22px] mb-1" /> : <Menu className="w-[22px] h-[22px] mb-1" />}
               <span className="text-[10px] font-bold">Menu</span>
@@ -527,7 +599,7 @@ function NavLink({ href, label, isActive, badge }: { href: string; label: string
       <button
         className={`relative px-3.5 py-2 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer ${
           isActive
-            ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50"
+            ? "text-primary dark:text-primary bg-primary/10 dark:bg-primary/50"
             : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60"
         }`}
       >
@@ -552,7 +624,7 @@ function MobileNavLink({
         onClick={onClick}
         className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-colors duration-150 cursor-pointer ${
           isActive
-            ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50"
+            ? "text-primary dark:text-primary bg-primary/10 dark:bg-primary/50"
             : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60"
         }`}
       >
@@ -582,7 +654,7 @@ function DarkModeToggle({ insideMenu }: { insideMenu?: boolean }) {
           {isDark ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-indigo-500" />}
           Dark Mode
         </span>
-        <div className={`w-8 h-4 rounded-full transition-colors relative ${isDark ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
+        <div className={`w-8 h-4 rounded-full transition-colors relative ${isDark ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-700'}`}>
           <div className={`w-3 h-3 bg-white rounded-full absolute top-0.5 transition-all ${isDark ? 'left-4.5' : 'left-0.5'}`} />
         </div>
       </button>

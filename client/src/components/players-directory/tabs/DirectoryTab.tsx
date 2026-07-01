@@ -119,8 +119,8 @@ export function DirectoryTab({
       {!loading && ownProfile && recommended.length > 0 && !searchQuery && levelFilter === "All" && departmentFilter === "All" && (
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-4">
-            <div className="p-2 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg">
-              <Sword className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <div className="p-2 bg-primary/15 dark:bg-primary/50 rounded-lg">
+              <Sword className="w-5 h-5 text-primary dark:text-primary" />
             </div>
             <div>
               <h3 className="text-lg font-black text-slate-800 dark:text-slate-100">
@@ -195,7 +195,7 @@ export function DirectoryTab({
           </p>
           <button
             onClick={() => fetchPlayers()}
-            className="mt-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition"
+            className="mt-2 px-4 py-2 bg-primary hover:bg-primary text-white text-sm font-bold rounded-xl transition"
           >
             Retry
           </button>
@@ -280,7 +280,7 @@ export function DirectoryTab({
                 setLevelFilter("All");
                 setDepartmentFilter("All");
               }}
-              className="mt-6 px-6 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-bold rounded-xl transition"
+              className="mt-6 px-6 py-2 bg-primary/15 hover:bg-primary/20 text-primary font-bold rounded-xl transition"
             >
               Clear Filters
             </button>

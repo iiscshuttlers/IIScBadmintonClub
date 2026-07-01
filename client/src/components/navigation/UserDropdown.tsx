@@ -10,7 +10,7 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
 const STATUS_CONFIG = [
-  { id: "looking", short: "Available", dot: "bg-emerald-400", active: "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-400/40" },
+  { id: "looking", short: "Available", dot: "bg-primary", active: "bg-primary/20 text-primary dark:text-primary/70 ring-1 ring-primary/40" },
   { id: "playing", short: "Playing", dot: "bg-amber-400",   active: "bg-amber-500/20 text-amber-700 dark:text-amber-300 ring-1 ring-amber-400/40" },
   { id: "resting", short: "Resting", dot: "bg-indigo-400",  active: "bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-400/40" },
   { id: "injured", short: "Injured", dot: "bg-rose-400",    active: "bg-rose-500/20 text-rose-700 dark:text-rose-300 ring-1 ring-rose-400/40" },
@@ -50,11 +50,11 @@ export default function SubBarProfileButton({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="relative w-8 h-8 rounded-full border-2 border-slate-200 dark:border-slate-700 hover:border-emerald-500 transition-all duration-200 overflow-hidden shrink-0 shadow-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-950">
+        <button className="relative w-8 h-8 rounded-full border-2 border-slate-200 dark:border-slate-700 hover:border-primary transition-all duration-200 overflow-hidden shrink-0 shadow-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-slate-950">
           {userAvatar ? (
             <img src={userAvatar} alt={userName} className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center font-black text-xs">
+            <div className="w-full h-full bg-gradient-to-br from-primary to-teal-600 text-white flex items-center justify-center font-black text-xs">
               {userName ? userName[0].toUpperCase() : "U"}
             </div>
           )}
@@ -66,7 +66,7 @@ export default function SubBarProfileButton({
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 p-0 border-0 overflow-hidden rounded-2xl shadow-2xl shadow-slate-300/40 dark:shadow-black/60">
-        <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 dark:from-slate-900 dark:via-slate-800 dark:to-emerald-950 px-4 pt-3 pb-4">
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary via-teal-600 to-primary dark:from-slate-900 dark:via-slate-800 dark:to-primary/90 px-4 pt-3 pb-4">
           <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full bg-white/10 pointer-events-none" />
           <div className="absolute -bottom-4 -left-4 w-20 h-20 rounded-full bg-white/5 pointer-events-none" />
           <div className="relative flex justify-between items-center mb-3">
@@ -129,7 +129,7 @@ export default function SubBarProfileButton({
               <UserPlus className="h-4 w-4 text-slate-400" /> Add Account
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={handleInvite} className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:text-slate-900 dark:focus:text-white focus:bg-slate-50 dark:focus:bg-slate-800 border-t border-slate-100 dark:border-slate-800 gap-2.5 px-3 py-2.5">
-              <UserPlus className="h-4 w-4 text-emerald-500" /> Invite Friends
+              <UserPlus className="h-4 w-4 text-primary" /> Invite Friends
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => setLocation("/privacy")} className="cursor-pointer font-semibold rounded-none text-slate-700 dark:text-slate-300 focus:text-slate-900 dark:focus:text-white focus:bg-slate-50 dark:focus:bg-slate-800 border-t border-slate-100 dark:border-slate-800 gap-2.5 px-3 py-2.5">
               <Shield className="h-4 w-4 text-slate-400" /> Privacy Policy

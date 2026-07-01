@@ -9,15 +9,15 @@ export default function PrivacyPolicy() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans pb-24 pt-4 lg:pt-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         <Link href="/">
-          <span className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors cursor-pointer mb-6">
+          <span className="inline-flex items-center gap-2 text-sm font-semibold text-primary dark:text-primary hover:text-primary dark:hover:text-primary/70 transition-colors cursor-pointer mb-6">
             <ArrowLeft className="w-4 h-4" /> Back to Home
           </span>
         </Link>
         
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-10 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-4 mb-8">
-            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
-              <Shield className="w-6 h-6 text-emerald-500" />
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <Shield className="w-6 h-6 text-primary" />
             </div>
             <div>
               <h1 className="text-3xl font-black text-slate-900 dark:text-white">Privacy Policy</h1>
@@ -52,7 +52,7 @@ export default function PrivacyPolicy() {
               <li>Provide personalized experiences, such as "Buddy" matchmaking, rivalry analytics, and player comparisons.</li>
               <li>Communicate with you regarding your matches, buddy requests, and platform updates via push notifications (with your explicit opt-in consent).</li>
               <li>Improve the platform based on aggregated, anonymized usage data.</li>
-              <li>Enforce our <Link href="/terms"><span className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer">Terms of Service</span></Link> and prevent misuse.</li>
+              <li>Enforce our <Link href="/terms"><span className="text-primary dark:text-primary font-bold hover:underline cursor-pointer">Terms of Service</span></Link> and prevent misuse.</li>
             </ul>
 
             <h3 className="text-xl font-bold text-slate-900 dark:text-white mt-8 mb-4">3. Third-Party Services & SDKs</h3>
@@ -60,11 +60,11 @@ export default function PrivacyPolicy() {
               Our platform integrates with the following third-party services. Each has its own privacy policy governing your data:
             </p>
             <ul className="list-disc pl-5 space-y-2">
-              <li><strong>Supabase</strong> — Database hosting, authentication, and real-time data. Your account data (email, profile) is stored on Supabase servers. <a href="https://supabase.com/privacy" target="_blank" rel="noreferrer" className="text-emerald-600 dark:text-emerald-400 hover:underline">Supabase Privacy Policy</a></li>
-              <li><strong>Google Analytics</strong> — Anonymized usage tracking to understand how our platform is used. No personally identifiable information is sent. <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer" className="text-emerald-600 dark:text-emerald-400 hover:underline">Google Privacy Policy</a></li>
-              <li><strong>Firebase</strong> — Used for real-time tournament bracket updates. <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noreferrer" className="text-emerald-600 dark:text-emerald-400 hover:underline">Firebase Privacy Policy</a></li>
-              <li><strong>Capacitor (Ionic)</strong> — Framework for native mobile app features like haptics and sharing. No user data is sent to Ionic. <a href="https://ionic.io/privacy" target="_blank" rel="noreferrer" className="text-emerald-600 dark:text-emerald-400 hover:underline">Ionic Privacy Policy</a></li>
-              <li><strong>YouTube (Embedded)</strong> — Match videos are embedded from YouTube. YouTube's privacy policy applies when you view videos. <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer" className="text-emerald-600 dark:text-emerald-400 hover:underline">Google Privacy Policy</a></li>
+              <li><strong>Supabase</strong> — Database hosting, authentication, and real-time data. Your account data (email, profile) is stored on Supabase servers. <a href="https://supabase.com/privacy" target="_blank" rel="noreferrer" className="text-primary dark:text-primary hover:underline">Supabase Privacy Policy</a></li>
+              <li><strong>Google Analytics</strong> — Anonymized usage tracking to understand how our platform is used. No personally identifiable information is sent. <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer" className="text-primary dark:text-primary hover:underline">Google Privacy Policy</a></li>
+              <li><strong>Firebase</strong> — Used for real-time tournament bracket updates. <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noreferrer" className="text-primary dark:text-primary hover:underline">Firebase Privacy Policy</a></li>
+              <li><strong>Capacitor (Ionic)</strong> — Framework for native mobile app features like haptics and sharing. No user data is sent to Ionic. <a href="https://ionic.io/privacy" target="_blank" rel="noreferrer" className="text-primary dark:text-primary hover:underline">Ionic Privacy Policy</a></li>
+              <li><strong>YouTube (Embedded)</strong> — Match videos are embedded from YouTube. YouTube's privacy policy applies when you view videos. <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer" className="text-primary dark:text-primary hover:underline">Google Privacy Policy</a></li>
             </ul>
 
             <h3 className="text-xl font-bold text-slate-900 dark:text-white mt-8 mb-4">4. Data Sharing and Disclosure</h3>
@@ -122,7 +122,7 @@ export default function PrivacyPolicy() {
             <ul className="list-disc pl-5 space-y-2">
               <li><strong>Access:</strong> Request a copy of your personal data stored on our platform.</li>
               <li><strong>Correction:</strong> Update or correct inaccurate personal data via your profile settings.</li>
-              <li><strong>Deletion:</strong> Request permanent deletion of your account and personal data at any time via the <Link href="/delete-account"><span className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer">Delete Account</span></Link> page, or by contacting us directly.</li>
+              <li><strong>Deletion:</strong> Request permanent deletion of your account and personal data at any time via the <Link href="/delete-account"><span className="text-primary dark:text-primary font-bold hover:underline cursor-pointer">Delete Account</span></Link> page, or by contacting us directly.</li>
               <li><strong>Portability:</strong> Request your data in a machine-readable format by contacting our administrators.</li>
               <li><strong>Withdrawal of Consent:</strong> Withdraw consent for data processing at any time (this may limit your ability to use certain features).</li>
             </ul>
@@ -158,13 +158,13 @@ export default function PrivacyPolicy() {
               <br /><br />
               <strong>IISc Badminton Club</strong><br />
               Indian Institute of Science, Bangalore 560012, India<br />
-              Email: <a href="mailto:iiscbadmintonclub@gmail.com" className="text-emerald-600 dark:text-emerald-400 hover:underline">iiscbadmintonclub@gmail.com</a>
+              Email: <a href="mailto:iiscbadmintonclub@gmail.com" className="text-primary dark:text-primary hover:underline">iiscbadmintonclub@gmail.com</a>
             </p>
 
             <div className="mt-10 pt-6 border-t border-slate-200 dark:border-slate-800 text-center">
               <p className="text-xs text-slate-400 dark:text-slate-500">
-                Also see our <Link href="/terms"><span className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer">Terms of Service</span></Link>
-                {" "}and <Link href="/delete-account"><span className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer">Delete Account</span></Link> pages.
+                Also see our <Link href="/terms"><span className="text-primary dark:text-primary font-bold hover:underline cursor-pointer">Terms of Service</span></Link>
+                {" "}and <Link href="/delete-account"><span className="text-primary dark:text-primary font-bold hover:underline cursor-pointer">Delete Account</span></Link> pages.
               </p>
             </div>
           </div>

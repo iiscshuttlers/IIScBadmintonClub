@@ -177,7 +177,7 @@ export function HeadToHeadWidget({
           </div>
           <div className="flex items-center gap-1.5 text-lg font-black">
             {stats.isWinStreak ? (
-              <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+              <span className="text-primary dark:text-primary flex items-center gap-1">
                 <TrendingUp className="w-5 h-5" /> W{stats.streak}
               </span>
             ) : (
@@ -195,7 +195,7 @@ export function HeadToHeadWidget({
             Point Differential
           </div>
           <div
-            className={`text-2xl font-black flex items-end gap-1 ${stats.pointDiff > 0 ? "text-emerald-600 dark:text-emerald-400" : stats.pointDiff < 0 ? "text-rose-600 dark:text-rose-400" : "text-slate-600 dark:text-slate-400"}`}
+            className={`text-2xl font-black flex items-end gap-1 ${stats.pointDiff > 0 ? "text-primary dark:text-primary" : stats.pointDiff < 0 ? "text-rose-600 dark:text-rose-400" : "text-slate-600 dark:text-slate-400"}`}
           >
             {stats.pointDiff > 0 ? "+" : ""}
             {stats.pointDiff}

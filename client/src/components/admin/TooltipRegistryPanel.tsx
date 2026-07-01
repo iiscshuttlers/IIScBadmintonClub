@@ -42,7 +42,7 @@ export function TooltipRegistryPanel() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-black text-slate-800 dark:text-white flex items-center gap-2">
-            <HelpCircle className="w-6 h-6 text-emerald-500" />
+            <HelpCircle className="w-6 h-6 text-primary" />
             Tooltip Registry
           </h2>
           <p className="text-slate-500 dark:text-slate-400 mt-1">
@@ -56,11 +56,11 @@ export function TooltipRegistryPanel() {
           <Card key={idx} className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="p-5">
               <div className="flex items-start gap-3">
-                <div className="mt-1 w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
-                  <MapPin className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <div className="mt-1 w-8 h-8 rounded-full bg-primary/15 dark:bg-primary/30 flex items-center justify-center shrink-0">
+                  <MapPin className="w-4 h-4 text-primary dark:text-primary" />
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-emerald-600 dark:text-emerald-500 uppercase tracking-wider mb-1">
+                  <div className="text-xs font-bold text-primary dark:text-primary uppercase tracking-wider mb-1">
                     {tip.page}
                   </div>
                   <h3 className="font-bold text-slate-900 dark:text-white mb-2 leading-tight">

@@ -10,20 +10,22 @@ export function ChangeEndsModal({
   onConfirm: () => void;
 }) {
   return (
-    <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur-sm rounded-4xl gap-5 p-8 text-center">
-      <ArrowLeftRight className="w-14 h-14 text-amber-400" />
-      <h2 className="text-2xl font-black text-white uppercase tracking-wider">Change Ends</h2>
-      <p className="text-slate-400 font-bold text-sm max-w-xs">{reason}</p>
-      <div className="flex items-center gap-2 text-amber-400 text-sm font-bold">
-        <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-        Players change sides of the court now
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+      <div className="flex flex-col items-center bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 text-center w-full max-w-sm shadow-2xl gap-5">
+        <ArrowLeftRight className="w-14 h-14 text-amber-400" />
+        <h2 className="text-2xl font-black text-white uppercase tracking-wider">Change Ends</h2>
+        <p className="text-slate-400 font-bold text-sm max-w-xs">{reason}</p>
+        <div className="flex items-center justify-center gap-2 text-amber-400 text-sm font-bold">
+          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+          Players change sides of the court now
+        </div>
+        <button
+          onClick={onConfirm}
+          className="mt-2 w-full py-4 bg-amber-500 hover:bg-amber-400 text-amber-950 rounded-2xl font-black uppercase tracking-widest shadow-xl transition"
+        >
+          Ends Changed ✓
+        </button>
       </div>
-      <button
-        onClick={onConfirm}
-        className="mt-2 px-10 py-4 bg-amber-500 hover:bg-amber-400 text-amber-950 rounded-2xl font-black uppercase tracking-widest shadow-xl transition"
-      >
-        Ends Changed ✓
-      </button>
     </div>
   );
 }
@@ -44,8 +46,9 @@ export function DisciplineCardModal({
   onIssueCard: (target: CardTarget, cardType: CardType) => void;
 }) {
   return (
-    <div className="absolute inset-0 z-50 flex flex-col items-start justify-start bg-slate-950/95 backdrop-blur-sm rounded-4xl p-6 overflow-auto">
-      <div className="flex items-center justify-between w-full mb-6">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+      <div className="flex flex-col items-start justify-start bg-slate-900 border border-slate-700 rounded-3xl p-6 w-full max-w-sm shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between w-full mb-6">
         <h2 className="text-lg font-black uppercase tracking-wider flex items-center gap-2">
           <Flag className="w-5 h-5 text-amber-400" /> Issue Discipline Card
         </h2>
@@ -95,31 +98,39 @@ export function DisciplineCardModal({
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
 
 export function RetireModal({
+  match,
   onRetire,
   onClose
 }: {
+  match?: any;
   onRetire: (team: 1 | 2) => void;
   onClose: () => void;
 }) {
+  const t1Name = match ? (match.t1.p1Name + (match.t1.p2Name ? ` & ${match.t1.p2Name}` : "")) : "Team 1";
+  const t2Name = match ? (match.t2.p1Name + (match.t2.p2Name ? ` & ${match.t2.p2Name}` : "")) : "Team 2";
+
   return (
-    <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur-sm rounded-4xl p-8 text-center gap-5">
-      <AlertTriangle className="w-12 h-12 text-rose-400" />
-      <h2 className="text-xl font-black text-white uppercase tracking-wider">Match Retirement</h2>
-      <p className="text-slate-400 text-sm">Which team is retiring from the match?</p>
-      <div className="flex gap-3 w-full max-w-xs">
-        <button onClick={() => onRetire(1)} className="flex-1 py-3 bg-rose-500/20 border border-rose-500 text-rose-400 rounded-xl font-bold text-sm hover:bg-rose-500/30 transition">
-          Team 1 Retires
-        </button>
-        <button onClick={() => onRetire(2)} className="flex-1 py-3 bg-rose-500/20 border border-rose-500 text-rose-400 rounded-xl font-bold text-sm hover:bg-rose-500/30 transition">
-          Team 2 Retires
-        </button>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+      <div className="flex flex-col items-center justify-center bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 text-center w-full max-w-sm shadow-2xl gap-5">
+        <AlertTriangle className="w-12 h-12 text-rose-400" />
+        <h2 className="text-xl font-black text-white uppercase tracking-wider">Match Retirement</h2>
+        <p className="text-slate-400 text-sm">Which team is retiring from the match?</p>
+        <div className="flex flex-col gap-3 w-full">
+          <button onClick={() => onRetire(1)} className="w-full py-3 px-4 bg-rose-500/20 border border-rose-500 text-rose-400 rounded-xl font-bold text-sm hover:bg-rose-500/30 transition">
+            {t1Name}
+          </button>
+          <button onClick={() => onRetire(2)} className="w-full py-3 px-4 bg-rose-500/20 border border-rose-500 text-rose-400 rounded-xl font-bold text-sm hover:bg-rose-500/30 transition">
+            {t2Name}
+          </button>
+        </div>
+        <button onClick={onClose} className="text-slate-500 text-sm hover:text-slate-300 transition mt-2">Cancel</button>
       </div>
-      <button onClick={onClose} className="text-slate-500 text-sm hover:text-slate-300 transition">Cancel</button>
     </div>
   );
 }
@@ -130,7 +141,10 @@ export function DirectScoreModal({
   directSetsText,
   setDirectSetsText,
   onSave,
-  onClose
+  onClose,
+  team1Label = "Team 1",
+  team2Label = "Team 2",
+  match
 }: {
   directWinner: 1 | 2 | null;
   setDirectWinner: (w: 1 | 2 | null) => void;
@@ -138,61 +152,138 @@ export function DirectScoreModal({
   setDirectSetsText: (t: string) => void;
   onSave: () => void;
   onClose: () => void;
+  team1Label?: string;
+  team2Label?: string;
+  match?: any;
 }) {
+  const sets = directSetsText ? directSetsText.split(",").map(s => s.trim()) : [];
+  const parsedSets = [0, 1, 2, 3, 4].map(i => {
+    const s = sets[i] || "";
+    const [t1, t2] = s.split("-");
+    return { t1: t1 || "", t2: t2 || "" };
+  });
+
+  const handleSetChange = (idx: number, team: 1 | 2, val: string) => {
+    const newSets = [...parsedSets];
+    if (team === 1) newSets[idx].t1 = val;
+    else newSets[idx].t2 = val;
+    
+    const validSets = newSets.filter((s, i) => i <= idx || s.t1 !== "" || s.t2 !== ""); // Keep sets up to the highest edited
+    const str = validSets.map(s => `${s.t1 || "0"}-${s.t2 || "0"}`).join(",");
+    setDirectSetsText(str);
+  };
+
+  const t1Name = match ? (match.t1.p1Name + (match.t1.p2Name ? ` & ${match.t1.p2Name}` : "")) : team1Label;
+  const t2Name = match ? (match.t2.p1Name + (match.t2.p2Name ? ` & ${match.t2.p2Name}` : "")) : team2Label;
+
+  const bestOfSets = match?.bestOfSets || 3;
+  const lastFilledSetIdx = parsedSets.findLastIndex(s => s.t1 !== "" || s.t2 !== "");
+  const setsToShow = Math.min(bestOfSets, Math.max(1, lastFilledSetIdx + 2));
+
   return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="bg-slate-900 border border-slate-700 p-6 rounded-3xl max-w-sm w-full shadow-2xl">
-        <h3 className="text-xl font-black mb-4 text-white">Enter Final Score</h3>
-        <div className="space-y-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 pb-20">
+      <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full shadow-2xl max-h-[75dvh] flex flex-col">
+        
+        <div className="p-6 pb-4 shrink-0 border-b border-slate-800">
+          <h3 className="text-xl font-black text-white">Enter Final Score</h3>
+        </div>
+
+        <div className="p-6 overflow-y-auto space-y-6">
           <div>
             <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Winner</label>
-            <div className="flex gap-2">
-              <button onClick={() => setDirectWinner(1)} className={`flex-1 py-3 rounded-xl font-bold transition ${directWinner === 1 ? "bg-emerald-500 text-white" : "bg-slate-800 text-slate-400"}`}>Team 1</button>
-              <button onClick={() => setDirectWinner(2)} className={`flex-1 py-3 rounded-xl font-bold transition ${directWinner === 2 ? "bg-emerald-500 text-white" : "bg-slate-800 text-slate-400"}`}>Team 2</button>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button onClick={() => setDirectWinner(1)} className={`flex-1 py-3 px-2 rounded-xl font-bold transition text-sm ${directWinner === 1 ? "bg-primary text-white" : "bg-slate-800 text-slate-400"}`}>{t1Name || "Team 1"}</button>
+              <button onClick={() => setDirectWinner(2)} className={`flex-1 py-3 px-2 rounded-xl font-bold transition text-sm ${directWinner === 2 ? "bg-sky-500 text-white" : "bg-slate-800 text-slate-400"}`}>{t2Name || "Team 2"}</button>
             </div>
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Set Scores (e.g. 21-15, 21-18)</label>
-            <input type="text" value={directSetsText} onChange={e => setDirectSetsText(e.target.value)} placeholder="21-15, 21-18" className="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white outline-none focus:border-emerald-500" />
-          </div>
-          <div className="flex gap-2 pt-2">
-            <button onClick={onClose} className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold">Cancel</button>
-            <button onClick={() => {
-              if (!directWinner || !directSetsText) { toast.error("Fill all fields"); return; }
-              onSave();
-            }} className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold">Save Score</button>
+            <label className="block text-xs font-bold text-slate-400 uppercase mb-3">Set Scores</label>
+            <div className="bg-slate-800/50 rounded-2xl border border-slate-700 overflow-hidden">
+              <div className="grid grid-cols-[auto_1fr_1fr] bg-slate-800 text-xs font-bold text-slate-400 uppercase tracking-widest">
+                <div className="p-3 text-center border-r border-slate-700">Set</div>
+                <div className="p-3 text-center border-r border-slate-700 truncate px-2" title={t1Name}>{t1Name || "Team 1"}</div>
+                <div className="p-3 text-center truncate px-2" title={t2Name}>{t2Name || "Team 2"}</div>
+              </div>
+              {Array.from({ length: setsToShow }).map((_, idx) => (
+                <div key={idx} className="grid grid-cols-[auto_1fr_1fr] border-t border-slate-700/50">
+                  <div className="p-3 flex items-center justify-center font-black text-slate-500 border-r border-slate-700 bg-slate-800/30 w-12">{idx + 1}</div>
+                  <div className="p-2 border-r border-slate-700">
+                    <input 
+                      type="number" 
+                      value={parsedSets[idx].t1} 
+                      onChange={e => handleSetChange(idx, 1, e.target.value)} 
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-center text-primary font-bold outline-none focus:border-primary" 
+                    />
+                  </div>
+                  <div className="p-2">
+                    <input 
+                      type="number" 
+                      value={parsedSets[idx].t2} 
+                      onChange={e => handleSetChange(idx, 2, e.target.value)} 
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-center text-sky-400 font-bold outline-none focus:border-sky-500" 
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
+
+        <div className="p-6 pt-4 border-t border-slate-700 shrink-0 flex gap-2">
+          <button onClick={onClose} className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition">Cancel</button>
+          <button onClick={() => {
+            if (!directWinner || !directSetsText) { toast.error("Fill winner and at least 1 set"); return; }
+            onSave();
+          }} className="flex-[2] py-3 bg-primary hover:bg-primary text-white rounded-xl font-bold transition">Save Score</button>
+        </div>
+        
       </div>
     </div>
   );
 }
 
-export function BreakTimerOverlay({
-  breakSecondsLeft,
-  breakLabel,
-  onEndBreak,
-  onClose
+export function ConfirmActionModal({
+  title,
+  message,
+  confirmLabel = "Confirm",
+  confirmColor = "bg-rose-600 hover:bg-rose-500",
+  icon: Icon = AlertTriangle,
+  onConfirm,
+  onClose,
 }: {
-  breakSecondsLeft: number;
-  breakLabel: string;
-  onEndBreak: () => void;
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  confirmColor?: string;
+  icon?: any;
+  onConfirm: () => void;
   onClose: () => void;
 }) {
   return (
-    <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur-sm rounded-4xl gap-5 p-8 text-center">
-      <button
-        onClick={onClose}
-        className="absolute top-4 left-4 flex items-center gap-1.5 text-slate-400 hover:text-white text-xs font-bold uppercase tracking-widest transition"
-      >
-        ← Back
-      </button>
-      <Timer className="w-12 h-12 text-amber-400 animate-pulse" />
-      <div className="text-8xl font-black tabular-nums text-amber-400 drop-shadow-[0_0_20px_rgba(251,191,36,0.4)]">
-        {Math.floor(breakSecondsLeft / 60).toString().padStart(2, "0")}:{(breakSecondsLeft % 60).toString().padStart(2, "0")}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+      <div className="flex flex-col items-center bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 text-center w-full max-w-sm shadow-2xl">
+        <Icon className="w-12 h-12 text-rose-500 mb-4" />
+        <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-wider mb-2">{title}</h2>
+        <p className="text-slate-400 font-bold text-xs sm:text-sm mb-6">{message}</p>
+        
+        <div className="flex w-full gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold text-sm rounded-2xl transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              onConfirm();
+              onClose();
+            }}
+            className={`flex-1 py-3 text-white font-bold text-sm rounded-2xl shadow-lg transition ${confirmColor}`}
+          >
+            {confirmLabel}
+          </button>
+        </div>
       </div>
-      {breakLabel && <p className="text-slate-400 font-bold text-xs uppercase tracking-widest text-center max-w-xs">{breakLabel}</p>}
-      <button onClick={onEndBreak} className="px-8 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-2xl font-bold text-sm">End Break</button>
     </div>
   );
 }

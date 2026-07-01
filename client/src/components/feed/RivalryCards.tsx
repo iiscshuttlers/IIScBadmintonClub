@@ -93,7 +93,7 @@ export function RivalryCards({ matches, limit = 3 }: Props) {
                     {r.p1.avatar_url ? (
                       <img src={r.p1.avatar_url} className="w-8 h-8 rounded-full object-cover border-2 border-white dark:border-slate-800 shadow" />
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-black text-xs">
+                      <div className="w-8 h-8 rounded-full bg-primary/15 dark:bg-primary/30 text-primary dark:text-primary flex items-center justify-center font-black text-xs">
                         {r.p1.full_name[0]}
                       </div>
                     )}
@@ -117,7 +117,7 @@ export function RivalryCards({ matches, limit = 3 }: Props) {
 
                 <div className="h-1.5 w-full rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 mb-2">
                   <div
-                    className="h-full bg-emerald-500 rounded-full transition-all"
+                    className="h-full bg-primary rounded-full transition-all"
                     style={{ width: `${r.count > 0 ? (r.p1Wins / r.count) * 100 : 50}%` }}
                   />
                 </div>

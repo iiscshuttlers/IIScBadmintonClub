@@ -93,7 +93,7 @@ export function PlayerAnalyticsWidget({ matches, playerId, playerElo }: Props) {
     const total = confirmedMatches.length;
     const score = total > 0 ? Math.round((opponents.size / total) * 100) : 0;
     let label = "Versatile";
-    let color = "text-emerald-600 dark:text-emerald-400";
+    let color = "text-primary dark:text-primary";
     if (score < 40) { label = "Specialist"; color = "text-amber-600 dark:text-amber-400"; }
     else if (score > 70) { label = "Explorer"; color = "text-blue-600 dark:text-blue-400"; }
     return { uniqueOpponents: opponents.size, total, diversityScore: score, label, color };
