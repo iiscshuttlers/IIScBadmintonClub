@@ -66,7 +66,7 @@ export function LiveBracketsSection({ tournamentId }: { tournamentId: string | n
 
   if (loading) {
     return (
-      <div className="py-32 flex flex-col items-center justify-center space-y-4">
+      <div className="py-12 flex flex-col items-center justify-center space-y-4">
         <div className="w-12 h-12 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />
         <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest animate-pulse">
           Loading Brackets
@@ -77,7 +77,7 @@ export function LiveBracketsSection({ tournamentId }: { tournamentId: string | n
 
   if (error || !formats.length) {
     return (
-      <div className="py-32 flex flex-col items-center justify-center text-center">
+      <div className="py-12 flex flex-col items-center justify-center text-center">
         <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
           <Trophy className="w-10 h-10 text-muted-foreground dark:text-muted-foreground" />
         </div>
@@ -112,7 +112,7 @@ export function LiveBracketsSection({ tournamentId }: { tournamentId: string | n
 
       <div className="max-w-7xl mx-auto overflow-x-auto">
         {currentMatches.length === 0 ? (
-          <div className="text-center py-20 text-gray-400 dark:text-muted-foreground italic">
+          <div className="text-center py-12 text-gray-400 dark:text-muted-foreground italic">
             No matches scheduled for {activeFormat} yet.
           </div>
         ) : (

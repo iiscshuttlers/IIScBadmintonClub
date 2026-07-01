@@ -75,7 +75,7 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
   const [activeFormat, setActiveFormat] = useState<string>("ALL");
 
   if (!tournamentData) return (
-    <div className="py-32 flex flex-col items-center justify-center text-center">
+    <div className="py-12 flex flex-col items-center justify-center text-center">
       <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
         <Calendar className="w-10 h-10 text-muted-foreground dark:text-muted-foreground" />
       </div>
@@ -145,7 +145,7 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-3 sm:px-4 py-6 sm:py-8 space-y-6 sm:space-y-8 font-sans text-foreground dark:text-foreground">
+    <div className="max-w-5xl mx-auto px-3 sm:px-4 py-6 sm:py-8 space-y-6 sm:space-y-6 font-sans text-foreground dark:text-foreground">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
@@ -204,11 +204,11 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
         {/* Vertical Timeline Line - Hidden on very small screens, shown from sm up */}
         <div className="absolute left-[23px] sm:left-[31px] md:left-[79px] top-4 bottom-4 w-0.5 bg-gradient-to-b from-slate-200 dark:from-slate-800 via-slate-200 dark:via-slate-800 to-transparent hidden xs:block" />
 
-        <div className="space-y-8 sm:space-y-10">
+        <div className="space-y-6 sm:space-y-10">
           {Object.entries(byTime).map(([time, matches]) => (
             <div
               key={time}
-              className="relative flex flex-col xs:flex-row gap-3 sm:gap-4 md:gap-8"
+              className="relative flex flex-col xs:flex-row gap-3 sm:gap-4 md:gap-6"
             >
               {/* Time Label */}
               <div className="xs:w-12 sm:w-20 flex-shrink-0 pt-1">
@@ -314,7 +314,7 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
 
                       {/* Players & Score Section - Redesigned for Mobile */}
                       <div className="px-4 sm:px-6 py-4 sm:py-6">
-                        <div className="flex flex-col md:grid md:grid-cols-[1fr_auto_1fr] items-center gap-4 sm:gap-8">
+                        <div className="flex flex-col md:grid md:grid-cols-[1fr_auto_1fr] items-center gap-4 sm:gap-6">
                           {/* Team 1 */}
                           <div
                             className={`w-full flex items-center md:justify-end gap-3 sm:gap-4 ${p1Won ? "md:scale-105 md:origin-right" : ""}`}

@@ -179,7 +179,7 @@ export function WinnersWallSection() {
 
   return (
     <div className="flex-1 w-full flex flex-col">
-      <section className="container mx-auto px-4 py-12 space-y-12">
+      <section className="container mx-auto px-4 py-12 space-y-6">
         {/* Aggregate Stats & Leaderboard Grid */}
         <div className="grid lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {/* Stats Bar */}
@@ -339,14 +339,14 @@ export function WinnersWallSection() {
         </div>
 
         {filteredTournaments.length === 0 ? (
-          <div className="text-center py-20 text-gray-400 dark:text-muted-foreground">
+          <div className="text-center py-12 text-gray-400 dark:text-muted-foreground">
             <Trophy className="w-12 h-12 mx-auto mb-4 opacity-30" />
             <p className="text-lg font-semibold">
               No results match this filter.
             </p>
           </div>
         ) : (
-          <div className="max-w-6xl mx-auto space-y-8">
+          <div className="max-w-6xl mx-auto space-y-6">
             <AnimatePresence mode="popLayout">
               {filteredTournaments.map((event, idx) => (
                 <motion.div
@@ -371,7 +371,7 @@ export function WinnersWallSection() {
                     }`}
                   />
 
-                  <div className="p-8 sm:p-10 space-y-6">
+                  <div className="p-6 sm:p-10 space-y-6">
                     <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
                       <div>
                         <div className="flex items-center gap-2 mb-2">

@@ -33,7 +33,7 @@ export function EquipmentTab({
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 10 }}
       transition={{ duration: 0.2 }}
-      className="space-y-8"
+      className="space-y-6"
     >
       {/* Multiple Rackets Arsenal */}
       <div className="space-y-4">

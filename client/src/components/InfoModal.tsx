@@ -54,7 +54,7 @@ export function InfoModal({ title, items, footer, triggerIcon, triggerClassName 
               onClick={(e) => e.stopPropagation()}
             >
               {/* Sticky Header */}
-              <div className="flex items-center justify-between p-6 sm:p-8 pb-4 shrink-0 bg-slate-900 z-10">
+              <div className="flex items-center justify-between p-6 sm:p-6 pb-4 shrink-0 bg-slate-900 z-10">
                 <div className="flex items-center gap-3">
                   {mainIcon && <div className="text-cyan-400">{mainIcon}</div>}
                   <h2 className="text-lg font-black text-cyan-400 tracking-wider uppercase">
@@ -70,7 +70,7 @@ export function InfoModal({ title, items, footer, triggerIcon, triggerClassName 
               </div>
 
               {/* Scrollable Content */}
-              <div className="p-6 sm:p-8 pt-0 overflow-y-auto custom-scrollbar">
+              <div className="p-6 sm:p-6 pt-0 overflow-y-auto custom-scrollbar">
                 <div className="space-y-4">
                   {items.map((item, idx) => (
                     <div key={idx} className="flex gap-4">

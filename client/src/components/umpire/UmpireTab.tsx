@@ -199,7 +199,7 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
             ) : (
               <button
                 onClick={() => setIsUmpiring(true)}
-                className="px-8 py-4 bg-primary hover:bg-primary text-foreground font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg transition-colors text-lg"
+                className="px-6 py-4 bg-primary hover:bg-primary text-foreground font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg transition-colors text-lg"
               >
                 <Play className="w-6 h-6 fill-white" /> Start Umpiring
               </button>
@@ -304,7 +304,7 @@ function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditSt
   if (recent.length === 0) return null;
 
   return (
-    <div className="bg-slate-900 rounded-[2rem] p-8 shadow-xl border border-slate-800">
+    <div className="bg-slate-900 rounded-[2rem] p-6 shadow-xl border border-slate-800">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
         <h3 className="text-xl font-black text-foreground">Recent Submissions (Editable for 15m)</h3>
         <div className="flex bg-slate-800 p-1 rounded-xl w-fit overflow-x-auto hide-scrollbar">

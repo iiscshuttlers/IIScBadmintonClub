@@ -214,13 +214,13 @@ export default function StatusBanner() {
       {location === "/" && !isClosed && messages.length > 0 && (
     <div className="relative bg-gradient-to-r from-primary to-primary text-foreground py-2.5 overflow-hidden flex items-center z-20 shadow-md">
       <Link href="/feed" className="flex-1 overflow-hidden min-w-0 pr-10">
-        <div className="marquee-anim flex gap-8 font-semibold tracking-wide text-sm md:text-base whitespace-nowrap hover:opacity-90 transition-opacity cursor-pointer">
+        <div className="marquee-anim flex gap-6 font-semibold tracking-wide text-sm md:text-base whitespace-nowrap hover:opacity-90 transition-opacity cursor-pointer">
           {Array(2)
             .fill(null)
             .map((_, blockIdx) => (
               <span
                 key={blockIdx}
-                className="whitespace-nowrap flex items-center gap-8"
+                className="whitespace-nowrap flex items-center gap-6"
               >
                 {Array(10)
                   .fill(messages)
@@ -228,7 +228,7 @@ export default function StatusBanner() {
                   .map((msg, idx) => (
                     <span
                       key={`${blockIdx}-${idx}`}
-                      className="flex items-center gap-8"
+                      className="flex items-center gap-6"
                     >
                       <span className={msg.colorClass}>{msg.text}</span>
                       <span className="inline-block w-1.5 h-1.5 rounded-full bg-white/40 flex-shrink-0" />
@@ -254,7 +254,7 @@ export default function StatusBanner() {
         const flyerContent = (
           <div className="flex-1 overflow-hidden min-w-0 pr-10">
             <div 
-              className="marquee-anim flex gap-8 font-semibold tracking-wide text-sm md:text-base whitespace-nowrap hover:opacity-90 transition-opacity"
+              className="marquee-anim flex gap-6 font-semibold tracking-wide text-sm md:text-base whitespace-nowrap hover:opacity-90 transition-opacity"
               style={{ animationDuration: flyer.speed === 'custom' ? `${flyer.customSpeed || 90}s` : flyer.speed === 'slow' ? '150s' : flyer.speed === 'fast' ? '45s' : '90s' }}
             >
               {Array(2)
@@ -262,7 +262,7 @@ export default function StatusBanner() {
                 .map((_, blockIdx) => (
                   <span
                     key={blockIdx}
-                    className="whitespace-nowrap flex items-center gap-8"
+                    className="whitespace-nowrap flex items-center gap-6"
                   >
                     {Array(10)
                       .fill(flyer.items || [])
@@ -272,7 +272,7 @@ export default function StatusBanner() {
                         return (
                           <span
                             key={`${blockIdx}-${idx}`}
-                            className="flex items-center gap-8"
+                            className="flex items-center gap-6"
                           >
                               <span
                                 className={isCssColor(msg.colorClass) ? "" : msg.colorClass}

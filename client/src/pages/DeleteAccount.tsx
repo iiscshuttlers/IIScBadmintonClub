@@ -26,7 +26,7 @@ export default function DeleteAccount() {
   if (!session) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full shadow-xl border border-slate-200 dark:border-slate-800">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-xl border border-slate-200 dark:border-slate-800">
           <div className="text-center space-y-4">
             <div className="w-14 h-14 rounded-full bg-rose-100 dark:bg-rose-950/40 flex items-center justify-center mx-auto">
               <Trash2 className="w-7 h-7 text-rose-600 dark:text-rose-400" />
@@ -112,7 +112,7 @@ export default function DeleteAccount() {
   if (step === "done") {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-sm w-full text-center shadow-xl border border-slate-200 dark:border-slate-800">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-sm w-full text-center shadow-xl border border-slate-200 dark:border-slate-800">
           <div className="w-14 h-14 rounded-full bg-primary/15 dark:bg-primary/40 flex items-center justify-center mx-auto mb-4">
             <ShieldCheck className="w-7 h-7 text-primary dark:text-primary" />
           </div>

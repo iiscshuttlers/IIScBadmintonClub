@@ -42,7 +42,7 @@ export function ProfileStatsTabLeft({
   ActivityHeatmap,
 }: ProfileStatsTabProps) {
   return (
-    <motion.section variants={itemVariants} className="space-y-6 md:space-y-8">
+    <motion.section variants={itemVariants} className="space-y-6 md:space-y-6">
       <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-3xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden">
         <h2 className="text-sm font-black uppercase tracking-widest text-muted-foreground dark:text-foreground/45 flex items-center gap-2 mb-6">
           <Target className="w-4 h-4 text-primary dark:text-primary" /> Player

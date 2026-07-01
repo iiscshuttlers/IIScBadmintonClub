@@ -39,7 +39,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="relative bg-slate-950 text-foreground mt-20 overflow-hidden">
+    <footer className="relative bg-slate-950 text-foreground mt-12 overflow-hidden">
       {/* Top gradient bar */}
       <div className="h-[3px] bg-gradient-to-r from-primary via-teal-400 to-orange-500" />
 
@@ -57,7 +57,7 @@ export default function Footer() {
       <div className="absolute bottom-0 right-1/4 w-80 h-56 bg-orange-500/5 rounded-full blur-3xl pointer-events-none" />
 
       <div className="relative container mx-auto px-4 pt-16 pb-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-14">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-14">
 
           {/* ── Brand Column ── */}
           <div className="lg:col-span-1 space-y-5">

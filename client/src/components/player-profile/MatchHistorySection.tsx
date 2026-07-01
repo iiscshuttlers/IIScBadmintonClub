@@ -545,7 +545,7 @@ export function MatchHistorySection({
                       );
                     })
                   ) : (
-                    <div className="p-8 text-center text-sm text-muted-foreground dark:text-muted-foreground italic">
+                    <div className="p-6 text-center text-sm text-muted-foreground dark:text-muted-foreground italic">
                       No{" "}
                       {matchHistoryFilter === "all" ? "" : matchHistoryFilter}{" "}
                       matches found

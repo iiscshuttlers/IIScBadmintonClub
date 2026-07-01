@@ -50,7 +50,7 @@ export function ProfileRankingTab({
   const doublesLabel = genderPrefix ? `${genderPrefix}D Rank` : "Doubles Rank";
 
   return (
-    <motion.section variants={itemVariants} className="space-y-6 md:space-y-8">
+    <motion.section variants={itemVariants} className="space-y-6 md:space-y-6">
       {authSession?.user?.id && player.userId && authSession.user.id !== player.userId && (
         <HeadToHeadWidget
           currentUserId={authSession.user.id}
@@ -229,7 +229,7 @@ export function ProfileRankingTab({
       {(!authSession?.user?.id || player.userId === authSession.user.id) &&
         eloHistoryData.length <= 1 &&
         liveMatches.length < 5 && (
-          <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-8 border border-slate-200 dark:border-white/8 text-center">
+          <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 text-center">
             <Trophy className="w-12 h-12 text-slate-300 dark:text-foreground/10 mx-auto mb-3" />
             <h3 className="text-sm font-bold text-muted-foreground dark:text-foreground/40">
               Not Enough Data

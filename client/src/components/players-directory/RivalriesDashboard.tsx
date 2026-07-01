@@ -53,7 +53,7 @@ export function RivalriesDashboard() {
   if (!rivalries || rivalries.length === 0) return null;
 
   return (
-    <div className="bg-slate-900 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden border border-slate-800">
+    <div className="bg-slate-900 rounded-3xl p-6 md:p-6 shadow-2xl relative overflow-hidden border border-slate-800">
       <div className="absolute -top-24 -right-24 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl" />
       <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-rose-500/10 rounded-full blur-3xl" />
       

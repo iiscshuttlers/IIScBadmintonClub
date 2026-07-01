@@ -280,7 +280,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
 
   return (
     <section className="font-sans pb-16 pt-8">
-      <div className="container mx-auto px-4 max-w-5xl space-y-8">
+      <div className="container mx-auto px-4 max-w-5xl space-y-6">
         {/* Tournament Status Subtabs */}
         <div className="flex justify-center mb-8">
           <div className="flex items-center gap-2 p-1 bg-slate-100 dark:bg-slate-800/50 rounded-2xl w-full max-w-md mx-auto">
@@ -372,7 +372,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
         {/* Registration CTA / Form — only when a form is configured */}
         {hasForm && (
           <motion.div custom={4} variants={fadeUp} initial="hidden" animate="visible">
-            <div className="bg-gradient-to-r from-slate-800 to-slate-900 dark:from-slate-900 dark:to-slate-950 rounded-3xl p-8 text-foreground text-center relative overflow-hidden border border-slate-700/50">
+            <div className="bg-gradient-to-r from-slate-800 to-slate-900 dark:from-slate-900 dark:to-slate-950 rounded-3xl p-6 text-foreground text-center relative overflow-hidden border border-slate-700/50">
               <div className="absolute inset-0 hero-pattern opacity-20" />
               <div className="relative z-10">
                 <div
@@ -396,7 +396,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
                   href={displayFormUrl ?? "#"}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`inline-flex items-center gap-2 px-8 py-4 rounded-xl font-black transition shadow-xl ${
+                  className={`inline-flex items-center gap-2 px-6 py-4 rounded-xl font-black transition shadow-xl ${
                     formClosed
                       ? "bg-slate-600 text-foreground opacity-70 cursor-not-allowed pointer-events-none"
                       : "bg-primary hover:bg-primary text-foreground"
@@ -441,7 +441,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
         )}
 
         {activeTab === "notices" && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <motion.div
               custom={5}
               variants={fadeUp}
@@ -586,11 +586,11 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
       </div>
       
       {/* ── GRID OF TOURNAMENTS (Rendered under the dashboard, or as the main view if dashboard is hidden) ── */}
-      <div className="container mx-auto px-4 max-w-5xl mt-16 space-y-12 pb-16">
+      <div className="container mx-auto px-4 max-w-5xl mt-12 space-y-6 pb-16">
         {viewStatus === "active" && liveEvents && (
           <div>
             {liveEvents.filter(e => e.id !== liveTournament?.id).length > 0 ? (
-              <div className="grid md:grid-cols-2 gap-8">
+              <div className="grid md:grid-cols-2 gap-6">
                 {liveEvents.filter(e => e.id !== liveTournament?.id).map((item) => renderCard?.(item, true))}
               </div>
             ) : !liveTournament ? (
@@ -610,7 +610,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
         {viewStatus === "draft" && upcomingEvents && (
           <div>
             {upcomingEvents.filter(e => e.id !== liveTournament?.id).length > 0 ? (
-              <div className="grid md:grid-cols-2 gap-8">
+              <div className="grid md:grid-cols-2 gap-6">
                 {upcomingEvents.filter(e => e.id !== liveTournament?.id).map((item) => renderCard?.(item, false))}
               </div>
             ) : !liveTournament ? (
@@ -632,7 +632,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
             {completedEvents && (
               <div>
                 {completedEvents.length > 0 ? (
-                  <div className="grid md:grid-cols-2 gap-8">
+                  <div className="grid md:grid-cols-2 gap-6">
                     {completedEvents.map((item) => renderCard?.(item, false))}
                   </div>
                 ) : (
@@ -699,7 +699,7 @@ function SupabaseScheduleView({ tournamentId }: { tournamentId: string | null })
       });
   }, [tournamentId]);
 
-  if (loading) return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
+  if (loading) return <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
 
   const categories = ["ALL", ...new Set(schedMatches.map((m) => m.category))];
   const filtered = activeCategory === "ALL" ? schedMatches : schedMatches.filter((m) => m.category === activeCategory);
@@ -715,7 +715,7 @@ function SupabaseScheduleView({ tournamentId }: { tournamentId: string | null })
   }
 
   if (!schedMatches.length) return (
-    <div className="py-24 flex flex-col items-center justify-center text-center">
+    <div className="py-16 flex flex-col items-center justify-center text-center">
       <Calendar className="w-12 h-12 text-slate-300 dark:text-muted-foreground mx-auto mb-4" />
       <h3 className="text-xl font-black text-muted-foreground dark:text-slate-200 mb-2">Schedule Not Yet Available</h3>
       <p className="text-muted-foreground max-w-md">Match schedule will appear here once the admin assigns court times to bracket matches.</p>
@@ -821,7 +821,7 @@ export function TournamentArchiveBrackets({ tournamentId }: { tournamentId: stri
 
   if (!matches.length) {
     return (
-      <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 p-8 text-center">
+      <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 p-6 text-center">
         <p className="text-muted-foreground">No match results recorded for this tournament.</p>
       </div>
     );

@@ -11,7 +11,7 @@ export function ChangeEndsModal({
 }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="flex flex-col items-center bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 text-center w-full max-w-sm shadow-2xl gap-5">
+      <div className="flex flex-col items-center bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-6 text-center w-full max-w-sm shadow-2xl gap-5">
         <ArrowLeftRight className="w-14 h-14 text-amber-400" />
         <h2 className="text-2xl font-black text-foreground uppercase tracking-wider">Change Ends</h2>
         <p className="text-muted-foreground font-bold text-sm max-w-xs">{reason}</p>
@@ -117,7 +117,7 @@ export function RetireModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="flex flex-col items-center justify-center bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 text-center w-full max-w-sm shadow-2xl gap-5">
+      <div className="flex flex-col items-center justify-center bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-6 text-center w-full max-w-sm shadow-2xl gap-5">
         <AlertTriangle className="w-12 h-12 text-rose-400" />
         <h2 className="text-xl font-black text-foreground uppercase tracking-wider">Match Retirement</h2>
         <p className="text-muted-foreground text-sm">Which team is retiring from the match?</p>
@@ -261,7 +261,7 @@ export function ConfirmActionModal({
 }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-      <div className="flex flex-col items-center bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 text-center w-full max-w-sm shadow-2xl">
+      <div className="flex flex-col items-center bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-6 text-center w-full max-w-sm shadow-2xl">
         <Icon className="w-12 h-12 text-rose-500 mb-4" />
         <h2 className="text-xl sm:text-2xl font-black text-foreground uppercase tracking-wider mb-2">{title}</h2>
         <p className="text-muted-foreground font-bold text-xs sm:text-sm mb-6">{message}</p>

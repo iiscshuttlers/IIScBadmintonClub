@@ -84,7 +84,7 @@ type LiveTournament = {
 
 function EventSkeleton() {
   return (
-    <div className="rounded-3xl border border-gray-200 dark:border-slate-700 shadow-md bg-white dark:bg-slate-800 p-8 space-y-5 animate-pulse">
+    <div className="rounded-3xl border border-gray-200 dark:border-slate-700 shadow-md bg-white dark:bg-slate-800 p-6 space-y-5 animate-pulse">
       <div className="flex gap-3">
         <div className="h-6 w-24 rounded-full bg-gray-200 dark:bg-slate-700" />
         <div className="h-6 w-36 rounded-full bg-gray-200 dark:bg-slate-700" />
@@ -139,16 +139,16 @@ function UpcomingCountdown({ event }: { event: any }) {
   if (!time) return null;
 
   return (
-    <div className="rounded-3xl bg-gradient-to-br from-blue-950 to-primary/90 text-foreground p-8 mb-8 shadow-2xl relative overflow-hidden">
+    <div className="rounded-3xl bg-gradient-to-br from-teal-800 to-emerald-700 text-foreground p-6 mb-8 shadow-2xl relative overflow-hidden">
       <div className="absolute inset-0 hero-pattern" />
       <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-6">
         <div className="flex-1">
-          <div className="flex items-center gap-2 text-primary font-black text-xs uppercase tracking-widest mb-2">
+          <div className="flex items-center gap-2 text-lime-300 font-black text-xs uppercase tracking-widest mb-2">
             <Clock className="w-4 h-4" />
             Next Tournament
           </div>
-          <h2 className="text-3xl font-bold">{event.name}</h2>
-          <p className="text-gray-400 mt-1 text-sm">{event.startDate}</p>
+          <h2 className="text-3xl font-bold text-white">{event.name}</h2>
+          <p className="text-emerald-100 mt-1 text-sm">{event.startDate}</p>
         </div>
         <div className="flex gap-3 text-center">
           {[
@@ -245,7 +245,7 @@ export default function Events() {
         <div
           className={`h-1 w-full ${liveMode ? "bg-gradient-to-r from-red-500 to-orange-500 animate-pulse" : isUpcoming ? "bg-gradient-to-r from-primary to-teal-500" : "bg-gradient-to-r from-slate-300 to-slate-400"}`}
         />
-        <CardContent className="p-8 space-y-5">
+        <CardContent className="p-6 space-y-5">
           <div className="flex flex-wrap items-center gap-3">
             {liveMode ? (
               <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400 text-xs font-bold">
@@ -376,11 +376,11 @@ export default function Events() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 lg:pb-8">
-      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-primary/90 text-foreground py-24 relative overflow-hidden">
+      <section className="bg-gradient-to-tr from-teal-800 via-emerald-700 to-lime-600 text-foreground py-16 relative overflow-hidden">
         <div className="absolute inset-0 hero-pattern" />
         <div className="container mx-auto px-4 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-foreground/80 px-4 py-2 rounded-full text-sm font-semibold mb-5">
-            <Calendar className="w-4 h-4 text-primary" />
+          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 px-4 py-2 rounded-full text-sm font-semibold mb-5">
+            <Calendar className="w-4 h-4 text-lime-300" />
             Tournaments & Events
             <InfoModal
               title="EVENTS & CHAMPIONSHIPS"
@@ -388,16 +388,16 @@ export default function Events() {
                 { badge: "LIVE", title: "Live Tournaments", desc: "View real-time brackets, fixtures, and results during active championships." },
                 { badge: "ARCHIVE", title: "Hall of Fame", desc: "Look back at the history of previous tournaments and our champions." }
               ]}
-              triggerClassName="text-foreground hover:text-primary/30"
+              triggerClassName="text-white hover:text-lime-200"
             />
           </div>
           <h1
-            className="text-5xl md:text-6xl font-black mb-5"
+            className="text-5xl md:text-6xl font-black mb-5 text-white"
             style={{ fontFamily: "Playfair Display, serif" }}
           >
             Events & Championships
           </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+          <p className="text-xl text-emerald-50 max-w-3xl mx-auto">
             Live tournaments, upcoming competitions and archived results.
           </p>
 
@@ -451,7 +451,7 @@ export default function Events() {
       )}
 
       {effectiveTab === "history" && (
-        <section className="py-20 bg-white dark:bg-slate-900">
+        <section className="py-12 bg-white dark:bg-slate-900">
           <div className="container mx-auto px-4">
             <motion.div
               className="text-center mb-14"
@@ -477,7 +477,7 @@ export default function Events() {
             <div className="max-w-3xl mx-auto">
               <div className="relative">
                 <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-blue-500 to-purple-500 opacity-30" />
-                <div className="space-y-8">
+                <div className="space-y-6">
                   {[
                     ...events,
                     ...ARCHIVED_TOURNAMENTS.filter((archived) => !events.some((e) => e.slug === archived.slug)),

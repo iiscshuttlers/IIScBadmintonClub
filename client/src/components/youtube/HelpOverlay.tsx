@@ -11,7 +11,7 @@ export function HelpOverlay({ showHelp, setShowHelp }: HelpOverlayProps) {
 
   return (
     <div className="absolute inset-0 bg-slate-900/95 z-50 flex flex-col items-center justify-center p-6 text-foreground overflow-y-auto">
-      <div className="w-full max-w-lg bg-slate-800/80 rounded-3xl p-6 md:p-8 shadow-2xl backdrop-blur-xl border border-white/10">
+      <div className="w-full max-w-lg bg-slate-800/80 rounded-3xl p-6 md:p-6 shadow-2xl backdrop-blur-xl border border-white/10">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold flex items-center gap-2">
             <HelpCircle className="w-6 h-6 text-primary" /> Gesture Cheat Sheet

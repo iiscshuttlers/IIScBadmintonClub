@@ -62,8 +62,8 @@ class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       if (this.props.fallback) return <>{this.props.fallback}</>;
       return (
-        <div className="flex items-center justify-center min-h-screen p-8 bg-background">
-          <div className="flex flex-col items-center w-full max-w-2xl p-8">
+        <div className="flex items-center justify-center min-h-screen p-6 bg-background">
+          <div className="flex flex-col items-center w-full max-w-2xl p-6">
             <AlertTriangle
               size={48}
               className="text-destructive mb-6 flex-shrink-0"

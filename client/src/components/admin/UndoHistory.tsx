@@ -68,9 +68,9 @@ export function UndoHistory() {
       </div>
 
       {loading && history.length === 0 ? (
-        <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+        <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
       ) : history.length === 0 ? (
-        <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800">
+        <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800">
           <History className="w-12 h-12 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
           <p className="text-muted-foreground font-bold">No history available.</p>
           <p className="text-xs text-muted-foreground mt-1">Modifications will appear here once you make changes.</p>

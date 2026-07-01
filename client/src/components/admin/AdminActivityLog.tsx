@@ -110,9 +110,9 @@ export function AdminActivityLog() {
       </div>
 
       {loading && logs.length === 0 ? (
-        <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+        <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
       ) : logs.length === 0 ? (
-        <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800">
+        <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800">
           <ClipboardList className="w-12 h-12 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
           <p className="text-muted-foreground font-bold">No admin actions logged yet.</p>
           <p className="text-xs text-muted-foreground mt-1">Actions will appear here once admins start making changes.</p>

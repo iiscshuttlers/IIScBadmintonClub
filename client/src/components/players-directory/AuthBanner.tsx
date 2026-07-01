@@ -145,7 +145,7 @@ export function AuthBanner({
         animate={{ opacity: 1, y: 0 }}
         className="mb-10"
       >
-        <div className="relative overflow-hidden bg-gradient-to-r from-primary to-teal-700 rounded-3xl p-8 text-foreground shadow-xl shadow-primary/20">
+        <div className="relative overflow-hidden bg-gradient-to-r from-primary to-teal-700 rounded-3xl p-6 text-foreground shadow-xl shadow-primary/20">
           <div className="absolute -right-10 -top-10 w-48 h-48 bg-white/5 rounded-full blur-3xl" />
           <div className="relative z-10 flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
             <div className="w-16 h-16 rounded-2xl bg-white/15 flex items-center justify-center shrink-0">
@@ -183,7 +183,7 @@ export function AuthBanner({
       animate={{ opacity: 1, y: 0 }}
       className="mb-10"
     >
-      <div className="relative overflow-hidden bg-gradient-to-r from-slate-800 to-slate-900 dark:from-slate-900 dark:to-slate-950 rounded-3xl p-8 text-foreground shadow-xl border border-slate-700/50">
+      <div className="relative overflow-hidden bg-gradient-to-r from-slate-800 to-slate-900 dark:from-slate-900 dark:to-slate-950 rounded-3xl p-6 text-foreground shadow-xl border border-slate-700/50">
         <div className="absolute -right-10 -top-10 w-48 h-48 bg-primary/5 rounded-full blur-3xl" />
         <div className="relative z-10 flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
           <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">

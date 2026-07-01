@@ -434,7 +434,7 @@ export function LiveScoreSection() {
   });
 
   return (
-    <div className="w-full max-w-5xl mx-auto p-4 space-y-8">
+    <div className="w-full max-w-5xl mx-auto p-4 space-y-6">
       <div className="flex flex-col sm:flex-row items-center justify-between bg-slate-900 rounded-[2rem] p-6 shadow-xl border border-slate-800 gap-4 text-center sm:text-left">
         <div>
           <h2 className="text-xl font-black text-foreground flex items-center justify-center sm:justify-start gap-2">
@@ -474,13 +474,13 @@ export function LiveScoreSection() {
       </div>
 
       {activeMatchList.filter(m => m.status !== "setup").length === 0 ? (
-        <div className="text-center py-20 bg-slate-900/50 rounded-3xl border border-slate-800 border-dashed">
+        <div className="text-center py-12 bg-slate-900/50 rounded-3xl border border-slate-800 border-dashed">
           <Activity className="w-16 h-16 mx-auto mb-4 opacity-20 text-muted-foreground" />
           <h2 className="text-2xl font-bold text-slate-300">No Live Matches</h2>
           <p className="mt-2 text-muted-foreground">Wait for someone to start broadcasting...</p>
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-6">
           {activeMatchList.map((m) => (
             <MatchBroadcastCard key={m.id} match={m} isAdmin={isAdmin} isUmpire={isUmpire} session={session} voiceEnabled={voiceEnabled} flashEnabled={flashEnabled} vibrateEnabled={vibrateEnabled} onKill={handleKill} onSubmit={handleSubmit} onTakeover={handleTakeover} />
           ))}

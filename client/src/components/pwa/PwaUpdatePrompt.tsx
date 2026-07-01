@@ -30,7 +30,7 @@ export function PwaUpdatePrompt() {
           className="fixed bottom-24 right-4 sm:bottom-8 sm:right-8 z-50 w-[calc(100vw-2rem)] sm:w-80 bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md border border-primary/50 shadow-2xl shadow-primary/50/20 rounded-2xl p-5 overflow-hidden"
         >
           {/* Decorative glowing orb */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-2xl rounded-full -mr-16 -mt-16 pointer-events-none" />
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-2xl rounded-full -mr-16 -mt-12 pointer-events-none" />
 
           <div className="relative">
             <h3 className="text-foreground font-bold text-lg mb-1 flex items-center gap-2">

@@ -266,7 +266,7 @@ export default function ScheduleCalendar() {
             Match Calendar
           </h2>
         </div>
-        <div className="grid lg:grid-cols-[1fr_1.5fr] gap-8">
+        <div className="grid lg:grid-cols-[1fr_1.5fr] gap-6">
           {/* Left: Interactive Calendar */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -509,7 +509,7 @@ export default function ScheduleCalendar() {
             transition={{ delay: 0.4 }}
           >
             <Card className="rounded-3xl shadow-xl border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl min-h-[500px]">
-              <div className="p-5 md:p-8 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 rounded-t-3xl">
+              <div className="p-5 md:p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 rounded-t-3xl">
                 <h2 className="text-2xl font-black text-slate-800 dark:text-foreground">
                   {selectedDate
                     ? selectedDate.toLocaleDateString("en-US", {
@@ -526,7 +526,7 @@ export default function ScheduleCalendar() {
                 </p>
               </div>
 
-              <div className="p-5 md:p-8">
+              <div className="p-5 md:p-6">
                 {selectedEvents.length > 0 ? (
                   <div className="space-y-6">
                     {selectedEvents.map((event, idx) => {
@@ -658,7 +658,7 @@ export default function ScheduleCalendar() {
 
             {tournamentData && selectedDateStr && dateFilterHasMatches(tournamentData, selectedDateStr) && (
               <Card className="rounded-3xl shadow-xl border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl mt-6 overflow-hidden">
-                <div className="bg-slate-50 dark:bg-slate-800/50 p-5 md:p-8 border-b border-slate-100 dark:border-slate-800">
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-5 md:p-6 border-b border-slate-100 dark:border-slate-800">
                   <h3 className="text-xl font-black text-slate-800 dark:text-foreground flex items-center gap-2">
                     <Trophy className="w-5 h-5 text-primary" />
                     Tournament Matches

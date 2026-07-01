@@ -83,7 +83,7 @@ export function DirectoryGrid({
 
   if (fetchError) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 space-y-4 text-center">
+      <div className="flex flex-col items-center justify-center py-12 space-y-4 text-center">
         <p className="text-muted-foreground dark:text-slate-300 font-bold">
           {isSupabaseConfigured
             ? "No connection to server"
@@ -171,7 +171,7 @@ export function DirectoryGrid({
         <div className="mt-12 flex justify-center">
           <button
             onClick={() => setVisibleCount((v) => v + 24)}
-            className="px-8 py-3 bg-white dark:bg-slate-800 border border-primary/40 dark:border-primary/50 text-primary dark:text-primary font-bold rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:bg-primary/10 dark:hover:bg-primary/80/20 transition-all flex items-center gap-2"
+            className="px-6 py-3 bg-white dark:bg-slate-800 border border-primary/40 dark:border-primary/50 text-primary dark:text-primary font-bold rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:bg-primary/10 dark:hover:bg-primary/80/20 transition-all flex items-center gap-2"
           >
             Load More Players
           </button>

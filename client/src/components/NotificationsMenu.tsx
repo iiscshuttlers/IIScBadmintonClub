@@ -169,7 +169,7 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
         </div>
         <div className="max-h-[60vh] overflow-y-auto custom-scrollbar">
           {notifications.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground dark:text-muted-foreground flex flex-col items-center">
+            <div className="p-6 text-center text-muted-foreground dark:text-muted-foreground flex flex-col items-center">
               <CheckCircle2 className="w-8 h-8 text-slate-300 dark:text-muted-foreground mb-2" />
               <p className="font-bold text-sm">All caught up!</p>
               <p className="text-xs">You have no new notifications.</p>

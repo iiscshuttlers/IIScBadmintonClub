@@ -68,7 +68,7 @@ export function FacilitiesSection() {
         {/* Courts + Hours */}
         <section className="py-14 bg-white dark:bg-slate-900">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
               {/* Courts card */}
               <motion.div
                 custom={0}
@@ -79,7 +79,7 @@ export function FacilitiesSection() {
               >
                 <div className="h-full rounded-3xl border-2 border-primary/30 dark:border-primary/50 shadow-md bg-white dark:bg-slate-800 overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="h-1.5 bg-gradient-to-r from-primary to-teal-600" />
-                  <div className="p-8">
+                  <div className="p-6">
                     <div className="flex items-center gap-3 mb-5">
                       <div className="w-12 h-12 rounded-2xl bg-primary/15 dark:bg-primary/30 flex items-center justify-center">
                         <Trophy className="w-6 h-6 text-primary dark:text-primary" />
@@ -117,7 +117,7 @@ export function FacilitiesSection() {
               >
                 <div className="h-full rounded-3xl border-2 border-blue-100 dark:border-blue-900/50 shadow-md bg-white dark:bg-slate-800 overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="h-1.5 bg-gradient-to-r from-blue-500 to-blue-700" />
-                  <div className="p-8">
+                  <div className="p-6">
                     <div className="flex items-center gap-3 mb-5">
                       <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center">
                         <Clock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
@@ -276,7 +276,7 @@ export function FacilitiesSection() {
         {/* Location + Membership */}
         <section className="py-14 bg-white dark:bg-slate-900">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
               {/* Location */}
               <motion.div
                 custom={0}
@@ -287,7 +287,7 @@ export function FacilitiesSection() {
               >
                 <div className="h-full rounded-3xl border border-slate-100 dark:border-slate-700 shadow-md bg-white dark:bg-slate-800 overflow-hidden">
                   <div className="h-1.5 bg-gradient-to-r from-blue-500 to-indigo-600" />
-                  <div className="p-8">
+                  <div className="p-6">
                     <div className="flex items-center gap-3 mb-5">
                       <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center">
                         <MapPin className="w-6 h-6 text-blue-700 dark:text-blue-400" />
@@ -334,7 +334,7 @@ export function FacilitiesSection() {
               >
                 <div className="h-full rounded-3xl border border-slate-100 dark:border-slate-700 shadow-md bg-white dark:bg-slate-800 overflow-hidden">
                   <div className="h-1.5 bg-gradient-to-r from-primary to-teal-600" />
-                  <div className="p-8">
+                  <div className="p-6">
                     <div className="flex items-center gap-3 mb-5">
                       <div className="w-12 h-12 rounded-2xl bg-primary/15 dark:bg-primary/30 flex items-center justify-center">
                         <Users className="w-6 h-6 text-primary dark:text-primary" />

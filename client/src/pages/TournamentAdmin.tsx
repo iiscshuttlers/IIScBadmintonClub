@@ -30,7 +30,7 @@ export default function TournamentAdmin() {
 
   if (!isAdmin && !isMainAdmin) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-[#060d1b] gap-4 p-8 text-center">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-[#060d1b] gap-4 p-6 text-center">
         <ShieldAlert className="w-16 h-16 text-rose-500" />
         <h1 className="text-2xl font-black text-slate-800 dark:text-foreground">Access Denied</h1>
         <p className="text-muted-foreground">You need admin permissions to access Tournament Manager.</p>

@@ -8,7 +8,7 @@ interface Props {
 
 export function LeaderboardHighlights({ upsets, activeStreaks }: Props) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16 px-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10 px-4">
       {/* BIGGEST UPSETS */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}

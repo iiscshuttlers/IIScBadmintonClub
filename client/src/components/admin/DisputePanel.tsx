@@ -67,13 +67,13 @@ export function DisputePanel() {
   };
 
   if (loading) return (
-    <div className="flex justify-center py-20">
+    <div className="flex justify-center py-12">
       <Loader2 className="w-8 h-8 animate-spin text-primary" />
     </div>
   );
 
   if (matches.length === 0) return (
-    <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800">
+    <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800">
       <CheckCircle className="w-12 h-12 text-primary mx-auto mb-3" />
       <h3 className="text-lg font-black text-muted-foreground dark:text-slate-300">No open disputes</h3>
       <p className="text-muted-foreground text-sm mt-1">All match results are confirmed.</p>

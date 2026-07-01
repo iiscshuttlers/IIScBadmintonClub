@@ -62,7 +62,7 @@ export default function ChangePassword() {
           <ArrowLeft className="w-4 h-4" /> Back to home
         </button>
 
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-slate-800">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-6 shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-slate-800">
           <div className="w-12 h-12 rounded-2xl bg-primary/15 dark:bg-primary/30 flex items-center justify-center mb-6">
             <Lock className="w-6 h-6 text-primary dark:text-primary" />
           </div>

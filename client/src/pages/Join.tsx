@@ -9,11 +9,11 @@ export default function Join() {
   const auth = useJoinAuth();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-primary/90 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-tr from-teal-800 via-emerald-700 to-lime-600 flex flex-col justify-center py-12 sm:px-6 lg:px-6 relative overflow-hidden">
       {/* Decorative background */}
       <div className="absolute inset-0 hero-pattern opacity-50" />
-      <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 left-1/4 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-lime-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 left-1/4 w-64 h-64 bg-emerald-400/5 rounded-full blur-3xl pointer-events-none" />
       {/* Subtle court lines */}
       <div className="absolute inset-0 opacity-5 pointer-events-none">
         <svg className="w-full h-full" viewBox="0 0 800 600" preserveAspectRatio="none">
@@ -41,7 +41,7 @@ export default function Join() {
               triggerClassName="text-foreground hover:text-primary/70"
             />
           </div>
-          <p className="mt-2 text-sm text-blue-300">Member portal · Campus Badminton Community</p>
+          <p className="mt-2 text-sm text-emerald-100">Member portal · Campus Badminton Community</p>
         </div>
 
         <div className="bg-white dark:bg-slate-900 py-8 px-6 shadow-2xl sm:rounded-3xl sm:px-10 border border-white/10 backdrop-blur-sm">

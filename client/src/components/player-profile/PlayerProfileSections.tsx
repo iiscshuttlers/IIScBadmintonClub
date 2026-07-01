@@ -71,7 +71,7 @@ export function EquipmentArsenalSection({
 
   return (
     <section className="py-8 relative" ref={containerRef}>
-      <div className="flex items-center gap-3 mb-16 px-4">
+      <div className="flex items-center gap-3 mb-10 px-4">
         <div className="h-px flex-1 bg-linear-to-r from-transparent to-slate-300 dark:to-white/10" />
         <span className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground dark:text-foreground/35 shrink-0 flex items-center gap-2">
           <Zap className="w-3.5 h-3.5 text-violet-500" /> Equipment Arsenal

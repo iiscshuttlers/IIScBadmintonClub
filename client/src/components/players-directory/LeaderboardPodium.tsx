@@ -26,7 +26,7 @@ export function LeaderboardPodium({
   if (top3.length === 0) return null;
 
   return (
-    <div className="flex flex-col md:flex-row justify-center items-end gap-4 md:gap-6 mb-16 px-4">
+    <div className="flex flex-col md:flex-row justify-center items-end gap-4 md:gap-6 mb-10 px-4">
       {/* 2nd Place */}
       {top3[1] && (
         <motion.div
@@ -102,7 +102,7 @@ export function LeaderboardPodium({
                 <User className="w-full h-full p-5 text-amber-500" />
               )}
             </div>
-            <div className="w-full bg-gradient-to-b from-amber-300 to-amber-500 dark:from-amber-600 dark:to-amber-800 rounded-t-2xl p-5 md:p-8 text-center border-t border-x border-amber-200/50 shadow-2xl relative transition-colors group-hover:from-amber-400 group-hover:to-amber-500 dark:group-hover:from-amber-500 dark:group-hover:to-amber-700">
+            <div className="w-full bg-gradient-to-b from-amber-300 to-amber-500 dark:from-amber-600 dark:to-amber-800 rounded-t-2xl p-5 md:p-6 text-center border-t border-x border-amber-200/50 shadow-2xl relative transition-colors group-hover:from-amber-400 group-hover:to-amber-500 dark:group-hover:from-amber-500 dark:group-hover:to-amber-700">
               <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-amber-400 text-amber-950 flex items-center justify-center font-black text-lg shadow-lg border-2 border-amber-200">
                 1
               </div>

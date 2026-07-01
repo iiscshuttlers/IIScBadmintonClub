@@ -182,7 +182,7 @@ export function DirectoryTab({
           ))}
         </div>
       ) : fetchError ? (
-        <div className="flex flex-col items-center justify-center py-20 space-y-4 text-center">
+        <div className="flex flex-col items-center justify-center py-12 space-y-4 text-center">
           <p className="text-muted-foreground dark:text-slate-300 font-bold">
             {isSupabaseConfigured
               ? "No connection to server"
@@ -253,7 +253,7 @@ export function DirectoryTab({
             <div className="mt-12 text-center">
               <button
                 onClick={() => setVisibleCount((prev) => prev + 24)}
-                className="px-8 py-3 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-muted-foreground dark:text-slate-300 font-bold rounded-2xl transition shadow-sm border border-slate-300 dark:border-slate-700"
+                className="px-6 py-3 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-muted-foreground dark:text-slate-300 font-bold rounded-2xl transition shadow-sm border border-slate-300 dark:border-slate-700"
               >
                 Load More Players
               </button>
@@ -261,7 +261,7 @@ export function DirectoryTab({
           )}
         </>
       ) : (
-        <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
+        <div className="flex flex-col items-center justify-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
           <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
             <Users className="w-10 h-10 text-muted-foreground" />
           </div>

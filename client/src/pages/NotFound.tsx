@@ -154,7 +154,7 @@ export default function NotFound() {
 
         {/* Primary CTA */}
         <Link href="/">
-          <button className="inline-flex items-center gap-2 bg-primary hover:bg-primary text-foreground font-bold px-8 py-4 rounded-2xl shadow-lg hover:shadow-primary/30 hover:-translate-y-0.5 transition-all duration-200 mb-10 text-lg">
+          <button className="inline-flex items-center gap-2 bg-primary hover:bg-primary text-foreground font-bold px-6 py-4 rounded-2xl shadow-lg hover:shadow-primary/30 hover:-translate-y-0.5 transition-all duration-200 mb-10 text-lg">
             <Home className="w-5 h-5" />
             Back to Home
           </button>

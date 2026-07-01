@@ -302,7 +302,7 @@ export default function Marketplace() {
             ))}
           </div>
         ) : filteredListings.length === 0 ? (
-          <div className="text-center py-20">
+          <div className="text-center py-12">
             <Package className="w-16 h-16 text-slate-300 dark:text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-bold text-slate-800 dark:text-foreground mb-2">No items found</h3>
             <p className="text-muted-foreground dark:text-muted-foreground">Be the first to list an item in this category!</p>

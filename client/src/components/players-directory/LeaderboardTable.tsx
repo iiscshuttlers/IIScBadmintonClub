@@ -166,7 +166,7 @@ export function LeaderboardTable({
               })}
               {rest.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-muted-foreground dark:text-muted-foreground font-bold">
+                  <td colSpan={5} className="p-6 text-center text-muted-foreground dark:text-muted-foreground font-bold">
                     Not enough ranked players yet!
                   </td>
                 </tr>

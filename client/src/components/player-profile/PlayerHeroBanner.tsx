@@ -32,9 +32,9 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
 
       {/* Hero Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-4 pb-12 pointer-events-none">
-        <div className="flex flex-col md:flex-row gap-8 items-end relative pointer-events-auto">
+        <div className="flex flex-col md:flex-row gap-6 items-end relative pointer-events-auto">
           {/* Avatar */}
-          <div className="relative mt-8 md:mt-24 shrink-0 z-20">
+          <div className="relative mt-8 md:mt-12 shrink-0 z-20">
             <div className="w-40 h-40 md:w-64 md:h-64 rounded-2xl border-4 border-slate-200/70 dark:border-white/35 overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.55)] bg-slate-200 dark:bg-slate-800">
               {player.avatar ? (
                 <img

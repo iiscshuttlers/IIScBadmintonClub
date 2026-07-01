@@ -163,7 +163,7 @@ export function MyMatchesTab() {
 
   if (!profile) {
     return (
-      <div className="text-center py-24 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm mt-6">
+      <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm mt-6">
         <h3 className="text-xl font-black text-foreground dark:text-foreground mb-2">Sign in Required</h3>
         <p className="text-muted-foreground mb-6 max-w-sm mx-auto">You must be signed in to view your personal match history and pending requests.</p>
         <button

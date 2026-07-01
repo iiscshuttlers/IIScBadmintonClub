@@ -470,19 +470,19 @@ export default function Gallery() {
   return (
     <div className="min-h-screen font-sans">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-primary/90 text-foreground py-20 relative overflow-hidden">
+      <section className="bg-gradient-to-tr from-teal-800 via-emerald-700 to-lime-600 text-foreground py-12 relative overflow-hidden">
         <div className="absolute inset-0 hero-pattern" />
         <div className="container mx-auto px-4 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-foreground/80 px-4 py-2 rounded-full text-sm font-semibold mb-5">
+          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 px-4 py-2 rounded-full text-sm font-semibold mb-5">
             <Camera className="w-4 h-4" /> Photos & Videos
           </div>
           <h1
-            className="text-5xl md:text-6xl font-black mb-5"
+            className="text-5xl md:text-6xl font-black mb-5 text-white"
             style={{ fontFamily: "Playfair Display, serif" }}
           >
             Gallery
           </h1>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl text-emerald-50 max-w-2xl mx-auto leading-relaxed">
             Relive the intensity of tournaments, the focus of practice, and the
             vibrant badminton community at IISc.
           </p>
@@ -671,7 +671,7 @@ export default function Gallery() {
           )}
 
           {filteredItems.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <div className="flex flex-col items-center justify-center py-12 gap-4">
               <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                 <svg className="w-8 h-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3 20.25h18A2.25 2.25 0 0023.25 18v-12A2.25 2.25 0 0021 3.75H3A2.25 2.25 0 00.75 6v12A2.25 2.25 0 003 20.25z" />
@@ -687,14 +687,14 @@ export default function Gallery() {
             if (selectedSubfolder !== "all" && (!v.tournament || !v.tournament.toLowerCase().includes(selectedSubfolder.toLowerCase().replace(/[-_]/g, ' ')))) return false;
             return true;
           }).length > 0 && (
-            <div className="mt-16 animate-in fade-in slide-in-from-bottom-4">
+            <div className="mt-12 animate-in fade-in slide-in-from-bottom-4">
               <div className="flex items-center gap-3 mb-8">
                 <div className="w-2 h-8 bg-gradient-to-b from-red-500 to-orange-500 rounded-full" />
                 <h2 className="text-3xl font-black text-blue-900 dark:text-foreground">
                   Match Videos
                 </h2>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {videos.filter(v => {
                   if (selectedCategory !== "all" && (!v.tournament || !v.tournament.toLowerCase().includes(selectedCategory.toLowerCase().replace(/[-_]/g, ' ')))) return false;
                   if (selectedSubfolder !== "all" && (!v.tournament || !v.tournament.toLowerCase().includes(selectedSubfolder.toLowerCase().replace(/[-_]/g, ' ')))) return false;
@@ -753,7 +753,7 @@ export default function Gallery() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {videos.map((video) => (
               <button
                 key={video.id}

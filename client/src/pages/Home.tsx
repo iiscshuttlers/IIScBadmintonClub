@@ -95,17 +95,17 @@ export default function Home() {
           {/* Mobile photo bg */}
           <div className="lg:hidden absolute inset-0 z-0">
             <img src={iiscTeam} alt="IISc Badminton Team" className="w-full h-full object-cover object-[25%_center]" />
-            <div className="absolute inset-0 bg-gradient-to-b from-slate-950/92 via-slate-900/85 to-primary/90/95" />
+            <div className="absolute inset-0 bg-gradient-to-b from-teal-950/92 via-emerald-900/85 to-lime-600/95" />
           </div>
 
           {/* Desktop bg */}
           <div className="hidden lg:block absolute inset-0 z-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-blue-950/90 to-primary/90" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-teal-800 via-emerald-700 to-lime-600" />
             <div className="absolute inset-0 hero-pattern" />
             {/* decorative glow orbs */}
-            <div className="absolute top-1/4 right-[15%] w-[500px] h-[500px] bg-primary/6 rounded-full blur-[100px]" />
-            <div className="absolute bottom-1/3 left-[10%] w-[400px] h-[400px] bg-blue-500/6 rounded-full blur-[80px]" />
-            <div className="absolute top-1/3 left-[40%] w-[300px] h-[300px] bg-orange-500/4 rounded-full blur-[60px]" />
+            <div className="absolute top-1/4 right-[15%] w-[500px] h-[500px] bg-lime-500/6 rounded-full blur-[100px]" />
+            <div className="absolute bottom-1/3 left-[10%] w-[400px] h-[400px] bg-teal-500/6 rounded-full blur-[80px]" />
+            <div className="absolute top-1/3 left-[40%] w-[300px] h-[300px] bg-emerald-400/4 rounded-full blur-[60px]" />
             {/* dot grid */}
             <div className="absolute inset-0 dot-pattern opacity-30" />
           </div>
@@ -114,7 +114,7 @@ export default function Home() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
 
               {/* Left Content */}
-              <motion.div variants={fadeUp} initial="hidden" animate="visible" className="space-y-8">
+              <motion.div variants={fadeUp} initial="hidden" animate="visible" className="space-y-6">
                 {/* Live badge */}
                 <div className="inline-flex items-center gap-2.5 bg-white/8 border border-white/15 backdrop-blur-sm text-primary/70 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider">
                   <span className="relative flex h-2 w-2">
@@ -147,12 +147,12 @@ export default function Home() {
                 {/* CTAs */}
                 <div className="flex flex-col sm:flex-row gap-3.5 pt-1">
                   <Link href="/events">
-                    <Button className="bg-primary hover:bg-primary text-foreground px-8 py-6 text-sm font-bold flex items-center gap-2 w-full sm:w-auto justify-center rounded-xl shadow-lg shadow-primary/25 hover:-translate-y-0.5 transition-all duration-300 glow-emerald cursor-pointer">
+                    <Button className="bg-primary hover:bg-primary text-foreground px-6 py-6 text-sm font-bold flex items-center gap-2 w-full sm:w-auto justify-center rounded-xl shadow-lg shadow-primary/25 hover:-translate-y-0.5 transition-all duration-300 glow-emerald cursor-pointer">
                       Explore Events <ArrowRight className="w-4 h-4" />
                     </Button>
                   </Link>
                   <Link href="/players">
-                    <Button variant="outline" className="border-2 border-white/20 bg-white/5 text-foreground hover:bg-white/10 hover:border-white/35 px-8 py-6 text-sm font-semibold w-full sm:w-auto rounded-xl transition-all duration-300 cursor-pointer backdrop-blur-sm">
+                    <Button variant="outline" className="border-2 border-white/20 bg-white/5 text-foreground hover:bg-white/10 hover:border-white/35 px-6 py-6 text-sm font-semibold w-full sm:w-auto rounded-xl transition-all duration-300 cursor-pointer backdrop-blur-sm">
                       Meet the Players
                     </Button>
                   </Link>
@@ -195,7 +195,7 @@ export default function Home() {
         </section>
 
         {/* ── QUICK PATHS ──────────────────────────────────────────────── */}
-        <section aria-label="Quick Links" className="py-20 bg-slate-50 dark:bg-slate-900/60">
+        <section aria-label="Quick Links" className="py-12 bg-slate-50 dark:bg-slate-900/60">
           <div className="container mx-auto px-4">
             <motion.div
               className="text-center mb-12"
@@ -307,10 +307,10 @@ export default function Home() {
         </section>
 
         {/* ── ABOUT / MISSION & VALUES ──────────────────────────────────── */}
-        <section aria-label="About & Mission" className="py-24 bg-white dark:bg-slate-950">
+        <section aria-label="About & Mission" className="py-16 bg-white dark:bg-slate-950">
           <div className="container mx-auto px-4 max-w-6xl">
             <motion.div
-              className="mb-16"
+              className="mb-10"
               variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}
             >
               <div className="inline-flex items-center gap-2 bg-primary/10 dark:bg-primary/10 border border-primary/40 dark:border-primary/25 text-primary dark:text-primary px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider mb-5">
@@ -377,14 +377,14 @@ export default function Home() {
 
             {/* Team Photo */}
             <motion.div
-              className="mt-16 relative rounded-3xl overflow-hidden shadow-2xl cursor-pointer group border border-slate-200 dark:border-slate-700 max-w-5xl mx-auto"
+              className="mt-12 relative rounded-3xl overflow-hidden shadow-2xl cursor-pointer group border border-slate-200 dark:border-slate-700 max-w-5xl mx-auto"
               variants={fadeUp}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
               onClick={() => setIsImageOpen(true)}
             >
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent z-10 flex items-end p-8 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent z-10 flex items-end p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 <span className="text-foreground text-sm font-semibold bg-white/15 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
                   Click to enlarge photo
                 </span>
@@ -402,7 +402,7 @@ export default function Home() {
         </section>
 
         {/* ── LEADERSHIP ────────────────────────────────────────────────── */}
-        <section aria-label="Leadership Team" className="py-20 bg-slate-50 dark:bg-slate-900/50">
+        <section aria-label="Leadership Team" className="py-12 bg-slate-50 dark:bg-slate-900/50">
           <div className="container mx-auto px-4">
             <motion.div
               className="text-center mb-12"
@@ -463,14 +463,14 @@ export default function Home() {
             variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}
           >
             <div className="container mx-auto px-4">
-              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-950 via-slate-900 to-primary/90 p-8 md:p-12 shadow-2xl">
+              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-950 via-slate-900 to-primary/90 p-6 md:p-12 shadow-2xl">
                 {/* Decorative elements */}
                 <div className="absolute inset-0 hero-pattern opacity-40" />
                 <div className="absolute top-0 right-0 w-80 h-80 bg-primary/8 rounded-full blur-3xl" />
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/8 rounded-full blur-3xl" />
                 <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-primary via-teal-400 to-orange-500" />
 
-                <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-8">
+                <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-6">
                   <div className="flex-1 space-y-4">
                     <div className="inline-flex items-center gap-2 bg-amber-400/15 border border-amber-400/25 text-amber-300 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
                       <Star className="w-3 h-3" /> Recent Highlight
@@ -499,7 +499,7 @@ export default function Home() {
         )}
 
         {/* ── CTA ───────────────────────────────────────────────────────── */}
-        <section className="py-24 relative overflow-hidden bg-slate-900 dark:bg-slate-950">
+        <section className="py-16 relative overflow-hidden bg-slate-900 dark:bg-slate-950">
           {/* Background */}
           <div className="absolute inset-0 hero-pattern opacity-50" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/6 rounded-full blur-[100px]" />

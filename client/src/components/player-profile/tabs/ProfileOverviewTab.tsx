@@ -158,7 +158,7 @@ export function ProfileOverviewTab({
   const isWinStreak = streak?.startsWith("W");
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Split Stats (Friendly / Tournament / Overall) */}
       {splitStats && splitStats.all.total > 0 && (
         <motion.div variants={itemVariants}>

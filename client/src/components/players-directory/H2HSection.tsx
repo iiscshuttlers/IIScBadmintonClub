@@ -179,13 +179,13 @@ export function H2HSection() {
 
   if (loading)
     return (
-      <div className="flex justify-center py-20">
+      <div className="flex justify-center py-12">
         <Activity className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
 
   return (
-    <div className="font-sans animate-in fade-in zoom-in-95 duration-300 space-y-12">
+    <div className="font-sans animate-in fade-in zoom-in-95 duration-300 space-y-6">
       
       <RivalriesDashboard />
 

@@ -49,7 +49,7 @@ export function LivePlayersSection({ tournamentId, categories }: { tournamentId:
 
   if (loading) {
     return (
-      <div className="flex justify-center py-20">
+      <div className="flex justify-center py-12">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -59,7 +59,7 @@ export function LivePlayersSection({ tournamentId, categories }: { tournamentId:
 
   if (activeCategories.length === 0) {
     return (
-      <div className="text-center py-20 bg-white/5 dark:bg-slate-800/50 rounded-3xl border border-slate-200 dark:border-slate-700">
+      <div className="text-center py-12 bg-white/5 dark:bg-slate-800/50 rounded-3xl border border-slate-200 dark:border-slate-700">
         <Users className="w-12 h-12 text-slate-300 dark:text-muted-foreground mx-auto mb-4" />
         <h3 className="text-lg font-black text-slate-800 dark:text-foreground">No Players Registered Yet</h3>
         <p className="text-muted-foreground mt-1">Participants will appear here once they are added.</p>

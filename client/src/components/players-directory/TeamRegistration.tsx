@@ -170,7 +170,7 @@ export function TeamRegistration({ onTeamRegistered }: { onTeamRegistered: () =>
               <button
                 onClick={handleRegister}
                 disabled={loading || !partnerId || !teamName || !teamCategory}
-                className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed text-foreground px-8 py-3 rounded-xl font-black text-sm uppercase tracking-wider transition-colors shadow-lg shadow-violet-500/20"
+                className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed text-foreground px-6 py-3 rounded-xl font-black text-sm uppercase tracking-wider transition-colors shadow-lg shadow-violet-500/20"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Register Team"}
               </button>

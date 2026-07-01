@@ -227,7 +227,7 @@ export function GuestPlayersPanel() {
   ) => (b ? `${a?.full_name} + ${b.full_name}` : a?.full_name ?? "—");
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* ── Create guest ─────────────────────────────────────── */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 p-5 sm:p-6">
         <h2 className="text-lg font-black text-slate-800 dark:text-foreground flex items-center gap-2 mb-1">

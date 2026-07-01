@@ -150,7 +150,7 @@ export default function TournamentDetail() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-primary/90 text-foreground py-24 relative overflow-hidden">
+      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-primary/90 text-foreground py-16 relative overflow-hidden">
         <div className="absolute inset-0 hero-pattern" />
         <div className="container mx-auto px-4 text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-400/20 border border-amber-400/30 text-amber-300 text-sm font-bold mb-5">
@@ -173,7 +173,7 @@ export default function TournamentDetail() {
         </div>
       </section>
 
-      <section className="container mx-auto px-4 py-12 max-w-6xl space-y-8">
+      <section className="container mx-auto px-4 py-12 max-w-6xl space-y-6">
         {/* Breadcrumbs */}
         <Breadcrumb>
           <BreadcrumbList>
@@ -191,7 +191,7 @@ export default function TournamentDetail() {
           </BreadcrumbList>
         </Breadcrumb>
 
-        <div className="grid lg:grid-cols-[1.5fr_0.7fr] gap-8 items-start">
+        <div className="grid lg:grid-cols-[1.5fr_0.7fr] gap-6 items-start">
           {/* Main results card */}
           <motion.div
             custom={0}
@@ -201,7 +201,7 @@ export default function TournamentDetail() {
           >
             <Card className="rounded-3xl shadow-md border border-primary/30 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
               <div className="h-1.5 bg-gradient-to-r from-primary via-teal-500 to-blue-600" />
-              <CardContent className="p-8 sm:p-10 space-y-8">
+              <CardContent className="p-6 sm:p-10 space-y-6">
                 {/* Status + description */}
                 <div>
                   <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -232,7 +232,7 @@ export default function TournamentDetail() {
 
                 {/* Winners grid */}
                 {tournament.winners && (
-                  <div className="space-y-8">
+                  <div className="space-y-6">
                     {Object.entries(
                       tournament.winners.reduce(
                         (acc, curr) => {

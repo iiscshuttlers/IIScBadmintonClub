@@ -81,11 +81,11 @@ export default function ComparePlayers() {
   }, [p1, p2]);
 
   if (loading) {
-    return <div className="p-8 text-center text-muted-foreground">Loading rivalry data...</div>;
+    return <div className="p-6 text-center text-muted-foreground">Loading rivalry data...</div>;
   }
 
   if (!player1 || !player2) {
-    return <div className="p-8 text-center text-rose-500">Could not load players.</div>;
+    return <div className="p-6 text-center text-rose-500">Could not load players.</div>;
   }
 
   // Calculate stats
@@ -201,7 +201,7 @@ export default function ComparePlayers() {
       </div>
 
       {/* Profiles Side by Side */}
-      <div className="grid grid-cols-2 gap-4 sm:gap-8 mb-8">
+      <div className="grid grid-cols-2 gap-4 sm:gap-6 mb-8">
         {/* Player 1 */}
         <div className="flex flex-col items-center text-center">
           <img src={player1.avatar_url || ""} className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-primary/30 dark:border-primary shadow-lg mb-4" />
@@ -395,7 +395,7 @@ export default function ComparePlayers() {
       )}
 
       {matches.length === 0 && (
-        <div className="text-center p-8 text-muted-foreground bg-slate-50 dark:bg-slate-800/50 rounded-3xl mt-6 border border-slate-200 dark:border-slate-700">
+        <div className="text-center p-6 text-muted-foreground bg-slate-50 dark:bg-slate-800/50 rounded-3xl mt-6 border border-slate-200 dark:border-slate-700">
           No head-to-head matches played yet.
         </div>
       )}

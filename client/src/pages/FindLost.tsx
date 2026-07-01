@@ -498,7 +498,7 @@ export default function FindLost() {
         {loading ? (
           <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-indigo-500" /></div>
         ) : posts.length === 0 ? (
-          <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800">
+          <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800">
             <PackageSearch className="w-12 h-12 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
             <h3 className="font-black text-muted-foreground dark:text-slate-300 mb-1">No posts yet</h3>
             <p className="text-muted-foreground text-sm">Be the first to post a lost or found item.</p>

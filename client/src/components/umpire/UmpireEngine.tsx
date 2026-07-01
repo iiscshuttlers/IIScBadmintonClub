@@ -151,7 +151,7 @@ export function UmpireEngine({
     const badgeCls = CAT_BADGE[tm.category] ?? "bg-slate-600";
 
     return (
-      <div className="bg-slate-900 border border-slate-800 rounded-4xl p-5 sm:p-8 text-foreground max-w-lg mx-auto shadow-2xl">
+      <div className="bg-slate-900 border border-slate-800 rounded-4xl p-5 sm:p-6 text-foreground max-w-lg mx-auto shadow-2xl">
         <div className="absolute top-0 inset-x-0 h-1.5 bg-linear-to-r from-primary to-sky-500 rounded-t-4xl" />
 
         {/* Header */}
@@ -304,7 +304,7 @@ export function UmpireEngine({
 
   // ── PLAYING / FINISHED SCREEN ──────────────────────────────────────────────
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-4xl p-4 sm:p-8 text-foreground max-w-4xl lg:max-w-5xl mx-auto shadow-2xl relative overflow-hidden">
+    <div className="bg-slate-900 border border-slate-800 rounded-4xl p-4 sm:p-6 text-foreground max-w-4xl lg:max-w-5xl mx-auto shadow-2xl relative overflow-hidden">
       <div className="absolute top-0 inset-x-0 h-1.5 bg-linear-to-r from-primary to-sky-500" />
       {renderSetupOverlay()}
       {/* ── Change Ends Overlay ── */}
@@ -389,7 +389,7 @@ export function UmpireEngine({
             } Won
           </p>
           <p className="text-primary font-bold mb-8 text-2xl">{match.setsHistory.join(", ")}{match.retiredTeam ? ` (T${match.retiredTeam} Retired)` : ""}</p>
-          <button onClick={saveMatchToProfile} className="px-8 py-4 bg-linear-to-r from-amber-500 to-orange-500 text-foreground rounded-2xl font-black uppercase tracking-wider shadow-xl flex items-center gap-2 mx-auto">
+          <button onClick={saveMatchToProfile} className="px-6 py-4 bg-linear-to-r from-amber-500 to-orange-500 text-foreground rounded-2xl font-black uppercase tracking-wider shadow-xl flex items-center gap-2 mx-auto">
             <Save className="w-5 h-5" /> Save to Profile & Notify
           </button>
           <button onClick={() => updateMatch({ status: "playing", winner: undefined, retiredTeam: undefined })} className="mt-6 text-sm font-bold text-muted-foreground hover:text-muted-foreground underline">

@@ -41,7 +41,7 @@ export function TeamsTab() {
 
   return (
     <div className="font-sans animate-in fade-in zoom-in-95 duration-300">
-      <div className="max-w-4xl mx-auto space-y-8">
+      <div className="max-w-4xl mx-auto space-y-6">
         
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>

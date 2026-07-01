@@ -438,7 +438,7 @@ export default function PlayerProfile() {
         {/* Tab Navigation */}
         <div className="w-full border-b border-slate-200 dark:border-amber-900/20 bg-white dark:bg-[#0a1628] sticky top-0 z-30 shadow-sm dark:shadow-amber-900/10">
           <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-10">
-            <div className="grid grid-cols-2 md:flex md:items-center gap-x-2 md:gap-8 w-full md:min-w-max">
+            <div className="grid grid-cols-2 md:flex md:items-center gap-x-2 md:gap-6 w-full md:min-w-max">
               {["OVERVIEW", "RANKING", "STATS", "MATCHES", "PHOTOS"].map((tab) => (
                 <button
                   key={tab}
@@ -467,7 +467,7 @@ export default function PlayerProfile() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-24 space-y-8"
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-6 pt-2 pb-24 space-y-6"
       >
         {/* Pending Match Verification Banner */}
         {(activeTab === "MATCHES" || activeTab === "OVERVIEW") &&
@@ -514,9 +514,9 @@ export default function PlayerProfile() {
             </motion.div>
           )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-8">
           {/* ── LEFT COLUMN ── */}
-          <div className="lg:col-span-7 xl:col-span-8 space-y-8">
+          <div className="lg:col-span-7 xl:col-span-8 space-y-6">
             {activeTab === "OVERVIEW" && (
               <ProfileOverviewTab
                 player={player}

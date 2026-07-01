@@ -65,7 +65,7 @@ export default function MatchAlert() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg rounded-2xl px-8 py-4 shadow-2xl border border-primary/40 dark:border-primary/80 text-center max-w-xs"
+              className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg rounded-2xl px-6 py-4 shadow-2xl border border-primary/40 dark:border-primary/80 text-center max-w-xs"
             >
               <p className="text-lg font-black text-foreground dark:text-foreground mb-1">
                 New Match Alert!

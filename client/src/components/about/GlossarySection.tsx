@@ -246,7 +246,7 @@ export function GlossarySection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
             key={section.category}
-            className={`p-6 md:p-8 rounded-3xl border shadow-sm break-inside-avoid mb-6 inline-block w-full ${section.color}`}
+            className={`p-6 md:p-6 rounded-3xl border shadow-sm break-inside-avoid mb-6 inline-block w-full ${section.color}`}
           >
             <div className="flex items-center gap-4 mb-8">
               <div className="p-3 bg-white dark:bg-slate-900 rounded-2xl shadow-sm">

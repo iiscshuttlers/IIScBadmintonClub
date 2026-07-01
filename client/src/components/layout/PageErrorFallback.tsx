@@ -1,6 +1,6 @@
 export function PageErrorFallback() {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20 text-center px-6">
+    <div className="flex-1 flex flex-col items-center justify-center gap-4 py-12 text-center px-6">
       <div className="text-4xl">🏸</div>
       <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">This page crashed</h2>
       <p className="text-sm text-muted-foreground dark:text-muted-foreground max-w-xs">
