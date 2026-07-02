@@ -1,6 +1,6 @@
 {
-  "versionCode": 178,
-  "versionName": "1.178",
+  "versionCode": 179,
+  "versionName": "1.179",
   "downloadUrl": "https://play.google.com/store/apps/details?id=com.iiscshuttlers.app",
-  "changelog": "- fix: resolve TypeScript strict errors"
+  "changelog": "Version 1.179 released with bug fixes and performance improvements."
 }
