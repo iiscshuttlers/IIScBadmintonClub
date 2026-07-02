@@ -1,5 +1,13 @@
 [
   {
+    "versionCode": 180,
+    "versionName": "1.180",
+    "date": "2026-07-02T20:02:24.784Z",
+    "changes": [
+      "Version 1.180 released with bug fixes and performance improvements."
+    ]
+  },
+  {
     "versionCode": 179,
     "versionName": "1.179",
     "date": "2026-07-02T10:37:45.426Z",
