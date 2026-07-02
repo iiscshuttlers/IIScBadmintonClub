@@ -1,5 +1,13 @@
 [
   {
+    "versionCode": 176,
+    "versionName": "1.176",
+    "date": "2026-07-02T10:23:42.157Z",
+    "changes": [
+      "- new app isolation"
+    ]
+  },
+  {
     "versionCode": 175,
     "versionName": "1.175",
     "date": "2026-07-02T10:07:15.864Z",
