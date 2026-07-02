@@ -1,5 +1,16 @@
 [
   {
+    "versionCode": 175,
+    "versionName": "1.175",
+    "date": "2026-07-02T10:07:15.864Z",
+    "changes": [
+      "- fix: improve Feed header color combinations for better contrast and accessibility",
+      "- refactor: compact spacing across website and app for denser UI",
+      "- refactor: replace all hardcoded text colors with semantic foreground tokens",
+      "- refactor: replace all hardcoded emerald-* with semantic primary tokens"
+    ]
+  },
+  {
     "versionCode": 174,
     "versionName": "1.174",
     "date": "2026-06-29T22:47:16.552Z",

@@ -1,6 +1,6 @@
 {
-  "versionCode": 174,
-  "versionName": "1.174",
+  "versionCode": 175,
+  "versionName": "1.175",
   "downloadUrl": "https://play.google.com/store/apps/details?id=com.iiscshuttlers.app",
-  "changelog": "Version 1.174 released with bug fixes and performance improvements."
+  "changelog": "- fix: improve Feed header color combinations for better contrast and accessibility\n- refactor: compact spacing across website and app for denser UI\n- refactor: replace all hardcoded text colors with semantic foreground tokens\n- refactor: replace all hardcoded emerald-* with semantic primary tokens"
 }
