@@ -54,6 +54,7 @@ export interface PlayerRow {
   followers: string[] | null;
   is_guest: boolean | null;
   deleted_at: string | null;
+  created_at?: string;
 }
 
 export interface RacketDetail {

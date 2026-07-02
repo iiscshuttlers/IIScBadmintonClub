@@ -22,6 +22,7 @@ interface Props {
   matches: Match[];
   playerId: string;
   playerElo: number;
+  allPlayers?: any[];
 }
 
 function parseScore(score: string): number[][] {

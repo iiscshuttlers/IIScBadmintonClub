@@ -47,8 +47,20 @@ export default function PersonalProfilePage() {
     isAdmin,
     savedAccounts,
     switchAccount,
-    handleInvite,
   } = useNavigationAuth();
+  
+  const handleInvite = async () => {
+    if (navigator.share) {
+      await navigator.share({
+        title: "IISc Shuttlers",
+        text: "Join the IISc Shuttlers community!",
+        url: window.location.origin,
+      });
+    } else {
+      await navigator.clipboard.writeText(window.location.origin);
+      toast.success("Link copied to clipboard!");
+    }
+  };
   
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<"profile" | "settings">("profile");
@@ -307,7 +319,7 @@ export default function PersonalProfilePage() {
                   <button onClick={() => setViewAsRole(null)} className={cn("flex-1 text-[11px] font-bold py-2 rounded-lg transition-all", !viewAsRole ? "bg-white dark:bg-slate-700 shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}>Master</button>
                   <button onClick={() => setViewAsRole('admin')} className={cn("flex-1 text-[11px] font-bold py-2 rounded-lg transition-all", viewAsRole === 'admin' ? "bg-white dark:bg-slate-700 shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}>Admin</button>
                   <button onClick={() => setViewAsRole('umpire')} className={cn("flex-1 text-[11px] font-bold py-2 rounded-lg transition-all", viewAsRole === 'umpire' ? "bg-white dark:bg-slate-700 shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}>Umpire</button>
-                  <button onClick={() => setViewAsRole('user')} className={cn("flex-1 text-[11px] font-bold py-2 rounded-lg transition-all", viewAsRole === 'user' ? "bg-white dark:bg-slate-700 shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}>User</button>
+                  <button onClick={() => setViewAsRole('player')} className={cn("flex-1 text-[11px] font-bold py-2 rounded-lg transition-all", viewAsRole === 'player' ? "bg-white dark:bg-slate-700 shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}>User</button>
                 </div>
               </div>
             </div>

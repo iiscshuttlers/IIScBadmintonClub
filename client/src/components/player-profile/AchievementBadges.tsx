@@ -11,6 +11,7 @@ interface Match {
   team2_partner_id?: string;
   status?: string;
   created_at?: string;
+  date?: string;
   match_score?: string;
   player1?: any;
   player2?: any;

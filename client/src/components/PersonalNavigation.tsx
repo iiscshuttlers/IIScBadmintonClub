@@ -259,7 +259,7 @@ export function PersonalNavigation() {
                   />
                 )}
                 <span className="relative z-10">
-                  <Avatar src={profile?.avatar_url} name={profile?.name} size="sm" />
+                  <Avatar src={profile?.avatar_url} name={profile?.full_name} size="sm" />
                 </span>
               </span>
               <span

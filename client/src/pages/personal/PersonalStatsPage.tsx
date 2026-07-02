@@ -213,7 +213,7 @@ export default function PersonalStatsPage() {
 
       {/* Analytics Widget */}
       <div className="mb-8">
-        <PlayerAnalyticsWidget playerId={profile!.id} matches={filteredMatches} allPlayers={allPlayers} />
+        <PlayerAnalyticsWidget playerId={profile!.id} playerElo={profile!.elo_rating} matches={filteredMatches} allPlayers={allPlayers} />
       </div>
 
       {/* Elo Chart */}

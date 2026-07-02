@@ -59,7 +59,7 @@ export default function PersonalGrowthPage() {
 
   // Calculate ELO change (simple estimation)
   const eloChange =
-    profile?.elo_rating && profile.created_at
+    profile?.elo_rating
       ? Math.round(profile.elo_rating - 1200)
       : 0;
 

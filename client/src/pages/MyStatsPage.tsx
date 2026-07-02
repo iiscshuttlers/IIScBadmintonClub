@@ -121,7 +121,7 @@ export default function MyStatsPage() {
 
       {/* Analytics Widget */}
       <div className="mb-8">
-        <PlayerAnalyticsWidget playerId={ownProfile!.id} matches={filteredMatches} allPlayers={allPlayers} />
+        <PlayerAnalyticsWidget playerId={ownProfile!.id} playerElo={ownProfile!.elo_rating} matches={filteredMatches} allPlayers={allPlayers} />
       </div>
 
       {/* Elo Chart */}

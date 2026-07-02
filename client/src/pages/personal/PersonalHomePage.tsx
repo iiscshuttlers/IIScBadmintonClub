@@ -230,10 +230,10 @@ export default function PersonalHomePage() {
                   <span className="inline-flex items-center rounded-full bg-primary/15 px-3 py-1 text-xs font-bold capitalize text-primary">
                     {profile?.playing_level ?? "Player"}
                   </span>
-                  {stats.streak > 0 && (
+                  {stats.streak !== "No matches" && (
                     <span className="inline-flex items-center gap-1 text-xs font-bold text-secondary">
                       <Flame className="h-3.5 w-3.5" />
-                      {stats.streak}W streak
+                      {stats.streak}
                     </span>
                   )}
                 </div>

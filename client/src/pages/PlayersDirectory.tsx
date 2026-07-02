@@ -269,8 +269,8 @@ export default function PlayersDirectory() {
               allDepartments={filters.allDepartments}
               myBuddyIds={myBuddyIds}
               myBuddyRequests={myBuddyRequests}
-              handleBuddyAction={(playerId, action) => handleBuddyAction({ playerId, action })}
-              handleToggleFollow={(targetId) => handleToggleFollow({ targetId, targetName: "" })}
+              handleBuddyAction={handleBuddyAction}
+              handleToggleFollow={handleToggleFollow}
               followingIds={followingIds}
             />
           </div>

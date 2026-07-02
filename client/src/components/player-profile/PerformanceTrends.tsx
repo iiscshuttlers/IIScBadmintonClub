@@ -6,6 +6,7 @@ interface Match {
   winner_id?: string;
   status?: string;
   created_at?: string;
+  date?: string;
   elo_change_p1?: number;
   elo_change_p2?: number;
   elo_change_p3?: number;
