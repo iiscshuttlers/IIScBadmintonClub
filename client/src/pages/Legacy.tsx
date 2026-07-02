@@ -488,11 +488,11 @@ export default function Legacy() {
           <p className="text-xl text-emerald-50 max-w-2xl mx-auto leading-relaxed">
             Honoring the champions, the fighters, and the top performers of IISc Badminton Club, along with all our memories.
           </p>
-          <div className="mt-4 flex justify-center">
-            <div className="flex bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 flex-wrap justify-center gap-1 sm:gap-0">
+          <div className="mt-4 flex justify-center w-full px-2">
+            <div className="grid grid-cols-2 sm:flex bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 sm:flex-wrap sm:justify-center gap-1.5 sm:gap-0 w-full sm:w-auto">
               <button
                 onClick={() => setActiveTab("champions")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black transition-all ${
+                className={`flex w-full sm:w-auto items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
                   activeTab === "champions"
                     ? "bg-white text-emerald-900 shadow-md scale-100"
                     : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
@@ -502,7 +502,7 @@ export default function Legacy() {
               </button>
               <button
                 onClick={() => setActiveTab("albums")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black transition-all ${
+                className={`flex w-full sm:w-auto items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
                   activeTab === "albums"
                     ? "bg-white text-blue-900 shadow-md scale-100"
                     : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
@@ -512,7 +512,7 @@ export default function Legacy() {
               </button>
               <button
                 onClick={() => setActiveTab("photos")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black transition-all ${
+                className={`flex w-full sm:w-auto items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
                   activeTab === "photos"
                     ? "bg-white text-blue-900 shadow-md scale-100"
                     : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
@@ -522,7 +522,7 @@ export default function Legacy() {
               </button>
               <button
                 onClick={() => setActiveTab("videos")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black transition-all ${
+                className={`flex w-full sm:w-auto items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
                   activeTab === "videos"
                     ? "bg-white text-blue-900 shadow-md scale-100"
                     : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
@@ -576,48 +576,51 @@ export default function Legacy() {
 
           {/* Sub-folder Filter */}
           {(activeTab === "albums" || activeTab === "photos") && subfolders.length > 0 && (
-            <div className="flex flex-wrap gap-3 justify-center mb-12 animate-in fade-in slide-in-from-top-4">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 justify-center mb-12 animate-in fade-in slide-in-from-top-4 w-full sm:max-w-2xl sm:mx-auto">
               <button
                 onClick={() => {
                   setSelectedSubfolder("all");
                   updateUrlFilter(selectedCategory, false);
                 }}
-                className={`px-5 py-1.5 rounded-full text-sm font-semibold transition ${
+                className={`col-span-2 w-full px-5 py-2.5 sm:py-2 rounded-xl sm:rounded-full text-sm font-semibold transition ${
                   selectedSubfolder === "all"
                     ? "bg-blue-900 dark:bg-blue-700 text-foreground"
                     : "bg-gray-100 dark:bg-slate-800 text-muted-foreground dark:text-muted-foreground hover:bg-gray-200 dark:hover:bg-slate-700"
                 }`}
               >
-                All Albums
+                {activeTab === "photos" ? "All Photos" : "All Albums"}
               </button>
-              {subfolders.map((sub) => (
-                <div key={sub} className="flex items-center gap-1 group relative">
-                  <button
-                    onClick={() => {
-                      setSelectedSubfolder(sub);
-                      updateUrlFilter(sub, true);
-                    }}
-                    className={`px-5 py-1.5 rounded-full text-sm font-semibold transition pr-10 ${
-                      selectedSubfolder === sub
-                        ? "bg-blue-900 dark:bg-blue-700 text-foreground shadow-md"
-                        : "bg-gray-100 dark:bg-slate-800 text-muted-foreground dark:text-muted-foreground hover:bg-gray-200 dark:hover:bg-slate-700"
-                    }`}
-                  >
-                    {formatText(sub)}
-                  </button>
-                  <button
-                    onClick={(e) => handleSubscribe(e, sub)}
-                    className={`absolute right-1.5 p-1.5 rounded-full transition-colors ${
-                      subscribedTags.has(sub) 
-                        ? "text-primary hover:text-primary bg-primary/10" 
-                        : "text-gray-400 hover:text-primary hover:bg-primary/10 opacity-0 group-hover:opacity-100"
-                    }`}
-                    title={subscribedTags.has(sub) ? "Unsubscribe" : "Subscribe to notifications"}
-                  >
-                    {subscribedTags.has(sub) ? <BellRing className="w-3.5 h-3.5" /> : <Bell className="w-3.5 h-3.5" />}
-                  </button>
-                </div>
-              ))}
+              {subfolders.map((sub, i) => {
+                const isOddLast = (subfolders.length % 2 !== 0) && (i === subfolders.length - 1);
+                return (
+                  <div key={sub} className={`flex items-center gap-1 group relative w-full ${isOddLast ? 'col-span-2' : 'col-span-1'}`}>
+                    <button
+                      onClick={() => {
+                        setSelectedSubfolder(sub);
+                        updateUrlFilter(sub, true);
+                      }}
+                      className={`w-full px-4 py-2.5 sm:py-2 rounded-xl sm:rounded-full text-[13px] sm:text-sm font-semibold transition pr-10 truncate ${
+                        selectedSubfolder === sub
+                          ? "bg-blue-900 dark:bg-blue-700 text-foreground shadow-md"
+                          : "bg-gray-100 dark:bg-slate-800 text-muted-foreground dark:text-muted-foreground hover:bg-gray-200 dark:hover:bg-slate-700"
+                      }`}
+                    >
+                      {formatText(sub)}
+                    </button>
+                    <button
+                      onClick={(e) => handleSubscribe(e, sub)}
+                      className={`absolute right-1.5 p-1.5 rounded-full transition-colors ${
+                        subscribedTags.has(sub) 
+                          ? "text-primary hover:text-primary bg-primary/10" 
+                          : "text-gray-400 hover:text-primary hover:bg-primary/10 opacity-0 sm:group-hover:opacity-100"
+                      }`}
+                      title={subscribedTags.has(sub) ? "Unsubscribe" : "Subscribe to notifications"}
+                    >
+                      {subscribedTags.has(sub) ? <BellRing className="w-3.5 h-3.5" /> : <Bell className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           )}
 

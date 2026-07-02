@@ -293,11 +293,11 @@ export function UmpireEngine({
     );
   };
 
-  // Tournament pre-fill — show clean setup screen instead of generic UmpireSetupFlow
-  if (tournamentMatch && match.status === "setup") {
+  // ── SETUP SCREEN (INITIAL) ─────────────────────────────────────────────────
+  if (match.status === "setup") {
     return (
-      <div className="relative max-w-lg mx-auto">
-        {renderTournamentSetup()}
+      <div className="relative max-w-xl mx-auto">
+        {tournamentMatch ? renderTournamentSetup() : renderSetupContent()}
       </div>
     );
   }

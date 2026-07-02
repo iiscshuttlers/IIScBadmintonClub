@@ -46,6 +46,12 @@ export default function FeedTab() {
     setActiveTab(tabId);
   };
 
+  useEffect(() => {
+    const onOpenUmpire = () => setActiveTab("umpire");
+    window.addEventListener("openUmpireTab", onOpenUmpire);
+    return () => window.removeEventListener("openUmpireTab", onOpenUmpire);
+  }, []);
+
   const { liveMatchIds, hasLiveMatches } = useLiveMatches();
 
   const {

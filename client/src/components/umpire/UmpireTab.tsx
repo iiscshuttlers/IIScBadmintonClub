@@ -114,6 +114,7 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
           isTournamentUmpire={isUmpire}
           initialMatchState={takeoverMatch}
           onClose={() => {
+            resetUmpireStore();
             setTakeoverKey(null);
             setTakeoverMatch(null);
           }}
@@ -149,6 +150,7 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
           isTournamentUmpire={isUmpire}
           initialMatchState={myLiveMatch}
           onClose={() => {
+            resetUmpireStore();
             setIsUmpiring(false);
             setMyLiveMatch(null);
           }}
@@ -198,7 +200,10 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
               </div>
             ) : (
               <button
-                onClick={() => setIsUmpiring(true)}
+                onClick={() => {
+                  resetUmpireStore();
+                  setIsUmpiring(true);
+                }}
                 className="px-6 py-4 bg-primary hover:bg-primary text-primary-foreground font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg transition-colors text-lg"
               >
                 <Play className="w-6 h-6 fill-white" /> Start Umpiring

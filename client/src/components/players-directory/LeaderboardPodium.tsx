@@ -26,7 +26,7 @@ export function LeaderboardPodium({
   if (top3.length === 0) return null;
 
   return (
-    <div className="flex flex-col md:flex-row justify-center items-end gap-4 md:gap-6 mb-10 px-4">
+    <div className="flex flex-col md:flex-row justify-center items-center md:items-end gap-4 md:gap-6 mb-10 px-4">
       {/* 2nd Place */}
       {top3[1] && (
         <motion.div

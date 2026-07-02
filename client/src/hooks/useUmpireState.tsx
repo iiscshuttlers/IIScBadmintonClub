@@ -87,7 +87,7 @@ export function useUmpireState({
         const t2Names = ((editState as any).team2_label || "").split(" & ");
         
         return {
-          id: userId,
+          id: editState.id || crypto.randomUUID(),
           dbId: editState.id,
           umpireName: userName,
           isFriendly: editState.is_friendly ?? true,
@@ -142,7 +142,7 @@ export function useUmpireState({
           MS: "Singles", WS: "Singles", MD: "Doubles", WD: "Doubles", XD: "Doubles",
         };
         return {
-          id: userId,
+          id: tournamentMatch.id || crypto.randomUUID(),
           umpireName: userName,
           isFriendly: false,
           matchNumber: tournamentMatch.match_code,
@@ -180,7 +180,7 @@ export function useUmpireState({
       }
 
       return {
-        id: userId,
+        id: crypto.randomUUID(),
         umpireName: userName,
         isFriendly: true,
         matchNumber: "",

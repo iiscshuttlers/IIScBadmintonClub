@@ -10,7 +10,7 @@ export function useLiveMatches() {
       const ids = new Set<string>();
       let anyLive = false;
       Object.values(val).forEach((m: any) => {
-        if (m.status === "playing") {
+        if (m.status === "playing" || (m.status === "setup" && m.t1?.p1Id && m.t2?.p1Id)) {
           anyLive = true;
           if (!m.isFriendly) {
             [m.t1?.p1Id, m.t1?.p2Id, m.t2?.p1Id, m.t2?.p2Id]

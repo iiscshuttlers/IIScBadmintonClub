@@ -81,7 +81,7 @@ export function TeamsTab({ searchQuery = "" }: TeamsTabProps) {
           </div>
         )}
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap justify-center gap-2">
           {["doubles", "XD"].map((cat) => (
             <button
               key={cat}

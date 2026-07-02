@@ -17,7 +17,7 @@ import {
   Sun,
   Zap,
   ChevronDown,
-  BookOpen,
+  Globe,
   Plus,
   Lock,
   Search,
@@ -261,7 +261,7 @@ export default function Navigation() {
                 <img
                   src={`${import.meta.env.BASE_URL}iisc-logo.png`}
                   alt="IISc Logo"
-                  className="w-7 h-7 object-contain flex-shrink-0 transition-all duration-300"
+                  className="w-9 h-9 object-contain flex-shrink-0 transition-all duration-300"
                 />
                 <div className="min-w-0">
                   <span className="font-bold text-foreground dark:text-foreground leading-tight text-[13px] sm:text-base block whitespace-nowrap tracking-tight">
@@ -439,11 +439,7 @@ export default function Navigation() {
                 ) : isLoggedIn ? (
                   <div className="space-y-0.5">
 
-                    {isAdmin && (
-                      <Link href="/admin" className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-violet-50 dark:hover:bg-violet-950/30 text-violet-600 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
-                        <Zap className="h-4 w-4" /> Site Admin
-                      </Link>
-                    )}
+
                     <button
                       className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer"
                       onClick={handleInvite}
@@ -528,7 +524,7 @@ export default function Navigation() {
 
               <Link href="/hub" className="flex-1 min-w-0">
                 <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/hub") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
-                  <BookOpen strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
+                  <Globe strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
                   <span className="text-[11px] font-semibold">Hub</span>
                 </button>
               </Link>

@@ -334,7 +334,7 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="light" switchable>
+      <ThemeProvider defaultTheme="dark" switchable>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <AppUpdateProvider>

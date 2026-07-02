@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { TrendingUp, Check } from "lucide-react";
+import { TrendingUp, Check, HelpCircle } from "lucide-react";
 import type { BwfMatchState } from "@/types/umpire";
 
 type VoteTally = { t1: number; t2: number };
@@ -73,19 +73,30 @@ async function fetchStatProb(m: BwfMatchState): Promise<StatProb> {
   };
 }
 
-function ProbBar({ t1Pct, t2Pct, t1Label, t2Label, label }: {
-  t1Pct: number; t2Pct: number; t1Label: string; t2Label: string; label: string;
+function ProbBar({ t1Pct, t2Pct, t1Label, t2Label, label, tooltip }: {
+  t1Pct: number; t2Pct: number; t1Label: string; t2Label: string; label: string; tooltip?: string;
 }) {
   return (
     <div className="mt-3">
-      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">{label}</p>
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{label}</p>
+        {tooltip && (
+          <div className="group relative flex items-center">
+            <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/70 hover:text-muted-foreground cursor-help transition-colors" />
+            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 bg-slate-800 text-slate-300 text-xs font-medium p-2.5 rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 shadow-xl border border-slate-700 leading-relaxed text-center pointer-events-none">
+              {tooltip}
+              <div className="absolute left-1/2 -translate-x-1/2 top-full border-[6px] border-transparent border-t-slate-800" />
+            </div>
+          </div>
+        )}
+      </div>
       <div className="flex rounded-full overflow-hidden h-4">
         {t1Pct > 0 && (
           <div
             className="bg-primary flex items-center justify-start pl-2 transition-all duration-700"
             style={{ width: `${t1Pct}%` }}
           >
-            {t1Pct >= 20 && <span className="text-[10px] font-black text-foreground truncate">{t1Pct}%</span>}
+            {t1Pct >= 20 && <span className="text-[10px] font-black text-slate-900 truncate">{t1Pct}%</span>}
           </div>
         )}
         {t2Pct > 0 && (
@@ -93,7 +104,7 @@ function ProbBar({ t1Pct, t2Pct, t1Label, t2Label, label }: {
             className="bg-sky-400 flex items-center justify-end pr-2 transition-all duration-700"
             style={{ width: `${t2Pct}%` }}
           >
-            {t2Pct >= 20 && <span className="text-[10px] font-black text-foreground truncate">{t2Pct}%</span>}
+            {t2Pct >= 20 && <span className="text-[10px] font-black text-slate-900 truncate">{t2Pct}%</span>}
           </div>
         )}
       </div>
@@ -188,6 +199,7 @@ function MatchPredictionCard({ m, myPick, onPick }: {
               t1Label={t1Label}
               t2Label={t2Label}
               label="Based on history"
+              tooltip="Calculated from past match history between these players. If they haven't faced each other, it defaults to their overall win rates."
             />
           )}
 
@@ -197,6 +209,7 @@ function MatchPredictionCard({ m, myPick, onPick }: {
             t1Label={`${t1Label} · ${tally.t1} vote${tally.t1 !== 1 ? "s" : ""}`}
             t2Label={`${tally.t2} vote${tally.t2 !== 1 ? "s" : ""} · ${t2Label}`}
             label="Community votes"
+            tooltip="Live predictions from people in the community watching this match."
           />
         </>
       ) : (
@@ -226,7 +239,9 @@ export function MatchPredictions() {
 
   useEffect(() => {
     const parse = (val: Record<string, BwfMatchState>) => {
-      setLiveMatches(Object.values(val).filter((m) => m.status === "playing"));
+      setLiveMatches(Object.values(val).filter((m) => 
+        m.status === "playing" || (m.status === "setup" && m.t1.p1Id && m.t2.p1Id)
+      ));
     };
 
     supabase

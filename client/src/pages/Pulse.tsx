@@ -186,9 +186,39 @@ export default function Pulse() {
     description: "Live activity, announcements, and tournaments at IISc Badminton Club.",
   });
 
-  const [pulseTab, setPulseTab] = useHashTab(["feed", "events"] as const, "feed");
-
   const TOURNAMENT_SUB_TABS = ["notices", "players", "schedule", "broadcast", "brackets", "past", "umpire"];
+  const EVENTS_TABS = ["events", "calendar", "tournament", "history", ...TOURNAMENT_SUB_TABS];
+
+  const getPulseTab = () => {
+    const hash = window.location.hash.replace("#", "");
+    if (hash === "feed") return "feed";
+    if (EVENTS_TABS.includes(hash)) return "events";
+    return "feed";
+  };
+
+  const [pulseTab, setPulseTabState] = useState<"feed" | "events">(getPulseTab);
+
+  useEffect(() => {
+    const onHashChange = () => setPulseTabState(getPulseTab());
+    window.addEventListener("hashchange", onHashChange);
+    if (!window.location.hash) {
+      window.history.replaceState(null, "", "#feed");
+    }
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
+
+  const setPulseTab = (tab: "feed" | "events") => {
+    setPulseTabState(tab);
+    if (tab === "events") {
+      const currentHash = window.location.hash.replace("#", "");
+      if (!EVENTS_TABS.includes(currentHash) || currentHash === "events") {
+        window.location.hash = "calendar";
+      }
+    } else {
+      window.location.hash = "feed";
+    }
+  };
+
   const [activeTab, setActiveTab] = useHashTab(
     ["calendar", "tournament", "history", ...TOURNAMENT_SUB_TABS] as const,
     "calendar"
@@ -424,7 +454,7 @@ export default function Pulse() {
                     : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
                 }`}
               >
-                <Trophy className="w-4 h-4" /> Tournaments
+                <Trophy className="w-4 h-4" /> Events
               </button>
             </div>
           </div>

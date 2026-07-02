@@ -9,6 +9,7 @@ import {
 } from "react";
 import { App as CapApp } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
+import { fetchSiteData } from "@/lib/siteData";
 
 export type AppUpdateInfo = {
   versionName: string;
@@ -49,13 +50,10 @@ export function AppUpdateProvider({ children }: { children: ReactNode }) {
 
     (async () => {
       try {
-        const remoteVersionUrl =
-          "https://iiscshuttlers.github.io/iiscshuttlers/data/app-version.json";
-        const [info, res] = await Promise.all([
+        const [info, latest] = await Promise.all([
           CapApp.getInfo(),
-          fetch(`${remoteVersionUrl}?v=${Date.now()}`),
+          fetchSiteData<any>("app_version", "app-version.json")
         ]);
-        const latest = await res.json();
 
         if (Number.parseInt(info.build, 10) < latest.versionCode) {
           setUpdateInfo({
@@ -67,9 +65,9 @@ export function AppUpdateProvider({ children }: { children: ReactNode }) {
           });
 
           // Auto-show the prompt only once per app launch.
-          const shownFor = sessionStorage.getItem(AUTO_PROMPT_KEY);
+          const shownFor = localStorage.getItem(AUTO_PROMPT_KEY);
           if (shownFor !== String(latest.versionCode)) {
-            sessionStorage.setItem(AUTO_PROMPT_KEY, String(latest.versionCode));
+            localStorage.setItem(AUTO_PROMPT_KEY, String(latest.versionCode));
             setIsDialogOpen(true);
           }
         }

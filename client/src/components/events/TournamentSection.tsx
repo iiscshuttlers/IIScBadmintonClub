@@ -117,6 +117,12 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
   }, [viewStatus, activeTid]);
 
   useEffect(() => {
+    const onOpenUmpire = () => setActiveTab("umpire" as any);
+    window.addEventListener("openUmpireTab", onOpenUmpire);
+    return () => window.removeEventListener("openUmpireTab", onOpenUmpire);
+  }, [setActiveTab]);
+
+  useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
         supabase

@@ -46,7 +46,7 @@
         try {
           const theme = localStorage.getItem('theme');
           const accent = localStorage.getItem('accent');
-          if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          if (theme === 'dark' || !theme) {
             document.documentElement.classList.add('dark');
           }
           if (accent && accent !== 'emerald') {

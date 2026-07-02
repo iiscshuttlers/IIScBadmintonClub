@@ -11,6 +11,9 @@ importers:
       '@capacitor-community/file-opener':
         specifier: ^8.0.1
         version: 8.0.1(@capacitor/core@8.3.4)
+      '@capacitor-community/text-to-speech':
+        specifier: ^8.0.2
+        version: 8.0.2(@capacitor/core@8.3.4)
       '@capacitor/android':
         specifier: ^8.3.3
         version: 8.3.4(@capacitor/core@8.3.4)
@@ -762,6 +765,11 @@ packages:
   '@capacitor-community/file-opener@8.0.1':
     resolution: {integrity: sha512-kiPybhOlDUMmt5LLsulxLZC/j4gHcPuvKsdbCZTDsQTShGc2G5SNqalYSJUFUfNYl3gQSF7jnNPRlfD5JnSeaw==}
     engines: {node: '>=16.0.0', npm: '>=8.0.0'}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
+
+  '@capacitor-community/text-to-speech@8.0.2':
+    resolution: {integrity: sha512-SbpBMzcmzdTiN8jQDme/yUYHEJISZA+IiaRn5zT14k3UKpjaA7eYBnSm9h76rJHRV/y6DVZVhT1J0SaK5JTKtA==}
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
 
@@ -6031,6 +6039,10 @@ snapshots:
       '@babel/helper-validator-identifier': 7.28.5
 
   '@capacitor-community/file-opener@8.0.1(@capacitor/core@8.3.4)':
+    dependencies:
+      '@capacitor/core': 8.3.4
+
+  '@capacitor-community/text-to-speech@8.0.2(@capacitor/core@8.3.4)':
     dependencies:
       '@capacitor/core': 8.3.4
 

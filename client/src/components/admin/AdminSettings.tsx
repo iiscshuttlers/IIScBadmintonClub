@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { Save, Loader2, Settings, Zap, WrenchIcon, Bell, AlertTriangle, Power } from "lucide-react";
+import { Save, Loader2, Settings, Zap, WrenchIcon, Bell, AlertTriangle, Power, Smartphone } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { InfoModal } from "@/components/InfoModal";
 
@@ -46,6 +46,40 @@ export function AdminSettings() {
     if (data?.value) setSettings({ ...DEFAULTS, ...(data.value as Partial<ClubSettings>) });
     setLoading(false);
   }, []);
+
+  const [savingUpdate, setSavingUpdate] = useState(false);
+  const forceUpdatePrompt = async () => {
+    if (!window.confirm("Are you sure you want to send a push notification to ALL users and force the update popup?")) return;
+    setSavingUpdate(true);
+    try {
+      // Import fetchSiteData dynamically to avoid circular dependencies if any, or just fetch directly
+      const { fetchSiteData } = await import("@/lib/siteData");
+      const latest = await fetchSiteData<any>("app_version", "app-version.json");
+      const currentVersion = latest?.versionCode || 1;
+      const nextVersion = currentVersion + 1;
+      
+      const newAppVersion = {
+        ...(latest || {}),
+        versionCode: nextVersion,
+        versionName: `Update (Forced)`,
+        changelog: "A new mandatory update is available. Please update the app to continue."
+      };
+      
+      await supabase.from("site_data").upsert({ key: "app_version", value: newAppVersion, updated_at: new Date().toISOString() }, { onConflict: "key" });
+      
+      await supabase.functions.invoke("send-announcement", {
+        body: { title: "Update Available", body: "A new version of IISc Badminton Club is available! Please open the app to update." },
+      });
+      
+      await supabase.from("admin_logs").insert({ admin_email: session?.user?.email || "admin", action: `Forced app update prompt (v${nextVersion})`, created_at: new Date().toISOString() });
+      
+      toast.success("Update notification sent and popup forced!");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to force update");
+    } finally {
+      setSavingUpdate(false);
+    }
+  };
 
   useEffect(() => { load(); }, [load]);
 
@@ -224,6 +258,34 @@ export function AdminSettings() {
               <p className="text-[10px] text-muted-foreground mt-1">Rate-limit: prevents ELO farming</p>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* App Updates */}
+      <div className={cardCls}>
+        <div className="flex items-center gap-2 mb-4">
+          <Smartphone className="w-5 h-5 text-indigo-500" />
+          <h3 className="font-black text-slate-800 dark:text-foreground">Force App Update Prompt</h3>
+          <InfoModal
+            title="APP UPDATE PROMPT"
+            items={[
+              { badge: "FORCE", title: "Trigger Popup", desc: "This increments the internal app version code and sends a push notification. The next time users open the app, they will see a mandatory update popup." }
+            ]}
+          />
+        </div>
+        <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div>
+            <p className="font-bold text-slate-800 dark:text-foreground text-sm">Send Update Notification</p>
+            <p className="text-xs text-muted-foreground mt-0.5 max-w-sm">Sends a push notification to all users and forces the update popup on next launch.</p>
+          </div>
+          <button
+            onClick={forceUpdatePrompt}
+            disabled={savingUpdate}
+            className="shrink-0 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-bold rounded-xl transition disabled:opacity-50 flex items-center gap-2"
+          >
+            {savingUpdate ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bell className="w-4 h-4" />}
+            {savingUpdate ? "Sending..." : "Send Now"}
+          </button>
         </div>
       </div>
 

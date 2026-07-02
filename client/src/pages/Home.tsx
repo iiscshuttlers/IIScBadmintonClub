@@ -91,26 +91,27 @@ export default function Home() {
       <div className="min-h-screen pb-24 lg:pb-8">
 
         {/* ── HERO ──────────────────────────────────────────────────────── */}
-        <section aria-label="Hero" className="relative overflow-hidden text-white py-10 lg:py-12 flex items-center">
+        <section aria-label="Hero" className="relative overflow-hidden text-white py-10 lg:py-12 flex items-center bg-slate-950">
           {/* Mobile photo bg */}
-          <div className="lg:hidden absolute inset-0 z-0">
-            <img src={iiscTeam} alt="IISc Badminton Team" className="w-full h-full object-cover object-[25%_center]" />
-            <div className="absolute inset-0 bg-gradient-to-b from-teal-950/92 via-emerald-900/85 to-lime-600/95" />
+          <div className="lg:hidden absolute inset-x-0 top-0 z-0">
+            <img src={iiscTeam} alt="IISc Badminton Team" className="w-full aspect-[4/3] sm:aspect-video object-cover object-top" />
+            <div className="absolute inset-0 bg-slate-950/20" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
           </div>
 
           {/* Desktop bg */}
           <div className="hidden lg:block absolute inset-0 z-0">
-            <div className="absolute inset-0 bg-gradient-to-tr from-teal-800 via-emerald-700 to-lime-600" />
-            <div className="absolute inset-0 hero-pattern" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-900 to-slate-950" />
+            <div className="absolute inset-0 hero-pattern opacity-30" />
             {/* decorative glow orbs */}
-            <div className="absolute top-1/4 right-[15%] w-[500px] h-[500px] bg-lime-500/6 rounded-full blur-[100px]" />
-            <div className="absolute bottom-1/3 left-[10%] w-[400px] h-[400px] bg-teal-500/6 rounded-full blur-[80px]" />
-            <div className="absolute top-1/3 left-[40%] w-[300px] h-[300px] bg-emerald-400/4 rounded-full blur-[60px]" />
+            <div className="absolute top-1/4 right-[15%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px]" />
+            <div className="absolute bottom-1/3 left-[10%] w-[400px] h-[400px] bg-teal-500/10 rounded-full blur-[80px]" />
+            <div className="absolute top-1/3 left-[40%] w-[300px] h-[300px] bg-primary/5 rounded-full blur-[60px]" />
             {/* dot grid */}
             <div className="absolute inset-0 dot-pattern opacity-30" />
           </div>
 
-          <div className="container mx-auto px-4 pt-6 pb-4 lg:pt-8 lg:pb-6 relative z-10 w-full">
+          <div className="container mx-auto px-4 pt-56 sm:pt-72 pb-4 lg:pt-8 lg:pb-6 relative z-10 w-full">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
 
               {/* Left Content */}
@@ -126,21 +127,21 @@ export default function Home() {
 
                 {/* Heading */}
                 <div className="space-y-2">
-                  <h1 className="text-5xl lg:text-6xl xl:text-7xl font-black leading-[1.05] tracking-tight" style={{ fontFamily: "Playfair Display, serif" }}>
+                  <h1 className="text-5xl lg:text-6xl xl:text-7xl font-black leading-[1.05] tracking-tight text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]" style={{ fontFamily: "Playfair Display, serif" }}>
                     Where{" "}
                     <span className="relative inline-block">
-                      <span className="text-primary">Champions</span>
+                      <span className="text-primary drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]">Champions</span>
                     </span>{" "}
                     Are Forged
                   </h1>
-                  <p className="text-base text-white/50 font-medium uppercase tracking-widest">
+                  <p className="text-base text-slate-200 font-bold uppercase tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
                     Indian Institute of Science · Bangalore
                   </p>
                 </div>
 
-                <p className="text-lg text-slate-300 leading-relaxed max-w-lg">
+                <p className="text-lg text-white font-medium leading-relaxed max-w-lg drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
                   Experience world-class badminton at IISc. Join our vibrant community of{" "}
-                  <span className="text-primary font-semibold">350+ players</span> — from beginners to national champions — competing, training, and growing together.
+                  <span className="text-white font-black bg-primary/40 backdrop-blur-md px-1.5 py-0.5 rounded-md border border-primary/50 shadow-sm">350+ players</span> — from beginners to national champions — competing, training, and growing together.
                 </p>
 
                 {/* CTAs */}
@@ -151,14 +152,14 @@ export default function Home() {
                     </Button>
                   </Link>
                   <Link href="/players">
-                    <Button variant="outline" className="border-2 border-white/20 bg-white/5 text-foreground hover:bg-white/10 hover:border-white/35 px-4 py-2.5 text-sm font-semibold w-full sm:w-auto rounded-xl transition-all duration-300 cursor-pointer backdrop-blur-sm">
+                    <Button variant="outline" className="border-2 border-white/40 bg-slate-900/60 text-white hover:bg-slate-900/80 hover:border-white/60 px-4 py-2.5 text-sm font-bold w-full sm:w-auto rounded-xl transition-all duration-300 cursor-pointer backdrop-blur-md shadow-lg">
                       Meet the Players
                     </Button>
                   </Link>
                 </div>
 
                 {/* Inline mini-stats */}
-                <div className="flex items-center gap-4 pt-1 border-t border-white/10">
+                <div className="flex items-center justify-center gap-4 pt-1 border-t border-white/10 max-w-lg">
                   {[
                     { value: config?.stats?.members || "350+", label: "Members" },
                     { value: config?.stats?.tournaments || "20+", label: "Tournaments" },

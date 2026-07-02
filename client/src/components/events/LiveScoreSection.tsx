@@ -4,6 +4,8 @@ import { Trophy, Activity, Tv2, Trash2, Save, ShieldCheck, X, MonitorPlay, Bell,
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
+import { Capacitor } from "@capacitor/core";
+import { TextToSpeech } from "@capacitor-community/text-to-speech";
 import { playSmashSound } from "@/lib/sounds";
 import type { BwfMatchState } from "@/types/umpire";
 
@@ -72,7 +74,7 @@ function MatchBroadcastCard({
         osc.stop(ctx.currentTime + 0.2);
       } catch (e) {}
 
-      if (voiceEnabled && window.speechSynthesis) {
+      if (voiceEnabled) {
         const t1Name = match.t1.p1Name + (match.t1.p2Name ? " and " + match.t1.p2Name : "");
         const t2Name = match.t2.p1Name + (match.t2.p2Name ? " and " + match.t2.p2Name : "");
         const sName = match.serverTeam === 1 ? t1Name : t2Name;
@@ -81,17 +83,30 @@ function MatchBroadcastCard({
         const rScore = match.serverTeam === 1 ? match.t2.score : match.t1.score;
         
         const text = `${sName}, ${sScore}, ${rScore}, ${rName}`;
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        
-        const voices = window.speechSynthesis.getVoices();
-        const indianVoice = voices.find(v => 
-          (v.lang === 'en-IN' && (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('zira') || v.name.toLowerCase().includes('aditi'))) || 
-          v.lang === 'en-IN' || v.lang === 'hi-IN'
-        );
-        if (indianVoice) utterance.voice = indianVoice;
-        utterance.rate = 0.65;
-        window.speechSynthesis.speak(utterance);
+
+        if (Capacitor.isNativePlatform()) {
+          // Native robust TTS
+          TextToSpeech.speak({
+            text,
+            lang: 'en-IN',
+            rate: 0.9,
+            pitch: 1.0,
+            volume: 1.0,
+            category: 'ambient',
+          }).catch(console.error);
+        } else if (window.speechSynthesis) {
+          // Web fallback
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(text);
+          const voices = window.speechSynthesis.getVoices();
+          const indianVoice = voices.find(v => 
+            (v.lang === 'en-IN' && (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('zira') || v.name.toLowerCase().includes('aditi'))) || 
+            v.lang === 'en-IN' || v.lang === 'hi-IN'
+          );
+          if (indianVoice) utterance.voice = indianVoice;
+          utterance.rate = 0.65;
+          window.speechSynthesis.speak(utterance);
+        }
       }
     }
     prevScores.current = { t1: match.t1.score, t2: match.t2.score };
@@ -309,7 +324,7 @@ export function LiveScoreSection() {
   const { session, profile, isAdmin, isUmpire } = useAuth();
   const [, navigate] = useLocation();
   const [liveMatches, setLiveMatches] = useState<Record<string, BwfMatchState>>({});
-  const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [flashEnabled, setFlashEnabled] = useState(true);
   const [vibrateEnabled, setVibrateEnabled] = useState(true);
   const prevScoresRef = useRef<Record<string, { t1: number; t2: number }>>({});
@@ -317,7 +332,7 @@ export function LiveScoreSection() {
   // ── Admin: jump into the umpire panel to control a running broadcast ──
   const handleTakeover = (matchId: string) => {
     sessionStorage.setItem("umpire_takeover_key", matchId);
-    navigate("/feed/umpire");
+    window.dispatchEvent(new CustomEvent("openUmpireTab"));
   };
 
   const fetchLiveMatches = async () => {
@@ -444,7 +459,15 @@ export function LiveScoreSection() {
         </div>
         <div className="flex flex-wrap items-center justify-center gap-2 mt-4 sm:mt-0">
           <button
-            onClick={() => setVoiceEnabled(!voiceEnabled)}
+            onClick={() => {
+              if (!voiceEnabled && window.speechSynthesis) {
+                // Unlock speech synthesis on mobile webviews with a silent utterance during user gesture
+                const u = new SpeechSynthesisUtterance("");
+                u.volume = 0;
+                window.speechSynthesis.speak(u);
+              }
+              setVoiceEnabled(!voiceEnabled);
+            }}
             className={`flex justify-center items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-bold transition-colors ${
               voiceEnabled ? 'bg-primary/20 text-primary border-primary/50 hover:bg-primary/30' : 'bg-slate-800 text-muted-foreground border-slate-700 hover:bg-slate-700'
             }`}

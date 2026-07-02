@@ -32,7 +32,7 @@ export const isPollVisible = (poll: Poll) => {
   if (poll.end_date && now > new Date(poll.end_date).getTime()) return false;
   return true;
 };
-function PollCard({ poll, onVote, onArchive, onDelete, currentUserId, isAdmin }: { poll: Poll; onVote: (pollId: string, optionId: string) => void; onArchive?: (pollId: string, archive: boolean) => void; onDelete?: (pollId: string) => void; currentUserId?: string; isAdmin?: boolean }) {
+function PollCard({ poll, onVote, onArchive, onDelete, onNotify, currentUserId, isAdmin }: { poll: Poll; onVote: (pollId: string, optionId: string) => void; onArchive?: (pollId: string, archive: boolean) => void; onDelete?: (pollId: string) => void; onNotify?: (poll: Poll) => void; currentUserId?: string; isAdmin?: boolean }) {
   const totalVotes = poll.options.reduce((sum, o) => sum + (o.votes?.length || 0), 0);
   const userVotedId = currentUserId
     ? poll.options.find(o => o.votes?.includes(currentUserId))?.id
@@ -50,7 +50,15 @@ function PollCard({ poll, onVote, onArchive, onDelete, currentUserId, isAdmin }:
         </span>
       </div>
       {isAdmin && (
-        <div className="absolute top-6 right-6 flex items-center gap-2">
+        <div className="flex flex-wrap justify-end items-center gap-3 mb-4 mt-[-8px]">
+          {onNotify && (
+            <button
+              onClick={() => onNotify(poll)}
+              className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-indigo-500 transition-colors flex items-center gap-1"
+            >
+              Notify
+            </button>
+          )}
           {onArchive && (
             <button
               onClick={() => onArchive(poll.id, !poll.is_archived)}
@@ -67,12 +75,12 @@ function PollCard({ poll, onVote, onArchive, onDelete, currentUserId, isAdmin }:
               Delete
             </button>
           )}
-          <a href="/admin#polls" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-violet-500 transition-colors flex items-center gap-1 border-l border-slate-200 dark:border-slate-700 pl-2 ml-1">
+          <a href="/admin#polls" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-violet-500 transition-colors flex items-center gap-1 border-l border-slate-200 dark:border-slate-700 pl-3">
             Manage
           </a>
         </div>
       )}
-      <h3 className="font-black text-slate-800 dark:text-foreground text-base mb-4 mt-2 pr-24">{poll.question}</h3>
+      <h3 className="font-black text-slate-800 dark:text-foreground text-base mb-4 mt-2">{poll.question}</h3>
       <div className="space-y-2.5">
         {poll.options.map((option) => {
           const voteCount = option.votes?.length || 0;
@@ -131,6 +139,8 @@ function CreatePollForm({ onCreated, onCancel }: { onCreated: () => void; onCanc
   const [question, setQuestion] = useState("");
   const [options, setOptions] = useState(["", ""]);
   const [saving, setSaving] = useState(false);
+  const [notify, setNotify] = useState(true);
+  const { session } = useAuth();
 
   const addOption = () => setOptions(prev => [...prev, ""]);
   const removeOption = (i: number) => setOptions(prev => prev.filter((_, idx) => idx !== i));
@@ -155,6 +165,22 @@ function CreatePollForm({ onCreated, onCancel }: { onCreated: () => void; onCanc
     polls.unshift(poll);
 
     await supabase.from("site_data").upsert({ key: "polls", value: { polls } }, { onConflict: "key" });
+    
+    if (notify) {
+      toast.info("Sending push notification...");
+      try {
+        await supabase.functions.invoke("send-announcement", {
+          body: {
+            title: "New Community Poll!",
+            body: question.trim(),
+            admin_email: session?.user?.email ?? "admin",
+          },
+        });
+      } catch (err) {
+        toast.error("Failed to send push notification");
+      }
+    }
+
     toast.success("Poll created!");
     setSaving(false);
     onCreated();
@@ -191,6 +217,18 @@ function CreatePollForm({ onCreated, onCancel }: { onCreated: () => void; onCanc
           </div>
         ))}
       </div>
+      <div className="flex items-center gap-2 mb-3 px-1">
+        <input 
+          type="checkbox" 
+          id="notify-poll" 
+          checked={notify} 
+          onChange={e => setNotify(e.target.checked)} 
+          className="rounded border-slate-300 text-violet-600 focus:ring-violet-500 w-4 h-4 cursor-pointer" 
+        />
+        <label htmlFor="notify-poll" className="text-sm font-semibold text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+          Send Push Notification
+        </label>
+      </div>
       <div className="flex gap-2">
         <button onClick={addOption} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-violet-600 bg-violet-50 dark:bg-violet-900/20 hover:bg-violet-100 dark:hover:bg-violet-900/40 transition">
           <Plus className="w-3.5 h-3.5" /> Add Option
@@ -208,7 +246,7 @@ function CreatePollForm({ onCreated, onCancel }: { onCreated: () => void; onCanc
 }
 
 export function PollsSection() {
-  const { profile, isAdmin } = useAuth();
+  const { profile, session, isAdmin } = useAuth();
   const [polls, setPolls] = useState<Poll[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -270,6 +308,23 @@ export function PollsSection() {
     toast.success("Poll deleted");
   };
 
+  const handleNotify = async (poll: Poll) => {
+    if (!confirm("Send a push notification to all users about this poll?")) return;
+    toast.info("Sending push notification...");
+    try {
+      await supabase.functions.invoke("send-announcement", {
+        body: {
+          title: "New Community Poll!",
+          body: poll.question,
+          admin_email: session?.user?.email ?? "admin",
+        },
+      });
+      toast.success("Push notification sent!");
+    } catch (err) {
+      toast.error("Failed to send push notification");
+    }
+  };
+
   if (loading) return null;
   if (!isAdmin && polls.filter(isPollVisible).length === 0) return null;
 
@@ -298,7 +353,7 @@ export function PollsSection() {
 
       {polls.filter(isPollVisible).map((poll) => (
         <motion.div key={poll.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <PollCard poll={poll} onVote={handleVote} onArchive={isAdmin ? handleArchive : undefined} onDelete={isAdmin ? handleDelete : undefined} currentUserId={profile?.id} isAdmin={isAdmin} />
+          <PollCard poll={poll} onVote={handleVote} onArchive={isAdmin ? handleArchive : undefined} onDelete={isAdmin ? handleDelete : undefined} onNotify={isAdmin ? handleNotify : undefined} currentUserId={profile?.id} isAdmin={isAdmin} />
         </motion.div>
       ))}
 
@@ -310,7 +365,7 @@ export function PollsSection() {
           </div>
           <div className="space-y-4">
             {polls.filter(p => p.is_archived).map(poll => (
-              <PollCard key={poll.id} poll={poll} onVote={handleVote} onArchive={isAdmin ? handleArchive : undefined} onDelete={isAdmin ? handleDelete : undefined} currentUserId={profile?.id} isAdmin={isAdmin} />
+              <PollCard key={poll.id} poll={poll} onVote={handleVote} onArchive={isAdmin ? handleArchive : undefined} onDelete={isAdmin ? handleDelete : undefined} onNotify={isAdmin ? handleNotify : undefined} currentUserId={profile?.id} isAdmin={isAdmin} />
             ))}
           </div>
         </div>
