@@ -1,5 +1,13 @@
 [
   {
+    "versionCode": 178,
+    "versionName": "1.178",
+    "date": "2026-07-02T10:31:55.131Z",
+    "changes": [
+      "- fix: resolve TypeScript strict errors"
+    ]
+  },
+  {
     "versionCode": 177,
     "versionName": "1.177",
     "date": "2026-07-02T10:28:03.337Z",
