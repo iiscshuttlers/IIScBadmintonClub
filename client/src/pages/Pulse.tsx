@@ -1,4 +1,6 @@
 import { Link } from "wouter";
+import FeedTab from "@/components/pulse/FeedTab";
+import { Activity } from "lucide-react";
 import { motion, type Variants } from "framer-motion";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -175,15 +177,16 @@ function UpcomingCountdown({ event }: { event: any }) {
   );
 }
 
-export default function Events() {
+export default function Pulse() {
   const { user } = useAuth();
   const isAdmin = user?.role === "master_admin" || user?.role === "admin";
 
   usePageMeta({
-    title: "Events & Championships",
-    description:
-      "Browse live, upcoming and completed badminton tournaments at IISc.",
+    title: "Pulse",
+    description: "Live activity, announcements, and tournaments at IISc Badminton Club.",
   });
+
+  const [pulseTab, setPulseTab] = useHashTab(["feed", "events"] as const, "feed");
 
   const TOURNAMENT_SUB_TABS = ["notices", "players", "schedule", "broadcast", "brackets", "past", "umpire"];
   const [activeTab, setActiveTab] = useHashTab(
@@ -376,12 +379,12 @@ export default function Events() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 lg:pb-8">
-      <section className="bg-gradient-to-tr from-teal-800 via-emerald-700 to-lime-600 text-foreground py-16 relative overflow-hidden">
+      <section className="bg-gradient-to-tr from-teal-800 via-emerald-700 to-lime-600 text-foreground py-4 relative overflow-hidden">
         <div className="absolute inset-0 hero-pattern" />
         <div className="container mx-auto px-4 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 px-4 py-2 rounded-full text-sm font-semibold mb-5">
-            <Calendar className="w-4 h-4 text-lime-300" />
-            Tournaments & Events
+          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 px-4 py-1.5 rounded-full text-sm font-semibold mb-2">
+            <Activity className="w-4 h-4 text-lime-300" />
+            Pulse
             <InfoModal
               title="EVENTS & CHAMPIONSHIPS"
               items={[
@@ -392,20 +395,46 @@ export default function Events() {
             />
           </div>
           <h1
-            className="text-5xl md:text-6xl font-black mb-5 text-white"
+            className="text-5xl md:text-6xl font-black mb-2 text-white"
             style={{ fontFamily: "Playfair Display, serif" }}
           >
-            Events & Championships
+            Action & Updates
           </h1>
           <p className="text-xl text-emerald-50 max-w-3xl mx-auto">
-            Live tournaments, upcoming competitions and archived results.
+            Live feed, ongoing tournaments, and club announcements.
           </p>
 
-          <div className="mt-10 w-full flex justify-center">
+          <div className="mt-4 w-full flex justify-center mb-6">
+            <div className="flex bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 gap-1.5">
+              <button
+                onClick={() => setPulseTab("feed")}
+                className={`flex items-center justify-center gap-2 px-6 py-2 rounded-xl text-sm font-black transition-all ${
+                  pulseTab === "feed"
+                    ? "bg-white text-blue-900 shadow-md scale-100"
+                    : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
+                }`}
+              >
+                <Activity className="w-4 h-4" /> Live Feed
+              </button>
+              <button
+                onClick={() => setPulseTab("events")}
+                className={`flex items-center justify-center gap-2 px-6 py-2 rounded-xl text-sm font-black transition-all ${
+                  pulseTab === "events"
+                    ? "bg-white text-blue-900 shadow-md scale-100"
+                    : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
+                }`}
+              >
+                <Trophy className="w-4 h-4" /> Tournaments
+              </button>
+            </div>
+          </div>
+          
+          {pulseTab === "events" && (
+            <div className="mt-4 w-full flex justify-center">
             <div className="flex flex-wrap sm:flex-nowrap bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 gap-1.5 w-full sm:w-auto">
               <button
                 onClick={() => setActiveTab("calendar")}
-                className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all flex-1 basis-[45%] sm:basis-auto shrink-0 ${
+                className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-black transition-all flex-1 basis-[45%] sm:basis-auto shrink-0 ${
                   effectiveTab === "calendar"
                     ? "bg-white text-blue-900 shadow-md scale-100"
                     : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
@@ -416,7 +445,7 @@ export default function Events() {
               {tournamentCfg.enabled && (
                 <button
                   onClick={() => setActiveTab("tournament")}
-                  className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all flex-1 basis-[45%] sm:basis-auto shrink-0 ${
+                  className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-black transition-all flex-1 basis-[45%] sm:basis-auto shrink-0 ${
                     effectiveTab === "tournament"
                       ? "bg-rose-500 text-foreground shadow-md scale-100 shadow-rose-500/30"
                       : "text-foreground/80 hover:text-rose-400 hover:bg-rose-500/10 scale-95"
@@ -428,7 +457,7 @@ export default function Events() {
               )}
               <button
                 onClick={() => setActiveTab("history")}
-                className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all flex-1 basis-[100%] sm:basis-auto shrink-0 ${
+                className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-black transition-all flex-1 basis-[45%] sm:basis-auto shrink-0 ${
                   effectiveTab === "history"
                     ? "bg-white text-blue-900 shadow-md scale-100"
                     : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
@@ -437,11 +466,16 @@ export default function Events() {
                 <Clock className="w-4 h-4" /> History
               </button>
             </div>
-          </div>
+            </div>
+          )}
         </div>
       </section>
 
-      {effectiveTab === "tournament" && tournamentCfg.enabled && (
+      {pulseTab === "feed" ? (
+        <FeedTab />
+      ) : (
+        <>
+          {effectiveTab === "tournament" && tournamentCfg.enabled && (
         <TournamentSection 
           liveEvents={live}
           upcomingEvents={upcoming}
@@ -609,8 +643,9 @@ export default function Events() {
       {effectiveTab === "calendar" && (
         <>
           {/* ── 1. Match Calendar ───────────────────────────────────────────── */}
-      <ScheduleCalendar />
-
+          <ScheduleCalendar />
+        </>
+      )}
         </>
       )}
     </div>

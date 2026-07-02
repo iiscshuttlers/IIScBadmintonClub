@@ -96,7 +96,7 @@ export function DirectoryGrid({
         </p>
         <button
           onClick={fetchPlayers}
-          className="mt-2 px-4 py-2 bg-primary hover:bg-primary text-foreground text-sm font-bold rounded-xl transition"
+          className="mt-2 px-4 py-2 bg-primary hover:bg-primary text-primary-foreground text-sm font-bold rounded-xl transition"
         >
           Retry
         </button>

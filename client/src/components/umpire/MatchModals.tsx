@@ -192,7 +192,7 @@ export function DirectScoreModal({
           <div>
             <label className="block text-xs font-bold text-muted-foreground uppercase mb-2">Winner</label>
             <div className="flex flex-col sm:flex-row gap-2">
-              <button onClick={() => setDirectWinner(1)} className={`flex-1 py-3 px-2 rounded-xl font-bold transition text-sm ${directWinner === 1 ? "bg-primary text-foreground" : "bg-slate-800 text-muted-foreground"}`}>{t1Name || "Team 1"}</button>
+              <button onClick={() => setDirectWinner(1)} className={`flex-1 py-3 px-2 rounded-xl font-bold transition text-sm ${directWinner === 1 ? "bg-primary text-primary-foreground" : "bg-slate-800 text-muted-foreground"}`}>{t1Name || "Team 1"}</button>
               <button onClick={() => setDirectWinner(2)} className={`flex-1 py-3 px-2 rounded-xl font-bold transition text-sm ${directWinner === 2 ? "bg-sky-500 text-foreground" : "bg-slate-800 text-muted-foreground"}`}>{t2Name || "Team 2"}</button>
             </div>
           </div>
@@ -234,7 +234,7 @@ export function DirectScoreModal({
           <button onClick={() => {
             if (!directWinner || !directSetsText) { toast.error("Fill winner and at least 1 set"); return; }
             onSave();
-          }} className="flex-[2] py-3 bg-primary hover:bg-primary text-foreground rounded-xl font-bold transition">Save Score</button>
+          }} className="flex-[2] py-3 bg-primary hover:bg-primary text-primary-foreground rounded-xl font-bold transition">Save Score</button>
         </div>
         
       </div>

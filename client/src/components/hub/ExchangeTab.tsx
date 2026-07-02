@@ -31,7 +31,7 @@ interface Listing {
   };
 }
 
-export default function Marketplace() {
+export default function ExchangeTab() {
   const { session } = useAuth();
   const [listings, setListings] = useState<Listing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -176,7 +176,7 @@ export default function Marketplace() {
     .filter(l => typeFilter === 'all' ? true : l.listing_type === typeFilter);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-safe pb-24">
+    <div className="w-full">
       {/* Top Tab Bar for Unified Noticeboard */}
       <div className="bg-slate-100 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-center gap-2">
@@ -184,7 +184,7 @@ export default function Marketplace() {
             onClick={() => { 
               setActiveTab("marketplace"); 
               setFilter("All");
-              window.history.replaceState({}, '', '/exchange#buy-sell'); 
+              window.history.replaceState({}, '', '/hub#buy-sell'); 
             }} 
             className={`px-5 py-2 rounded-xl font-black text-sm transition-all ${
               activeTab === "marketplace" 
@@ -197,7 +197,7 @@ export default function Marketplace() {
           <button 
             onClick={() => { 
               setActiveTab("findlost"); 
-              window.history.replaceState({}, '', '/exchange#lost-found'); 
+              window.history.replaceState({}, '', '/hub#lost-found'); 
             }} 
             className={`px-5 py-2 rounded-xl font-black text-sm transition-all ${
               activeTab === "findlost" 
@@ -231,7 +231,7 @@ export default function Marketplace() {
               </div>
               <button 
                 onClick={() => setIsCreateModalOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary text-foreground rounded-lg text-sm font-bold shadow-sm shadow-primary/20 transition-all active:scale-95"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary text-primary-foreground rounded-lg text-sm font-bold shadow-sm shadow-primary/20 transition-all active:scale-95"
               >
                 <Plus className="w-4 h-4" /> Create Listing
               </button>

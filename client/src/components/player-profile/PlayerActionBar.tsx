@@ -228,7 +228,7 @@ export function PlayerActionBar({
             ) : buddyStatus === 'received' ? (
               <button
                 onClick={() => onBuddyAction("accept")}
-                className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-primary text-foreground hover:bg-primary"
+                className="flex items-center gap-2 px-6 py-2.5 font-black rounded-xl transition-all shadow-md text-sm uppercase tracking-wider bg-primary text-primary-foreground hover:bg-primary"
               >
                 <Heart className="w-4 h-4" />
                 Accept Request

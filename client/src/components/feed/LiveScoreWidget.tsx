@@ -314,7 +314,7 @@ export function LiveScoreWidget({ onClose }: Props) {
               <button
                 onClick={submitForElo}
                 disabled={submittingElo}
-                className="flex-1 py-3 rounded-2xl bg-primary hover:bg-primary disabled:opacity-60 text-foreground font-black text-sm transition flex items-center justify-center gap-2"
+                className="flex-1 py-3 rounded-2xl bg-primary hover:bg-primary disabled:opacity-60 text-primary-foreground font-black text-sm transition flex items-center justify-center gap-2"
               >
                 {submittingElo ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trophy className="w-4 h-4" />}
                 {submittingElo ? "Submitting…" : "Yes, submit!"}

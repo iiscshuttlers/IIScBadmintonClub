@@ -8,8 +8,14 @@ interface Match {
   created_at?: string;
   elo_change_p1?: number;
   elo_change_p2?: number;
+  elo_change_p3?: number;
+  elo_change_p4?: number;
   player1_id?: string;
   player2_id?: string;
+  team1_partner_id?: string;
+  team2_partner_id?: string;
+  match_score?: string;
+  score?: string;
 }
 
 interface Props {
@@ -32,11 +38,23 @@ function SparkLine({ values, color }: { values: number[]; color: string }) {
 }
 
 export function PerformanceTrends({ matches, playerId }: Props) {
+  const isWinner = (m: Match) => {
+    if (!m.winner_id) return false;
+    const isTeam1 = m.player1_id === playerId || m.team1_partner_id === playerId;
+    const isTeam1Winner = m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id;
+    return isTeam1 ? isTeam1Winner : !isTeam1Winner;
+  };
+
   const data = useMemo(() => {
     const confirmed = matches
-      .filter((m) => m.status === "confirmed" && m.created_at)
-      .sort((a, b) => new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime())
-      .slice(-20);
+      .filter((m) => m.status === "confirmed" && (m.date || m.created_at))
+      .sort((a, b) => {
+        const timeA = new Date(a.date || a.created_at!).getTime();
+        const timeB = new Date(b.date || b.created_at!).getTime();
+        return timeB - timeA; // Descending (newest first)
+      })
+      .slice(0, 20)
+      .reverse(); // Ascending (oldest to newest for the chart)
 
     if (confirmed.length < 5) return null;
 
@@ -44,7 +62,7 @@ export function PerformanceTrends({ matches, playerId }: Props) {
     const winRates: number[] = [];
     for (let i = 4; i < confirmed.length; i++) {
       const window = confirmed.slice(i - 4, i + 1);
-      const wins = window.filter((m) => m.winner_id === playerId).length;
+      const wins = window.filter(isWinner).length;
       winRates.push((wins / 5) * 100);
     }
 
@@ -52,6 +70,8 @@ export function PerformanceTrends({ matches, playerId }: Props) {
     const eloChanges: number[] = confirmed.map((m) => {
       if (m.player1_id === playerId) return m.elo_change_p1 ?? 0;
       if (m.player2_id === playerId) return m.elo_change_p2 ?? 0;
+      if (m.team1_partner_id === playerId) return m.elo_change_p3 ?? 0;
+      if (m.team2_partner_id === playerId) return m.elo_change_p4 ?? 0;
       return 0;
     });
 
@@ -60,7 +80,7 @@ export function PerformanceTrends({ matches, playerId }: Props) {
     const cumulativeElo: number[] = eloChanges.map((c) => (cumElo += c));
 
     const lastFive = confirmed.slice(-5);
-    const recentWins = lastFive.filter((m) => m.winner_id === playerId).length;
+    const recentWins = lastFive.filter(isWinner).length;
     const recentForm = recentWins >= 4 ? "hot" : recentWins <= 1 ? "cold" : "neutral";
 
     return { winRates, cumulativeElo, recentForm, recentWins, total: confirmed.length };
@@ -117,11 +137,31 @@ export function PerformanceTrends({ matches, playerId }: Props) {
             .filter((m) => m.status === "confirmed")
             .slice(-5)
             .map((m, i) => {
-              const won = m.winner_id === playerId;
+              const won = isWinner(m);
+              let myGames = 0;
+              let oppGames = 0;
+              const scoreStr = m.match_score || m.score || "";
+              const sets = scoreStr.split(",").map(s => s.trim());
+              sets.forEach(set => {
+                const parts = set.split("-");
+                if (parts.length === 2) {
+                  const p1 = parseInt(parts[0], 10);
+                  const p2 = parseInt(parts[1], 10);
+                  if (!isNaN(p1) && !isNaN(p2)) {
+                    const isTeam1 = m.player1_id === playerId || m.team1_partner_id === playerId;
+                    const myScore = isTeam1 ? p1 : p2;
+                    const oppScore = isTeam1 ? p2 : p1;
+                    if (myScore > oppScore) myGames++;
+                    else if (oppScore > myScore) oppGames++;
+                  }
+                }
+              });
+              const matchScoreText = myGames || oppGames ? `${myGames}-${oppGames}` : (won ? "W" : "L");
+              
               return (
                 <div key={i} title={won ? "Win" : "Loss"}
-                  className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black ${won ? "bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary" : "bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400"}`}>
-                  {won ? "W" : "L"}
+                  className={`h-8 px-2 min-w-[32px] rounded-xl flex items-center justify-center text-[11px] font-black tracking-tight ${won ? "bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary" : "bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400"}`}>
+                  {matchScoreText}
                 </div>
               );
             })}

@@ -23,7 +23,7 @@ function FormPill({ result, index }: { result: "W" | "L"; index: number }) {
   return (
     <div
       className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-black
-        ${isWin ? "bg-primary text-foreground" : "bg-slate-200 dark:bg-white/10 text-muted-foreground dark:text-foreground/40"}
+        ${isWin ? "bg-primary text-primary-foreground" : "bg-slate-200 dark:bg-white/10 text-muted-foreground dark:text-primary-foreground/40"}
       `}
       style={{ opacity }}
     >
@@ -493,7 +493,7 @@ export function ProfileOverviewTab({
           ).map((attr) => (
             <div
               key={attr.label}
-              className="relative overflow-hidden bg-white/5 rounded-2xl p-5 sm:p-6 border border-slate-200 dark:border-white/8 hover:border-slate-300 dark:hover:border-white/14 hover:bg-slate-50 dark:hover:bg-slate-200 dark:bg-white/8 hover:-translate-y-0.5 transition-all duration-300 group"
+              className="relative overflow-hidden bg-white/5 rounded-2xl p-5 sm:p-6 border border-slate-200 dark:border-white/8 hover:border-slate-300 dark:hover:border-white/14 hover:bg-slate-50 dark:hover:bg-white/12 dark:bg-white/8 hover:-translate-y-0.5 transition-all duration-300 group"
             >
               <div
                 className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${attr.accent}`}

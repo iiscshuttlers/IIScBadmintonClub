@@ -393,7 +393,7 @@ export function PlayersManager() {
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-3 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${filter === f ? "bg-primary text-foreground" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-300 hover:border-primary/50"}`}
+                className={`px-3 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${filter === f ? "bg-primary text-primary-foreground" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-300 hover:border-primary/50"}`}
               >
                 {f === "profile"
                   ? "Profile Created"
@@ -528,7 +528,7 @@ export function PlayersManager() {
                   <button
                     onClick={() => approve(p.id)}
                     disabled={busy}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary hover:bg-primary text-foreground text-xs font-bold transition disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary hover:bg-primary text-primary-foreground text-xs font-bold transition disabled:opacity-50"
                   >
                     {busy ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />

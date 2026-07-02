@@ -9,6 +9,11 @@ export interface SiteConfig {
     instagram: string;
     location: string;
   };
+  elo?: {
+    kNewbie: number;
+    kExperienced: number;
+    tournamentMultiplier: number;
+  };
 }
 
 export interface SiteHoliday {

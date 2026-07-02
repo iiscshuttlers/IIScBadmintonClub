@@ -164,13 +164,13 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
         <div className="flex gap-2 bg-slate-900 p-1 rounded-2xl w-fit mx-auto">
           <button
             onClick={() => setActiveSubTab("friendly")}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black transition-all ${activeSubTab === "friendly" ? "bg-primary text-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black transition-all ${activeSubTab === "friendly" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-primary-foreground"}`}
           >
             <Tv2 className="w-4 h-4" /> Friendly
           </button>
           <button
             onClick={() => setActiveSubTab("tournament")}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black transition-all ${activeSubTab === "tournament" ? "bg-primary text-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black transition-all ${activeSubTab === "tournament" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-primary-foreground"}`}
           >
             <Swords className="w-4 h-4" /> Tournament
           </button>
@@ -199,7 +199,7 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
             ) : (
               <button
                 onClick={() => setIsUmpiring(true)}
-                className="px-6 py-4 bg-primary hover:bg-primary text-foreground font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg transition-colors text-lg"
+                className="px-6 py-4 bg-primary hover:bg-primary text-primary-foreground font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg transition-colors text-lg"
               >
                 <Play className="w-6 h-6 fill-white" /> Start Umpiring
               </button>
@@ -313,7 +313,7 @@ function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditSt
               key={f}
               onClick={() => setFilterFormat(f)}
               className={`px-3 py-1.5 rounded-lg text-xs font-black whitespace-nowrap transition-all ${
-                filterFormat === f ? "bg-primary text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                filterFormat === f ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-primary-foreground"
               }`}
             >
               {f}

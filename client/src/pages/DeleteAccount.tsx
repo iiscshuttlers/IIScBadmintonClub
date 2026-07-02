@@ -35,7 +35,7 @@ export default function DeleteAccount() {
             <p className="text-sm text-muted-foreground dark:text-muted-foreground">
               To delete your account through the app, please sign in first.
             </p>
-            <button onClick={() => navigate("/join")} className="w-full px-5 py-3 bg-primary hover:bg-primary text-foreground font-bold rounded-xl transition">
+            <button onClick={() => navigate("/join")} className="w-full px-5 py-3 bg-primary hover:bg-primary text-primary-foreground font-bold rounded-xl transition">
               Sign In to Delete
             </button>
             <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
@@ -120,7 +120,7 @@ export default function DeleteAccount() {
           <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-6">
             Your data has been removed. We're sorry to see you go.
           </p>
-          <button onClick={() => navigate("/")} className="w-full py-3 rounded-xl bg-primary hover:bg-primary text-foreground font-bold transition">
+          <button onClick={() => navigate("/")} className="w-full py-3 rounded-xl bg-primary hover:bg-primary text-primary-foreground font-bold transition">
             Go to Home
           </button>
         </div>

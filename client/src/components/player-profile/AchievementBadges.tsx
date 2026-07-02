@@ -49,7 +49,13 @@ const BADGES: BadgeDef[] = [
     icon: Flame,
     color: "bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400",
     getProgress: ({ matches, playerId }) => {
-      const confirmed = matches.filter((m) => m.status === "confirmed").sort((a, b) => new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime());
+      const confirmed = matches
+        .filter((m) => m.status === "confirmed" && (m.date || m.created_at))
+        .sort((a, b) => {
+          const timeA = new Date(a.date || a.created_at!).getTime();
+          const timeB = new Date(b.date || b.created_at!).getTime();
+          return timeA - timeB; // Ascending (oldest to newest)
+        });
       let streak = 0;
       let maxStreak = 0;
       for (const m of confirmed) {
@@ -171,10 +177,17 @@ export function AchievementBadges({ matches, playerId, elo }: Props) {
   const { wins, losses } = useMemo(() => {
     let w = 0;
     let l = 0;
+    const isWinner = (m: Match) => {
+      if (!m.winner_id) return false;
+      const isTeam1 = m.player1_id === playerId || m.team1_partner_id === playerId;
+      const isTeam1Winner = m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id;
+      return isTeam1 ? isTeam1Winner : !isTeam1Winner;
+    };
+
     matches
       .filter((m) => m.status === "confirmed")
       .forEach((m) => {
-        if (m.winner_id === playerId) w++;
+        if (isWinner(m)) w++;
         else l++;
       });
     return { wins: w, losses: l };

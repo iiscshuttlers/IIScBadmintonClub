@@ -264,7 +264,7 @@ export function TournamentEditor() {
         <button
           onClick={save}
           disabled={saving || !dirty}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary hover:bg-primary disabled:opacity-50 disabled:cursor-not-allowed text-foreground font-bold transition shadow-lg shadow-primary/20"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary hover:bg-primary disabled:opacity-50 disabled:cursor-not-allowed text-primary-foreground font-bold transition shadow-lg shadow-primary/20"
         >
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           {saving ? "Saving…" : "Save Tournament Details"}

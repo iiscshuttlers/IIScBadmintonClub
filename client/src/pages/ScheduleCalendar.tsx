@@ -173,7 +173,7 @@ export default function ScheduleCalendar() {
                 title: t.name,
                 type: "event",
                 location: t.venue || "Gymkhana",
-                link: "/events#tournament",
+                link: "/pulse#tournament",
               });
             }
           });
@@ -188,7 +188,7 @@ export default function ScheduleCalendar() {
               title: tourneyCfg.name,
               type: "event",
               location: tourneyCfg.venue,
-              link: "/events#tournament",
+              link: "/pulse#tournament",
             });
           }
           if (
@@ -199,7 +199,7 @@ export default function ScheduleCalendar() {
               date: tourneyCfg.formCloseDate,
               title: `${tourneyCfg.name} — Registration closes`,
               type: "event",
-              link: "/events#tournament",
+              link: "/pulse#tournament",
               registrationDeadline: tourneyCfg.formCloseDate,
             });
           }

@@ -24,7 +24,7 @@ export function ConfirmDialog({
   const confirmCls =
     confirmVariant === "danger"
       ? "bg-rose-600 hover:bg-rose-700 text-foreground"
-      : "bg-primary hover:bg-primary text-foreground";
+      : "bg-primary hover:bg-primary text-primary-foreground";
 
   return (
     <AnimatePresence>

@@ -14,11 +14,8 @@ import { useHashTab } from "@/hooks/useHashTab";
 import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 
 import { LeaderboardSection } from "@/components/players-directory/LeaderboardSection";
-import { H2HSection } from "@/components/players-directory/H2HSection";
 import { AuthBanner } from "@/components/players-directory/AuthBanner";
-import { NetworkTab } from "@/components/players-directory/tabs/NetworkTab";
 import { DirectoryTab } from "@/components/players-directory/tabs/DirectoryTab";
-import { TeamsTab } from "@/components/players-directory/tabs/TeamsTab";
 
 const LogMatchModal = lazy(() => import("@/components/LogMatchModal"));
 
@@ -84,12 +81,12 @@ export default function PlayersDirectory() {
 
   const LEADERBOARD_SUB_TABS = ["elo", "ironman"];
   const [activeTab, setActiveTab] = useHashTab(
-    ["directory", "leaderboard", "network", "h2h", "teams", ...LEADERBOARD_SUB_TABS] as const,
+    ["directory", "leaderboard", ...LEADERBOARD_SUB_TABS] as const,
     "directory"
   );
   const effectiveTab = LEADERBOARD_SUB_TABS.includes(activeTab as string)
     ? "leaderboard"
-    : activeTab as "directory" | "leaderboard" | "network" | "h2h" | "teams";
+    : activeTab as "directory" | "leaderboard";
 
   const { handleBuddyAction: doBuddyAction, handleToggleFollow: doToggleFollow } = useSocialActions();
 
@@ -199,7 +196,7 @@ export default function PlayersDirectory() {
   /* ── Render ─────────────────────────────────────────────────────── */
   return (
     <div className="flex-1 w-full flex flex-col bg-slate-50 dark:bg-slate-950">
-      <section className="bg-gradient-to-r from-blue-900 via-indigo-950 to-primary/80 text-foreground py-6 sm:py-8 relative overflow-hidden shrink-0">
+      <section className="bg-gradient-to-r from-teal-800 via-emerald-700 to-lime-600 text-foreground py-4 sm:py-6 relative overflow-hidden shrink-0">
         <div className="container mx-auto px-4 relative z-10">
           <div className="flex flex-col items-center justify-center gap-6">
             <div className="w-full md:w-auto flex justify-center">
@@ -207,7 +204,7 @@ export default function PlayersDirectory() {
                 <button
                   onClick={() => setActiveTab("directory")}
                   className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-sm font-black transition-all ${
-                    effectiveTab === "directory" ? "bg-white text-primary shadow-md" : "text-foreground/80 hover:text-foreground hover:bg-white/10"
+                    effectiveTab === "directory" ? "bg-white text-slate-900 shadow-md" : "text-foreground/80 hover:text-foreground hover:bg-white/10"
                   }`}
                 >
                   <Users className="w-4 h-4 shrink-0" /> Directory
@@ -215,37 +212,11 @@ export default function PlayersDirectory() {
                 <button
                   onClick={() => setActiveTab("leaderboard")}
                   className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-sm font-black transition-all ${
-                    effectiveTab === "leaderboard" ? "bg-white text-primary shadow-md" : "text-foreground/80 hover:text-foreground hover:bg-white/10"
+                    effectiveTab === "leaderboard" ? "bg-white text-slate-900 shadow-md" : "text-foreground/80 hover:text-foreground hover:bg-white/10"
                   }`}
                 >
                   <Trophy className="w-4 h-4 shrink-0" /> Rankings
                 </button>
-                <button
-                  onClick={() => setActiveTab("h2h")}
-                  className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-sm font-black transition-all ${
-                    effectiveTab === "h2h" ? "bg-white text-rose-700 shadow-md" : "text-foreground/80 hover:text-foreground hover:bg-white/10"
-                  }`}
-                >
-                  <Swords className="w-4 h-4 shrink-0" /> H2H
-                </button>
-                <button
-                  onClick={() => setActiveTab("teams")}
-                  className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-sm font-black transition-all ${
-                    effectiveTab === "teams" ? "bg-white text-violet-700 shadow-md" : "text-foreground/80 hover:text-foreground hover:bg-white/10"
-                  }`}
-                >
-                  <Shield className="w-4 h-4 shrink-0" /> Teams
-                </button>
-                {session && ownProfile && (
-                  <button
-                    onClick={() => setActiveTab("network")}
-                    className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-sm font-black transition-all ${
-                      effectiveTab === "network" ? "bg-white text-violet-700 shadow-md" : "text-foreground/80 hover:text-foreground hover:bg-white/10"
-                    }`}
-                  >
-                    <Heart className="w-4 h-4 shrink-0" /> Network
-                  </button>
-                )}
               </div>
             </div>
           </div>
@@ -263,36 +234,9 @@ export default function PlayersDirectory() {
           processingMatches={processingMatches}
         />
 
-        {effectiveTab === "h2h" ? (
-          <div className="mt-8">
-            <H2HSection />
-          </div>
-        ) : effectiveTab === "teams" ? (
-          <div className="mt-8">
-            <TeamsTab />
-          </div>
-        ) : effectiveTab === "leaderboard" ? (
+        {effectiveTab === "leaderboard" ? (
           <div className="mt-8">
             <LeaderboardSection players={players} />
-          </div>
-        ) : effectiveTab === "network" ? (
-          <div className="mt-8">
-            <NetworkTab
-              players={players}
-              myBuddyIds={myBuddyIds}
-              ownProfile={ownProfile}
-              setLocation={setLocation}
-              setSelectedOpponentId={setSelectedOpponentId}
-              setIsLogMatchOpen={setIsLogMatchOpen}
-              followingIds={followingIds}
-              followers={followers}
-              myBuddyRequests={myBuddyRequests}
-              isAdmin={isAdmin}
-              handleAdminDelete={handleAdminDelete}
-              handleAdminEdit={handleAdminEdit}
-              handleBuddyAction={handleBuddyAction}
-              handleToggleFollow={handleToggleFollow}
-            />
           </div>
         ) : (
           <div className="mt-8">
@@ -325,9 +269,9 @@ export default function PlayersDirectory() {
               allDepartments={filters.allDepartments}
               myBuddyIds={myBuddyIds}
               myBuddyRequests={myBuddyRequests}
-              handleBuddyAction={handleBuddyAction}
+              handleBuddyAction={(playerId, action) => handleBuddyAction({ playerId, action })}
+              handleToggleFollow={(targetId) => handleToggleFollow({ targetId, targetName: "" })}
               followingIds={followingIds}
-              handleToggleFollow={handleToggleFollow}
             />
           </div>
         )}

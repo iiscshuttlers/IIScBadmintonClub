@@ -146,6 +146,7 @@ export function ProfileStatsTabLeft({
         matches={liveMatches}
         playerId={id}
         playerElo={player.elo_rating ?? 1200}
+        allPlayers={allPlayers}
       />
       <ActivityHeatmap
         matches={liveMatches.filter((m) => m.status === "confirmed")}

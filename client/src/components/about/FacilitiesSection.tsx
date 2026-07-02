@@ -66,7 +66,7 @@ export function FacilitiesSection() {
     <section className="bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 w-full">
       <div className="w-full">
         {/* Courts + Hours */}
-        <section className="py-14 bg-white dark:bg-slate-900">
+        <section className="py-6 bg-white dark:bg-slate-900">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
               {/* Courts card */}
@@ -79,8 +79,8 @@ export function FacilitiesSection() {
               >
                 <div className="h-full rounded-3xl border-2 border-primary/30 dark:border-primary/50 shadow-md bg-white dark:bg-slate-800 overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="h-1.5 bg-gradient-to-r from-primary to-teal-600" />
-                  <div className="p-6">
-                    <div className="flex items-center gap-3 mb-5">
+                  <div className="p-4">
+                    <div className="flex items-center gap-3 mb-3">
                       <div className="w-12 h-12 rounded-2xl bg-primary/15 dark:bg-primary/30 flex items-center justify-center">
                         <Trophy className="w-6 h-6 text-primary dark:text-primary" />
                       </div>
@@ -88,7 +88,7 @@ export function FacilitiesSection() {
                         Indoor Courts
                       </h2>
                     </div>
-                    <p className="text-muted-foreground dark:text-muted-foreground leading-relaxed mb-6">
+                    <p className="text-muted-foreground dark:text-muted-foreground leading-relaxed mb-4">
                       Three professional-grade wooden courts with synthetic mat
                       flooring and modern lighting, designed for both training
                       and competitive play.
@@ -117,8 +117,8 @@ export function FacilitiesSection() {
               >
                 <div className="h-full rounded-3xl border-2 border-blue-100 dark:border-blue-900/50 shadow-md bg-white dark:bg-slate-800 overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="h-1.5 bg-gradient-to-r from-blue-500 to-blue-700" />
-                  <div className="p-6">
-                    <div className="flex items-center gap-3 mb-5">
+                  <div className="p-4">
+                    <div className="flex items-center gap-3 mb-3">
                       <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center">
                         <Clock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                       </div>
@@ -130,7 +130,7 @@ export function FacilitiesSection() {
                       {schedule.map((slot, idx) => (
                         <div
                           key={idx}
-                          className={`flex items-center justify-between p-4 rounded-2xl ${
+                          className={`flex items-center justify-between p-3 rounded-2xl ${
                             idx === 0
                               ? "bg-gradient-to-r from-primary/10 to-teal-50 dark:from-primary/20 dark:to-teal-950/20 border border-primary/30 dark:border-primary/50"
                               : "bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 border border-red-100 dark:border-red-900/50"
@@ -166,7 +166,7 @@ export function FacilitiesSection() {
         </section>
 
         {/* Court Closure Days */}
-        <section className="py-14 bg-slate-50 dark:bg-slate-900/50">
+        <section className="py-6 bg-slate-50 dark:bg-slate-900/50">
           <div className="container mx-auto px-4 max-w-6xl">
             {/* Section header */}
             <div className="flex items-center gap-3 mb-8">
@@ -185,7 +185,7 @@ export function FacilitiesSection() {
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
-                className="mb-8 bg-gradient-to-r from-blue-900 to-indigo-900 text-foreground p-5 rounded-2xl shadow-md relative overflow-hidden"
+                className="mb-8 bg-gradient-to-r from-emerald-700 to-lime-600 text-foreground p-5 rounded-2xl shadow-md relative overflow-hidden"
               >
                 <div className="absolute inset-0 hero-pattern opacity-30" />
                 <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-3">
@@ -274,7 +274,7 @@ export function FacilitiesSection() {
         </section>
 
         {/* Location + Membership */}
-        <section className="py-14 bg-white dark:bg-slate-900">
+        <section className="py-6 bg-white dark:bg-slate-900">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
               {/* Location */}
@@ -287,8 +287,8 @@ export function FacilitiesSection() {
               >
                 <div className="h-full rounded-3xl border border-slate-100 dark:border-slate-700 shadow-md bg-white dark:bg-slate-800 overflow-hidden">
                   <div className="h-1.5 bg-gradient-to-r from-blue-500 to-indigo-600" />
-                  <div className="p-6">
-                    <div className="flex items-center gap-3 mb-5">
+                  <div className="p-4">
+                    <div className="flex items-center gap-3 mb-3">
                       <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center">
                         <MapPin className="w-6 h-6 text-blue-700 dark:text-blue-400" />
                       </div>
@@ -314,7 +314,7 @@ export function FacilitiesSection() {
                       href="https://maps.app.goo.gl/pBTtJGYEPwnu6qd78"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 bg-primary hover:bg-primary text-foreground px-5 py-3 rounded-xl font-bold text-sm transition-all hover:-translate-y-0.5 shadow-md shadow-primary/20"
+                      className="inline-flex items-center gap-2 bg-primary hover:bg-primary text-primary-foreground px-5 py-3 rounded-xl font-bold text-sm transition-all hover:-translate-y-0.5 shadow-md shadow-primary/20"
                     >
                       <MapPin className="w-4 h-4" />
                       Open in Google Maps
@@ -334,8 +334,8 @@ export function FacilitiesSection() {
               >
                 <div className="h-full rounded-3xl border border-slate-100 dark:border-slate-700 shadow-md bg-white dark:bg-slate-800 overflow-hidden">
                   <div className="h-1.5 bg-gradient-to-r from-primary to-teal-600" />
-                  <div className="p-6">
-                    <div className="flex items-center gap-3 mb-5">
+                  <div className="p-4">
+                    <div className="flex items-center gap-3 mb-3">
                       <div className="w-12 h-12 rounded-2xl bg-primary/15 dark:bg-primary/30 flex items-center justify-center">
                         <Users className="w-6 h-6 text-primary dark:text-primary" />
                       </div>

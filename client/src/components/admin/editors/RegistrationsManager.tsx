@@ -110,7 +110,7 @@ export function RegistrationsManager() {
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded-xl text-sm font-bold transition whitespace-nowrap ${filter === f ? "bg-slate-800 text-foreground" : "bg-white border border-slate-200 text-muted-foreground hover:bg-slate-50"}`}
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition whitespace-nowrap ${filter === f ? "bg-slate-800 text-white" : "bg-white border border-slate-200 text-muted-foreground hover:bg-slate-50"}`}
           >
             {f.charAt(0).toUpperCase() + f.slice(1)}
           </button>
@@ -188,7 +188,7 @@ export function RegistrationsManager() {
                     <button
                       onClick={() => updateStatus(r.id, "approved")}
                       disabled={busy}
-                      className="flex-1 md:flex-none px-3 py-2 rounded-xl bg-primary hover:bg-primary text-foreground text-xs font-bold transition disabled:opacity-50"
+                      className="flex-1 md:flex-none px-3 py-2 rounded-xl bg-primary hover:bg-primary text-primary-foreground text-xs font-bold transition disabled:opacity-50"
                     >
                       Approve
                     </button>

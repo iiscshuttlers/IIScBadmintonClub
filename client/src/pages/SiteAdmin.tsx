@@ -232,7 +232,7 @@ function SiteAdminInner() {
                 sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
                 setLocation("/join");
               }}
-              className="px-6 py-3 bg-primary hover:bg-primary text-foreground font-bold rounded-xl transition shadow-lg shadow-primary/20"
+              className="px-6 py-3 bg-primary hover:bg-primary text-primary-foreground font-bold rounded-xl transition shadow-lg shadow-primary/20"
             >
               Sign In
             </button>
@@ -311,7 +311,7 @@ function SiteAdminInner() {
                                         <Icon className={`w-5 h-5 ${active ? "text-primary" : "text-muted-foreground"}`} />
                                         <span className="text-center leading-tight">{tab.label}</span>
                                         {count !== null && (
-                                          <span className="absolute top-1 right-1 text-[9px] px-1 py-0.5 rounded-full font-black bg-primary text-foreground leading-none">{count}</span>
+                                          <span className="absolute top-1 right-1 text-[9px] px-1 py-0.5 rounded-full font-black bg-primary text-primary-foreground leading-none">{count}</span>
                                         )}
                                       </button>
                                     );

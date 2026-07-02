@@ -286,7 +286,7 @@ export function HighlightsTab({
               disabled={
                 !(achMedal === "Other" ? achCustomMedal.trim() : true) || !achTournament.trim()
               }
-              className="px-4 py-2 bg-primary hover:bg-primary disabled:opacity-50 text-foreground rounded-xl text-xs font-bold transition shrink-0"
+              className="px-4 py-2 bg-primary hover:bg-primary disabled:opacity-50 text-primary-foreground rounded-xl text-xs font-bold transition shrink-0"
             >
               Add
             </button>

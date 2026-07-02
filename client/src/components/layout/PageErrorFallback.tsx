@@ -9,7 +9,7 @@ export function PageErrorFallback() {
       <div className="flex gap-3">
         <button
           onClick={() => window.location.reload()}
-          className="px-4 py-2 text-sm font-bold bg-primary hover:bg-primary text-foreground rounded-xl transition-colors"
+          className="px-4 py-2 text-sm font-bold bg-primary hover:bg-primary text-primary-foreground rounded-xl transition-colors"
         >
           Reload
         </button>

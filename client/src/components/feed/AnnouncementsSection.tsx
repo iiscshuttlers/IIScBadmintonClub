@@ -331,7 +331,7 @@ export function AnnouncementsSection() {
                       onClick={() => setSelectedCategory(cat.id)}
                       className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
                         selectedCategory === cat.id
-                          ? "bg-primary text-foreground shadow-md shadow-primary/20 dark:shadow-primary/50/40 scale-105"
+                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 dark:shadow-primary/50/40 scale-105"
                           : `${cat.color} hover:shadow-sm dark:bg-slate-800 dark:text-slate-300`
                       }`}
                     >

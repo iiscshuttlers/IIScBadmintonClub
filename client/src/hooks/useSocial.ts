@@ -28,10 +28,10 @@ export function useSocialActions() {
     },
     onMutate: async ({ playerId, action }) => {
       if (!ownProfile) return;
-      await queryClient.cancelQueries({ queryKey: ["buddy-requests", ownProfile.id] });
-      const previousRequests = queryClient.getQueryData(["buddy-requests", ownProfile.id]);
+      await queryClient.cancelQueries({ queryKey: ["players", "buddy_requests", ownProfile.id] });
+      const previousRequests = queryClient.getQueryData(["players", "buddy_requests", ownProfile.id]);
 
-      queryClient.setQueryData(["buddy-requests", ownProfile.id], (old: any) => {
+      queryClient.setQueryData(["players", "buddy_requests", ownProfile.id], (old: any) => {
         const list = old || [];
         if (action === 'send') {
           return [...list, { id: 'temp-' + Date.now(), status: 'pending', sender_id: ownProfile.id, receiver_id: playerId }];
@@ -51,7 +51,7 @@ export function useSocialActions() {
       return { previousRequests };
     },
     onSuccess: (_, { action }) => {
-      queryClient.invalidateQueries({ queryKey: ["buddy-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["players", "buddy_requests"] });
       if (action === 'send') toast.success("Buddy request sent!");
       if (action === 'cancel') toast.success("Buddy request cancelled.");
       if (action === 'accept') {
@@ -65,7 +65,7 @@ export function useSocialActions() {
     onError: (error: any, _variables, context: any) => {
       console.error(error);
       if (context?.previousRequests && ownProfile) {
-        queryClient.setQueryData(["buddy-requests", ownProfile.id], context.previousRequests);
+        queryClient.setQueryData(["players", "buddy_requests", ownProfile.id], context.previousRequests);
       }
       toast.error("Failed to perform action: " + (error.message || error.toString()));
     }

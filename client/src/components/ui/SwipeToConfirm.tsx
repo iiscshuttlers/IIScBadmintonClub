@@ -61,7 +61,7 @@ export function SwipeToConfirm({ onConfirm, isLoading, disabled, text = "Swipe t
 
   if (isSuccess || isLoading) {
     return (
-      <div className="w-full h-14 rounded-full bg-primary text-foreground flex items-center justify-center font-bold shadow-lg shadow-primary/20 transition-all">
+      <div className="w-full h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-lg shadow-primary/20 transition-all">
         {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Check className="w-5 h-5 mr-2" /> Match Submitted!</>}
       </div>
     );

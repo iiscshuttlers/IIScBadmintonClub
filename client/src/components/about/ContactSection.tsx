@@ -82,12 +82,12 @@ export function ContactSection() {
   return (
     <div className="w-full">
       {/* Contact Cards */}
-      <section className="py-16 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+      <section className="py-8 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             <Card className="border-0 shadow-md bg-gradient-to-br from-primary/10 to-teal-50 dark:from-primary/30 dark:to-teal-950/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
               <CardHeader>
-                <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-2">
+                <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-1">
                   <Mail className="w-6 h-6 text-foreground" />
                 </div>
                 <CardTitle className="text-primary dark:text-primary text-base">
@@ -101,7 +101,7 @@ export function ContactSection() {
                 >
                   iiscbadmintonclub@gmail.com
                 </a>
-                <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-2">
+                <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-1">
                   Best for membership and official queries.
                 </p>
               </CardContent>
@@ -109,7 +109,7 @@ export function ContactSection() {
 
             <Card className="border-0 shadow-md bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
               <CardHeader>
-                <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center mb-2">
+                <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center mb-1">
                   <Phone className="w-6 h-6 text-foreground" />
                 </div>
                 <CardTitle className="text-orange-700 dark:text-orange-400 text-base">
@@ -120,7 +120,7 @@ export function ContactSection() {
                 <p className="font-bold text-foreground dark:text-foreground">
                   +91 (080) 2293 xxxx
                 </p>
-                <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-2">
+                <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-1">
                   IISc Gymkhana Office
                 </p>
               </CardContent>
@@ -128,7 +128,7 @@ export function ContactSection() {
 
             <Card className="border-0 shadow-md bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
               <CardHeader>
-                <div className="w-12 h-12 rounded-xl bg-blue-900 flex items-center justify-center mb-2">
+                <div className="w-12 h-12 rounded-xl bg-blue-900 flex items-center justify-center mb-1">
                   <MapPin className="w-6 h-6 text-foreground" />
                 </div>
                 <CardTitle className="text-blue-900 dark:text-blue-400 text-base">
@@ -160,9 +160,9 @@ export function ContactSection() {
       </section>
 
       {/* FAQ */}
-      <section className="py-16 bg-white dark:bg-slate-950">
+      <section className="py-8 bg-white dark:bg-slate-950">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <h2
               className="text-3xl font-black text-blue-900 dark:text-foreground"
               style={{ fontFamily: "Playfair Display, serif" }}
@@ -181,7 +181,7 @@ export function ContactSection() {
       </section>
 
       {/* Social + CTA */}
-      <section className="py-16 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+      <section className="py-8 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <SocialCTA />

@@ -100,7 +100,7 @@ export default function SettingsHubPage() {
             );
           } else if (item.onClick) {
             return (
-              <button key={item.label} onClick={item.onClick} className="w-full">
+              <button key={item.label} onClick={item.onClick} className="w-full text-left">
                 {content}
               </button>
             );

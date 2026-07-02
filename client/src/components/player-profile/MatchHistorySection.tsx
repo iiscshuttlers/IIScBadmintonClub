@@ -337,7 +337,7 @@ export function MatchHistorySection({
                                 <>
                                   <button
                                     onClick={() => handleConfirmMatch(m.id)}
-                                    className="flex-1 sm:flex-none text-xs font-bold px-3 py-1.5 rounded-lg bg-primary hover:bg-primary text-foreground transition-colors"
+                                    className="flex-1 sm:flex-none text-xs font-bold px-3 py-1.5 rounded-lg bg-primary hover:bg-primary text-primary-foreground transition-colors"
                                   >
                                     Confirm
                                   </button>
@@ -440,8 +440,8 @@ export function MatchHistorySection({
                               className={`w-10 h-10 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center font-black text-sm shadow-md
                             ${
                               won
-                                ? "bg-gradient-to-br from-primary to-primary text-foreground shadow-primary/30"
-                                : "bg-gradient-to-br from-rose-400 to-rose-600 text-foreground shadow-rose-500/30"
+                                ? "bg-gradient-to-br from-primary to-primary text-slate-900 shadow-primary/30"
+                                : "bg-gradient-to-br from-rose-400 to-rose-600 text-white shadow-rose-500/30"
                             }`}
                             >
                               {won ? "W" : "L"}

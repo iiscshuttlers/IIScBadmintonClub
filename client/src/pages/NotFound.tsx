@@ -11,16 +11,15 @@ import {
 
 const quickLinks = [
   { href: "/", label: "Home", icon: Home },
-  { href: "/events", label: "Events", icon: Calendar },
-  { href: "/hall-of-fame", label: "Winners Wall", icon: Trophy },
-  { href: "/feed", label: "Feed", icon: Bell },
-  { href: "/gallery", label: "Gallery", icon: Image },
+  { href: "/pulse", label: "Pulse", icon: Calendar },
+  { href: "/legacy", label: "Legacy", icon: Trophy },
+  { href: "/hub", label: "Hub", icon: Bell },
   { href: "/join", label: "Join Us", icon: Mail },
 ];
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-primary/80 flex flex-col items-center justify-center px-4 text-foreground relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-tr from-teal-800 via-emerald-700 to-lime-600 flex flex-col items-center justify-center px-4 text-foreground relative overflow-hidden">
       {/* Decorative shuttlecock court lines */}
       <div className="absolute inset-0 opacity-5 pointer-events-none">
         <svg
@@ -154,7 +153,7 @@ export default function NotFound() {
 
         {/* Primary CTA */}
         <Link href="/">
-          <button className="inline-flex items-center gap-2 bg-primary hover:bg-primary text-foreground font-bold px-6 py-4 rounded-2xl shadow-lg hover:shadow-primary/30 hover:-translate-y-0.5 transition-all duration-200 mb-10 text-lg">
+          <button className="inline-flex items-center gap-2 bg-primary hover:bg-primary text-primary-foreground font-bold px-6 py-4 rounded-2xl shadow-lg hover:shadow-primary/30 hover:-translate-y-0.5 transition-all duration-200 mb-10 text-lg">
             <Home className="w-5 h-5" />
             Back to Home
           </button>
@@ -162,7 +161,7 @@ export default function NotFound() {
 
         {/* Quick nav */}
         <div>
-          <p className="text-blue-300 text-sm font-semibold uppercase tracking-widest mb-4">
+          <p className="text-blue-300 text-sm font-semibold uppercase tracking-widest mb-2">
             Or jump to a section
           </p>
           <div className="flex flex-wrap justify-center gap-2">

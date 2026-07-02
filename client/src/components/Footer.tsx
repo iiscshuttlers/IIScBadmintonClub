@@ -21,21 +21,13 @@ export default function Footer() {
 
   const quickLinks = [
     { href: "/", label: "Home" },
-    { href: "/events", label: "Events" },
-    { href: "/feed", label: "Feed" },
+    { href: "/pulse", label: "Pulse" },
     { href: "/players", label: "Players" },
-    { href: "/about", label: "About" },
-    { href: "/gallery", label: "Gallery" },
+    { href: "/hub", label: "Hub" },
+    { href: "/legacy", label: "Legacy" },
     { href: "/privacy", label: "Privacy Policy" },
     { href: "/terms", label: "Terms of Service" },
     { href: "/delete-account", label: "Delete Account" },
-  ];
-
-  const facilities = [
-    "3 Indoor Courts",
-    "Synthetic Mat Flooring",
-    "Professional Lighting",
-    "Tournament Hosting",
   ];
 
   return (
@@ -56,10 +48,10 @@ export default function Footer() {
       <div className="absolute top-0 left-1/4 w-96 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 right-1/4 w-80 h-56 bg-orange-500/5 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="relative container mx-auto px-4 pt-16 pb-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-14">
+      <div className="relative container mx-auto px-4 pt-10 pb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-10">
 
-          {/* ── Brand Column ── */}
+          {/* ── Brand & Contact ── */}
           <div className="lg:col-span-1 space-y-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center flex-shrink-0">
@@ -74,12 +66,22 @@ export default function Footer() {
                 <p className="text-[11px] text-primary/80 font-medium uppercase tracking-wider mt-0.5">Shuttlers · Est. 2018</p>
               </div>
             </div>
-            <p className="text-muted-foreground text-sm leading-relaxed">
-              Promoting excellence in badminton through competitive play, training, and community engagement at the Indian Institute of Science, Bangalore.
-            </p>
+
+            <div className="space-y-3 text-sm pt-2">
+              <div className="flex gap-3 items-center">
+                <MapPin className="w-4 h-4 text-primary shrink-0" />
+                <span className="text-muted-foreground">IISc Gymkhana, Bangalore</span>
+              </div>
+              <div className="flex gap-3 items-center">
+                <Mail className="w-4 h-4 text-primary shrink-0" />
+                <a href="mailto:iiscbadmintonclub@gmail.com" className="text-muted-foreground hover:text-primary transition-colors">
+                  iiscbadmintonclub@gmail.com
+                </a>
+              </div>
+            </div>
 
             {/* Social links */}
-            <div className="flex gap-2.5 pt-1">
+            <div className="flex gap-2.5 pt-2">
               <a
                 href="https://www.instagram.com/badminton.iisc/"
                 target="_blank"
@@ -110,8 +112,8 @@ export default function Footer() {
 
           {/* ── Quick Links ── */}
           <div>
-            <h4 className="font-bold text-xs text-primary uppercase tracking-widest mb-5">Quick Links</h4>
-            <ul className="space-y-2">
+            <h4 className="font-bold text-xs text-primary uppercase tracking-widest mb-4">Quick Links</h4>
+            <ul className="grid grid-cols-2 gap-y-2.5">
               {quickLinks.map(({ href, label }) => (
                 <li key={href}>
                   <Link href={href}>
@@ -125,87 +127,40 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* ── Contact ── */}
-          <div>
-            <h4 className="font-bold text-xs text-primary uppercase tracking-widest mb-5">Contact</h4>
-            <div className="space-y-4 text-sm">
-              <div className="flex gap-3 items-start">
-                <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <MapPin className="w-3.5 h-3.5 text-primary" />
-                </div>
-                <span className="text-muted-foreground leading-relaxed">
-                  IISc Gymkhana, Bangalore<br />560012, India
-                </span>
-              </div>
-              <div className="flex gap-3 items-center">
-                <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
-                  <Mail className="w-3.5 h-3.5 text-primary" />
-                </div>
-                <a
-                  href="mailto:iiscbadmintonclub@gmail.com"
-                  className="text-muted-foreground hover:text-primary transition-colors"
-                >
-                  iiscbadmintonclub@gmail.com
-                </a>
-              </div>
-            </div>
-
-            {/* Facilities */}
-            <div className="mt-7">
-              <h4 className="font-bold text-xs text-primary uppercase tracking-widest mb-4">Facilities</h4>
-              <ul className="space-y-2">
-                {facilities.map((f) => (
-                  <li key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span className="w-4 h-4 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
-                      <svg className="w-2.5 h-2.5 text-primary" fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth="2.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M2 6l3 3 5-5" />
-                      </svg>
-                    </span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* ── App Download — only shown on web, never inside the native app (Play Store policy) ── */}
+          {/* ── App Download ── */}
           {!Capacitor.isNativePlatform() && (
-          <div>
-            <h4 className="font-bold text-xs text-primary uppercase tracking-widest mb-5">Get the App</h4>
-            <a
-              href={apkUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              download
-              className="group flex items-center gap-3.5 bg-white/4 border border-white/8 hover:bg-primary/8 hover:border-primary/25 rounded-2xl p-4 transition-all duration-300 mb-3"
-              title="Download Android App"
-            >
-              <div className="w-11 h-11 rounded-xl bg-primary/15 border border-primary/20 flex items-center justify-center flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-primary" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M17.523 15.341 14 13.438V8h-4v5.438l-3.523 1.903A1 1 0 0 0 6 16.277V20h12v-3.723a1 1 0 0 0-.477-.936zM8.008 6.192l1.5-2.598A.5.5 0 0 1 10 3.5h4a.5.5 0 0 1 .492.094l1.5 2.598A6.978 6.978 0 0 0 12 5a6.978 6.978 0 0 0-3.992 1.192z" />
-                </svg>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-[11px] text-muted-foreground font-medium">Download for</div>
-                <div className="text-sm font-bold text-foreground">Android App</div>
-              </div>
-              <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
-            </a>
-            <p className="text-muted-foreground text-xs leading-relaxed px-1">
-              Full-featured native app with live scores, match logging, tournaments, and player profiles.
-            </p>
-          </div>
+            <div>
+              <h4 className="font-bold text-xs text-primary uppercase tracking-widest mb-4">Get the App</h4>
+              <a
+                href={apkUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+                className="group flex items-center gap-3.5 bg-white/4 border border-white/8 hover:bg-primary/8 hover:border-primary/25 rounded-2xl p-4 transition-all duration-300"
+                title="Download Android App"
+              >
+                <div className="w-11 h-11 rounded-xl bg-primary/15 border border-primary/20 flex items-center justify-center flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-primary" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.523 15.341 14 13.438V8h-4v5.438l-3.523 1.903A1 1 0 0 0 6 16.277V20h12v-3.723a1 1 0 0 0-.477-.936zM8.008 6.192l1.5-2.598A.5.5 0 0 1 10 3.5h4a.5.5 0 0 1 .492.094l1.5 2.598A6.978 6.978 0 0 0 12 5a6.978 6.978 0 0 0-3.992 1.192z" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[11px] text-muted-foreground font-medium">Download for</div>
+                  <div className="text-sm font-bold text-foreground">Android App</div>
+                </div>
+                <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+              </a>
+            </div>
           )}
         </div>
 
         {/* ── Bottom Bar ── */}
-        <div className="border-t border-white/5 pt-6">
+        <div className="border-t border-white/5 pt-5">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
             <p className="text-muted-foreground text-xs">
               © {new Date().getFullYear()} IISc Badminton Club. All rights reserved.
-              {/* Hidden admin doorway */}
               <Link href="/admin">
-                <span className="text-foreground ml-1 select-none">·</span>
+                <span className="text-foreground ml-1 select-none opacity-0">·</span>
               </Link>
             </p>
             <div className="flex items-center gap-3">

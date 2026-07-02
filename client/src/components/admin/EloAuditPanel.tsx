@@ -388,7 +388,7 @@ export function EloAuditPanel() {
       <div className="flex flex-col sm:flex-row gap-2">
         {(["history", "snapshot", "matchwise"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)}
-            className={`px-4 py-3 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition text-center ${tab === t ? "bg-primary text-foreground shadow-md" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-300 hover:border-primary/50"}`}>
+            className={`px-4 py-3 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition text-center ${tab === t ? "bg-primary text-primary-foreground shadow-md" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-300 hover:border-primary/50"}`}>
             {t === "history" ? "Recalculation History" : t === "snapshot" ? "Current ELO Snapshot" : "Matchwise ELO"}
           </button>
         ))}

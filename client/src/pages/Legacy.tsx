@@ -16,8 +16,10 @@ import {
   Heart,
   Bell,
   BellRing,
+  Trophy,
 } from "lucide-react";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { WinnersWallSection } from "@/components/events/WinnersWallSection";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSiteData } from "@/lib/siteData";
 import { supabase } from "@/lib/supabase";
@@ -87,11 +89,11 @@ function LazyImage({
 
 
 
-export default function Gallery() {
+export default function Legacy() {
   usePageMeta({
-    title: "Gallery",
+    title: "Legacy",
     description:
-      "Photos and videos from IISc Badminton Club tournaments and events.",
+      "Honoring the history, champions, and memories of IISc Badminton Club.",
   });
 
   const queryClient = useQueryClient();
@@ -99,8 +101,8 @@ export default function Gallery() {
   const [, setLocation] = useLocation();
 
   const [activeTab, setActiveTab] = useHashTab(
-    ["albums", "photos", "videos"] as const,
-    "albums"
+    ["champions", "albums", "photos", "videos"] as const,
+    "champions"
   );
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [likedPhotos, setLikedPhotos] = useState<Set<string>>(new Set());
@@ -470,27 +472,37 @@ export default function Gallery() {
   return (
     <div className="min-h-screen font-sans">
       {/* Hero Section */}
-      <section className="bg-gradient-to-tr from-teal-800 via-emerald-700 to-lime-600 text-foreground py-12 relative overflow-hidden">
+      <section className="bg-gradient-to-tr from-teal-800 via-emerald-700 to-lime-600 text-foreground py-4 relative overflow-hidden">
         <div className="absolute inset-0 hero-pattern" />
         <div className="container mx-auto px-4 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 px-4 py-2 rounded-full text-sm font-semibold mb-5">
-            <Camera className="w-4 h-4" /> Photos & Videos
+          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 px-4 py-1.5 rounded-full text-sm font-semibold mb-2">
+            <Trophy className="w-4 h-4 text-amber-300" />
+            Club Legends
           </div>
           <h1
-            className="text-5xl md:text-6xl font-black mb-5 text-white"
+            className="text-5xl md:text-6xl font-black mb-2 text-white"
             style={{ fontFamily: "Playfair Display, serif" }}
           >
-            Gallery
+            Legacy
           </h1>
           <p className="text-xl text-emerald-50 max-w-2xl mx-auto leading-relaxed">
-            Relive the intensity of tournaments, the focus of practice, and the
-            vibrant badminton community at IISc.
+            Honoring the champions, the fighters, and the top performers of IISc Badminton Club, along with all our memories.
           </p>
-          <div className="mt-8 flex justify-center">
+          <div className="mt-4 flex justify-center">
             <div className="flex bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 flex-wrap justify-center gap-1 sm:gap-0">
               <button
+                onClick={() => setActiveTab("champions")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black transition-all ${
+                  activeTab === "champions"
+                    ? "bg-white text-emerald-900 shadow-md scale-100"
+                    : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
+                }`}
+              >
+                <Trophy className="w-4 h-4" /> Champions
+              </button>
+              <button
                 onClick={() => setActiveTab("albums")}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black transition-all ${
                   activeTab === "albums"
                     ? "bg-white text-blue-900 shadow-md scale-100"
                     : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
@@ -500,7 +512,7 @@ export default function Gallery() {
               </button>
               <button
                 onClick={() => setActiveTab("photos")}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black transition-all ${
                   activeTab === "photos"
                     ? "bg-white text-blue-900 shadow-md scale-100"
                     : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
@@ -510,7 +522,7 @@ export default function Gallery() {
               </button>
               <button
                 onClick={() => setActiveTab("videos")}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black transition-all ${
                   activeTab === "videos"
                     ? "bg-white text-blue-900 shadow-md scale-100"
                     : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
@@ -523,7 +535,9 @@ export default function Gallery() {
         </div>
       </section>
 
-      {activeTab === "albums" || activeTab === "photos" ? (
+      {activeTab === "champions" && <WinnersWallSection />}
+
+      {(activeTab === "albums" || activeTab === "photos") && (
       <section className="py-16 bg-white dark:bg-slate-950">
         <div className="container mx-auto px-4">
           {/* Main Category Filter */}
@@ -544,7 +558,7 @@ export default function Gallery() {
                     }}
                     className={`px-6 py-2 rounded-full font-bold transition-all duration-300 flex items-center gap-2 ${
                       selectedCategory === cat.id
-                        ? "bg-primary text-foreground shadow-lg scale-105"
+                        ? "bg-primary text-primary-foreground shadow-lg scale-105"
                         : "bg-gray-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700"
                     }`}
                   >
@@ -734,7 +748,9 @@ export default function Gallery() {
           )}
         </div>
       </section>
-      ) : (
+      )}
+
+      {activeTab === "videos" && (
       <section className="py-16 bg-white dark:bg-slate-950">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">

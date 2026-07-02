@@ -29,12 +29,19 @@ export function ConfigEditor({
       mission:
         "To foster excellence in badminton through competitive play and community engagement at IISc.",
     },
+    elo: data?.elo || {
+      kNewbie: 40,
+      kExperienced: 20,
+      tournamentMultiplier: 1.0,
+    },
   };
 
   const updateStats = (field: keyof SiteConfig["stats"], val: string) =>
     onChange({ ...d, stats: { ...d.stats, [field]: val } });
   const updateAbout = (field: keyof SiteConfig["about"], val: string) =>
     onChange({ ...d, about: { ...d.about, [field]: val } });
+  const updateElo = (field: keyof NonNullable<SiteConfig["elo"]>, val: number) =>
+    onChange({ ...d, elo: { ...d.elo!, [field]: val } });
 
   return (
     <div className="space-y-6">
@@ -108,6 +115,52 @@ export function ConfigEditor({
               className={`${inputCls} resize-y`}
               placeholder="Write the club's history here. It will appear on the About page."
             />
+          </div>
+        </div>
+      </div>
+
+      {/* ELO Configuration */}
+      <div className={cardCls}>
+        <h3 className="text-lg font-black text-slate-800 dark:text-foreground mb-4 flex items-center gap-2">
+          <Activity className="w-5 h-5 text-indigo-500" /> ELO Calculation Formula
+        </h3>
+        <p className="text-sm text-muted-foreground mb-6">
+          Adjust the constants used in the global ELO calculation. The system uses a standard Elo rating formula with dynamic K-factors (Volatility Multiplier) and a smart sets multiplier based on straight sets vs 3-set matches.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div>
+            <label className={labelCls}>New Player K-Factor (&lt; 10 matches)</label>
+            <input
+              type="number"
+              value={d.elo?.kNewbie ?? 40}
+              onChange={(e) => updateElo("kNewbie", Number(e.target.value))}
+              className={inputCls}
+              placeholder="e.g. 40"
+            />
+            <p className="text-xs text-muted-foreground mt-1">High volatility for quick placement.</p>
+          </div>
+          <div>
+            <label className={labelCls}>Experienced K-Factor (10+ matches)</label>
+            <input
+              type="number"
+              value={d.elo?.kExperienced ?? 20}
+              onChange={(e) => updateElo("kExperienced", Number(e.target.value))}
+              className={inputCls}
+              placeholder="e.g. 20"
+            />
+            <p className="text-xs text-muted-foreground mt-1">Lower volatility for stable rankings.</p>
+          </div>
+          <div>
+            <label className={labelCls}>Tournament Match Multiplier</label>
+            <input
+              type="number"
+              step="0.1"
+              value={d.elo?.tournamentMultiplier ?? 1.0}
+              onChange={(e) => updateElo("tournamentMultiplier", Number(e.target.value))}
+              className={inputCls}
+              placeholder="e.g. 1.5"
+            />
+            <p className="text-xs text-muted-foreground mt-1">Extra weightage applied to tournament matches.</p>
           </div>
         </div>
       </div>

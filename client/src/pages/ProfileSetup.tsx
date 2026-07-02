@@ -26,13 +26,15 @@ export default function ProfileSetup() {
 
   if (!setup.session) return null; // Wait for redirect
 
-  const tabs = [
+  const allTabs = [
     { id: "basic", label: "Basic Info", icon: UserCircle },
     { id: "badminton", label: "Game Stats", icon: Activity },
     { id: "equipment", label: "Equipment", icon: Swords },
     { id: "highlights", label: "Highlights", icon: Trophy },
     { id: "media", label: "Media Showcase", icon: Video },
   ];
+
+  const tabs = setup.isEditing ? allTabs : allTabs.filter(t => t.id === "basic");
 
   const tabOrder = tabs.map((t) => t.id);
   const currentIndex = tabOrder.indexOf(setup.activeTab);
@@ -76,7 +78,8 @@ export default function ProfileSetup() {
           </div>
 
           {/* Sleek Tab Navigation */}
-          <div className="-mx-4 sm:mx-0 px-4 sm:px-0 grid grid-cols-2 md:flex md:flex-wrap border-b border-slate-200 dark:border-slate-800 mb-6 sm:mb-8 gap-2 pb-2">
+          {tabs.length > 1 && (
+            <div className="-mx-4 sm:mx-0 px-4 sm:px-0 grid grid-cols-2 md:flex md:flex-wrap border-b border-slate-200 dark:border-slate-800 mb-6 sm:mb-8 gap-2 pb-2">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = setup.activeTab === tab.id;
@@ -96,6 +99,7 @@ export default function ProfileSetup() {
               );
             })}
           </div>
+          )}
 
           <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 p-5 sm:p-6">
             <form onSubmit={setup.handleSubmit} className="space-y-6">
@@ -173,7 +177,7 @@ export default function ProfileSetup() {
                   <Button
                     type="submit"
                     disabled={setup.loading}
-                    className="w-full min-h-[52px] bg-primary hover:bg-primary text-foreground font-bold px-5 py-3.5 rounded-xl shadow-lg shadow-primary/25 transition-all text-base sm:text-lg flex items-center justify-center gap-2 disabled:opacity-70"
+                    className="w-full min-h-[52px] bg-primary hover:bg-primary text-primary-foreground font-bold px-5 py-3.5 rounded-xl shadow-lg shadow-primary/25 transition-all text-base sm:text-lg flex items-center justify-center gap-2 disabled:opacity-70"
                   >
                     {setup.loading ? (
                       <>
@@ -183,7 +187,7 @@ export default function ProfileSetup() {
                     ) : (
                       <>
                         <Save className="w-5 h-5" />
-                        Save & Launch Profile
+                        {setup.isEditing ? "Save & Launch Profile" : "Save & Enter Club"}
                       </>
                     )}
                   </Button>
@@ -195,20 +199,22 @@ export default function ProfileSetup() {
                       setup.setActiveTab(nextTabId as any);
                       window.scrollTo({ top: 0, behavior: "smooth" });
                     }}
-                    className="w-full min-h-[52px] bg-primary hover:bg-primary text-foreground font-bold px-5 py-3.5 rounded-xl shadow-lg shadow-primary/25 transition-all text-base sm:text-lg flex items-center justify-center gap-2"
+                    className="w-full min-h-[52px] bg-primary hover:bg-primary text-primary-foreground font-bold px-5 py-3.5 rounded-xl shadow-lg shadow-primary/25 transition-all text-base sm:text-lg flex items-center justify-center gap-2"
                   >
                     Save & Next: {nextTabObj?.label} <ArrowRight className="w-5 h-5" />
                   </Button>
                 )}
 
-                <button
-                  type="button"
-                  onClick={(e) => setup.handleSubmit(e as any)}
-                  disabled={setup.loading}
-                  className="min-h-[52px] px-6 py-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-muted-foreground dark:text-slate-200 font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed text-xs sm:text-sm"
-                >
-                  Complete profile later, Launch for now
-                </button>
+                {setup.isEditing && (
+                  <button
+                    type="button"
+                    onClick={(e) => setup.handleSubmit(e as any)}
+                    disabled={setup.loading}
+                    className="min-h-[52px] px-6 py-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-muted-foreground dark:text-slate-200 font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed text-xs sm:text-sm"
+                  >
+                    Complete profile later, Launch for now
+                  </button>
+                )}
               </div>
             </form>
           </div>

@@ -91,7 +91,7 @@ export default function Home() {
       <div className="min-h-screen pb-24 lg:pb-8">
 
         {/* ── HERO ──────────────────────────────────────────────────────── */}
-        <section aria-label="Hero" className="relative overflow-hidden text-foreground min-h-[calc(90vh-72px)] lg:min-h-[90vh] flex items-center">
+        <section aria-label="Hero" className="relative overflow-hidden text-white py-10 lg:py-12 flex items-center">
           {/* Mobile photo bg */}
           <div className="lg:hidden absolute inset-0 z-0">
             <img src={iiscTeam} alt="IISc Badminton Team" className="w-full h-full object-cover object-[25%_center]" />
@@ -110,11 +110,11 @@ export default function Home() {
             <div className="absolute inset-0 dot-pattern opacity-30" />
           </div>
 
-          <div className="container mx-auto px-4 pt-24 pb-20 lg:pt-28 lg:pb-28 relative z-10 w-full">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          <div className="container mx-auto px-4 pt-6 pb-4 lg:pt-8 lg:pb-6 relative z-10 w-full">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
 
               {/* Left Content */}
-              <motion.div variants={fadeUp} initial="hidden" animate="visible" className="space-y-6">
+              <motion.div variants={fadeUp} initial="hidden" animate="visible" className="space-y-2">
                 {/* Live badge */}
                 <div className="inline-flex items-center gap-2.5 bg-white/8 border border-white/15 backdrop-blur-sm text-primary/70 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider">
                   <span className="relative flex h-2 w-2">
@@ -130,11 +130,10 @@ export default function Home() {
                     Where{" "}
                     <span className="relative inline-block">
                       <span className="text-primary">Champions</span>
-                    </span>
-                    <br />
+                    </span>{" "}
                     Are Forged
                   </h1>
-                  <p className="text-base text-foreground/50 font-medium uppercase tracking-widest pt-1">
+                  <p className="text-base text-white/50 font-medium uppercase tracking-widest">
                     Indian Institute of Science · Bangalore
                   </p>
                 </div>
@@ -145,29 +144,29 @@ export default function Home() {
                 </p>
 
                 {/* CTAs */}
-                <div className="flex flex-col sm:flex-row gap-3.5 pt-1">
-                  <Link href="/events">
-                    <Button className="bg-primary hover:bg-primary text-foreground px-6 py-6 text-sm font-bold flex items-center gap-2 w-full sm:w-auto justify-center rounded-xl shadow-lg shadow-primary/25 hover:-translate-y-0.5 transition-all duration-300 glow-emerald cursor-pointer">
+                <div className="flex flex-col sm:flex-row gap-3 pt-0">
+                  <Link href="/pulse#events">
+                    <Button className="bg-primary hover:bg-primary text-primary-foreground px-4 py-2.5 text-sm font-bold flex items-center gap-1.5 w-full sm:w-auto justify-center rounded-xl shadow-lg shadow-primary/25 hover:-translate-y-0.5 transition-all duration-300 glow-emerald cursor-pointer">
                       Explore Events <ArrowRight className="w-4 h-4" />
                     </Button>
                   </Link>
                   <Link href="/players">
-                    <Button variant="outline" className="border-2 border-white/20 bg-white/5 text-foreground hover:bg-white/10 hover:border-white/35 px-6 py-6 text-sm font-semibold w-full sm:w-auto rounded-xl transition-all duration-300 cursor-pointer backdrop-blur-sm">
+                    <Button variant="outline" className="border-2 border-white/20 bg-white/5 text-foreground hover:bg-white/10 hover:border-white/35 px-4 py-2.5 text-sm font-semibold w-full sm:w-auto rounded-xl transition-all duration-300 cursor-pointer backdrop-blur-sm">
                       Meet the Players
                     </Button>
                   </Link>
                 </div>
 
                 {/* Inline mini-stats */}
-                <div className="flex items-center gap-6 pt-2 border-t border-white/10">
+                <div className="flex items-center gap-4 pt-1 border-t border-white/10">
                   {[
                     { value: config?.stats?.members || "350+", label: "Members" },
                     { value: config?.stats?.tournaments || "20+", label: "Tournaments" },
                     { value: config?.stats?.trophies || "10+", label: "IISM Trophies" },
                   ].map(({ value, label }) => (
                     <div key={label} className="text-center">
-                      <div className="text-2xl font-black text-foreground">{value}</div>
-                      <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{label}</div>
+                      <div className="text-2xl font-black text-white drop-shadow-sm">{value}</div>
+                      <div className="text-[10px] text-white/85 font-semibold uppercase tracking-wider drop-shadow-sm">{label}</div>
                     </div>
                   ))}
                 </div>
@@ -187,7 +186,7 @@ export default function Home() {
           </div>
 
           {/* Scroll indicator */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 text-foreground/30 animate-bounce">
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 text-white/30 animate-bounce">
             <div className="w-5 h-8 rounded-full border-2 border-white/20 flex items-start justify-center pt-1.5">
               <div className="w-1 h-2 bg-white/40 rounded-full" />
             </div>
@@ -222,7 +221,7 @@ export default function Home() {
             >
               {[
                 {
-                  href: "/events", title: "Events", description: "Browse live, upcoming and archived tournaments.",
+                  href: "/pulse#events", title: "Pulse", description: "Browse live feeds, upcoming and archived tournaments.",
                   Icon: CalendarDays,
                   iconBg: "bg-primary/15 dark:bg-primary/40",
                   iconColor: "text-primary dark:text-primary",
@@ -232,17 +231,17 @@ export default function Home() {
                   tagColor: "bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary",
                 },
                 {
-                  href: "/hall-of-fame", title: "Winners Wall", description: "See champions and podiums from all club events.",
+                  href: "/legacy", title: "Legacy", description: "See champions, podiums, and photo memories from all club events.",
                   Icon: Medal,
                   iconBg: "bg-amber-100 dark:bg-amber-900/40",
                   iconColor: "text-amber-600 dark:text-amber-400",
                   accentColor: "text-amber-600 dark:text-amber-400",
                   hoverBorder: "hover:border-amber-200 dark:hover:border-amber-800",
-                  tag: "Hall of Fame",
+                  tag: "Legacy",
                   tagColor: "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400",
                 },
                 {
-                  href: "/feed", title: "Announcements", description: "Check court notices, event updates and club news.",
+                  href: "/pulse", title: "Announcements", description: "Check court notices, event updates and club news.",
                   Icon: Bell,
                   iconBg: "bg-blue-100 dark:bg-blue-900/40",
                   iconColor: "text-blue-600 dark:text-blue-400",
@@ -254,19 +253,19 @@ export default function Home() {
               ].map((item) => (
                 <motion.div key={item.href} variants={cardVariant}>
                   <Link href={item.href}>
-                    <div className={`group h-full rounded-2xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-800/80 p-7 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer ${item.hoverBorder}`}>
-                      <div className="flex items-start justify-between mb-5">
-                        <div className={`w-12 h-12 rounded-2xl ${item.iconBg} flex items-center justify-center`}>
-                          <item.Icon className={`w-6 h-6 ${item.iconColor}`} />
+                    <div className={`group h-full rounded-2xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-800/80 p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer ${item.hoverBorder}`}>
+                      <div className="flex items-start justify-between mb-3">
+                        <div className={`w-10 h-10 rounded-2xl ${item.iconBg} flex items-center justify-center`}>
+                          <item.Icon className={`w-5 h-5 ${item.iconColor}`} />
                         </div>
-                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${item.tagColor}`}>
+                        <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${item.tagColor}`}>
                           {item.tag}
                         </span>
                       </div>
-                      <h3 className="text-lg font-bold text-foreground dark:text-foreground mb-2">{item.title}</h3>
-                      <p className="text-muted-foreground dark:text-muted-foreground text-sm leading-relaxed mb-5">{item.description}</p>
-                      <div className={`inline-flex items-center gap-1.5 text-sm font-bold ${item.accentColor} group-hover:gap-3 transition-all duration-300`}>
-                        Open <ChevronRight className="w-4 h-4" />
+                      <h3 className="text-lg font-bold text-foreground dark:text-foreground mb-1">{item.title}</h3>
+                      <p className="text-muted-foreground dark:text-muted-foreground text-sm leading-snug mb-3">{item.description}</p>
+                      <div className={`inline-flex items-center gap-1.5 text-sm font-bold ${item.accentColor} group-hover:gap-2.5 transition-all duration-300`}>
+                        Open <ChevronRight className="w-3.5 h-3.5" />
                       </div>
                     </div>
                   </Link>
@@ -277,7 +276,7 @@ export default function Home() {
         </section>
 
         {/* ── STATS BANNER (dark) ───────────────────────────────────────── */}
-        <section aria-label="Club Statistics" className="py-16 bg-slate-900 dark:bg-slate-950 border-y border-slate-800">
+        <section aria-label="Club Statistics" className="py-6 bg-slate-900 dark:bg-slate-950 border-y border-slate-800">
           <div className="container mx-auto px-4">
             <motion.div
               className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-slate-700/40 rounded-2xl overflow-hidden"
@@ -291,15 +290,15 @@ export default function Home() {
                 <motion.div
                   key={label}
                   variants={cardVariant}
-                  className="bg-slate-900 dark:bg-slate-950 p-10 text-center relative overflow-hidden group"
+                  className="bg-slate-900 dark:bg-slate-950 p-6 text-center relative overflow-hidden group"
                 >
                   <div className={`absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r ${gradient}`} />
-                  <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${gradient} bg-opacity-10 mb-4`}>
-                    <Icon className="w-5 h-5 text-foreground" />
+                  <div className={`inline-flex p-2.5 rounded-xl bg-gradient-to-br ${gradient} bg-opacity-10 mb-2`}>
+                    <Icon className="w-5 h-5 text-white" />
                   </div>
-                  <div className="text-4xl lg:text-5xl font-black text-foreground mb-1 tabular-nums">{value}</div>
+                  <div className="text-4xl lg:text-5xl font-black text-white mb-1 tabular-nums">{value}</div>
                   <div className="text-sm font-bold text-slate-300 mb-1">{label}</div>
-                  <div className="text-xs text-muted-foreground">{desc}</div>
+                  <div className="text-xs text-slate-400">{desc}</div>
                 </motion.div>
               ))}
             </motion.div>
@@ -307,16 +306,16 @@ export default function Home() {
         </section>
 
         {/* ── ABOUT / MISSION & VALUES ──────────────────────────────────── */}
-        <section aria-label="About & Mission" className="py-16 bg-white dark:bg-slate-950">
+        <section aria-label="About & Mission" className="py-8 bg-white dark:bg-slate-950">
           <div className="container mx-auto px-4 max-w-6xl">
             <motion.div
-              className="mb-10"
+              className="mb-6"
               variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}
             >
-              <div className="inline-flex items-center gap-2 bg-primary/10 dark:bg-primary/10 border border-primary/40 dark:border-primary/25 text-primary dark:text-primary px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider mb-5">
+              <div className="inline-flex items-center gap-2 bg-primary/10 dark:bg-primary/10 border border-primary/40 dark:border-primary/25 text-primary dark:text-primary px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider mb-3">
                 <Zap className="w-3.5 h-3.5" /> Our Story
               </div>
-              <h2 className="text-4xl lg:text-5xl font-black text-foreground dark:text-foreground mb-4 leading-tight" style={{ fontFamily: "Playfair Display, serif" }}>
+              <h2 className="text-4xl lg:text-5xl font-black text-foreground dark:text-foreground mb-2 leading-tight" style={{ fontFamily: "Playfair Display, serif" }}>
                 About IISc
                 <span className="text-primary dark:text-primary"> Badminton Club</span>
               </h2>
@@ -326,11 +325,11 @@ export default function Home() {
             </motion.div>
 
             <motion.div
-              className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-start"
+              className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start"
               variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}
             >
               {/* Mission */}
-              <motion.div variants={fadeUp} className="space-y-6">
+              <motion.div variants={fadeUp} className="space-y-4">
                 <div>
                   <h3 className="text-2xl font-black text-foreground dark:text-foreground mb-1 flex items-center gap-3" style={{ fontFamily: "Playfair Display, serif" }}>
                     <span className="w-1.5 h-7 bg-gradient-to-b from-primary to-teal-500 rounded-full inline-block" />
@@ -342,7 +341,7 @@ export default function Home() {
                     "To foster excellence in badminton through competitive play and community engagement at IISc. We aim to develop skilled players while promoting discipline, teamwork, and sportsmanship."}
                 </p>
                 {config?.about?.history && (
-                  <div className="pt-4 space-y-3">
+                  <div className="pt-2 space-y-2">
                     <h3 className="text-2xl font-black text-foreground dark:text-foreground flex items-center gap-3" style={{ fontFamily: "Playfair Display, serif" }}>
                       <span className="w-1.5 h-7 bg-gradient-to-b from-blue-400 to-indigo-500 rounded-full inline-block" />
                       Our History
@@ -354,20 +353,20 @@ export default function Home() {
 
               {/* Values */}
               <motion.div variants={fadeUp}>
-                <h3 className="text-2xl font-black text-foreground dark:text-foreground mb-6 flex items-center gap-3" style={{ fontFamily: "Playfair Display, serif" }}>
+                <h3 className="text-2xl font-black text-foreground dark:text-foreground mb-4 flex items-center gap-3" style={{ fontFamily: "Playfair Display, serif" }}>
                   <span className="w-1.5 h-7 bg-gradient-to-b from-orange-400 to-amber-500 rounded-full inline-block" />
                   Our Values
                 </h3>
-                <div className="grid grid-cols-2 gap-3.5">
+                <div className="grid grid-cols-2 gap-3">
                   {VALUES.map(({ title, desc, Icon }) => (
                     <div
                       key={title}
-                      className="group relative rounded-2xl p-5 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-800 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
+                      className="group relative rounded-2xl p-4 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-800 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
                     >
-                      <div className="w-8 h-8 rounded-xl bg-primary/15 dark:bg-primary/40 flex items-center justify-center mb-3">
+                      <div className="w-8 h-8 rounded-xl bg-primary/15 dark:bg-primary/40 flex items-center justify-center mb-2">
                         <Icon className="w-4 h-4 text-primary dark:text-primary" />
                       </div>
-                      <h4 className="font-black text-foreground dark:text-foreground text-sm mb-1.5">{title}</h4>
+                      <h4 className="font-black text-foreground dark:text-foreground text-sm mb-1">{title}</h4>
                       <p className="text-muted-foreground dark:text-muted-foreground text-xs leading-relaxed">{desc}</p>
                     </div>
                   ))}
@@ -377,7 +376,7 @@ export default function Home() {
 
             {/* Team Photo */}
             <motion.div
-              className="mt-12 relative rounded-3xl overflow-hidden shadow-2xl cursor-pointer group border border-slate-200 dark:border-slate-700 max-w-5xl mx-auto"
+              className="mt-8 relative rounded-3xl overflow-hidden shadow-2xl cursor-pointer group border border-slate-200 dark:border-slate-700 max-w-5xl mx-auto"
               variants={fadeUp}
               initial="hidden"
               whileInView="visible"
@@ -459,36 +458,36 @@ export default function Home() {
         {/* ── RECENT HIGHLIGHT ──────────────────────────────────────────── */}
         {highlight && (
           <motion.section
-            className="py-14 bg-white dark:bg-slate-900"
+            className="py-8 bg-white dark:bg-slate-900"
             variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}
           >
             <div className="container mx-auto px-4">
-              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-950 via-slate-900 to-primary/90 p-6 md:p-12 shadow-2xl">
+              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-800 via-emerald-700 to-lime-600 p-6 md:p-8 shadow-2xl">
                 {/* Decorative elements */}
                 <div className="absolute inset-0 hero-pattern opacity-40" />
-                <div className="absolute top-0 right-0 w-80 h-80 bg-primary/8 rounded-full blur-3xl" />
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/8 rounded-full blur-3xl" />
+                <div className="absolute top-0 right-0 w-80 h-80 bg-lime-400/8 rounded-full blur-3xl" />
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-400/8 rounded-full blur-3xl" />
                 <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-primary via-teal-400 to-orange-500" />
 
-                <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-6">
-                  <div className="flex-1 space-y-4">
-                    <div className="inline-flex items-center gap-2 bg-amber-400/15 border border-amber-400/25 text-amber-300 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
+                <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-4">
+                  <div className="flex-1 space-y-1">
+                    <div className="inline-flex items-center gap-2 bg-amber-400/15 border border-amber-400/25 text-amber-300 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
                       <Star className="w-3 h-3" /> Recent Highlight
                     </div>
-                    <h3 className="text-2xl md:text-3xl font-black text-foreground leading-tight" style={{ fontFamily: "Playfair Display, serif" }}>
+                    <h3 className="text-2xl md:text-3xl font-black text-white leading-tight" style={{ fontFamily: "Playfair Display, serif" }}>
                       {highlight.name}
                     </h3>
-                    <p className="text-slate-300 text-sm leading-relaxed max-w-xl">{highlight.description}</p>
+                    <p className="text-emerald-50 text-sm leading-relaxed max-w-xl">{highlight.description}</p>
                   </div>
-                  <div className="flex gap-3 flex-wrap">
+                  <div className="flex gap-2 flex-wrap">
                     <Link href={`/events/${highlight.slug}`}>
-                      <Button className="bg-white text-foreground hover:bg-slate-100 font-bold px-6 py-3 rounded-xl flex items-center gap-2 cursor-pointer shadow-lg transition-all hover:-translate-y-0.5">
+                      <Button className="bg-white text-slate-900 hover:bg-slate-100 font-bold px-5 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer shadow-lg transition-all hover:-translate-y-0.5">
                         View Results <Trophy className="w-4 h-4" />
                       </Button>
                     </Link>
-                    <Link href="/hall-of-fame">
-                      <Button variant="outline" className="border-white/20 text-foreground hover:bg-white/10 font-semibold px-6 py-3 rounded-xl cursor-pointer transition-all">
-                        Winners Wall
+                    <Link href="/legacy">
+                      <Button variant="outline" className="border-white/40 text-white hover:bg-white/10 font-semibold px-5 py-2.5 rounded-xl cursor-pointer transition-all">
+                        Legacy
                       </Button>
                     </Link>
                   </div>
@@ -499,7 +498,7 @@ export default function Home() {
         )}
 
         {/* ── CTA ───────────────────────────────────────────────────────── */}
-        <section className="py-16 relative overflow-hidden bg-slate-900 dark:bg-slate-950">
+        <section className="py-6 relative overflow-hidden bg-slate-900 dark:bg-slate-950">
           {/* Background */}
           <div className="absolute inset-0 hero-pattern opacity-50" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/6 rounded-full blur-[100px]" />
@@ -508,7 +507,7 @@ export default function Home() {
             className="container mx-auto px-4 text-center relative z-10"
             variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}
           >
-            <div className="max-w-2xl mx-auto space-y-6">
+            <div className="max-w-2xl mx-auto space-y-4">
               <div className="inline-flex items-center gap-2 bg-white/8 border border-white/12 text-primary px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider">
                 <Zap className="w-3.5 h-3.5" /> Join the Community
               </div>
@@ -521,12 +520,12 @@ export default function Home() {
               </p>
               <div className="flex flex-col sm:flex-row gap-3.5 justify-center pt-2">
                 <Link href="/join">
-                  <Button className="bg-primary hover:bg-primary text-foreground px-10 py-6 text-sm font-bold rounded-xl shadow-lg shadow-primary/20 hover:-translate-y-0.5 transition-all duration-300 glow-emerald cursor-pointer">
+                  <Button className="bg-primary hover:bg-primary text-primary-foreground px-8 py-3.5 text-sm font-bold rounded-xl shadow-lg shadow-primary/20 hover:-translate-y-0.5 transition-all duration-300 glow-emerald cursor-pointer">
                     Get Started Today
                   </Button>
                 </Link>
                 <Link href="/players">
-                  <Button variant="outline" className="border-white/20 bg-white/5 text-foreground hover:bg-white/10 px-10 py-6 text-sm font-semibold rounded-xl transition-all duration-300 cursor-pointer">
+                  <Button variant="outline" className="border-white/20 bg-white/5 text-foreground hover:bg-white/10 px-8 py-3.5 text-sm font-semibold rounded-xl transition-all duration-300 cursor-pointer">
                     Meet the Players
                   </Button>
                 </Link>
@@ -581,7 +580,7 @@ function ImageModal({ src, alt, onClose }: { src: string; alt: string; onClose: 
 function AnimatedLogo() {
   return (
     <div className="relative flex items-center justify-center overflow-visible">
-      <div className="relative flex-shrink-0" style={{ width: "min(380px, 85vw)", height: "min(380px, 85vw)" }}>
+      <div className="relative flex-shrink-0" style={{ width: "min(260px, 75vw)", height: "min(260px, 75vw)" }}>
         <div className="relative w-full h-full rounded-full bg-gradient-to-br from-slate-950 to-blue-950 shadow-2xl border-[8px] border-slate-900 flex flex-col items-center justify-center overflow-hidden ring-[6px] ring-amber-500">
           {/* Grid pattern */}
           <div className="absolute inset-0 opacity-15 pointer-events-none">
@@ -596,7 +595,7 @@ function AnimatedLogo() {
           </div>
 
           {/* IISc silhouette */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[280px] opacity-20 text-amber-500 pointer-events-none mt-2">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] opacity-20 text-amber-500 pointer-events-none mt-2">
             <svg viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
               <line x1="15" y1="180" x2="185" y2="180" strokeWidth="3" />
               <rect x="75" y="80" width="50" height="100" />
@@ -620,14 +619,14 @@ function AnimatedLogo() {
           </div>
 
           {/* Top text */}
-          <div className="absolute top-16 left-0 right-0 text-center z-10 flex flex-col items-center">
+          <div className="absolute top-10 left-0 right-0 text-center z-10 flex flex-col items-center">
             <h1 className="text-7xl font-black text-foreground tracking-wider drop-shadow-md flex items-baseline">
               IIS<span className="text-6xl text-amber-400 ml-0.5">c</span>
             </h1>
           </div>
 
           {/* Central animations */}
-          <div className="absolute inset-0 z-20 pointer-events-none">
+          <div className="absolute inset-0 z-20 pointer-events-none transform scale-75 origin-center">
             <div className="racket-anim absolute top-1/2 left-1/2 -ml-[50px] -mt-[50px] w-[100px] h-[180px]">
               <svg width="100" height="180" viewBox="0 0 100 180">
                 <rect x="42" y="120" width="16" height="50" fill="#f59e0b" rx="2" />

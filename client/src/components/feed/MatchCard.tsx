@@ -176,7 +176,7 @@ export function MatchCard({
       {members.map(({ player, eloChange }, i) => {
         const nameEl = (
           <div className="flex-1 min-w-0">
-            <span className={`font-bold text-xs block group-hover/p:underline ${isApp ? "line-clamp-2 whitespace-normal leading-tight" : "truncate"} ${win ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-slate-300"}`}>
+            <span className={`font-bold text-xs block group-hover/p:underline line-clamp-2 whitespace-normal leading-tight ${win ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-slate-300"}`}>
               {player.full_name}
             </span>
             {eloChange != null ? (
@@ -204,7 +204,7 @@ export function MatchCard({
               </div>
             )}
             {win && (
-              <div className="absolute -bottom-1 -right-1 bg-primary text-foreground rounded-full p-0.5 border border-white dark:border-slate-900 shadow-sm">
+              <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground rounded-full p-0.5 border border-white dark:border-slate-900 shadow-sm">
                 <Trophy className="w-2 h-2" />
               </div>
             )}
@@ -241,7 +241,7 @@ export function MatchCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
       id={`match-card-${match.id}`}
-      className={`bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm relative overflow-hidden group transition-all duration-200 hover:-translate-y-0.5 ${
+      className={`bg-white dark:bg-slate-900 rounded-3xl p-2 shadow-sm relative overflow-hidden group transition-all duration-200 hover:-translate-y-0.5 ${
         isMatchOfTheDay
           ? "border-2 border-amber-400 shadow-amber-500/20 shadow-xl hover:shadow-amber-400/30"
           : "border border-slate-100 dark:border-slate-800 hover:shadow-lg dark:hover:shadow-slate-700/40"
@@ -289,7 +289,7 @@ export function MatchCard({
         </div>
       )}
 
-      <div className="flex items-center justify-center gap-2 mb-3 mt-2 md:mt-0 flex-wrap">
+      <div className="flex items-center justify-center gap-1.5 mb-1 mt-1 md:mt-0 flex-wrap">
         <span className="flex items-center gap-1 text-xs font-bold text-muted-foreground dark:text-muted-foreground">
           <Swords className="w-3.5 h-3.5" />
           {match.is_friendly === false ? "Tournament" : "Friendly"}
@@ -302,14 +302,14 @@ export function MatchCard({
       </div>
 
       {/* Date */}
-      <div className="text-[11px] text-muted-foreground dark:text-muted-foreground font-bold uppercase tracking-widest text-center mb-3">
+      <div className="text-[11px] text-muted-foreground dark:text-muted-foreground font-bold uppercase tracking-widest text-center mb-1">
         {new Date(match.created_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
       </div>
 
       {/* Scoreboard */}
-      <div className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 p-3">
+      <div className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 p-1">
         {/* Teams */}
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 mb-3">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1 mb-0.5">
           {renderTeam(team1, team1Win, hasWinner && !team1Win, "left")}
           <div className="text-[10px] text-muted-foreground dark:text-muted-foreground font-black uppercase tracking-widest text-center px-1">
             vs
@@ -319,8 +319,8 @@ export function MatchCard({
 
         {/* Sets-won headline */}
         {parsedSets.length > 0 && (
-          <div className="text-center border-t border-slate-200 dark:border-slate-700/60 pt-4 mb-4 relative">
-            <div className="flex items-center justify-center gap-4">
+          <div className="text-center border-t border-slate-200 dark:border-slate-700/60 pt-1 mb-1 relative">
+            <div className="flex items-center justify-center gap-2">
               <div className={`flex items-center relative transition-all ${team1Win ? "scale-110" : team2Win ? "opacity-60 grayscale" : ""}`}>
                 <span className={`text-4xl sm:text-5xl font-black tracking-tighter leading-none ${team1Win ? "bg-gradient-to-br from-primary to-teal-600 bg-clip-text text-transparent drop-shadow-md" : "text-muted-foreground dark:text-muted-foreground"}`}>
                   {setsWonP1}
@@ -337,20 +337,20 @@ export function MatchCard({
                 </span>
               </div>
             </div>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground dark:text-muted-foreground mt-2">sets</div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground dark:text-muted-foreground mt-0.5">sets</div>
           </div>
         )}
 
         {/* Set-by-set */}
         {parsedSets.length > 0 ? (
-          <div className="space-y-2">
+          <div className="space-y-0.5">
             {parsedSets.map((s, i) => {
               const p1Won = s.p1 > s.p2;
               return (
-                <div key={i} className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                  <span className={`text-2xl text-center tabular-nums tracking-tight ${p1Won ? "font-black text-primary dark:text-primary" : "font-bold text-muted-foreground dark:text-muted-foreground"}`}>{s.p1}</span>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground dark:text-muted-foreground bg-white dark:bg-slate-800 rounded-full px-2.5 py-0.5 border border-slate-200 dark:border-slate-700 whitespace-nowrap">Set {i + 1}</span>
-                  <span className={`text-2xl text-center tabular-nums tracking-tight ${!p1Won ? "font-black text-primary dark:text-primary" : "font-bold text-muted-foreground dark:text-muted-foreground"}`}>{s.p2}</span>
+                <div key={i} className="grid grid-cols-[1fr_auto_1fr] items-center gap-1">
+                  <span className={`text-2xl text-center tabular-nums tracking-tight ${p1Won ? "font-black text-primary dark:text-primary" : "font-bold text-rose-500 dark:text-rose-400"}`}>{s.p1}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground dark:text-muted-foreground bg-white dark:bg-slate-800 rounded-full px-2 py-0 border border-slate-200 dark:border-slate-700 whitespace-nowrap">Set {i + 1}</span>
+                  <span className={`text-2xl text-center tabular-nums tracking-tight ${!p1Won ? "font-black text-primary dark:text-primary" : "font-bold text-rose-500 dark:text-rose-400"}`}>{s.p2}</span>
                 </div>
               );
             })}
@@ -361,9 +361,8 @@ export function MatchCard({
           </div>
         )}
 
-        {/* Highlights */}
         {highlightUrl && (
-          <div className="flex justify-center mt-3">
+          <div className="flex justify-center mt-1.5">
             <a
               href={highlightUrl}
               target="_blank"
@@ -378,13 +377,27 @@ export function MatchCard({
 
       {/* Result recap */}
       {hasWinner && winnerMembers && loserMembers && (
-        <div className="text-center text-[11px] text-muted-foreground dark:text-muted-foreground mt-3 px-2 leading-snug">
-          <span className={isApp ? "block" : undefined}>
-            <span className="font-bold text-muted-foreground dark:text-slate-200">{joinNames(winnerMembers)}</span> defeated{" "}
-            <span className="font-bold text-muted-foreground dark:text-slate-200">{joinNames(loserMembers)}</span>
-          </span>{" "}
-          <span className={isApp ? "block font-bold text-muted-foreground dark:text-slate-200 mt-0.5" : undefined}>{winnerSetCount}–{loserSetCount}</span>{" "}
-          {displayScore && <span className={isApp ? "block" : undefined}>({displayScore})</span>}
+        <div className="text-center text-[11px] mt-1.5 px-1 leading-snug flex flex-col gap-0.5">
+          <span className="block font-black text-primary dark:text-primary">{joinNames(winnerMembers)}</span>
+          <span className="block text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mt-0.5">defeated</span>
+          <span className="block font-semibold text-slate-500 dark:text-slate-400 line-through decoration-slate-400/50 mb-0.5">{joinNames(loserMembers)}</span>
+          <span className="block mt-0.5">
+            <span style={{color: 'var(--color-primary)'}} className="font-black">{winnerSetCount}</span>
+            <span className="text-slate-400 dark:text-slate-500 mx-1">–</span>
+            <span style={{color: '#ef4444'}} className="font-black dark:text-rose-400">{loserSetCount}</span>
+          </span>
+          {displayScore && (
+            <span className="block tabular-nums text-slate-600 dark:text-slate-400">
+              ({parsedSets.map((s, i) => (
+                <span key={i}>
+                  <span style={{color: team1Win ? 'var(--color-primary)' : '#ef4444'}} className="font-semibold">{s.p1}</span>
+                  <span className="text-slate-400 dark:text-slate-500 mx-0.5">-</span>
+                  <span style={{color: team2Win ? 'var(--color-primary)' : '#ef4444'}} className="font-semibold">{s.p2}</span>
+                  {i < parsedSets.length - 1 && <span className="text-slate-400 dark:text-slate-500">, </span>}
+                </span>
+              ))})
+            </span>
+          )}
         </div>
       )}
 
@@ -408,7 +421,7 @@ export function MatchCard({
 
       {/* AI Summary Block */}
       {isGeneratingSummary && (
-        <div className="mt-4 p-4 rounded-2xl bg-gradient-to-br from-indigo-50 to-primary/5 dark:from-indigo-950/30 dark:to-primary/90/30 border border-indigo-100 dark:border-indigo-900/50 flex flex-col items-center justify-center min-h-[80px]">
+        <div className="mt-1.5 p-2 rounded-2xl bg-gradient-to-br from-indigo-50 to-primary/5 dark:from-indigo-950/30 dark:to-primary/90/30 border border-indigo-100 dark:border-indigo-900/50 flex flex-col items-center justify-center min-h-[80px]">
           <Loader2 className="w-5 h-5 text-indigo-500 animate-spin mb-2" />
           <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-400 animate-pulse">Gemini is analyzing the match...</span>
         </div>
@@ -417,7 +430,7 @@ export function MatchCard({
       {aiSummary && !isGeneratingSummary && (
         <motion.div 
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-          className="mt-4 p-4 rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-950 text-foreground shadow-lg border border-indigo-500/30 relative overflow-hidden"
+          className="mt-1.5 p-2.5 rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-950 text-foreground shadow-lg border border-indigo-500/30 relative overflow-hidden"
         >
           <div className="absolute -top-6 -right-6 text-indigo-500/20">
             <Sparkles className="w-24 h-24" />
@@ -434,14 +447,14 @@ export function MatchCard({
 
       {/* Reaction Kudos & Edit */}
       {!hideActions && (
-      <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/50 flex flex-col gap-2 relative z-10">
+      <div className="mt-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800/50 flex flex-col gap-0.5 relative z-10">
         {/* Actions Row */}
         <div className="flex justify-between items-center px-1">
           <button
             onPointerDown={(e) => e.stopPropagation()}
             onClick={handleGenerateSummary}
             disabled={isGeneratingSummary || !!aiSummary}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all active:scale-95 ${
               aiSummary 
                 ? "text-indigo-500 bg-indigo-50 dark:bg-indigo-500/20 opacity-70" 
                 : "text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -454,7 +467,7 @@ export function MatchCard({
           <button
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsScorecardOpen(true); }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
           >
             <BarChart2 className="w-3.5 h-3.5" /> Scorecard
           </button>
@@ -469,7 +482,7 @@ export function MatchCard({
               e.stopPropagation();
               if (onKudos) onKudos();
             }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all active:scale-95 ${
               isKudosed
                 ? "text-rose-500 bg-rose-50 dark:bg-rose-500/20"
                 : "text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"

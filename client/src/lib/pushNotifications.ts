@@ -12,14 +12,14 @@ function handleDeepLink(data: Record<string, string> | undefined) {
 
   switch (type) {
     case "match_confirmation":
-      window.location.href = "/feed/my-matches";
+      window.location.href = "/personal/matches";
       break;
     case "challenge_expiry":
-      window.location.href = "/feed/challenges";
+      window.location.href = "/personal/matches?tab=challenges";
       break;
     case "new_challenge":
       if (data.challenge_id) {
-        window.location.href = `/feed/challenges`;
+        window.location.href = `/personal/matches?tab=challenges`;
       }
       break;
     case "find_lost":
@@ -42,7 +42,7 @@ function handleDeepLink(data: Record<string, string> | undefined) {
       }
       break;
     case "weekly_digest":
-      window.location.href = "/feed/my-matches";
+      window.location.href = "/personal/matches";
       break;
     default:
       window.location.href = "/feed";

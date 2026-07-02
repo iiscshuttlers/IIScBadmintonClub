@@ -198,7 +198,7 @@ export function QRCodeScannerModal({ isOpen, onClose, onScan }: QRCodeScannerMod
                   <button
                     onClick={requestCameraPermission}
                     disabled={requestingPermission}
-                    className="bg-primary hover:bg-primary disabled:bg-slate-400 text-foreground font-bold px-6 py-2 rounded-xl transition-colors"
+                    className="bg-primary hover:bg-primary disabled:bg-slate-400 text-primary-foreground font-bold px-6 py-2 rounded-xl transition-colors"
                   >
                     {requestingPermission ? "Requesting..." : "Try Again"}
                   </button>
@@ -207,14 +207,14 @@ export function QRCodeScannerModal({ isOpen, onClose, onScan }: QRCodeScannerMod
 
               {scanResult ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-primary/10 z-10">
-                  <div className="w-16 h-16 bg-primary text-foreground rounded-full flex items-center justify-center mb-4">
+                  <div className="w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center mb-4">
                     <QrCode className="w-8 h-8" />
                   </div>
                   <p className="text-primary dark:text-primary font-bold text-lg">Player Found!</p>
                 </div>
               ) : null}
 
-              <div id="reader" className="w-full overflow-hidden rounded-2xl [&_button]:bg-primary [&_button]:text-foreground [&_button]:px-4 [&_button]:py-2 [&_button]:rounded-xl [&_button]:font-bold [&_button]:mt-4 [&_select]:mt-4 [&_select]:p-2 [&_select]:rounded-lg [&_select]:bg-slate-100 dark:[&_select]:bg-slate-800 dark:[&_select]:text-foreground"></div>
+              <div id="reader" className="w-full overflow-hidden rounded-2xl [&_button]:bg-primary [&_button]:text-primary-foreground [&_button]:px-4 [&_button]:py-2 [&_button]:rounded-xl [&_button]:font-bold [&_button]:mt-4 [&_select]:mt-4 [&_select]:p-2 [&_select]:rounded-lg [&_select]:bg-slate-100 dark:[&_select]:bg-slate-800 dark:[&_select]:text-primary-foreground"></div>
             </div>
             
             <div className="bg-slate-50 dark:bg-slate-800/50 p-4 text-center text-sm font-medium text-muted-foreground dark:text-muted-foreground">

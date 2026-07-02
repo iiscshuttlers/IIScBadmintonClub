@@ -45,7 +45,7 @@ export function PwaUpdatePrompt() {
             <div className="flex gap-3">
               <button
                 onClick={() => updateServiceWorker(true)}
-                className="flex-1 bg-primary hover:bg-primary text-foreground py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 transition-all active:scale-95"
+                className="flex-1 bg-primary hover:bg-primary text-primary-foreground py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 transition-all active:scale-95"
               >
                 Reload & Update
               </button>

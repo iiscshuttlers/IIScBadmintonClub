@@ -303,9 +303,9 @@ export default function PlayerProfile() {
 
       <div className="relative z-10 w-full bg-white dark:bg-[#060d1b]">
         {/* Navigation Bar */}
-        <div className="absolute top-0 left-0 right-0 z-50 px-4 py-4 flex items-center justify-between">
+        <div className="relative z-50 w-full px-4 py-4 flex flex-wrap items-center justify-between gap-3">
           <Link href="/">
-            <button className="w-10 h-10 md:w-12 md:h-12 bg-black/20 hover:bg-black/40 backdrop-blur-md text-foreground rounded-full flex items-center justify-center transition-all">
+            <button className="w-10 h-10 md:w-12 md:h-12 bg-white/90 hover:bg-white text-slate-700 dark:bg-black/40 dark:hover:bg-black/60 dark:text-white backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-slate-200 dark:border-white/10">
               <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
             </button>
           </Link>
@@ -315,20 +315,20 @@ export default function PlayerProfile() {
               <button
                 onClick={handleReport}
                 title="Report User"
-                className="w-10 h-10 md:w-12 md:h-12 bg-black/20 hover:bg-rose-500/80 backdrop-blur-md text-foreground rounded-full flex items-center justify-center transition-all"
+                className="w-10 h-10 md:w-12 md:h-12 bg-white/90 hover:bg-rose-50 hover:text-rose-600 text-slate-700 dark:bg-black/40 dark:hover:bg-rose-500/80 dark:text-white backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-slate-200 dark:border-white/10"
               >
                 <Flag className="w-4 h-4 md:w-5 md:h-5" />
               </button>
             )}
             <button
               onClick={handleShare}
-              className="w-10 h-10 md:w-12 md:h-12 bg-black/20 hover:bg-black/40 backdrop-blur-md text-foreground rounded-full flex items-center justify-center transition-all"
+              className="w-10 h-10 md:w-12 md:h-12 bg-white/90 hover:bg-white text-slate-700 dark:bg-black/40 dark:hover:bg-black/60 dark:text-white backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-slate-200 dark:border-white/10"
             >
               <Share2 className="w-4 h-4 md:w-5 md:h-5" />
             </button>
             <button
               onClick={handleWrapped}
-              className="px-3 md:px-5 py-2 md:py-2.5 h-10 md:h-12 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 shadow-lg text-foreground font-black text-xs md:text-sm uppercase tracking-wider rounded-full flex items-center gap-2 transition-all border border-white/20 hover:scale-105 active:scale-95 whitespace-nowrap"
+              className="px-3 md:px-5 py-2 md:py-2.5 h-10 md:h-12 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 shadow-lg text-white font-black text-xs md:text-sm uppercase tracking-wider rounded-full flex items-center gap-2 transition-all hover:scale-105 active:scale-95 whitespace-nowrap"
             >
               <Sparkles className="w-4 h-4" />
               <span className="hidden sm:inline">2024 Wrapped</span>
@@ -398,14 +398,14 @@ export default function PlayerProfile() {
                   };
                 })
               })}
-              className="px-3 md:px-5 py-2 md:py-2.5 h-10 md:h-12 bg-black/20 hover:bg-black/40 backdrop-blur-md text-foreground font-black text-xs md:text-sm uppercase tracking-wider rounded-full flex items-center gap-2 transition-all border border-white/20 whitespace-nowrap"
+              className="px-3 md:px-5 py-2 md:py-2.5 h-10 md:h-12 bg-white/90 hover:bg-white text-slate-700 dark:bg-black/40 dark:hover:bg-black/60 dark:text-white backdrop-blur-md shadow-sm font-black text-xs md:text-sm uppercase tracking-wider rounded-full flex items-center gap-2 transition-all border border-slate-200 dark:border-white/10 whitespace-nowrap"
             >
               <span className="hidden sm:inline">Export PDF</span>
               <span className="sm:hidden">PDF</span>
             </button>
             {currentUser && currentUser.id === player.userId && (
               <Link href="/profile/setup">
-                <button className="w-10 h-10 md:w-12 md:h-12 bg-black/20 hover:bg-black/40 backdrop-blur-md text-foreground rounded-full flex items-center justify-center transition-all">
+                <button className="w-10 h-10 md:w-12 md:h-12 bg-white/90 hover:bg-white text-slate-700 dark:bg-black/40 dark:hover:bg-black/60 dark:text-white backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-slate-200 dark:border-white/10">
                   <Settings className="w-4 h-4 md:w-5 md:h-5" />
                 </button>
               </Link>
@@ -413,7 +413,7 @@ export default function PlayerProfile() {
             {currentUser && currentUser.id === player.userId && (
               <button
                 onClick={() => signOut()}
-                className="w-10 h-10 md:w-12 md:h-12 bg-black/20 hover:bg-black/40 backdrop-blur-md text-foreground rounded-full flex items-center justify-center transition-all"
+                className="w-10 h-10 md:w-12 md:h-12 bg-white/90 hover:bg-white text-slate-700 dark:bg-black/40 dark:hover:bg-black/60 dark:text-white backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-slate-200 dark:border-white/10"
               >
                 <LogOut className="w-4 h-4 md:w-5 md:h-5" />
               </button>
@@ -495,18 +495,29 @@ export default function PlayerProfile() {
                       <span className="font-bold">{m.player2?.full_name}</span>
                     </div>
                     <div className="flex gap-2 w-full sm:w-auto">
-                      <button
-                        onClick={() => handleConfirmMatch(m.id)}
-                        className="flex-1 sm:flex-none px-4 py-2 bg-primary hover:bg-primary text-foreground text-xs font-black rounded-xl transition"
-                      >
-                        Confirm
-                      </button>
-                      <button
-                        onClick={() => handleRejectMatch(m.id)}
-                        className="flex-1 sm:flex-none px-4 py-2 bg-white/10 hover:bg-white/20 text-foreground text-xs font-black rounded-xl transition"
-                      >
-                        Reject
-                      </button>
+                      {m.submitted_by === player.id ? (
+                        <button
+                          onClick={() => handleWithdrawMatch(m.id)}
+                          className="flex-1 sm:flex-none px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white text-xs font-black rounded-xl transition"
+                        >
+                          Withdraw
+                        </button>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => handleConfirmMatch(m.id)}
+                            className="flex-1 sm:flex-none px-4 py-2 bg-primary hover:bg-primary text-primary-foreground text-xs font-black rounded-xl transition"
+                          >
+                            Confirm
+                          </button>
+                          <button
+                            onClick={() => handleRejectMatch(m.id)}
+                            className="flex-1 sm:flex-none px-4 py-2 bg-white/10 hover:bg-white/20 text-foreground text-xs font-black rounded-xl transition"
+                          >
+                            Reject
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}

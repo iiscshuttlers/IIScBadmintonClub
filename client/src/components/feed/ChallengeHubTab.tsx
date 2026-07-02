@@ -43,6 +43,18 @@ export function ChallengeHubTab({ currentUser }: { currentUser: any }) {
     }
   };
 
+  const handleDismiss = async (id: string) => {
+    // Optimistic removal so the list feels instant
+    setChallenges((prev) => prev.filter((c) => c.id !== id));
+    try {
+      const { error } = await supabase.from("challenges").delete().eq("id", id);
+      if (error) throw error;
+    } catch (err: any) {
+      toast.error(err.message);
+      fetchChallenges();
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-12">
@@ -53,7 +65,13 @@ export function ChallengeHubTab({ currentUser }: { currentUser: any }) {
 
   const incoming = challenges.filter((c) => c.challenged_id === currentUser?.id && c.status === "pending");
   const outgoing = challenges.filter((c) => c.challenger_id === currentUser?.id && c.status === "pending");
-  const history = challenges.filter((c) => c.status !== "pending");
+  const accepted = challenges.filter((c) => c.status === "accepted");
+  const inactive = challenges
+    .filter((c) => c.status === "cancelled" || c.status === "declined")
+    .slice(0, 5);
+  const history = [...accepted, ...inactive].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
 
   return (
     <div className="space-y-6">
@@ -81,7 +99,7 @@ export function ChallengeHubTab({ currentUser }: { currentUser: any }) {
                   </div>
                 </div>
                 <div className="flex gap-2 w-full sm:w-auto">
-                  <button onClick={() => handleAction(c.id, "accepted")} className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-primary text-foreground font-bold text-xs rounded-xl hover:bg-primary transition">
+                  <button onClick={() => handleAction(c.id, "accepted")} className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground font-bold text-xs rounded-xl hover:bg-primary transition">
                     <Check className="w-3.5 h-3.5" /> Accept
                   </button>
                   <button onClick={() => handleAction(c.id, "declined")} className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-200 dark:bg-slate-800 text-muted-foreground dark:text-muted-foreground font-bold text-xs rounded-xl hover:bg-slate-300 dark:hover:bg-slate-700 transition">
@@ -127,17 +145,27 @@ export function ChallengeHubTab({ currentUser }: { currentUser: any }) {
           <div className="text-center text-muted-foreground text-sm py-4">No challenge history yet.</div>
         ) : (
           <div className="space-y-3">
-            {history.slice(0, 10).map((c) => (
-              <div key={c.id} className="flex justify-between items-center text-xs p-3 rounded-xl bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800">
-                <div>
+            {history.map((c) => (
+              <div key={c.id} className="flex justify-between items-center gap-2 text-xs p-3 rounded-xl bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800">
+                <div className="min-w-0">
                   <span className="font-bold">{c.challenger_id === currentUser.id ? "You" : c.challenger.full_name}</span> challenged <span className="font-bold">{c.challenged_id === currentUser.id ? "You" : c.challenged.full_name}</span>
                 </div>
-                <div className={`font-bold uppercase tracking-wider px-2 py-1 rounded-md ${
-                  c.status === "accepted" ? "bg-primary/15 text-primary dark:bg-primary/30" : 
-                  c.status === "declined" ? "bg-rose-100 text-rose-600 dark:bg-rose-900/30" : 
-                  "bg-slate-200 text-muted-foreground dark:bg-slate-700"
-                }`}>
-                  {c.status}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className={`font-bold uppercase tracking-wider px-2 py-1 rounded-md ${
+                    c.status === "accepted" ? "bg-primary/15 text-primary dark:bg-primary/30" :
+                    c.status === "declined" ? "bg-rose-100 text-rose-600 dark:bg-rose-900/30" :
+                    "bg-slate-200 text-muted-foreground dark:bg-slate-700"
+                  }`}>
+                    {c.status}
+                  </span>
+                  <button
+                    onClick={() => handleDismiss(c.id)}
+                    aria-label="Dismiss"
+                    title="Dismiss from history"
+                    className="p-1 rounded-full text-muted-foreground hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </div>
             ))}

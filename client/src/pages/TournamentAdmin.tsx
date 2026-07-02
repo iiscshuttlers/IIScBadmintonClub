@@ -35,7 +35,7 @@ export default function TournamentAdmin() {
         <h1 className="text-2xl font-black text-slate-800 dark:text-foreground">Access Denied</h1>
         <p className="text-muted-foreground">You need admin permissions to access Tournament Manager.</p>
         <button onClick={() => navigate("/")}
-          className="mt-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary text-foreground font-black transition">
+          className="mt-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary text-primary-foreground font-black transition">
           Go Home
         </button>
       </div>

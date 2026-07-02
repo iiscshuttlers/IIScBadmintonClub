@@ -236,7 +236,7 @@ export function UmpireMode() {
       const player1 = match.Player_1 || match.Players_1 || "Player 1";
       const player2 = match.Player_2 || match.Players_2 || "Player 2";
       const roundLabel = match.Round || match.round || "";
-      const tournamentName = data?.tournament_name || "IISC Shuttlers";
+      const tournamentName = data?.tournament_name || "IISc Shuttlers";
       const scoreStr = scores.map((s) => `${s.p1}-${s.p2}`).filter((s) => s !== "0-0" || scores.length === 1).join(", ");
       const title = `${tournamentName} • ${selectedFormat}${roundLabel ? ` • ${roundLabel}` : ""}`;
       const body = `Match ${selectedMatchId}: ${player1} vs ${player2}${scoreStr && scoreStr !== "0-0" ? ` | ${scoreStr}` : " — Match Started!"}`;
@@ -347,7 +347,7 @@ export function UmpireMode() {
               setFormat(f);
               setMatchId("");
             }}
-            className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition ${selectedFormat === f ? "bg-primary text-foreground shadow-md" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-300"}`}
+            className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition ${selectedFormat === f ? "bg-primary text-primary-foreground shadow-md" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-300"}`}
           >
             {f}
           </button>
@@ -487,11 +487,10 @@ export function UmpireMode() {
                 </div>
                 <button
                   onClick={() => updateScore(player, 1)}
-                  className={`w-full aspect-square rounded-2xl flex flex-col items-center justify-center transition shadow-sm active:scale-95 ${
-                    serverSide === player
+                  className={`w-full aspect-square rounded-2xl flex flex-col items-center justify-center transition shadow-sm active:scale-95 ${serverSide === player
                       ? "bg-amber-50 dark:bg-amber-950/20 border-2 border-amber-400 text-amber-700 dark:text-amber-400 active:bg-amber-500 active:text-foreground"
-                      : "bg-primary/10 dark:bg-primary/20 border-2 border-primary text-primary dark:text-primary active:bg-primary active:text-foreground"
-                  }`}
+                      : "bg-primary/10 dark:bg-primary/20 border-2 border-primary text-primary dark:text-primary active:bg-primary active:text-primary-foreground"
+                    }`}
                 >
                   <Plus className="w-8 h-8 opacity-40 mb-1" />
                   <span className="text-6xl font-black">

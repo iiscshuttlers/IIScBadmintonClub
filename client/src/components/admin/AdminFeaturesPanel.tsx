@@ -72,7 +72,7 @@ function NotifQueuePanel() {
           </div>
           <div className="flex gap-2">
             <button onClick={flushNow} disabled={flushing || stats.unsent === 0}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-primary hover:bg-primary disabled:opacity-50 text-foreground text-sm font-black transition">
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-primary hover:bg-primary disabled:opacity-50 text-primary-foreground text-sm font-black transition">
               {flushing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
               Send Now
             </button>
@@ -329,7 +329,7 @@ function ChallengesAdminPanel() {
           </div>
           <div className="flex justify-end gap-2 pt-1">
             <button type="button" onClick={() => setIsAdding(false)} className="px-3 py-1.5 text-xs font-bold text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300 transition">Cancel</button>
-            <button type="submit" className="px-3 py-1.5 text-xs font-bold bg-primary hover:bg-primary text-foreground rounded-lg transition">Save Challenge</button>
+            <button type="submit" className="px-3 py-1.5 text-xs font-bold bg-primary hover:bg-primary text-primary-foreground rounded-lg transition">Save Challenge</button>
           </div>
         </form>
       ) : (
@@ -413,7 +413,7 @@ function DbHealthPanel() {
     <div className={cardCls}>
       {sectionTitle(<ShieldCheck className="w-4 h-4" />, "Database Health Check")}
       <button onClick={run} disabled={loading}
-        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-primary disabled:opacity-50 text-foreground text-sm font-black transition mb-4">
+        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-primary disabled:opacity-50 text-primary-foreground text-sm font-black transition mb-4">
         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
         Run Health Check
       </button>
@@ -537,7 +537,7 @@ export function AdminFeaturesPanel() {
             onClick={() => setSection(s.id)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
               section === s.id
-                ? "bg-primary text-foreground shadow-md"
+                ? "bg-primary text-primary-foreground shadow-md"
                 : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-300 hover:border-primary"
             }`}
           >

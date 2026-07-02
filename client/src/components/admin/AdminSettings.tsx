@@ -235,7 +235,7 @@ export function AdminSettings() {
           <button
             onClick={save}
             disabled={saving}
-            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary hover:bg-primary text-foreground font-bold shadow-lg shadow-primary/20 transition disabled:opacity-50"
+            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary hover:bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/20 transition disabled:opacity-50"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {saving ? "Saving…" : "Save Settings"}

@@ -2,8 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { getTournaments } from "@/lib/tournaments";
 import { fetchSiteData } from "@/lib/siteData";
-import { NotificationsMenu } from "@/components/NotificationsMenu";
-import UserDropdown from "@/components/navigation/UserDropdown";
+import { Avatar } from "@/components/ui/Avatar";
 import { PersonalNavigation } from "@/components/PersonalNavigation";
 import {
   Menu,
@@ -27,6 +26,8 @@ import {
   Users,
   Shield,
   Download,
+  Trophy,
+  LayoutDashboard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,30 +50,26 @@ import { GlobalSearch } from "@/components/GlobalSearch";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 const CLUB_LINKS = [
-  { href: "/feed", label: "Feed" },
   { href: "/players", label: "Players" },
-  { href: "/events", label: "Events" },
-  { href: "/hall-of-fame", label: "Winners Wall" },
-  { href: "/gallery", label: "Gallery" },
-  { href: "/exchange", label: "Exchange" },
-  { href: "/about", label: "Club" },
-];
-
-const PERSONAL_LINKS = [
-  { href: "/my-feed", label: "My Matches" },
-  { href: "/my-network", label: "My Network" },
-  { href: "/my-stats", label: "My Stats" },
-  { href: "/settings", label: "Settings" }
+  { href: "/pulse", label: "Pulse" },
+  { href: "/legacy", label: "Legacy" },
+  { href: "/hub", label: "Hub" },
 ];
 
 function ModeToggle({ isLoggedIn, setLocation, mode, setMode }: { isLoggedIn: boolean, setLocation: any, mode: 'club' | 'personal', setMode: any }) {
   const handleToggle = (newMode: 'club' | 'personal') => {
-    if (newMode === 'personal' && !isLoggedIn) {
-      sessionStorage.setItem("return_url", "/feed/my-matches");
-      setLocation("/join");
-      return;
+    if (newMode === 'personal') {
+      if (!isLoggedIn) {
+        sessionStorage.setItem("return_url", "/personal");
+        setLocation("/join");
+        return;
+      }
+      setMode(newMode);
+      setLocation("/personal");
+    } else {
+      setMode(newMode);
+      setLocation("/");
     }
-    setMode(newMode);
   };
 
   return (
@@ -120,13 +117,27 @@ export default function Navigation() {
   const { updateInfo, openUpdateDialog } = useAppUpdate();
   const { mode, setMode } = useAppMode();
 
-  const currentLinks = mode === "club" ? CLUB_LINKS : PERSONAL_LINKS;
+  const currentLinks = CLUB_LINKS;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Sync mode with URL location
+  useEffect(() => {
+    if (location.startsWith("/personal") && mode !== "personal") {
+      setMode("personal");
+    } else if (
+      !location.startsWith("/personal") && 
+      !location.startsWith("/settings") && 
+      !location.startsWith("/profile") &&
+      mode !== "club"
+    ) {
+      setMode("club");
+    }
+  }, [location, mode, setMode]);
 
   // Global Ctrl+K / Cmd+K keyboard shortcut to open search
   useEffect(() => {
@@ -153,8 +164,8 @@ export default function Navigation() {
 
   useEffect(() => {
     setIsOpen(false);
-    // Mark announcements as read when user visits the feed page
-    if (location.startsWith("/feed")) {
+    // Mark announcements as read when user visits the pulse page
+    if (location.startsWith("/pulse")) {
       localStorage.setItem("iisc_announcements_last_seen", Date.now().toString());
       setHasUnreadAnnouncements(false);
     }
@@ -234,7 +245,8 @@ export default function Navigation() {
   return (
     <>
       <nav
-        className={`pt-[max(env(safe-area-inset-top),36px)] md:pt-[max(env(safe-area-inset-top),16px)] sticky top-0 z-50 transition-all duration-300 ${
+        style={{ paddingTop: 'max(env(safe-area-inset-top), 24px)' }}
+        className={`sticky top-0 z-50 transition-all duration-300 ${
           scrolled
             ? "bg-gradient-to-r from-primary/10 to-white/95 dark:from-primary/40 dark:to-slate-950/95 backdrop-blur-xl shadow-lg shadow-primary/20 dark:shadow-slate-900/40 border-b border-primary/30 dark:border-slate-800/60"
             : "bg-gradient-to-r from-primary/10 to-white dark:from-primary/20 dark:to-slate-950 border-b border-transparent"
@@ -245,16 +257,14 @@ export default function Navigation() {
           {/* ── Row 1: Logo + Nav Links ─────────────────────────────── */}
           <div className="flex items-center gap-2">
             <Link href="/">
-              <div className="flex items-center gap-2.5 cursor-pointer flex-shrink-0">
+              <div className="flex items-center gap-2 cursor-pointer min-w-0">
                 <img
                   src={`${import.meta.env.BASE_URL}iisc-logo.png`}
                   alt="IISc Logo"
-                  className={`w-auto object-contain flex-shrink-0 transition-all duration-300 ${
-                    scrolled ? "h-7 sm:h-8" : "h-9 sm:h-10"
-                  }`}
+                  className="w-7 h-7 object-contain flex-shrink-0 transition-all duration-300"
                 />
-                <div>
-                  <span className="font-bold text-foreground dark:text-foreground leading-tight text-sm sm:text-base block whitespace-nowrap tracking-tight">
+                <div className="min-w-0">
+                  <span className="font-bold text-foreground dark:text-foreground leading-tight text-[13px] sm:text-base block whitespace-nowrap tracking-tight">
                     IISc Badminton Club
                   </span>
                   {viewAsRole ? (
@@ -280,43 +290,42 @@ export default function Navigation() {
                   href={link.href}
                   label={link.label}
                   isActive={isActive(link.href)}
-                  badge={link.href === "/events" ? liveEventCount : link.href === "/feed" && hasUnreadAnnouncements ? -1 : undefined}
+                  badge={link.href === "/pulse" ? (liveEventCount > 0 ? liveEventCount : (hasUnreadAnnouncements ? -1 : undefined)) : undefined}
                 />
               ))}
             </div>
 
             {/* Mobile action buttons (search + profile) — always visible on mobile */}
-            <div className="flex lg:hidden items-center gap-1.5 ml-auto flex-shrink-0">
+            <div className="flex lg:hidden items-center gap-0.5 ml-auto flex-shrink-0">
               <button
                 onClick={() => setSearchOpen(true)}
-                className="p-2 rounded-xl text-muted-foreground dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="p-1.5 rounded-xl text-muted-foreground dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 aria-label="Search"
               >
-                <Search className="w-4.5 h-4.5" />
+                <Search className="w-4 h-4" />
               </button>
-              {isLoggedIn && myPlayerId && (
-                <NotificationsMenu currentUser={{ id: myPlayerId }} />
-              )}
               {!authLoading && (
                 isLoggedIn ? (
-                  <UserDropdown
-                    userAvatar={userAvatar}
-                    userName={userName}
-                    userEmail={userEmail}
-                    myPlayerId={myPlayerId}
-                    pendingActionCount={pendingActionCount}
-                    isAdmin={isAdmin}
-                    savedAccounts={savedAccounts}
-                    switchAccount={switchAccount}
-                    handleSignOut={handleSignOut}
-                    handleInvite={handleInvite}
-                  />
+                  <div className="flex items-center gap-1">
+                    {isAdmin && (
+                      <button
+                        onClick={() => setLocation("/admin")}
+                        className="p-1.5 rounded-xl text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/30 transition-colors"
+                        title="Site Admin"
+                      >
+                        <Shield className="w-4.5 h-4.5" />
+                      </button>
+                    )}
+                    <button onClick={() => setLocation("/personal")} className="hover:opacity-80 transition-opacity">
+                      <Avatar src={userAvatar} name={userName} size="xs" />
+                    </button>
+                  </div>
                 ) : (
                   <div onClick={() => {
                     sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
                     setLocation("/join");
                   }} className="cursor-pointer">
-                    <Button className="flex items-center gap-1.5 bg-primary hover:bg-primary text-foreground font-bold text-xs px-3 rounded-full h-8 shadow-sm cursor-pointer pointer-events-none">
+                    <Button className="flex items-center gap-1.5 bg-primary hover:bg-primary text-primary-foreground font-bold text-xs px-3 rounded-full h-8 shadow-sm cursor-pointer pointer-events-none">
                       <LogIn className="w-3.5 h-3.5" /> Sign In
                     </Button>
                   </div>
@@ -343,30 +352,29 @@ export default function Navigation() {
             >
               <Search className="w-4 h-4" />
             </button>
-            {isLoggedIn && myPlayerId && (
-              <NotificationsMenu currentUser={{ id: myPlayerId }} />
-            )}
             {!authLoading && (
               isLoggedIn ? (
-                <UserDropdown
-                  userAvatar={userAvatar}
-                  userName={userName}
-                  userEmail={userEmail}
-                  myPlayerId={myPlayerId}
-                  pendingActionCount={pendingActionCount}
-                  isAdmin={isAdmin}
-                  savedAccounts={savedAccounts}
-                  switchAccount={switchAccount}
-                  handleSignOut={handleSignOut}
-                  handleInvite={handleInvite}
-                />
+                <div className="flex items-center gap-3 ml-2 border-l border-slate-200 dark:border-slate-800 pl-3">
+                  {isAdmin && (
+                    <button
+                      onClick={() => setLocation("/admin")}
+                      className="p-1.5 rounded-xl text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/30 transition-colors"
+                      title="Site Admin"
+                    >
+                      <Shield className="w-5 h-5" />
+                    </button>
+                  )}
+                  <button onClick={() => setLocation("/personal")} className="hover:opacity-80 transition-opacity">
+                    <Avatar src={userAvatar} name={userName} size="sm" />
+                  </button>
+                </div>
               ) : (
 
                 <div className="cursor-pointer" onClick={() => {
                   sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
                   setLocation("/join");
                 }}>
-                  <Button className="flex items-center gap-1.5 bg-primary hover:bg-primary text-foreground font-bold text-xs px-3 rounded-full h-7 shadow-sm cursor-pointer pointer-events-none">
+                  <Button className="flex items-center gap-1.5 bg-primary hover:bg-primary text-primary-foreground font-bold text-xs px-3 rounded-full h-7 shadow-sm cursor-pointer pointer-events-none">
                     <LogIn className="w-3.5 h-3.5" /> Sign In
                   </Button>
                 </div>
@@ -387,18 +395,8 @@ export default function Navigation() {
           >
               <div className="px-4 py-4 space-y-1">
                 <div className="w-10 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mb-4" />
-                {currentLinks.filter(l => l.href !== "/feed" && l.href !== "/players").map((link) => (
-                  <MobileNavLink
-                    key={link.href}
-                    href={link.href}
-                    label={link.label}
-                    badge={link.href === "/events" ? liveEventCount : undefined}
-                    isActive={isActive(link.href)}
-                    onClick={() => setIsOpen(false)}
-                  />
-                ))}
 
-              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 mt-2">
+              <div className="pt-2 mt-2">
 
                 {/* ── Light / Dark toggle — always visible ── */}
                 <div className="mb-3 flex bg-slate-100 dark:bg-slate-900 rounded-2xl p-1.5 gap-1.5 border border-slate-200/60 dark:border-slate-800">
@@ -440,17 +438,6 @@ export default function Navigation() {
                   <div className="h-10 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
                 ) : isLoggedIn ? (
                   <div className="space-y-0.5">
-                      <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl mb-2 overflow-hidden border border-slate-100 dark:border-slate-800">
-                        <button className="w-full flex items-center gap-2 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer border-b border-slate-100 dark:border-slate-800" onClick={() => { setIsOpen(false); setIsPreferencesOpen(true); }}>
-                          <Settings className="h-4 w-4 text-muted-foreground" /> App Preferences
-                        </button>
-                        <Link href="/profile/setup" className="w-full flex items-center gap-2 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
-                          <User className="h-4 w-4 text-muted-foreground" /> Edit Profile
-                        </Link>
-                        <Link href="/profile/password" className="w-full flex items-center gap-2 px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
-                          <Lock className="h-4 w-4 text-muted-foreground" /> Change Password
-                        </Link>
-                      </div>
 
                     {isAdmin && (
                       <Link href="/admin" className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-violet-50 dark:hover:bg-violet-950/30 text-violet-600 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
@@ -479,7 +466,7 @@ export default function Navigation() {
                     setIsOpen(false);
                     setLocation("/join");
                   }} className="w-full">
-                    <Button className="w-full flex items-center gap-2 justify-center bg-primary hover:bg-primary text-foreground font-bold rounded-xl h-11 cursor-pointer mt-1">
+                    <Button className="w-full flex items-center gap-2 justify-center bg-primary hover:bg-primary text-primary-foreground font-bold rounded-xl h-11 cursor-pointer mt-1">
                       <LogIn className="w-4 h-4" /> Sign In to your account
                     </Button>
                   </div>
@@ -491,85 +478,74 @@ export default function Navigation() {
         )}
 
       {/* ── Mobile Bottom Navigation Bar (outside nav to ensure fixed positioning) ─────────────────────────────── */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-white/95 dark:bg-slate-950/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 flex justify-around items-end px-2 pb-safe pt-1 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]">
-            {mode === 'club' ? (
-              <>
-                <Link href="/">
-                  <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/") ? "text-primary dark:text-primary" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
-                    <Home className={`w-[22px] h-[22px] mb-1 ${isActive("/") ? "fill-primary/20" : ""}`} />
-                    <span className="text-[10px] font-bold">Home</span>
+      <div 
+        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-white/95 dark:bg-slate-950/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 flex justify-around items-end px-1 pt-1 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]"
+      >
+                <Link href="/" className="flex-1 min-w-0">
+                  <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
+                    <LayoutDashboard strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
+                    <span className="text-[11px] font-semibold">Home</span>
                   </button>
                 </Link>
-                <Link href="/feed">
-                  <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/feed") ? "text-primary dark:text-primary" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
-                    <Activity className={`w-[22px] h-[22px] mb-1 ${isActive("/feed") ? "fill-primary/20" : ""}`} />
-                    <span className="text-[10px] font-bold">Feed</span>
+                <Link href="/pulse" className="flex-1 min-w-0">
+                  <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/pulse") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
+                    <Activity strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
+                    <span className="text-[11px] font-semibold">Pulse</span>
                     {hasUnreadAnnouncements && (
-                      <span title="New announcements" className="absolute top-1 right-2.5 flex items-center justify-center">
+                      <span title="New announcements" className="absolute top-1 right-1.5 flex items-center justify-center">
                         <span className="w-2 h-2 bg-red-500 rounded-full border border-white dark:border-slate-950" />
                       </span>
                     )}
                   </button>
                 </Link>
-              </>
-            ) : (
-              <>
-                <Link href={myPlayerId ? `/player/${myPlayerId}` : "/join"}>
-                  <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${(location.startsWith("/player/") && location.includes(myPlayerId!)) ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
-                    <User className={`w-[22px] h-[22px] mb-1 ${(location.startsWith("/player/") && location.includes(myPlayerId!)) ? "fill-blue-600/20" : ""}`} />
-                    <span className="text-[10px] font-bold">My Stats</span>
-                  </button>
-                </Link>
-                <Link href="/feed/my-matches">
-                  <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/feed/my-matches") ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
-                    <Activity className={`w-[22px] h-[22px] mb-1 ${isActive("/feed/my-matches") ? "fill-blue-600/20" : ""}`} />
-                    <span className="text-[10px] font-bold">My Feed</span>
-                  </button>
-                </Link>
-              </>
-            )}
+
+              <Link href="/players" className="flex-1 min-w-0">
+                <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/players") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
+                  <Users strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
+                  <span className="text-[11px] font-semibold">Players</span>
+                </button>
+              </Link>
 
             {/* Center Log Match FAB */}
-            <div className="relative -top-5 mx-1">
+            <div className="flex-1 min-w-0 shrink-0 flex justify-center items-center relative -top-3.5">
               {isLoggedIn ? (
                 <button
                   onClick={() => window.dispatchEvent(new Event('openLogMatchModal'))}
-                  className={`w-[52px] h-[52px] ${mode === 'club' ? 'bg-gradient-to-tr from-primary to-teal-500 hover:from-primary hover:to-teal-400 shadow-primary/40' : 'bg-gradient-to-tr from-blue-600 to-indigo-500 hover:from-blue-500 hover:to-indigo-400 shadow-blue-500/40'} rounded-full flex items-center justify-center text-foreground shadow-xl border-4 border-white dark:border-slate-950 transition-transform active:scale-95 cursor-pointer`}
+                  className="w-12 h-12 bg-[#ccff00] hover:bg-[#b8e600] text-black shadow-[#ccff00]/30 rounded-full flex items-center justify-center shadow-lg border-[3px] border-[#ccff00] dark:border-[#ccff00] transition-transform active:scale-95 cursor-pointer"
                 >
-                  <Plus className="w-6 h-6 stroke-[3]" />
+                  <Plus strokeWidth={2.5} className="w-6 h-6" />
                 </button>
               ) : (
                 <button onClick={() => {
                   sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
                   setLocation("/join");
-                }} className="w-[52px] h-[52px] bg-slate-800 hover:bg-slate-700 rounded-full flex items-center justify-center text-foreground shadow-xl border-4 border-white dark:border-slate-950 transition-transform active:scale-95 cursor-pointer">
-                  <LogIn className="w-5 h-5 ml-1" />
+                }} className="w-11 h-11 bg-slate-800 hover:bg-slate-700 rounded-full flex items-center justify-center text-foreground shadow-lg border-[3px] border-white dark:border-slate-950 transition-transform active:scale-95 cursor-pointer">
+                  <LogIn className="w-4 h-4 ml-0.5" />
                 </button>
               )}
             </div>
 
-            {mode === 'club' ? (
-              <Link href="/players">
-                <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/players") ? "text-primary dark:text-primary" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
-                  <Users className={`w-[22px] h-[22px] mb-1 ${isActive("/players") ? "fill-primary/20" : ""}`} />
-                  <span className="text-[10px] font-bold">Players</span>
+              <Link href="/hub" className="flex-1 min-w-0">
+                <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/hub") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
+                  <BookOpen strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
+                  <span className="text-[11px] font-semibold">Hub</span>
                 </button>
               </Link>
-            ) : (
-              <Link href="/players?tab=connections">
-                <button className={`relative flex flex-col items-center p-2 min-w-[60px] ${isActive("/players") ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
-                  <Users className={`w-[22px] h-[22px] mb-1 ${isActive("/players") ? "fill-blue-600/20" : ""}`} />
-                  <span className="text-[10px] font-bold">Network</span>
+              
+              <Link href="/legacy" className="flex-1 min-w-0">
+                <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/legacy") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
+                  <Trophy strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
+                  <span className="text-[11px] font-semibold">Legacy</span>
                 </button>
               </Link>
-            )}
 
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className={`relative flex flex-col items-center p-2 min-w-[60px] cursor-pointer ${isOpen ? (mode === 'club' ? "text-primary dark:text-primary" : "text-blue-600 dark:text-blue-400") : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}
+              className={`relative flex-1 min-w-0 flex flex-col items-center pt-2 pb-1 px-0.5 cursor-pointer ${isOpen ? (mode === 'club' ? "text-primary dark:text-primary" : "text-blue-600 dark:text-blue-400") : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}
             >
-              {isOpen ? <X className="w-[22px] h-[22px] mb-1" /> : <Menu className="w-[22px] h-[22px] mb-1" />}
-              <span className="text-[10px] font-bold">Menu</span>
+              {isOpen ? <X className="w-5 h-5 mb-0.5" /> : <Menu className="w-5 h-5 mb-0.5" />}
+              <span className="text-[11px] font-semibold">Menu</span>
             </button>
         </div>
 

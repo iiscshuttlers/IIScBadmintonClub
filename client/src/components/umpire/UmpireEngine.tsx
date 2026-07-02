@@ -255,7 +255,7 @@ export function UmpireEngine({
         {/* Start */}
         <button
           onClick={startTournamentMatch}
-          className="w-full py-4 rounded-2xl bg-primary hover:bg-primary text-foreground font-black text-lg transition shadow-lg shadow-primary/50/30 flex items-center justify-center gap-2">
+          className="w-full py-4 rounded-2xl bg-primary hover:bg-primary text-primary-foreground font-black text-lg transition shadow-lg shadow-primary/50/30 flex items-center justify-center gap-2">
           <Play className="w-5 h-5 fill-white" /> Start Match
         </button>
       </div>

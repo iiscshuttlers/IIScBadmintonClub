@@ -116,15 +116,15 @@ export function usePushNotifications(userId: string | undefined) {
               if (type === "player_profile" && data.player_id) {
                 window.location.href = `${baseUrl}/player/${data.player_id}`;
               } else if (action === "view_match" || type === "match_confirmation") {
-                window.location.href = `${baseUrl}/feed/my-matches${matchId ? `?highlight=${matchId}` : ""}`;
+                window.location.href = `${baseUrl}/personal/matches${matchId ? `?highlight=${matchId}` : ""}`;
               } else if (type === "kudos") {
                 window.location.href = `${baseUrl}/feed/activity${matchId ? `?highlight=${matchId}` : ""}`;
               } else if (type === "challenge_expiry" || data.tab === "challenges") {
-                window.location.href = `${baseUrl}/feed/challenges`;
+                window.location.href = `${baseUrl}/personal/matches?tab=challenges`;
               } else if (action === "view_announcements") {
                 window.location.href = `${baseUrl}/feed/announcements`;
               } else if (matchId) {
-                window.location.href = `${baseUrl}/feed/my-matches?highlight=${matchId}`;
+                window.location.href = `${baseUrl}/personal/matches?highlight=${matchId}`;
               } else {
                 window.location.href = `${baseUrl}/feed`;
               }

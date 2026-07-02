@@ -17,12 +17,12 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
       {/* Profile Banner */}
       <div className="absolute top-0 left-0 w-full h-[380px] md:h-[460px] overflow-hidden">
         <img
-          src="/profile_banner_dark.png"
+          src="/profile_banner_light.png"
           alt="Profile Banner"
           className="w-full h-full object-cover dark:hidden"
         />
         <img
-          src="/profile_banner_light.png"
+          src="/profile_banner_dark.png"
           alt="Profile Banner"
           className="w-full h-full object-cover hidden dark:block"
         />
@@ -50,7 +50,7 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
             </div>
             {/* Rank badge */}
             {eloRank && (
-              <div className="absolute -bottom-4 -right-4 bg-primary text-foreground px-4 py-2 rounded-lg font-black text-xl shadow-lg border-2 border-white dark:border-slate-950 flex items-center gap-2">
+              <div className="absolute -bottom-4 -right-4 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-black text-xl shadow-lg border-2 border-white dark:border-slate-950 flex items-center gap-2">
                 <Trophy className="w-5 h-5" /> #{eloRank}
               </div>
             )}
@@ -62,10 +62,10 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
               {heroRestName && (
                 <div className="flex items-center gap-3">
                   <span
-                    className="text-xl md:text-3xl font-bold uppercase tracking-[0.2em] text-foreground/95 dark:text-foreground"
+                    className="text-xl md:text-3xl font-bold uppercase tracking-[0.2em] text-slate-800 dark:text-foreground"
                     style={
                       theme === "light"
-                        ? { textShadow: "0 2px 12px rgba(0,0,0,0.7), 0 1px 4px rgba(0,0,0,0.5)" }
+                        ? { textShadow: "0 2px 12px rgba(255,255,255,0.8), 0 1px 4px rgba(255,255,255,0.6)" }
                         : undefined
                     }
                   >
@@ -88,10 +88,10 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
 
               <div className="flex items-center flex-wrap gap-4">
                 <h1
-                  className="text-5xl md:text-8xl font-black uppercase tracking-tighter leading-none text-white dark:text-foreground"
+                  className="text-5xl md:text-8xl font-black uppercase tracking-tighter leading-none text-slate-900 dark:text-foreground"
                   style={
                     theme === "light"
-                      ? { textShadow: "0 4px 24px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4)" }
+                      ? { textShadow: "0 2px 16px rgba(255,255,255,0.8), 0 1px 4px rgba(255,255,255,0.6)" }
                       : undefined
                   }
                 >

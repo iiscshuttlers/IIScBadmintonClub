@@ -8,6 +8,7 @@ import { Capacitor } from "@capacitor/core";
 import { Share } from "@capacitor/share";
 import { getBaseShareUrl } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
+import { useLocation } from "wouter";
 
 import type { PlayerRow } from "@/types";
 
@@ -80,6 +81,7 @@ interface PlayerCardProps {
   isFollowing?: boolean;
   currentUserName?: string;
   currentUserId?: string;
+  isPersonalView?: boolean;
 }
 
 export function PlayerCard({
@@ -97,7 +99,9 @@ export function PlayerCard({
   isFollowing = false,
   currentUserName,
   currentUserId,
+  isPersonalView = false,
 }: PlayerCardProps) {
+  const [, setLocation] = useLocation();
   // Calibration Phase
   const totalMatches = (() => {
     if (!player.win_loss_record) return 0;
@@ -199,6 +203,13 @@ export function PlayerCard({
       className="h-full"
     >
       <Card
+        onClick={() => {
+          if (window.location.pathname.startsWith("/personal")) {
+            setLocation(`/personal/player/${player.id}`);
+          } else {
+            setLocation(`/player/${player.id}`);
+          }
+        }}
         className={`h-full w-full overflow-hidden cursor-pointer bg-white dark:bg-slate-900
         hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:shadow-xl hover:-translate-y-1
         transition-all duration-300 flex flex-col items-center text-center relative p-6 rounded-3xl border
@@ -281,9 +292,10 @@ export function PlayerCard({
             )}
           </div>
         </div>
-
-        {/* Bottom: Actions */}
-        <div className="mt-auto w-full border-t border-slate-100 dark:border-slate-800 pt-3 space-y-2">
+        
+        {/* ACTION BUTTONS: Only shown in Personal Circle View */}
+        {isPersonalView && (
+          <div className="mt-auto w-full border-t border-slate-100 dark:border-slate-800 pt-3 space-y-2">
 
           {/* Row 1: Social actions (buddy + follow) — full-width pills */}
           {!isOwn && (onBuddyAction || onToggleFollow) && (
@@ -351,52 +363,77 @@ export function PlayerCard({
             </div>
           )}
 
-          {/* Row 2: Admin + utility icon buttons */}
-          <div className="flex items-center justify-between">
-            <div className="flex gap-1">
-              {isAdmin && !isOwn && (
-                <>
-                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit?.(player.id); }} className="p-1.5 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"><Pencil className="w-3.5 h-3.5" /></button>
-                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete?.(player.id); }} className="p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-lg transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
-                </>
-              )}
-            </div>
-            <div className="flex items-center gap-1">
+          {/* Centered Log Match Button */}
+          {onLogMatch && !isOwn && (
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onLogMatch(player.id); }}
+              className="w-full flex items-center justify-center gap-2 py-2 mt-2 mb-3 rounded-xl bg-primary/10 dark:bg-primary/20 hover:bg-primary/20 dark:hover:bg-primary/30 text-primary font-bold text-xs border border-primary/20 transition-all shadow-sm"
+            >
+              <Sword className="w-4 h-4" />
+              Log Match
+            </button>
+          )}
+
+          {/* Row 2: Utility icon buttons with labels */}
+          <div className="flex items-center justify-center gap-6 pt-1">
+            {!isOwn && (
               <button
-                onClick={handleShare}
-                className="w-8 h-8 flex items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/90/30 transition-colors"
-                title="Share profile"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); handlePing(); }}
+                className={`flex flex-col items-center justify-center gap-1 transition-colors ${
+                  isPinged ? "text-amber-500" : "text-muted-foreground hover:text-amber-500"
+                }`}
+                title="Ping player"
               >
-                <Share2 className="w-3.5 h-3.5" />
-              </button>
-              {!isOwn && (
-                <button
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); handlePing(); }}
-                  className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
-                    isPinged ? "text-amber-500 bg-amber-50 dark:bg-amber-950/30" : "text-muted-foreground hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/30"
-                  }`}
-                  title="Ping player"
-                >
+                <div className={`p-2 rounded-full ${isPinged ? "bg-amber-50 dark:bg-amber-950/30" : "bg-slate-50 dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-950/30"}`}>
                   <BellRing className="w-3.5 h-3.5" />
-                </button>
-              )}
-              {onLogMatch && !isOwn && (
+                </div>
+                <span className="text-[9px] font-black uppercase tracking-wider">Ping</span>
+              </button>
+            )}
+            
+            <button
+              onClick={handleShare}
+              className="flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-primary transition-colors"
+              title="Share profile"
+            >
+              <div className="p-2 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-primary/10 dark:hover:bg-primary/90/30">
+                <Share2 className="w-3.5 h-3.5" />
+              </div>
+              <span className="text-[9px] font-black uppercase tracking-wider">Share</span>
+            </button>
+
+            {isAdmin && !isOwn && (
+              <>
                 <button
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); onLogMatch(player.id); }}
-                  className="w-8 h-8 flex items-center justify-center rounded-full text-muted-foreground hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
-                  title="Log Match"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit?.(player.id); }}
+                  className="flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-blue-500 transition-colors"
+                  title="Edit Player"
                 >
-                  <Sword className="w-3.5 h-3.5" />
+                  <div className="p-2 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/30">
+                    <Pencil className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-[9px] font-black uppercase tracking-wider">Edit</span>
                 </button>
-              )}
-            </div>
+                <button
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete?.(player.id); }}
+                  className="flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-rose-500 transition-colors"
+                  title="Delete Player"
+                >
+                  <div className="p-2 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-900/30">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-[9px] font-black uppercase tracking-wider">Delete</span>
+                </button>
+              </>
+            )}
           </div>
 
         </div>
+        )}
         
         {/* 'You' badge */}
         {isOwn && (
-          <span className="absolute top-4 left-4 bg-primary text-foreground px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest shadow-sm">
+          <span className="absolute top-4 left-4 bg-primary text-primary-foreground px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest shadow-sm">
             You
           </span>
         )}

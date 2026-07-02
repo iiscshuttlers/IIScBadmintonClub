@@ -153,7 +153,7 @@ export default function ComparePlayers() {
   const fmtColor2 = "text-blue-600 dark:text-blue-400";
 
   return (
-    <div className="pb-24 max-w-4xl mx-auto px-4 mt-6">
+    <div className="pb-24 pt-6 max-w-4xl mx-auto px-4">
       <Link href="/players">
         <button className="flex items-center text-muted-foreground hover:text-slate-800 dark:hover:text-foreground mb-6 transition-colors">
           <ChevronLeft className="w-5 h-5 mr-1" />
@@ -162,7 +162,7 @@ export default function ComparePlayers() {
       </Link>
 
       <div className="text-center mb-10">
-        <div className="inline-flex items-center gap-2 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-4 border border-rose-200 dark:border-rose-900/50">
+        <div className="inline-flex items-center gap-2 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-2 border border-rose-200 dark:border-rose-900/50">
           <Swords className="w-4 h-4" /> Head to Head Rivalry
           <InfoModal
             title="H2H RIVALRY"
@@ -205,7 +205,7 @@ export default function ComparePlayers() {
         {/* Player 1 */}
         <div className="flex flex-col items-center text-center">
           <img src={player1.avatar_url || ""} className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-primary/30 dark:border-primary shadow-lg mb-4" />
-          <div className="relative group w-full max-w-[200px] mx-auto">
+          <div className="relative group w-full px-1 mx-auto">
             <select
               value={player1.id}
               onChange={(e) => {
@@ -213,7 +213,7 @@ export default function ComparePlayers() {
                   setLocation(`/compare/${e.target.value}/${player2.id}`);
                 }
               }}
-              className="text-xl font-black text-foreground dark:text-foreground bg-transparent appearance-none text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-6 py-1 rounded-xl w-full truncate focus:outline-none"
+              className="text-sm sm:text-xl font-black text-foreground dark:text-foreground bg-transparent appearance-none text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-2 sm:px-6 py-1 rounded-xl w-full focus:outline-none whitespace-normal break-words"
             >
               <option value={player1.id} className="hidden">{player1.full_name}</option>
               {allPlayers.map((p) => (
@@ -235,7 +235,7 @@ export default function ComparePlayers() {
         {/* Player 2 */}
         <div className="flex flex-col items-center text-center">
           <img src={player2.avatar_url || ""} className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-blue-100 dark:border-blue-900 shadow-lg mb-4" />
-          <div className="relative group w-full max-w-[200px] mx-auto">
+          <div className="relative group w-full px-1 mx-auto">
             <select
               value={player2.id}
               onChange={(e) => {
@@ -243,7 +243,7 @@ export default function ComparePlayers() {
                   setLocation(`/compare/${player1.id}/${e.target.value}`);
                 }
               }}
-              className="text-xl font-black text-foreground dark:text-foreground bg-transparent appearance-none text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-6 py-1 rounded-xl w-full truncate focus:outline-none"
+              className="text-sm sm:text-xl font-black text-foreground dark:text-foreground bg-transparent appearance-none text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-2 sm:px-6 py-1 rounded-xl w-full focus:outline-none whitespace-normal break-words"
             >
               <option value={player2.id} className="hidden">{player2.full_name}</option>
               {allPlayers.map((p) => (
@@ -302,19 +302,21 @@ export default function ComparePlayers() {
         
         <div className="space-y-4">
           {[
-            { label: "Department", icon: MapPin, p1Val: player1.department, p2Val: player2.department },
-            { label: "Playing Style", icon: Activity, p1Val: player1.playing_style || "Balanced", p2Val: player2.playing_style || "Balanced" },
-            { label: "Dominant Hand", icon: User, p1Val: player1.dominant_hand || "Right-handed", p2Val: player2.dominant_hand || "Right-handed" },
-            { label: "Height", icon: Ruler, p1Val: player1.height || "N/A", p2Val: player2.height || "N/A" },
-            { label: "Joined", icon: Calendar, p1Val: player1.joined_year || "N/A", p2Val: player2.joined_year || "N/A" }
+            { label: "Department", icon: MapPin, p1Val: player1.department, p2Val: player2.department, color: "text-rose-500 dark:text-rose-400", chip: "bg-rose-100 dark:bg-rose-500/15" },
+            { label: "Playing Style", icon: Activity, p1Val: player1.playing_style || "Balanced", p2Val: player2.playing_style || "Balanced", color: "text-amber-500 dark:text-amber-400", chip: "bg-amber-100 dark:bg-amber-500/15" },
+            { label: "Dominant Hand", icon: User, p1Val: player1.dominant_hand || "Right-handed", p2Val: player2.dominant_hand || "Right-handed", color: "text-violet-500 dark:text-violet-400", chip: "bg-violet-100 dark:bg-violet-500/15" },
+            { label: "Height", icon: Ruler, p1Val: player1.height || "N/A", p2Val: player2.height || "N/A", color: "text-cyan-500 dark:text-cyan-400", chip: "bg-cyan-100 dark:bg-cyan-500/15" },
+            { label: "Joined", icon: Calendar, p1Val: player1.joined_year || "N/A", p2Val: player2.joined_year || "N/A", color: "text-fuchsia-500 dark:text-fuchsia-400", chip: "bg-fuchsia-100 dark:bg-fuchsia-500/15" }
           ].map((stat, idx) => (
             <div key={idx} className="flex items-center justify-between py-2 border-b border-slate-50 dark:border-slate-800/50 last:border-0">
-              <div className="flex-1 text-right text-sm font-bold text-muted-foreground dark:text-slate-300 pr-4">{stat.p1Val}</div>
+              <div className="flex-1 text-right text-sm font-bold text-primary dark:text-primary pr-4">{stat.p1Val}</div>
               <div className="w-24 shrink-0 flex flex-col items-center justify-center">
-                 <stat.icon className="w-4 h-4 text-muted-foreground mb-1" />
-                 <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider text-center">{stat.label}</span>
+                 <span className={`flex items-center justify-center w-8 h-8 rounded-full mb-1 ${stat.chip}`}>
+                   <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                 </span>
+                 <span className={`text-[10px] font-black uppercase tracking-wider text-center ${stat.color}`}>{stat.label}</span>
               </div>
-              <div className="flex-1 text-left text-sm font-bold text-muted-foreground dark:text-slate-300 pl-4">{stat.p2Val}</div>
+              <div className="flex-1 text-left text-sm font-bold text-blue-600 dark:text-blue-400 pl-4">{stat.p2Val}</div>
             </div>
           ))}
         </div>

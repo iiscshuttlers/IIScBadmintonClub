@@ -5,7 +5,11 @@ import { TeamRegistration } from "../TeamRegistration";
 import { Link } from "wouter";
 import { usePlayers } from "@/hooks/usePlayers";
 
-export function TeamsTab() {
+interface TeamsTabProps {
+  searchQuery?: string;
+}
+
+export function TeamsTab({ searchQuery = "" }: TeamsTabProps) {
   const [teams, setTeams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState("doubles");
@@ -35,23 +39,30 @@ export function TeamsTab() {
     fetchTeams();
   }, []);
 
-  const filteredTeams = teams.filter((t) => 
-    category === "doubles" ? (t.category === "MD" || t.category === "WD") : t.category === category
-  );
+  const filteredTeams = teams.filter((t) => {
+    const categoryMatch = category === "doubles" ? (t.category === "MD" || t.category === "WD") : t.category === category;
+    if (!categoryMatch) return false;
+    
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const p1 = players?.find(p => p.id === t.player1_id);
+      const p2 = players?.find(p => p.id === t.player2_id);
+      const teamName = t.team_name?.toLowerCase() || "";
+      const p1Name = p1?.full_name?.toLowerCase() || "";
+      const p2Name = p2?.full_name?.toLowerCase() || "";
+      
+      return teamName.includes(query) || p1Name.includes(query) || p2Name.includes(query);
+    }
+    
+    return true;
+  });
 
   return (
     <div className="font-sans animate-in fade-in zoom-in-95 duration-300">
       <div className="max-w-4xl mx-auto space-y-6">
         
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-foreground dark:text-foreground flex items-center gap-2">
-              <Shield className="w-8 h-8 text-violet-500" /> Official Teams
-            </h1>
-            <p className="text-muted-foreground font-medium mt-1">
-              Registered partnerships and their combined Elo ratings
-            </p>
-          </div>
+          <div className="flex-1" />
 
           <button
             onClick={() => setShowRegistration(!showRegistration)}

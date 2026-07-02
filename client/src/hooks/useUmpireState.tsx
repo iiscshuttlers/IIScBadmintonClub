@@ -326,7 +326,7 @@ export function useUmpireState({
         toast.error("You must be a buddy of at least one player.");
         return;
       }
-      const cat = deduceCategory();
+      const cat = match.customCategory || deduceCategory();
       if (cat === "Hybrid") {
         toast.error("Invalid format: Singles vs Doubles matches are not allowed.");
         return;
@@ -573,6 +573,11 @@ export function useUmpireState({
         const roundLabel = `${match.matchNumber || (match.isFriendly ? "Friendly" : "Tournament")} • ${durationMinutes}m`;
   
         const umpirePlayerId = toRealId(userId);
+        let dbCategory = match.category;
+        if (dbCategory === "XD") dbCategory = "Mixed Doubles";
+        else if (dbCategory === "MD" || dbCategory === "WD") dbCategory = "Doubles";
+        else if (dbCategory === "MS" || dbCategory === "WS") dbCategory = "Singles";
+
         const payload = {
           umpire_id:          umpirePlayerId,
           player1_id:         toRealId(match.t1.p1Id),
@@ -581,7 +586,7 @@ export function useUmpireState({
           team2_partner_id:   toRealId(match.t2.p2Id),
           winner_id:          winnerId,
           match_score:        finalScoreStr,
-          match_category:     match.category,
+          match_category:     dbCategory,
           match_round:        roundLabel,
           is_friendly:        match.isFriendly,
           sets_history:       match.setsHistory,

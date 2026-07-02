@@ -12,6 +12,8 @@ import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import confetti from "canvas-confetti";
 import { useHashTab } from "@/hooks/useHashTab";
 
+import { useAppMode } from "@/contexts/AppModeContext";
+
 export function MyMatchesTab() {
   const { profile, isAdmin } = useAuth();
   const [, setLocation] = useLocation();
@@ -122,7 +124,7 @@ export function MyMatchesTab() {
     }
   };
 
-  const handleAction = async (matchId: string, action: "confirm" | "reject") => {
+  const handleAction = async (matchId: string, action: "confirm" | "reject" | "withdraw") => {
     if (Capacitor.isNativePlatform()) {
       try {
         await Haptics.impact({ style: ImpactStyle.Medium });
@@ -151,13 +153,17 @@ export function MyMatchesTab() {
           } catch (e) {}
         }
       }
-    } else {
+    } else if (action === "reject") {
       const { error } = await supabase.rpc("reject_friendly_match", {
         match_uuid: matchId,
         rejecter_id: profile.id,
       });
       if (error) toast.error("Failed to reject match: " + error.message);
       else toast.success("Match rejected.");
+    } else if (action === "withdraw") {
+      const { error } = await supabase.from("matches").delete().eq("id", matchId);
+      if (error) toast.error("Failed to withdraw match: " + error.message);
+      else toast.success("Match withdrawn.");
     }
   };
 
@@ -171,7 +177,7 @@ export function MyMatchesTab() {
             sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
             setLocation("/join");
           }}
-          className="px-6 py-3 bg-primary hover:bg-primary text-foreground font-bold rounded-xl transition shadow-lg shadow-primary/20"
+          className="px-6 py-3 bg-primary hover:bg-primary text-primary-foreground font-bold rounded-xl transition shadow-lg shadow-primary/20"
         >
           Sign In
         </button>
@@ -179,14 +185,16 @@ export function MyMatchesTab() {
     );
   }
 
+  const { mode } = useAppMode();
+
   return (
     <div className="w-full max-w-3xl mx-auto pb-12">
       {/* Controls */}
-      <div className="sticky top-[56px] z-30 bg-slate-50 dark:bg-slate-950 -mx-4 px-4 py-4 mb-4">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 shadow-sm border border-slate-200 dark:border-slate-800">
+      <div className={`sticky ${mode === "personal" ? "top-0 lg:top-0" : "top-[56px] lg:top-[72px]"} z-30 bg-slate-50 dark:bg-slate-950 -mx-4 px-4 py-2 mb-2`}>
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-3 shadow-sm border border-slate-200 dark:border-slate-800">
         
         {/* Tabs - 3 Rows */}
-        <div className="flex flex-col gap-2 mb-4">
+        <div className="flex flex-col gap-2 mb-3">
           
           {/* Row 1: All */}
           <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-2xl">
@@ -345,16 +353,30 @@ export function MyMatchesTab() {
                         <button onClick={() => handleAction(match.id, "reject")} className="flex-1 sm:flex-none px-4 py-2 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-sm font-bold rounded-xl transition-colors">
                           Reject
                         </button>
-                        <button onClick={() => handleAction(match.id, "confirm")} className="flex-1 sm:flex-none px-6 py-2 bg-primary hover:bg-primary text-foreground text-sm font-bold rounded-xl shadow-lg shadow-primary/20 transition-colors">
+                        <button onClick={() => handleAction(match.id, "confirm")} className="flex-1 sm:flex-none px-6 py-2 bg-primary hover:bg-primary text-primary-foreground text-sm font-bold rounded-xl shadow-lg shadow-primary/20 transition-colors">
                           Accept Match
                         </button>
                       </div>
                     </div>
                   )}
                   {isPending && !needsMyAction && (iAmSubmitter || iAlreadyAccepted) && (
-                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest text-center">
-                      {isDoubles ? `Waiting for players — ${acceptedCount}/${requiredAccepts} accepted` : "Waiting for opponent"}
-                    </p>
+                    <div className="flex flex-col items-center gap-2 mt-1">
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest text-center">
+                        {isDoubles ? `Waiting for players — ${acceptedCount}/${requiredAccepts} accepted` : "Waiting for opponent"}
+                      </p>
+                      {iAmSubmitter && (
+                        <button
+                          onClick={() => {
+                            if (window.confirm("Are you sure you want to withdraw this match request?")) {
+                              handleAction(match.id, "withdraw");
+                            }
+                          }}
+                          className="px-4 py-1.5 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-colors"
+                        >
+                          Withdraw Request
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               </MatchCard>

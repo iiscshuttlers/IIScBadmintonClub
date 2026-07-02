@@ -73,7 +73,7 @@ export function AppUpdatePrompt({ updateInfo, onDismiss }: Props) {
                 <div className="flex gap-3 mt-4">
                   <button
                     onClick={handleUpdate}
-                    className="flex-1 flex items-center justify-center gap-2 bg-primary hover:bg-primary active:scale-95 text-foreground py-3 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 transition-all"
+                    className="flex-1 flex items-center justify-center gap-2 bg-primary hover:bg-primary active:scale-95 text-primary-foreground py-3 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 transition-all"
                   >
                     <Download className="w-4 h-4" />
                     Update Now

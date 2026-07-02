@@ -81,7 +81,7 @@ export default function TournamentDetail() {
 
   useEffect(() => {
     if (tournament && (tournament.status === "active" || tournament.status === "draft")) {
-      setLocation(`/events?t=${tournament.status}#tournament`);
+      setLocation(`/pulse?t=${tournament.status}#tournament`);
     }
   }, [tournament?.id, tournament?.status, setLocation]);
 
@@ -123,10 +123,10 @@ export default function TournamentDetail() {
           <p className="text-muted-foreground dark:text-muted-foreground">
             This tournament page doesn't exist or hasn't been archived yet.
           </p>
-          <Link href="/events">
-            <button className="inline-flex items-center gap-2 bg-primary hover:bg-primary text-foreground font-bold px-6 py-3 rounded-xl transition-all hover:-translate-y-0.5">
+          <Link href="/pulse">
+            <button className="inline-flex items-center gap-2 bg-primary hover:bg-primary text-primary-foreground font-bold px-6 py-3 rounded-xl transition-all hover:-translate-y-0.5">
               <ArrowLeft className="w-4 h-4" />
-              Back to Events
+              Back to Pulse
             </button>
           </Link>
         </div>
@@ -150,7 +150,7 @@ export default function TournamentDetail() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-primary/90 text-foreground py-16 relative overflow-hidden">
+      <section className="bg-gradient-to-tr from-teal-800 via-emerald-700 to-lime-600 text-foreground py-6 relative overflow-hidden">
         <div className="absolute inset-0 hero-pattern" />
         <div className="container mx-auto px-4 text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-400/20 border border-amber-400/30 text-amber-300 text-sm font-bold mb-5">
@@ -158,15 +158,15 @@ export default function TournamentDetail() {
             {typeLabel}
           </div>
           <h1
-            className="text-4xl sm:text-5xl md:text-6xl font-black mb-4"
+            className="text-4xl sm:text-5xl md:text-6xl font-black mb-4 text-white"
             style={{ fontFamily: "Playfair Display, serif" }}
           >
             {tournament.name}
           </h1>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+          <p className="text-xl text-emerald-50 max-w-2xl mx-auto">
             {tournament.subtitle}
           </p>
-          <div className="flex items-center justify-center gap-2 mt-4 text-gray-400 text-sm">
+          <div className="flex items-center justify-center gap-2 mt-4 text-emerald-100 text-sm">
             <Calendar className="w-4 h-4" />
             {tournament.startDate}
           </div>
@@ -182,7 +182,7 @@ export default function TournamentDetail() {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbLink href="/events?t=completed#tournament">Events</BreadcrumbLink>
+              <BreadcrumbLink href="/pulse?t=completed#tournament">Pulse</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
@@ -454,7 +454,7 @@ export default function TournamentDetail() {
                 <div className="space-y-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
                   {tournament.galleryFolder && (
                     <Link
-                      href={`/gallery?filter=${encodeURIComponent(tournament.galleryFolder)}`}
+                      href={`/legacy?filter=${encodeURIComponent(tournament.galleryFolder)}`}
                     >
                       <button className="w-full flex items-center justify-center gap-2 bg-primary/15 hover:bg-primary/20 dark:bg-primary/40 dark:hover:bg-primary/80/60 text-primary dark:text-primary font-bold px-4 py-3 rounded-xl text-sm transition-all hover:-translate-y-0.5">
                         <ImageIcon className="w-4 h-4" />
@@ -462,10 +462,10 @@ export default function TournamentDetail() {
                       </button>
                     </Link>
                   )}
-                  <Link href="/hall-of-fame">
+                  <Link href="/legacy">
                     <button className="w-full flex items-center justify-center gap-2 bg-blue-900 hover:bg-blue-800 dark:bg-blue-800 dark:hover:bg-blue-700 text-foreground font-bold px-4 py-3 rounded-xl text-sm transition-all hover:-translate-y-0.5">
                       <Trophy className="w-4 h-4" />
-                      Club Hall of Fame
+                      Legacy (Champions & Gallery)
                     </button>
                   </Link>
                 </div>

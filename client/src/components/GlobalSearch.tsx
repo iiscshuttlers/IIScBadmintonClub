@@ -135,7 +135,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
           id: m.id,
           title: `${m.player1?.full_name ?? "?"} vs ${m.player2?.full_name ?? "?"}`,
           subtitle: `${m.category ?? "Match"} · ${m.match_score || m.score || ""}`,
-          href: m.player1_id ? `/player/${m.player1_id}` : `/feed`,
+          href: m.player1_id ? `/player/${m.player1_id}` : `/pulse`,
         }));
       }
 
@@ -159,7 +159,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
               id: ann.title,
               title: ann.title,
               subtitle: ann.category,
-              href: "/feed",
+              href: "/pulse",
             });
             if (annList.length >= 3) break;
           }

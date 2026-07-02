@@ -139,7 +139,7 @@ export function PlayerControls({ player, videoId, chapters, scoreLogs }: PlayerC
                       <button
                         key={s}
                         onClick={() => { setPlaybackRate(s); setShowClubControls(false); }}
-                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${speed === s ? 'bg-primary text-foreground' : 'bg-white/10 text-foreground/70 hover:bg-white/20'}`}
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${speed === s ? 'bg-primary text-primary-foreground' : 'bg-white/10 text-primary-foreground/70 hover:bg-white/20'}`}
                       >
                         {s}x
                       </button>

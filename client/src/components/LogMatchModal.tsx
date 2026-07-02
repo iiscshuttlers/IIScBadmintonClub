@@ -152,7 +152,7 @@ function StepBar({ step }: { step: number }) {
     <div className="flex items-center gap-1 px-6 pt-4 pb-2">
       {steps.map((label, i) => (
         <div key={i} className="flex items-center gap-1 flex-1">
-          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 transition-all ${i < step ? "bg-primary text-foreground" : i === step ? "bg-primary text-foreground ring-2 ring-primary/50 dark:ring-primary" : "bg-slate-200 dark:bg-slate-700 text-muted-foreground"}`}>
+          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 transition-all ${i < step ? "bg-primary text-primary-foreground" : i === step ? "bg-primary text-primary-foreground ring-2 ring-primary/50 dark:ring-primary" : "bg-slate-200 dark:bg-slate-700 text-muted-foreground"}`}>
             {i < step ? <Check className="w-3 h-3" /> : i + 1}
           </div>
           <span className={`text-[10px] font-bold whitespace-nowrap ${i === step ? "text-primary dark:text-primary" : "text-muted-foreground"}`}>{label}</span>
@@ -732,7 +732,7 @@ export default function LogMatchModal({
                 )}
                 {step < 2 && (
                   <button type="button" onClick={goNext}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary text-foreground font-bold text-sm transition shadow-md shadow-primary/20">
+                    className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary text-primary-foreground font-bold text-sm transition shadow-md shadow-primary/20">
                     Next <ChevronRight className="w-4 h-4" />
                   </button>
                 )}

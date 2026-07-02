@@ -159,7 +159,7 @@ export function DisputePanel() {
               <button
                 disabled={isProcessing}
                 onClick={() => resolve(m.id, "uphold")}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary hover:bg-primary text-foreground text-sm font-bold transition disabled:opacity-50"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary hover:bg-primary text-primary-foreground text-sm font-bold transition disabled:opacity-50"
               >
                 {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
                 Uphold Result ({currentWinner?.full_name?.split(" ")[0]} wins)

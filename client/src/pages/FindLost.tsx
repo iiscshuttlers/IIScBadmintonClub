@@ -322,10 +322,10 @@ export default function FindLost() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-safe pb-24 lg:pb-8">
       {/* Hero */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-foreground py-12 relative overflow-hidden">
+      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-foreground py-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(99,102,241,0.15),transparent)] pointer-events-none" />
         <div className="container mx-auto px-4 max-w-3xl relative z-10 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-black uppercase tracking-widest mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-black uppercase tracking-widest mb-2">
             <Search className="w-4 h-4 text-indigo-400" /> Find & Lost
             <InfoModal
               title="FIND & LOST"
@@ -374,7 +374,7 @@ export default function FindLost() {
                   <button
                     key={t}
                     onClick={() => setForm((f) => ({ ...f, type: t }))}
-                    className={`flex-1 py-2 rounded-xl text-sm font-black uppercase tracking-wider transition ${form.type === t ? (t === "lost" ? "bg-rose-600 text-foreground" : "bg-primary text-foreground") : "bg-slate-100 dark:bg-slate-800 text-muted-foreground"}`}
+                    className={`flex-1 py-2 rounded-xl text-sm font-black uppercase tracking-wider transition ${form.type === t ? (t === "lost" ? "bg-rose-600 text-primary-foreground" : "bg-primary text-primary-foreground") : "bg-slate-100 dark:bg-slate-800 text-muted-foreground"}`}
                   >
                     {t === "lost" ? "I Lost Something" : "I Found Something"}
                   </button>

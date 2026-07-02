@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { BarChart3, Target, Users, Zap, TrendingUp, Clock } from "lucide-react";
+import { BarChart3, Target, Users, Zap, TrendingUp, Clock, HelpCircle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Match {
   id: string;
@@ -56,13 +57,12 @@ function winProb(myElo: number, oppElo: number): number {
   return Math.round((1 / (1 + Math.pow(10, (oppElo - myElo) / 400))) * 100);
 }
 
-export function PlayerAnalyticsWidget({ matches, playerId, playerElo }: Props) {
+export function PlayerAnalyticsWidget({ matches, playerId, playerElo, allPlayers = [] }: Props) {
   const confirmedMatches = useMemo(
     () => matches.filter((m) => (m as any).status === "confirmed" || !(m as any).status),
     [matches],
   );
 
-  /* ── Category Specialization ─────────────────────────────────── */
   const categoryStats = useMemo(() => {
     const cats: Record<string, { wins: number; total: number }> = {};
     for (const m of confirmedMatches) {
@@ -86,6 +86,109 @@ export function PlayerAnalyticsWidget({ matches, playerId, playerElo }: Props) {
     if (best.winRate > overall + 10 && best.total >= 3) return best;
     return null;
   }, [categoryStats, confirmedMatches, playerId]);
+
+  /* ── Deep Analytics ──────────────────────────────────────────── */
+  const deepStats = useMemo(() => {
+    const opponents = new Map<string, { wins: number, losses: number }>();
+    const partners = new Map<string, { wins: number, total: number }>();
+    let comebacks = 0;
+    let crushSets = 0;
+    let totalSetsPlayed = 0;
+
+    for (const m of confirmedMatches) {
+      const myTeam = m.player1_id === playerId || m.team1_partner_id === playerId ? 1 : 2;
+      const won = isWinner(m, playerId);
+
+      let opps: string[] = [];
+      let partner: string | null = null;
+      if (myTeam === 1) {
+        if (m.player2_id) opps.push(m.player2_id);
+        if (m.team2_partner_id) opps.push(m.team2_partner_id);
+        if (m.team1_partner_id && m.team1_partner_id !== playerId) partner = m.team1_partner_id;
+        else if (m.player1_id !== playerId) partner = m.player1_id;
+      } else {
+        if (m.player1_id) opps.push(m.player1_id);
+        if (m.team1_partner_id) opps.push(m.team1_partner_id);
+        if (m.team2_partner_id && m.team2_partner_id !== playerId) partner = m.team2_partner_id;
+        else if (m.player2_id !== playerId) partner = m.player2_id;
+      }
+
+      for (const opp of opps) {
+        if (!opponents.has(opp)) opponents.set(opp, { wins: 0, losses: 0 });
+        if (won) opponents.get(opp)!.wins++;
+        else opponents.get(opp)!.losses++;
+      }
+
+      if (partner) {
+        if (!partners.has(partner)) partners.set(partner, { wins: 0, total: 0 });
+        partners.get(partner)!.total++;
+        if (won) partners.get(partner)!.wins++;
+      }
+
+      // Sets & Comebacks & Crush Sets
+      const sets = parseScore(m.score);
+      totalSetsPlayed += sets.length;
+      if (sets.length > 0) {
+        const firstSet = sets[0];
+        const [a, b] = firstSet;
+        const lostFirstSet = myTeam === 1 ? a < b : a > b;
+        
+        if (sets.length === 3) {
+          if (won && lostFirstSet) comebacks++;
+        }
+
+        // Crush Sets (Win a set keeping opponent under 10)
+        for (const [sa, sb] of sets) {
+          const myScore = myTeam === 1 ? sa : sb;
+          const oppScore = myTeam === 1 ? sb : sa;
+          if (myScore >= 21 && oppScore < 10) crushSets++;
+        }
+      }
+    }
+
+    let nemesis = null;
+    let bestMatchup = null;
+    let maxLosses = 0;
+    let maxWins = 0;
+
+    for (const [opp, stats] of opponents.entries()) {
+      if (stats.losses > maxLosses || (stats.losses === maxLosses && stats.losses > 0 && stats.wins < (nemesis?.wins || 999))) {
+        maxLosses = stats.losses;
+        nemesis = { id: opp, ...stats };
+      }
+      if (stats.wins > maxWins || (stats.wins === maxWins && stats.wins > 0 && stats.losses < (bestMatchup?.losses || 999))) {
+        maxWins = stats.wins;
+        bestMatchup = { id: opp, ...stats };
+      }
+    }
+
+    let bestPartner = null;
+    let maxPartnerScore = 0;
+    for (const [p, stats] of partners.entries()) {
+      if (stats.total >= 3) {
+        const wr = stats.wins / stats.total;
+        if (wr > maxPartnerScore) {
+          maxPartnerScore = wr;
+          bestPartner = { id: p, winRate: Math.round(wr * 100), total: stats.total };
+        }
+      }
+    }
+
+    const crushRate = totalSetsPlayed > 0 ? Math.round((crushSets / totalSetsPlayed) * 100) : 0;
+
+    const getPlayerName = (id: string) => {
+      const p = allPlayers.find(x => x.id === id);
+      return p ? p.full_name.split(" ")[0] : "Unknown";
+    };
+
+    return {
+      nemesis: nemesis && nemesis.losses >= 2 ? { name: getPlayerName(nemesis.id), ...nemesis } : null,
+      bestMatchup: bestMatchup && bestMatchup.wins >= 2 ? { name: getPlayerName(bestMatchup.id), ...bestMatchup } : null,
+      bestPartner: bestPartner ? { name: getPlayerName(bestPartner.id), ...bestPartner } : null,
+      comebacks,
+      crushRate
+    };
+  }, [confirmedMatches, playerId, allPlayers]);
 
   /* ── Opponent Diversity ──────────────────────────────────────── */
   const diversityStats = useMemo(() => {
@@ -137,15 +240,23 @@ export function PlayerAnalyticsWidget({ matches, playerId, playerElo }: Props) {
   return (
     <div className="space-y-4">
       <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground dark:text-muted-foreground flex items-center gap-2">
-        <BarChart3 className="w-4 h-4 text-indigo-500" /> Advanced Analytics
+        <BarChart3 className="w-4 h-4 text-primary" /> Advanced Analytics
       </h3>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {/* Category Specialization */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 shadow-sm">
+      <div className="grid grid-cols-2 sm:grid-cols-2 gap-3">
+        {/* Specialization */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 shadow-sm col-span-2">
           <div className="flex items-center gap-1.5 mb-3">
             <Target className="w-4 h-4 text-violet-500" />
-            <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Specialization</span>
+            <span className="text-xs font-black uppercase tracking-widest text-muted-foreground flex-1">Specialization</span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/60 cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-[200px] text-center">
+                <p>Identifies the match category where you have the highest win rate compared to your overall performance.</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
           {specialization ? (
             <>
@@ -157,13 +268,13 @@ export function PlayerAnalyticsWidget({ matches, playerId, playerElo }: Props) {
             <>
               <p className="text-base font-black text-slate-800 dark:text-foreground">All-Rounder</p>
               <div className="mt-2 space-y-1.5">
-                {categoryStats.slice(0, 3).map(({ cat, winRate, total }) => (
+                {categoryStats.slice(0, 3).map(({ cat, winRate }) => (
                   <div key={cat} className="flex items-center gap-2">
                     <span className="text-[10px] font-bold text-muted-foreground w-8 shrink-0">{cat}</span>
                     <div className="flex-1 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                       <div className="h-full bg-violet-500 rounded-full" style={{ width: `${winRate}%` }} />
                     </div>
-                    <span className="text-[10px] font-black text-muted-foreground">{winRate}%</span>
+                    <span className="text-[10px] font-black text-muted-foreground">{winRate}% Win Rate</span>
                   </div>
                 ))}
               </div>
@@ -171,8 +282,63 @@ export function PlayerAnalyticsWidget({ matches, playerId, playerElo }: Props) {
           )}
         </div>
 
+        {/* Nemesis */}
+        {deepStats.nemesis && (
+          <div className={`bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 shadow-sm ${!deepStats.bestMatchup ? 'col-span-2' : ''}`}>
+            <div className="flex items-center gap-1.5 mb-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-rose-500"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" x2="19" y1="19" y2="13"/><line x1="16" x2="20" y1="16" y2="20"/><line x1="19" x2="21" y1="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" x2="9" y1="14" y2="18"/><line x1="7" x2="4" y1="17" y2="20"/><line x1="3" x2="5" y1="19" y2="21"/></svg>
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex-1">Nemesis</span>
+            </div>
+            <p className="text-lg font-black text-slate-800 dark:text-foreground truncate">{deepStats.nemesis.name}</p>
+            <p className="text-xs font-bold text-rose-600 dark:text-rose-400 mt-0.5">{deepStats.nemesis.wins}W - {deepStats.nemesis.losses}L</p>
+          </div>
+        )}
+
+        {/* Best Matchup */}
+        {deepStats.bestMatchup && (
+          <div className={`bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 shadow-sm ${!deepStats.nemesis ? 'col-span-2' : ''}`}>
+            <div className="flex items-center gap-1.5 mb-1">
+              <Target className="w-4 h-4 text-emerald-500" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex-1">Easy Target</span>
+            </div>
+            <p className="text-lg font-black text-slate-800 dark:text-foreground truncate">{deepStats.bestMatchup.name}</p>
+            <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{deepStats.bestMatchup.wins}W - {deepStats.bestMatchup.losses}L</p>
+          </div>
+        )}
+
+        {/* Dynamic Duo */}
+        {deepStats.bestPartner && (
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 shadow-sm col-span-2">
+            <div className="flex items-center gap-1.5 mb-1">
+              <Users className="w-4 h-4 text-blue-500" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex-1">Dynamic Duo</span>
+            </div>
+            <p className="text-lg font-black text-slate-800 dark:text-foreground truncate">{deepStats.bestPartner.name}</p>
+            <p className="text-xs font-bold text-blue-600 dark:text-blue-400 mt-0.5">{deepStats.bestPartner.winRate}% Win Rate ({deepStats.bestPartner.total} matches)</p>
+          </div>
+        )}
+
+        {/* Comebacks & Dominance */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 shadow-sm col-span-2 flex justify-around">
+          <div className="text-center">
+            <div className="flex justify-center items-center gap-1.5 mb-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+              <TrendingUp className="w-3.5 h-3.5 text-orange-500" /> Comebacks
+            </div>
+            <p className="text-2xl font-black text-slate-800 dark:text-foreground">{deepStats.comebacks}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Won after losing 1st set</p>
+          </div>
+          <div className="w-px bg-slate-200 dark:bg-slate-800 mx-4" />
+          <div className="text-center">
+            <div className="flex justify-center items-center gap-1.5 mb-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+              <Zap className="w-3.5 h-3.5 text-amber-500" /> Crush Rate
+            </div>
+            <p className="text-2xl font-black text-slate-800 dark:text-foreground">{deepStats.crushRate}%</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Sets won by 12+ pts</p>
+          </div>
+        </div>
+        
         {/* Opponent Diversity */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 shadow-sm">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 shadow-sm col-span-2 sm:col-span-1">
           <div className="flex items-center gap-1.5 mb-3">
             <Users className="w-4 h-4 text-blue-500" />
             <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Diversity</span>
@@ -189,7 +355,7 @@ export function PlayerAnalyticsWidget({ matches, playerId, playerElo }: Props) {
         </div>
 
         {/* Match Pace */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 shadow-sm">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 shadow-sm col-span-2 sm:col-span-1">
           <div className="flex items-center gap-1.5 mb-3">
             <Clock className="w-4 h-4 text-amber-500" />
             <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Match Pace</span>
@@ -213,6 +379,7 @@ export function PlayerAnalyticsWidget({ matches, playerId, playerElo }: Props) {
             </div>
           </div>
         </div>
+
       </div>
     </div>
   );

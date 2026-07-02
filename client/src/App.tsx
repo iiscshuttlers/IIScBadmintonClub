@@ -25,6 +25,7 @@ import { useInactivityLogout } from "./hooks/useInactivityLogout";
 import { useNativeBackButton } from "./hooks/useNativeBackButton";
 import { usePullToRefresh } from "./hooks/usePullToRefresh";
 import { useOfflineSync } from "./hooks/useOfflineSync";
+import { useOverflowGuard } from "./hooks/useOverflowGuard";
 import { useBroadcastNotification } from "./hooks/useBroadcastNotification";
 import { usePingsNotification } from "./hooks/usePingsNotification";
 import { initSounds, playOnUnlock, playSmashSound } from "./lib/sounds";
@@ -39,6 +40,7 @@ import { PageErrorFallback } from "./components/layout/PageErrorFallback";
 import { BackToTop } from "./components/layout/BackToTop";
 import { ScrollProgress } from "./components/layout/ScrollProgress";
 import { ScrollToTop } from "./components/layout/ScrollToTop";
+import { RoutePersistence } from "./components/layout/RoutePersistence";
 import { AppModeProvider, useAppMode } from "./contexts/AppModeContext";
 
 // NotFound is eagerly loaded (tiny, always needed as fallback)
@@ -46,33 +48,31 @@ import NotFound from "./pages/NotFound";
 
 // All pages lazy-loaded for optimal bundle splitting
 const Home = lazy(() => import("./pages/Home"));
-const Feed = lazy(() => import("./pages/Feed"));
-const Events = lazy(() => import("./pages/Events"));
-const About = lazy(() => import("./pages/About"));
-const Gallery = lazy(() => import("./pages/Gallery"));
+const Hub = lazy(() => import("./pages/Hub"));
+const Legacy = lazy(() => import("./pages/Legacy"));
 const TournamentDetail = lazy(() => import("./pages/TournamentDetail"));
+const Pulse = lazy(() => import("./pages/Pulse"));
 
 
-// TournamentAdmin merged into SiteAdmin — /tournament/admin redirects to /admin
+// TournamentAdmin is the dedicated fullscreen Tournament Manager
 const SiteAdmin = lazy(() => import("./pages/SiteAdmin"));
 const PlayerProfile = lazy(() => import("./pages/PlayerProfile"));
 const Join = lazy(() => import("./pages/Join"));
 const ProfileSetup = lazy(() => import("./pages/ProfileSetup"));
 const PlayersDirectory = lazy(() => import("./pages/PlayersDirectory"));
 const ComparePlayers = lazy(() => import("./pages/ComparePlayers"));
-const HallOfFame = lazy(() => import("./pages/HallOfFame"));
 const ChangePassword = lazy(() => import("./pages/ChangePassword"));
 
 const DeleteAccount = lazy(() => import("./pages/DeleteAccount"));
 const DoublesPairProfile = lazy(() => import("./pages/DoublesPairProfile"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
-const Marketplace = lazy(() => import("./pages/Marketplace"));
+
 const TournamentAdmin = lazy(() => import("./pages/TournamentAdmin"));
 
 // Personal Mode Pages (Brainy-style navigation)
 const PersonalHomePage = lazy(() => import("./pages/personal/PersonalHomePage"));
-const PersonalTrainPage = lazy(() => import("./pages/personal/PersonalTrainPage"));
+const PersonalMatchesPage = lazy(() => import("./pages/personal/PersonalMatchesPage"));
 const PersonalGrowthPage = lazy(() => import("./pages/personal/PersonalGrowthPage"));
 const PersonalStatsPage = lazy(() => import("./pages/personal/PersonalStatsPage"));
 const PersonalCirclePage = lazy(() => import("./pages/personal/PersonalCirclePage"));
@@ -99,21 +99,13 @@ function AppRoutes() {
       <Suspense fallback={<PageSkeleton />}>
         <Switch>
           <Route path="/" component={Home} />
-          <Route path="/feed">
-            <ErrorBoundary fallback={<PageErrorFallback />}>
-              <Feed />
-            </ErrorBoundary>
-          </Route>
-          <Route path="/feed/:tab">
-            <ErrorBoundary fallback={<PageErrorFallback />}>
-              <Feed />
-            </ErrorBoundary>
-          </Route>
-          <Route path="/about" component={About} />
-          <Route path="/hall-of-fame" component={HallOfFame} />
-          <Route path="/gallery" component={Gallery} />
+          <Route path="/pulse" component={Pulse} />
+
+          <Route path="/hub" component={Hub} />
+          <Route path="/legacy" component={Legacy} />
+          <Route path="/hall-of-fame" component={() => { window.location.href='/legacy#champions'; return null; }} />
+          <Route path="/gallery" component={() => { window.location.href='/legacy#albums'; return null; }} />
           <Route path="/events/:slug" component={TournamentDetail} />
-          <Route path="/events" component={Events} />
           <Route path="/join" component={Join} />
           <Route path="/player/:id">
             <ErrorBoundary fallback={<PageErrorFallback />}>
@@ -130,8 +122,9 @@ function AppRoutes() {
               <DoublesPairProfile />
             </ErrorBoundary>
           </Route>
-          <Route path="/exchange" component={Marketplace} />
-          <Route path="/marketplace" component={Marketplace} /> {/* Keep legacy for a bit just in case */}
+          {/* Keep legacy exchange/marketplace for redirects if needed */}
+          <Route path="/marketplace" component={() => { window.location.href='/hub#exchange'; return null; }} />
+          <Route path="/exchange" component={() => { window.location.href='/hub#exchange'; return null; }} />
           <Route path="/privacy" component={PrivacyPolicy} />
           <Route path="/terms" component={TermsOfService} />
 
@@ -141,16 +134,23 @@ function AppRoutes() {
           <Route path="/players" component={PlayersDirectory} />
           <Route path="/player/:id/edit"><ProtectedRoute><ProfileSetup /></ProtectedRoute></Route>
           <Route path="/profile/password"><ProtectedRoute><ChangePassword /></ProtectedRoute></Route>
-          <Route path="/find-lost"><ProtectedRoute><Marketplace /></ProtectedRoute></Route>
+          <Route path="/find-lost" component={() => { window.location.href='/hub#lost-found'; return null; }} />
           <Route path="/delete-account"><ProtectedRoute><DeleteAccount /></ProtectedRoute></Route>
 
           {/* Personal Mode Routes (Brainy-style navigation) */}
           <Route path="/personal"><PersonalModeRoute><PersonalHomePage /></PersonalModeRoute></Route>
-          <Route path="/personal/train"><PersonalModeRoute><PersonalTrainPage /></PersonalModeRoute></Route>
+          <Route path="/personal/matches"><PersonalModeRoute><PersonalMatchesPage /></PersonalModeRoute></Route>
           <Route path="/personal/growth"><PersonalModeRoute><PersonalGrowthPage /></PersonalModeRoute></Route>
           <Route path="/personal/stats"><PersonalModeRoute><PersonalStatsPage /></PersonalModeRoute></Route>
           <Route path="/personal/circle"><PersonalModeRoute><PersonalCirclePage /></PersonalModeRoute></Route>
           <Route path="/personal/me"><PersonalModeRoute><PersonalProfilePage /></PersonalModeRoute></Route>
+          <Route path="/personal/player/:id">
+            <PersonalModeRoute>
+              <ErrorBoundary fallback={<PageErrorFallback />}>
+                <PlayerProfile />
+              </ErrorBoundary>
+            </PersonalModeRoute>
+          </Route>
 
           <Route path="/404" component={NotFound} />
           <Route component={NotFound} />
@@ -209,6 +209,7 @@ function AppContent() {
   useNativeBackButton();
   usePullToRefresh();
   useOfflineSync();
+  useOverflowGuard();
 
   // Handle deep links from QR codes and NFC scans
   useEffect(() => {
@@ -276,12 +277,13 @@ function AppContent() {
               }
             >
               <ScrollToTop />
+              <RoutePersistence />
               <ScrollProgress />
-              <div className={`flex flex-col min-h-screen ${session && mode === "personal" ? "lg:ml-64" : ""}`}>
+              <div data-overflow-root className={`flex flex-col min-h-screen overflow-x-clip ${session && mode === "personal" ? "lg:ml-64" : ""}`}>
                 {/* Skip-to-content for keyboard / screen-reader users */}
                 <a
                   href="#main-content"
-                  className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-foreground focus:rounded-xl focus:font-bold focus:shadow-lg"
+                  className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-xl focus:font-bold focus:shadow-lg"
                 >
                   Skip to content
                 </a>
@@ -289,7 +291,7 @@ function AppContent() {
                 <PwaInstallPrompt />
                 <Navigation />
                 <StatusBanner />
-                <main id="main-content" className={`flex-1 flex flex-col ${mode === "club" ? "pb-20 lg:pb-0" : ""}`}>
+                <main id="main-content" className={`flex-1 flex flex-col ${session ? "pb-24 lg:pb-0" : mode === "club" ? "pb-20 lg:pb-0" : ""} ${mode === "personal" ? "pt-[calc(3rem+env(safe-area-inset-top))] lg:pt-0" : ""}`}>
                   <AppRoutes />
                 </main>
                 <Footer />

@@ -2,7 +2,7 @@ import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import {
   Home,
-  Dumbbell,
+  Activity,
   TrendingUp,
   BarChart3,
   Users,
@@ -11,16 +11,20 @@ import {
   LogOut,
   User,
   RotateCcw,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAppMode } from "@/contexts/AppModeContext";
+import { useNavigationAuth } from "@/hooks/useNavigationAuth";
 import { Avatar } from "@/components/ui/Avatar";
+import { NotificationsMenu } from "@/components/NotificationsMenu";
+import { Search } from "lucide-react";
 
 const PERSONAL_NAV_ITEMS = [
   { path: "/personal", label: "Home", icon: Home },
-  { path: "/personal/train", label: "Train", icon: Dumbbell },
+  { path: "/personal/matches", label: "Matches", icon: Activity },
   { path: "/personal/growth", label: "Growth", icon: TrendingUp },
   { path: "/personal/stats", label: "Stats", icon: BarChart3 },
   { path: "/personal/circle", label: "Circle", icon: Users },
@@ -31,9 +35,12 @@ export function PersonalNavigation() {
   const { profile, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { setMode } = useAppMode();
+  const { isAdmin } = useNavigationAuth();
 
-  const isActive = (path: string) =>
-    path === "/" ? location === "/" : location.startsWith(path);
+  const isActive = (path: string) => {
+    if (path === "/" || path === "/personal") return location === path;
+    return location.startsWith(path);
+  };
 
   const handleBackToClub = () => {
     setMode("club");
@@ -44,19 +51,50 @@ export function PersonalNavigation() {
     <>
       {/* ===== Desktop Sidebar ===== */}
       <aside className="hidden lg:flex flex-col fixed left-0 top-0 h-screen w-64 border-r border-border bg-card z-50 py-6 px-4">
-        {/* Logo / Brand */}
-        <button
-          onClick={() => setLocation("/")}
-          className="flex items-center gap-3 px-2 mb-9 group"
-        >
-          <div className="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30 group-hover:scale-105 transition-transform">
-            <span className="text-lg font-bold text-foreground">🏸</span>
+        {/* Logo / Brand & Actions */}
+        <div className="flex flex-col gap-5 px-2 mb-8">
+          <button
+            onClick={() => {
+              setMode("club");
+              setLocation("/");
+            }}
+            className="flex items-center gap-3 group w-full"
+          >
+            <img
+              src={`${import.meta.env.BASE_URL}iisc-logo.png`}
+              alt="IISc Logo"
+              className="h-9 w-auto object-contain flex-shrink-0 group-hover:scale-105 transition-transform"
+            />
+            <span className="font-bold text-[14px] tracking-tight text-foreground dark:text-foreground hidden xl:block whitespace-nowrap text-left">
+              IISc Badminton Club
+            </span>
+          </button>
+          
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('open-global-search'))}
+              className="flex-1 flex items-center justify-start gap-2.5 px-3 py-2 rounded-xl text-muted-foreground dark:text-slate-400 bg-slate-100/50 dark:bg-slate-800/50 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors border border-transparent dark:border-slate-800"
+              aria-label="Search"
+            >
+              <Search className="w-4 h-4" />
+              <span className="text-xs font-semibold">Search...</span>
+            </button>
+            {isAdmin && (
+              <button
+                onClick={() => setLocation("/admin")}
+                className="flex items-center justify-center flex-shrink-0 p-2 rounded-xl text-violet-600 dark:text-violet-400 bg-slate-100/50 dark:bg-slate-800/50 hover:bg-violet-50 dark:hover:bg-violet-900/30 transition-colors border border-transparent dark:border-slate-800"
+                title="Site Admin"
+              >
+                <Shield className="w-4 h-4" />
+              </button>
+            )}
+            {profile?.id && (
+              <div className="flex items-center justify-center flex-shrink-0 bg-slate-100/50 dark:bg-slate-800/50 p-0.5 rounded-xl border border-transparent dark:border-slate-800">
+                <NotificationsMenu currentUser={{ id: profile.id }} />
+              </div>
+            )}
           </div>
-          <span className="font-bold text-xl text-foreground dark:text-foreground">
-            Shuttlers
-          </span>
-        </button>
-
+        </div>
         {/* Nav links */}
         <nav className="flex flex-col gap-1 flex-1">
           {PERSONAL_NAV_ITEMS.map(({ path, label, icon: Icon }) => {
@@ -113,20 +151,11 @@ export function PersonalNavigation() {
               isActive("/personal/me") ? "bg-primary/10 dark:bg-primary/30" : "hover:bg-slate-100 dark:hover:bg-slate-800/60"
             )}
           >
-            <Avatar src={profile?.avatar_url} name={profile?.name} size="sm" />
+            <Avatar src={profile?.avatar_url} name={profile?.full_name} size="sm" />
             <div className="flex-1 min-w-0 text-left">
-              <p className="text-sm font-semibold text-foreground dark:text-foreground truncate">{profile?.name ?? "Profile"}</p>
-              <p className="text-xs text-muted-foreground dark:text-muted-foreground truncate">@{profile?.username ?? "user"}</p>
+              <p className="text-sm font-semibold text-foreground dark:text-foreground truncate">{profile?.full_name ?? "Profile"}</p>
+              <p className="text-xs text-muted-foreground dark:text-muted-foreground truncate">{profile?.email ?? ""}</p>
             </div>
-          </button>
-
-          {/* Back to Club Button */}
-          <button
-            onClick={handleBackToClub}
-            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all w-full"
-          >
-            <RotateCcw className="w-5 h-5" />
-            Back to Club
           </button>
 
           {/* Sign Out */}
@@ -140,10 +169,39 @@ export function PersonalNavigation() {
         </div>
       </aside>
 
+      {/* ===== Mobile Top Header ===== */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 pt-[env(safe-area-inset-top)] bg-background/95 backdrop-blur-md border-b border-border">
+        <div className="h-12 flex items-center justify-between px-3">
+        <button
+          onClick={handleBackToClub}
+          className="flex items-center gap-2 px-1 py-1 rounded-lg hover:bg-muted/50 transition-colors"
+        >
+          <img src={`${import.meta.env.BASE_URL}iisc-logo.png`} alt="Club" className="w-6 h-6 object-contain opacity-90" />
+        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('open-global-search'))}
+            className="w-8 h-8 flex items-center justify-center rounded-full text-muted-foreground hover:bg-muted transition-colors"
+            aria-label="Search"
+          >
+            <Search className="w-4 h-4" />
+          </button>
+          {profile?.id && (
+            <div className="[&_button]:!w-8 [&_button]:!h-8 [&_button]:!flex [&_button]:!items-center [&_button]:!justify-center [&_button]:!rounded-full [&_svg]:!w-4 [&_svg]:!h-4">
+              <NotificationsMenu currentUser={{ id: profile.id }} />
+            </div>
+          )}
+        </div>
+        </div>
+      </div>
+
       {/* ===== Mobile Floating Tab Bar ===== */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bottom-nav pointer-events-none">
-        <nav className="pointer-events-auto mx-3 mb-3 rounded-[1.4rem] border border-border bg-card/85 backdrop-blur-2xl shadow-[0_10px_40px_-8px_rgba(0,0,0,0.55)] dark:shadow-[0_10px_40px_-8px_rgba(0,0,0,0.8)]">
-          <div className="flex items-center justify-around h-[4.25rem] px-1.5">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bottom-nav pointer-events-none pb-[max(env(safe-area-inset-bottom),0.75rem)]">
+        {/* Solid background covering the safe area at the very bottom */}
+        <div className="absolute bottom-0 left-0 right-0 h-[max(env(safe-area-inset-bottom),0.75rem)] bg-background pointer-events-auto" />
+        
+        <nav className="pointer-events-auto mx-3 mb-0 rounded-[1.4rem] border border-border bg-card/85 backdrop-blur-2xl shadow-[0_10px_40px_-8px_rgba(0,0,0,0.55)] dark:shadow-[0_10px_40px_-8px_rgba(0,0,0,0.8)] relative z-10">
+          <div className="flex items-center justify-around h-[4.25rem] px-1">
             {PERSONAL_NAV_ITEMS.map(({ path, label, icon: Icon }) => {
               const active = isActive(path);
               return (
@@ -179,7 +237,7 @@ export function PersonalNavigation() {
                   {active && (
                     <motion.span
                       layoutId="tab-active-dot"
-                      className="absolute -bottom-0.5 w-1 h-1 rounded-full bg-primary dark:bg-primary"
+                      className="absolute bottom-1.5 w-1 h-1 rounded-full bg-primary dark:bg-primary"
                       transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
                     />
                   )}
@@ -215,7 +273,7 @@ export function PersonalNavigation() {
               {isActive("/personal/me") && (
                 <motion.span
                   layoutId="tab-active-dot"
-                  className="absolute -bottom-0.5 w-1 h-1 rounded-full bg-primary dark:bg-primary"
+                  className="absolute bottom-1.5 w-1 h-1 rounded-full bg-primary dark:bg-primary"
                   transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
                 />
               )}

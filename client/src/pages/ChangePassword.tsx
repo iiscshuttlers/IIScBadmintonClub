@@ -135,7 +135,7 @@ export default function ChangePassword() {
               <Button
                 type="submit"
                 disabled={loading || !newPassword || !confirmPassword || newPassword !== confirmPassword}
-                className="w-full bg-primary hover:bg-primary text-foreground font-bold py-3 rounded-xl transition-all h-auto"
+                className="w-full bg-primary hover:bg-primary text-primary-foreground font-bold py-3 rounded-xl transition-all h-auto"
               >
                 {loading ? "Updating..." : "Update Password"}
               </Button>

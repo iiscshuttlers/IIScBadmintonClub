@@ -237,7 +237,7 @@ export function GlossarySection() {
 
   return (
     <div className="w-full bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
-      <div className="container mx-auto px-4 py-8 max-w-5xl pb-24 md:pb-8">
+      <div className="container mx-auto px-4 py-4 max-w-5xl pb-24 md:pb-8">
 
       <div className="columns-1 lg:columns-2 gap-6">
         {features.map((section, idx) => (
@@ -246,9 +246,9 @@ export function GlossarySection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
             key={section.category}
-            className={`p-6 md:p-6 rounded-3xl border shadow-sm break-inside-avoid mb-6 inline-block w-full ${section.color}`}
+            className={`p-4 md:p-4 rounded-3xl border shadow-sm break-inside-avoid mb-4 inline-block w-full ${section.color}`}
           >
-            <div className="flex items-center gap-4 mb-8">
+            <div className="flex items-center gap-4 mb-4">
               <div className="p-3 bg-white dark:bg-slate-900 rounded-2xl shadow-sm">
                 {section.icon}
               </div>
@@ -257,7 +257,7 @@ export function GlossarySection() {
               </h2>
             </div>
             
-            <div className="space-y-6">
+            <div className="space-y-4">
               {section.items.map((item, i) => (
                 <div key={i} className="flex gap-4">
                   <div className="mt-1 flex-shrink-0">

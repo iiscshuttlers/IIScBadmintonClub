@@ -24,7 +24,7 @@ export function WelcomeView({ auth }: { auth: JoinAuthContext }) {
         <p className="text-base font-bold text-muted-foreground dark:text-slate-200">Your campus shuttlers hub</p>
         <p className="text-xs text-muted-foreground dark:text-muted-foreground">Track matches · Climb the ladder · Connect with players</p>
       </div>
-      <button onClick={() => { auth.reset(); auth.setMode("signin"); }} className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-primary hover:bg-primary text-foreground font-bold text-sm shadow-lg shadow-primary/25 transition">
+      <button onClick={() => { auth.reset(); auth.setMode("signin"); }} className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-primary hover:bg-primary text-primary-foreground font-bold text-sm shadow-lg shadow-primary/25 transition">
         <LogIn className="w-4 h-4" /> Sign In
       </button>
       <button onClick={() => { auth.reset(); auth.setMode("signup"); }} className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-200 font-bold text-sm hover:border-primary hover:text-primary dark:hover:text-primary transition">
@@ -59,7 +59,7 @@ export function SignInView({ auth }: { auth: JoinAuthContext }) {
           </button>
         </div>
       </div>
-      <Button type="submit" disabled={auth.loading} className="w-full py-6 bg-primary hover:bg-primary text-foreground font-bold rounded-xl shadow-lg shadow-primary/20 transition-all text-base flex items-center justify-center gap-2">
+      <Button type="submit" disabled={auth.loading} className="w-full py-6 bg-primary hover:bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 transition-all text-base flex items-center justify-center gap-2">
         {auth.loading ? <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : <><LogIn className="w-5 h-5" /> Sign In</>}
       </Button>
       {auth.errorMsg === "Email not confirmed" && (
@@ -135,7 +135,7 @@ export function SignUpView({ auth }: { auth: JoinAuthContext }) {
           I agree to the <Link href="/privacy"><span className="text-primary dark:text-primary font-bold hover:underline">Privacy Policy</span></Link> and <Link href="/terms"><span className="text-primary dark:text-primary font-bold hover:underline">Terms of Service</span></Link>.
         </span>
       </label>
-      <Button type="submit" disabled={auth.loading || !auth.agreedToTerms} className="w-full py-6 bg-primary hover:bg-primary text-foreground font-bold rounded-xl shadow-lg shadow-primary/20 transition-all text-base flex items-center justify-center gap-2 disabled:opacity-50">
+      <Button type="submit" disabled={auth.loading || !auth.agreedToTerms} className="w-full py-6 bg-primary hover:bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 transition-all text-base flex items-center justify-center gap-2 disabled:opacity-50">
         {auth.loading ? <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : <><UserPlus className="w-5 h-5" /> Create Account</>}
       </Button>
       <div className="text-center">
@@ -159,7 +159,7 @@ export function OtpEmailView({ auth }: { auth: JoinAuthContext }) {
           <input required type="email" value={auth.email} onChange={e => auth.setEmail(e.target.value)} placeholder="your@email.com" className={`${inputClass} pl-10`} />
         </div>
       </div>
-      <Button type="submit" disabled={auth.loading} className="w-full py-6 bg-primary hover:bg-primary text-foreground font-bold rounded-xl shadow-lg shadow-primary/20 transition-all text-base flex items-center justify-center gap-2">
+      <Button type="submit" disabled={auth.loading} className="w-full py-6 bg-primary hover:bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 transition-all text-base flex items-center justify-center gap-2">
         {auth.loading ? <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : <>Send Login Code <ArrowRight className="w-5 h-5" /></>}
       </Button>
       <div className="text-center">
@@ -180,7 +180,7 @@ export function OtpVerifyView({ auth }: { auth: JoinAuthContext }) {
         <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <input required type="text" maxLength={8} value={auth.otp} onChange={e => auth.setOtp(e.target.value)} placeholder="Enter code" autoComplete="one-time-code" className={`${inputClass} pl-10 text-center tracking-[0.4em] text-xl font-bold`} />
       </div>
-      <Button type="submit" disabled={auth.loading} className="w-full py-6 bg-primary hover:bg-primary text-foreground font-bold rounded-xl shadow-lg shadow-primary/20 transition-all text-base flex items-center justify-center gap-2">
+      <Button type="submit" disabled={auth.loading} className="w-full py-6 bg-primary hover:bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 transition-all text-base flex items-center justify-center gap-2">
         {auth.loading ? <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : "Verify & Log In"}
       </Button>
       <div className="text-center">

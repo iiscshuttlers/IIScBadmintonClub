@@ -359,7 +359,7 @@ export function UmpireSetupFlow({
               startMatch();
             }
           }}
-          className="w-full py-4 bg-primary hover:bg-primary active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed text-foreground rounded-2xl font-black uppercase tracking-widest shadow-[0_4px_24px_rgba(16,185,129,0.35)] transition-all"
+          className="w-full py-4 bg-primary hover:bg-primary active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed text-primary-foreground rounded-2xl font-black uppercase tracking-widest shadow-[0_4px_24px_rgba(16,185,129,0.35)] transition-all"
         >
           {isEditSetupOpen ? "Save Changes" : (match.pointLog.length > 0 ? "▶ Resume Broadcasting" : "▶ Start Broadcasting")}
         </button>

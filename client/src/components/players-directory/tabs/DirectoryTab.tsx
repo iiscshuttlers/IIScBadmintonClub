@@ -1,8 +1,10 @@
 import { motion, type Variants } from "framer-motion";
-import { Users, Sword } from "lucide-react";
+import { Users, Sword, Shield } from "lucide-react";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { PlayerCard, type Player } from "@/components/players-directory/PlayerCard";
 import { DirectoryFilters } from "@/components/players-directory/DirectoryFilters";
+import { TeamsTab } from "@/components/players-directory/tabs/TeamsTab";
+import { useState } from "react";
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -49,6 +51,7 @@ interface DirectoryTabProps {
   handleBuddyAction: (playerId: string, action: 'send'|'cancel'|'accept'|'remove') => void;
   followingIds: Set<string>;
   handleToggleFollow: (id: string) => void;
+  isPersonalView?: boolean;
 }
 
 export function DirectoryTab({
@@ -83,7 +86,9 @@ export function DirectoryTab({
   handleBuddyAction,
   followingIds,
   handleToggleFollow,
+  isPersonalView = false,
 }: DirectoryTabProps) {
+  const [viewMode, setViewMode] = useState<"individuals" | "teams">("individuals");
 
   const recommended = (() => {
     if (loading || !ownProfile) return [];
@@ -115,8 +120,36 @@ export function DirectoryTab({
         otherPlayersCount={otherPlayersCount}
       />
 
-      {/* Recommended Opponents (Matchmaking) */}
-      {!loading && ownProfile && recommended.length > 0 && !searchQuery && levelFilter === "All" && departmentFilter === "All" && (
+      {/* Directory Sub-Navigation (Individuals / Teams) */}
+      <div className="flex justify-center mb-8">
+        <div className="bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl flex gap-1 border border-slate-200 dark:border-slate-800 w-full sm:w-auto max-w-sm">
+          <button
+            onClick={() => setViewMode("individuals")}
+            className={`flex-1 flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${
+              viewMode === "individuals"
+                ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Users className="w-4 h-4" /> Individuals
+          </button>
+          <button
+            onClick={() => setViewMode("teams")}
+            className={`flex-1 flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${
+              viewMode === "teams"
+                ? "bg-violet-600 text-white shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Shield className="w-4 h-4" /> Teams
+          </button>
+        </div>
+      </div>
+
+      {viewMode === "individuals" ? (
+        <>
+          {/* Recommended Opponents (Matchmaking) */}
+          {!loading && ownProfile && recommended.length > 0 && !searchQuery && levelFilter === "All" && departmentFilter === "All" && (
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-4">
             <div className="p-2 bg-primary/15 dark:bg-primary/50 rounded-lg">
@@ -133,7 +166,10 @@ export function DirectoryTab({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {recommended.map((player) => (
-              <div key={"rec-" + player.id} className="cursor-pointer h-full" onClick={() => setLocation(`/player/${player.id}`)}>
+              <div key={"rec-" + player.id} className="cursor-pointer h-full" onClick={() => {
+                if (window.location.pathname.startsWith("/personal")) setLocation(`/personal/player/${player.id}`);
+                else setLocation(`/player/${player.id}`);
+              }}>
                 <PlayerCard
                   player={player}
                   isOwn={false}
@@ -152,6 +188,7 @@ export function DirectoryTab({
                   onToggleFollow={handleToggleFollow}
                   currentUserName={ownProfile?.full_name}
                   currentUserId={ownProfile?.id}
+                  isPersonalView={isPersonalView}
                 />
               </div>
             ))}
@@ -195,7 +232,7 @@ export function DirectoryTab({
           </p>
           <button
             onClick={() => fetchPlayers()}
-            className="mt-2 px-4 py-2 bg-primary hover:bg-primary text-foreground text-sm font-bold rounded-xl transition"
+            className="mt-2 px-4 py-2 bg-primary hover:bg-primary text-primary-foreground text-sm font-bold rounded-xl transition"
           >
             Retry
           </button>
@@ -221,7 +258,10 @@ export function DirectoryTab({
                 key={player.id}
                 variants={itemVariants}
                 className="group h-full cursor-pointer"
-                onClick={() => setLocation(`/player/${player.id}`)}
+                onClick={() => {
+                  if (window.location.pathname.startsWith("/personal")) setLocation(`/personal/player/${player.id}`);
+                  else setLocation(`/player/${player.id}`);
+                }}
               >
                 <PlayerCard
                   player={player}
@@ -244,6 +284,7 @@ export function DirectoryTab({
                   onToggleFollow={ownProfile ? handleToggleFollow : undefined}
                   currentUserName={ownProfile?.full_name}
                   currentUserId={ownProfile?.id}
+                  isPersonalView={isPersonalView}
                 />
               </motion.div>
             ))}
@@ -285,6 +326,12 @@ export function DirectoryTab({
               Clear Filters
             </button>
           )}
+        </div>
+      )}
+      </>
+      ) : (
+        <div className="mt-4">
+          <TeamsTab searchQuery={searchQuery} />
         </div>
       )}
     </>

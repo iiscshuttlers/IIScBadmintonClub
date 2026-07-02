@@ -4,6 +4,10 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-stat: "Barlow Condensed", "Outfit", "Inter", sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -32,6 +36,7 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -43,18 +48,21 @@
 }
 
 :root {
-  /* VOLT Athletic Design System (Brainy Theme) - Default (Lime/Volt) */
-  --primary: #84cc16;
-  --primary-foreground: #0a0a0b;
-  --sidebar-primary: #84cc16;
-  --sidebar-primary-foreground: #0a0a0b;
+  /* VOLT Athletic Design System (Brainy Theme) - Default (Lime/Volt)
+     Light mode uses a deep, AA-readable lime so `text-primary`, links and
+     icons stay legible on the light background; vivid neon lime is reserved
+     for dark mode ("hero" theme) and decorative gradients/glows below. */
+  --primary: #4d7c0f;
+  --primary-foreground: #ffffff;
+  --sidebar-primary: #4d7c0f;
+  --sidebar-primary-foreground: #ffffff;
 
-  /* Accent: Electric Cyan - data and secondary action */
-  --accent: #0891b2;
+  /* Accent: Deep Cyan - data and secondary action (AA-readable as text) */
+  --accent: #0e7490;
   --accent-foreground: #ffffff;
 
-  /* Secondary Accent: Ember Orange - streaks and warmth */
-  --secondary: #ea580c;
+  /* Secondary Accent: Ember Orange - streaks and warmth (AA-readable) */
+  --secondary: #c2410c;
   --secondary-foreground: #ffffff;
 
   --chart-1: #84cc16;
@@ -62,6 +70,7 @@
   --chart-3: #ea580c;
   --chart-4: #7c3aed;
   --chart-5: #db2777;
+  --chart-6: #d97706; /* amber-600 */
 
   --radius: 0.875rem;
   --background: #f7f8f4;
@@ -76,13 +85,13 @@
   --destructive-foreground: #ffffff;
   --border: #e2e4dc;
   --input: #eef0e9;
-  --ring: #84cc16;
+  --ring: #4d7c0f;
   --sidebar: #ffffff;
   --sidebar-foreground: #0c0d10;
-  --sidebar-accent: #84cc16;
-  --sidebar-accent-foreground: #0a0a0b;
+  --sidebar-accent: #4d7c0f;
+  --sidebar-accent-foreground: #ffffff;
   --sidebar-border: #e2e4dc;
-  --sidebar-ring: #84cc16;
+  --sidebar-ring: #4d7c0f;
 
   --grad-from: #4d7c0f;
   --grad-to: #059669;
@@ -118,6 +127,7 @@
   --chart-3: #ff7a45;
   --chart-4: #a78bfa;
   --chart-5: #f472b6;
+  --chart-6: #fbbf24; /* amber-400 */
   --sidebar: #131417;
   --sidebar-foreground: #f4f5f0;
   --sidebar-accent: #ccff00;
@@ -153,13 +163,13 @@
 }
 
 :root[data-accent="rose"] {
-  --primary: #e11d48;
+  --primary: #be123c;
   --primary-foreground: #ffffff;
-  --sidebar-primary: #e11d48;
-  --sidebar-accent: #e11d48;
-  --ring: #e11d48;
-  --sidebar-ring: #e11d48;
-  --chart-1: #e11d48;
+  --sidebar-primary: #be123c;
+  --sidebar-accent: #be123c;
+  --ring: #be123c;
+  --sidebar-ring: #be123c;
+  --chart-1: #be123c;
 }
 
 .dark[data-accent="rose"] {
@@ -173,13 +183,13 @@
 }
 
 :root[data-accent="amber"] {
-  --primary: #d97706;
+  --primary: #b45309;
   --primary-foreground: #ffffff;
-  --sidebar-primary: #d97706;
-  --sidebar-accent: #d97706;
-  --ring: #d97706;
-  --sidebar-ring: #d97706;
-  --chart-1: #d97706;
+  --sidebar-primary: #b45309;
+  --sidebar-accent: #b45309;
+  --ring: #b45309;
+  --sidebar-ring: #b45309;
+  --chart-1: #b45309;
 }
 
 .dark[data-accent="amber"] {
@@ -213,13 +223,13 @@
 }
 
 :root[data-accent="cyberpunk"] {
-  --primary: #00ffcc;
-  --primary-foreground: #000000;
-  --sidebar-primary: #00ffcc;
-  --sidebar-accent: #00ffcc;
-  --ring: #00ffcc;
-  --sidebar-ring: #00ffcc;
-  --chart-1: #00ffcc;
+  --primary: #0f766e;
+  --primary-foreground: #ffffff;
+  --sidebar-primary: #0f766e;
+  --sidebar-accent: #0f766e;
+  --ring: #0f766e;
+  --sidebar-ring: #0f766e;
+  --chart-1: #0f766e;
 }
 
 .dark[data-accent="cyberpunk"] {
@@ -242,10 +252,19 @@
   html {
     overscroll-behavior: none;
     overscroll-behavior-y: none;
+    /* Compact density: shrink the rem anchor so all rem-based spacing,
+       gaps and type scale down uniformly across the app. Eases back to
+       the browser default on large desktops where space isn't tight. */
+    font-size: 15px;
+  }
+  @media (min-width: 1280px) {
+    html {
+      font-size: 16px;
+    }
   }
   body {
     @apply bg-background text-foreground;
-    font-family: "Inter", sans-serif;
+    font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overscroll-behavior: none;
@@ -258,7 +277,10 @@
   h4,
   h5,
   h6 {
-    letter-spacing: -0.01em;
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
   }
   /* Eliminate tap delay on mobile for all interactive elements */
   button,
@@ -562,9 +584,64 @@
 
 /* Barlow Condensed for stat numbers / display counters */
 .font-stat {
-  font-family: "Barlow Condensed", "Inter", sans-serif;
+  font-family: var(--font-stat);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
+}
+
+/* ── Brainy "VOLT" premium surfaces (glow stat cards) ─────────────────────── */
+/* Oversized data numerals — tabular so digits don't jitter as they animate */
+.text-display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.95;
+}
+
+/* Hairline top-light on dark cards for that premium sheen */
+.sheen {
+  position: relative;
+}
+.dark .sheen::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--foreground) 14%, transparent), transparent);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Ambient blurred colour orbs for hero areas */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.18;
+  pointer-events: none;
+}
+.dark .orb {
+  opacity: 0.24;
+}
+.orb-volt {
+  background: radial-gradient(circle, var(--primary), transparent 70%);
+}
+.orb-cyan {
+  background: radial-gradient(circle, var(--accent), transparent 70%);
+}
+.orb-amber {
+  background: radial-gradient(circle, var(--secondary), transparent 70%);
+}
+
+/* Subtle grid texture masked to the top of hero areas */
+.grid-texture {
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--foreground) 5%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--foreground) 5%, transparent) 1px, transparent 1px);
+  background-size: 32px 32px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 20%, transparent 75%);
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 20%, transparent 75%);
 }
 
 /* ── Accessibility: respect reduced-motion preference ──────────────────────── */
@@ -589,10 +666,10 @@
 
 /* Mobile Safe Areas */
 @utility pb-safe {
-  padding-bottom: max(env(safe-area-inset-bottom), 1.5rem);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 @utility pt-safe {
-  padding-top: max(env(safe-area-inset-top), 1rem);
+  padding-top: env(safe-area-inset-top, 0px);
 }
 .racket-anim { transform-origin: 50px 170px; animation: swing 1.5s infinite ease-in-out; }
 @keyframes swing {

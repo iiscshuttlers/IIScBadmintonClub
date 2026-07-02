@@ -96,7 +96,7 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
       <AnimatePresence>
         {lightboxIndex !== null && (() => {
           const photo = photos[lightboxIndex];
-          const galleryUrl = `/gallery?filter=${encodeURIComponent(photo.subfolder || photo.category)}&photo=${encodeURIComponent(photo.path)}`;
+          const galleryUrl = `/legacy?filter=${encodeURIComponent(photo.subfolder || photo.category)}&photo=${encodeURIComponent(photo.path)}`;
           
           return (
             <motion.div
@@ -156,7 +156,7 @@ export function PlayerPhotosSection({ playerId }: { playerId: string }) {
                   <div className="flex items-center gap-3 mt-3">
                     <a
                       href={galleryUrl}
-                      className="flex items-center gap-2 px-6 py-2.5 bg-white text-foreground rounded-full text-sm font-bold shadow-lg hover:bg-gray-200 transition-all active:scale-95"
+                      className="flex items-center gap-2 px-6 py-2.5 bg-white text-slate-900 rounded-full text-sm font-bold shadow-lg hover:bg-gray-200 transition-all active:scale-95"
                       onClick={(e) => e.stopPropagation()}
                     >
                       View in Album

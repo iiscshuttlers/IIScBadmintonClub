@@ -138,7 +138,7 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
               {['Racket', 'Shoes', 'Shuttlecocks', 'Accessories', 'Other'].map(cat => (
                 <label key={cat} className="cursor-pointer">
                   <input type="radio" value={cat} {...register("category", { required: true })} className="peer sr-only" defaultChecked={cat === 'Racket'} />
-                  <div className={`px-4 py-2 rounded-xl text-sm font-bold border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-muted-foreground ${listingType === 'sell' ? 'peer-checked:bg-primary peer-checked:border-primary' : 'peer-checked:bg-indigo-500 peer-checked:border-indigo-500'} peer-checked:text-foreground transition-all`}>
+                  <div className={`px-4 py-2 rounded-xl text-sm font-bold border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-muted-foreground ${listingType === 'sell' ? 'peer-checked:bg-primary peer-checked:border-primary' : 'peer-checked:bg-indigo-500 peer-checked:border-indigo-500'} peer-checked:text-primary-foreground transition-all`}>
                     {cat}
                   </div>
                 </label>
@@ -171,7 +171,7 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
           <button 
             type="submit" 
             disabled={isSubmitting}
-            className={`w-full mt-4 text-foreground font-black py-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 ${listingType === 'sell' ? 'bg-primary hover:bg-primary shadow-primary/25' : 'bg-indigo-500 hover:bg-indigo-600 shadow-indigo-500/25'}`}
+            className={`w-full mt-4 text-primary-foreground font-black py-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 ${listingType === 'sell' ? 'bg-primary hover:bg-primary shadow-primary/25' : 'bg-indigo-500 hover:bg-indigo-600 shadow-indigo-500/25'}`}
           >
             {isSubmitting ? (
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

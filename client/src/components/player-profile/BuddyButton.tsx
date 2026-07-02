@@ -99,7 +99,7 @@ export function BuddyButton({ targetPlayerId }: Props) {
   if (status === "pending_received") return (
     <div className="flex items-center gap-2">
       <button onClick={accept} disabled={acting}
-        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary hover:bg-primary text-foreground font-bold text-xs transition disabled:opacity-50">
+        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary hover:bg-primary text-primary-foreground font-bold text-xs transition disabled:opacity-50">
         {acting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserCheck className="w-3.5 h-3.5" />}
         Accept
       </button>

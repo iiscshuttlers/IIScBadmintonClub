@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   LineChart,
   Line,
@@ -19,7 +19,9 @@ export interface EloDataPoint {
 }
 
 interface EloChartProps {
-  data: EloDataPoint[];
+  playerId: string;
+  matches: any[];
+  currentElo?: number;
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -30,7 +32,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       <div className="bg-slate-900/95 border border-slate-700/50 p-3 rounded-xl shadow-xl backdrop-blur-sm">
         <p className="text-xs text-muted-foreground font-medium mb-1">{data.date}</p>
         <p className="text-sm font-bold text-foreground mb-2">
-          vs {data.opponent}
+          {data.opponent}
         </p>
         <div className="flex items-center gap-3">
           <span className={`text-xs font-black px-2 py-0.5 rounded ${isWin ? 'bg-primary/20 text-primary' : 'bg-rose-500/20 text-rose-400'}`}>
@@ -46,7 +48,68 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export function EloChart({ data }: EloChartProps) {
+export function EloChart({ playerId, matches, currentElo = 1200 }: EloChartProps) {
+  const data = useMemo(() => {
+    if (!matches || matches.length === 0) return [];
+    
+    const confirmed = matches.filter(m => m.status === 'confirmed');
+    if (confirmed.length === 0) return [];
+
+    let current = currentElo;
+    const history: EloDataPoint[] = [];
+    
+    // matches are typically sorted latest first, so we iterate from index 0 (latest) backwards in time
+    for (const m of confirmed) {
+      let change = 0;
+      if (m.player1_id === playerId) change = m.elo_change_p1 || 0;
+      else if (m.player2_id === playerId) change = m.elo_change_p2 || 0;
+      else if (m.team1_partner_id === playerId) change = m.elo_change_p3 || 0;
+      else if (m.team2_partner_id === playerId) change = m.elo_change_p4 || 0;
+      
+      const isWin = (m.winner_id === m.player1_id && (m.player1_id === playerId || m.team1_partner_id === playerId)) ||
+                    (m.winner_id === m.player2_id && (m.player2_id === playerId || m.team2_partner_id === playerId));
+                    
+      let oppName = "Unknown";
+      const p1 = m.player1?.full_name?.split(" ")[0] || "Opponent";
+      const p2 = m.player2?.full_name?.split(" ")[0] || "Opponent";
+      const pt1 = m.partner1?.full_name?.split(" ")[0];
+      const pt2 = m.partner2?.full_name?.split(" ")[0];
+      
+      const isTeam1 = m.player1_id === playerId || m.team1_partner_id === playerId;
+      
+      if (isTeam1) {
+        if (m.team1_partner_id && m.team2_partner_id) {
+           const myPartner = m.player1_id === playerId ? pt1 : p1;
+           oppName = `w/ ${myPartner} vs ${p2} & ${pt2}`;
+        } else {
+           oppName = `vs ${p2}`;
+        }
+      } else {
+        if (m.team1_partner_id && m.team2_partner_id) {
+           const myPartner = m.player2_id === playerId ? pt2 : p2;
+           oppName = `w/ ${myPartner} vs ${p1} & ${pt1}`;
+        } else {
+           oppName = `vs ${p1}`;
+        }
+      }
+      
+      const matchDate = m.date || m.created_at;
+      
+      history.unshift({
+        date: new Date(matchDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+        timestamp: new Date(matchDate).getTime(),
+        elo: current,
+        opponent: oppName,
+        result: isWin ? "W" : "L",
+        eloChange: change
+      });
+      
+      current -= change;
+    }
+    
+    return history;
+  }, [matches, playerId, currentElo]);
+
   if (!data || data.length === 0) {
     return (
       <div className="h-64 flex items-center justify-center border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">

@@ -260,7 +260,7 @@ export function TournamentManager() {
           <button
             onClick={createTournament}
             disabled={creating}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary hover:bg-primary text-foreground text-xs font-black transition disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary hover:bg-primary text-primary-foreground text-xs font-black transition disabled:opacity-50"
           >
             {creating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
             New Tournament
@@ -278,7 +278,7 @@ export function TournamentManager() {
                 onClick={() => setTab(tab)}
                 className={`px-3 py-2 rounded-xl text-sm font-black transition-all w-full sm:w-auto text-center ${
                   activeTab === tab
-                    ? "bg-primary text-foreground shadow"
+                    ? "bg-primary text-primary-foreground shadow"
                     : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-muted-foreground dark:text-slate-300 hover:border-primary"
                 }`}
               >
@@ -391,7 +391,7 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
           <StatusChip status={form.status} />
           {form.status === "draft" && (
             <button onClick={() => transition("active")} disabled={transitioning}
-              className="px-3 py-1 text-xs font-black rounded-xl bg-primary hover:bg-primary text-foreground disabled:opacity-50 transition">
+              className="px-3 py-1 text-xs font-black rounded-xl bg-primary hover:bg-primary text-primary-foreground disabled:opacity-50 transition">
               {transitioning ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "→ Activate"}
             </button>
           )}
@@ -455,7 +455,7 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
                 return (
                   <button key={cat} type="button"
                     onClick={() => upd("categories", active ? form.categories.filter((c) => c !== cat) : [...form.categories, cat])}
-                    className={`px-4 py-1.5 rounded-xl text-sm font-black border transition-all ${active ? "bg-primary text-foreground border-primary" : "border-slate-200 dark:border-slate-700 text-muted-foreground hover:border-primary"}`}>
+                    className={`px-4 py-1.5 rounded-xl text-sm font-black border transition-all ${active ? "bg-primary text-primary-foreground border-primary" : "border-slate-200 dark:border-slate-700 text-muted-foreground hover:border-primary"}`}>
                     {cat}
                   </button>
                 );
@@ -509,7 +509,7 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
           )}
         </div>
         <button onClick={save} disabled={saving}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary hover:bg-primary disabled:opacity-50 text-foreground font-black transition shadow-lg">
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary hover:bg-primary disabled:opacity-50 text-primary-foreground font-black transition shadow-lg">
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           Save Details
         </button>
@@ -1055,7 +1055,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                       <button
                         onClick={() => runBulkImport(cat)}
                         disabled={bulkImporting || !bulkText.trim()}
-                        className="flex-1 py-2 text-xs font-black rounded-lg bg-primary hover:bg-primary text-foreground transition disabled:opacity-50 flex items-center justify-center gap-1">
+                        className="flex-1 py-2 text-xs font-black rounded-lg bg-primary hover:bg-primary text-primary-foreground transition disabled:opacity-50 flex items-center justify-center gap-1">
                         {bulkImporting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
                         Import {bulkText.trim() ? parseBulkLines(bulkText, cat).length : 0} Participants
                       </button>
@@ -1087,7 +1087,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                 </div>
                 <div className="flex justify-end gap-2 pt-2">
                   <button onClick={() => saveSeeds(cat)}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-primary text-foreground text-xs font-black shadow transition">
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-primary text-primary-foreground text-xs font-black shadow transition">
                     Save
                   </button>
                   <button onClick={() => generateBracket(cat)}
@@ -1421,7 +1421,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
         <div className="flex flex-wrap gap-2">
           {tournament.categories.map((cat) => (
             <button key={cat} onClick={() => setActiveCategory(cat)}
-              className={`px-4 py-1.5 rounded-xl text-sm font-black transition-all ${activeCategory === cat ? "bg-primary text-foreground" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-muted-foreground dark:text-slate-300 hover:border-primary"}`}>
+              className={`px-4 py-1.5 rounded-xl text-sm font-black transition-all ${activeCategory === cat ? "bg-primary text-primary-foreground" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-muted-foreground dark:text-slate-300 hover:border-primary"}`}>
               {cat}
             </button>
           ))}
@@ -1527,7 +1527,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                         const gp = parseInt((document.getElementById(`rule-${activeCategory}-${round}-golden_point`) as HTMLInputElement)?.value || "30");
                         saveRoundRule({ ...rule, points_to_win: ptw, best_of_sets: bos, golden_point: gp });
                       }}
-                      className="px-3 py-2 rounded-xl bg-primary hover:bg-primary text-foreground text-xs font-black transition shadow-sm mb-[1px]"
+                      className="px-3 py-2 rounded-xl bg-primary hover:bg-primary text-primary-foreground text-xs font-black transition shadow-sm mb-[1px]"
                     >
                       Save
                     </button>
@@ -1855,7 +1855,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                           {/* Actions */}
                           <div className="flex gap-2 pt-1">
                             <button onClick={submitEditScore}
-                              className="px-4 py-1.5 rounded-xl bg-primary hover:bg-primary text-foreground text-xs font-black transition">
+                              className="px-4 py-1.5 rounded-xl bg-primary hover:bg-primary text-primary-foreground text-xs font-black transition">
                               Save
                             </button>
                             <button onClick={() => setEditScore(null)} className="text-xs text-muted-foreground hover:text-muted-foreground transition">Cancel</button>

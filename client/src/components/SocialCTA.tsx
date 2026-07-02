@@ -46,16 +46,16 @@ export function SocialCTA({
 
   // card variant — dark gradient card with hero-pattern
   return (
-    <div className="bg-gradient-to-br from-blue-900 to-primary/80 text-foreground p-6 md:p-10 rounded-3xl shadow-xl relative overflow-hidden">
+    <div className="bg-gradient-to-br from-emerald-700 to-lime-600 text-foreground p-4 md:p-6 rounded-3xl shadow-xl relative overflow-hidden">
       <div className="absolute inset-0 hero-pattern" />
       <div className="relative z-10">
         <h2
-          className="text-2xl font-black mb-2"
+          className="text-2xl font-black mb-2 text-white"
           style={{ fontFamily: "Playfair Display, serif" }}
         >
           Follow Our Journey
         </h2>
-        <p className="text-gray-300 text-sm mb-6 max-w-lg">
+        <p className="text-emerald-50 text-sm mb-4 max-w-lg">
           Catch the latest match highlights, event photos, and community moments
           on our social channels.
         </p>

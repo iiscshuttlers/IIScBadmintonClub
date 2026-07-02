@@ -70,6 +70,11 @@ export type SiteConfig = {
     trophies: string;
   };
   about: { history: string; mission: string };
+  elo?: {
+    kNewbie: number;
+    kExperienced: number;
+    tournamentMultiplier: number;
+  };
 };
 export type FlyerItem = { text: string; colorClass: string; };
 export type DynamicFlyer = {

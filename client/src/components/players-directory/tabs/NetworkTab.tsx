@@ -92,7 +92,7 @@ export function NetworkTab({
                         </div>
                         {ownProfile && (
                           <button
-                            className="ml-auto shrink-0 px-3 py-1.5 bg-primary hover:bg-primary text-foreground text-xs font-bold rounded-lg transition"
+                            className="ml-auto shrink-0 px-3 py-1.5 bg-primary hover:bg-primary text-primary-foreground text-xs font-bold rounded-lg transition"
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedOpponentId(player.id);
@@ -287,7 +287,7 @@ export function NetworkTab({
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleBuddyAction(player.id, 'accept')}
-                        className="px-3 py-1.5 bg-primary hover:bg-primary text-foreground text-xs font-bold rounded-lg transition"
+                        className="px-3 py-1.5 bg-primary hover:bg-primary text-primary-foreground text-xs font-bold rounded-lg transition"
                       >
                         Accept
                       </button>

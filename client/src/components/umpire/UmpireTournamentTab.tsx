@@ -43,7 +43,7 @@ const CAT_LABELS: Record<string, string> = {
 const CAT_COLORS: Record<string, { bg: string; active: string; dot: string }> = {
   MS: { bg: "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300", active: "bg-blue-600 text-foreground border-blue-600", dot: "bg-blue-500" },
   WS: { bg: "bg-pink-50 dark:bg-pink-950/30 border-pink-200 dark:border-pink-800 text-pink-700 dark:text-pink-300", active: "bg-pink-600 text-foreground border-pink-600", dot: "bg-pink-500" },
-  MD: { bg: "bg-primary/10 dark:bg-primary/30 border-primary/40 dark:border-primary/80 text-primary dark:text-primary/70", active: "bg-primary text-foreground border-primary", dot: "bg-primary" },
+  MD: { bg: "bg-primary/10 dark:bg-primary/30 border-primary/40 dark:border-primary/80 text-primary dark:text-primary/70", active: "bg-primary text-primary-foreground border-primary", dot: "bg-primary" },
   WD: { bg: "bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300", active: "bg-purple-600 text-foreground border-purple-600", dot: "bg-purple-500" },
   XD: { bg: "bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-300", active: "bg-orange-600 text-foreground border-orange-600", dot: "bg-orange-500" },
 };
@@ -333,7 +333,7 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
             {/* Start button */}
             <button
               onClick={() => onStartMatch(selectedMatch)}
-              className="w-full py-4 rounded-xl bg-primary hover:bg-primary text-foreground font-black text-base transition flex items-center justify-center gap-2 shadow-lg shadow-primary/50/30"
+              className="w-full py-4 rounded-xl bg-primary hover:bg-primary text-primary-foreground font-black text-base transition flex items-center justify-center gap-2 shadow-lg shadow-primary/50/30"
             >
               <Play className="w-5 h-5 fill-white" />
               {selectedMatch.status === "in_progress" ? "Resume Match" : "Start Umpiring"}

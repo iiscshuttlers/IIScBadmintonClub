@@ -4,8 +4,10 @@ import { Swords, Trophy, Activity, BarChart3 } from "lucide-react";
 import { Link } from "wouter";
 import { BeautifulScoreDisplay } from "@/components/feed/BeautifulScoreDisplay";
 import { RivalriesDashboard } from "./RivalriesDashboard";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function H2HSection() {
+  const { session } = useAuth();
   const [players, setPlayers] = useState<any[]>([]);
   const [p1Id, setP1Id] = useState<string>("");
   const [p2Id, setP2Id] = useState<string>("");
@@ -22,8 +24,15 @@ export function H2HSection() {
         if (data) {
           setPlayers(data.sort((a, b) => b.elo_rating - a.elo_rating));
           if (data.length >= 2) {
-            setP1Id(data[0].id);
-            setP2Id(data[1].id);
+            const currentUserId = session?.user?.id;
+            const hasCurrentUser = data.find(p => p.id === currentUserId);
+            if (hasCurrentUser) {
+              setP1Id(currentUserId);
+              setP2Id(data.find(p => p.id !== currentUserId)?.id || data[1].id);
+            } else {
+              setP1Id(data[0].id);
+              setP2Id(data[1].id);
+            }
           }
         }
         setLoading(false);
@@ -44,7 +53,7 @@ export function H2HSection() {
       .then(({ data }) => {
         if (data) setTournamentMatches(data);
       });
-  }, []);
+  }, [session?.user?.id]);
 
   const h2hMatches = useMemo(() => {
     if (!p1Id || !p2Id || !matches.length) return [];
@@ -237,7 +246,7 @@ export function H2HSection() {
               {/* Link to Deep Analytics */}
               {p1Id && p2Id && (
                 <Link href={`/compare/${p1Id}/${p2Id}`}>
-                  <button className="flex items-center gap-2 px-4 py-2 bg-slate-900 dark:bg-primary text-foreground rounded-full text-xs font-black uppercase tracking-wider mb-4 hover:scale-105 transition-transform shadow-md">
+                  <button className="flex items-center gap-2 px-4 py-2 bg-slate-900 dark:bg-primary text-primary-foreground rounded-full text-xs font-black uppercase tracking-wider mb-4 hover:scale-105 transition-transform shadow-md">
                     <BarChart3 className="w-4 h-4" /> View Deep Analytics
                   </button>
                 </Link>
@@ -329,20 +338,20 @@ export function H2HSection() {
 
         {(h2hMatches.length > 0 || h2hTournamentMatches.length > 0) && (
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 space-y-4">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 w-full">
               <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">
                 Match History
               </h3>
-              <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+              <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-full sm:w-auto overflow-x-auto hide-scrollbar">
                 <button
                   onClick={() => setMatchTab("club")}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${matchTab === "club" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-foreground shadow-sm" : "text-muted-foreground hover:text-muted-foreground"}`}
+                  className={`flex-1 sm:flex-none whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${matchTab === "club" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-foreground shadow-sm" : "text-muted-foreground hover:text-muted-foreground"}`}
                 >
                   Club {h2hMatches.length > 0 && <span className="ml-1 opacity-60">({h2hMatches.length})</span>}
                 </button>
                 <button
                   onClick={() => setMatchTab("tournament")}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${matchTab === "tournament" ? "bg-amber-500 text-foreground shadow-sm" : "text-muted-foreground hover:text-muted-foreground"}`}
+                  className={`flex-1 sm:flex-none whitespace-nowrap justify-center px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${matchTab === "tournament" ? "bg-amber-500 text-white shadow-sm" : "text-muted-foreground hover:text-muted-foreground"}`}
                 >
                   <Swords className="w-3 h-3" /> Tournament {h2hTournamentMatches.length > 0 && <span className="ml-0.5 opacity-80">({h2hTournamentMatches.length})</span>}
                 </button>
@@ -413,36 +422,48 @@ export function H2HSection() {
               return (
                 <div
                   key={i}
-                  className="flex flex-col p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl gap-3"
+                  className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-white dark:bg-slate-800/40 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200"
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="text-sm font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
-                      {new Date(m.created_at).toLocaleDateString()}
+                  {/* Header: date + format */}
+                  <div className="flex items-center justify-between gap-2 px-4 pt-3.5 pb-2">
+                    <div className="text-xs font-bold text-muted-foreground dark:text-muted-foreground whitespace-nowrap">
+                      {new Date(m.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                     </div>
                     {matchFormat && (
-                      <span className="text-[10px] font-black uppercase tracking-widest bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-800/50">
+                      <span className="text-[10px] font-black uppercase tracking-widest bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-300 px-2.5 py-1 rounded-full border border-indigo-200/70 dark:border-indigo-800/50">
                         {matchFormat}
                       </span>
                     )}
                   </div>
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div className="flex flex-col gap-1">
-                      <p className="text-sm font-bold text-slate-800 dark:text-slate-300 flex items-center gap-2 flex-wrap">
-                        <span className={team1Won ? "text-primary dark:text-primary" : ""}>
-                          {mp1?.full_name} {mp3 ? `& ${mp3.full_name}` : ""}
+
+                  {/* Teams */}
+                  <div className="px-4 pb-3">
+                    <div className="relative flex flex-col">
+                      {/* Team 1 row */}
+                      <div className={`flex items-center gap-2 rounded-xl px-3 py-2 ${team1Won ? "bg-primary/5 dark:bg-primary/10" : ""}`}>
+                        <span className={`flex-1 text-sm font-bold leading-tight ${team1Won ? "text-primary dark:text-primary" : "text-slate-700 dark:text-slate-300"}`}>
+                          {mp1?.full_name}{mp3 ? ` & ${mp3.full_name}` : ""}
                         </span>
-                        <span className="text-[10px] font-black uppercase text-rose-500 shrink-0">vs</span>
-                        <span className={!team1Won ? "text-primary dark:text-primary" : ""}>
-                          {mp2?.full_name} {mp4 ? `& ${mp4.full_name}` : ""}
+                        {team1Won && <Trophy className="w-4 h-4 text-amber-500 shrink-0" />}
+                      </div>
+
+                      {/* VS divider */}
+                      <div className="flex items-center gap-2 py-0.5 pl-3">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-rose-500">vs</span>
+                        <div className="flex-1 h-px bg-slate-100 dark:bg-slate-700/50" />
+                      </div>
+
+                      {/* Team 2 row */}
+                      <div className={`flex items-center gap-2 rounded-xl px-3 py-2 ${!team1Won ? "bg-primary/5 dark:bg-primary/10" : ""}`}>
+                        <span className={`flex-1 text-sm font-bold leading-tight ${!team1Won ? "text-primary dark:text-primary" : "text-slate-700 dark:text-slate-300"}`}>
+                          {mp2?.full_name}{mp4 ? ` & ${mp4.full_name}` : ""}
                         </span>
-                        {team1Won ? (
-                          <Trophy className="w-4 h-4 text-primary ml-1" />
-                        ) : (
-                          <Trophy className="w-4 h-4 text-primary ml-1 order-last sm:order-none" />
-                        )}
-                      </p>
+                        {!team1Won && <Trophy className="w-4 h-4 text-amber-500 shrink-0" />}
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-1.5 justify-start sm:justify-center">
+
+                    {/* Score chips */}
+                    <div className="mt-2.5 flex flex-wrap gap-1.5 border-t border-slate-100 dark:border-slate-700/50 pt-2.5">
                       <BeautifulScoreDisplay score={m.score.split(" | ")[0]} />
                     </div>
                   </div>

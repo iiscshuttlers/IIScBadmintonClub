@@ -89,7 +89,7 @@ export function ContentEditorWrapper<T>({
               <button
                 onClick={() => setShowConfirm(true)}
                 disabled={isSaving}
-                className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-primary text-foreground text-sm font-bold transition disabled:opacity-50 shadow-md w-full sm:w-auto min-w-[140px]"
+                className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-primary text-primary-foreground text-sm font-bold transition disabled:opacity-50 shadow-md w-full sm:w-auto min-w-[140px]"
               >
                 {isSaving ? (
                   <Loader2 className="w-4 h-4 animate-spin shrink-0" />
@@ -161,7 +161,7 @@ export function ContentEditorWrapper<T>({
                 <button
                   onClick={handleSaveClick}
                   disabled={isSaving}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 sm:py-2.5 rounded-xl bg-primary hover:bg-primary text-foreground font-bold shadow-lg shadow-primary/20 transition disabled:opacity-50"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 sm:py-2.5 rounded-xl bg-primary hover:bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/20 transition disabled:opacity-50"
                 >
                   {isSaving ? (
                     <Loader2 className="w-5 h-5 animate-spin shrink-0" />

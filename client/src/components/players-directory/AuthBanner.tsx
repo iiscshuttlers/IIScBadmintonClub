@@ -91,48 +91,7 @@ export function AuthBanner({
           </div>
         )}
 
-        <div>
-          <h2 className="text-xs uppercase tracking-widest font-black text-muted-foreground dark:text-muted-foreground mb-4 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-primary" /> Your Profile
-          </h2>
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-primary/50 dark:border-primary shadow-xl shadow-primary/10/50 dark:shadow-none p-6 flex flex-col sm:flex-row items-center gap-6">
-            <Link
-              href={`/player/${ownProfile.id}`}
-              className="flex items-center gap-4 flex-1 group min-w-0"
-            >
-              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-primary shadow-md shrink-0">
-                {ownProfile.avatar_url ? (
-                  <img
-                    loading="lazy"
-                    src={ownProfile.avatar_url}
-                    alt={ownProfile.full_name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-primary/15 dark:bg-primary/30 flex items-center justify-center text-2xl font-black text-primary">
-                    {ownProfile.full_name.charAt(0)}
-                  </div>
-                )}
-              </div>
-              <div className="min-w-0">
-                <div className="text-xl font-black text-foreground dark:text-foreground group-hover:text-primary dark:group-hover:text-primary transition-colors">
-                  {ownProfile.full_name}
-                  {ownProfile.nickname && (
-                    <span className="ml-2 text-sm font-semibold text-muted-foreground italic whitespace-nowrap">
-                      "{ownProfile.nickname}"
-                    </span>
-                  )}
-                </div>
-                <div className="text-sm text-muted-foreground dark:text-muted-foreground font-medium mt-0.5">
-                  {ownProfile.department} · Class of {ownProfile.joined_year}
-                </div>
-                <div className="flex items-center gap-1.5 mt-1 text-primary dark:text-primary text-xs font-bold">
-                  View full profile <ChevronRight className="w-3.5 h-3.5" />
-                </div>
-              </div>
-            </Link>
-          </div>
-        </div>
+
       </motion.div>
     );
   }
@@ -165,7 +124,7 @@ export function AuthBanner({
             </div>
             <button
               onClick={() => setLocation("/profile/setup")}
-              className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-white text-primary font-black text-sm hover:bg-primary/10 transition shadow-lg shrink-0"
+              className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-white text-lime-700 font-black text-sm hover:bg-lime-50 transition shadow-lg shrink-0"
             >
               <PlusCircle className="w-5 h-5" /> Create My Profile
             </button>
@@ -206,7 +165,7 @@ export function AuthBanner({
               sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
               setLocation("/join");
             }}
-            className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-primary hover:bg-primary text-foreground font-black text-sm transition shadow-lg shadow-primary/20 shrink-0"
+            className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-primary hover:bg-primary text-primary-foreground font-black text-sm transition shadow-lg shadow-primary/20 shrink-0"
           >
             <LogIn className="w-5 h-5" /> Sign In / Join
           </button>

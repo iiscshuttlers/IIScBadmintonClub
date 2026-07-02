@@ -316,7 +316,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
                     onClick={() => setActiveTid(event.slug || event.id)}
                     className={`px-4 py-1.5 rounded-xl text-sm font-bold transition-all ${
                       isActive
-                        ? "bg-primary text-foreground shadow-sm"
+                        ? "bg-primary text-primary-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700/50"
                     }`}
                   >
@@ -399,7 +399,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
                   className={`inline-flex items-center gap-2 px-6 py-4 rounded-xl font-black transition shadow-xl ${
                     formClosed
                       ? "bg-slate-600 text-foreground opacity-70 cursor-not-allowed pointer-events-none"
-                      : "bg-primary hover:bg-primary text-foreground"
+                      : "bg-primary hover:bg-primary text-primary-foreground"
                   }`}
                 >
                   {ctaLabel} <ArrowRight className="w-5 h-5" />
@@ -424,7 +424,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-3 rounded-xl text-sm font-bold transition-all whitespace-nowrap flex-1 basis-[45%] sm:basis-auto shrink-0 ${
                 activeTab === tab.id
-                  ? "bg-primary text-foreground shadow-md shadow-primary/20"
+                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
                   : "text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
               }`}
             >
@@ -730,7 +730,7 @@ function SupabaseScheduleView({ tournamentId }: { tournamentId: string | null })
           <button key={cat} onClick={() => setActiveCategory(cat)}
             className={`px-4 py-1.5 rounded-xl text-sm font-black transition-all border ${
               activeCategory === cat
-                ? "bg-primary text-foreground border-primary shadow"
+                ? "bg-primary text-primary-foreground border-primary shadow"
                 : "border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-muted-foreground hover:border-primary"
             }`}>
             {cat}
@@ -845,7 +845,7 @@ export function TournamentArchiveBrackets({ tournamentId }: { tournamentId: stri
               <button key={cat} onClick={() => setActiveCategory(cat)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all border ${
                   activeCategory === cat
-                    ? "bg-primary text-foreground border-primary shadow"
+                    ? "bg-primary text-primary-foreground border-primary shadow"
                     : "border-slate-200 dark:border-slate-700 text-muted-foreground hover:border-primary"
                 }`}>
                 {cat}

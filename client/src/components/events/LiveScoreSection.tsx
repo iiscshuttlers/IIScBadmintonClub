@@ -292,7 +292,7 @@ function MatchBroadcastCard({
                     if (!adminSets.trim()) { toast.error("Enter set scores"); return; }
                     onSubmit(match, adminWinner, adminSets);
                   }}
-                  className="flex-1 py-2.5 bg-primary hover:bg-primary text-foreground rounded-xl font-bold text-sm flex items-center justify-center gap-1.5"
+                  className="flex-1 py-2.5 bg-primary hover:bg-primary text-primary-foreground rounded-xl font-bold text-sm flex items-center justify-center gap-1.5"
                 >
                   <Save className="w-4 h-4" /> Submit & Save
                 </button>

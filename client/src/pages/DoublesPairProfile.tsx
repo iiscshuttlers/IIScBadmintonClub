@@ -111,8 +111,8 @@ export default function DoublesPairProfile() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 lg:pb-8">
       {/* Hero */}
-      <div className="bg-linear-to-br from-slate-900 via-blue-950 to-slate-900 text-foreground py-12 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.5),transparent)] pointer-events-none" />
+      <div className="bg-gradient-to-br from-teal-800 via-emerald-700 to-teal-800 text-foreground py-6 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,rgba(34,197,94,0.5),transparent)] pointer-events-none" />
         <div className="container mx-auto px-4 max-w-3xl relative z-10">
           <Link href="/players" className="inline-flex items-center gap-1.5 text-foreground/60 hover:text-foreground text-sm font-bold mb-6 transition">
             <ArrowLeft className="w-4 h-4" /> Back to Players
@@ -121,20 +121,20 @@ export default function DoublesPairProfile() {
             <div className="flex items-center gap-4">
               <Link href={`/player/${p1}`}><Avatar player={player1} size="lg" /></Link>
               <div className="flex flex-col items-center gap-1">
-                <Users className="w-6 h-6 text-blue-400" />
-                <span className="text-xs font-black text-foreground/50 uppercase tracking-widest">Pair</span>
+                <Users className="w-6 h-6 text-lime-300" />
+                <span className="text-xs font-black text-white/70 uppercase tracking-widest">Pair</span>
               </div>
               <Link href={`/player/${p2}`}><Avatar player={player2} size="lg" /></Link>
             </div>
             <div className="text-center">
               <div className="flex items-center justify-center gap-2">
-                <h1 className="text-2xl font-black text-foreground">{player1.full_name} & {player2.full_name}</h1>
+                <h1 className="text-2xl font-black text-white">{player1.full_name} & {player2.full_name}</h1>
                 <InfoModal
                   title="DOUBLES PAIR"
                   items={[
                     { badge: "STATS", title: "Combined Stats", desc: "This page shows statistics specifically for when these two players play together as a team on the same side of the court." }
                   ]}
-                  triggerClassName="text-blue-300 hover:text-foreground"
+                  triggerClassName="text-emerald-200 hover:text-white"
                 />
               </div>
               <p className="text-blue-300 text-sm mt-1">Doubles Pair Profile · {totalMatches} matches together</p>

@@ -32,47 +32,18 @@ import { useLiveMatches } from "@/hooks/useLiveMatches";
 import { AnnouncementsSection } from "@/components/feed/AnnouncementsSection";
 import { LiveScoreSection } from "@/components/events/LiveScoreSection";
 import { UmpireTab } from "@/components/umpire/UmpireTab";
-import { MyMatchesTab } from "@/components/feed/MyMatchesTab";
 import { MatchCard } from "@/components/feed/MatchCard";
-import { ChallengeHubTab } from "@/components/feed/ChallengeHubTab";
 import { PollsSection } from "@/components/feed/PollsSection";
 import { RivalryCards } from "@/components/feed/RivalryCards";
-import { WeeklyChallenges } from "@/components/feed/WeeklyChallenges";
 import { MatchPredictions } from "@/components/feed/MatchPredictions";
 
-export default function Feed() {
-  usePageMeta({
-    title: "Activity Feed",
-    description:
-      "Live badminton activity, upsets, and recent matches at IISc Badminton Club.",
-  });
-
+export default function FeedTab() {
   const { session, profile: ownProfile, isUmpire, isAdmin } = useAuth();
   const [, setLocation] = useLocation();
-  const [match, params] = useRoute("/feed/:tab");
+  const [activeTab, setActiveTab] = useState<"matches" | "announcements" | "umpire">("matches");
 
-  const [activeTab, setActiveTab] = useState<"matches" | "announcements" | "umpire" | "my_matches" | "challenges">("matches");
-
-  useEffect(() => {
-    if (match && params) {
-      const tab = (params as any).tab;
-      if (tab === "activity") setActiveTab("matches");
-      else if (tab === "announcements") setActiveTab("announcements");
-      else if (tab === "umpire") setActiveTab("umpire");
-      else if (tab === "my-matches") setActiveTab("my_matches");
-      else if (tab === "challenges") setActiveTab("challenges");
-    } else {
-      setActiveTab("matches");
-    }
-  }, [match, params]);
-
-  const handleTabChange = (tabId: "matches" | "announcements" | "umpire" | "my_matches" | "challenges") => {
+  const handleTabChange = (tabId: "matches" | "announcements" | "umpire") => {
     setActiveTab(tabId);
-    if (tabId === "matches") setLocation("/feed/activity");
-    else if (tabId === "announcements") setLocation("/feed/announcements");
-    else if (tabId === "umpire") setLocation("/feed/umpire");
-    else if (tabId === "my_matches") setLocation("/feed/my-matches");
-    else if (tabId === "challenges") setLocation("/feed/challenges");
   };
 
   const { liveMatchIds, hasLiveMatches } = useLiveMatches();
@@ -125,101 +96,51 @@ export default function Feed() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-safe pb-24 lg:pb-8 font-sans selection:bg-primary/30">
-      <div className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 text-foreground py-12 lg:py-16 relative overflow-hidden shrink-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(255,255,255,0.1),transparent)] pointer-events-none" />
-        <div className="container mx-auto px-4 max-w-3xl relative z-10 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-black uppercase tracking-widest mb-4">
-            <Activity className="w-4 h-4 text-white" /> Global Feed
-          </div>
-          <h1 className="text-3xl sm:text-5xl font-black mb-4 tracking-tight text-white">
-            Activity Feed
-          </h1>
-          <p className="text-emerald-50 font-medium">
-            See what's happening on the courts in real-time.
-          </p>
-
-          <div className="mt-8 w-full flex justify-center">
-            <div className="w-full grid grid-cols-2 gap-2 md:flex md:w-auto md:gap-0 bg-transparent md:bg-white/10 md:backdrop-blur-md md:p-1.5 md:rounded-2xl md:border md:border-white/20">
-              <Link
-                href="/feed/activity"
-                onClick={() => handleTabChange("matches")}
-                className={`flex justify-center items-center gap-2 px-4 py-3 md:px-6 md:py-2.5 rounded-xl text-xs md:text-sm font-black transition-all ${activeTab === "matches"
-                  ? "bg-white text-primary shadow-md"
-                  : "bg-white/10 md:bg-transparent text-white md:text-white/80 hover:bg-white/20 md:hover:bg-white/10"
-                  }`}
-              >
-                <Activity className="w-4 h-4" /> Match Activity
-              </Link>
-              <Link
-                href="/feed/announcements"
-                onClick={() => {
-                  handleTabChange("announcements");
-                  localStorage.setItem("iisc_announcements_last_seen", Date.now().toString());
-                  window.dispatchEvent(new Event("announcements-read"));
-                }}
-                className={`flex justify-center items-center gap-2 px-4 py-3 md:px-6 md:py-2.5 rounded-xl text-xs md:text-sm font-black transition-all ${activeTab === "announcements"
-                  ? "bg-white text-primary shadow-md"
-                  : "bg-white/10 md:bg-transparent text-white md:text-white/80 hover:bg-white/20 md:hover:bg-white/10"
-                  }`}
-              >
-                <Bell className="w-4 h-4" /> Announcements
-              </Link>
+    <div className="w-full">
+      <div className="bg-slate-100 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 mb-6">
+        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-center gap-2">
+          <button
+            onClick={() => handleTabChange("matches")}
+            className={`flex justify-center items-center gap-2 px-4 py-2 rounded-xl text-sm font-black transition-all ${activeTab === "matches"
+              ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-foreground shadow-md"
+              : "text-muted-foreground hover:bg-slate-200 dark:hover:bg-slate-800"
+              }`}
+          >
+            <Activity className="w-4 h-4" /> Matches
+          </button>
+          <button
+            onClick={() => {
+              handleTabChange("announcements");
+            }}
+            className={`flex justify-center items-center gap-2 px-4 py-2 rounded-xl text-sm font-black transition-all ${activeTab === "announcements"
+              ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-foreground shadow-md"
+              : "text-muted-foreground hover:bg-slate-200 dark:hover:bg-slate-800"
+              }`}
+          >
+            <Bell className="w-4 h-4" /> Announcements
+          </button>
               {session && (
                 <>
-                  <Link
-                    href="/feed/my-matches"
-                    onClick={() => handleTabChange("my_matches")}
-                    className={`flex justify-center items-center gap-2 px-4 py-3 md:px-6 md:py-2.5 rounded-xl text-xs md:text-sm font-black transition-all ${activeTab === "my_matches"
-                      ? "bg-white text-primary shadow-md"
-                      : "bg-white/10 md:bg-transparent text-white md:text-white/80 hover:bg-white/20 md:hover:bg-white/10"
-                      }`}
-                  >
-                    <UserCheck className="w-4 h-4" /> My Matches
-                  </Link>
-                  <Link
-                    href="/feed/challenges"
-                    onClick={() => handleTabChange("challenges")}
-                    className={`flex justify-center items-center gap-2 px-4 py-3 md:px-6 md:py-2.5 rounded-xl text-xs md:text-sm font-black transition-all ${activeTab === "challenges"
-                      ? "bg-white text-primary shadow-md"
-                      : "bg-white/10 md:bg-transparent text-white md:text-white/80 hover:bg-white/20 md:hover:bg-white/10"
-                      }`}
-                  >
-                    <Swords className="w-4 h-4" /> Challenges
-                  </Link>
                 </>
               )}
               {(isUmpire || isAdmin) && (
-                <Link
-                  href="/feed/umpire"
+                <button
                   onClick={() => handleTabChange("umpire")}
-                  className={`col-span-full md:col-span-1 flex justify-center items-center gap-2 px-4 py-3 md:px-6 md:py-2.5 rounded-xl text-xs md:text-sm font-black transition-all ${activeTab === "umpire"
-                    ? "bg-white text-primary shadow-md"
-                    : "bg-white/10 md:bg-transparent text-white md:text-white/80 hover:bg-white/20 md:hover:bg-white/10"
+                  className={`flex justify-center items-center gap-2 px-4 py-2 rounded-xl text-sm font-black transition-all ${activeTab === "umpire"
+                    ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-foreground shadow-md"
+                    : "text-muted-foreground hover:bg-slate-200 dark:hover:bg-slate-800"
                     }`}
                 >
                   <Tv2 className="w-4 h-4" /> Umpire
-                </Link>
+                </button>
               )}
-            </div>
           </div>
         </div>
-      </div>
-
       <div className={`container mx-auto px-4 max-w-3xl ${activeTab === "my_matches" ? "mt-0" : "mt-8"}`}>
         {activeTab === "announcements" ? (
           <AnnouncementsSection />
         ) : activeTab === "umpire" && (isUmpire || isAdmin) ? (
           <UmpireTab />
-        ) : activeTab === "my_matches" ? (
-          <MyMatchesTab />
-        ) : activeTab === "challenges" ? (
-          <>
-            <div className="mb-6">
-              <WeeklyChallenges />
-            </div>
-            <ChallengeHubTab currentUser={session?.user} />
-          </>
         ) : (
           <>
             {!loading && session && hasLiveMatches && <MatchPredictions />}
@@ -349,7 +270,7 @@ export default function Feed() {
                 <button
                   onClick={() => setFeedFilter("global")}
                   className={`shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all ${feedFilter === "global"
-                    ? "bg-primary text-foreground shadow-md"
+                    ? "bg-primary text-primary-foreground shadow-md"
                     : "bg-transparent text-muted-foreground dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                     }`}
                 >
@@ -395,7 +316,7 @@ export default function Feed() {
                   onChange={(e) => setCategoryFilter(e.target.value as any)}
                   className="bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 text-xs font-bold rounded-lg px-2 py-1.5 outline-none border-none focus:ring-2 focus:ring-primary cursor-pointer"
                 >
-                  <option value="all">All Modes</option>
+                  <option value="all">All</option>
                   <option value="singles">Singles</option>
                   <option value="doubles">Doubles</option>
                   <option value="mixed">Mixed Doubles</option>
