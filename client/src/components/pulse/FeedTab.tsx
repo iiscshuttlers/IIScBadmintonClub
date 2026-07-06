@@ -411,7 +411,7 @@ export default function FeedTab() {
                   </div>
                 )}
               </div>
-            ) : feedFilter === "global" ? (
+            ) : (
               <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm mt-8">
                 <div className="w-24 h-24 mx-auto bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
                   <Trophy className="w-10 h-10 text-slate-300 dark:text-muted-foreground" />
@@ -420,11 +420,10 @@ export default function FeedTab() {
                   No matches yet
                 </h3>
                 <p className="text-muted-foreground font-medium max-w-sm mx-auto">
-                  It's quiet on the courts. Be the first to log a match today and
-                  get the action started!
+                  It's quiet on the courts. Check back later for more action!
                 </p>
               </div>
-            ) : null}
+            )}
           </>
         )}
       </div>

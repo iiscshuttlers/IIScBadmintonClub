@@ -804,6 +804,15 @@ export function TournamentArchiveBrackets({ tournamentId }: { tournamentId: stri
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   useEffect(() => {
+    // Supabase will throw 400 if we pass a non-UUID string to a UUID column
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tournamentId);
+    
+    if (!isUUID) {
+      setMatches([]);
+      setLoading(false);
+      return;
+    }
+
     supabase
       .from("tournament_matches")
       .select("id,category,match_code,round,round_name,match_number,team1_label,team2_label,winner_side,score,sets_history,status")

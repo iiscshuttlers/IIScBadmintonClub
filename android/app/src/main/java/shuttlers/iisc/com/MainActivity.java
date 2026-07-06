@@ -1,4 +1,4 @@
-package com.iiscshuttlers.app;
+package shuttlers.iisc.com;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
