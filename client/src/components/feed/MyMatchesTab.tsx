@@ -367,7 +367,9 @@ export function MyMatchesTab() {
                       {iAmSubmitter && (
                         <button
                           onClick={() => {
-                            if (window.confirm("Are you sure you want to withdraw this match request?")) {
+                            if (typeof (window as any).Capacitor !== "undefined") {
+                              handleAction(match.id, "withdraw");
+                            } else if (window.confirm("Are you sure you want to withdraw this match request?")) {
                               handleAction(match.id, "withdraw");
                             }
                           }}

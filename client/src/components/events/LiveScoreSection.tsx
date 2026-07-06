@@ -269,7 +269,15 @@ function MatchBroadcastCard({
                 <Save className="w-4 h-4" /> Enter Final Score
               </button>
               <button
-                onClick={() => { if (window.confirm("Kill this broadcast? It will be removed without saving a result.")) onKill(match.id); }}
+                onClick={() => {
+                  if (typeof (window as any).Capacitor !== "undefined") {
+                    // On Capacitor, window.confirm freezes — use direct action with toast undo pattern
+                    onKill(match.id);
+                    toast.success("Broadcast killed.", { description: "Result not saved." });
+                  } else if (window.confirm("Kill this broadcast? It will be removed without saving a result.")) {
+                    onKill(match.id);
+                  }
+                }}
                 className="flex items-center gap-1.5 px-4 py-2.5 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 font-bold text-xs rounded-xl transition"
               >
                 <Trash2 className="w-4 h-4" /> Kill Broadcast

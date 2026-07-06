@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Loader2, Users, Info } from "lucide-react";
+import { safeReplaceState, safeGetSearchParams } from "@/lib/navUtils";
 
 interface Participant {
   id: string;
@@ -12,7 +13,7 @@ interface Participant {
 export function LivePlayersSection({ tournamentId, categories }: { tournamentId: string; categories: string[] }) {
   const [participants, setParticipants] = useState<Record<string, Participant[]>>({});
   const [loading, setLoading] = useState(true);
-  const searchParams = new URLSearchParams(window.location.search);
+  const searchParams = safeGetSearchParams();
   const [activeCat, setActiveCat] = useState<string>(searchParams.get("cat") || "");
 
   useEffect(() => {
@@ -42,9 +43,11 @@ export function LivePlayersSection({ tournamentId, categories }: { tournamentId:
 
   useEffect(() => {
     if (!activeCat) return;
-    const url = new URL(window.location.href);
-    url.searchParams.set("cat", activeCat);
-    window.history.replaceState({}, "", url.toString());
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set("cat", activeCat);
+      safeReplaceState(url.toString());
+    } catch { /* ignore on Capacitor */ }
   }, [activeCat]);
 
   if (loading) {

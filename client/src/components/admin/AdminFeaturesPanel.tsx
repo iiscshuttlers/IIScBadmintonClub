@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { WeeklyChallenges } from "@/components/feed/WeeklyChallenges";
+import { safeReplaceState, safeGetSearchParams, isCapacitor } from "@/lib/navUtils";
 
 const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm";
 const sectionTitle = (icon: React.ReactNode, label: string) => (
@@ -506,16 +507,17 @@ function CronJobsPanel() {
 
 export function AdminFeaturesPanel() {
   const [section, setSection] = useState<"live" | "predictions" | "challenges" | "notifications" | "api" | "health">(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = safeGetSearchParams();
     const tab = params.get("tab") as any;
     return ["live", "predictions", "challenges", "notifications", "api", "health"].includes(tab) ? tab : "live";
   });
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = safeGetSearchParams();
     params.set("tab", section);
-    const newUrl = `${window.location.pathname}?${params.toString()}${window.location.hash}`;
-    window.history.replaceState(null, "", newUrl);
+    const hash = isCapacitor ? "" : window.location.hash;
+    const newUrl = `${window.location.pathname}?${params.toString()}${hash}`;
+    safeReplaceState(newUrl);
   }, [section]);
 
   const sections = [

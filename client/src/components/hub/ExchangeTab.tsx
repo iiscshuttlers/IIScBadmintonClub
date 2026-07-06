@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { CreateListingModal } from "@/components/marketplace/CreateListingModal";
 import { InfoModal } from "@/components/InfoModal";
 import FindLost from "@/pages/FindLost";
+import { safeReplaceState, safeGetSearchParams, safeGetHash, isCapacitor } from "@/lib/navUtils";
 
 interface Listing {
   id: string;
@@ -43,14 +44,14 @@ export default function ExchangeTab() {
   const [typeFilter, setTypeFilter] = useState<'all' | 'sell' | 'buy'>('all');
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = safeGetSearchParams();
     if (filter === "All") {
       params.delete("cat");
     } else {
       params.set("cat", filter);
     }
-    const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}${window.location.hash}`;
-    window.history.replaceState(null, "", newUrl);
+    const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}${isCapacitor ? "" : window.location.hash}`;
+    safeReplaceState(newUrl);
   }, [filter]);
   const [showSold, setShowSold] = useState(false);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
@@ -69,7 +70,10 @@ export default function ExchangeTab() {
   };
   const menuRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<"marketplace" | "findlost">(() => {
-    return window.location.pathname.includes("find-lost") || window.location.hash.includes("lost") ? "findlost" : "marketplace";
+    if (isCapacitor) return "marketplace";
+    try {
+      return window.location.pathname.includes("find-lost") || window.location.hash.includes("lost") ? "findlost" : "marketplace";
+    } catch { return "marketplace"; }
   });
 
   const fetchListings = async () => {
@@ -184,7 +188,7 @@ export default function ExchangeTab() {
             onClick={() => { 
               setActiveTab("marketplace"); 
               setFilter("All");
-              window.history.replaceState({}, '', '/hub#buy-sell'); 
+              safeReplaceState('/hub#buy-sell');
             }} 
             className={`px-5 py-2 rounded-xl font-black text-sm transition-all ${
               activeTab === "marketplace" 
@@ -197,7 +201,7 @@ export default function ExchangeTab() {
           <button 
             onClick={() => { 
               setActiveTab("findlost"); 
-              window.history.replaceState({}, '', '/hub#lost-found'); 
+              safeReplaceState('/hub#lost-found');
             }} 
             className={`px-5 py-2 rounded-xl font-black text-sm transition-all ${
               activeTab === "findlost" 

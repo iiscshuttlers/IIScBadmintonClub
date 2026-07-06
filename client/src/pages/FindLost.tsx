@@ -6,6 +6,7 @@ import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { InfoModal } from "@/components/InfoModal";
+import { safeReplaceState, safeGetSearchParams, isCapacitor } from "@/lib/navUtils";
 import {
   Search,
   Plus,
@@ -75,14 +76,15 @@ export default function FindLost() {
   });
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = safeGetSearchParams();
     if (filter === "all") {
       params.delete("cat");
     } else {
       params.set("cat", filter);
     }
-    const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}${window.location.hash}`;
-    window.history.replaceState(null, "", newUrl);
+    const hash = isCapacitor ? "" : window.location.hash;
+    const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}${hash}`;
+    safeReplaceState(newUrl);
   }, [filter]);
   const [showResolved, setShowResolved] = useState(false);
   const [showForm, setShowForm] = useState(false);

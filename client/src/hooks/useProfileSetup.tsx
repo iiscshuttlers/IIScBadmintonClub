@@ -12,6 +12,7 @@ import { useProfileBadmintonState } from "./profile/useProfileBadmintonState";
 import { useProfileEquipmentState } from "./profile/useProfileEquipmentState";
 import { useProfileHighlightsState } from "./profile/useProfileHighlightsState";
 import { useProfileMediaState } from "./profile/useProfileMediaState";
+import { safeReplaceState, safeGetHash } from "@/lib/navUtils";
 
 const PASSWORD_UPDATE_TIMEOUT_MS = 12_000;
 
@@ -24,7 +25,7 @@ export function useProfileSetup() {
   const profileLoadedRef = useRef<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<"basic" | "badminton" | "equipment" | "highlights" | "media">(() => {
-    const hash = window.location.hash.replace("#", "");
+    const hash = safeGetHash();
     if (["basic", "badminton", "equipment", "highlights", "media"].includes(hash)) {
       return hash as "basic" | "badminton" | "equipment" | "highlights" | "media";
     }
@@ -32,7 +33,7 @@ export function useProfileSetup() {
   });
 
   useEffect(() => {
-    window.history.replaceState(null, "", `#${activeTab}`);
+    safeReplaceState(`#${activeTab}`);
   }, [activeTab]);
 
   const basic = useProfileBasicState();

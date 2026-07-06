@@ -37,6 +37,7 @@ import {
   DEFAULT_TOURNAMENT_CONFIG,
   type TournamentConfig,
 } from "@/lib/tournaments";
+import { safeReplaceState } from "@/lib/navUtils";
 
 const NOTICES_BUCKET = "tournament_notices";
 
@@ -109,11 +110,13 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
   const mountedRef = useRef(true);
 
   useEffect(() => {
-    const url = new URL(window.location.href);
-    url.searchParams.set("t", viewStatus);
-    if (activeTid) url.searchParams.set("tid", activeTid);
-    else url.searchParams.delete("tid");
-    window.history.replaceState({}, "", url.toString());
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set("t", viewStatus);
+      if (activeTid) url.searchParams.set("tid", activeTid);
+      else url.searchParams.delete("tid");
+      safeReplaceState(url.toString());
+    } catch { /* ignore on Capacitor */ }
   }, [viewStatus, activeTid]);
 
   useEffect(() => {

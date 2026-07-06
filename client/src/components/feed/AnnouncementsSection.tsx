@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchSiteData } from "@/lib/siteData";
 import { SocialCTA } from "@/components/SocialCTA";
 import DOMPurify from "dompurify";
+import { safeReplaceState, safeGetSearchParams, isCapacitor } from "@/lib/navUtils";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 function sanitize(html: string) {
@@ -56,14 +57,15 @@ export function AnnouncementsSection() {
   });
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = safeGetSearchParams();
     if (selectedCategory === "all") {
       params.delete("cat");
     } else {
       params.set("cat", selectedCategory);
     }
-    const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}${window.location.hash}`;
-    window.history.replaceState(null, "", newUrl);
+    const hash = isCapacitor ? "" : window.location.hash;
+    const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}${hash}`;
+    safeReplaceState(newUrl);
   }, [selectedCategory]);
   const [loading, setLoading] = useState(true);
   const [visibleCount, setVisibleCount] = useState(10);

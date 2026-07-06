@@ -6,6 +6,7 @@ import { AnnouncementEditor } from "./editors/AnnouncementEditor";
 import { EventEditor } from "./editors/EventEditor";
 import { PushBroadcastPanel } from "./editors/PushBroadcastPanel";
 import { Bell } from "lucide-react";
+import { safeReplaceState, safeGetSearchParams, isCapacitor } from "@/lib/navUtils";
 
 type SubTabId = "announcements" | "events" | "flyers" | "push";
 
@@ -15,16 +16,17 @@ export function NoticeboardManager({
   setTabCounts: React.Dispatch<React.SetStateAction<Record<string, number>>>;
 }) {
   const [activeTab, setActiveTab] = useState<SubTabId>(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = safeGetSearchParams();
     const tab = params.get("tab") as SubTabId;
     return ["announcements", "events", "flyers", "push"].includes(tab) ? tab : "announcements";
   });
 
   React.useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = safeGetSearchParams();
     params.set("tab", activeTab);
-    const newUrl = `${window.location.pathname}?${params.toString()}${window.location.hash}`;
-    window.history.replaceState(null, "", newUrl);
+    const hash = isCapacitor ? "" : window.location.hash;
+    const newUrl = `${window.location.pathname}?${params.toString()}${hash}`;
+    safeReplaceState(newUrl);
   }, [activeTab]);
   const tabs: { id: SubTabId; label: string; icon: any }[] = [
     { id: "announcements", label: "Announcements", icon: Megaphone },
