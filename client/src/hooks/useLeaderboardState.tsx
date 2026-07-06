@@ -3,6 +3,7 @@ import { getEloTier } from "@/lib/tiers";
 import { useHashTab } from "@/hooks/useHashTab";
 import { useIronmanMonthlyQuery } from "@/hooks/queries/useIronmanMonthlyQuery";
 import { useLeaderboardStatsQuery } from "@/hooks/queries/useLeaderboardStatsQuery";
+import { safeReplaceState, safeGetSearchParams } from "@/lib/navUtils";
 
 export interface PlayerRank {
   id: string;
@@ -26,7 +27,7 @@ export function useLeaderboardState(players: PlayerRank[]) {
   const [activeTab, setActiveTab] = useHashTab(
     ["elo", "ironman"] as const,
     (() => {
-      const params = new URLSearchParams(window.location.search);
+      const params = safeGetSearchParams();
       const lb = params.get("lb");
       return (lb === "elo" || lb === "ironman" ? lb : null) ||
         (localStorage.getItem("leaderboard_tab") as "elo" | "ironman") ||
@@ -35,7 +36,7 @@ export function useLeaderboardState(players: PlayerRank[]) {
   );
   
   const [categoryFilter, setCategoryFilter] = useState<"ALL" | "MS" | "WS" | "MD" | "WD" | "XD">(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = safeGetSearchParams();
     const cat = params.get("cat");
     if (["ALL", "MS", "WS", "MD", "WD", "XD"].includes(cat || "")) return cat as any;
     return "ALL";
@@ -43,18 +44,18 @@ export function useLeaderboardState(players: PlayerRank[]) {
 
   const [ironmanFilter, setIronmanFilter] = useState<"all" | "monthly">("all");
   const [eloMode, setEloMode] = useState<"club" | "tournament">(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = safeGetSearchParams();
     const mode = params.get("mode");
     if (mode === "club" || mode === "tournament") return mode as any;
     return "club";
   });
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = safeGetSearchParams();
     params.set("lb", activeTab);
     params.set("cat", categoryFilter);
     params.set("mode", eloMode);
-    window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}#${activeTab}`);
+    safeReplaceState(`${window.location.pathname}?${params.toString()}#${activeTab}`);
     localStorage.setItem("leaderboard_tab", activeTab);
   }, [activeTab, categoryFilter, eloMode]);
   

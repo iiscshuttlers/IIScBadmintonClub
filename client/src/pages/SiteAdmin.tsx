@@ -25,6 +25,7 @@ import {
   FileCode2,
   ExternalLink,
   LayoutGrid,
+  UserRound,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
@@ -39,6 +40,7 @@ import {
   ChangelogViewer,
   NoticeboardManager,
 } from "@/components/admin/AdminEditors";
+import { ConvenerEditor, DEFAULT_CONVENER_DATA } from "@/components/admin/ConvenerEditor";
 import { AdminStatsOverview } from "@/components/admin/AdminStatsOverview";
 import { DisputePanel } from "@/components/admin/DisputePanel";
 import { AdminSettings } from "@/components/admin/AdminSettings";
@@ -77,7 +79,8 @@ type TabId =
   | "all_features"
   | "tooltips"
   | "recycle_bin"
-  | "undo_history";
+  | "undo_history"
+  | "convener_photos";
 
 interface TabGroup {
   title: string;
@@ -100,6 +103,7 @@ const TAB_GROUPS: TabGroup[] = [
       { id: "polls", label: "Community Polls", icon: Megaphone },
       { id: "holidays", label: "Holidays", icon: Calendar },
       { id: "videos", label: "Videos", icon: Video },
+      { id: "convener_photos", label: "Convener Photos", icon: UserRound },
     ],
   },
   {
@@ -454,6 +458,14 @@ function SiteAdminInner() {
             {activeTab === "tooltips" && <TooltipRegistryPanel />}
             {activeTab === "undo_history" && <UndoHistory />}
             {activeTab === "recycle_bin" && <RecycleBin />}
+            {activeTab === "convener_photos" && (
+              <ContentEditorWrapper
+                dbKey="convener_photos"
+                emptyState={DEFAULT_CONVENER_DATA}
+                editorName="Convener Photos"
+                EditorComponent={ConvenerEditor}
+              />
+            )}
           </motion.div>
         </AnimatePresence>
       </div>

@@ -20,6 +20,7 @@ import { ARCHIVED_TOURNAMENTS } from "@/data/tournamentArchive";
 import { fetchSiteData } from "@/lib/siteData";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { InfoModal } from "@/components/InfoModal";
+import type { ConvenerData } from "@/components/admin/ConvenerEditor";
 
 // ── Animation variants ────────────────────────────────────────────────────────
 const fadeUp: Variants = {
@@ -50,6 +51,7 @@ function getLatestHighlight() {
 
 export default function Home() {
   const [config, setConfig] = useState<Record<string, any> | null>(null);
+  const [convenerData, setConvenerData] = useState<ConvenerData | null>(null);
 
   useEffect(() => {
     fetchSiteData("site_config", "site_config.json")
@@ -57,6 +59,10 @@ export default function Home() {
         if (data) setConfig(data);
       })
       .catch(console.error);
+
+    fetchSiteData<ConvenerData>("convener_photos", "convener_photos.json")
+      .then((data) => { if (data) setConvenerData(data); })
+      .catch(() => {}); // silent – static files may not exist yet
   }, []);
 
   usePageMeta({
@@ -72,15 +78,15 @@ export default function Home() {
   const teamMembers = [
     {
       role: "Convener",
-      name: "Raja Janmejay",
-      description: "Leading the club with vision and passion for the sport",
-      image: `${import.meta.env.BASE_URL}convener.png`,
+      name: convenerData?.convener?.name || "Raja Janmejay",
+      description: convenerData?.convener?.description || "Leading the club with vision and passion for the sport",
+      image: convenerData?.convener?.imageUrl || `${import.meta.env.BASE_URL}convener.png`,
     },
     {
       role: "Co-Convener",
-      name: "Aneesh Varla",
-      description: "Helping members connect, compete, and grow through badminton",
-      image: `${import.meta.env.BASE_URL}co_convener.png`,
+      name: convenerData?.coConvener?.name || "Aneesh Varla",
+      description: convenerData?.coConvener?.description || "Helping members connect, compete, and grow through badminton",
+      image: convenerData?.coConvener?.imageUrl || `${import.meta.env.BASE_URL}co_convener.png`,
     },
   ];
 

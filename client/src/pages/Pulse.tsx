@@ -189,35 +189,45 @@ export default function Pulse() {
   const TOURNAMENT_SUB_TABS = ["notices", "players", "schedule", "broadcast", "brackets", "past", "umpire"];
   const EVENTS_TABS = ["events", "calendar", "tournament", "history", ...TOURNAMENT_SUB_TABS];
 
+  const isCapacitorEnv = typeof (window as any).Capacitor !== "undefined";
+
   const getPulseTab = () => {
-    const hash = window.location.hash.replace("#", "");
-    if (hash === "feed") return "feed";
-    if (EVENTS_TABS.includes(hash)) return "events";
+    if (isCapacitorEnv) return "feed";
+    try {
+      const hash = window.location.hash.replace("#", "");
+      if (hash === "feed") return "feed";
+      if (EVENTS_TABS.includes(hash)) return "events";
+    } catch { /* ignore */ }
     return "feed";
   };
 
   const [pulseTab, setPulseTabState] = useState<"feed" | "events">(getPulseTab);
 
   useEffect(() => {
+    if (isCapacitorEnv) return;
     const onHashChange = () => setPulseTabState(getPulseTab());
     window.addEventListener("hashchange", onHashChange);
     if (!window.location.hash) {
-      window.history.replaceState(null, "", "#feed");
+      try { window.history.replaceState(null, "", "#feed"); } catch { /* ignore */ }
     }
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
 
   const setPulseTab = (tab: "feed" | "events") => {
     setPulseTabState(tab);
-    if (tab === "events") {
-      const currentHash = window.location.hash.replace("#", "");
-      if (!EVENTS_TABS.includes(currentHash) || currentHash === "events") {
-        window.location.hash = "calendar";
+    if (isCapacitorEnv) return;
+    try {
+      if (tab === "events") {
+        const currentHash = window.location.hash.replace("#", "");
+        if (!EVENTS_TABS.includes(currentHash) || currentHash === "events") {
+          window.location.hash = "calendar";
+        }
+      } else {
+        window.location.hash = "feed";
       }
-    } else {
-      window.location.hash = "feed";
-    }
+    } catch { /* ignore */ }
   };
+
 
   const [activeTab, setActiveTab] = useHashTab(
     ["calendar", "tournament", "history", ...TOURNAMENT_SUB_TABS] as const,
