@@ -140,8 +140,8 @@ export default defineConfig(() => {
   // Otherwise use '/'
   const isCapacitor = process.env.CAPACITOR === "true";
   const isGithubPages = process.env.GITHUB_PAGES === "true";
-  const basePath = isCapacitor ? "./" : isGithubPages ? "/iiscshuttlers/" : "/";
-  const manifestIconPath = (name: string) => isGithubPages ? `/iiscshuttlers/${name}` : `/${name}`;
+  const basePath = isCapacitor ? "./" : isGithubPages ? "/IIScBadmintonClub/" : "/";
+  const manifestIconPath = (name: string) => isGithubPages ? `/IIScBadmintonClub/${name}` : `/${name}`;
 
   return {
     define: {
