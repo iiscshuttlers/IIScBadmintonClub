@@ -1,5 +1,24 @@
 [
   {
+    "versionCode": 182,
+    "versionName": "1.2",
+    "date": "2026-07-06T22:53:45.134Z",
+    "changes": [
+      "- feat: admin convener photo editor + dynamic home page + Capacitor nav safety",
+      "- fix: correct github pages base URL and add env flag",
+      "- fix: resolve packages field missing in pnpm-workspace",
+      "- chore: use manual pnpm install to fix action-setup bug",
+      "- chore: add Cloudinary keys to workflow",
+      "- Setup GitHub Actions deployment for Pages",
+      "- chore: remove sensitive files from tracking",
+      "- Bump version to 1.0.1 for next release",
+      "- Update android package names and format screenshots",
+      "- Remove GitHub Pages deployment workflow",
+      "- New WebPage",
+      "- Updates"
+    ]
+  },
+  {
     "versionCode": 180,
     "versionName": "1.180",
     "date": "2026-07-02T20:02:24.784Z",

@@ -1,6 +1,6 @@
 {
-  "versionCode": 180,
-  "versionName": "1.180",
+  "versionCode": 182,
+  "versionName": "1.2",
   "downloadUrl": "https://play.google.com/store/apps/details?id=com.iiscshuttlers.app",
-  "changelog": "Version 1.180 released with bug fixes and performance improvements."
+  "changelog": "- feat: admin convener photo editor + dynamic home page + Capacitor nav safety\n- fix: correct github pages base URL and add env flag\n- fix: resolve packages field missing in pnpm-workspace\n- chore: use manual pnpm install to fix action-setup bug\n- chore: add Cloudinary keys to workflow\n- Setup GitHub Actions deployment for Pages\n- chore: remove sensitive files from tracking\n- Bump version to 1.0.1 for next release\n- Update android package names and format screenshots\n- Remove GitHub Pages deployment workflow\n- New WebPage\n- Updates"
 }
