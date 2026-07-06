@@ -2,4 +2,5 @@ allowBuilds:
   "@firebase/util": true
   esbuild: true
   protobufjs: true
+  puppeteer: set this to true or false
   sharp: true

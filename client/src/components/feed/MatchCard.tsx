@@ -109,14 +109,7 @@ export function MatchCard({
     return cat;
   };
 
-  const getCategoryElo = (player: any) => {
-    if (!player) return null;
-    const label = getDisplayCategory().toLowerCase();
-    if (label.includes("mixed")) return player.mixed_elo;
-    if (label.includes("doubles")) return player.doubles_elo;
-    if (label.includes("singles")) return player.singles_elo;
-    return player.elo_rating;
-  };
+
 
   const isPlayerInMatch = currentUser && (
     match.player1_id === currentUser.id ||
@@ -149,12 +142,12 @@ export function MatchCard({
   const team2Win = hasWinner && !team1Win;
 
   const team1 = [
-    { player: actualP1, eloChange: match.elo_change_p1 },
-    ...(match.partner1 ? [{ player: match.partner1, eloChange: match.elo_change_p3 }] : []),
+    { player: actualP1 },
+    ...(match.partner1 ? [{ player: match.partner1 }] : []),
   ].filter((m) => m.player);
   const team2 = [
-    { player: actualP2, eloChange: match.elo_change_p2 },
-    ...(match.partner2 ? [{ player: match.partner2, eloChange: match.elo_change_p4 }] : []),
+    { player: actualP2 },
+    ...(match.partner2 ? [{ player: match.partner2 }] : []),
   ].filter((m) => m.player);
 
   // Natural-language recap of the result (only when there's a winner)
@@ -167,27 +160,18 @@ export function MatchCard({
 
   // Renders a team's players as stacked avatar + name rows (singles = one row)
   const renderTeam = (
-    members: { player: any; eloChange?: number | null }[],
+    members: { player: any }[],
     win: boolean,
     dim: boolean,
     align: "left" | "right"
   ) => (
     <div className="flex flex-col gap-1.5">
-      {members.map(({ player, eloChange }, i) => {
+      {members.map(({ player }, i) => {
         const nameEl = (
           <div className="flex-1 min-w-0">
             <span className={`font-bold text-xs block group-hover/p:underline line-clamp-2 whitespace-normal leading-tight ${win ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-slate-300"}`}>
               {player.full_name}
             </span>
-            {eloChange != null ? (
-              <span className={`block text-[10px] font-bold ${eloChange > 0 ? "text-primary" : "text-rose-500"}`}>
-                {eloChange > 0 ? "+" : ""}{eloChange} ELO
-              </span>
-            ) : getCategoryElo(player) ? (
-              <span className="block text-[10px] font-bold text-muted-foreground dark:text-muted-foreground">
-                {getCategoryElo(player)} ELO
-              </span>
-            ) : null}
           </div>
         );
         const avatarEl = (

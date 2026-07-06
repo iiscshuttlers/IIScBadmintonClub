@@ -58,14 +58,6 @@ export async function fetchPendingMatchesForPlayer(playerId: string): Promise<Ma
 }
 
 export async function fetchFeedMatches(limit = 100): Promise<MatchWithPlayers[]> {
-  const { data: friendlyData, error: friendlyError } = await supabase
-    .from("matches")
-    .select(MATCH_SELECT_WITH_PLAYERS)
-    .eq("status", "confirmed")
-    .order("created_at", { ascending: false })
-    .limit(limit);
-  if (friendlyError) throw friendlyError;
-
   const playerSelect = "id, full_name, avatar_url, gender, elo_rating, singles_elo, doubles_elo, mixed_elo";
   const { data: tournamentData, error: tourneyError } = await supabase
     .from("tournament_matches")
@@ -83,17 +75,13 @@ export async function fetchFeedMatches(limit = 100): Promise<MatchWithPlayers[]>
       return hasTeam1 && hasTeam2;
     })
     .map((m: any) => ({
-    ...m,
-    is_friendly: false,
-    team1_partner_id: m.player3_id,
-    team2_partner_id: m.player4_id,
-  }));
+      ...m,
+      is_friendly: false,
+      team1_partner_id: m.player3_id,
+      team2_partner_id: m.player4_id,
+    }));
 
-  const allMatches = [...(friendlyData ?? []), ...mappedTourney].sort((a: any, b: any) => {
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-  });
-
-  return allMatches.slice(0, limit) as unknown as MatchWithPlayers[];
+  return mappedTourney as unknown as MatchWithPlayers[];
 }
 
 export async function confirmMatch(matchId: string, confirmerId: string) {

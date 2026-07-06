@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { getTournaments } from "@/lib/tournaments";
 import { fetchSiteData } from "@/lib/siteData";
 import { Avatar } from "@/components/ui/Avatar";
-import { PersonalNavigation } from "@/components/PersonalNavigation";
+// PersonalNavigation removed
 import {
   Menu,
   X,
@@ -50,45 +50,12 @@ import { GlobalSearch } from "@/components/GlobalSearch";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 const CLUB_LINKS = [
-  { href: "/players", label: "Players" },
   { href: "/pulse", label: "Pulse" },
   { href: "/legacy", label: "Legacy" },
   { href: "/hub", label: "Hub" },
 ];
 
-function ModeToggle({ isLoggedIn, setLocation, mode, setMode }: { isLoggedIn: boolean, setLocation: any, mode: 'club' | 'personal', setMode: any }) {
-  const handleToggle = (newMode: 'club' | 'personal') => {
-    if (newMode === 'personal') {
-      if (!isLoggedIn) {
-        sessionStorage.setItem("return_url", "/personal");
-        setLocation("/join");
-        return;
-      }
-      setMode(newMode);
-      setLocation("/personal");
-    } else {
-      setMode(newMode);
-      setLocation("/");
-    }
-  };
-
-  return (
-    <div className="flex bg-slate-100 dark:bg-slate-900 rounded-full p-1 mr-2 shadow-inner border border-slate-200/60 dark:border-slate-800">
-      <button
-        onClick={() => handleToggle('club')}
-        className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all ${mode === 'club' ? 'bg-white dark:bg-slate-800 text-primary dark:text-primary shadow-sm' : 'text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300'}`}
-      >
-        <Users className="w-3.5 h-3.5" /> Club
-      </button>
-      <button
-        onClick={() => handleToggle('personal')}
-        className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all ${mode === 'personal' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300'}`}
-      >
-        <User className="w-3.5 h-3.5" /> Personal
-      </button>
-    </div>
-  );
-}
+// ModeToggle removed
 
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
@@ -125,19 +92,7 @@ export default function Navigation() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Sync mode with URL location
-  useEffect(() => {
-    if (location.startsWith("/personal") && mode !== "personal") {
-      setMode("personal");
-    } else if (
-      !location.startsWith("/personal") && 
-      !location.startsWith("/settings") && 
-      !location.startsWith("/profile") &&
-      mode !== "club"
-    ) {
-      setMode("club");
-    }
-  }, [location, mode, setMode]);
+  // Mode logic simplified
 
   // Global Ctrl+K / Cmd+K keyboard shortcut to open search
   useEffect(() => {
@@ -237,10 +192,6 @@ export default function Navigation() {
     setIsOpen(false);
   };
 
-  // Render Personal mode navigation if in Personal mode
-  if (mode === "personal" && isLoggedIn) {
-    return <PersonalNavigation />;
-  }
 
   return (
     <>
@@ -282,7 +233,7 @@ export default function Navigation() {
 
             {/* Desktop Nav Links */}
             <div className="hidden lg:flex items-center gap-0.5 flex-1 justify-center">
-              <ModeToggle isLoggedIn={isLoggedIn} setLocation={setLocation} mode={mode} setMode={setMode} />
+
               <NavLink href="/" label="Home" isActive={isActive("/")} />
               {currentLinks.map((link) => (
                 <NavLink
@@ -316,9 +267,28 @@ export default function Navigation() {
                         <Shield className="w-4.5 h-4.5" />
                       </button>
                     )}
-                    <button onClick={() => setLocation("/personal")} className="hover:opacity-80 transition-opacity">
-                      <Avatar src={userAvatar} name={userName} size="xs" />
-                    </button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="hover:opacity-80 transition-opacity outline-none">
+                          <Avatar src={userAvatar} name={userName} size="xs" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56 mt-2">
+                        <DropdownMenuItem onClick={() => setLocation("/personal/me")} className="cursor-pointer">
+                          <User className="mr-2 h-4 w-4" />
+                          <span>Player Profile</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => toggleTheme()} className="cursor-pointer">
+                          {theme === "dark" ? <Sun className="mr-2 h-4 w-4 text-amber-500" /> : <Moon className="mr-2 h-4 w-4 text-indigo-500" />}
+                          <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleSignOut()} className="cursor-pointer text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-950/30">
+                          <LogOut className="mr-2 h-4 w-4" />
+                          <span>Sign Out</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 ) : (
                   <div onClick={() => {
@@ -336,15 +306,7 @@ export default function Navigation() {
 
           {/* ── Row 2: Action Buttons — desktop only ─────────────────── */}
           <div className="hidden lg:flex items-center justify-end gap-1.5 mt-1 border-t border-slate-100 dark:border-slate-800/60 pt-1.5">
-            {isLoggedIn && (
-              <Button
-                onClick={() => window.dispatchEvent(new Event('openLogMatchModal'))}
-                className="bg-blue-600 hover:bg-blue-700 text-foreground font-bold text-xs px-3 rounded-full h-7 shadow-sm"
-              >
-                <Plus className="w-3.5 h-3.5 mr-1" />
-                Log Match
-              </Button>
-            )}
+
             <button
               onClick={() => setSearchOpen(true)}
               className="p-1.5 rounded-xl text-muted-foreground dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
@@ -364,9 +326,28 @@ export default function Navigation() {
                       <Shield className="w-5 h-5" />
                     </button>
                   )}
-                  <button onClick={() => setLocation("/personal")} className="hover:opacity-80 transition-opacity">
-                    <Avatar src={userAvatar} name={userName} size="sm" />
-                  </button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="hover:opacity-80 transition-opacity outline-none">
+                        <Avatar src={userAvatar} name={userName} size="sm" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 mt-2">
+                      <DropdownMenuItem onClick={() => setLocation("/personal/me")} className="cursor-pointer">
+                        <User className="mr-2 h-4 w-4" />
+                        <span>Player Profile</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => toggleTheme()} className="cursor-pointer">
+                        {theme === "dark" ? <Sun className="mr-2 h-4 w-4 text-amber-500" /> : <Moon className="mr-2 h-4 w-4 text-indigo-500" />}
+                        <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => handleSignOut()} className="cursor-pointer text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-950/30">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Sign Out</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               ) : (
 
@@ -496,31 +477,9 @@ export default function Navigation() {
                   </button>
                 </Link>
 
-              <Link href="/players" className="flex-1 min-w-0">
-                <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/players") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
-                  <Users strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
-                  <span className="text-[11px] font-semibold">Players</span>
-                </button>
-              </Link>
 
-            {/* Center Log Match FAB */}
-            <div className="flex-1 min-w-0 shrink-0 flex justify-center items-center relative -top-3.5">
-              {isLoggedIn ? (
-                <button
-                  onClick={() => window.dispatchEvent(new Event('openLogMatchModal'))}
-                  className="w-12 h-12 bg-[#ccff00] hover:bg-[#b8e600] text-black shadow-[#ccff00]/30 rounded-full flex items-center justify-center shadow-lg border-[3px] border-[#ccff00] dark:border-[#ccff00] transition-transform active:scale-95 cursor-pointer"
-                >
-                  <Plus strokeWidth={2.5} className="w-6 h-6" />
-                </button>
-              ) : (
-                <button onClick={() => {
-                  sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
-                  setLocation("/join");
-                }} className="w-11 h-11 bg-slate-800 hover:bg-slate-700 rounded-full flex items-center justify-center text-foreground shadow-lg border-[3px] border-white dark:border-slate-950 transition-transform active:scale-95 cursor-pointer">
-                  <LogIn className="w-4 h-4 ml-0.5" />
-                </button>
-              )}
-            </div>
+
+
 
               <Link href="/hub" className="flex-1 min-w-0">
                 <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/hub") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>

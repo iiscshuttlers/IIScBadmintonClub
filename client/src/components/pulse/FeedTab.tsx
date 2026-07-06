@@ -60,8 +60,6 @@ export default function FeedTab() {
     displayMatches,
     limitCount,
     setLimitCount,
-    feedFilter,
-    setFeedFilter,
     courtUtil,
     matchOfTheDayId,
     weeklyRecap,
@@ -69,9 +67,22 @@ export default function FeedTab() {
     setCategoryFilter,
     timeFilter,
     setTimeFilter,
-    typeFilter,
-    setTypeFilter
+    tournamentFilter,
+    setTournamentFilter
   } = useFeedMatches(ownProfile);
+
+  const [tournaments, setTournaments] = useState<{ id: string, name: string }[]>([]);
+  useEffect(() => {
+    supabase
+      .from("tournaments")
+      .select("id, name")
+      .eq("status", "active") // Or allow all non-deleted? Let's just get all non-deleted.
+      .neq("status", "deleted")
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        if (data) setTournaments(data);
+      });
+  }, []);
 
   usePullToRefresh();
 
@@ -236,87 +247,28 @@ export default function FeedTab() {
                       </div>
                     </div>
                   )}
-                  {weeklyRecap.highestClimber &&
-                    weeklyRecap.highestClimber.eloClimb > 0 && (
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                          Highest Climber
-                        </span>
-                        <div className="text-base font-bold text-foreground line-clamp-1">
-                          {weeklyRecap.highestClimber.name}
-                        </div>
-                        <div className="text-sm font-black text-amber-400">
-                          +{weeklyRecap.highestClimber.eloClimb} ELO Gained
-                        </div>
-                      </div>
-                    )}
-                  {weeklyRecap.biggestUpset && (
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                        Biggest Upset
-                      </span>
-                      <div className="text-base font-bold text-foreground line-clamp-1">
-                        {weeklyRecap.biggestUpset.winner_id ===
-                          weeklyRecap.biggestUpset.player1?.id
-                          ? weeklyRecap.biggestUpset.player1?.full_name
-                          : weeklyRecap.biggestUpset.player2?.full_name}
-                      </div>
-                      <div className="text-sm font-black text-rose-400">
-                        Won as the underdog
-                      </div>
-                    </div>
-                  )}
+
                 </div>
               </div>
             )}
 
             {/* Feed filter tabs and Advanced Filters */}
             <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-              <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0 hide-scrollbar">
-                <button
-                  onClick={() => setFeedFilter("global")}
-                  className={`shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all ${feedFilter === "global"
-                    ? "bg-primary text-primary-foreground shadow-md"
-                    : "bg-transparent text-muted-foreground dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-                    }`}
+              <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0 hide-scrollbar flex-1">
+                <select
+                  value={tournamentFilter}
+                  onChange={(e) => setTournamentFilter(e.target.value)}
+                  className="bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 text-xs font-bold rounded-lg px-2 py-1.5 outline-none border-none focus:ring-2 focus:ring-primary cursor-pointer w-full max-w-[200px]"
                 >
-                  <Activity className="w-3.5 h-3.5" /> Global
-                </button>
-                {session && (
-                  <>
-                    <button
-                      onClick={() => setFeedFilter("following")}
-                      className={`shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all ${feedFilter === "following"
-                        ? "bg-sky-600 text-foreground shadow-md"
-                        : "bg-transparent text-muted-foreground dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-                        }`}
-                    >
-                      <UserCheck className="w-3.5 h-3.5" /> Following
-                    </button>
-                    <button
-                      onClick={() => setFeedFilter("buddies")}
-                      className={`shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all ${feedFilter === "buddies"
-                        ? "bg-violet-600 text-foreground shadow-md"
-                        : "bg-transparent text-muted-foreground dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-                        }`}
-                    >
-                      <Heart className="w-3.5 h-3.5" /> Buddies
-                    </button>
-                  </>
-                )}
+                  <option value="all">All Tournaments</option>
+                  {tournaments.map(t => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
               </div>
 
               {/* Advanced Filters */}
               <div className="flex items-center gap-2 pl-2 sm:pl-4 sm:border-l sm:border-slate-200 dark:sm:border-slate-700">
-                <select
-                  value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value as any)}
-                  className="bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 text-xs font-bold rounded-lg px-2 py-1.5 outline-none border-none focus:ring-2 focus:ring-primary cursor-pointer hidden sm:block"
-                >
-                  <option value="all">All Matches</option>
-                  <option value="friendly">Friendly</option>
-                  <option value="tournament">Tournament</option>
-                </select>
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value as any)}
@@ -338,23 +290,6 @@ export default function FeedTab() {
                 </select>
               </div>
             </div>
-
-            {/* Empty state for social filters */}
-            {!loading && (feedFilter === "following" || feedFilter === "buddies") && displayMatches.length === 0 && (
-              <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm mb-4">
-                <div className="w-16 h-16 mx-auto bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
-                  {feedFilter === "buddies" ? <Heart className="w-8 h-8 text-violet-300" /> : <UserCheck className="w-8 h-8 text-sky-300" />}
-                </div>
-                <h3 className="text-lg font-black text-muted-foreground dark:text-slate-300 mb-1">
-                  No matches yet
-                </h3>
-                <p className="text-muted-foreground text-sm max-w-xs mx-auto">
-                  {feedFilter === "buddies"
-                    ? "None of your buddies have logged a match recently."
-                    : "None of the players you follow have logged a match recently."}
-                </p>
-              </div>
-            )}
 
             {loading ? (
               renderSkeleton()

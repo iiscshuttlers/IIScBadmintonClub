@@ -363,17 +363,6 @@ export function PlayerCard({
             </div>
           )}
 
-          {/* Centered Log Match Button */}
-          {onLogMatch && !isOwn && (
-            <button
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onLogMatch(player.id); }}
-              className="w-full flex items-center justify-center gap-2 py-2 mt-2 mb-3 rounded-xl bg-primary/10 dark:bg-primary/20 hover:bg-primary/20 dark:hover:bg-primary/30 text-primary font-bold text-xs border border-primary/20 transition-all shadow-sm"
-            >
-              <Sword className="w-4 h-4" />
-              Log Match
-            </button>
-          )}
-
           {/* Row 2: Utility icon buttons with labels */}
           <div className="flex items-center justify-center gap-6 pt-1">
             {!isOwn && (

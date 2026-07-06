@@ -151,11 +151,6 @@ export default function Home() {
                       Explore Events <ArrowRight className="w-4 h-4" />
                     </Button>
                   </Link>
-                  <Link href="/players">
-                    <Button variant="outline" className="border-2 border-white/40 bg-slate-900/60 text-white hover:bg-slate-900/80 hover:border-white/60 px-4 py-2.5 text-sm font-bold w-full sm:w-auto rounded-xl transition-all duration-300 cursor-pointer backdrop-blur-md shadow-lg">
-                      Meet the Players
-                    </Button>
-                  </Link>
                 </div>
 
                 {/* Inline mini-stats */}
@@ -523,11 +518,6 @@ export default function Home() {
                 <Link href="/join">
                   <Button className="bg-primary hover:bg-primary text-primary-foreground px-8 py-3.5 text-sm font-bold rounded-xl shadow-lg shadow-primary/20 hover:-translate-y-0.5 transition-all duration-300 glow-emerald cursor-pointer">
                     Get Started Today
-                  </Button>
-                </Link>
-                <Link href="/players">
-                  <Button variant="outline" className="border-white/20 bg-white/5 text-foreground hover:bg-white/10 px-8 py-3.5 text-sm font-semibold rounded-xl transition-all duration-300 cursor-pointer">
-                    Meet the Players
                   </Button>
                 </Link>
               </div>

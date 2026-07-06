@@ -22,7 +22,6 @@ export default function Footer() {
   const quickLinks = [
     { href: "/", label: "Home" },
     { href: "/pulse", label: "Pulse" },
-    { href: "/players", label: "Players" },
     { href: "/hub", label: "Hub" },
     { href: "/legacy", label: "Legacy" },
     { href: "/privacy", label: "Privacy Policy" },

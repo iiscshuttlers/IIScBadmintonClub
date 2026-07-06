@@ -59,7 +59,7 @@ const SiteAdmin = lazy(() => import("./pages/SiteAdmin"));
 const PlayerProfile = lazy(() => import("./pages/PlayerProfile"));
 const Join = lazy(() => import("./pages/Join"));
 const ProfileSetup = lazy(() => import("./pages/ProfileSetup"));
-const PlayersDirectory = lazy(() => import("./pages/PlayersDirectory"));
+
 const ComparePlayers = lazy(() => import("./pages/ComparePlayers"));
 const ChangePassword = lazy(() => import("./pages/ChangePassword"));
 
@@ -70,12 +70,6 @@ const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 
 const TournamentAdmin = lazy(() => import("./pages/TournamentAdmin"));
 
-// Personal Mode Pages (Brainy-style navigation)
-const PersonalHomePage = lazy(() => import("./pages/personal/PersonalHomePage"));
-const PersonalMatchesPage = lazy(() => import("./pages/personal/PersonalMatchesPage"));
-const PersonalGrowthPage = lazy(() => import("./pages/personal/PersonalGrowthPage"));
-const PersonalStatsPage = lazy(() => import("./pages/personal/PersonalStatsPage"));
-const PersonalCirclePage = lazy(() => import("./pages/personal/PersonalCirclePage"));
 const PersonalProfilePage = lazy(() => import("./pages/personal/PersonalProfilePage"));
 
 function PersonalModeRoute({ children }: { children: React.ReactNode }) {
@@ -131,18 +125,14 @@ function AppRoutes() {
           <Route path="/admin"><ProtectedRoute><SiteAdmin /></ProtectedRoute></Route>
           <Route path="/tournament-admin"><ProtectedRoute><TournamentAdmin /></ProtectedRoute></Route>
           <Route path="/profile/setup"><ProtectedRoute><ProfileSetup /></ProtectedRoute></Route>
-          <Route path="/players" component={PlayersDirectory} />
+
           <Route path="/player/:id/edit"><ProtectedRoute><ProfileSetup /></ProtectedRoute></Route>
           <Route path="/profile/password"><ProtectedRoute><ChangePassword /></ProtectedRoute></Route>
           <Route path="/find-lost" component={() => { window.location.href='/hub#lost-found'; return null; }} />
           <Route path="/delete-account"><ProtectedRoute><DeleteAccount /></ProtectedRoute></Route>
 
           {/* Personal Mode Routes (Brainy-style navigation) */}
-          <Route path="/personal"><PersonalModeRoute><PersonalHomePage /></PersonalModeRoute></Route>
-          <Route path="/personal/matches"><PersonalModeRoute><PersonalMatchesPage /></PersonalModeRoute></Route>
-          <Route path="/personal/growth"><PersonalModeRoute><PersonalGrowthPage /></PersonalModeRoute></Route>
-          <Route path="/personal/stats"><PersonalModeRoute><PersonalStatsPage /></PersonalModeRoute></Route>
-          <Route path="/personal/circle"><PersonalModeRoute><PersonalCirclePage /></PersonalModeRoute></Route>
+          <Route path="/personal"><PersonalModeRoute><PersonalProfilePage /></PersonalModeRoute></Route>
           <Route path="/personal/me"><PersonalModeRoute><PersonalProfilePage /></PersonalModeRoute></Route>
           <Route path="/personal/player/:id">
             <PersonalModeRoute>

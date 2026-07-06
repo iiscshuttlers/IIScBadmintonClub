@@ -5,10 +5,9 @@ export function useFeedMatches(ownProfile: any) {
   const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [limitCount, setLimitCount] = useState(100);
-  const [feedFilter, setFeedFilter] = useState<"global" | "following" | "buddies">("global");
+  const [tournamentFilter, setTournamentFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<"all" | "singles" | "doubles" | "mixed">("all");
   const [timeFilter, setTimeFilter] = useState<"all" | "today" | "week">("all");
-  const [typeFilter, setTypeFilter] = useState<"all" | "friendly" | "tournament">("all");
 
   const fetchFeed = useCallback(
     async (silent = false) => {
@@ -52,23 +51,7 @@ export function useFeedMatches(ownProfile: any) {
   const displayMatches = useMemo(() => {
     let filtered = matches;
 
-    // 1. Social Filter
-    if (feedFilter !== "global") {
-      const ids = feedFilter === "buddies" ? buddyIds : followingIds;
-      if (ids.length === 0) {
-        filtered = [];
-      } else {
-        filtered = filtered.filter((m: any) => {
-          const matchIds = [
-            m.player1_id, m.player2_id, m.team1_partner_id, m.team2_partner_id,
-            m.player1?.id, m.player2?.id, m.partner1?.id, m.partner2?.id
-          ].filter(Boolean).map(String);
-          return ids.some((id: string) => matchIds.includes(id));
-        });
-      }
-    }
-
-    // 2. Category Filter
+    // 1. Category Filter
     if (categoryFilter !== "all") {
       filtered = filtered.filter((m: any) => {
         const cat = (m.category || "").toLowerCase();
@@ -79,7 +62,7 @@ export function useFeedMatches(ownProfile: any) {
       });
     }
 
-    // 3. Time Filter
+    // 2. Time Filter
     if (timeFilter !== "all") {
       const now = new Date();
       filtered = filtered.filter((m: any) => {
@@ -96,17 +79,13 @@ export function useFeedMatches(ownProfile: any) {
       });
     }
 
-    // 4. Type Filter
-    if (typeFilter !== "all") {
-      filtered = filtered.filter((m: any) => {
-        if (typeFilter === "friendly") return m.is_friendly === true;
-        if (typeFilter === "tournament") return m.is_friendly === false;
-        return true;
-      });
+    // 3. Tournament Filter
+    if (tournamentFilter !== "all") {
+      filtered = filtered.filter((m: any) => m.tournament_id === tournamentFilter);
     }
 
     return filtered;
-  }, [matches, feedFilter, categoryFilter, timeFilter, typeFilter, followingIds, buddyIds]);
+  }, [matches, categoryFilter, timeFilter, tournamentFilter]);
 
   const courtUtil = useMemo(() => {
     const hours = new Array(24).fill(0);
@@ -189,8 +168,6 @@ export function useFeedMatches(ownProfile: any) {
     displayMatches,
     limitCount,
     setLimitCount,
-    feedFilter,
-    setFeedFilter,
     courtUtil,
     matchOfTheDayId,
     weeklyRecap,
@@ -198,7 +175,7 @@ export function useFeedMatches(ownProfile: any) {
     setCategoryFilter,
     timeFilter,
     setTimeFilter,
-    typeFilter,
-    setTypeFilter
+    tournamentFilter,
+    setTournamentFilter
   };
 }

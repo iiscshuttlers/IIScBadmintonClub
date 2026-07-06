@@ -136,16 +136,6 @@ export default function PersonalProfilePage() {
 
   const settingsItems = [
     {
-      icon: ArrowLeft,
-      label: "Switch to Club Mode",
-      description: "Return to the main club dashboard",
-      onClick: () => {
-        setMode("club");
-        setLocation("/");
-      },
-      primaryIcon: true,
-    },
-    {
       icon: UserPlus,
       label: "Add Account",
       description: "Log in to an additional account",
@@ -233,34 +223,6 @@ export default function PersonalProfilePage() {
 
       {activeTab === "profile" && (
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-          {/* Status Selector */}
-          <div className="mb-6 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4">
-            <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-              <Zap className="w-4 h-4 text-amber-500" /> Current Status
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {STATUS_CONFIG.map(({ id, short, dot, active: activeClass }) => {
-                const active = currentStatus === id;
-                return (
-                  <button
-                    key={id}
-                    disabled={updatingStatus}
-                    onClick={() => updateStatus(id)}
-                    className={cn(
-                      "flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-bold transition-all",
-                      active
-                        ? activeClass
-                        : "bg-slate-50 dark:bg-slate-800 text-muted-foreground hover:text-foreground hover:bg-slate-100 dark:hover:bg-slate-700"
-                    )}
-                  >
-                    <span className={cn("w-2 h-2 rounded-full shrink-0", active ? dot : "bg-slate-300 dark:bg-slate-600")} />
-                    {short}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
           {/* Appearance Toggle */}
           <div className="mb-6 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4">
             <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
