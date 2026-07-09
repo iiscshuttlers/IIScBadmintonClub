@@ -12,9 +12,6 @@ const labelCls = "block text-xs font-bold text-muted-foreground dark:text-muted-
 interface ClubSettings {
   maintenanceMode: boolean;
   maintenanceMessage: string;
-  eloKFactorCalibration: number;
-  eloKFactorStable: number;
-  eloGlobalMultiplier: number;
   matchAnnouncementPush: boolean;
   challengeExpiryHours: number;
   confirmationNudgeHours: number;
@@ -24,9 +21,6 @@ interface ClubSettings {
 const DEFAULTS: ClubSettings = {
   maintenanceMode: false,
   maintenanceMessage: "Site is under maintenance. Please check back shortly.",
-  eloKFactorCalibration: 32,
-  eloKFactorStable: 16,
-  eloGlobalMultiplier: 0.33,
   matchAnnouncementPush: true,
   challengeExpiryHours: 48,
   confirmationNudgeHours: 12,
@@ -154,57 +148,7 @@ export function AdminSettings() {
         )}
       </div>
 
-      {/* ELO Configuration */}
-      <div className={cardCls}>
-        <div className="flex items-center gap-2 mb-4">
-          <Zap className="w-5 h-5 text-primary" />
-          <h3 className="font-black text-slate-800 dark:text-foreground">ELO Rating Configuration</h3>
-          <InfoModal
-            title="ELO CONFIGURATION"
-            items={[
-              { badge: "K-CALIB", title: "Calibration Phase", desc: "Used for a player's first 10 matches. Causes massive rating swings to quickly find their true skill level." },
-              { badge: "K-STABLE", title: "Stable Phase", desc: "Used after 10 matches. Standard rating adjustments for consistent, slower movement." },
-              { badge: "MULTIPLIER", title: "Global Multiplier", desc: "Scales down all point exchanges globally to prevent hyper-inflation of ratings over time." }
-            ]}
-          />
-          <span className="text-xs text-muted-foreground font-medium ml-auto">(applied on next recalculation)</span>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
-            <label className={labelCls}>K-Factor (Calibration, first 10 matches)</label>
-            <input
-              type="number"
-              min={8} max={64} step={4}
-              value={settings.eloKFactorCalibration}
-              onChange={(e) => update("eloKFactorCalibration", Number(e.target.value))}
-              className={inputCls}
-            />
-            <p className="text-[10px] text-muted-foreground mt-1">Default: 32 (higher = faster rating movement)</p>
-          </div>
-          <div>
-            <label className={labelCls}>K-Factor (Stable, 10+ matches)</label>
-            <input
-              type="number"
-              min={4} max={32} step={4}
-              value={settings.eloKFactorStable}
-              onChange={(e) => update("eloKFactorStable", Number(e.target.value))}
-              className={inputCls}
-            />
-            <p className="text-[10px] text-muted-foreground mt-1">Default: 16</p>
-          </div>
-          <div>
-            <label className={labelCls}>Global ELO Multiplier (0–1)</label>
-            <input
-              type="number"
-              min={0.1} max={1} step={0.01}
-              value={settings.eloGlobalMultiplier}
-              onChange={(e) => update("eloGlobalMultiplier", Number(e.target.value))}
-              className={inputCls}
-            />
-            <p className="text-[10px] text-muted-foreground mt-1">Default: 0.33 (global ELO moves at 1/3 speed)</p>
-          </div>
-        </div>
-      </div>
+
 
       {/* Notification Settings */}
       <div className={cardCls}>
