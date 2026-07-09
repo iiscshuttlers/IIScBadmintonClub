@@ -185,7 +185,7 @@ export function GuestPlayersPanel() {
         .from("players")
         .select("id, full_name, department")
         .eq("is_approved", true)
-        .is("is_guest", null)
+        .or("is_guest.is.null,is_guest.eq.false")
         .order("full_name");
       setRealPlayers((data as RealPlayer[]) ?? []);
     }
