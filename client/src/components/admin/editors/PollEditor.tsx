@@ -93,23 +93,30 @@ export function PollEditor({
       <div className="space-y-4">
         {data.map((poll, i) => (
           <div key={poll.id} className={cardCls + ` p-6 flex flex-col gap-4 relative group ${poll.is_archived ? 'opacity-75 bg-slate-50 dark:bg-slate-900' : ''}`}>
-            <div className="absolute top-4 right-4 flex items-center gap-2">
-              <button
-                onClick={() => updatePoll(i, { is_archived: !poll.is_archived })}
-                className="text-muted-foreground hover:text-amber-500 transition-colors"
-                title={poll.is_archived ? "Unarchive Poll" : "Archive Poll"}
-              >
-                {poll.is_archived ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
-              </button>
-              <button
-                onClick={() => removePoll(i)}
-                className="text-muted-foreground hover:text-rose-500 transition-colors"
-                title="Delete Poll"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+            <div className="flex justify-end mb-2">
+              <div className="grid grid-cols-2 gap-2 w-full sm:w-auto">
+                <button
+                  onClick={() => updatePoll(i, { is_archived: !poll.is_archived })}
+                  className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border shadow-sm ${
+                    poll.is_archived
+                      ? "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800"
+                      : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"
+                  }`}
+                >
+                  {poll.is_archived ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
+                  {poll.is_archived ? "Unarchive" : "Archive"}
+                </button>
+                <button
+                  onClick={() => removePoll(i)}
+                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 dark:bg-rose-900/20 dark:border-rose-800 dark:hover:bg-rose-900/40 shadow-sm"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </button>
+              </div>
             </div>
-            <div className="flex items-start gap-4 pr-16">
+            
+            <div className="flex items-start gap-4">
               <div className="flex-1 space-y-3">
                 <div>
                   <label className={labelCls}>Poll Question</label>
