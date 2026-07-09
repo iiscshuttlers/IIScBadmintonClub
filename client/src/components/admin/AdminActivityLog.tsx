@@ -119,8 +119,9 @@ export function AdminActivityLog() {
         </div>
       ) : (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
               <tr>
                 <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Time</th>
                 <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Admin</th>
@@ -150,7 +151,8 @@ export function AdminActivityLog() {
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
 
           {logs.length >= (page + 1) * PAGE_SIZE && (
             <div className="p-4 border-t border-slate-100 dark:border-slate-800 text-center">
