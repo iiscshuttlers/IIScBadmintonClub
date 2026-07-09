@@ -13,6 +13,10 @@ public class MainActivity extends BridgeActivity {
     registerPlugin(FloatingScorePlugin.class);
     registerPlugin(UmpireBackgroundPlugin.class);
     registerPlugin(MatchAlarmPlugin.class);
+    registerPlugin(PipPlugin.class);
+    registerPlugin(PlayerMotionPlugin.class);
+    registerPlugin(WidgetManagerPlugin.class);
+    registerPlugin(GeofencePlugin.class);
     super.onCreate(savedInstanceState);
     createNotificationChannels();
   }

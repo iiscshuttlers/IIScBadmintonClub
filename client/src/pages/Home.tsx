@@ -1,5 +1,7 @@
 import { Sparkles, ShieldCheck, Activity, Award, Target, Handshake, Sprout } from "lucide-react";
 import { Link } from "wouter";
+import { Capacitor } from "@capacitor/core";
+import { Geofence } from "@/lib/geofence";
 import { Button } from "@/components/ui/button";
 import {
   ArrowRight,
@@ -70,6 +72,12 @@ export default function Home() {
     description:
       "IISc Badminton Club — join a vibrant community of players, from beginners to champions, all united by passion for the sport.",
   });
+
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      Geofence.setupGymkhanaGeofence().catch(e => console.log("Geofence setup failed:", e));
+    }
+  }, []);
 
   const [isImageOpen, setIsImageOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);

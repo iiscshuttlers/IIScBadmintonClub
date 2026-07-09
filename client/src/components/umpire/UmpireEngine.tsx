@@ -5,13 +5,16 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Trophy, Activity, Plus, Minus, X, Settings, Save, Timer, Play,
-  AlertTriangle, BookOpen, ArrowLeftRight, Flag, ChevronDown, ChevronUp, Repeat,
+  AlertTriangle, BookOpen, ArrowLeftRight, Flag, ChevronDown, ChevronUp, Repeat, Tv2, MonitorPlay, ActivitySquare
 } from "lucide-react";
 import { toast } from "sonner";
 import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
 import { Capacitor } from "@capacitor/core";
 import FloatingScore from "@/lib/floatingScore";
 import { UmpireBackground } from "@/lib/umpireBackground";
+import { Pip } from "@/lib/pip";
+import { PlayerMotion, type MotionData } from "@/lib/playerMotion";
+import { WidgetManager } from "@/lib/widgetManager";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -112,6 +115,22 @@ export function UmpireEngine({
   const [confirmAction, setConfirmAction] = useState<{ title: string; message: string; onConfirm: () => void; confirmLabel?: string; confirmColor?: string } | null>(null);
 
   const [isScorePinned, setIsScorePinned] = useState(false);
+  const [isMotionTracking, setIsMotionTracking] = useState(false);
+  const [motionData, setMotionData] = useState<MotionData | null>(null);
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform() || !isMotionTracking) return;
+    
+    PlayerMotion.startTracking().catch(console.error);
+    const listener = PlayerMotion.addListener("onMotionUpdate", (data) => {
+      setMotionData(data);
+    });
+
+    return () => {
+      PlayerMotion.stopTracking().catch(console.error);
+      listener.then(l => l.remove()).catch(console.error);
+    };
+  }, [isMotionTracking]);
 
   const togglePinScore = async () => {
     if (!Capacitor.isNativePlatform()) {
@@ -213,13 +232,22 @@ export function UmpireEngine({
     };
   }, [match?.status, match?.id, addPoint]);
 
-  // Sync background notification score
+  // Sync background notification score and Widget
   useEffect(() => {
     if (!Capacitor.isNativePlatform() || match?.status !== "playing") return;
     const scoreStr = `${match.t1.score} - ${match.t2.score}`;
     const t1Label = match.t1.teamName || match.t1.p1Name;
     const t2Label = match.t2.teamName || match.t2.p1Name;
     UmpireBackground.updateScore({ score: scoreStr, teams: `${t1Label} vs ${t2Label}` }).catch(console.error);
+    
+    // Also push to Home Screen Widget
+    WidgetManager.updateWidget({
+      title: match.tournament || "IISc Badminton",
+      team1: t1Label,
+      score1: String(match.t1.score),
+      team2: t2Label,
+      score2: String(match.t2.score),
+    }).catch(console.error);
   }, [match?.t1.score, match?.t2.score, match?.status]);
 
   // ── TOURNAMENT SETUP SCREEN ────────────────────────────────────────────────
@@ -455,9 +483,17 @@ export function UmpireEngine({
               <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" /> Edit Setup
             </button>
             {Capacitor.isNativePlatform() && (
-              <button onClick={togglePinScore} className={`shrink-0 px-1 py-2 sm:px-3 sm:py-2 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border transition ${isScorePinned ? "bg-violet-600 border-violet-500 text-white" : "bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700"}`}>
-                <Tv2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {isScorePinned ? "Unpin Score" : "Pin Score"}
-              </button>
+              <>
+                <button onClick={togglePinScore} className={`shrink-0 px-1 py-2 sm:px-3 sm:py-2 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border transition ${isScorePinned ? "bg-violet-600 border-violet-500 text-white" : "bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700"}`}>
+                  <Tv2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {isScorePinned ? "Unpin Score" : "Pin Score"}
+                </button>
+                <button onClick={() => Pip.enterPipMode()} className="shrink-0 px-1 py-2 sm:px-3 sm:py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border border-slate-700 transition">
+                  <MonitorPlay className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" /> PiP
+                </button>
+                <button onClick={() => setIsMotionTracking(m => !m)} className={`shrink-0 px-1 py-2 sm:px-3 sm:py-2 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border transition ${isMotionTracking ? "bg-green-600 border-green-500 text-white" : "bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700"}`}>
+                  <ActivitySquare className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {isMotionTracking ? motionData?.intensity || "Tracking..." : "Track Motion"}
+                </button>
+              </>
             )}
           </>
         )}
