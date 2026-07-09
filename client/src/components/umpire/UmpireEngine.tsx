@@ -65,8 +65,8 @@ export type BwfMatchState = {
   pointsToWin: number;
   bestOfSets: number;
   goldenPoint: number;
-  t1: { p1Id: string; p1Name: string; p2Id?: string; p2Name?: string; score: number; games: number };
-  t2: { p1Id: string; p1Name: string; p2Id?: string; p2Name?: string; score: number; games: number };
+  t1: { p1Id: string; p1Name: string; p2Id?: string; p2Name?: string; teamName?: string; score: number; games: number };
+  t2: { p1Id: string; p1Name: string; p2Id?: string; p2Name?: string; teamName?: string; score: number; games: number };
   serverTeam: 1 | 2;
   serverPlayerIndex: 0 | 1;
   receiverPlayerIndex: 0 | 1;
@@ -79,6 +79,7 @@ export type BwfMatchState = {
   winner?: 1 | 2;
   retiredTeam?: 1 | 2;
   setsHistory: string[];
+  tournament?: string;
 };
 
 type CardType = "yellow" | "red" | "black";
