@@ -1,5 +1,8 @@
 import React, { useState } from "react";
-import { Plus, Trash2, CheckCircle2, Ban, Archive, ArchiveRestore } from "lucide-react";
+import { Plus, Trash2, CheckCircle2, Ban, Archive, ArchiveRestore, Bell, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
 import { inputCls, labelCls, cardCls } from "./shared";
 import { Poll } from "../../feed/PollsSection";
 
@@ -10,6 +13,45 @@ export function PollEditor({
   data: Poll[];
   onChange: (d: Poll[]) => void;
 }) {
+  const { session } = useAuth();
+  const [sendingPush, setSendingPush] = useState<string | null>(null);
+
+  const sendPushNotification = async (poll: Poll) => {
+    if (!poll.question || poll.question === "New Poll") {
+      toast.error("Please enter a valid poll question before sending a notification.");
+      return;
+    }
+    if (!confirm("Send a push notification to all users about this poll?")) return;
+    setSendingPush(poll.id);
+    try {
+      const payload = {
+        title: "New Community Poll!",
+        body: poll.question,
+        url: "/pulse",
+      };
+
+      const { data: fnData, error: fnError } = await supabase.functions.invoke("send-announcement", {
+        body: {
+          ...payload,
+          admin_email: session?.user?.email ?? "admin",
+        },
+      });
+      if (fnError) throw fnError;
+
+      await supabase.from("site_data").upsert(
+        { key: "admin_push", value: { ...payload, timestamp: Date.now() }, updated_at: new Date().toISOString() },
+        { onConflict: "key" }
+      );
+
+      const sent = fnData?.sent ?? 0;
+      toast.success(`Push notification sent to ${sent} devices!`);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to send push notification");
+    } finally {
+      setSendingPush(null);
+    }
+  };
+
   const addPoll = () => {
     const p: Poll = {
       id: crypto.randomUUID(),
@@ -111,6 +153,14 @@ export function PollEditor({
                   >
                     {poll.is_active ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Ban className="w-3.5 h-3.5" />}
                     {poll.is_active ? "Active" : "Inactive (Completed)"}
+                  </button>
+                  <button
+                    onClick={() => sendPushNotification(poll)}
+                    disabled={sendingPush === poll.id}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors bg-indigo-50 text-indigo-600 border border-indigo-200 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:border-indigo-800 dark:hover:bg-indigo-900/50 disabled:opacity-50"
+                  >
+                    {sendingPush === poll.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Bell className="w-3.5 h-3.5" />}
+                    Broadcast Push
                   </button>
                   <span className="text-xs font-bold text-muted-foreground bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
                     {poll.options.reduce((sum, o) => sum + (o.votes?.length || 0), 0)} Total Votes
