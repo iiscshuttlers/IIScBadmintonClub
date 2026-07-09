@@ -10,6 +10,7 @@ import {
 import { toast } from "sonner";
 import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
 import { Capacitor } from "@capacitor/core";
+import FloatingScore from "@/lib/floatingScore";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -109,6 +110,39 @@ export function UmpireEngine({
 }) {
   const [confirmAction, setConfirmAction] = useState<{ title: string; message: string; onConfirm: () => void; confirmLabel?: string; confirmColor?: string } | null>(null);
 
+  const [isScorePinned, setIsScorePinned] = useState(false);
+
+  const togglePinScore = async () => {
+    if (!Capacitor.isNativePlatform()) {
+      toast.error("Floating score is only available on Android");
+      return;
+    }
+    try {
+      if (isScorePinned) {
+        await FloatingScore.stopService();
+        setIsScorePinned(false);
+      } else {
+        const { granted } = await FloatingScore.checkPermission();
+        if (!granted) {
+          const res = await FloatingScore.requestPermission();
+          if (!res.granted) {
+            toast.error("Permission required. Please enable 'Display over other apps' in Settings.", { duration: 5000 });
+            return;
+          }
+        }
+        
+        // Wait for service to start with initial score
+        const scoreStr = `${match.t1.score} - ${match.t2.score}`;
+        await FloatingScore.startService({ score: scoreStr });
+        setIsScorePinned(true);
+      }
+    } catch (e: any) {
+      console.error(e);
+      toast.error("Failed to pin score: " + e.message);
+      setIsScorePinned(false);
+    }
+  };
+
   const umpireState = useUmpireState({
     userId,
     userEmail,
@@ -138,6 +172,26 @@ export function UmpireEngine({
 
   // Render variables
   const friendlyOnly = !isAdminEmail(userEmail) && !isTournamentUmpire;
+
+  // Sync score when match state changes
+  useEffect(() => {
+    if (isScorePinned && Capacitor.isNativePlatform() && match) {
+      const scoreStr = `${match.t1.score} - ${match.t2.score}`;
+      FloatingScore.updateScore({ score: scoreStr }).catch(() => {
+        setIsScorePinned(false);
+      });
+    }
+  }, [match?.t1.score, match?.t2.score, isScorePinned]);
+
+  // Cleanup floating widget on unmount
+  useEffect(() => {
+    return () => {
+      if (isScorePinned && Capacitor.isNativePlatform()) {
+        FloatingScore.stopService().catch(() => {});
+      }
+    };
+  }, [isScorePinned]);
+
   // ── TOURNAMENT SETUP SCREEN ────────────────────────────────────────────────
   // Shown instead of UmpireSetupFlow when a tournament match is pre-filled.
   const renderTournamentSetup = () => {
@@ -370,6 +424,11 @@ export function UmpireEngine({
             <button onClick={() => setIsEditSetupOpen(true)} className="shrink-0 px-1 py-2 sm:px-3 sm:py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border border-slate-700 transition">
               <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" /> Edit Setup
             </button>
+            {Capacitor.isNativePlatform() && (
+              <button onClick={togglePinScore} className={`shrink-0 px-1 py-2 sm:px-3 sm:py-2 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border transition ${isScorePinned ? "bg-violet-600 border-violet-500 text-white" : "bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700"}`}>
+                <Tv2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {isScorePinned ? "Unpin Score" : "Pin Score"}
+              </button>
+            )}
           </>
         )}
       </div>

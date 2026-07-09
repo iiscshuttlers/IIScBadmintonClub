@@ -54,6 +54,8 @@
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="notify_whistle" />
+            
+        <service android:name=".FloatingScoreService" android:exported="false" />
     </application>
 
     <!-- Permissions -->
@@ -65,6 +67,7 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <!-- Camera and NFC are optional so the app is available on devices without them -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
