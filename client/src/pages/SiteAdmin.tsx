@@ -34,12 +34,12 @@ import {
   PollEditor,
   VideoEditor,
   PlayersManager,
-  UmpireMode,
   ConfigEditor,
   MatchesManager,
   ChangelogViewer,
   NoticeboardManager,
 } from "@/components/admin/AdminEditors";
+import { UmpireTab } from "@/components/umpire/UmpireTab";
 import { ConvenerEditor, DEFAULT_CONVENER_DATA } from "@/components/admin/ConvenerEditor";
 import { AdminStatsOverview } from "@/components/admin/AdminStatsOverview";
 import { DisputePanel } from "@/components/admin/DisputePanel";
@@ -449,7 +449,7 @@ function SiteAdminInner() {
             {activeTab === "matches" && <MatchesManager />}
             {activeTab === "disputes" && <DisputePanel />}
             {activeTab === "elo_audit" && <EloAuditPanel />}
-            {activeTab === "umpire" && <UmpireMode />}
+            {activeTab === "umpire" && <UmpireTab />}
             {activeTab === "settings" && <AdminSettings />}
             {activeTab === "activity_log" && <AdminActivityLog />}
             {activeTab === "changelog" && <ChangelogViewer />}

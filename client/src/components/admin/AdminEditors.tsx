@@ -8,7 +8,7 @@ export { PollEditor } from "./editors/PollEditor";
 export { EventEditor } from "./editors/EventEditor";
 export { VideoEditor } from "./editors/VideoEditor";
 export { PlayersManager } from "./editors/PlayersManager";
-export { UmpireMode } from "./UmpireMode";
+
 export { RegistrationsManager } from "./editors/RegistrationsManager";
 export { MatchesManager } from "./editors/MatchesManager";
 export { ChangelogViewer } from "./editors/ChangelogViewer";

@@ -433,6 +433,7 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
               <option value="open">Open Tournament</option>
               <option value="invitational">Invitational</option>
               <option value="internal">Internal</option>
+              <option value="team">Team Tournament</option>
             </select>
           </div>
           <div>
