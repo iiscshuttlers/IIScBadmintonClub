@@ -419,7 +419,7 @@ function SiteAdminInner() {
                 editorName="Holidays" 
                 EditorComponent={HolidayEditor} 
                 writeTransformer={(data) => data.filter((h: any) => h.date && h.name)}
-                setTabCount={(c) => setTabCounts(prev => ({ ...prev, holidays: c }))} 
+                setTabCount={(c) => setTabCounts(prev => prev.holidays === c ? prev : { ...prev, holidays: c })} 
               />
             )}
             {activeTab === "polls" && (
@@ -429,7 +429,7 @@ function SiteAdminInner() {
                 editorName="Polls" 
                 EditorComponent={(props: any) => <PollEditor data={props.data.polls || []} onChange={(d) => props.onChange({ polls: d })} />} 
                 writeTransformer={(data: any) => ({ polls: data.polls })}
-                setTabCount={(c) => setTabCounts(prev => ({ ...prev, polls: c }))} 
+                setTabCount={(c) => setTabCounts(prev => prev.polls === c ? prev : { ...prev, polls: c })} 
                 countExtractor={(data: any) => data.polls?.length ?? 0}
               />
             )}
@@ -441,7 +441,7 @@ function SiteAdminInner() {
                 editorName="Videos" 
                 EditorComponent={VideoEditor} 
                 writeTransformer={(data) => data.filter((v: any) => v.title && v.videoId)}
-                setTabCount={(c) => setTabCounts(prev => ({ ...prev, videos: c }))} 
+                setTabCount={(c) => setTabCounts(prev => prev.videos === c ? prev : { ...prev, videos: c })} 
               />
             )}
             {activeTab === "players" && <PlayersManager />}

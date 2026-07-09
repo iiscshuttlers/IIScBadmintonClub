@@ -75,7 +75,7 @@ export function NoticeboardManager({
             recent: data.recent.filter((a: any) => a.title),
           })}
           setTabCount={(c) =>
-            setTabCounts((prev) => ({ ...prev, announcements: c }))
+            setTabCounts((prev) => prev.announcements === c ? prev : { ...prev, announcements: c })
           }
           countExtractor={(data: any) => data.recent?.length ?? 0}
         />
@@ -91,7 +91,7 @@ export function NoticeboardManager({
             data.filter((e: any) => e.title && e.date)
           }
           setTabCount={(c) =>
-            setTabCounts((prev) => ({ ...prev, events: c }))
+            setTabCounts((prev) => prev.events === c ? prev : { ...prev, events: c })
           }
         />
       </div>
@@ -103,7 +103,7 @@ export function NoticeboardManager({
           editorName="Flyers"
           EditorComponent={FlyerEditor}
           setTabCount={(c) =>
-            setTabCounts((prev) => ({ ...prev, flyers: c }))
+            setTabCounts((prev) => prev.flyers === c ? prev : { ...prev, flyers: c })
           }
         />
       </div>
