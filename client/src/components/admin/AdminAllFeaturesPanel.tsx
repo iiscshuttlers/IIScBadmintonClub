@@ -50,6 +50,7 @@ const iconMap: Record<string, React.ReactNode> = {
   "Download": "⬇️",
   "QrCode": "📲",
   "Smartphone": "📱",
+  "Tv2": "📺",
 };
 
 import { InfoModal } from "@/components/InfoModal";
