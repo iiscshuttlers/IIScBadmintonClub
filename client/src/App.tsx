@@ -72,6 +72,9 @@ const TournamentAdmin = lazy(() => import("./pages/TournamentAdmin"));
 
 const PersonalProfilePage = lazy(() => import("./pages/personal/PersonalProfilePage"));
 
+const TvScoreboardIndex = lazy(() => import("./pages/TvScoreboardIndex"));
+const TvScoreboard = lazy(() => import("./pages/TvScoreboard"));
+
 function PersonalModeRoute({ children }: { children: React.ReactNode }) {
   const { session, isInitializing } = useAuth();
   const [, setLocation] = useLocation();
@@ -94,6 +97,9 @@ function AppRoutes() {
         <Switch>
           <Route path="/" component={Home} />
           <Route path="/pulse" component={Pulse} />
+          
+          <Route path="/tv" component={TvScoreboardIndex} />
+          <Route path="/tv/:matchId" component={TvScoreboard} />
 
           <Route path="/hub" component={Hub} />
           <Route path="/legacy" component={Legacy} />
@@ -192,7 +198,7 @@ function AppContent() {
   const [isLogMatchOpen, setIsLogMatchOpen] = useState(false);
   const [defaultOpponentId, setDefaultOpponentId] = useState<string | undefined>(undefined);
   const { profile, session } = useAuth();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { mode } = useAppMode();
 
   useInactivityLogout();
@@ -269,7 +275,7 @@ function AppContent() {
               <ScrollToTop />
               <RoutePersistence />
               <ScrollProgress />
-              <div data-overflow-root className={`flex flex-col min-h-screen overflow-x-clip ${session && mode === "personal" ? "lg:ml-64" : ""}`}>
+              <div data-overflow-root className={`flex flex-col min-h-screen overflow-x-clip ${session && mode === "personal" && !location.startsWith("/tv") ? "lg:ml-64" : ""}`}>
                 {/* Skip-to-content for keyboard / screen-reader users */}
                 <a
                   href="#main-content"
@@ -277,14 +283,14 @@ function AppContent() {
                 >
                   Skip to content
                 </a>
-                <OfflineBanner />
-                <PwaInstallPrompt />
-                <Navigation />
-                <StatusBanner />
-                <main id="main-content" className={`flex-1 flex flex-col ${session ? "pb-24 lg:pb-0" : mode === "club" ? "pb-20 lg:pb-0" : ""} ${mode === "personal" ? "pt-[calc(3rem+env(safe-area-inset-top))] lg:pt-0" : ""}`}>
+                {!location.startsWith("/tv") && <OfflineBanner />}
+                {!location.startsWith("/tv") && <PwaInstallPrompt />}
+                {!location.startsWith("/tv") && <Navigation />}
+                {!location.startsWith("/tv") && <StatusBanner />}
+                <main id="main-content" className={`flex-1 flex flex-col ${location.startsWith("/tv") ? "" : session ? "pb-24 lg:pb-0" : mode === "club" ? "pb-20 lg:pb-0" : ""} ${location.startsWith("/tv") ? "" : mode === "personal" ? "pt-[calc(3rem+env(safe-area-inset-top))] lg:pt-0" : ""}`}>
                   <AppRoutes />
                 </main>
-                <Footer />
+                {!location.startsWith("/tv") && <Footer />}
               </div>
               <BackToTop />
             </Router>
