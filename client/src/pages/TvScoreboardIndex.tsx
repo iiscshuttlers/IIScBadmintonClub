@@ -4,7 +4,7 @@ import { Tv2, Activity, ShieldCheck, MonitorPlay } from "lucide-react";
 import type { BwfMatchState } from "@/types/umpire";
 
 export default function TvScoreboardIndex() {
-  const { data: rawLiveMatches, isLoading } = useLiveSiteData("live_matches");
+  const { data: rawLiveMatches, isLoading } = useLiveSiteData("live_matches", 5000);
   
   const liveMatches = rawLiveMatches as Record<string, BwfMatchState> | null;
   const activeMatches = Object.entries(liveMatches || {}).filter(([_, m]) => m.status === "playing");

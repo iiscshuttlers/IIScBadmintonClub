@@ -19,7 +19,7 @@ export function usePlayerMatches(playerId: string, limit = 50) {
   });
 }
 
-export function useLiveSiteData(key: string) {
+export function useLiveSiteData(key: string, refetchInterval: number | false = false) {
   return useQuery({
     queryKey: ["site_data", key],
     queryFn: async () => {
@@ -28,5 +28,6 @@ export function useLiveSiteData(key: string) {
       return data?.value as any;
     },
     staleTime: 1000 * 60 * 60, // 1 hour (revalidated by real-time)
+    refetchInterval,
   });
 }

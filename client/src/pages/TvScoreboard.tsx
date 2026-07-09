@@ -15,18 +15,24 @@ export default function TvScoreboard() {
   useEffect(() => {
     if (!matchId) return;
     
-    // Fetch initial
-    supabase
-      .from("site_data")
-      .select("value")
-      .eq("key", "live_matches")
-      .single()
-      .then(({ data }) => {
-        if (data?.value && data.value[matchId]) {
-          setMatchState(data.value[matchId] as BwfMatchState);
-        }
-        setLoading(false);
-      });
+    const fetchInitial = () => {
+      supabase
+        .from("site_data")
+        .select("value")
+        .eq("key", "live_matches")
+        .single()
+        .then(({ data }) => {
+          if (data?.value && data.value[matchId]) {
+            setMatchState(data.value[matchId] as BwfMatchState);
+          } else {
+            setMatchState(null);
+          }
+          setLoading(false);
+        });
+    };
+
+    fetchInitial();
+    const interval = setInterval(fetchInitial, 5000); // Fallback polling
 
     // Subscribe
     const sub = supabase
@@ -53,6 +59,7 @@ export default function TvScoreboard() {
 
     return () => {
       supabase.removeChannel(sub);
+      clearInterval(interval);
     };
   }, [matchId]);
 
