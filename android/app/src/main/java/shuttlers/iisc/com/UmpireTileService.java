@@ -23,7 +23,7 @@ public class UmpireTileService extends TileService {
     public void onClick() {
         super.onClick();
         
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("iiscshuttlers://umpire"));
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivityAndCollapse(intent);
     }

@@ -126,6 +126,7 @@ function AppRoutes() {
           <Route path="/marketplace" component={() => { window.location.href='/hub?tab=exchange'; return null; }} />
           <Route path="/exchange" component={() => { window.location.href='/hub?tab=exchange'; return null; }} />
           <Route path="/find-lost" component={() => { window.location.href='/hub?tab=exchange&sub=lost-found'; return null; }} />
+          <Route path="/umpire" component={() => { window.location.href='/hub?tab=my_matches'; return null; }} />
           <Route path="/privacy" component={PrivacyPolicy} />
           <Route path="/terms" component={TermsOfService} />
 
