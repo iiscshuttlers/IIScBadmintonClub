@@ -63,7 +63,7 @@ public class GeofencePlugin extends Plugin {
         // IISc Gymkhana coordinates
         double lat = call.getDouble("lat", 13.018664852167875);
         double lng = call.getDouble("lng", 77.56458406276157);
-        float radius = call.getFloat("radius", 200.0f); // 200 meters
+        float radius = call.getFloat("radius", 50.0f); // 50 meters
 
         Geofence geofence = new Geofence.Builder()
                 .setRequestId("GYMKHANA_GEOFENCE")
