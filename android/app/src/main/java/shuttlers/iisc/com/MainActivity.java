@@ -11,6 +11,8 @@ public class MainActivity extends BridgeActivity {
   @Override
   public void onCreate(android.os.Bundle savedInstanceState) {
     registerPlugin(FloatingScorePlugin.class);
+    registerPlugin(UmpireBackgroundPlugin.class);
+    registerPlugin(MatchAlarmPlugin.class);
     super.onCreate(savedInstanceState);
     createNotificationChannels();
   }

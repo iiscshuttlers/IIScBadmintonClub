@@ -56,6 +56,16 @@
             android:value="notify_whistle" />
             
         <service android:name=".FloatingScoreService" android:exported="false" />
+        
+        <service android:name=".UmpireBackgroundService" android:exported="false" android:foregroundServiceType="dataSync|specialUse" />
+        
+        <receiver android:name=".NotificationActionReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="shuttlers.iisc.com.ACTION_ADD_POINT" />
+            </intent-filter>
+        </receiver>
+        
+        <receiver android:name=".MatchAlarmReceiver" android:exported="false" />
     </application>
 
     <!-- Permissions -->
@@ -68,7 +78,11 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <!-- Camera and NFC are optional so the app is available on devices without them -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.nfc" android:required="false" />

@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
 import { Capacitor } from "@capacitor/core";
 import FloatingScore from "@/lib/floatingScore";
+import { UmpireBackground } from "@/lib/umpireBackground";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -191,6 +192,35 @@ export function UmpireEngine({
       }
     };
   }, [isScorePinned]);
+
+  // ── Native Background Service & Lock Screen (Phase 2) ──
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform() || match?.status !== "playing") return;
+    
+    // Auto-start the background keep-alive service
+    UmpireBackground.startService().catch(console.error);
+    
+    // Listen for Lock Screen / Notification +1 Point Actions
+    const listenerPromise = UmpireBackground.addListener("umpireAction", (info) => {
+      if (info.team === 1 || info.team === 2) {
+        addPoint(info.team);
+      }
+    });
+    
+    return () => {
+      UmpireBackground.stopService().catch(console.error);
+      listenerPromise.then(l => l.remove()).catch(console.error);
+    };
+  }, [match?.status, match?.id, addPoint]);
+
+  // Sync background notification score
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform() || match?.status !== "playing") return;
+    const scoreStr = `${match.t1.score} - ${match.t2.score}`;
+    const t1Label = match.t1.teamName || match.t1.p1Name;
+    const t2Label = match.t2.teamName || match.t2.p1Name;
+    UmpireBackground.updateScore({ score: scoreStr, teams: `${t1Label} vs ${t2Label}` }).catch(console.error);
+  }, [match?.t1.score, match?.t2.score, match?.status]);
 
   // ── TOURNAMENT SETUP SCREEN ────────────────────────────────────────────────
   // Shown instead of UmpireSetupFlow when a tournament match is pre-filled.

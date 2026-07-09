@@ -87,11 +87,17 @@ export default function TvScoreboard() {
 
   // Format the team names
   const renderTeamName = (team: 1 | 2) => {
-    const p1 = team === 1 ? matchState.t1.p1Name : matchState.t2.p1Name;
-    const p2 = team === 1 ? matchState.t1.p2Name : matchState.t2.p2Name;
+    const t = team === 1 ? matchState.t1 : matchState.t2;
+    const p1 = t.p1Name;
+    const p2 = t.p2Name;
     
     return (
       <div className="flex flex-col items-center justify-center">
+        {t.teamName && (
+          <div className="text-xl lg:text-3xl font-bold tracking-widest text-slate-500 mb-2 uppercase">
+            {t.teamName}
+          </div>
+        )}
         <div className="text-5xl lg:text-7xl font-black tracking-tight text-white drop-shadow-md truncate max-w-[90vw]">
           {p1}
         </div>
@@ -111,8 +117,15 @@ export default function TvScoreboard() {
       
       {/* Top Header info */}
       <div className="h-24 lg:h-32 w-full flex items-center justify-between px-12 bg-gradient-to-b from-slate-900 to-black/0">
-        <div className="text-3xl font-black text-cyan-500 uppercase tracking-widest drop-shadow-[0_0_10px_rgba(6,182,212,0.5)]">
-          IISc Badminton
+        <div className="flex flex-col">
+          <div className="text-3xl font-black text-cyan-500 tracking-widest drop-shadow-[0_0_10px_rgba(6,182,212,0.5)]">
+            IISc Badminton
+          </div>
+          {matchState.tournament && (
+            <div className="text-xl font-bold text-slate-400 tracking-wider uppercase mt-1">
+              {matchState.tournament}
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-6">
           <div className="text-2xl font-bold text-slate-400 tracking-widest uppercase">
