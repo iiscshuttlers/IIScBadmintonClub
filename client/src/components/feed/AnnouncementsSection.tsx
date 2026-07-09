@@ -325,21 +325,36 @@ export function AnnouncementsSection() {
 
             {/* Filter */}
             <section className="py-6 border-b bg-white dark:bg-slate-950 sticky top-16 z-10 shadow-sm">
-              <div className="container mx-auto px-4">
-                <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2.5 justify-center">
-                  {categories.map((cat) => (
+              <div className="container mx-auto px-4 max-w-md">
+                <div className="flex flex-col gap-3">
+                  {categories.filter(c => c.id === 'all').map((cat) => (
                     <button
                       key={cat.id}
                       onClick={() => setSelectedCategory(cat.id)}
-                      className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
+                      className={`w-full px-5 py-3 rounded-full text-sm font-bold transition-all duration-200 flex justify-center items-center gap-2 ${
                         selectedCategory === cat.id
-                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 dark:shadow-primary/50/40 scale-105"
+                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 dark:shadow-primary/50/40 scale-[1.02]"
                           : `${cat.color} hover:shadow-sm dark:bg-slate-800 dark:text-slate-300`
                       }`}
                     >
-                      {cat.icon} {cat.label}
+                      <span className="text-base">{cat.icon}</span> {cat.label}
                     </button>
                   ))}
+                  <div className="grid grid-cols-2 gap-3">
+                    {categories.filter(c => c.id !== 'all').map((cat) => (
+                      <button
+                        key={cat.id}
+                        onClick={() => setSelectedCategory(cat.id)}
+                        className={`w-full px-3 py-2.5 rounded-full text-sm font-bold transition-all duration-200 flex justify-center items-center gap-2 ${
+                          selectedCategory === cat.id
+                            ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 dark:shadow-primary/50/40 scale-[1.02]"
+                            : `${cat.color} hover:shadow-sm dark:bg-slate-800 dark:text-slate-300`
+                        }`}
+                      >
+                        <span className="text-base">{cat.icon}</span> <span className="truncate">{cat.label}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </section>

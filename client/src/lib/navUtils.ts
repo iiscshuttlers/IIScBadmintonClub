@@ -6,8 +6,10 @@
  * the app should go through these helpers.
  */
 
+import { Capacitor } from '@capacitor/core';
+
 /** True when running inside a Capacitor native shell (Android / iOS) */
-export const isCapacitor = typeof (window as any).Capacitor !== "undefined";
+export const isCapacitor = Capacitor.isNativePlatform();
 
 /**
  * Safely update the URL without adding a browser history entry.
@@ -19,6 +21,19 @@ export function safeReplaceState(url: string): void {
     window.history.replaceState(null, "", url);
   } catch {
     // Ignore – some strict environments block this
+  }
+}
+
+/**
+ * Safely push a new URL history entry.
+ * No-op on Capacitor.
+ */
+export function safePushState(url: string): void {
+  if (isCapacitor) return;
+  try {
+    window.history.pushState(null, "", url);
+  } catch {
+    // Ignore
   }
 }
 

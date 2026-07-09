@@ -100,9 +100,11 @@ export default function Legacy() {
   const { session, isAdmin, profile } = useAuth();
   const [, setLocation] = useLocation();
 
+  const initialFilter = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("filter") : null;
+
   const [activeTab, setActiveTab] = useHashTab(
     ["champions", "albums", "photos", "videos"] as const,
-    "champions"
+    initialFilter ? "albums" : "champions"
   );
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [likedPhotos, setLikedPhotos] = useState<Set<string>>(new Set());
@@ -137,7 +139,7 @@ export default function Legacy() {
     });
   };
 
-  const [selectedSubfolder, setSelectedSubfolder] = useState("all");
+  const [selectedSubfolder, setSelectedSubfolder] = useState(initialFilter || "all");
   const [tagSearch, setTagSearch] = useState("");
   const [visibleCount, setVisibleCount] = useState(20);
   const observerRef = useRef<HTMLDivElement>(null);
@@ -323,7 +325,8 @@ export default function Legacy() {
     ([path, loader], index) => {
       const cleanPath = path.replace("/src/assets/gallery/", "");
       const parts = cleanPath.split("/");
-      const category = parts[0];
+      const rawCategory = parts[0];
+      const category = rawCategory.charAt(0).toUpperCase() + rawCategory.slice(1);
       const subfolder = parts.length > 2 ? parts.slice(1, -1).join("/") : "";
       const filename = parts[parts.length - 1];
       const title = formatText(filename.replace(/\.[^/.]+$/, ""));
@@ -375,6 +378,11 @@ export default function Legacy() {
               .map((item) => item.subfolder),
           ),
         );
+
+  // Ensure the active filter is always visible as a pill, even if empty
+  if (selectedSubfolder !== "all" && !subfolders.includes(selectedSubfolder)) {
+    subfolders.push(selectedSubfolder);
+  }
 
 
   // Read URL params to auto-select album
@@ -490,7 +498,8 @@ export default function Legacy() {
           </p>
           <div className="mt-4 flex justify-center w-full px-2">
             <div className="grid grid-cols-2 sm:flex bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 sm:flex-wrap sm:justify-center gap-1.5 sm:gap-0 w-full sm:w-auto">
-              <button
+              <a
+                href="#champions"
                 onClick={() => setActiveTab("champions")}
                 className={`flex w-full sm:w-auto items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
                   activeTab === "champions"
@@ -499,8 +508,9 @@ export default function Legacy() {
                 }`}
               >
                 <Trophy className="w-4 h-4" /> Champions
-              </button>
-              <button
+              </a>
+              <a
+                href="#albums"
                 onClick={() => setActiveTab("albums")}
                 className={`flex w-full sm:w-auto items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
                   activeTab === "albums"
@@ -509,8 +519,9 @@ export default function Legacy() {
                 }`}
               >
                 <Camera className="w-4 h-4" /> Albums
-              </button>
-              <button
+              </a>
+              <a
+                href="#photos"
                 onClick={() => setActiveTab("photos")}
                 className={`flex w-full sm:w-auto items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
                   activeTab === "photos"
@@ -519,8 +530,9 @@ export default function Legacy() {
                 }`}
               >
                 <Camera className="w-4 h-4" /> All Photos
-              </button>
-              <button
+              </a>
+              <a
+                href="#videos"
                 onClick={() => setActiveTab("videos")}
                 className={`flex w-full sm:w-auto items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
                   activeTab === "videos"
@@ -529,7 +541,7 @@ export default function Legacy() {
                 }`}
               >
                 <PlayCircle className="w-4 h-4" /> All Videos
-              </button>
+              </a>
             </div>
           </div>
         </div>
@@ -860,11 +872,13 @@ export default function Legacy() {
       )}
 
       {/* Social Media */}
-      <section className="py-16 bg-white dark:bg-slate-950 border-t border-gray-100 dark:border-slate-800">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <SocialCTA />
-        </div>
-      </section>
+      {activeTab === "videos" && (
+        <section className="py-16 bg-white dark:bg-slate-950 border-t border-gray-100 dark:border-slate-800">
+          <div className="container mx-auto px-4 max-w-4xl">
+            <SocialCTA />
+          </div>
+        </section>
+      )}
 
       {/* Lightbox */}
       {selectedIndex !== null && (

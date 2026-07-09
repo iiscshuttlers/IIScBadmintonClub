@@ -452,22 +452,20 @@ export default function TournamentDetail() {
                 </div>
 
                 <div className="space-y-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
-                  {tournament.galleryFolder && (
-                    <Link
-                      href={`/legacy?filter=${encodeURIComponent(tournament.galleryFolder)}`}
-                    >
-                      <button className="w-full flex items-center justify-center gap-2 bg-primary/15 hover:bg-primary/20 dark:bg-primary/40 dark:hover:bg-primary/80/60 text-primary dark:text-primary font-bold px-4 py-3 rounded-xl text-sm transition-all hover:-translate-y-0.5">
-                        <ImageIcon className="w-4 h-4" />
-                        View Gallery
-                      </button>
-                    </Link>
-                  )}
-                  <Link href="/legacy">
+                  <a
+                    href={tournament.galleryFolder ? `/legacy?filter=${encodeURIComponent(tournament.galleryFolder)}#albums` : `/legacy#albums`}
+                  >
+                    <button className="w-full flex items-center justify-center gap-2 bg-primary/15 hover:bg-primary/20 dark:bg-primary/40 dark:hover:bg-primary/80/60 text-primary dark:text-primary font-bold px-4 py-3 rounded-xl text-sm transition-all hover:-translate-y-0.5">
+                      <ImageIcon className="w-4 h-4" />
+                      View Gallery
+                    </button>
+                  </a>
+                  <a href="/legacy#champions">
                     <button className="w-full flex items-center justify-center gap-2 bg-blue-900 hover:bg-blue-800 dark:bg-blue-800 dark:hover:bg-blue-700 text-foreground font-bold px-4 py-3 rounded-xl text-sm transition-all hover:-translate-y-0.5">
                       <Trophy className="w-4 h-4" />
-                      Legacy (Champions & Gallery)
+                      Hall of Fame
                     </button>
-                  </Link>
+                  </a>
                 </div>
               </CardContent>
             </Card>

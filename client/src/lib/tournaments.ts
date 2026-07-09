@@ -5,6 +5,7 @@ export async function getTournaments() {
   const { data, error } = await supabase
     .from("tournaments")
     .select("*, tournament_matches(category, match_code, round_name, winner_side, team1_label, team2_label)")
+    .neq("status", "deleted")
     .order("created_at", { ascending: false });
   
   if (error) {

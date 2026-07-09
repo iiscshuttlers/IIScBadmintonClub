@@ -71,20 +71,33 @@ export default function FindLost() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | PostType>(() => {
     const params = new URLSearchParams(window.location.search);
-    const cat = params.get("cat");
-    return (cat === "lost" || cat === "found") ? cat : "all";
+    const postType = params.get("postType");
+    return (postType === "lost" || postType === "found") ? postType : "all";
   });
 
   useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const postType = params.get("postType");
+      setFilter((postType === "lost" || postType === "found") ? postType : "all");
+    };
+    window.addEventListener("popstate", handlePopState);
+
     const params = safeGetSearchParams();
     if (filter === "all") {
-      params.delete("cat");
+      params.delete("postType");
     } else {
-      params.set("cat", filter);
+      params.set("postType", filter);
     }
     const hash = isCapacitor ? "" : window.location.hash;
     const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}${hash}`;
-    safeReplaceState(newUrl);
+    const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    
+    if (newUrl !== currentUrl) {
+      import("@/lib/navUtils").then(({ safePushState }) => safePushState(newUrl));
+    }
+
+    return () => window.removeEventListener("popstate", handlePopState);
   }, [filter]);
   const [showResolved, setShowResolved] = useState(false);
   const [showForm, setShowForm] = useState(false);

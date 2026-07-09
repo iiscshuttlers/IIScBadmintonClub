@@ -114,45 +114,42 @@ export default function FeedTab() {
 
   return (
     <div className="w-full">
-      <div className="bg-slate-100 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 mb-6">
-        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-center gap-2">
+      <div className="bg-slate-100/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 mb-6 shadow-sm">
+        <div className="max-w-3xl mx-auto px-2 sm:px-4 py-2 sm:py-3 flex items-center justify-center gap-1 sm:gap-2 overflow-x-auto hide-scrollbar">
           <button
             onClick={() => handleTabChange("matches")}
-            className={`flex justify-center items-center gap-2 px-4 py-2 rounded-xl text-sm font-black transition-all ${activeTab === "matches"
-              ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-foreground shadow-md"
-              : "text-muted-foreground hover:bg-slate-200 dark:hover:bg-slate-800"
-              }`}
+            className={`whitespace-nowrap flex-shrink-0 flex justify-center items-center px-3 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all ${
+              activeTab === "matches"
+                ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-md ring-1 ring-slate-200/50 dark:ring-slate-700/50"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50"
+            }`}
           >
-            <Activity className="w-4 h-4" /> Matches
+            Matches
           </button>
           <button
-            onClick={() => {
-              handleTabChange("announcements");
-            }}
-            className={`flex justify-center items-center gap-2 px-4 py-2 rounded-xl text-sm font-black transition-all ${activeTab === "announcements"
-              ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-foreground shadow-md"
-              : "text-muted-foreground hover:bg-slate-200 dark:hover:bg-slate-800"
-              }`}
+            onClick={() => handleTabChange("announcements")}
+            className={`whitespace-nowrap flex-shrink-0 flex justify-center items-center px-3 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all ${
+              activeTab === "announcements"
+                ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-md ring-1 ring-slate-200/50 dark:ring-slate-700/50"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50"
+            }`}
           >
-            <Bell className="w-4 h-4" /> Announcements
+            Announcements
           </button>
-              {session && (
-                <>
-                </>
-              )}
-              {(isUmpire || isAdmin) && (
-                <button
-                  onClick={() => handleTabChange("umpire")}
-                  className={`flex justify-center items-center gap-2 px-4 py-2 rounded-xl text-sm font-black transition-all ${activeTab === "umpire"
-                    ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-foreground shadow-md"
-                    : "text-muted-foreground hover:bg-slate-200 dark:hover:bg-slate-800"
-                    }`}
-                >
-                  <Tv2 className="w-4 h-4" /> Umpire
-                </button>
-              )}
-          </div>
+          {(isUmpire || isAdmin) && (
+            <button
+              onClick={() => handleTabChange("umpire")}
+              className={`whitespace-nowrap flex-shrink-0 flex justify-center items-center px-3 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all ${
+                activeTab === "umpire"
+                  ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-md ring-1 ring-slate-200/50 dark:ring-slate-700/50"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50"
+              }`}
+            >
+              Umpire
+            </button>
+          )}
         </div>
+      </div>
       <div className="container mx-auto px-4 max-w-3xl mt-8">
         {activeTab === "announcements" ? (
           <AnnouncementsSection />
@@ -253,12 +250,12 @@ export default function FeedTab() {
             )}
 
             {/* Feed filter tabs and Advanced Filters */}
-            <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-              <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0 hide-scrollbar flex-1">
+            <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+              <div className="flex w-full sm:flex-1">
                 <select
                   value={tournamentFilter}
                   onChange={(e) => setTournamentFilter(e.target.value)}
-                  className="bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 text-xs font-bold rounded-lg px-2 py-1.5 outline-none border-none focus:ring-2 focus:ring-primary cursor-pointer w-full max-w-[200px]"
+                  className="bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 text-sm font-bold rounded-xl px-3 py-2 outline-none border-none focus:ring-2 focus:ring-primary cursor-pointer w-full"
                 >
                   <option value="all">All Tournaments</option>
                   {tournaments.map(t => (
@@ -268,13 +265,13 @@ export default function FeedTab() {
               </div>
 
               {/* Advanced Filters */}
-              <div className="flex items-center gap-2 pl-2 sm:pl-4 sm:border-l sm:border-slate-200 dark:sm:border-slate-700">
+              <div className="flex items-center gap-2.5 w-full sm:w-auto sm:pl-4 sm:border-l sm:border-slate-200 dark:sm:border-slate-700">
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value as any)}
-                  className="bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 text-xs font-bold rounded-lg px-2 py-1.5 outline-none border-none focus:ring-2 focus:ring-primary cursor-pointer"
+                  className="flex-1 sm:flex-none bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 text-sm font-bold rounded-xl px-3 py-2 outline-none border-none focus:ring-2 focus:ring-primary cursor-pointer min-w-0"
                 >
-                  <option value="all">All</option>
+                  <option value="all">All Categories</option>
                   <option value="singles">Singles</option>
                   <option value="doubles">Doubles</option>
                   <option value="mixed">Mixed Doubles</option>
@@ -282,7 +279,7 @@ export default function FeedTab() {
                 <select
                   value={timeFilter}
                   onChange={(e) => setTimeFilter(e.target.value as any)}
-                  className="bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 text-xs font-bold rounded-lg px-2 py-1.5 outline-none border-none focus:ring-2 focus:ring-primary cursor-pointer"
+                  className="flex-1 sm:flex-none bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 text-sm font-bold rounded-xl px-3 py-2 outline-none border-none focus:ring-2 focus:ring-primary cursor-pointer min-w-0"
                 >
                   <option value="all">All Time</option>
                   <option value="today">Today</option>

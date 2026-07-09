@@ -41,19 +41,64 @@ export default function ExchangeTab() {
     const params = new URLSearchParams(window.location.search);
     return params.get("cat") || "All";
   });
-  const [typeFilter, setTypeFilter] = useState<'all' | 'sell' | 'buy'>('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'sell' | 'buy'>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const type = params.get("type");
+    if (type === "sell" || type === "buy") return type;
+    return 'all';
+  });
+
+  const [activeTab, setActiveTab] = useState<"marketplace" | "findlost">(() => {
+    if (isCapacitor) return "marketplace";
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const sub = params.get("sub");
+      if (sub === "lost-found" || window.location.pathname.includes("find-lost") || window.location.hash.includes("lost")) return "findlost";
+      return "marketplace";
+    } catch { return "marketplace"; }
+  });
+
+  const [showSold, setShowSold] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("showSold") === "true";
+  });
 
   useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      setFilter(params.get("cat") || "All");
+      const type = params.get("type");
+      setTypeFilter(type === "sell" || type === "buy" ? type : "all");
+      const sub = params.get("sub");
+      setActiveTab(sub === "lost-found" || window.location.hash.includes("lost") ? "findlost" : "marketplace");
+      setShowSold(params.get("showSold") === "true");
+    };
+    window.addEventListener("popstate", handlePopState);
+
     const params = safeGetSearchParams();
-    if (filter === "All") {
-      params.delete("cat");
-    } else {
-      params.set("cat", filter);
-    }
+    
+    if (filter === "All") params.delete("cat");
+    else params.set("cat", filter);
+
+    if (typeFilter === "all") params.delete("type");
+    else params.set("type", typeFilter);
+
+    if (activeTab === "marketplace") params.delete("sub");
+    else params.set("sub", "lost-found");
+
+    if (!showSold) params.delete("showSold");
+    else params.set("showSold", "true");
+
     const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}${isCapacitor ? "" : window.location.hash}`;
-    safeReplaceState(newUrl);
-  }, [filter]);
-  const [showSold, setShowSold] = useState(false);
+    const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    
+    if (newUrl !== currentUrl) {
+      import("@/lib/navUtils").then(({ safePushState }) => safePushState(newUrl));
+    }
+
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [filter, typeFilter, activeTab, showSold]);
+  
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [reportedIds, setReportedIds] = useState<Set<string>>(new Set());
@@ -69,13 +114,6 @@ export default function ExchangeTab() {
     toast.success("Listing reported. Our team will review it.");
   };
   const menuRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<"marketplace" | "findlost">(() => {
-    if (isCapacitor) return "marketplace";
-    try {
-      return window.location.pathname.includes("find-lost") || window.location.hash.includes("lost") ? "findlost" : "marketplace";
-    } catch { return "marketplace"; }
-  });
-
   const fetchListings = async () => {
     setIsLoading(true);
     try {
@@ -188,7 +226,6 @@ export default function ExchangeTab() {
             onClick={() => { 
               setActiveTab("marketplace"); 
               setFilter("All");
-              safeReplaceState('/hub#buy-sell');
             }} 
             className={`px-5 py-2 rounded-xl font-black text-sm transition-all ${
               activeTab === "marketplace" 
@@ -201,7 +238,6 @@ export default function ExchangeTab() {
           <button 
             onClick={() => { 
               setActiveTab("findlost"); 
-              safeReplaceState('/hub#lost-found');
             }} 
             className={`px-5 py-2 rounded-xl font-black text-sm transition-all ${
               activeTab === "findlost" 
@@ -287,7 +323,7 @@ export default function ExchangeTab() {
                     onClick={() => setFilter(cat)}
                     className={`px-1 sm:px-4 py-1.5 rounded-full text-xs font-black transition-all truncate text-center ${
                       filter === cat
-                        ? 'bg-slate-800 text-white dark:bg-white dark:text-foreground shadow-sm'
+                        ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900 shadow-sm'
                         : 'bg-slate-100 text-muted-foreground hover:bg-slate-200 dark:bg-slate-800 dark:text-muted-foreground dark:hover:bg-slate-700'
                     }`}
                   >

@@ -4,7 +4,8 @@ import { InfoModal } from "@/components/InfoModal";
 import { ContactSection } from "@/components/about/ContactSection";
 import { FacilitiesSection } from "@/components/about/FacilitiesSection";
 import { GlossarySection } from "@/components/about/GlossarySection";
-import { useHashTab } from "@/hooks/useHashTab";
+import { useState, useEffect, useCallback } from "react";
+import { safeReplaceState, safePushState, safeGetSearchParams } from "@/lib/navUtils";
 import ExchangeTab from "@/components/hub/ExchangeTab";
 import { Store } from "lucide-react";
 
@@ -14,10 +15,36 @@ export default function Hub() {
     description: "Learn more about IISc Badminton Club, our facilities, contact info, and platform features.",
   });
 
-  const [activeTab, setActiveTab] = useHashTab(
-    ["contact", "facilities", "glossary", "exchange"] as const,
-    "contact"
-  );
+  const [activeTab, setActiveTab] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get("tab");
+    return ["contact", "facilities", "glossary", "exchange"].includes(tab as string) ? tab : "contact";
+  });
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get("tab");
+      setActiveTab(["contact", "facilities", "glossary", "exchange"].includes(tab as string) ? tab as any : "contact");
+    };
+    window.addEventListener("popstate", handlePopState);
+    
+    // Ensure initial URL has the tab parameter set
+    const params = safeGetSearchParams();
+    if (params.get("tab") !== activeTab) {
+      params.set("tab", activeTab);
+      safeReplaceState(`${window.location.pathname}?${params.toString()}`);
+    }
+    
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [activeTab]);
+
+  const handleTabChange = useCallback((tab: string) => {
+    setActiveTab(tab);
+    const params = safeGetSearchParams();
+    params.set("tab", tab);
+    safePushState(`${window.location.pathname}?${params.toString()}`);
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 lg:pb-8 font-sans selection:bg-primary/30">
@@ -48,7 +75,7 @@ export default function Hub() {
           <div className="mt-4 flex justify-center w-full px-2">
             <div className="grid grid-cols-2 sm:flex bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 sm:flex-wrap sm:justify-center gap-1.5 sm:gap-0 w-full sm:w-auto">
               <button
-                onClick={() => setActiveTab("contact")}
+                onClick={() => handleTabChange("contact")}
                 className={`flex w-full sm:w-auto items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
                   activeTab === "contact"
                     ? "bg-white text-blue-900 shadow-md scale-100"
@@ -58,7 +85,7 @@ export default function Hub() {
                 <Info className="w-4 h-4" /> Contact & FAQ
               </button>
               <button
-                onClick={() => setActiveTab("facilities")}
+                onClick={() => handleTabChange("facilities")}
                 className={`flex w-full sm:w-auto items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
                   activeTab === "facilities"
                     ? "bg-white text-blue-900 shadow-md scale-100"
@@ -68,7 +95,7 @@ export default function Hub() {
                 <MapPin className="w-4 h-4" /> Facilities
               </button>
               <button
-                onClick={() => setActiveTab("glossary")}
+                onClick={() => handleTabChange("glossary")}
                 className={`flex w-full sm:w-auto items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
                   activeTab === "glossary"
                     ? "bg-white text-blue-900 shadow-md scale-100"
@@ -78,7 +105,7 @@ export default function Hub() {
                 <BookOpen className="w-4 h-4" /> Glossary
               </button>
               <button
-                onClick={() => setActiveTab("exchange")}
+                onClick={() => handleTabChange("exchange")}
                 className={`flex w-full sm:w-auto items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
                   activeTab === "exchange"
                     ? "bg-white text-blue-900 shadow-md scale-100"

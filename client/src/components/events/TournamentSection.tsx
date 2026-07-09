@@ -149,6 +149,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
     supabase
       .from("tournaments")
       .select("*")
+      .neq("status", "deleted")
       .order("created_at", { ascending: false })
       .then(({ data }) => {
         if (!data?.length) return;

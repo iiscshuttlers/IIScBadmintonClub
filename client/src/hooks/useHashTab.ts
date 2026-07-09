@@ -12,8 +12,10 @@ import { useState, useEffect, useCallback } from "react";
  * @returns [activeTab, handleTabChange]
  */
 
+import { Capacitor } from '@capacitor/core';
+
 /** True when running inside a Capacitor native shell */
-const isCapacitor = typeof (window as any).Capacitor !== "undefined";
+const isCapacitor = Capacitor.isNativePlatform();
 
 export function useHashTab<T extends string>(
   validTabs: readonly T[],
