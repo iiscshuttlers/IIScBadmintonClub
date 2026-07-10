@@ -10,7 +10,6 @@ import {
 import { toast } from "sonner";
 import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
 import { Capacitor } from "@capacitor/core";
-import FloatingScore from "@/lib/floatingScore";
 import { UmpireBackground } from "@/lib/umpireBackground";
 import { Pip } from "@/lib/pip";
 import { PlayerMotion, type MotionData } from "@/lib/playerMotion";
@@ -19,68 +18,7 @@ import { WidgetManager } from "@/lib/widgetManager";
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 import type { PlayerSlim as Player } from "@/types";
-
-// Shape of a DB match row passed into edit mode (distinct from BwfMatchState)
-export type MatchEditState = {
-  is_edit_mode: true;
-  id: string;
-  player1_id: string;
-  player2_id: string;
-  team1_partner_id?: string | null;
-  team2_partner_id?: string | null;
-  winner_id?: string | null;
-  score?: string | null;
-  match_score?: string | null;
-  round?: string | null;
-  is_friendly?: boolean | null;
-  category?: string;
-  sets_history?: string[] | null;
-  player1?: { full_name: string } | null;
-  player2?: { full_name: string } | null;
-  partner1?: { full_name: string } | null;
-  partner2?: { full_name: string } | null;
-  team1_label?: string | null;
-  team2_label?: string | null;
-};
-
-export type PointLogEntry = {
-  gameNum: number;
-  team: 1 | 2 | "let" | "fault";
-  t1Score: number;
-  t2Score: number;
-  serverTeam: 1 | 2;
-  note?: string;
-  ts: number;
-};
-
-export type BwfMatchState = {
-  id: string;
-  umpireName: string;
-  isFriendly: boolean;
-  matchNumber?: string;
-  category: string;
-  inferredCategory?: string;
-  customCategory?: string;
-  dbId?: string;
-  pointsToWin: number;
-  bestOfSets: number;
-  goldenPoint: number;
-  t1: { p1Id: string; p1Name: string; p2Id?: string; p2Name?: string; teamName?: string; score: number; games: number };
-  t2: { p1Id: string; p1Name: string; p2Id?: string; p2Name?: string; teamName?: string; score: number; games: number };
-  serverTeam: 1 | 2;
-  serverPlayerIndex: 0 | 1;
-  receiverPlayerIndex: 0 | 1;
-  receiverP0AtTop: boolean;
-  t1LastServedBy: 0 | 1;
-  t2LastServedBy: 0 | 1;
-  endsSwapped: boolean;
-  pointLog: PointLogEntry[];
-  status: "setup" | "playing" | "finished";
-  winner?: 1 | 2;
-  retiredTeam?: 1 | 2;
-  setsHistory: string[];
-  tournament?: string;
-};
+import type { BwfMatchState, MatchEditState, PointLogEntry } from "@/types/umpire";
 
 type CardType = "yellow" | "red" | "black";
 type CardTarget = "t1p1" | "t1p2" | "t2p1" | "t2p2";
@@ -95,6 +33,15 @@ import { useUmpireState } from "@/hooks/useUmpireState";
 // ── UmpireEngine ──────────────────────────────────────────────────────────────
 
 import type { TournamentMatchForUmpire } from "./UmpireTournamentTab";
+
+function buildFloatingTeamLabel(team: BwfMatchState["t1"]): string {
+  if (team.teamName) return team.teamName;
+  return team.p2Name ? `${team.p1Name} & ${team.p2Name}` : team.p1Name;
+}
+
+function buildFloatingTeamsLabel(match: BwfMatchState): string {
+  return `${buildFloatingTeamLabel(match.t1)} vs ${buildFloatingTeamLabel(match.t2)}`;
+}
 
 export function UmpireEngine({
   userId,
@@ -118,13 +65,68 @@ export function UmpireEngine({
   const [isScorePinned, setIsScorePinned] = useState(false);
   const [isMotionTracking, setIsMotionTracking] = useState(false);
   const [motionData, setMotionData] = useState<MotionData | null>(null);
+  const [hasGyro, setHasGyro] = useState<boolean | null>(null);
+  
+  const motionStatsRef = useRef({
+    count: 0, sumMagnitude: 0, maxMagnitude: 0,
+    idle: 0, walking: 0, running: 0, smash_sprint: 0,
+  });
+
+  const sensorStatsRef = useRef({
+    sumAccelSq: 0, sumGyro: 0, sumGyroSq: 0, maxGyro: 0,
+    total_swings: 0, smash_count: 0, clear_count: 0, drive_count: 0, net_shot_count: 0,
+    sumSwingSpeed: 0, maxSwingSpeed: 0,
+    lateralCount: 0, forwardBackCount: 0, verticalCount: 0,
+    intensities: [] as number[],
+    lastSec: 0
+  });
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform() || !isMotionTracking) return;
-    
-    PlayerMotion.startTracking().catch(console.error);
+
+    PlayerMotion.startTracking().then(res => setHasGyro(res?.hasGyro ?? false)).catch(console.error);
     const listener = PlayerMotion.addListener("onMotionUpdate", (data) => {
       setMotionData(data);
+      const stats = motionStatsRef.current;
+      const sens = sensorStatsRef.current;
+      
+      stats.count += 1;
+      stats.sumMagnitude += data.magnitude;
+      stats.maxMagnitude = Math.max(stats.maxMagnitude, data.magnitude);
+      if (data.intensity in stats) (stats as any)[data.intensity] += 1;
+      
+      sens.sumAccelSq += data.magnitude * data.magnitude;
+      
+      if (data.hasGyro && data.rotationRate) {
+        sens.sumGyro += data.rotationRate;
+        sens.sumGyroSq += data.rotationRate * data.rotationRate;
+        sens.maxGyro = Math.max(sens.maxGyro, data.rotationRate);
+      }
+      
+      if (data.swingDetected) {
+        sens.total_swings += 1;
+        if (data.swingType === "smash") sens.smash_count += 1;
+        if (data.swingType === "clear") sens.clear_count += 1;
+        if (data.swingType === "drive") sens.drive_count += 1;
+        if (data.swingType === "net_shot") sens.net_shot_count += 1;
+        
+        const speed = data.rotationRate || data.magnitude;
+        sens.sumSwingSpeed += speed;
+        sens.maxSwingSpeed = Math.max(sens.maxSwingSpeed, speed);
+      }
+      
+      if (data.magnitude > 2.0) {
+        const ax = Math.abs(data.x), ay = Math.abs(data.y), az = Math.abs(data.z);
+        if (ax > ay && ax > az) sens.lateralCount += 1;
+        else if (ay > ax && ay > az) sens.verticalCount += 1;
+        else sens.forwardBackCount += 1;
+      }
+      
+      const now = Date.now();
+      if (now - sens.lastSec > 1000) {
+        sens.intensities.push(data.magnitude);
+        sens.lastSec = now;
+      }
     });
 
     return () => {
@@ -133,34 +135,77 @@ export function UmpireEngine({
     };
   }, [isMotionTracking]);
 
-  const togglePinScore = async () => {
-    if (!Capacitor.isNativePlatform()) {
-      toast.error("Floating score is only available on Android");
-      return;
-    }
+  const saveMotionStats = async (matchId: string, matchSource: "friendly" | "tournament") => {
+    const stats = motionStatsRef.current;
+    const sens = sensorStatsRef.current;
+    if (stats.count === 0) return;
     try {
-      if (isScorePinned) {
-        await FloatingScore.stopService();
-        setIsScorePinned(false);
-      } else {
-        const { granted } = await FloatingScore.checkPermission();
-        if (!granted) {
-          const res = await FloatingScore.requestPermission();
-          if (!res.granted) {
-            toast.error("Permission required. Please enable 'Display over other apps' in Settings.", { duration: 5000 });
-            return;
-          }
-        }
-        
-        // Wait for service to start with initial score
-        const scoreStr = `${match.t1.score} - ${match.t2.score}`;
-        await FloatingScore.startService({ score: scoreStr });
-        setIsScorePinned(true);
+      await supabase.from("match_motion_stats").upsert({
+        match_id: matchId,
+        match_source: matchSource,
+        sample_count: stats.count,
+        avg_magnitude: stats.sumMagnitude / stats.count,
+        max_magnitude: stats.maxMagnitude,
+        idle_pct: (stats.idle / stats.count) * 100,
+        walking_pct: (stats.walking / stats.count) * 100,
+        running_pct: (stats.running / stats.count) * 100,
+        smash_sprint_pct: (stats.smash_sprint / stats.count) * 100,
+        recorded_by: userId || null,
+      }, { onConflict: "match_id,match_source" });
+
+      const n = stats.count;
+      const accelAvg = stats.sumMagnitude / n;
+      const accelVar = Math.max(0, (sens.sumAccelSq - (stats.sumMagnitude * stats.sumMagnitude) / n) / (n > 1 ? n - 1 : 1));
+      
+      const gyroAvg = sens.sumGyro / n;
+      const gyroVar = Math.max(0, (sens.sumGyroSq - (sens.sumGyro * sens.sumGyro) / n) / (n > 1 ? n - 1 : 1));
+      
+      const totalMoves = sens.lateralCount + sens.forwardBackCount + sens.verticalCount || 1;
+      
+      let fhInt = 0, shInt = 0;
+      if (sens.intensities.length > 0) {
+        const mid = Math.floor(sens.intensities.length / 2);
+        const fh = sens.intensities.slice(0, mid);
+        const sh = sens.intensities.slice(mid);
+        fhInt = fh.length ? fh.reduce((a,b)=>a+b,0)/fh.length : 0;
+        shInt = sh.length ? sh.reduce((a,b)=>a+b,0)/sh.length : 0;
       }
-    } catch (e: any) {
-      console.error(e);
-      toast.error("Failed to pin score: " + e.message);
-      setIsScorePinned(false);
+
+      await supabase.from("match_sensor_analytics").upsert({
+        match_id: matchId,
+        match_source: matchSource,
+        player_id: userId,
+        
+        accel_avg: accelAvg,
+        accel_peak: stats.maxMagnitude,
+        accel_std: Math.sqrt(accelVar),
+        
+        gyro_avg: hasGyro ? gyroAvg : null,
+        gyro_peak: hasGyro ? sens.maxGyro : null,
+        gyro_std: hasGyro ? Math.sqrt(gyroVar) : null,
+        
+        total_swings: sens.total_swings,
+        smash_count: sens.smash_count,
+        clear_count: sens.clear_count,
+        drive_count: sens.drive_count,
+        net_shot_count: sens.net_shot_count,
+        avg_swing_speed: sens.total_swings ? sens.sumSwingSpeed / sens.total_swings : 0,
+        max_swing_speed: sens.maxSwingSpeed,
+        
+        lateral_pct: (sens.lateralCount / totalMoves) * 100,
+        forward_back_pct: (sens.forwardBackCount / totalMoves) * 100,
+        vertical_pct: (sens.verticalCount / totalMoves) * 100,
+        
+        first_half_intensity: fhInt,
+        second_half_intensity: shInt,
+        fatigue_index: fhInt > 0 ? shInt / fhInt : 1.0,
+      }, { onConflict: "match_id,match_source,player_id" });
+
+    } catch (err) {
+      console.error("Failed to save motion stats", err);
+    } finally {
+      motionStatsRef.current = { count: 0, sumMagnitude: 0, maxMagnitude: 0, idle: 0, walking: 0, running: 0, smash_sprint: 0 };
+      sensorStatsRef.current = { sumAccelSq: 0, sumGyro: 0, sumGyroSq: 0, maxGyro: 0, total_swings: 0, smash_count: 0, clear_count: 0, drive_count: 0, net_shot_count: 0, sumSwingSpeed: 0, maxSwingSpeed: 0, lateralCount: 0, forwardBackCount: 0, verticalCount: 0, intensities: [], lastSec: 0 };
     }
   };
 
@@ -172,7 +217,8 @@ export function UmpireEngine({
     friendlyOnly: !isAdminEmail(userEmail) && !isTournamentUmpire,
     initialMatchState,
     tournamentMatch,
-    onClose
+    onClose,
+    onMatchSaved: saveMotionStats,
   });
 
   const {
@@ -193,25 +239,6 @@ export function UmpireEngine({
 
   // Render variables
   const friendlyOnly = !isAdminEmail(userEmail) && !isTournamentUmpire;
-
-  // Sync score when match state changes
-  useEffect(() => {
-    if (isScorePinned && Capacitor.isNativePlatform() && match) {
-      const scoreStr = `${match.t1.score} - ${match.t2.score}`;
-      FloatingScore.updateScore({ score: scoreStr }).catch(() => {
-        setIsScorePinned(false);
-      });
-    }
-  }, [match?.t1.score, match?.t2.score, isScorePinned]);
-
-  // Cleanup floating widget on unmount
-  useEffect(() => {
-    return () => {
-      if (isScorePinned && Capacitor.isNativePlatform()) {
-        FloatingScore.stopService().catch(() => {});
-      }
-    };
-  }, [isScorePinned]);
 
   // ── Native Background Service & Lock Screen (Phase 2) ──
   useEffect(() => {
@@ -485,9 +512,6 @@ export function UmpireEngine({
             </button>
             {Capacitor.isNativePlatform() && (
               <>
-                <button onClick={togglePinScore} className={`shrink-0 px-1 py-2 sm:px-3 sm:py-2 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border transition ${isScorePinned ? "bg-violet-600 border-violet-500 text-white" : "bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700"}`}>
-                  <Tv2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {isScorePinned ? "Unpin Score" : "Pin Score"}
-                </button>
                 <button onClick={async () => {
                   try {
                     await Pip.enterPipMode();
@@ -853,7 +877,7 @@ export function UmpireEngine({
 
           {/* ── Match Action Buttons (Bottom) ── */}
           {match.status === "playing" && (
-            <div className="grid grid-cols-3 gap-2 mt-8 mb-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-8 mb-4">
               <button onClick={() => setConfirmAction({
                 title: "Cancel Match",
                 message: "Are you sure you want to exit without saving? Any unsaved progress will be lost.",
@@ -862,6 +886,22 @@ export function UmpireEngine({
                 onConfirm: () => handleClose()
               })} className="px-1 py-3 bg-slate-800 hover:bg-rose-500/20 text-rose-400 font-bold text-[10px] sm:text-xs rounded-xl flex flex-col sm:flex-row justify-center items-center gap-1 sm:gap-1.5 border border-slate-700 hover:border-rose-500/30 transition shadow-sm">
                 <X className="w-4 h-4 sm:w-4 sm:h-4" /> Cancel
+              </button>
+              
+              <button 
+                onClick={() => {
+                  const t1Name = match.t1.p2Name ? `${match.t1.p1Name} & ${match.t1.p2Name}` : match.t1.p1Name;
+                  const t2Name = match.t2.p2Name ? `${match.t2.p1Name} & ${match.t2.p2Name}` : match.t2.p1Name;
+                  const fullScore = `${t1Name} [${match.t1.score} - ${match.t2.score}] ${t2Name}`;
+                  supabase.from("site_data").upsert({ 
+                    key: "match_alert", 
+                    value: { message: `🏆 Live Score: ${fullScore}`, time: Date.now() } 
+                  });
+                  toast.success("Score pushed to all users!");
+                }}
+                className="px-1 py-3 bg-slate-800 hover:bg-sky-500/20 text-sky-400 font-bold text-[10px] sm:text-xs rounded-xl flex flex-col sm:flex-row justify-center items-center gap-1 sm:gap-1.5 border border-slate-700 hover:border-sky-500/30 transition shadow-sm"
+              >
+                <Tv2 className="w-4 h-4 sm:w-4 sm:h-4" /> Push Score
               </button>
               <button onClick={() => setConfirmAction({
                 title: "Finish Match",
@@ -877,12 +917,59 @@ export function UmpireEngine({
                 message: "Are you sure you want to permanently abort this match and delete its records?",
                 confirmLabel: "Abort Match",
                 confirmColor: "bg-rose-600 hover:bg-rose-500",
-                onConfirm: () => handleClose()
+                onConfirm: async () => {
+                  try {
+                    const { data } = await supabase.from("site_data").select("value").eq("key", "live_matches").single();
+                    const lm = (data?.value as Record<string, any>) || {};
+                    if (lm[match.id]) {
+                      delete lm[match.id];
+                      await supabase.from("site_data").upsert({ key: "live_matches", value: lm });
+                    }
+                  } catch (e) {
+                    console.error("Failed to abort broadcast", e);
+                  }
+                  handleClose();
+                }
               })} className="px-1 py-3 bg-slate-800 hover:bg-rose-500/20 text-rose-400 font-bold text-[10px] sm:text-xs rounded-xl flex flex-col sm:flex-row justify-center items-center gap-1 sm:gap-1.5 border border-slate-700 hover:border-rose-500/30 transition shadow-sm">
                 <AlertTriangle className="w-4 h-4 sm:w-4 sm:h-4" /> Abort
               </button>
             </div>
           )}
+
+      {/* ── Takeover Request Banner (Non-blocking) ── */}
+      {match.takeoverRequest?.status === "pending" && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[95%] max-w-sm pointer-events-auto">
+          <div className="bg-slate-900 border border-primary/50 rounded-2xl p-4 shadow-2xl shadow-primary/20 space-y-3 animate-in slide-in-from-top-4 fade-in">
+            <div className="flex items-center gap-3">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm font-black text-foreground">Handover Request</h3>
+                <p className="text-xs text-slate-300 truncate">
+                  <span className="font-bold text-primary">{match.takeoverRequest.requesterName}</span> wants to take over.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  updateMatch({ takeoverRequest: { ...match.takeoverRequest!, status: "rejected" } });
+                }}
+                className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-foreground font-bold text-xs rounded-xl transition"
+              >
+                Reject
+              </button>
+              <button
+                onClick={() => {
+                  updateMatch({ takeoverRequest: { ...match.takeoverRequest!, status: "approved" } });
+                  toast.success("Handover approved. You can now close this match.");
+                }}
+                className="flex-1 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-xl transition shadow-lg"
+              >
+                Approve
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

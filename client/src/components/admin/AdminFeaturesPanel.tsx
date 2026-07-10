@@ -14,7 +14,9 @@ import { toast } from "sonner";
 import { WeeklyChallenges } from "@/components/feed/WeeklyChallenges";
 import { safeReplaceState, safeGetSearchParams, isCapacitor } from "@/lib/navUtils";
 
-const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm";
+import { UmpireAssignmentPanel } from "./UmpireAssignmentPanel";
+
+const cardCls = "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm";
 const sectionTitle = (icon: React.ReactNode, label: string) => (
   <div className="flex items-center gap-2 mb-4">
     <div className="p-1.5 rounded-lg bg-primary/10 dark:bg-primary/40 text-primary dark:text-primary">
@@ -572,6 +574,9 @@ export function AdminFeaturesPanel() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <NotifQueuePanel />
           <CronJobsPanel />
+          <AdminTournamentFeatures />
+          <UmpireAssignmentPanel />
+          <ManageTournaments />
         </div>
       )}
       {section === "api" && <PublicApiPanel />}

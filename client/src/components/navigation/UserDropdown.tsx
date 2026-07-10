@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Lock, Zap, UserPlus, LogOut, User, Settings, Shield, Trash2 } from "lucide-react";
+import { Lock, Zap, UserPlus, LogOut, User, Settings, Shield, Trash2, Trophy } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -119,6 +119,11 @@ export default function SubBarProfileButton({
             <DropdownMenuItem onSelect={() => setLocation("/profile/setup")} className="cursor-pointer font-semibold rounded-none text-muted-foreground dark:text-slate-300 focus:text-foreground dark:focus:text-foreground focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2.5 gap-2.5">
               <User className="w-4 h-4 text-muted-foreground" /> Edit Profile
             </DropdownMenuItem>
+            {myPlayerId && (
+              <DropdownMenuItem onSelect={() => setLocation(`/player/${myPlayerId}/career`)} className="cursor-pointer font-semibold rounded-none text-muted-foreground dark:text-slate-300 focus:text-foreground dark:focus:text-foreground focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2.5 border-t border-slate-100 dark:border-slate-800 gap-2.5">
+                <Trophy className="w-4 h-4 text-muted-foreground" /> Career
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onSelect={() => setLocation("/profile/password")} className="cursor-pointer font-semibold rounded-none text-muted-foreground dark:text-slate-300 focus:text-foreground dark:focus:text-foreground focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2.5 border-t border-slate-100 dark:border-slate-800 gap-2.5">
               <Lock className="w-4 h-4 text-muted-foreground" /> Change Password
             </DropdownMenuItem>

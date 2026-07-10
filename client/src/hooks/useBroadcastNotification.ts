@@ -188,6 +188,36 @@ export function useBroadcastNotification() {
             } catch (e) {
               console.error("Failed to parse admin push", e);
             }
+          } else if (row.key === "match_alert") {
+            try {
+              const data = row.value;
+              if (data && data.message && data.time && data.time !== lastAdminPushRef.current /* reuse ref or create new, let's just create new ref or just check time */) {
+                // To avoid duplicate notifications from multiple renders, we use lastAdminPushRef 
+                // but let's just make a new ref or just use lastAdminPushRef since it's just a timestamp.
+                if (data.time !== lastAdminPushRef.current) {
+                  lastAdminPushRef.current = data.time;
+                  playWhistleSound();
+                  
+                  if (Capacitor.isNativePlatform()) {
+                    LocalNotifications.schedule({
+                      notifications: [{
+                        title: "Live Match Score",
+                        body: data.message,
+                        id: Math.floor(Math.random() * 1000000),
+                        schedule: { at: new Date(Date.now() + 100) },
+                        channelId: "notify_whistle",
+                      }]
+                    }).catch(console.warn);
+                  } else {
+                    showWebNotification("Live Match Score", data.message, () => {
+                      window.location.href = `${import.meta.env.BASE_URL || "/"}feed`;
+                    });
+                  }
+                }
+              }
+            } catch (e) {
+              console.error("Failed to parse match alert push", e);
+            }
           }
         },
       )

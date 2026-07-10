@@ -37,9 +37,22 @@ export function VideoPlayerModal({ video, onClose }: Props) {
   const [enableScoringMode, setEnableScoringMode] = useState(false);
   const [teamA, setTeamA] = useState<string[]>(["Team A"]);
   const [teamB, setTeamB] = useState<string[]>(["Team B"]);
+  const [isInPip, setIsInPip] = useState(false);
   const backdropRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YoutubePlayerHandle>(null);
   const chapters = video.chapters ?? [];
+
+  // Android PiP shrinks the whole app window, not just the video — so once
+  // we're in PiP, strip the UI down to only the player so nothing else shows.
+  useEffect(() => {
+    if (!isCapacitor) return;
+    const handle = Pip.addListener("pipModeChanged", ({ isInPipMode }) => {
+      setIsInPip(isInPipMode);
+    });
+    return () => {
+      handle.then((h) => h.remove());
+    };
+  }, []);
 
   // Close on Escape
   useEffect(() => {
@@ -87,62 +100,66 @@ export function VideoPlayerModal({ video, onClose }: Props) {
   return (
     <div
       ref={backdropRef}
-      className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-sm flex items-center justify-center p-2 md:p-6"
+      className={`fixed inset-0 z-[200] flex items-center justify-center ${isInPip ? "bg-black" : "bg-black/90 backdrop-blur-sm p-2 md:p-6"}`}
       onClick={(e) => {
         if (e.target === backdropRef.current) onClose();
       }}
     >
-      <div className="relative w-full max-w-6xl flex flex-col lg:flex-row gap-0 rounded-2xl overflow-hidden shadow-2xl bg-black">
+      <div className={`relative flex flex-col lg:flex-row gap-0 bg-black ${isInPip ? "w-full h-full max-w-none" : "w-full max-w-6xl rounded-2xl overflow-hidden shadow-2xl"}`}>
         {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 z-50 text-foreground/70 hover:text-foreground bg-black/60 hover:bg-black/80 rounded-full p-2 transition-colors"
-          aria-label="Close"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        {!isInPip && (
+          <button
+            onClick={onClose}
+            className="absolute top-3 right-3 z-50 text-foreground/70 hover:text-foreground bg-black/60 hover:bg-black/80 rounded-full p-2 transition-colors"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
 
         {/* Player */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 flex flex-col">
           {/* Title bar */}
-          <div className="px-4 py-3 bg-gray-950 border-b border-white/5 flex justify-between items-center">
-            <div>
-              {video.category && (
-                <p className="text-primary text-xs font-bold uppercase tracking-widest mb-0.5">
-                  {video.category}
-                </p>
-              )}
-              <h2 className="text-foreground font-bold text-sm md:text-base leading-tight pr-8">
-                {video.title}
-              </h2>
-            </div>
-            <div className="flex gap-2 shrink-0 items-center">
-              {isCapacitor && (
+          {!isInPip && (
+            <div className="px-4 py-3 bg-gray-950 border-b border-white/5 flex justify-between items-center">
+              <div>
+                {video.category && (
+                  <p className="text-primary text-xs font-bold uppercase tracking-widest mb-0.5">
+                    {video.category}
+                  </p>
+                )}
+                <h2 className="text-foreground font-bold text-sm md:text-base leading-tight pr-8">
+                  {video.title}
+                </h2>
+              </div>
+              <div className="flex gap-2 shrink-0 items-center">
+                {isCapacitor && (
+                  <button
+                    onClick={async () => {
+                      try {
+                        await Pip.enterPipMode();
+                      } catch (e: any) {
+                        toast.info(e?.message || "Could not enter PiP mode");
+                      }
+                    }}
+                    className="shrink-0 p-1.5 sm:px-3 sm:py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] sm:text-xs rounded-full sm:rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border border-slate-700 transition"
+                    title="Picture in Picture"
+                  >
+                    <MonitorPlay className="w-4 h-4 sm:w-4 sm:h-4" /> <span className="hidden sm:inline">PiP</span>
+                  </button>
+                )}
                 <button
-                  onClick={async () => {
-                    try {
-                      await Pip.enterPipMode();
-                    } catch (e: any) {
-                      toast.info(e?.message || "Could not enter PiP mode");
-                    }
-                  }}
-                  className="shrink-0 p-1.5 sm:px-3 sm:py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] sm:text-xs rounded-full sm:rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border border-slate-700 transition"
-                  title="Picture in Picture"
+                  onClick={() => setEnableScoringMode(v => !v)}
+                  className={`text-xs font-bold px-3 py-1.5 rounded-full transition-colors shrink-0 ${enableScoringMode ? 'bg-rose-500 text-foreground shadow-[0_0_15px_rgba(244,63,94,0.5)]' : 'bg-white/10 text-foreground/70 hover:bg-white/20'}`}
                 >
-                  <MonitorPlay className="w-4 h-4 sm:w-4 sm:h-4" /> <span className="hidden sm:inline">PiP</span>
+                  {enableScoringMode ? 'Exit Scoring' : 'Score Mode'}
                 </button>
-              )}
-              <button 
-                onClick={() => setEnableScoringMode(v => !v)}
-                className={`text-xs font-bold px-3 py-1.5 rounded-full transition-colors shrink-0 ${enableScoringMode ? 'bg-rose-500 text-foreground shadow-[0_0_15px_rgba(244,63,94,0.5)]' : 'bg-white/10 text-foreground/70 hover:bg-white/20'}`}
-              >
-                {enableScoringMode ? 'Exit Scoring' : 'Score Mode'}
-              </button>
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Aspect-ratio box */}
-          <div className="aspect-video w-full bg-black">
+          {/* Aspect-ratio box (fills the whole window while in PiP) */}
+          <div className={isInPip ? "flex-1 w-full bg-black" : "aspect-video w-full bg-black"}>
             <YoutubePlayer
               ref={playerRef}
               videoId={video.videoId}
@@ -159,16 +176,18 @@ export function VideoPlayerModal({ video, onClose }: Props) {
           </div>
 
           {/* Keyboard shortcuts hint */}
-          <div className="hidden md:flex px-4 py-2 bg-gray-950 gap-4 text-foreground/30 text-[11px] border-t border-white/5">
-            <span>Space / K — play/pause</span>
-            <span>← / → — skip 10s</span>
-            <span>F — fullscreen</span>
-            <span>M — mute</span>
-          </div>
+          {!isInPip && (
+            <div className="hidden md:flex px-4 py-2 bg-gray-950 gap-4 text-foreground/30 text-[11px] border-t border-white/5">
+              <span>Space / K — play/pause</span>
+              <span>← / → — skip 10s</span>
+              <span>F — fullscreen</span>
+              <span>M — mute</span>
+            </div>
+          )}
         </div>
 
         {/* Chapter sidebar — only shown if there are chapters */}
-        {chapters.length > 0 && (
+        {!isInPip && chapters.length > 0 && (
           <div className="w-full lg:w-64 bg-gray-950 border-t lg:border-t-0 lg:border-l border-white/5 flex flex-col max-h-52 lg:max-h-none overflow-y-auto">
             <div className="px-4 py-3 border-b border-white/5 sticky top-0 bg-gray-950 z-10">
               <h3 className="text-foreground/50 text-xs font-bold uppercase tracking-widest">

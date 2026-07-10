@@ -2,7 +2,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
   appId: "shuttlers.iisc.com",
-  appName: "IISc Badminton Club",
+  appName: "IISc Shuttlers",
   webDir: "dist",
   server: {
     androidScheme: "https",

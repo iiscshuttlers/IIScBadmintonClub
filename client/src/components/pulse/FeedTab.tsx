@@ -37,17 +37,18 @@ import { PollsSection } from "@/components/feed/PollsSection";
 import { RivalryCards } from "@/components/feed/RivalryCards";
 import { MatchPredictions } from "@/components/feed/MatchPredictions";
 
+import { useHashTab } from "@/hooks/useHashTab";
+
 export default function FeedTab() {
   const { session, profile: ownProfile, isUmpire, isAdmin } = useAuth();
   const [, setLocation] = useLocation();
-  const [activeTab, setActiveTab] = useState<"matches" | "announcements" | "umpire">("matches");
-
-  const handleTabChange = (tabId: "matches" | "announcements" | "umpire") => {
-    setActiveTab(tabId);
-  };
+  const [activeTab, handleTabChange] = useHashTab(
+    ["feed-matches", "announcements", "umpire-panel"] as const,
+    "feed-matches"
+  );
 
   useEffect(() => {
-    const onOpenUmpire = () => setActiveTab("umpire");
+    const onOpenUmpire = () => handleTabChange("umpire-panel");
     window.addEventListener("openUmpireTab", onOpenUmpire);
     return () => window.removeEventListener("openUmpireTab", onOpenUmpire);
   }, []);
@@ -117,9 +118,9 @@ export default function FeedTab() {
       <div className="bg-slate-100/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 mb-6 shadow-sm">
         <div className="max-w-3xl mx-auto px-2 sm:px-4 py-2 sm:py-3 flex items-center justify-center gap-1 sm:gap-2 overflow-x-auto hide-scrollbar">
           <button
-            onClick={() => handleTabChange("matches")}
+            onClick={() => handleTabChange("feed-matches")}
             className={`whitespace-nowrap flex-shrink-0 flex justify-center items-center px-3 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all ${
-              activeTab === "matches"
+              activeTab === "feed-matches"
                 ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-md ring-1 ring-slate-200/50 dark:ring-slate-700/50"
                 : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50"
             }`}
@@ -138,9 +139,9 @@ export default function FeedTab() {
           </button>
           {(isUmpire || isAdmin) && (
             <button
-              onClick={() => handleTabChange("umpire")}
+              onClick={() => handleTabChange("umpire-panel")}
               className={`whitespace-nowrap flex-shrink-0 flex justify-center items-center px-3 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all ${
-                activeTab === "umpire"
+                activeTab === "umpire-panel"
                   ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-md ring-1 ring-slate-200/50 dark:ring-slate-700/50"
                   : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50"
               }`}
@@ -153,17 +154,20 @@ export default function FeedTab() {
       <div className="container mx-auto px-4 max-w-3xl mt-8">
         {activeTab === "announcements" ? (
           <AnnouncementsSection />
-        ) : activeTab === "umpire" && (isUmpire || isAdmin) ? (
+        ) : activeTab === "umpire-panel" && (isUmpire || isAdmin) ? (
           <UmpireTab />
         ) : (
           <>
             {!loading && session && hasLiveMatches && <MatchPredictions />}
 
+            {!loading && (
+              <div className="-mx-4 sm:mx-0 mb-6">
+                <LiveScoreSection />
+              </div>
+            )}
+
             {!loading && displayMatches.length > 0 && (
               <>
-                <div className="-mx-4 sm:mx-0 mb-6">
-                  <LiveScoreSection />
-                </div>
                 <div className="mb-6 bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden">
                   <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground dark:text-muted-foreground mb-4">
                     <BarChart3 className="w-4 h-4 text-primary" /> Court

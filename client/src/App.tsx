@@ -57,6 +57,7 @@ const Pulse = lazy(() => import("./pages/Pulse"));
 // TournamentAdmin is the dedicated fullscreen Tournament Manager
 const SiteAdmin = lazy(() => import("./pages/SiteAdmin"));
 const PlayerProfile = lazy(() => import("./pages/PlayerProfile"));
+const PlayerCareerPage = lazy(() => import("./pages/PlayerCareerPage"));
 const Join = lazy(() => import("./pages/Join"));
 const ProfileSetup = lazy(() => import("./pages/ProfileSetup"));
 
@@ -110,6 +111,11 @@ function AppRoutes() {
           <Route path="/player/:id">
             <ErrorBoundary fallback={<PageErrorFallback />}>
               <PlayerProfile />
+            </ErrorBoundary>
+          </Route>
+          <Route path="/player/:id/career">
+            <ErrorBoundary fallback={<PageErrorFallback />}>
+              <PlayerCareerPage />
             </ErrorBoundary>
           </Route>
           <Route path="/compare/:p1/:p2">

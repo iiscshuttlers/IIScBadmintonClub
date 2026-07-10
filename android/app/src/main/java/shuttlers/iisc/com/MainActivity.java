@@ -2,10 +2,12 @@ package shuttlers.iisc.com;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.res.Configuration;
 import android.media.AudioAttributes;
 import android.net.Uri;
 import android.os.Build;
 import com.getcapacitor.BridgeActivity;
+import com.getcapacitor.PluginHandle;
 
 public class MainActivity extends BridgeActivity {
   @Override
@@ -17,8 +19,18 @@ public class MainActivity extends BridgeActivity {
     registerPlugin(PlayerMotionPlugin.class);
     registerPlugin(WidgetManagerPlugin.class);
     registerPlugin(GeofencePlugin.class);
+    registerPlugin(HealthConnectPlugin.class);
     super.onCreate(savedInstanceState);
     createNotificationChannels();
+  }
+
+  @Override
+  public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode, Configuration newConfig) {
+    super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig);
+    PluginHandle handle = getBridge().getPlugin("Pip");
+    if (handle != null && handle.getInstance() instanceof PipPlugin) {
+      ((PipPlugin) handle.getInstance()).notifyPipModeChanged(isInPictureInPictureMode);
+    }
   }
 
   private Uri soundUri(String filename) {

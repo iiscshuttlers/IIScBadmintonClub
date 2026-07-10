@@ -41,6 +41,11 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="iiscshuttlers" />
             </intent-filter>
+            
+            <!-- Health Connect Permissions Rationale -->
+            <intent-filter>
+                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+            </intent-filter>
         </activity>
 
         <provider
@@ -56,10 +61,9 @@
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="notify_whistle" />
             
-        <!-- Temporarily disabled for Google Play Console bypass
         <service android:name=".FloatingScoreService" android:exported="false" />
-        <service android:name=".UmpireBackgroundService" android:exported="false" android:foregroundServiceType="dataSync|specialUse" />
-        -->
+        
+        <service android:name=".UmpireBackgroundService" android:exported="false" android:foregroundServiceType="dataSync" />
         
         <receiver android:name=".NotificationActionReceiver" android:exported="false">
             <intent-filter>
@@ -107,18 +111,18 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <!-- Temporarily disabled for Google Play Console bypass
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
-    -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <!-- Temporarily disabled for Google Play Console bypass
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
-    -->
     <!-- Camera and NFC are optional so the app is available on devices without them -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.nfc" android:required="false" />
+
+    <!-- Health Connect Permissions -->
+    <uses-permission android:name="android.permission.health.READ_HEART_RATE"/>
+    <uses-permission android:name="android.permission.health.READ_STEPS"/>
+    <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED"/>
 </manifest>
 

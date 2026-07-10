@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { useLiveSiteData } from "@/hooks/useMatches";
-import { Tv2, Activity, ShieldCheck, MonitorPlay } from "lucide-react";
+import { Tv2, Activity, ShieldCheck, MonitorPlay, ArrowLeft } from "lucide-react";
 import type { BwfMatchState } from "@/types/umpire";
 
 export default function TvScoreboardIndex() {
@@ -10,8 +10,14 @@ export default function TvScoreboardIndex() {
   const activeMatches = Object.entries(liveMatches || {}).filter(([_, m]) => m.status === "playing");
 
   return (
-    <div className="min-h-screen bg-slate-950 p-6 text-slate-200">
-      <div className="max-w-4xl mx-auto space-y-8 mt-12">
+    <div className="min-h-screen bg-slate-950 p-6 text-slate-200 relative">
+      <Link href="/">
+        <button className="absolute top-4 left-4 sm:top-6 sm:left-6 p-2 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded-full transition border border-slate-800 shadow-md flex items-center gap-2 pr-4">
+          <ArrowLeft className="w-5 h-5" />
+          <span className="text-sm font-bold">Back to App</span>
+        </button>
+      </Link>
+      <div className="max-w-4xl mx-auto space-y-8 mt-12 sm:mt-16">
         <div className="text-center space-y-4">
           <div className="mx-auto w-20 h-20 bg-blue-900/30 rounded-3xl flex items-center justify-center mb-6 ring-1 ring-blue-500/20 shadow-[0_0_40px_-10px_rgba(59,130,246,0.3)]">
             <MonitorPlay className="w-10 h-10 text-blue-400" />

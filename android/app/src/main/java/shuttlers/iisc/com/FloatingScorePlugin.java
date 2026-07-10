@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
 
+import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -13,6 +14,19 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 
 @CapacitorPlugin(name = "FloatingScore")
 public class FloatingScorePlugin extends Plugin {
+
+    // Static reference so FloatingScoreService (not a Plugin/Activity) can
+    // notify JS when the user dismisses the overlay from the close button.
+    public static FloatingScorePlugin instance;
+
+    @Override
+    public void load() {
+        instance = this;
+    }
+
+    public void notifyClosed() {
+        notifyListeners("floatingScoreClosed", new JSObject());
+    }
 
     @PluginMethod
     public void checkPermission(PluginCall call) {
@@ -55,28 +69,26 @@ public class FloatingScorePlugin extends Plugin {
             call.reject("Permission not granted for SYSTEM_ALERT_WINDOW");
             return;
         }
+
+        JSArray matches = call.getArray("matches");
+        String matchesJson = matches != null ? matches.toString() : "[]";
+
         Intent intent = new Intent(getContext(), FloatingScoreService.class);
+        intent.putExtra("matches", matchesJson);
         getContext().startService(intent);
-        
-        String score = call.getString("score", "00 - 00");
-        
-        // Use a small delay to ensure service has time to start and bind its instance
-        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-            if (FloatingScoreService.instance != null) {
-                FloatingScoreService.instance.updateScore(score);
-            }
-        }, 500);
 
         call.resolve();
     }
 
     @PluginMethod
     public void updateScore(PluginCall call) {
-        String score = call.getString("score", "00 - 00");
+        JSArray matches = call.getArray("matches");
+        String matchesJson = matches != null ? matches.toString() : "[]";
+
         if (FloatingScoreService.instance != null) {
             getActivity().runOnUiThread(() -> {
                 if (FloatingScoreService.instance != null) {
-                    FloatingScoreService.instance.updateScore(score);
+                    FloatingScoreService.instance.updateScore(matchesJson);
                 }
             });
             call.resolve();

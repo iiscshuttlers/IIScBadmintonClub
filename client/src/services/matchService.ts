@@ -121,16 +121,16 @@ export class MatchService {
     if (error) throw error;
   }
 
-  static async upsertLiveMatch(umpireUserId: string, matchState: BwfMatchState) {
-    const { error } = await supabase.rpc("upsert_live_match", {
-      umpire_user_id: umpireUserId,
+  static async upsertLiveMatch(matchId: string, matchState: BwfMatchState) {
+    const { error } = await supabase.rpc("upsert_live_match_by_id", {
+      p_match_id: matchId,
       match_state: matchState as unknown as Record<string, unknown>,
     });
     if (error) throw error;
   }
 
-  static async removeLiveMatch(umpireUserId: string) {
-    const { error } = await supabase.rpc("remove_live_match", { umpire_user_id: umpireUserId });
+  static async removeLiveMatch(matchId: string) {
+    const { error } = await supabase.rpc("remove_live_match_by_id", { p_match_id: matchId });
     if (error) throw error;
   }
 }

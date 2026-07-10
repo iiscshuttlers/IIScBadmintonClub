@@ -13,6 +13,8 @@ import {
   ChevronRight,
   Star,
   Zap,
+  MapPin,
+  Map,
 } from "lucide-react";
 import iiscTeam from "@/assets/iisc-team.jpg";
 import { usePageMeta } from "@/hooks/usePageMeta";
@@ -73,11 +75,29 @@ export default function Home() {
       "IISc Badminton Club — join a vibrant community of players, from beginners to champions, all united by passion for the sport.",
   });
 
+  const [showLocationDisclosure, setShowLocationDisclosure] = useState(false);
+
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
-      Geofence.setupGymkhanaGeofence().catch(e => console.log("Geofence setup failed:", e));
+      const agreed = localStorage.getItem("location_disclosure_agreed");
+      if (agreed === "true") {
+        Geofence.setupGymkhanaGeofence().catch(e => console.log("Geofence setup failed:", e));
+      } else if (!agreed) {
+        setShowLocationDisclosure(true);
+      }
     }
   }, []);
+
+  const handleAgreeLocation = () => {
+    localStorage.setItem("location_disclosure_agreed", "true");
+    setShowLocationDisclosure(false);
+    Geofence.setupGymkhanaGeofence().catch(e => console.log("Geofence setup failed:", e));
+  };
+
+  const handleDeclineLocation = () => {
+    localStorage.setItem("location_disclosure_agreed", "false");
+    setShowLocationDisclosure(false);
+  };
 
   const [isImageOpen, setIsImageOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -546,6 +566,35 @@ export default function Home() {
         {isImageOpen && (
           <ImageModal src={iiscTeam} alt="IISc Badminton Team" onClose={() => setIsImageOpen(false)} />
         )}
+
+      {showLocationDisclosure && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-indigo-500" />
+            <div className="w-16 h-16 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center mb-6">
+              <MapPin className="w-8 h-8" />
+            </div>
+            <h2 className="text-xl font-black text-white mb-3">Use your location</h2>
+            <p className="text-sm font-medium text-slate-300 leading-relaxed mb-6">
+              This app collects location data to enable automatic check-ins and notifications when you arrive at the badminton courts, even when the app is closed or not in use.
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={handleAgreeLocation}
+                className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-sm transition-colors"
+              >
+                I Agree
+              </button>
+              <button
+                onClick={handleDeclineLocation}
+                className="w-full py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm transition-colors"
+              >
+                No Thanks
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
     </>
   );
@@ -677,8 +726,6 @@ function AnimatedLogo() {
           </div>
         </div>
       </div>
-
-
     </div>
   );
 }

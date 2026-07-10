@@ -23,6 +23,7 @@ export interface UmpireStateProps {
   initialMatchState?: BwfMatchState | MatchEditState | null;
   tournamentMatch?: TournamentMatchForUmpire | null;
   onClose: () => void;
+  onMatchSaved?: (matchId: string, matchSource: "friendly" | "tournament") => void;
 }
 
 export function useUmpireState({
@@ -33,7 +34,8 @@ export function useUmpireState({
   friendlyOnly,
   initialMatchState,
   tournamentMatch,
-  onClose
+  onClose,
+  onMatchSaved
 }: UmpireStateProps) {
   const isAdmin = isAdminEmail(userEmail);
   const [players, setPlayers] = useState<Player[]>([]);
@@ -89,6 +91,7 @@ export function useUmpireState({
         return {
           id: editState.id || crypto.randomUUID(),
           dbId: editState.id,
+          umpireId: userId,
           umpireName: userName,
           isFriendly: editState.is_friendly ?? true,
           isTournamentMatch: editState.is_tournament_match,
@@ -133,6 +136,7 @@ export function useUmpireState({
         return {
           ...liveState,
           id: liveState.id || userId,
+          umpireId: liveState.umpireId || userId,
           umpireName: liveState.umpireName || userName,
         } as BwfMatchState;
       }
@@ -143,6 +147,7 @@ export function useUmpireState({
         };
         return {
           id: tournamentMatch.id || crypto.randomUUID(),
+          umpireId: userId,
           umpireName: userName,
           isFriendly: false,
           matchNumber: tournamentMatch.match_code,
@@ -181,6 +186,7 @@ export function useUmpireState({
 
       return {
         id: crypto.randomUUID(),
+        umpireId: userId,
         umpireName: userName,
         isFriendly: true,
         matchNumber: "",
@@ -209,6 +215,28 @@ export function useUmpireState({
       setMatch(match);
     }
   }, [storeMatch, setMatch, match]);
+
+  useEffect(() => {
+    if (!match.id || match.status === "finished") return;
+
+    // Listen to site_data changes for live_matches
+    const sub = supabase.channel(`umpire_engine_${match.id}_${userId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "site_data", filter: "key=eq.live_matches" }, (payload) => {
+        if (payload.new && (payload.new as any).value) {
+          const newMatches = (payload.new as any).value;
+          // The key in live_matches is now the match's id
+          const remoteMatch = newMatches[match.id];
+          if (remoteMatch) {
+            // Check for new takeover request
+            if (remoteMatch.takeoverRequest?.status === "pending" && useUmpireStore.getState().match?.takeoverRequest?.status !== "pending") {
+              setMatch({ ...useUmpireStore.getState().match!, takeoverRequest: remoteMatch.takeoverRequest });
+            }
+          }
+        }
+      }).subscribe();
+      
+    return () => { supabase.removeChannel(sub); };
+  }, [match.id, match.status]);
 
   
     // Discipline cards: per player slot, array of card types issued
@@ -308,7 +336,7 @@ export function useUmpireState({
       const next = { ...match, ...updates };
       next.inferredCategory = getInferredCategory(next.category, next.t1, next.t2);
       setMatch(next);
-      await MatchService.upsertLiveMatch(userId, next).catch(err => { toast.error("Broadcast sync failed — check your connection"); });
+      await MatchService.upsertLiveMatch(next.id, next).catch(err => { toast.error("Broadcast sync failed — check your connection"); });
       const error = false;
       
     };
@@ -435,6 +463,38 @@ export function useUmpireState({
       const { _changeEnds, _reason, _break, ...stateUpdates } = updates as any;
       updateMatch(stateUpdates);
 
+      // Check if we should auto-push score (half point or set end)
+      // _changeEnds is true when a set finishes OR when reaching half point in third set.
+      // But we also want to push at half point in ANY set.
+      const newT1Score = stateUpdates.t1?.score ?? match.t1.score;
+      const newT2Score = stateUpdates.t2?.score ?? match.t2.score;
+      const t1Games = stateUpdates.t1?.games ?? match.t1.games;
+      const t2Games = stateUpdates.t2?.games ?? match.t2.games;
+      const oldT1Games = match.t1.games;
+      const oldT2Games = match.t2.games;
+      
+      const halfPoint = match.pointsToWin === 21 ? 11 : match.pointsToWin === 15 ? 8 : -1;
+      const isHalfPoint = (newT1Score === halfPoint && newT2Score < halfPoint) || (newT2Score === halfPoint && newT1Score < halfPoint);
+      const isSetWon = t1Games > oldT1Games || t2Games > oldT2Games;
+
+      // Ensure we don't push multiple times for the exact same half point
+      // (This could happen if someone deducts a point and adds it again, but a little spam is okay for umpire, 
+      // or we can just rely on the score exactly hitting the halfPoint)
+      if ((isHalfPoint && (match.t1.score < halfPoint && match.t2.score < halfPoint)) || isSetWon) {
+        const t1Name = match.t1.p2Name ? `${match.t1.p1Name} & ${match.t1.p2Name}` : match.t1.p1Name;
+        const t2Name = match.t2.p2Name ? `${match.t2.p1Name} & ${match.t2.p2Name}` : match.t2.p1Name;
+        const scoreStr = isSetWon 
+          ? `Set won by ${t1Games > oldT1Games ? t1Name : t2Name}!`
+          : `Half-time interval!`;
+        const fullScore = `${t1Name} [${newT1Score} - ${newT2Score}] ${t2Name}`;
+        
+        // Push alert
+        supabase.from("site_data").upsert({ 
+          key: "match_alert", 
+          value: { message: `🏆 ${match.category} Match: ${scoreStr} ${fullScore}`, time: Date.now() } 
+        });
+      }
+
       if (_changeEnds) {
         setPendingBreakAfterEnds(_break || null);
         setChangeEndsReason(_reason || "Change Ends");
@@ -541,6 +601,7 @@ export function useUmpireState({
             key: "match_alert",
             value: { message: `🏆 Tournament: ${match.t1.p1Name}${match.t1.p2Name ? ` & ${match.t1.p2Name}` : ""} vs ${match.t2.p1Name}${match.t2.p2Name ? ` & ${match.t2.p2Name}` : ""} — ${scoreStr}`, time: Date.now() },
           });
+          onMatchSaved?.(matchId, "tournament");
           toast.success("Tournament match result saved!");
           handleClose();
         } catch (err: any) {
@@ -615,6 +676,7 @@ export function useUmpireState({
   
         const notifMsg = `🏆 ${match.isFriendly ? "Friendly" : "Tournament"} Match: ${match.t1.p1Name}${match.t1.p2Name ? ` & ${match.t1.p2Name}` : ""} vs ${match.t2.p1Name}${match.t2.p2Name ? ` & ${match.t2.p2Name}` : ""} — ${match.setsHistory.join(", ")}`;
         await supabase.from("site_data").upsert({ key: "match_alert", value: { message: notifMsg, time: Date.now() } });
+        if (newMatchId) onMatchSaved?.(newMatchId, "friendly");
         const hasGuests = [match.t1.p1Id, match.t1.p2Id, match.t2.p1Id, match.t2.p2Id]
           .some(id => id && !realIds.has(id));
         toast.success(hasGuests ? "Match saved! Guest players are not credited to any profile." : "Match saved to profiles!");

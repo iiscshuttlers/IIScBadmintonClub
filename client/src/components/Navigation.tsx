@@ -267,28 +267,38 @@ export default function Navigation() {
                         <Shield className="w-4.5 h-4.5" />
                       </button>
                     )}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="hover:opacity-80 transition-opacity outline-none">
-                          <Avatar src={userAvatar} name={userName} size="xs" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56 mt-2">
-                        <DropdownMenuItem onClick={() => setLocation("/personal/me")} className="cursor-pointer">
-                          <User className="mr-2 h-4 w-4" />
-                          <span>Player Profile</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => toggleTheme()} className="cursor-pointer">
-                          {theme === "dark" ? <Sun className="mr-2 h-4 w-4 text-amber-500" /> : <Moon className="mr-2 h-4 w-4 text-indigo-500" />}
-                          <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => handleSignOut()} className="cursor-pointer text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-950/30">
-                          <LogOut className="mr-2 h-4 w-4" />
-                          <span>Sign Out</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {myPlayerId ? (
+                      <button
+                        onClick={() => setLocation(`/player/${myPlayerId}/career`)}
+                        className="hover:opacity-80 transition-opacity outline-none"
+                        title="View your career"
+                      >
+                        <Avatar src={userAvatar} name={userName} size="xs" />
+                      </button>
+                    ) : (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="hover:opacity-80 transition-opacity outline-none">
+                            <Avatar src={userAvatar} name={userName} size="xs" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56 mt-2">
+                          <DropdownMenuItem onClick={() => setLocation("/personal/me")} className="cursor-pointer">
+                            <User className="mr-2 h-4 w-4" />
+                            <span>Player Profile</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => toggleTheme()} className="cursor-pointer">
+                            {theme === "dark" ? <Sun className="mr-2 h-4 w-4 text-amber-500" /> : <Moon className="mr-2 h-4 w-4 text-indigo-500" />}
+                            <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleSignOut()} className="cursor-pointer text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-950/30">
+                            <LogOut className="mr-2 h-4 w-4" />
+                            <span>Sign Out</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                   </div>
                 ) : (
                   <div onClick={() => {
@@ -326,28 +336,38 @@ export default function Navigation() {
                       <Shield className="w-5 h-5" />
                     </button>
                   )}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="hover:opacity-80 transition-opacity outline-none">
-                        <Avatar src={userAvatar} name={userName} size="sm" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56 mt-2">
-                      <DropdownMenuItem onClick={() => setLocation("/personal/me")} className="cursor-pointer">
-                        <User className="mr-2 h-4 w-4" />
-                        <span>Player Profile</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => toggleTheme()} className="cursor-pointer">
-                        {theme === "dark" ? <Sun className="mr-2 h-4 w-4 text-amber-500" /> : <Moon className="mr-2 h-4 w-4 text-indigo-500" />}
-                        <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => handleSignOut()} className="cursor-pointer text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-950/30">
-                        <LogOut className="mr-2 h-4 w-4" />
-                        <span>Sign Out</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  {myPlayerId ? (
+                    <button
+                      onClick={() => setLocation(`/player/${myPlayerId}/career`)}
+                      className="hover:opacity-80 transition-opacity outline-none"
+                      title="View your career"
+                    >
+                      <Avatar src={userAvatar} name={userName} size="sm" />
+                    </button>
+                  ) : (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="hover:opacity-80 transition-opacity outline-none">
+                          <Avatar src={userAvatar} name={userName} size="sm" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56 mt-2">
+                        <DropdownMenuItem onClick={() => setLocation("/personal/me")} className="cursor-pointer">
+                          <User className="mr-2 h-4 w-4" />
+                          <span>Player Profile</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => toggleTheme()} className="cursor-pointer">
+                          {theme === "dark" ? <Sun className="mr-2 h-4 w-4 text-amber-500" /> : <Moon className="mr-2 h-4 w-4 text-indigo-500" />}
+                          <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleSignOut()} className="cursor-pointer text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-950/30">
+                          <LogOut className="mr-2 h-4 w-4" />
+                          <span>Sign Out</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </div>
               ) : (
 
@@ -455,7 +475,8 @@ export default function Navigation() {
         )}
 
       {/* ── Mobile Bottom Navigation Bar (outside nav to ensure fixed positioning) ─────────────────────────────── */}
-      <div 
+      {!/^\/player\/[^/]+\/career/.test(location) && (
+      <div
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
         className="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-white/95 dark:bg-slate-950/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 flex justify-around items-end px-1 pt-1 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]"
       >
@@ -502,7 +523,9 @@ export default function Navigation() {
               {isOpen ? <X className="w-5 h-5 mb-0.5" /> : <Menu className="w-5 h-5 mb-0.5" />}
               <span className="text-[11px] font-semibold">Menu</span>
             </button>
-        </div>
+          </div>
+      )}
+
 
       {/* Global Search Modal */}
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />

@@ -3,17 +3,15 @@ package shuttlers.iisc.com;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.PendingIntent;
-import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 
-import androidx.core.content.ContextCompat;
-
+import com.getcapacitor.PermissionState;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
+import com.getcapacitor.annotation.PermissionCallback;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingClient;
 import com.google.android.gms.location.GeofencingRequest;
@@ -52,17 +50,29 @@ public class GeofencePlugin extends Plugin {
         return geofencePendingIntent;
     }
 
-    @SuppressLint("MissingPermission")
     @PluginMethod
     public void setupGymkhanaGeofence(PluginCall call) {
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (getPermissionState("location") != PermissionState.GRANTED) {
+            requestPermissionForAlias("location", call, "locationPermissionCallback");
+            return;
+        }
+        addGeofence(call);
+    }
+
+    @PermissionCallback
+    private void locationPermissionCallback(PluginCall call) {
+        if (getPermissionState("location") != PermissionState.GRANTED) {
             call.reject("Location permission not granted");
             return;
         }
+        addGeofence(call);
+    }
 
+    @SuppressLint("MissingPermission")
+    private void addGeofence(PluginCall call) {
         // IISc Gymkhana coordinates
-        double lat = call.getDouble("lat", 13.018664852167875);
-        double lng = call.getDouble("lng", 77.56458406276157);
+        double lat = call.getDouble("lat", 13.016601274233912);
+        double lng = call.getDouble("lng", 77.56285452175143);
         float radius = call.getFloat("radius", 50.0f); // 50 meters
 
         Geofence geofence = new Geofence.Builder()

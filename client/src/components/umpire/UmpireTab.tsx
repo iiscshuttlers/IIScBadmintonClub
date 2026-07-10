@@ -12,14 +12,17 @@ import { UmpireTournamentTab, type TournamentMatchForUmpire } from "./UmpireTour
 
 export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean }) {
   const { session, isUmpire } = useAuth();
-  const [isUmpiring, setIsUmpiring] = useState(false);
-  const [myLiveMatch, setMyLiveMatch] = useState<BwfMatchState | MatchEditState | null>(null);
+  const [activeMatches, setActiveMatches] = useState<(BwfMatchState | MatchEditState | TournamentMatchForUmpire)[]>([]);
+  const [activeMatchIndex, setActiveMatchIndex] = useState<number>(-1);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
-  const [activeTournamentMatch, setActiveTournamentMatch] = useState<TournamentMatchForUmpire | null>(null);
   const resetUmpireStore = useUmpireStore((s) => s.reset);
-  // Admin "take over" of another umpire's broadcast (key = original umpire's id)
-  const [takeoverKey, setTakeoverKey] = useState<string | null>(null);
-  const [takeoverMatch, setTakeoverMatch] = useState<BwfMatchState | null>(null);
+
+  // Auto-select the first match if we just loaded some and none was selected
+  useEffect(() => {
+    if (activeMatches.length > 0 && activeMatchIndex === -1 && activeMatches.length === 1) {
+      setActiveMatchIndex(0);
+    }
+  }, [activeMatches.length, activeMatchIndex]);
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -34,8 +37,7 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
       .then(({ data }) => {
         const m = data?.value?.[key] as BwfMatchState | undefined;
         if (m && m.status && m.status !== "setup") {
-          setTakeoverKey(key);
-          setTakeoverMatch(m);
+          setActiveMatches((prev) => [...prev, m]);
         }
       });
   }, [session?.user?.id]);
@@ -49,8 +51,18 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
       .eq("key", "live_matches")
       .single()
       .then(({ data }) => {
-        if (data?.value && data.value[session.user.id]) {
-          setMyLiveMatch(data.value[session.user.id] as BwfMatchState);
+        if (data?.value) {
+          const myMatches = Object.values(data.value).filter(
+            (m: any) => m.umpireId === session.user.id
+          ) as BwfMatchState[];
+          
+          if (myMatches.length > 0) {
+            setActiveMatches((prev) => {
+              const existingIds = new Set(prev.map(p => (p as any).id));
+              const newMatches = myMatches.filter(m => !existingIds.has(m.id));
+              return [...prev, ...newMatches];
+            });
+          }
         }
       });
 
@@ -60,6 +72,7 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
       }
     });
 
+    // The realtime subscription handles remote takeover requests or external updates
     const sub = supabase
       .channel("umpire_tab_matches")
       .on(
@@ -71,9 +84,17 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
           filter: "key=eq.live_matches",
         },
         (payload) => {
-          const newValue = (payload.new as Record<string, unknown>)?.value;
+          const newValue = (payload.new as Record<string, unknown>)?.value as Record<string, BwfMatchState>;
           if (newValue) {
-            setMyLiveMatch((newValue[session.user.id] as BwfMatchState) || null);
+            setActiveMatches((prev) => {
+              return prev.map(m => {
+                const matchId = (m as any).id;
+                // Update match if it exists in DB, otherwise leave it (could be local setup state)
+                return newValue[matchId] && newValue[matchId].umpireId === session.user.id 
+                  ? newValue[matchId] 
+                  : m;
+              });
+            });
           }
         },
       )
@@ -86,77 +107,116 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
 
   if (!session) return null;
 
-  // Admin took over a running broadcast — drive it under the original umpire's key
-  if (takeoverKey && takeoverMatch) {
-    return (
-      <div className="-mx-4 sm:mx-0 mb-6">
-        <UmpireEngine
-          userId={takeoverKey}
-          userEmail={session.user.email!}
-          userName={session.user.user_metadata?.full_name || "Guest"}
-          isTournamentUmpire={isUmpire}
-          initialMatchState={takeoverMatch}
-          onClose={() => {
-            resetUmpireStore();
-            setTakeoverKey(null);
-            setTakeoverMatch(null);
-          }}
-        />
-      </div>
-    );
-  }
+  const removeMatch = (indexToRemove: number) => {
+    setActiveMatches((prev) => {
+      const newMatches = prev.filter((_, i) => i !== indexToRemove);
+      if (newMatches.length === 0) {
+        setActiveMatchIndex(-1);
+      } else if (activeMatchIndex === indexToRemove) {
+        setActiveMatchIndex(Math.max(0, indexToRemove - 1));
+      } else if (activeMatchIndex > indexToRemove) {
+        setActiveMatchIndex(activeMatchIndex - 1);
+      }
+      return newMatches;
+    });
+    resetUmpireStore();
+  };
 
-  // Tournament match umpiring
-  if (activeTournamentMatch) {
-    return (
-      <div className="-mx-4 sm:mx-0 mb-6">
-        <UmpireEngine
-          userId={session.user.id}
-          userEmail={session.user.email!}
-          userName={session.user.user_metadata?.full_name || "Guest"}
-          isTournamentUmpire={isUmpire}
-          initialMatchState={null}
-          tournamentMatch={activeTournamentMatch}
-          onClose={() => setActiveTournamentMatch(null)}
-        />
-      </div>
-    );
-  }
+  const startMatch = (m: any) => {
+    setActiveMatches(prev => {
+      setActiveMatchIndex(prev.length);
+      return [...prev, m];
+    });
+  };
 
-  if (isUmpiring || myLiveMatch) {
-    return (
-      <div className="-mx-4 sm:mx-0 mb-6">
-        <UmpireEngine
-          userId={session.user.id}
-          userEmail={session.user.email!}
-          userName={session.user.user_metadata?.full_name || "Guest"}
-          isTournamentUmpire={isUmpire}
-          initialMatchState={myLiveMatch}
-          onClose={() => {
-            resetUmpireStore();
-            setIsUmpiring(false);
-            setMyLiveMatch(null);
-          }}
-        />
-      </div>
-    );
-  }
+  const showNewMatch = activeMatches.length === 0 || activeMatchIndex === -1;
+  const currentMatch = activeMatches[activeMatchIndex];
+  const isTournamentMatch = currentMatch && 'id' in currentMatch && 'match_code' in currentMatch;
 
   return (
-    <div className="w-full max-w-5xl mx-auto p-4 space-y-6">
-      <div className="space-y-6">
-        <div className="bg-slate-900 rounded-[2rem] p-6 shadow-xl border border-slate-800">
-          <h2 className="text-xl font-black text-foreground mb-5">Tournament Matches</h2>
-          <UmpireTournamentTab onStartMatch={(m) => { resetUmpireStore(); setActiveTournamentMatch(m); }} />
-        </div>
-        <RecentUmpireMatches
-          isTournament={true}
-          onEdit={(matchData) => {
-            setMyLiveMatch(matchData);
-            setIsUmpiring(true);
-          }}
-        />
+    <div className="w-full max-w-5xl mx-auto p-2 sm:p-4 space-y-6">
+      {/* Tabs */}
+      <div className="flex gap-2 overflow-x-auto hide-scrollbar border-b border-slate-800 pb-2">
+        {activeMatches.map((m, idx) => {
+          let mLabel = `Match ${idx + 1}`;
+          if ('category' in m) {
+            const num = ('match_code' in m && m.match_code) ? m.match_code : ('matchNumber' in m && m.matchNumber) ? m.matchNumber : `${idx + 1}`;
+            mLabel = `${m.category} ${num}`;
+          }
+          return (
+            <button
+              key={('id' in m ? m.id : idx)}
+              onClick={() => setActiveMatchIndex(idx)}
+              className={`whitespace-nowrap px-4 py-2 rounded-t-xl text-sm font-bold transition-all border-b-2 ${
+                activeMatchIndex === idx
+                  ? "bg-slate-800 border-primary text-primary"
+                  : "bg-slate-900/50 border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                {mLabel}
+                <div 
+                  onClick={(e) => { e.stopPropagation(); removeMatch(idx); }}
+                  className="w-5 h-5 rounded-full flex items-center justify-center hover:bg-slate-700 text-slate-500 hover:text-rose-400 transition"
+                >
+                  <span className="text-xs">×</span>
+                </div>
+              </div>
+            </button>
+          );
+        })}
+        <button
+          onClick={() => setActiveMatchIndex(-1)}
+          className={`whitespace-nowrap px-4 py-2 rounded-t-xl text-sm font-bold transition-all border-b-2 flex items-center gap-2 ${
+            showNewMatch
+              ? "bg-slate-800 border-primary text-primary"
+              : "bg-slate-900/50 border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+          }`}
+        >
+          <span className="text-lg leading-none">+</span> New Match
+        </button>
       </div>
+
+      {!showNewMatch && currentMatch && (
+        <div className="relative border border-slate-700 rounded-[2rem] overflow-hidden bg-slate-900 shadow-xl">
+          <UmpireEngine
+            key={('id' in currentMatch ? currentMatch.id : activeMatchIndex)}
+            userId={session.user.id}
+            userEmail={session.user.email!}
+            userName={session.user.user_metadata?.full_name || "Guest"}
+            isTournamentUmpire={isUmpire}
+            initialMatchState={isTournamentMatch ? null : currentMatch as BwfMatchState | MatchEditState}
+            tournamentMatch={isTournamentMatch ? currentMatch as TournamentMatchForUmpire : undefined}
+            onClose={() => removeMatch(activeMatchIndex)}
+          />
+        </div>
+      )}
+
+      {showNewMatch && (
+        <div className="space-y-6">
+          <div className="bg-slate-900 rounded-[2rem] p-6 shadow-xl border border-slate-800">
+            <h2 className="text-xl font-black text-foreground mb-5">Start New Match</h2>
+            <div className="mb-6 flex gap-3">
+              <button
+                onClick={() => startMatch({
+                  id: crypto.randomUUID(),
+                  is_edit_mode: false,
+                })}
+                className="px-5 py-3 rounded-xl bg-primary text-primary-foreground font-black shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform flex items-center gap-2"
+              >
+                <Swords className="w-5 h-5" /> Start Friendly Match
+              </button>
+            </div>
+            
+            <h2 className="text-xl font-black text-foreground mb-5">Tournament Matches</h2>
+            <UmpireTournamentTab onStartMatch={startMatch} />
+          </div>
+          <RecentUmpireMatches
+            isTournament={true}
+            onEdit={startMatch}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -195,7 +255,7 @@ function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditSt
       if (isTournament) {
         let query = supabase
           .from("tournament_matches")
-          .select("id, player1_id, player2_id, team1_partner_id:player3_id, team2_partner_id:player4_id, winner_id, score, sets_history, round:round_name, category, created_at:scored_at, team1_label, team2_label, player1:players!player1_id(full_name, gender), player2:players!player2_id(full_name, gender), partner1:players!player3_id(full_name, gender), partner2:players!player4_id(full_name, gender)")
+          .select("id, player1_id, player2_id, team1_partner_id:player3_id, team2_partner_id:player4_id, winner_id, score, sets_history, round:round_name, category, created_at:scored_at, team1_label, team2_label, player1:players!player1_id(full_name, gender), player2:players!player2_id(full_name, gender), partner1:players!tournament_matches_player3_id_fkey(full_name, gender), partner2:players!tournament_matches_player4_id_fkey(full_name, gender)")
           .eq("status", "completed")
           .order("scored_at", { ascending: false });
         if (isAdmin) {

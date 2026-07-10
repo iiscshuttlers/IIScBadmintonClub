@@ -24,7 +24,16 @@ public class UmpireBackgroundService extends Service {
         instance = this;
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         createNotificationChannel();
-        startForeground(NOTIFICATION_ID, buildNotification("00 - 00", "Match Active"));
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(NOTIFICATION_ID, buildNotification("00 - 00", "Match Active"), android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
+            } else {
+                startForeground(NOTIFICATION_ID, buildNotification("00 - 00", "Match Active"));
+            }
+        } catch (Exception e) {
+            // Some ROMs or Android versions may reject foreground service; don't crash
+            stopSelf();
+        }
     }
 
     @Override

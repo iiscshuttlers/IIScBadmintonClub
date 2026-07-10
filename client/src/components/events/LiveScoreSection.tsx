@@ -6,6 +6,7 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { Capacitor } from "@capacitor/core";
 import { TextToSpeech } from "@capacitor-community/text-to-speech";
+import FloatingScore from "@/lib/floatingScore";
 import { playSmashSound } from "@/lib/sounds";
 import type { BwfMatchState } from "@/types/umpire";
 
@@ -20,6 +21,9 @@ function MatchBroadcastCard({
   onKill,
   onSubmit,
   onTakeover,
+  onTakeoverRequest,
+  isScorePinned,
+  togglePinScore
 }: {
   match: BwfMatchState;
   isAdmin: boolean;
@@ -31,6 +35,9 @@ function MatchBroadcastCard({
   onKill: (matchId: string) => void;
   onSubmit: (m: BwfMatchState, winner: 1 | 2, setsText: string) => void;
   onTakeover: (matchId: string) => void;
+  onTakeoverRequest: (match: BwfMatchState) => void;
+  isScorePinned: boolean;
+  togglePinScore: (matchId: string) => void;
 }) {
   const [showAdminForm, setShowAdminForm] = useState(false);
   const [adminWinner, setAdminWinner] = useState<1 | 2 | null>(null);
@@ -168,6 +175,13 @@ function MatchBroadcastCard({
             {match.isFriendly ? "Friendly" : `Tournament • ${match.matchNumber}`} • {match.inferredCategory || match.category} • Best of {match.bestOfSets} ({match.pointsToWin} pts) • Umpire: {match.umpireName}
           </div>
         </div>
+        {Capacitor.isNativePlatform() && (
+          <button 
+             onClick={() => togglePinScore(match.id)} 
+             className={`shrink-0 px-3 py-2 font-bold text-xs rounded-xl flex items-center gap-1.5 border transition ${isScorePinned ? "bg-violet-600 border-violet-500 text-white" : "bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700"}`}>
+             <Tv2 className="w-4 h-4" /> <span className="hidden sm:inline">{isScorePinned ? "Unpin Score" : "Pin Score"}</span>
+          </button>
+        )}
       </div>
 
       {match.status === "finished" ? (
@@ -253,14 +267,14 @@ function MatchBroadcastCard({
 
           {!showAdminForm ? (
             <div className="flex flex-wrap gap-2">
-              {isAdmin && (
+              {/* Umpire/Admin Takeover Button */}
               <button
-                onClick={() => onTakeover(match.id)}
+                onClick={() => onTakeoverRequest(match)}
                 className="flex items-center gap-1.5 px-4 py-2.5 bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/40 text-indigo-300 font-bold text-xs rounded-xl transition"
               >
                 <MonitorPlay className="w-4 h-4" /> Open in Umpire
               </button>
-              )}
+              
               {isAdmin && (<>
               <button
                 onClick={() => { setAdminSets(match.setsHistory.join(", ")); setShowAdminForm(true); }}
@@ -335,12 +349,41 @@ export function LiveScoreSection() {
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [flashEnabled, setFlashEnabled] = useState(true);
   const [vibrateEnabled, setVibrateEnabled] = useState(true);
+  const [takeoverTarget, setTakeoverTarget] = useState<BwfMatchState | null>(null);
+  const [pinnedMatchIds, setPinnedMatchIds] = useState<string[]>([]);
   const prevScoresRef = useRef<Record<string, { t1: number; t2: number }>>({});
 
   // ── Admin: jump into the umpire panel to control a running broadcast ──
-  const handleTakeover = (matchId: string) => {
+  const handleForceTakeover = (matchId: string) => {
     sessionStorage.setItem("umpire_takeover_key", matchId);
     window.dispatchEvent(new CustomEvent("openUmpireTab"));
+    setTakeoverTarget(null);
+  };
+  
+  const handleTakeoverRequest = (match: BwfMatchState) => {
+    if (session?.user?.id === match.id || session?.user?.id === match.umpireId) {
+      // You are already the umpire, just enter
+      handleForceTakeover(match.id);
+      return;
+    }
+    setTakeoverTarget(match);
+  };
+
+  const sendTakeoverRequest = async (matchId: string) => {
+    const { data } = await supabase.from("site_data").select("value").eq("key", "live_matches").single();
+    if (!data?.value) return;
+    
+    const lm = data.value as Record<string, BwfMatchState>;
+    if (!lm[matchId]) return;
+
+    lm[matchId].takeoverRequest = {
+      requesterId: session?.user?.id || "",
+      requesterName: profile?.full_name || session?.user?.user_metadata?.full_name || "Guest",
+      status: "pending"
+    };
+
+    await supabase.from("site_data").upsert({ key: "live_matches", value: lm });
+    toast.success("Takeover request sent!");
   };
 
   const fetchLiveMatches = async () => {
@@ -383,6 +426,17 @@ export function LiveScoreSection() {
                 playSmashSound();
               }
               prevScoresRef.current[m.id] = { t1: m.t1.score, t2: m.t2.score };
+              
+              // Check if our takeover request was approved or rejected
+              if (takeoverTarget && takeoverTarget.id === m.id && m.takeoverRequest?.requesterId === session?.user?.id) {
+                if (m.takeoverRequest.status === "approved") {
+                  toast.success(`${m.umpireName} approved your request!`);
+                  handleForceTakeover(m.id);
+                } else if (m.takeoverRequest.status === "rejected") {
+                  toast.error(`${m.umpireName} rejected your takeover request.`);
+                  setTakeoverTarget(null);
+                }
+              }
             });
             setLiveMatches(newMatches);
           }
@@ -396,6 +450,88 @@ export function LiveScoreSection() {
     return () => {
       supabase.removeChannel(sub);
       clearInterval(poll);
+    };
+  }, []);
+
+  const buildFloatingTeamLabel = (team: BwfMatchState["t1"]): string => {
+    if (team.teamName) return team.teamName;
+    return team.p2Name ? `${team.p1Name} & ${team.p2Name}` : team.p1Name;
+  };
+
+  const togglePinScore = async (matchId: string) => {
+    if (!Capacitor.isNativePlatform()) {
+      toast.error("Floating score is only available on Android");
+      return;
+    }
+    setPinnedMatchIds((prev) => {
+      if (prev.includes(matchId)) {
+        return prev.filter((id) => id !== matchId);
+      } else {
+        return [...prev, matchId];
+      }
+    });
+  };
+
+  // Sync floating score whenever pinned matches or their scores change
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    if (pinnedMatchIds.length === 0) {
+      FloatingScore.stopService().catch(console.error);
+      return;
+    }
+
+    const checkAndStart = async () => {
+      try {
+        const { granted } = await FloatingScore.checkPermission();
+        if (!granted) {
+          const res = await FloatingScore.requestPermission();
+          if (!res.granted) {
+            toast.error("Permission required for floating score.");
+            setPinnedMatchIds([]); // Reset if denied
+            return;
+          }
+        }
+
+        const matchesPayload = pinnedMatchIds.map(id => {
+          const m = liveMatches[id];
+          if (!m) return null;
+          const scoreStr = `${m.t1.score} - ${m.t2.score}`;
+          const teamsStr = `${buildFloatingTeamLabel(m.t1)} vs ${buildFloatingTeamLabel(m.t2)}`;
+          return { id, score: scoreStr, teams: teamsStr };
+        }).filter(Boolean);
+
+        if (matchesPayload.length > 0) {
+          // This will start the service if it isn't running, or update it if it is
+          await FloatingScore.startService({ matches: matchesPayload as any });
+        }
+      } catch (e) {
+        console.error("Floating score error", e);
+      }
+    };
+
+    checkAndStart();
+  }, [pinnedMatchIds, liveMatches]);
+
+  // The native overlay's close button / double-tap stops the service, but
+  // JS still thinks matches are pinned — without this, the next score poll
+  // would just restart the overlay. Clear our state so it stays dismissed.
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const handle = FloatingScore.addListener("floatingScoreClosed", () => {
+      setPinnedMatchIds([]);
+    });
+    return () => {
+      handle.then((h) => h.remove());
+    };
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (Capacitor.isNativePlatform()) {
+        FloatingScore.stopService().catch(() => {});
+      }
     };
   }, []);
 
@@ -454,6 +590,10 @@ export function LiveScoreSection() {
     const buddies = profile.buddies || [];
     const following = profile.following || [];
     return participants.some(pid => buddies.includes(pid) || following.includes(pid));
+  }).sort((a, b) => {
+    const aPinned = pinnedMatchIds.includes(a.id) ? 1 : 0;
+    const bPinned = pinnedMatchIds.includes(b.id) ? 1 : 0;
+    return bPinned - aPinned;
   });
 
   return (
@@ -513,8 +653,75 @@ export function LiveScoreSection() {
       ) : (
         <div className="space-y-6">
           {activeMatchList.map((m) => (
-            <MatchBroadcastCard key={m.id} match={m} isAdmin={isAdmin} isUmpire={isUmpire} session={session} voiceEnabled={voiceEnabled} flashEnabled={flashEnabled} vibrateEnabled={vibrateEnabled} onKill={handleKill} onSubmit={handleSubmit} onTakeover={handleTakeover} />
+            <MatchBroadcastCard 
+              key={m.id} 
+              match={m} 
+              isAdmin={isAdmin} 
+              isUmpire={isUmpire} 
+              session={session} 
+              voiceEnabled={voiceEnabled} 
+              flashEnabled={flashEnabled} 
+              vibrateEnabled={vibrateEnabled} 
+              onKill={handleKill} 
+              onSubmit={handleSubmit} 
+              onTakeover={handleForceTakeover} 
+              onTakeoverRequest={handleTakeoverRequest} 
+              isScorePinned={pinnedMatchIds.includes(m.id)}
+              togglePinScore={togglePinScore}
+            />
           ))}
+        </div>
+      )}
+
+      {takeoverTarget && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl max-w-sm w-full text-center space-y-4">
+            <ShieldCheck className="w-12 h-12 text-primary mx-auto opacity-50 mb-2" />
+            <h3 className="text-xl font-black text-foreground">Match Handover</h3>
+            
+            {takeoverTarget.takeoverRequest?.requesterId === session?.user?.id && takeoverTarget.takeoverRequest?.status === "pending" ? (
+              <div className="space-y-4 pt-2">
+                <Loader2 className="w-8 h-8 text-primary animate-spin mx-auto" />
+                <p className="text-sm text-slate-300">
+                  Waiting for <span className="font-bold text-amber-400">{takeoverTarget.umpireName}</span> to approve your request...
+                </p>
+                <button
+                  onClick={() => setTakeoverTarget(null)}
+                  className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-foreground font-bold text-sm rounded-xl transition"
+                >
+                  Cancel Request
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-sm text-slate-300">
+                  You are about to take over umpiring from <span className="font-bold text-amber-400">{takeoverTarget.umpireName}</span>.
+                </p>
+                <div className="flex flex-col gap-2 pt-2">
+                  <button
+                    onClick={() => sendTakeoverRequest(takeoverTarget.id)}
+                    className="w-full py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm rounded-xl transition shadow-lg"
+                  >
+                    Request Takeover
+                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => handleForceTakeover(takeoverTarget.id)}
+                      className="w-full py-2.5 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-400 font-bold text-sm rounded-xl transition mt-2"
+                    >
+                      Force Takeover (Admin)
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setTakeoverTarget(null)}
+                    className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-foreground font-bold text-sm rounded-xl transition mt-1"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

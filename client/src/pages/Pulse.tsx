@@ -34,6 +34,8 @@ import { LiveScoreSection } from "@/components/events/LiveScoreSection";
 import { useHashTab } from "@/hooks/useHashTab";
 import { useAuth } from "@/contexts/AuthContext";
 
+import { Capacitor } from '@capacitor/core';
+
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 28 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
@@ -188,14 +190,15 @@ export default function Pulse() {
 
   const TOURNAMENT_SUB_TABS = ["notices", "players", "schedule", "broadcast", "brackets", "past", "umpire"];
   const EVENTS_TABS = ["events", "calendar", "tournament", "history", ...TOURNAMENT_SUB_TABS];
+  const FEED_TABS = ["feed-matches", "announcements", "umpire-panel"];
 
-  const isCapacitorEnv = typeof (window as any).Capacitor !== "undefined";
+  const isCapacitorEnv = Capacitor.isNativePlatform();
 
   const getPulseTab = () => {
     if (isCapacitorEnv) return "feed";
     try {
       const hash = window.location.hash.replace("#", "");
-      if (hash === "feed") return "feed";
+      if (FEED_TABS.includes(hash) || hash === "feed") return "feed";
       if (EVENTS_TABS.includes(hash)) return "events";
     } catch { /* ignore */ }
     return "feed";
@@ -208,7 +211,7 @@ export default function Pulse() {
     const onHashChange = () => setPulseTabState(getPulseTab());
     window.addEventListener("hashchange", onHashChange);
     if (!window.location.hash) {
-      try { window.history.replaceState(null, "", "#feed"); } catch { /* ignore */ }
+      try { window.history.replaceState(null, "", "#feed-matches"); } catch { /* ignore */ }
     }
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
@@ -223,7 +226,10 @@ export default function Pulse() {
           window.location.hash = "calendar";
         }
       } else {
-        window.location.hash = "feed";
+        const currentHash = window.location.hash.replace("#", "");
+        if (!FEED_TABS.includes(currentHash)) {
+          window.location.hash = "feed-matches";
+        }
       }
     } catch { /* ignore */ }
   };

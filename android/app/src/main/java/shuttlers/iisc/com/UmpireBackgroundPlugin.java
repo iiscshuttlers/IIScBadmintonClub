@@ -22,14 +22,18 @@ public class UmpireBackgroundPlugin extends Plugin {
 
     @PluginMethod
     public void startService(PluginCall call) {
-        Context context = getContext();
-        Intent intent = new Intent(context, UmpireBackgroundService.class);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(intent);
-        } else {
-            context.startService(intent);
+        try {
+            Context context = getContext();
+            Intent intent = new Intent(context, UmpireBackgroundService.class);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent);
+            } else {
+                context.startService(intent);
+            }
+            call.resolve();
+        } catch (Exception e) {
+            call.reject("Could not start background service: " + e.getMessage());
         }
-        call.resolve();
     }
 
     @PluginMethod

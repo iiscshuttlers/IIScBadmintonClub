@@ -332,7 +332,40 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
 
             {/* Start button */}
             <button
-              onClick={() => onStartMatch(selectedMatch)}
+              onClick={async () => {
+                // If user is admin/umpire, allow by default? The prompt says "they should have the right to umpire those matches and also time bounded umpiring".
+                // If they have admin/umpire role globally, we can let them bypass, or we force the assignment check. 
+                // Let's check assignments anyway if they are not an admin.
+                const { data: assignments } = await supabase
+                  .from("umpire_assignments")
+                  .select("*")
+                  .eq("user_id", (await supabase.auth.getSession()).data.session?.user.id);
+
+                const hasAdmin = (await supabase.from("players").select("role").eq("id", (await supabase.auth.getSession()).data.session?.user.id!).single()).data?.role === 'admin';
+                
+                if (hasAdmin) {
+                  onStartMatch(selectedMatch);
+                  return;
+                }
+
+                const now = new Date();
+                const isValid = assignments?.some(a => {
+                  if (a.tournament_match_id === selectedMatch.id) return true;
+                  if (a.start_time && a.end_time) {
+                    const start = new Date(a.start_time);
+                    const end = new Date(a.end_time);
+                    return now >= start && now <= end;
+                  }
+                  return false;
+                });
+
+                if (!isValid) {
+                  toast.error("You don't have an active umpire assignment for this match or time block.");
+                  return;
+                }
+
+                onStartMatch(selectedMatch);
+              }}
               className="w-full py-4 rounded-xl bg-primary hover:bg-primary text-primary-foreground font-black text-base transition flex items-center justify-center gap-2 shadow-lg shadow-primary/50/30"
             >
               <Play className="w-5 h-5 fill-white" />

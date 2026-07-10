@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { useLiveSiteData } from "@/hooks/useMatches";
 import type { BwfMatchState } from "@/types/umpire";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 export default function TvScoreboard() {
@@ -113,7 +113,15 @@ export default function TvScoreboard() {
   const isServer = (team: 1 | 2) => matchState.serverTeam === team && matchState.status === "playing";
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col overflow-hidden font-sans selection:bg-transparent cursor-none">
+    <div className="min-h-screen bg-black text-white flex flex-col overflow-hidden font-sans selection:bg-transparent relative group">
+      {/* Exit Button (Shows on hover) */}
+      <button 
+        onClick={() => setLocation("/tv")}
+        className="absolute top-8 right-8 z-50 p-4 bg-slate-800/80 hover:bg-slate-700 text-white rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-md shadow-2xl"
+        title="Exit Scoreboard"
+      >
+        <X className="w-8 h-8" />
+      </button>
       
       {/* Top Header info */}
       <div className="h-24 lg:h-32 w-full flex items-center justify-between px-12 bg-gradient-to-b from-slate-900 to-black/0">

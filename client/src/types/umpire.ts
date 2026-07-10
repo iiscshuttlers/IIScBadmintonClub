@@ -20,6 +20,8 @@ export type MatchEditState = {
   player2?: { full_name: string } | null;
   partner1?: { full_name: string } | null;
   partner2?: { full_name: string } | null;
+  team1_label?: string | null;
+  team2_label?: string | null;
 };
 
 export type PointLogEntry = {
@@ -34,6 +36,7 @@ export type PointLogEntry = {
 
 export type BwfMatchState = {
   id: string;
+  umpireId: string;
   umpireName: string;
   isFriendly: boolean;
   isTournamentMatch?: boolean;
@@ -60,6 +63,11 @@ export type BwfMatchState = {
   retiredTeam?: 1 | 2;
   setsHistory: string[];
   tournament?: string;
+  takeoverRequest?: {
+    requesterId: string;
+    requesterName: string;
+    status: "pending" | "approved" | "rejected";
+  };
 };
 
 export type CardType = "yellow" | "red" | "black";
