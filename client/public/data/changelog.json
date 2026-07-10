@@ -1,5 +1,13 @@
 [
   {
+    "versionCode": 184,
+    "versionName": "1.05",
+    "date": "2026-07-10T05:38:26.552Z",
+    "changes": [
+      "- chore: Temporarily remove foreground service and background location permissions for Play Console compliance"
+    ]
+  },
+  {
     "versionCode": 183,
     "versionName": "1.3",
     "date": "2026-07-10T05:07:07.179Z",
