@@ -50,9 +50,12 @@ function fail(msg) {
 }
 
 function bumpVersion(name) {
+  // Expect a version like "1.00". Increment the minor part and keep two digits.
   const parts = name.split(".");
-  parts[parts.length - 1] = String(parseInt(parts[parts.length - 1]) + 1);
-  return parts.join(".");
+  const major = parts[0];
+  const minor = parseInt(parts[parts.length - 1] ?? "0");
+  const newMinor = (minor + 1).toString().padStart(2, "0");
+  return `${major}.${newMinor}`;
 }
 
 /* ── 0. Check gh auth ───────────────────────────────────────────── */

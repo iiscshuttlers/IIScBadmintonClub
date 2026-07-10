@@ -56,9 +56,10 @@
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="notify_whistle" />
             
+        <!-- Temporarily disabled for Google Play Console bypass
         <service android:name=".FloatingScoreService" android:exported="false" />
-        
         <service android:name=".UmpireBackgroundService" android:exported="false" android:foregroundServiceType="dataSync|specialUse" />
+        -->
         
         <receiver android:name=".NotificationActionReceiver" android:exported="false">
             <intent-filter>
@@ -106,12 +107,16 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- Temporarily disabled for Google Play Console bypass
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- Temporarily disabled for Google Play Console bypass
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    -->
     <!-- Camera and NFC are optional so the app is available on devices without them -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.nfc" android:required="false" />
