@@ -1,6 +1,6 @@
 {
-  "versionCode": 184,
-  "versionName": "1.05",
+  "versionCode": 185,
+  "versionName": "1.06",
   "downloadUrl": "https://play.google.com/store/apps/details?id=com.iiscshuttlers.app",
-  "changelog": "- chore: Temporarily remove foreground service and background location permissions for Play Console compliance"
+  "changelog": "Version 1.06 released with bug fixes and performance improvements."
 }
