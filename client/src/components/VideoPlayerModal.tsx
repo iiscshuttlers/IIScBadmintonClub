@@ -6,6 +6,10 @@ import {
   type YoutubePlayerHandle,
   type ScoreLog,
 } from "./YoutubePlayer";
+import { isCapacitor } from "@/lib/navUtils";
+import { Pip } from "@/lib/pip";
+import { MonitorPlay } from "lucide-react";
+import { toast } from "sonner";
 
 interface VideoItem {
   id: string;
@@ -112,12 +116,29 @@ export function VideoPlayerModal({ video, onClose }: Props) {
                 {video.title}
               </h2>
             </div>
-            <button 
-              onClick={() => setEnableScoringMode(v => !v)}
-              className={`text-xs font-bold px-3 py-1.5 rounded-full transition-colors shrink-0 ${enableScoringMode ? 'bg-rose-500 text-foreground shadow-[0_0_15px_rgba(244,63,94,0.5)]' : 'bg-white/10 text-foreground/70 hover:bg-white/20'}`}
-            >
-              {enableScoringMode ? 'Exit Scoring' : 'Score Mode'}
-            </button>
+            <div className="flex gap-2 shrink-0 items-center">
+              {isCapacitor && (
+                <button
+                  onClick={async () => {
+                    try {
+                      await Pip.enterPipMode();
+                    } catch (e: any) {
+                      toast.info(e?.message || "Could not enter PiP mode");
+                    }
+                  }}
+                  className="shrink-0 p-1.5 sm:px-3 sm:py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] sm:text-xs rounded-full sm:rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border border-slate-700 transition"
+                  title="Picture in Picture"
+                >
+                  <MonitorPlay className="w-4 h-4 sm:w-4 sm:h-4" /> <span className="hidden sm:inline">PiP</span>
+                </button>
+              )}
+              <button 
+                onClick={() => setEnableScoringMode(v => !v)}
+                className={`text-xs font-bold px-3 py-1.5 rounded-full transition-colors shrink-0 ${enableScoringMode ? 'bg-rose-500 text-foreground shadow-[0_0_15px_rgba(244,63,94,0.5)]' : 'bg-white/10 text-foreground/70 hover:bg-white/20'}`}
+              >
+                {enableScoringMode ? 'Exit Scoring' : 'Score Mode'}
+              </button>
+            </div>
           </div>
 
           {/* Aspect-ratio box */}

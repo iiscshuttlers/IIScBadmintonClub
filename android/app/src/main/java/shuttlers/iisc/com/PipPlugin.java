@@ -1,7 +1,12 @@
 package shuttlers.iisc.com;
 
+import android.app.AppOpsManager;
 import android.app.PictureInPictureParams;
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
+import android.provider.Settings;
 import android.util.Rational;
 
 import com.getcapacitor.Plugin;
@@ -15,6 +20,19 @@ public class PipPlugin extends Plugin {
     @PluginMethod
     public void enterPipMode(PluginCall call) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            
+            AppOpsManager appOps = (AppOpsManager) getContext().getSystemService(Context.APP_OPS_SERVICE);
+            if (appOps != null) {
+                int mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_PICTURE_IN_PICTURE, android.os.Process.myUid(), getContext().getPackageName());
+                if (mode != AppOpsManager.MODE_ALLOWED) {
+                    Intent intent = new Intent("android.settings.PICTURE_IN_PICTURE_SETTINGS", Uri.parse("package:" + getContext().getPackageName()));
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    getContext().startActivity(intent);
+                    call.reject("Permission denied. Opened settings.");
+                    return;
+                }
+            }
+
             int width = call.getInt("width", 16);
             int height = call.getInt("height", 9);
             

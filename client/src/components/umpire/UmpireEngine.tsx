@@ -488,7 +488,13 @@ export function UmpireEngine({
                 <button onClick={togglePinScore} className={`shrink-0 px-1 py-2 sm:px-3 sm:py-2 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border transition ${isScorePinned ? "bg-violet-600 border-violet-500 text-white" : "bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700"}`}>
                   <Tv2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {isScorePinned ? "Unpin Score" : "Pin Score"}
                 </button>
-                <button onClick={() => Pip.enterPipMode()} className="shrink-0 px-1 py-2 sm:px-3 sm:py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border border-slate-700 transition">
+                <button onClick={async () => {
+                  try {
+                    await Pip.enterPipMode();
+                  } catch (e: any) {
+                    toast.info(e?.message || "Could not enter PiP mode");
+                  }
+                }} className="shrink-0 px-1 py-2 sm:px-3 sm:py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border border-slate-700 transition">
                   <MonitorPlay className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" /> PiP
                 </button>
                 <button onClick={() => setIsMotionTracking(m => !m)} className={`shrink-0 px-1 py-2 sm:px-3 sm:py-2 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border transition ${isMotionTracking ? "bg-green-600 border-green-500 text-white" : "bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700"}`}>
