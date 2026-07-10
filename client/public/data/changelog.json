@@ -1,5 +1,31 @@
 [
   {
+    "versionCode": 183,
+    "versionName": "1.3",
+    "date": "2026-07-10T05:07:07.179Z",
+    "changes": [
+      "- feat: Add Picture-in-Picture to video player and handle Android permissions gracefully",
+      "- Fix TypeScript: add teamName and tournament to BwfMatchState type",
+      "- Add all native Android features to admin features tracker with detailed descriptions",
+      "- Implement deep linking for Umpire Quick Settings Tile",
+      "- Update geofence radius to 50 meters",
+      "- Implement Phase 3: Advanced Native Integrations",
+      "- Implement Phase 2: Native Background Service & Notification Actions",
+      "- Fix TV Scoreboard not updating (add polling fallback)",
+      "- Add TV Scoreboard Mode (Phase 1)",
+      "- Add Floating Score Widget (Draw over apps) natively using Capacitor Plugin",
+      "- Wrap AdminActivityLog table in overflow-x-auto to fix horizontal overflow on mobile screens",
+      "- Remove redundant/unused ELO settings from AdminSettings",
+      "- Fix guest claim modal not showing real players by correctly filtering is_guest",
+      "- Convert PollEditor Archive and Delete icons to a proper 1x2 button matrix",
+      "- Add Broadcast Push feature to PollEditor",
+      "- Fix infinite render loop in ContentEditorWrapper tab counting",
+      "- Add Team Tournament option and use new UmpireTab in Admin",
+      "- Fix active tab text color and URL history navigation",
+      "- fix: Capacitor-safe nav utils across all pages + remove window.confirm on native + delete App.tsx.bak"
+    ]
+  },
+  {
     "versionCode": 182,
     "versionName": "1.2",
     "date": "2026-07-06T22:53:45.134Z",
