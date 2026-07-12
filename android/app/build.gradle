@@ -71,6 +71,7 @@ dependencies {
     implementation project(':capacitor-cordova-android-plugins')
     implementation 'com.google.android.gms:play-services-location:21.0.1'
     implementation "androidx.health.connect:connect-client:1.1.0-alpha07"
+    implementation "androidx.security:security-crypto:1.1.0-alpha06"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
