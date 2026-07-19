@@ -1,0 +1,121 @@
+import { useState, useEffect } from "react";
+import { Brain, Activity, RefreshCw } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import ReactMarkdown from "react-markdown";
+
+interface MatchAnalyticsSectionProps {
+  matchId: string;
+}
+
+export function StrokeAnalyticsSection({ matchId }: MatchAnalyticsSectionProps) {
+  const [loadingStrokes, setLoadingStrokes] = useState(true);
+  const [strokes, setStrokes] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchStrokes = async () => {
+      setLoadingStrokes(true);
+      try {
+        const { data } = await supabase
+          .from("match_stroke_analytics")
+          .select("*")
+          .eq("match_id", matchId);
+        setStrokes(data || []);
+      } catch (e) {
+        console.error("Failed to fetch strokes", e);
+      } finally {
+        setLoadingStrokes(false);
+      }
+    };
+    fetchStrokes();
+  }, [matchId]);
+
+  const smashCount = strokes.filter(s => s.stroke_type === "Smash").length;
+  const clearCount = strokes.filter(s => s.stroke_type === "Clear").length;
+  const dropCount = strokes.filter(s => s.stroke_type === "Drop").length;
+
+  return (
+    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-700/50">
+      <h3 className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
+        <Activity className="w-4 h-4 text-blue-500" />
+        Stroke Breakdown
+      </h3>
+      
+      {loadingStrokes ? (
+        <div className="text-xs text-muted-foreground animate-pulse">Loading strokes...</div>
+      ) : strokes.length > 0 ? (
+        <div className="flex justify-between items-center bg-white dark:bg-slate-900 rounded-xl p-3 shadow-sm border border-slate-100 dark:border-slate-800">
+           <div className="text-center">
+             <div className="text-xl font-black text-slate-800 dark:text-slate-200">{smashCount}</div>
+             <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Smashes</div>
+           </div>
+           <div className="text-center">
+             <div className="text-xl font-black text-slate-800 dark:text-slate-200">{clearCount}</div>
+             <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Clears</div>
+           </div>
+           <div className="text-center">
+             <div className="text-xl font-black text-slate-800 dark:text-slate-200">{dropCount}</div>
+             <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Drops</div>
+           </div>
+        </div>
+      ) : (
+        <div className="text-xs text-muted-foreground bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+          No stroke data recorded for this match yet.
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function AICoachInsightsSection({ matchId }: MatchAnalyticsSectionProps) {
+  const [loadingInsights, setLoadingInsights] = useState(false);
+  const [insights, setInsights] = useState<string | null>(null);
+
+  const generateInsights = async () => {
+    setLoadingInsights(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-match-insights", {
+        body: { matchId }
+      });
+      if (error) throw error;
+      setInsights(data.insights);
+    } catch (e) {
+      console.error(e);
+      setInsights("*AI Insights could not be generated at this time. Please try again later.*");
+    } finally {
+      setLoadingInsights(false);
+    }
+  };
+
+  return (
+    <div className="bg-primary/5 dark:bg-primary/10 rounded-2xl p-4 border border-primary/20 dark:border-primary/20">
+      <h3 className="text-xs font-black uppercase tracking-widest text-primary mb-3 flex items-center gap-2">
+        <Brain className="w-4 h-4" />
+        AI Coach Insights
+      </h3>
+
+      {!insights ? (
+        <button 
+          onClick={generateInsights}
+          disabled={loadingInsights}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-foreground text-xs font-bold transition hover:bg-primary/90 disabled:opacity-50"
+        >
+          {loadingInsights ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Brain className="w-4 h-4" />}
+          {loadingInsights ? "Analyzing match..." : "Generate Insights"}
+        </button>
+      ) : (
+        <div className="prose prose-sm dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 text-xs">
+          <ReactMarkdown>{insights}</ReactMarkdown>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function MatchAnalyticsSection({ matchId }: MatchAnalyticsSectionProps) {
+  return (
+    <div className="space-y-4">
+      <StrokeAnalyticsSection matchId={matchId} />
+      <AICoachInsightsSection matchId={matchId} />
+    </div>
+  );
+}

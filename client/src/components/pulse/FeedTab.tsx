@@ -18,6 +18,7 @@ import {
   Heart,
   Bell,
   Tv2,
+  ChevronDown,
 } from "lucide-react";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { useAuth } from "@/contexts/AuthContext";
@@ -255,40 +256,48 @@ export default function FeedTab() {
 
             {/* Feed filter tabs and Advanced Filters */}
             <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-              <div className="flex w-full sm:flex-1">
+              <div className="flex w-full sm:flex-1 relative">
                 <select
                   value={tournamentFilter}
                   onChange={(e) => setTournamentFilter(e.target.value)}
-                  className="bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 text-sm font-bold rounded-xl px-3 py-2 outline-none border-none focus:ring-2 focus:ring-primary cursor-pointer w-full"
+                  className="appearance-none bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 text-sm font-bold rounded-xl pl-3 pr-8 py-2 outline-none border-none focus:ring-2 focus:ring-primary cursor-pointer w-full"
                 >
                   <option value="all">All Tournaments</option>
                   {tournaments.map(t => (
                     <option key={t.id} value={t.id}>{t.name}</option>
                   ))}
                 </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
 
               {/* Advanced Filters */}
               <div className="flex items-center gap-2.5 w-full sm:w-auto sm:pl-4 sm:border-l sm:border-slate-200 dark:sm:border-slate-700">
-                <select
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value as any)}
-                  className="flex-1 sm:flex-none bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 text-sm font-bold rounded-xl px-3 py-2 outline-none border-none focus:ring-2 focus:ring-primary cursor-pointer min-w-0"
-                >
-                  <option value="all">All Categories</option>
-                  <option value="singles">Singles</option>
-                  <option value="doubles">Doubles</option>
-                  <option value="mixed">Mixed Doubles</option>
-                </select>
-                <select
-                  value={timeFilter}
-                  onChange={(e) => setTimeFilter(e.target.value as any)}
-                  className="flex-1 sm:flex-none bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 text-sm font-bold rounded-xl px-3 py-2 outline-none border-none focus:ring-2 focus:ring-primary cursor-pointer min-w-0"
-                >
-                  <option value="all">All Time</option>
-                  <option value="today">Today</option>
-                  <option value="week">This Week</option>
-                </select>
+                <div className="relative flex-1 sm:flex-none">
+                  <select
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value as any)}
+                    className="appearance-none w-full bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 text-sm font-bold rounded-xl pl-3 pr-8 py-2 outline-none border-none focus:ring-2 focus:ring-primary cursor-pointer min-w-0"
+                  >
+                    <option value="all">All Categories</option>
+                    <option value="singles">Singles</option>
+                    <option value="doubles">Doubles</option>
+                    <option value="mixed">Mixed Doubles</option>
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+                <div className="relative flex-1 sm:flex-none">
+                  <select
+                    value={timeFilter}
+                    onChange={(e) => setTimeFilter(e.target.value as any)}
+                    className="appearance-none w-full bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300 text-sm font-bold rounded-xl pl-3 pr-8 py-2 outline-none border-none focus:ring-2 focus:ring-primary cursor-pointer min-w-0"
+                  >
+                    <option value="all">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
               </div>
             </div>
 

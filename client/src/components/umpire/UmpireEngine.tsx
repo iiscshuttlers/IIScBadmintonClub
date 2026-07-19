@@ -10,6 +10,7 @@ import {
 import { toast } from "sonner";
 import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
 import { Capacitor } from "@capacitor/core";
+import { App as CapacitorApp } from "@capacitor/app";
 import { UmpireBackground } from "@/lib/umpireBackground";
 import { Pip } from "@/lib/pip";
 import { PlayerMotion, type MotionData } from "@/lib/playerMotion";
@@ -78,8 +79,26 @@ export function UmpireEngine({
     sumSwingSpeed: 0, maxSwingSpeed: 0,
     lateralCount: 0, forwardBackCount: 0, verticalCount: 0,
     intensities: [] as number[],
-    lastSec: 0
+    lastSec: 0,
+    swingIntervals: [] as number[], lastSwingTime: 0,
+    lastDominantAxis: null as "lateral" | "forwardBack" | "vertical" | null, directionChanges: 0,
   });
+
+  // Per-rally accumulator: reset every time match.pointLog grows by one (see the
+  // pointLog-watching effect below). Buffered client-side and bulk-inserted once
+  // matchId is known (friendly matches only get an id once saved).
+  const currentRallyRef = useRef({
+    startedAt: Date.now(),
+    count: 0, sumMagnitude: 0, maxMagnitude: 0,
+    smashCount: 0, directionChanges: 0,
+    lastDominantAxis: null as "lateral" | "forwardBack" | "vertical" | null,
+  });
+  // Friendly matches only get a real DB id once saveMatchToProfile succeeds at
+  // match end. Until then, rallies are inserted under this random id and
+  // reconciled to the real one in saveMotionStats.
+  const pendingMatchIdRef = useRef<string>("");
+  const rallyCountRef = useRef(0);
+  const lastPointLogLenRef = useRef(0);
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform() || !isMotionTracking) return;
@@ -96,42 +115,84 @@ export function UmpireEngine({
       if (data.intensity in stats) (stats as any)[data.intensity] += 1;
       
       sens.sumAccelSq += data.magnitude * data.magnitude;
-      
+
       if (data.hasGyro && data.rotationRate) {
         sens.sumGyro += data.rotationRate;
         sens.sumGyroSq += data.rotationRate * data.rotationRate;
         sens.maxGyro = Math.max(sens.maxGyro, data.rotationRate);
       }
-      
+
+      const now = data.timestampMs ?? Date.now();
+
       if (data.swingDetected) {
         sens.total_swings += 1;
         if (data.swingType === "smash") sens.smash_count += 1;
         if (data.swingType === "clear") sens.clear_count += 1;
         if (data.swingType === "drive") sens.drive_count += 1;
         if (data.swingType === "net_shot") sens.net_shot_count += 1;
-        
+
         const speed = data.rotationRate || data.magnitude;
         sens.sumSwingSpeed += speed;
         sens.maxSwingSpeed = Math.max(sens.maxSwingSpeed, speed);
+
+        if (sens.lastSwingTime > 0) sens.swingIntervals.push(now - sens.lastSwingTime);
+        sens.lastSwingTime = now;
       }
-      
+
       if (data.magnitude > 2.0) {
         const ax = Math.abs(data.x), ay = Math.abs(data.y), az = Math.abs(data.z);
-        if (ax > ay && ax > az) sens.lateralCount += 1;
-        else if (ay > ax && ay > az) sens.verticalCount += 1;
-        else sens.forwardBackCount += 1;
+        let axis: "lateral" | "forwardBack" | "vertical";
+        if (ax > ay && ax > az) { axis = "lateral"; sens.lateralCount += 1; }
+        else if (ay > ax && ay > az) { axis = "vertical"; sens.verticalCount += 1; }
+        else { axis = "forwardBack"; sens.forwardBackCount += 1; }
+
+        if (sens.lastDominantAxis !== null && sens.lastDominantAxis !== axis && data.magnitude > 3.0) {
+          sens.directionChanges += 1;
+        }
+        sens.lastDominantAxis = axis;
       }
-      
-      const now = Date.now();
+
       if (now - sens.lastSec > 1000) {
         sens.intensities.push(data.magnitude);
         sens.lastSec = now;
+      }
+
+      // Mirror into the current-rally accumulator (reset on each pointLog entry)
+      const rally = currentRallyRef.current;
+      rally.count += 1;
+      rally.sumMagnitude += data.magnitude;
+      rally.maxMagnitude = Math.max(rally.maxMagnitude, data.magnitude);
+      if (data.swingDetected && data.swingType === "smash") rally.smashCount += 1;
+      if (data.magnitude > 2.0) {
+        const ax = Math.abs(data.x), ay = Math.abs(data.y), az = Math.abs(data.z);
+        const axis: "lateral" | "forwardBack" | "vertical" =
+          ax > ay && ax > az ? "lateral" : ay > ax && ay > az ? "vertical" : "forwardBack";
+        if (rally.lastDominantAxis !== null && rally.lastDominantAxis !== axis && data.magnitude > 3.0) {
+          rally.directionChanges += 1;
+        }
+        rally.lastDominantAxis = axis;
       }
     });
 
     return () => {
       PlayerMotion.stopTracking().catch(console.error);
       listener.then(l => l.remove()).catch(console.error);
+    };
+  }, [isMotionTracking]);
+
+  // ── App-lifecycle safety net (Phase 4) ──
+  // The wake lock and native timestamps (Phases 1-2) are what actually keep
+  // tracking accurate in the background; this just gives the umpire visibility
+  // instead of silent uncertainty on older/degraded devices.
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform() || !isMotionTracking) return;
+    const listenerPromise = CapacitorApp.addListener("appStateChange", ({ isActive }) => {
+      if (!isActive) {
+        toast.info("Tracking continues in the background — keep IISc Shuttlers running for accurate data");
+      }
+    });
+    return () => {
+      listenerPromise.then(l => l.remove()).catch(console.error);
     };
   }, [isMotionTracking]);
 
@@ -199,13 +260,31 @@ export function UmpireEngine({
         first_half_intensity: fhInt,
         second_half_intensity: shInt,
         fatigue_index: fhInt > 0 ? shInt / fhInt : 1.0,
+
+        avg_shot_interval_ms: sens.swingIntervals.length ? sens.swingIntervals.reduce((a, b) => a + b, 0) / sens.swingIntervals.length : null,
+        fastest_shot_interval_ms: sens.swingIntervals.length ? Math.min(...sens.swingIntervals) : null,
+        direction_changes: sens.directionChanges,
       }, { onConflict: "match_id,match_source,player_id" });
+
+      // Reconcile rallies already inserted under a pending id (friendly matches
+      // with no dbId yet when tracking started) to the real match id.
+      if (matchSource === "friendly" && pendingMatchIdRef.current && pendingMatchIdRef.current !== matchId) {
+        const { error: reconcileErr } = await supabase.from("match_rally_stats")
+          .update({ match_id: matchId })
+          .eq("match_id", pendingMatchIdRef.current)
+          .eq("match_source", "friendly");
+        if (reconcileErr) console.error("Failed to reconcile rally match id", reconcileErr);
+      }
 
     } catch (err) {
       console.error("Failed to save motion stats", err);
     } finally {
       motionStatsRef.current = { count: 0, sumMagnitude: 0, maxMagnitude: 0, idle: 0, walking: 0, running: 0, smash_sprint: 0 };
-      sensorStatsRef.current = { sumAccelSq: 0, sumGyro: 0, sumGyroSq: 0, maxGyro: 0, total_swings: 0, smash_count: 0, clear_count: 0, drive_count: 0, net_shot_count: 0, sumSwingSpeed: 0, maxSwingSpeed: 0, lateralCount: 0, forwardBackCount: 0, verticalCount: 0, intensities: [], lastSec: 0 };
+      sensorStatsRef.current = { sumAccelSq: 0, sumGyro: 0, sumGyroSq: 0, maxGyro: 0, total_swings: 0, smash_count: 0, clear_count: 0, drive_count: 0, net_shot_count: 0, sumSwingSpeed: 0, maxSwingSpeed: 0, lateralCount: 0, forwardBackCount: 0, verticalCount: 0, intensities: [], lastSec: 0, swingIntervals: [], lastSwingTime: 0, lastDominantAxis: null, directionChanges: 0 };
+      pendingMatchIdRef.current = "";
+      rallyCountRef.current = 0;
+      currentRallyRef.current = { startedAt: Date.now(), count: 0, sumMagnitude: 0, maxMagnitude: 0, smashCount: 0, directionChanges: 0, lastDominantAxis: null };
+      lastPointLogLenRef.current = 0;
     }
   };
 
@@ -239,6 +318,59 @@ export function UmpireEngine({
 
   // Render variables
   const friendlyOnly = !isAdminEmail(userEmail) && !isTournamentUmpire;
+
+  // ── Rally segmentation (Path A) ──
+  // Every new match.pointLog entry is a scored point, i.e. a rally boundary with a
+  // real timestamp — no stillness heuristic needed here. Flush the sensor
+  // accumulator collected since the last point and persist the rally row
+  // immediately (rather than buffering to match-end) so an OS process kill
+  // mid-match can't silently lose already-completed rallies. Tournament/edit
+  // matches already have a stable id; friendly matches without one yet use a
+  // pending random id, reconciled to the real id in saveMotionStats.
+  useEffect(() => {
+    if (!isMotionTracking || !match?.pointLog) return;
+    const log = match.pointLog;
+    if (log.length <= lastPointLogLenRef.current) {
+      lastPointLogLenRef.current = log.length;
+      return;
+    }
+    const entry = log[log.length - 1];
+    if (entry.team !== 1 && entry.team !== 2) {
+      // Let/fault entries don't end a rally
+      lastPointLogLenRef.current = log.length;
+      return;
+    }
+    const rally = currentRallyRef.current;
+    const now = Date.now();
+    if (rally.count > 0) {
+      const matchSource: "friendly" | "tournament" = (tournamentMatch || match.isTournamentMatch) ? "tournament" : "friendly";
+      const stableId = tournamentMatch?.id || match.dbId;
+      if (!stableId && !pendingMatchIdRef.current) {
+        pendingMatchIdRef.current = crypto.randomUUID();
+      }
+      const matchId = stableId || pendingMatchIdRef.current;
+      rallyCountRef.current += 1;
+      supabase.from("match_rally_stats").insert({
+        match_id: matchId,
+        match_source: matchSource,
+        game_num: entry.gameNum,
+        rally_number: rallyCountRef.current,
+        scoring_team: entry.team,
+        t1_score: entry.t1Score,
+        t2_score: entry.t2Score,
+        started_at: new Date(rally.startedAt).toISOString(),
+        duration_ms: Math.max(0, now - rally.startedAt),
+        shot_count: rally.count,
+        smash_count: rally.smashCount,
+        avg_intensity: rally.sumMagnitude / rally.count,
+        peak_intensity: rally.maxMagnitude,
+        direction_changes: rally.directionChanges,
+        recorded_by: userId || null,
+      }).then(({ error }) => { if (error) console.error("Failed to save rally stats", error); });
+    }
+    currentRallyRef.current = { startedAt: now, count: 0, sumMagnitude: 0, maxMagnitude: 0, smashCount: 0, directionChanges: 0, lastDominantAxis: null };
+    lastPointLogLenRef.current = log.length;
+  }, [match?.pointLog, isMotionTracking]);
 
   // ── Native Background Service & Lock Screen (Phase 2) ──
   useEffect(() => {

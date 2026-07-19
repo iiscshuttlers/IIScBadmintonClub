@@ -88,7 +88,7 @@ export function ContactSection() {
             <Card className="border-0 shadow-md bg-gradient-to-br from-primary/10 to-teal-50 dark:from-primary/30 dark:to-teal-950/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
               <CardHeader>
                 <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-1">
-                  <Mail className="w-6 h-6 text-foreground" />
+                  <Mail className="w-6 h-6 text-primary-foreground" />
                 </div>
                 <CardTitle className="text-primary dark:text-primary text-base">
                   Email
@@ -110,7 +110,7 @@ export function ContactSection() {
             <Card className="border-0 shadow-md bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
               <CardHeader>
                 <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center mb-1">
-                  <Phone className="w-6 h-6 text-foreground" />
+                  <Phone className="w-6 h-6 text-white" />
                 </div>
                 <CardTitle className="text-orange-700 dark:text-orange-400 text-base">
                   Phone
@@ -129,7 +129,7 @@ export function ContactSection() {
             <Card className="border-0 shadow-md bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
               <CardHeader>
                 <div className="w-12 h-12 rounded-xl bg-blue-900 flex items-center justify-center mb-1">
-                  <MapPin className="w-6 h-6 text-foreground" />
+                  <MapPin className="w-6 h-6 text-white" />
                 </div>
                 <CardTitle className="text-blue-900 dark:text-blue-400 text-base">
                   Location

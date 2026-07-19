@@ -1,6 +1,7 @@
 import { registerPlugin, PluginListenerHandle } from "@capacitor/core";
 
 export interface MotionData {
+  timestampMs?: number;
   x: number;
   y: number;
   z: number;

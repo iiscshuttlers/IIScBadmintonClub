@@ -59,5 +59,12 @@ export async function fetchSiteData<T>(
     `${import.meta.env.BASE_URL}data/${fallbackFile}?v=${Date.now()}`,
     { cache: "no-store" },
   );
-  return res.json() as Promise<T>;
+  if (!res.ok) {
+    throw new Error(`Fallback file not found: ${fallbackFile}`);
+  }
+  const contentType = res.headers.get("content-type");
+  if (contentType && !contentType.includes("application/json")) {
+    throw new Error(`Fallback file is not JSON: ${fallbackFile}`);
+  }
+  return res.json();
 }

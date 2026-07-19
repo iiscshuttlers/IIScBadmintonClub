@@ -120,8 +120,8 @@ export default function SubBarProfileButton({
               <User className="w-4 h-4 text-muted-foreground" /> Edit Profile
             </DropdownMenuItem>
             {myPlayerId && (
-              <DropdownMenuItem onSelect={() => setLocation(`/player/${myPlayerId}/career`)} className="cursor-pointer font-semibold rounded-none text-muted-foreground dark:text-slate-300 focus:text-foreground dark:focus:text-foreground focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2.5 border-t border-slate-100 dark:border-slate-800 gap-2.5">
-                <Trophy className="w-4 h-4 text-muted-foreground" /> Career
+              <DropdownMenuItem onSelect={() => setLocation(`/player/${myPlayerId}/personal`)} className="cursor-pointer font-semibold rounded-none text-muted-foreground dark:text-slate-300 focus:text-foreground dark:focus:text-foreground focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2.5 border-t border-slate-100 dark:border-slate-800 gap-2.5">
+                <Trophy className="w-4 h-4 text-muted-foreground" /> Personal
               </DropdownMenuItem>
             )}
             <DropdownMenuItem onSelect={() => setLocation("/profile/password")} className="cursor-pointer font-semibold rounded-none text-muted-foreground dark:text-slate-300 focus:text-foreground dark:focus:text-foreground focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2.5 border-t border-slate-100 dark:border-slate-800 gap-2.5">

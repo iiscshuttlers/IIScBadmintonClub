@@ -16,15 +16,12 @@ create index if not exists admin_history_admin_id_idx
 
 alter table public.admin_history enable row level security;
 
-DROP POLICY IF EXISTS "admins_read_own_history" ON public.admin_history;
 create policy "admins_read_own_history" on public.admin_history
   for select using (auth.uid() = admin_id);
 
-DROP POLICY IF EXISTS "admins_insert_history" ON public.admin_history;
 create policy "admins_insert_history" on public.admin_history
   for insert with check (auth.uid() = admin_id);
 
-DROP POLICY IF EXISTS "admins_delete_own_history" ON public.admin_history;
 create policy "admins_delete_own_history" on public.admin_history
   for delete using (auth.uid() = admin_id);
 
@@ -49,7 +46,6 @@ create index if not exists recycle_bin_expires_idx
 alter table public.recycle_bin enable row level security;
 
 -- Only admin/master_admin players can manage the recycle bin.
-DROP POLICY IF EXISTS "admins_manage_recycle_bin" ON public.recycle_bin;
 create policy "admins_manage_recycle_bin" on public.recycle_bin
   for all using (
     exists (

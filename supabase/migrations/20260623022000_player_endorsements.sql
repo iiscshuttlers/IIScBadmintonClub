@@ -18,20 +18,20 @@ ALTER TABLE public.player_endorsements ENABLE ROW LEVEL SECURITY;
 -- Policies
 
 -- 1. Anyone can read endorsements (for aggregating counts on profiles)
-CREATE POLICY "Endorsements are viewable by everyone"
-    ON public.player_endorsements FOR SELECT
+DROP POLICY IF EXISTS "Endorsements are viewable by everyone" ON player_endorsements;
+CREATE POLICY "Endorsements are viewable by everyone" ON player_endorsements FOR SELECT
     USING (true);
 
 -- 2. Authenticated users can insert their own endorsements
-CREATE POLICY "Users can insert their own endorsements"
-    ON public.player_endorsements FOR INSERT
+DROP POLICY IF EXISTS "Users can insert their own endorsements" ON player_endorsements;
+CREATE POLICY "Users can insert their own endorsements" ON player_endorsements FOR INSERT
     WITH CHECK (
         endorser_id = auth.uid()
     );
 
 -- 3. Users can update their own endorsements (e.g., swapping their vote)
-CREATE POLICY "Users can update their own endorsements"
-    ON public.player_endorsements FOR UPDATE
+DROP POLICY IF EXISTS "Users can update their own endorsements" ON player_endorsements;
+CREATE POLICY "Users can update their own endorsements" ON player_endorsements FOR UPDATE
     USING (
         endorser_id = auth.uid()
     )
@@ -40,8 +40,8 @@ CREATE POLICY "Users can update their own endorsements"
     );
 
 -- 4. Users can delete their own endorsements
-CREATE POLICY "Users can delete their own endorsements"
-    ON public.player_endorsements FOR DELETE
+DROP POLICY IF EXISTS "Users can delete their own endorsements" ON player_endorsements;
+CREATE POLICY "Users can delete their own endorsements" ON player_endorsements FOR DELETE
     USING (
         endorser_id = auth.uid()
     );

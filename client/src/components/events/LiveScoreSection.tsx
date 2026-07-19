@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { Trophy, Activity, Tv2, Trash2, Save, ShieldCheck, X, MonitorPlay, Bell, Loader2, Plus, Volume2, VolumeX, Smartphone, Zap } from "lucide-react";
 import { toast } from "sonner";
+import { MatchService } from "@/services/matchService";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { Capacitor } from "@capacitor/core";
@@ -89,7 +90,7 @@ function MatchBroadcastCard({
         const sScore = match.serverTeam === 1 ? match.t1.score : match.t2.score;
         const rScore = match.serverTeam === 1 ? match.t2.score : match.t1.score;
         
-        const text = `${sName}, ${sScore}, ${rScore}, ${rName}`;
+        const text = `${sName}, ${sScore}, ${rName}, ${rScore}`;
 
         if (Capacitor.isNativePlatform()) {
           // Native robust TTS
@@ -284,7 +285,7 @@ function MatchBroadcastCard({
               </button>
               <button
                 onClick={() => {
-                  if (typeof (window as any).Capacitor !== "undefined") {
+                  if (Capacitor.isNativePlatform()) {
                     // On Capacitor, window.confirm freezes — use direct action with toast undo pattern
                     onKill(match.id);
                     toast.success("Broadcast killed.", { description: "Result not saved." });
@@ -352,6 +353,7 @@ export function LiveScoreSection() {
   const [takeoverTarget, setTakeoverTarget] = useState<BwfMatchState | null>(null);
   const [pinnedMatchIds, setPinnedMatchIds] = useState<string[]>([]);
   const prevScoresRef = useRef<Record<string, { t1: number; t2: number }>>({});
+  const killedMatchesRef = useRef<Set<string>>(new Set());
 
   // ── Admin: jump into the umpire panel to control a running broadcast ──
   const handleForceTakeover = (matchId: string) => {
@@ -395,14 +397,28 @@ export function LiveScoreSection() {
     if (data?.value) {
       // Seed baseline scores so the first load doesn't trigger sounds
       const matches: Record<string, BwfMatchState> = data.value;
+      if (killedMatchesRef.current) {
+        Array.from(killedMatchesRef.current).forEach(id => delete matches[id]);
+      }
       Object.values(matches).forEach((m) => {
         prevScoresRef.current[m.id] = { t1: m.t1.score, t2: m.t2.score };
       });
-      setLiveMatches(data.value);
+      setLiveMatches(matches);
     }
   };
 
   useEffect(() => {
+    // Restore killed matches from sessionStorage on mount
+    const savedKilled = sessionStorage.getItem("killed_match_ids");
+    if (savedKilled) {
+      try {
+        const killed = JSON.parse(savedKilled);
+        killed.forEach((id: string) => killedMatchesRef.current.add(id));
+      } catch (e) {
+        console.error("Failed to restore killed matches", e);
+      }
+    }
+
     fetchLiveMatches();
 
     // Realtime subscription for immediate updates
@@ -419,6 +435,9 @@ export function LiveScoreSection() {
         (payload) => {
           if (payload.new && (payload.new as any).value) {
             const newMatches: Record<string, BwfMatchState> = (payload.new as any).value;
+            if (killedMatchesRef.current) {
+              Array.from(killedMatchesRef.current).forEach(id => delete newMatches[id]);
+            }
             // Play smash sound whenever any match score changes
             Object.values(newMatches).forEach((m) => {
               const prev = prevScoresRef.current[m.id];
@@ -537,11 +556,46 @@ export function LiveScoreSection() {
 
   // ── Admin: remove a broadcast from site_data ──
   const handleKill = async (matchId: string) => {
-    const { data } = await supabase.from("site_data").select("value").eq("key", "live_matches").single();
-    const lm = (data?.value as Record<string, any>) || {};
-    delete lm[matchId];
-    await supabase.from("site_data").upsert({ key: "live_matches", value: lm });
-    toast.success("Broadcast removed");
+    const originalMatch = liveMatches[matchId];
+
+    // 1. Optimistic UI update & ignore list
+    killedMatchesRef.current.add(matchId);
+    const killed = new Set(JSON.parse(sessionStorage.getItem("killed_match_ids") || "[]"));
+    killed.add(matchId);
+    sessionStorage.setItem("killed_match_ids", JSON.stringify(Array.from(killed)));
+
+    setLiveMatches(prev => {
+      const next = { ...prev };
+      delete next[matchId];
+      return next;
+    });
+
+    try {
+      // 2. Use MatchService to remove the live match via RPC
+      await MatchService.removeLiveMatch(matchId);
+
+      // 3. Verify deletion by checking the database
+      await new Promise(resolve => setTimeout(resolve, 500)); // Wait for realtime sync
+      const { data } = await supabase.from("site_data").select("value").eq("key", "live_matches").single();
+      if (data?.value && data.value[matchId]) {
+        throw new Error("Deletion verification failed - match still exists in database");
+      }
+
+      console.log("Match deleted successfully:", matchId);
+      toast.success("Broadcast removed");
+    } catch (err: any) {
+      console.error("Kill broadcast error:", err);
+
+      // 4. Revert optimistic update on error
+      if (originalMatch) {
+        setLiveMatches(prev => ({ ...prev, [matchId]: originalMatch }));
+      }
+      killedMatchesRef.current.delete(matchId);
+      killed.delete(matchId);
+      sessionStorage.setItem("killed_match_ids", JSON.stringify(Array.from(killed)));
+
+      toast.error("Failed to remove broadcast: " + (err?.message || "unknown error"));
+    }
   };
 
   // ── Admin: enter final score → submit confirmed match + remove broadcast ──
@@ -579,6 +633,9 @@ export function LiveScoreSection() {
   };
 
   const activeMatchList = Object.values(liveMatches).filter(match => {
+    // Don't show killed matches even if they somehow make it back into liveMatches due to subscription timing
+    if (killedMatchesRef.current.has(match.id)) return false;
+
     if (!match.isFriendly) return true; // Tournaments are public
     if (isAdmin) return true;
     if (session?.user?.id === match.id) return true; // Umpire
@@ -586,7 +643,7 @@ export function LiveScoreSection() {
 
     const participants = [match.t1.p1Id, match.t1.p2Id, match.t2.p1Id, match.t2.p2Id].filter(Boolean);
     if (participants.includes(profile.id)) return true; // Player
-    
+
     const buddies = profile.buddies || [];
     const following = profile.following || [];
     return participants.some(pid => buddies.includes(pid) || following.includes(pid));

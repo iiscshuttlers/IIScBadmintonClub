@@ -1,0 +1,1 @@
+CREATE OR REPLACE FUNCTION admin_approve_players(p_ids UUID[], p_approved BOOLEAN DEFAULT true) RETURNS VOID LANGUAGE plpgsql SECURITY DEFINER AS $$ BEGIN IF NOT EXISTS (SELECT 1 FROM players WHERE id = auth.uid() AND role IN ('admin', 'master_admin')) THEN RAISE EXCEPTION 'Unauthorized'; END IF; UPDATE players SET is_approved = p_approved WHERE id = ANY(p_ids); END; $$;

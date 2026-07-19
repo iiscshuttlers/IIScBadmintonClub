@@ -25,6 +25,7 @@ import { fetchSiteData } from "@/lib/siteData";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { InfoModal } from "@/components/InfoModal";
 import type { ConvenerData } from "@/components/admin/ConvenerEditor";
+import { VenueTrafficWidget } from "@/components/home/VenueTrafficWidget";
 
 // ── Animation variants ────────────────────────────────────────────────────────
 const fadeUp: Variants = {
@@ -222,6 +223,8 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <VenueTrafficWidget />
 
         {/* ── QUICK PATHS ──────────────────────────────────────────────── */}
         <section aria-label="Quick Links" className="py-12 bg-slate-50 dark:bg-slate-900/60">
@@ -571,7 +574,16 @@ export default function Home() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-indigo-500" />
-            <div className="w-16 h-16 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center mb-6">
+            <button
+              className="absolute top-4 right-4 z-10 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-full p-1.5 transition-all cursor-pointer"
+              onClick={handleDeclineLocation}
+              aria-label="Close"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <div className="w-16 h-16 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center mb-6 mt-2">
               <MapPin className="w-8 h-8" />
             </div>
             <h2 className="text-xl font-black text-white mb-3">Use your location</h2>

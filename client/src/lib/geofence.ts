@@ -6,6 +6,14 @@ export interface GeofencePlugin {
     lng?: number;
     radius?: number;
   }): Promise<void>;
+  setAuthContext(options: {
+    playerId: string;
+    accessToken: string;
+    refreshToken?: string;
+    supabaseUrl: string;
+    anonKey: string;
+  }): Promise<void>;
+  clearAuthContext(): Promise<void>;
 }
 
 export const Geofence = registerPlugin<GeofencePlugin>("Geofence");

@@ -58,18 +58,9 @@ export function PlayersManager() {
   const approve = async (id: string) => {
     setActionId(id);
     const player = players.find((p) => p.id === id);
-    const { data, error } = await supabase
-      .from("players")
-      .update({ is_approved: true })
-      .eq("id", id)
-      .select();
+    const { error } = await supabase.rpc("admin_approve_players", { p_ids: [id], p_approved: true });
     if (error) {
       toast("Approve failed: " + error.message, { icon: "❌" });
-    } else if (!data || data.length === 0) {
-      toast("Permission Denied", {
-        icon: "❌",
-        description: "Database RLS policy blocked the update.",
-      });
     } else {
       toast("Player approved!", { icon: "✅" });
       setPlayers((p) =>
@@ -90,18 +81,9 @@ export function PlayersManager() {
   const revoke = async (id: string) => {
     setActionId(id);
     const player = players.find((p) => p.id === id);
-    const { data, error } = await supabase
-      .from("players")
-      .update({ is_approved: false })
-      .eq("id", id)
-      .select();
+    const { error } = await supabase.rpc("admin_approve_players", { p_ids: [id], p_approved: false });
     if (error) {
       toast("Revoke failed: " + error.message, { icon: "❌" });
-    } else if (!data || data.length === 0) {
-      toast("Permission Denied", {
-        icon: "❌",
-        description: "Database RLS policy blocked the update.",
-      });
     } else {
       toast("Approval revoked.", { icon: "⚠️" });
       setPlayers((p) =>
@@ -125,7 +107,7 @@ export function PlayersManager() {
     if (!confirm(`Approve all ${pendingPlayers.length} pending players?`)) return;
     
     const ids = pendingPlayers.map(p => p.id);
-    const { error } = await supabase.from("players").update({ is_approved: true }).in("id", ids);
+    const { error } = await supabase.rpc("admin_approve_players", { p_ids: ids });
     if (error) {
       toast.error("Bulk approve failed: " + error.message);
     } else {

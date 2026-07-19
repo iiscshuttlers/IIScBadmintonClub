@@ -57,7 +57,7 @@ const Pulse = lazy(() => import("./pages/Pulse"));
 // TournamentAdmin is the dedicated fullscreen Tournament Manager
 const SiteAdmin = lazy(() => import("./pages/SiteAdmin"));
 const PlayerProfile = lazy(() => import("./pages/PlayerProfile"));
-const PlayerCareerPage = lazy(() => import("./pages/PlayerCareerPage"));
+const PlayerPersonalPage = lazy(() => import("./pages/PlayerPersonalPage"));
 const Join = lazy(() => import("./pages/Join"));
 const ProfileSetup = lazy(() => import("./pages/ProfileSetup"));
 
@@ -72,8 +72,11 @@ const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const TournamentAdmin = lazy(() => import("./pages/TournamentAdmin"));
 
 const PersonalProfilePage = lazy(() => import("./pages/personal/PersonalProfilePage"));
+const BroadcastOverlay = lazy(() => import("./pages/BroadcastOverlay"));
 
-const TvScoreboardIndex = lazy(() => import("./pages/TvScoreboardIndex"));
+import { VenueWelcomeModal } from "@/components/VenueWelcomeModal";
+
+const TvScoreboardIndex = lazy(() => import("@/pages/TvScoreboardIndex"));
 const TvScoreboard = lazy(() => import("./pages/TvScoreboard"));
 
 function PersonalModeRoute({ children }: { children: React.ReactNode }) {
@@ -113,10 +116,12 @@ function AppRoutes() {
               <PlayerProfile />
             </ErrorBoundary>
           </Route>
-          <Route path="/player/:id/career">
-            <ErrorBoundary fallback={<PageErrorFallback />}>
-              <PlayerCareerPage />
-            </ErrorBoundary>
+          <Route path="/player/:id/personal/*?">
+            <Suspense fallback={<PageSkeleton />}>
+              <ProtectedRoute>
+                <PlayerPersonalPage />
+              </ProtectedRoute>
+            </Suspense>
           </Route>
           <Route path="/compare/:p1/:p2">
             <ErrorBoundary fallback={<PageErrorFallback />}>
@@ -154,10 +159,13 @@ function AppRoutes() {
               </ErrorBoundary>
             </PersonalModeRoute>
           </Route>
+          
+          <Route path="/broadcast/:matchId" component={BroadcastOverlay} />
 
           <Route path="/404" component={NotFound} />
           <Route component={NotFound} />
         </Switch>
+        <VenueWelcomeModal />
       </Suspense>
     </ErrorBoundary>
   );

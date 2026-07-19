@@ -346,7 +346,7 @@ function ChallengesAdminPanel() {
 
 /* ── Public API Info ─────────────────────────────────────────────── */
 function PublicApiPanel() {
-  const base = "https://gewnvlanitzlukaiiznu.supabase.co/functions/v1/public-api";
+  const base = "https://htejmhsqqlfedlajqqyv.supabase.co/functions/v1/public-api";
   const endpoints = [
     { path: "/leaderboard", desc: "Top 20 players by ELO" },
     { path: "/recent-matches", desc: "Last 20 confirmed matches" },
@@ -574,9 +574,7 @@ export function AdminFeaturesPanel() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <NotifQueuePanel />
           <CronJobsPanel />
-          <AdminTournamentFeatures />
           <UmpireAssignmentPanel />
-          <ManageTournaments />
         </div>
       )}
       {section === "api" && <PublicApiPanel />}

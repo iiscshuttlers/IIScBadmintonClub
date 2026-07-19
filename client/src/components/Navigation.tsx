@@ -48,6 +48,7 @@ import { useAppMode } from "@/contexts/AppModeContext";
 import { PreferencesModal } from "@/components/QuickSettings";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { NotificationsMenu } from "@/components/NotificationsMenu";
 
 const CLUB_LINKS = [
   { href: "/pulse", label: "Pulse" },
@@ -80,7 +81,7 @@ export default function Navigation() {
     pendingActionCount,
   } = useNavigationAuth();
   const { theme, toggleTheme } = useTheme();
-  const { viewAsRole, setViewAsRole, isMasterAdmin: isTrulyMainAdmin } = useAuth();
+  const { viewAsRole, setViewAsRole, isMasterAdmin: isTrulyMainAdmin, profile } = useAuth();
   const { updateInfo, openUpdateDialog } = useAppUpdate();
   const { mode, setMode } = useAppMode();
 
@@ -192,6 +193,8 @@ export default function Navigation() {
     setIsOpen(false);
   };
 
+  // We now want the global top navigation bar to render everywhere, including personal spaces.
+  // The bottom navigation bar is still conditionally hidden below for personal spaces.
 
   return (
     <>
@@ -267,11 +270,19 @@ export default function Navigation() {
                         <Shield className="w-4.5 h-4.5" />
                       </button>
                     )}
-                    {myPlayerId ? (
+                    {profile && <NotificationsMenu currentUser={profile} />}
+
+                    {Capacitor.isNativePlatform() ? (
                       <button
-                        onClick={() => setLocation(`/player/${myPlayerId}/career`)}
-                        className="hover:opacity-80 transition-opacity outline-none"
-                        title="View your career"
+                        onClick={() => {
+                          if (myPlayerId) {
+                            setLocation(`/player/${myPlayerId}/personal`);
+                          } else {
+                            toast.info("Please set up your profile to access your Personal Space.");
+                            setLocation("/personal/me");
+                          }
+                        }}
+                        className="hover:opacity-80 transition-opacity outline-none ring-2 ring-primary/50 rounded-full"
                       >
                         <Avatar src={userAvatar} name={userName} size="xs" />
                       </button>
@@ -283,9 +294,23 @@ export default function Navigation() {
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56 mt-2">
+                          {myPlayerId ? (
+                            <DropdownMenuItem onClick={() => setLocation(`/player/${myPlayerId}/personal`)} className="cursor-pointer font-bold text-primary">
+                              <User className="mr-2 h-4 w-4" />
+                              <span>My Personal Space</span>
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem onClick={() => {
+                              toast.info("Please set up your profile to access your Personal Space.");
+                              setLocation("/personal/me");
+                            }} className="cursor-pointer font-bold text-muted-foreground">
+                              <User className="mr-2 h-4 w-4" />
+                              <span>My Personal Space</span>
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem onClick={() => setLocation("/personal/me")} className="cursor-pointer">
-                            <User className="mr-2 h-4 w-4" />
-                            <span>Player Profile</span>
+                            <Settings className="mr-2 h-4 w-4" />
+                            <span>Account Settings</span>
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => toggleTheme()} className="cursor-pointer">
                             {theme === "dark" ? <Sun className="mr-2 h-4 w-4 text-amber-500" /> : <Moon className="mr-2 h-4 w-4 text-indigo-500" />}
@@ -336,15 +361,8 @@ export default function Navigation() {
                       <Shield className="w-5 h-5" />
                     </button>
                   )}
-                  {myPlayerId ? (
-                    <button
-                      onClick={() => setLocation(`/player/${myPlayerId}/career`)}
-                      className="hover:opacity-80 transition-opacity outline-none"
-                      title="View your career"
-                    >
-                      <Avatar src={userAvatar} name={userName} size="sm" />
-                    </button>
-                  ) : (
+                  {profile && <NotificationsMenu currentUser={profile} />}
+
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button className="hover:opacity-80 transition-opacity outline-none">
@@ -352,9 +370,15 @@ export default function Navigation() {
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-56 mt-2">
+                        {myPlayerId && (
+                          <DropdownMenuItem onClick={() => setLocation(`/player/${myPlayerId}/personal`)} className="cursor-pointer font-bold text-primary">
+                            <User className="mr-2 h-4 w-4" />
+                            <span>My Personal Space</span>
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem onClick={() => setLocation("/personal/me")} className="cursor-pointer">
-                          <User className="mr-2 h-4 w-4" />
-                          <span>Player Profile</span>
+                          <Settings className="mr-2 h-4 w-4" />
+                          <span>Account Settings</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => toggleTheme()} className="cursor-pointer">
                           {theme === "dark" ? <Sun className="mr-2 h-4 w-4 text-amber-500" /> : <Moon className="mr-2 h-4 w-4 text-indigo-500" />}
@@ -367,7 +391,6 @@ export default function Navigation() {
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                  )}
                 </div>
               ) : (
 
@@ -443,6 +466,29 @@ export default function Navigation() {
 
                     <button
                       className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer"
+                      onClick={() => {
+                        setIsOpen(false);
+                        if (myPlayerId) {
+                          setLocation(`/player/${myPlayerId}/personal`);
+                        } else {
+                          toast.info("Please set up your profile to access your Personal Space.");
+                          setLocation("/personal/me");
+                        }
+                      }}
+                    >
+                      <User className="h-4 w-4 text-primary" /> My Personal Space
+                    </button>
+                    <button
+                      className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer"
+                      onClick={() => {
+                        setIsOpen(false);
+                        setLocation("/personal/me");
+                      }}
+                    >
+                      <Settings className="h-4 w-4 text-muted-foreground" /> Account Settings
+                    </button>
+                    <button
+                      className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer"
                       onClick={handleInvite}
                     >
                       <UserPlus className="h-4 w-4 text-primary" /> Invite Friends
@@ -475,7 +521,7 @@ export default function Navigation() {
         )}
 
       {/* ── Mobile Bottom Navigation Bar (outside nav to ensure fixed positioning) ─────────────────────────────── */}
-      {!/^\/player\/[^/]+\/career/.test(location) && (
+      {!/^\/player\/[^/]+\/personal/.test(location) && (
       <div
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
         className="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-white/95 dark:bg-slate-950/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 flex justify-around items-end px-1 pt-1 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]"

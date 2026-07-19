@@ -56,6 +56,13 @@ import { UndoHistory } from "@/components/admin/UndoHistory";
 import { AdminHistoryProvider, useAdminHistory } from "@/contexts/AdminHistoryContext";
 import { ContentEditorWrapper } from "@/components/admin/ContentEditorWrapper";
 
+import { AppArchitectureMap } from "@/components/admin/AppArchitectureMap";
+import { FeatureMapDashboard } from "@/components/admin/FeatureMapDashboard";
+import { DatabaseSchemaDashboard } from "@/components/admin/DatabaseSchemaDashboard";
+import { ArchitectureNeuralGraph } from "@/components/admin/ArchitectureNeuralGraph";
+import { AdminFeaturesGuide } from "@/components/admin/AdminFeaturesGuide";
+import { Database, BrainCircuit, BookOpen } from "lucide-react";
+
 /* ── Types ──────────────────────────────────────────────────────── */
 type TabId =
   | "overview"
@@ -77,9 +84,14 @@ type TabId =
   | "activity_log"
   | "features"
   | "all_features"
+  | "features_guide"
   | "tooltips"
   | "recycle_bin"
   | "undo_history"
+  | "architecture"
+  | "feature_registry"
+  | "database_schema"
+  | "neural_graph"
   | "convener_photos";
 
 interface TabGroup {
@@ -129,8 +141,13 @@ const TAB_GROUPS: TabGroup[] = [
     title: "✨ Features",
     description: "View platform features and system information",
     tabs: [
+      { id: "architecture", label: "App Architecture", icon: LayoutGrid },
+      { id: "feature_registry", label: "Codebase Survey", icon: FileCode2 },
+      { id: "database_schema", label: "Database Schema", icon: Database },
+      { id: "neural_graph", label: "Architecture Graph", icon: BrainCircuit },
       { id: "all_features", label: "All Features", icon: Sparkles },
       { id: "features", label: "Live Features", icon: Zap },
+      { id: "features_guide", label: "Features Guide", icon: BookOpen },
       { id: "tooltips", label: "Tooltip Registry", icon: Megaphone },
     ],
   },
@@ -285,12 +302,14 @@ function SiteAdminInner() {
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: -8 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute left-0 top-full mt-2 z-50 w-80 max-h-[80vh] overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl"
+                        className="absolute left-0 top-full mt-2 z-50 w-80 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl"
+                        style={{ maxHeight: "calc(100vh - 200px)", overflowY: "auto" }}
                       >
                         <div className="p-3 border-b border-slate-100 dark:border-slate-800">
                           <p className="text-xs font-black text-muted-foreground dark:text-muted-foreground uppercase tracking-widest">Admin Sections</p>
                         </div>
-                        <div className="p-3 space-y-4">
+                        <div className="p-3" style={{ paddingBottom: "100px" }}>
+                          <div className="space-y-4">
                           {TAB_GROUPS.map((group) => {
                             const visibleTabs = group.tabs.filter((tab) => isAdmin || tab.id === "umpire");
                             if (visibleTabs.length === 0) return null;
@@ -324,6 +343,7 @@ function SiteAdminInner() {
                               </div>
                             );
                           })}
+                          </div>
                         </div>
                       </motion.div>
                     )}
@@ -455,6 +475,11 @@ function SiteAdminInner() {
             {activeTab === "changelog" && <ChangelogViewer />}
             {activeTab === "features" && <AdminFeaturesPanel />}
             {activeTab === "all_features" && <AdminAllFeaturesPanel />}
+            {activeTab === "architecture" && <AppArchitectureMap />}
+            {activeTab === "feature_registry" && <FeatureMapDashboard />}
+            {activeTab === "database_schema" && <DatabaseSchemaDashboard />}
+            {activeTab === "neural_graph" && <ArchitectureNeuralGraph />}
+            {activeTab === "features_guide" && <AdminFeaturesGuide />}
             {activeTab === "tooltips" && <TooltipRegistryPanel />}
             {activeTab === "undo_history" && <UndoHistory />}
             {activeTab === "recycle_bin" && <RecycleBin />}

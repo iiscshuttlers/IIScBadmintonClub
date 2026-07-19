@@ -1,5 +1,5 @@
 import { usePageMeta } from "@/hooks/usePageMeta";
-import { Info, MapPin, BookOpen, ShieldCheck } from "lucide-react";
+import { Info, MapPin, BookOpen, ShieldCheck, MonitorPlay } from "lucide-react";
 import { InfoModal } from "@/components/InfoModal";
 import { ContactSection } from "@/components/about/ContactSection";
 import { FacilitiesSection } from "@/components/about/FacilitiesSection";
@@ -8,6 +8,7 @@ import { useState, useEffect, useCallback } from "react";
 import { safeReplaceState, safePushState, safeGetSearchParams } from "@/lib/navUtils";
 import ExchangeTab from "@/components/hub/ExchangeTab";
 import { Store } from "lucide-react";
+import { LiveCourtsDashboard } from "@/components/club/LiveCourtsDashboard";
 
 export default function Hub() {
   usePageMeta({
@@ -18,14 +19,14 @@ export default function Hub() {
   const [activeTab, setActiveTab] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
-    return ["contact", "facilities", "glossary", "exchange"].includes(tab as string) ? tab : "contact";
+    return ["courts", "contact", "facilities", "glossary", "exchange"].includes(tab as string) ? tab : "courts";
   });
 
   useEffect(() => {
     const handlePopState = () => {
       const params = new URLSearchParams(window.location.search);
       const tab = params.get("tab");
-      setActiveTab(["contact", "facilities", "glossary", "exchange"].includes(tab as string) ? tab as any : "contact");
+      setActiveTab(["courts", "contact", "facilities", "glossary", "exchange"].includes(tab as string) ? tab as any : "courts");
     };
     window.addEventListener("popstate", handlePopState);
     
@@ -75,6 +76,16 @@ export default function Hub() {
           <div className="mt-4 flex justify-center w-full px-2">
             <div className="grid grid-cols-2 sm:flex bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 sm:flex-wrap sm:justify-center gap-1.5 sm:gap-0 w-full sm:w-auto">
               <button
+                onClick={() => handleTabChange("courts")}
+                className={`flex w-full sm:w-auto items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
+                  activeTab === "courts"
+                    ? "bg-white text-blue-900 shadow-md scale-100"
+                    : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
+                }`}
+              >
+                <MonitorPlay className="w-4 h-4" /> Live Courts
+              </button>
+              <button
                 onClick={() => handleTabChange("contact")}
                 className={`flex w-full sm:w-auto items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
                   activeTab === "contact"
@@ -119,7 +130,8 @@ export default function Hub() {
         </div>
       </div>
 
-      <div className="w-full">
+      <div className="container mx-auto px-4 max-w-4xl pt-6">
+        {activeTab === "courts" && <LiveCourtsDashboard />}
         {activeTab === "contact" && <ContactSection />}
         {activeTab === "facilities" && <FacilitiesSection />}
         {activeTab === "glossary" && <GlossarySection />}

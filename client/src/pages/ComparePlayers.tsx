@@ -154,7 +154,7 @@ export default function ComparePlayers() {
 
   return (
     <div className="pb-24 pt-6 max-w-4xl mx-auto px-4">
-      <Link href="/players">
+      <Link href="/hub">
         <button className="flex items-center text-muted-foreground hover:text-slate-800 dark:hover:text-foreground mb-6 transition-colors">
           <ChevronLeft className="w-5 h-5 mr-1" />
           Back to Directory

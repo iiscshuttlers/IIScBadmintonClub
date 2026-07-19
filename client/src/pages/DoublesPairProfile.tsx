@@ -82,10 +82,11 @@ export default function DoublesPairProfile() {
   );
 
   if (!player1 || !player2) return (
-    <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-      <p className="text-muted-foreground">Players not found</p>
-      <Link href="/players" className="text-primary font-bold">Browse Players</Link>
-    </div>
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <h1 className="text-2xl font-bold mb-4">Pair not found</h1>
+        <p className="text-muted-foreground">Players not found</p>
+        <Link href="/hub" className="text-primary font-bold">Browse Players</Link>
+      </div>
   );
 
   const totalMatches = pairMatches.length;
@@ -114,7 +115,7 @@ export default function DoublesPairProfile() {
       <div className="bg-gradient-to-br from-teal-800 via-emerald-700 to-teal-800 text-foreground py-6 relative overflow-hidden">
         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,rgba(34,197,94,0.5),transparent)] pointer-events-none" />
         <div className="container mx-auto px-4 max-w-3xl relative z-10">
-          <Link href="/players" className="inline-flex items-center gap-1.5 text-foreground/60 hover:text-foreground text-sm font-bold mb-6 transition">
+          <Link href="/hub" className="inline-flex items-center gap-1.5 text-foreground/60 hover:text-foreground text-sm font-bold mb-6 transition">
             <ArrowLeft className="w-4 h-4" /> Back to Players
           </Link>
           <div className="flex flex-col items-center gap-6">

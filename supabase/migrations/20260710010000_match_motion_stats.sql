@@ -4,7 +4,7 @@
 CREATE TABLE IF NOT EXISTS match_motion_stats (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   match_id          UUID NOT NULL,
-  match_source      TEXT NOT NULL CHECK (match_source IN ('friendly', 'tournament')),
+  match_source      TEXT NOT NULL CHECK (match_source IN ('friendly', 'tournament', 'practice')),
   sample_count      INT NOT NULL DEFAULT 0,
   avg_magnitude     NUMERIC,
   max_magnitude     NUMERIC,
@@ -27,7 +27,7 @@ CREATE POLICY "mms_public_read" ON match_motion_stats
 
 DROP POLICY IF EXISTS "mms_auth_insert" ON match_motion_stats;
 CREATE POLICY "mms_auth_insert" ON match_motion_stats
-  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+  FOR INSERT WITH CHECK (recorded_by = auth.uid());
 
 DROP POLICY IF EXISTS "mms_auth_update_own" ON match_motion_stats;
 CREATE POLICY "mms_auth_update_own" ON match_motion_stats

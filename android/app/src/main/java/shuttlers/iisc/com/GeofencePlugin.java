@@ -3,7 +3,14 @@ package shuttlers.iisc.com;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Build;
+import android.util.Log;
+
+import androidx.security.crypto.EncryptedSharedPreferences;
+import androidx.security.crypto.MasterKey;
 
 import com.getcapacitor.PermissionState;
 import com.getcapacitor.Plugin;
@@ -17,6 +24,9 @@ import com.google.android.gms.location.GeofencingClient;
 import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationServices;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+
 @CapacitorPlugin(
     name = "Geofence",
     permissions = {
@@ -26,6 +36,15 @@ import com.google.android.gms.location.LocationServices;
 )
 public class GeofencePlugin extends Plugin {
 
+    static final String PREFS_NAME = "geofence_auth_prefs";
+    static final String KEY_PLAYER_ID = "player_id";
+    static final String KEY_ACCESS_TOKEN = "access_token";
+    static final String KEY_REFRESH_TOKEN = "refresh_token";
+    static final String KEY_SUPABASE_URL = "supabase_url";
+    static final String KEY_SUPABASE_ANON_KEY = "supabase_anon_key";
+
+    private static final String TAG = "GeofencePlugin";
+
     private GeofencingClient geofencingClient;
     private PendingIntent geofencePendingIntent;
 
@@ -33,6 +52,29 @@ public class GeofencePlugin extends Plugin {
     public void load() {
         super.load();
         geofencingClient = LocationServices.getGeofencingClient(getContext());
+    }
+
+    /**
+     * Auth tokens are sensitive and long-lived, so they're stored Keystore-encrypted rather than
+     * in plain SharedPreferences. Falls back to plain prefs only if the Keystore itself is
+     * unavailable (shouldn't happen on supported API levels).
+     */
+    static SharedPreferences getAuthPrefs(Context context) {
+        try {
+            MasterKey masterKey = new MasterKey.Builder(context)
+                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                    .build();
+            return EncryptedSharedPreferences.create(
+                    context,
+                    PREFS_NAME,
+                    masterKey,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            );
+        } catch (GeneralSecurityException | IOException e) {
+            Log.e(TAG, "Failed to open encrypted auth prefs, failing closed", e);
+            return null;
+        }
     }
 
     private PendingIntent getGeofencePendingIntent() {
@@ -56,7 +98,39 @@ public class GeofencePlugin extends Plugin {
             requestPermissionForAlias("location", call, "locationPermissionCallback");
             return;
         }
-        addGeofence(call);
+        ensureBackgroundLocation(call);
+    }
+
+    @PluginMethod
+    public void setAuthContext(PluginCall call) {
+        String playerId = call.getString("playerId");
+        String accessToken = call.getString("accessToken");
+        String refreshToken = call.getString("refreshToken");
+        String supabaseUrl = call.getString("supabaseUrl");
+        String anonKey = call.getString("anonKey");
+
+        SharedPreferences prefs = getAuthPrefs(getContext());
+        if (prefs == null) {
+            call.reject("Keystore encryption failed");
+            return;
+        }
+        prefs.edit()
+                .putString(KEY_PLAYER_ID, playerId)
+                .putString(KEY_ACCESS_TOKEN, accessToken)
+                .putString(KEY_REFRESH_TOKEN, refreshToken)
+                .putString(KEY_SUPABASE_URL, supabaseUrl)
+                .putString(KEY_SUPABASE_ANON_KEY, anonKey)
+                .apply();
+        call.resolve();
+    }
+
+    @PluginMethod
+    public void clearAuthContext(PluginCall call) {
+        SharedPreferences prefs = getAuthPrefs(getContext());
+        if (prefs != null) {
+            prefs.edit().clear().apply();
+        }
+        call.resolve();
     }
 
     @PermissionCallback
@@ -65,21 +139,43 @@ public class GeofencePlugin extends Plugin {
             call.reject("Location permission not granted");
             return;
         }
+        ensureBackgroundLocation(call);
+    }
+
+    /**
+     * Android 10+ rejects a combined foreground+background location request outright, so
+     * background access must be requested as a separate, later step after foreground is granted.
+     * Background is nice-to-have for reliable exit events; we still add the geofence in the
+     * foreground-only case rather than blocking setup on it.
+     */
+    private void ensureBackgroundLocation(PluginCall call) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+                && getPermissionState("backgroundLocation") != PermissionState.GRANTED) {
+            requestPermissionForAlias("backgroundLocation", call, "backgroundLocationPermissionCallback");
+            return;
+        }
+        addGeofence(call);
+    }
+
+    @PermissionCallback
+    private void backgroundLocationPermissionCallback(PluginCall call) {
+        // Proceed regardless of outcome: foreground-only geofencing still works, just less
+        // reliably in the background, which is an acceptable degradation.
         addGeofence(call);
     }
 
     @SuppressLint("MissingPermission")
     private void addGeofence(PluginCall call) {
         // IISc Gymkhana coordinates
-        double lat = call.getDouble("lat", 13.016601274233912);
-        double lng = call.getDouble("lng", 77.56285452175143);
+        double lat = call.getDouble("lat", 13.018651623022917);
+        double lng = call.getDouble("lng", 77.5646102174763);
         float radius = call.getFloat("radius", 50.0f); // 50 meters
 
         Geofence geofence = new Geofence.Builder()
                 .setRequestId("GYMKHANA_GEOFENCE")
                 .setCircularRegion(lat, lng, radius)
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
                 .build();
 
         GeofencingRequest request = new GeofencingRequest.Builder()

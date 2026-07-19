@@ -116,9 +116,10 @@ function ProbBar({ t1Pct, t2Pct, t1Label, t2Label, label, tooltip }: {
   );
 }
 
-function MatchPredictionCard({ m, myPick, onPick }: {
+function MatchPredictionCard({ m, myPick, profileId, onPick }: {
   m: BwfMatchState;
   myPick: 1 | 2 | undefined;
+  profileId: string | undefined;
   onPick: (team: 1 | 2) => void;
 }) {
   const [statProb, setStatProb] = useState<StatProb>(null);
@@ -154,6 +155,7 @@ function MatchPredictionCard({ m, myPick, onPick }: {
         event: "INSERT", schema: "public", table: "live_match_votes",
         filter: `live_match_id=eq.${m.id}`,
       }, (payload) => {
+        if (profileId && (payload.new as any).user_id === profileId) return; // Handled optimistically
         setTally(prev => ({
           t1: prev.t1 + ((payload.new as any).pick === 1 ? 1 : 0),
           t2: prev.t2 + ((payload.new as any).pick === 2 ? 1 : 0),
@@ -163,6 +165,7 @@ function MatchPredictionCard({ m, myPick, onPick }: {
         event: "DELETE", schema: "public", table: "live_match_votes",
         filter: `live_match_id=eq.${m.id}`,
       }, (payload) => {
+        if (profileId && (payload.old as any).user_id === profileId) return; // Handled optimistically
         setTally(prev => ({
           t1: Math.max(0, prev.t1 - ((payload.old as any).pick === 1 ? 1 : 0)),
           t2: Math.max(0, prev.t2 - ((payload.old as any).pick === 2 ? 1 : 0)),
@@ -215,13 +218,19 @@ function MatchPredictionCard({ m, myPick, onPick }: {
       ) : (
         <div className="flex gap-2">
           <button
-            onClick={() => onPick(1)}
+            onClick={() => {
+              setTally(prev => ({ ...prev, t1: prev.t1 + 1 }));
+              onPick(1);
+            }}
             className="flex-1 py-2.5 rounded-xl bg-primary/10 dark:bg-primary/20 hover:bg-primary/15 dark:hover:bg-primary/80/30 border border-primary/40 dark:border-primary/80 text-sm font-black text-primary dark:text-primary transition truncate"
           >
             {t1Label}
           </button>
           <button
-            onClick={() => onPick(2)}
+            onClick={() => {
+              setTally(prev => ({ ...prev, t2: prev.t2 + 1 }));
+              onPick(2);
+            }}
             className="flex-1 py-2.5 rounded-xl bg-sky-50 dark:bg-sky-950/20 hover:bg-sky-100 dark:hover:bg-sky-900/30 border border-sky-200 dark:border-sky-800 text-sm font-black text-sky-700 dark:text-sky-400 transition truncate"
           >
             {t2Label}
@@ -239,9 +248,12 @@ export function MatchPredictions() {
 
   useEffect(() => {
     const parse = (val: Record<string, BwfMatchState>) => {
-      setLiveMatches(Object.values(val).filter((m) => 
-        m.status === "playing" || (m.status === "setup" && m.t1.p1Id && m.t2.p1Id)
-      ));
+      const killedMatchIds = new Set(JSON.parse(sessionStorage.getItem("killed_match_ids") || "[]"));
+      setLiveMatches(Object.values(val).filter((m) => {
+        // Don't show matches that were just killed
+        if (killedMatchIds.has(m.id)) return false;
+        return m.status === "playing" || (m.status === "setup" && m.t1.p1Id && m.t2.p1Id);
+      }));
     };
 
     supabase
@@ -307,6 +319,7 @@ export function MatchPredictions() {
             key={m.id}
             m={m}
             myPick={picks[m.id]}
+            profileId={profile?.id}
             onPick={(team) => pick(m.id, team)}
           />
         ))}

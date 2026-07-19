@@ -1,0 +1,1532 @@
+{
+  "admin_history": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid"
+      },
+      {
+        "name": "admin_id",
+        "type": "uuid"
+      },
+      {
+        "name": "action_type",
+        "type": "text"
+      },
+      {
+        "name": "entity_type",
+        "type": "text"
+      },
+      {
+        "name": "entity_id",
+        "type": "text"
+      },
+      {
+        "name": "before_state",
+        "type": "jsonb"
+      },
+      {
+        "name": "after_state",
+        "type": "jsonb"
+      },
+      {
+        "name": "label",
+        "type": "text"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamptz"
+      }
+    ],
+    "policies": [
+      {
+        "name": "admins_read_own_history",
+        "action": "SELECT",
+        "using": "auth.uid(",
+        "check": null
+      },
+      {
+        "name": "admins_insert_history",
+        "action": "INSERT",
+        "using": null,
+        "check": "auth.uid("
+      },
+      {
+        "name": "admins_delete_own_history",
+        "action": "DELETE",
+        "using": "auth.uid(",
+        "check": null
+      }
+    ]
+  },
+  "recycle_bin": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid"
+      },
+      {
+        "name": "table_name",
+        "type": "text"
+      },
+      {
+        "name": "record_id",
+        "type": "text"
+      },
+      {
+        "name": "record_data",
+        "type": "jsonb"
+      },
+      {
+        "name": "deleted_by",
+        "type": "uuid"
+      },
+      {
+        "name": "label",
+        "type": "text"
+      },
+      {
+        "name": "deleted_at",
+        "type": "timestamptz"
+      },
+      {
+        "name": "expires_at",
+        "type": "timestamptz"
+      }
+    ],
+    "policies": [
+      {
+        "name": "admins_manage_recycle_bin",
+        "action": "ALL",
+        "using": "exists (\n      select 1 from public.players\n      where id = auth.uid(",
+        "check": null
+      }
+    ]
+  },
+  "live_match_votes": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid"
+      },
+      {
+        "name": "live_match_id",
+        "type": "text"
+      },
+      {
+        "name": "user_id",
+        "type": "uuid"
+      },
+      {
+        "name": "pick",
+        "type": "smallint"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamptz"
+      }
+    ],
+    "policies": [
+      {
+        "name": "insert own vote",
+        "action": "INSERT",
+        "using": null,
+        "check": "auth.uid("
+      },
+      {
+        "name": "read all votes",
+        "action": "SELECT",
+        "using": "true",
+        "check": null
+      }
+    ]
+  },
+  "player_endorsements": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID"
+      },
+      {
+        "name": "endorsed_player_id",
+        "type": "UUID"
+      },
+      {
+        "name": "endorser_id",
+        "type": "UUID"
+      },
+      {
+        "name": "category",
+        "type": "TEXT"
+      },
+      {
+        "name": "trait",
+        "type": "TEXT"
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMPTZ"
+      },
+      {
+        "name": "--",
+        "type": "Ensure"
+      }
+    ],
+    "policies": [
+      {
+        "name": "Endorsements are viewable by everyone",
+        "action": "SELECT",
+        "using": "true",
+        "check": null
+      },
+      {
+        "name": "Users can insert their own endorsements",
+        "action": "INSERT",
+        "using": null,
+        "check": "endorser_id = auth.uid("
+      },
+      {
+        "name": "Users can update their own endorsements",
+        "action": "UPDATE",
+        "using": "endorser_id = auth.uid(",
+        "check": null
+      },
+      {
+        "name": "Users can delete their own endorsements",
+        "action": "DELETE",
+        "using": "endorser_id = auth.uid(",
+        "check": null
+      }
+    ]
+  },
+  "marketplace_listings": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid"
+      },
+      {
+        "name": "seller_id",
+        "type": "uuid"
+      },
+      {
+        "name": "title",
+        "type": "text"
+      },
+      {
+        "name": "description",
+        "type": "text"
+      },
+      {
+        "name": "price",
+        "type": "numeric(10,2)"
+      },
+      {
+        "name": "condition",
+        "type": "text"
+      },
+      {
+        "name": "category",
+        "type": "text"
+      },
+      {
+        "name": "image_url",
+        "type": "text"
+      },
+      {
+        "name": "status",
+        "type": "text"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp"
+      }
+    ],
+    "policies": [
+      {
+        "name": "Anyone can view active marketplace listings",
+        "action": "SELECT",
+        "using": "status = 'active'",
+        "check": null
+      },
+      {
+        "name": "Users can view their own listings regardless of status",
+        "action": "SELECT",
+        "using": "auth.uid(",
+        "check": null
+      },
+      {
+        "name": "Users can create listings",
+        "action": "INSERT",
+        "using": null,
+        "check": "auth.uid("
+      },
+      {
+        "name": "Users can update their own listings",
+        "action": "UPDATE",
+        "using": "auth.uid(",
+        "check": null
+      },
+      {
+        "name": "Users can delete their own listings",
+        "action": "DELETE",
+        "using": "auth.uid(",
+        "check": null
+      }
+    ]
+  },
+  "doubles_teams": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID"
+      },
+      {
+        "name": "team_name",
+        "type": "TEXT"
+      },
+      {
+        "name": "player1_id",
+        "type": "UUID"
+      },
+      {
+        "name": "player2_id",
+        "type": "UUID"
+      },
+      {
+        "name": "category",
+        "type": "TEXT"
+      },
+      {
+        "name": "elo_rating",
+        "type": "INTEGER"
+      },
+      {
+        "name": "matches_played",
+        "type": "INTEGER"
+      },
+      {
+        "name": "matches_won",
+        "type": "INTEGER"
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP"
+      }
+    ],
+    "policies": [
+      {
+        "name": "Anyone can read doubles_teams",
+        "action": "SELECT",
+        "using": "true",
+        "check": null
+      },
+      {
+        "name": "Players can create teams they are part of",
+        "action": "INSERT",
+        "using": null,
+        "check": "auth.uid("
+      },
+      {
+        "name": "Players can update their own teams",
+        "action": "UPDATE",
+        "using": "auth.uid(",
+        "check": null
+      },
+      {
+        "name": "Players can delete their own teams",
+        "action": "DELETE",
+        "using": "auth.uid(",
+        "check": null
+      }
+    ]
+  },
+  "tournaments": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID"
+      },
+      {
+        "name": "name",
+        "type": "TEXT"
+      },
+      {
+        "name": "tournament_type",
+        "type": "TEXT"
+      },
+      {
+        "name": "--",
+        "type": "open"
+      },
+      {
+        "name": "--",
+        "type": "single_elim"
+      },
+      {
+        "name": "--",
+        "type": "['MS'"
+      },
+      {
+        "name": "'XD']",
+        "type": "status"
+      },
+      {
+        "name": "--",
+        "type": "draft"
+      },
+      {
+        "name": "end_date",
+        "type": "DATE"
+      },
+      {
+        "name": "venue",
+        "type": "TEXT"
+      },
+      {
+        "name": "description",
+        "type": "TEXT"
+      },
+      {
+        "name": "eligibility",
+        "type": "TEXT"
+      },
+      {
+        "name": "form_url",
+        "type": "TEXT"
+      },
+      {
+        "name": "form_status",
+        "type": "TEXT"
+      },
+      {
+        "name": "--",
+        "type": "open"
+      },
+      {
+        "name": "archived_at",
+        "type": "TIMESTAMPTZ"
+      },
+      {
+        "name": "created_by",
+        "type": "UUID"
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMPTZ"
+      }
+    ],
+    "policies": [
+      {
+        "name": "tournaments_public_read",
+        "action": "SELECT",
+        "using": "status <> 'draft'",
+        "check": null
+      },
+      {
+        "name": "tournaments_admin_read",
+        "action": "SELECT",
+        "using": "EXISTS (SELECT 1 FROM players WHERE id = auth.uid(",
+        "check": null
+      },
+      {
+        "name": "tournaments_admin_write",
+        "action": "ALL",
+        "using": "EXISTS (SELECT 1 FROM players WHERE id = auth.uid(",
+        "check": null
+      },
+      {
+        "name": "tournaments_admin_write",
+        "action": "ALL",
+        "using": "EXISTS (SELECT 1 FROM players WHERE id = auth.uid(",
+        "check": null
+      }
+    ]
+  },
+  "tournament_participants": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID"
+      },
+      {
+        "name": "tournament_id",
+        "type": "UUID"
+      },
+      {
+        "name": "category",
+        "type": "TEXT"
+      },
+      {
+        "name": "player_id",
+        "type": "UUID"
+      },
+      {
+        "name": "--",
+        "type": "NULL"
+      },
+      {
+        "name": "--",
+        "type": "NULL"
+      },
+      {
+        "name": "--",
+        "type": "free-text"
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMPTZ"
+      }
+    ],
+    "policies": [
+      {
+        "name": "tp_public_read",
+        "action": "SELECT",
+        "using": "EXISTS (SELECT 1 FROM tournaments t WHERE t.id = tournament_id AND t.status <> 'draft'",
+        "check": null
+      },
+      {
+        "name": "tp_admin_all",
+        "action": "ALL",
+        "using": "EXISTS (SELECT 1 FROM players WHERE id = auth.uid(",
+        "check": null
+      },
+      {
+        "name": "tp_admin_all",
+        "action": "ALL",
+        "using": "EXISTS (SELECT 1 FROM players WHERE id = auth.uid(",
+        "check": null
+      }
+    ]
+  },
+  "tournament_round_rules": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID"
+      },
+      {
+        "name": "tournament_id",
+        "type": "UUID"
+      },
+      {
+        "name": "category",
+        "type": "TEXT"
+      },
+      {
+        "name": "--",
+        "type": "MS"
+      },
+      {
+        "name": "round_name",
+        "type": "TEXT"
+      },
+      {
+        "name": "points_to_win",
+        "type": "INT"
+      },
+      {
+        "name": "best_of_sets",
+        "type": "INT"
+      },
+      {
+        "name": "golden_point",
+        "type": "INT"
+      }
+    ],
+    "policies": [
+      {
+        "name": "trr_public_read",
+        "action": "SELECT",
+        "using": "EXISTS (SELECT 1 FROM tournaments t WHERE t.id = tournament_id AND t.status <> 'draft'",
+        "check": null
+      },
+      {
+        "name": "trr_admin_all",
+        "action": "ALL",
+        "using": "EXISTS (SELECT 1 FROM players WHERE id = auth.uid(",
+        "check": null
+      },
+      {
+        "name": "trr_admin_all",
+        "action": "ALL",
+        "using": "EXISTS (SELECT 1 FROM players WHERE id = auth.uid(",
+        "check": null
+      }
+    ]
+  },
+  "tournament_matches": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID"
+      },
+      {
+        "name": "tournament_id",
+        "type": "UUID"
+      },
+      {
+        "name": "category",
+        "type": "TEXT"
+      },
+      {
+        "name": "match_code",
+        "type": "TEXT"
+      },
+      {
+        "name": "--",
+        "type": "'MS_R1_01'"
+      },
+      {
+        "name": "'XD_F_01'",
+        "type": "round"
+      },
+      {
+        "name": "round_name",
+        "type": "TEXT"
+      },
+      {
+        "name": "match_number",
+        "type": "INT"
+      },
+      {
+        "name": "--",
+        "type": "Team"
+      },
+      {
+        "name": "player3_id",
+        "type": "UUID"
+      },
+      {
+        "name": "--",
+        "type": "doubles"
+      },
+      {
+        "name": "--",
+        "type": "display"
+      },
+      {
+        "name": "player4_id",
+        "type": "UUID"
+      },
+      {
+        "name": "--",
+        "type": "doubles"
+      },
+      {
+        "name": "--",
+        "type": "Admin"
+      },
+      {
+        "name": "scheduled_at",
+        "type": "TIMESTAMPTZ"
+      },
+      {
+        "name": "--",
+        "type": "Scoring"
+      },
+      {
+        "name": "best_of_sets",
+        "type": "INT"
+      },
+      {
+        "name": "golden_point",
+        "type": "INT"
+      },
+      {
+        "name": "--",
+        "type": "Result"
+      },
+      {
+        "name": "winner_id",
+        "type": "UUID"
+      },
+      {
+        "name": "--",
+        "type": "player1_id"
+      },
+      {
+        "name": "--",
+        "type": "\"21-15"
+      },
+      {
+        "name": "21-18",
+        "type": "sets_history"
+      },
+      {
+        "name": "--",
+        "type": "Status"
+      },
+      {
+        "name": "--",
+        "type": "scheduled"
+      },
+      {
+        "name": "--",
+        "type": "only"
+      },
+      {
+        "name": "--",
+        "type": "match_code"
+      },
+      {
+        "name": "--",
+        "type": "Bracket"
+      },
+      {
+        "name": "advances_to_position_loser",
+        "type": "SMALLINT"
+      },
+      {
+        "name": "--",
+        "type": "Audit"
+      },
+      {
+        "name": "scored_by",
+        "type": "UUID"
+      },
+      {
+        "name": "scored_at",
+        "type": "TIMESTAMPTZ"
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMPTZ"
+      }
+    ],
+    "policies": [
+      {
+        "name": "tm_public_read",
+        "action": "SELECT",
+        "using": "EXISTS (SELECT 1 FROM tournaments t WHERE t.id = tournament_id AND t.status <> 'draft'",
+        "check": null
+      },
+      {
+        "name": "tm_admin_read",
+        "action": "SELECT",
+        "using": "EXISTS (SELECT 1 FROM players WHERE id = auth.uid(",
+        "check": null
+      },
+      {
+        "name": "tm_admin_write",
+        "action": "ALL",
+        "using": "EXISTS (SELECT 1 FROM players WHERE id = auth.uid(",
+        "check": null
+      },
+      {
+        "name": "tm_admin_write",
+        "action": "ALL",
+        "using": "EXISTS (SELECT 1 FROM players WHERE id = auth.uid(",
+        "check": null
+      }
+    ]
+  },
+  "umpire_assignments": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID"
+      },
+      {
+        "name": "user_id",
+        "type": "UUID"
+      },
+      {
+        "name": "match_id",
+        "type": "UUID"
+      },
+      {
+        "name": "--",
+        "type": "Can"
+      },
+      {
+        "name": "start_time",
+        "type": "TIMESTAMP"
+      },
+      {
+        "name": "end_time",
+        "type": "TIMESTAMP"
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP"
+      },
+      {
+        "name": "created_by",
+        "type": "UUID"
+      }
+    ],
+    "policies": [
+      {
+        "name": "Anyone can view umpire assignments",
+        "action": "SELECT",
+        "using": "true",
+        "check": null
+      },
+      {
+        "name": "Admins can manage umpire assignments",
+        "action": "ALL",
+        "using": "auth.role(",
+        "check": null
+      }
+    ]
+  },
+  "match_motion_stats": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID"
+      },
+      {
+        "name": "match_id",
+        "type": "UUID"
+      },
+      {
+        "name": "match_source",
+        "type": "TEXT"
+      },
+      {
+        "name": "sample_count",
+        "type": "INT"
+      },
+      {
+        "name": "avg_magnitude",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "max_magnitude",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "idle_pct",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "walking_pct",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "running_pct",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "smash_sprint_pct",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "recorded_by",
+        "type": "UUID"
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMPTZ"
+      }
+    ],
+    "policies": [
+      {
+        "name": "mms_public_read",
+        "action": "SELECT",
+        "using": "true",
+        "check": null
+      },
+      {
+        "name": "mms_auth_insert",
+        "action": "INSERT",
+        "using": null,
+        "check": "auth.uid("
+      },
+      {
+        "name": "mms_auth_update_own",
+        "action": "UPDATE",
+        "using": "recorded_by = auth.uid(",
+        "check": null
+      }
+    ]
+  },
+  "match_sensor_analytics": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID"
+      },
+      {
+        "name": "match_id",
+        "type": "UUID"
+      },
+      {
+        "name": "match_source",
+        "type": "TEXT"
+      },
+      {
+        "name": "player_id",
+        "type": "UUID"
+      },
+      {
+        "name": "--",
+        "type": "Accelerometer"
+      },
+      {
+        "name": "accel_peak",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "accel_std",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "--",
+        "type": "Gyroscope"
+      },
+      {
+        "name": "gyro_peak",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "gyro_std",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "--",
+        "type": "Swing"
+      },
+      {
+        "name": "smash_count",
+        "type": "INT"
+      },
+      {
+        "name": "clear_count",
+        "type": "INT"
+      },
+      {
+        "name": "drive_count",
+        "type": "INT"
+      },
+      {
+        "name": "net_shot_count",
+        "type": "INT"
+      },
+      {
+        "name": "avg_swing_speed",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "max_swing_speed",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "--",
+        "type": "Movement"
+      },
+      {
+        "name": "forward_back_pct",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "vertical_pct",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "--",
+        "type": "Fatigue"
+      },
+      {
+        "name": "second_half_intensity",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "fatigue_index",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMPTZ"
+      }
+    ],
+    "policies": [
+      {
+        "name": "msa_public_read",
+        "action": "SELECT",
+        "using": "true",
+        "check": null
+      },
+      {
+        "name": "msa_auth_insert",
+        "action": "INSERT",
+        "using": null,
+        "check": "auth.uid("
+      },
+      {
+        "name": "msa_auth_update_own",
+        "action": "UPDATE",
+        "using": "player_id = auth.uid(",
+        "check": null
+      }
+    ]
+  },
+  "match_health_data": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID"
+      },
+      {
+        "name": "match_id",
+        "type": "UUID"
+      },
+      {
+        "name": "match_source",
+        "type": "TEXT"
+      },
+      {
+        "name": "player_id",
+        "type": "UUID"
+      },
+      {
+        "name": "--",
+        "type": "Heart"
+      },
+      {
+        "name": "hr_max",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "hr_min",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "hr_resting",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "hr_recovery",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "--",
+        "type": "HR"
+      },
+      {
+        "name": "--",
+        "type": "<60%"
+      },
+      {
+        "name": "--",
+        "type": "60-70%"
+      },
+      {
+        "name": "--",
+        "type": "70-80%"
+      },
+      {
+        "name": "--",
+        "type": "80-90%"
+      },
+      {
+        "name": "--",
+        "type": ">90%"
+      },
+      {
+        "name": "--",
+        "type": "[{time"
+      },
+      {
+        "name": "...]",
+        "type": "for"
+      },
+      {
+        "name": "calories_burned",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMPTZ"
+      }
+    ],
+    "policies": [
+      {
+        "name": "Anyone can read match health data",
+        "action": "SELECT",
+        "using": "true",
+        "check": null
+      },
+      {
+        "name": "Admins, umpires, and players can insert/update match health data",
+        "action": "ALL",
+        "using": "auth.uid(",
+        "check": null
+      }
+    ]
+  },
+  "venue_presence_events": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid"
+      },
+      {
+        "name": "player_id",
+        "type": "uuid"
+      },
+      {
+        "name": "event_type",
+        "type": "text"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp"
+      }
+    ],
+    "policies": [
+      {
+        "name": "Users can log their own presence events",
+        "action": "INSERT",
+        "using": null,
+        "check": "auth.uid("
+      },
+      {
+        "name": "Users can view their own presence events",
+        "action": "SELECT",
+        "using": "auth.uid(",
+        "check": null
+      }
+    ]
+  },
+  "player_sleep_data": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID"
+      },
+      {
+        "name": "player_id",
+        "type": "UUID"
+      },
+      {
+        "name": "sleep_date",
+        "type": "DATE"
+      },
+      {
+        "name": "total_minutes",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "deep_minutes",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "rem_minutes",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "light_minutes",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "awake_minutes",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMPTZ"
+      }
+    ],
+    "policies": [
+      {
+        "name": "Anyone can read player sleep data",
+        "action": "SELECT",
+        "using": "true",
+        "check": null
+      },
+      {
+        "name": "Players can insert/update their own sleep data",
+        "action": "ALL",
+        "using": "auth.uid(",
+        "check": null
+      }
+    ]
+  },
+  "match_rally_stats": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID"
+      },
+      {
+        "name": "match_id",
+        "type": "UUID"
+      },
+      {
+        "name": "match_source",
+        "type": "TEXT"
+      },
+      {
+        "name": "player_id",
+        "type": "UUID"
+      },
+      {
+        "name": "game_num",
+        "type": "INT"
+      },
+      {
+        "name": "rally_number",
+        "type": "INT"
+      },
+      {
+        "name": "scoring_team",
+        "type": "SMALLINT"
+      },
+      {
+        "name": "t1_score",
+        "type": "INT"
+      },
+      {
+        "name": "t2_score",
+        "type": "INT"
+      },
+      {
+        "name": "started_at",
+        "type": "TIMESTAMPTZ"
+      },
+      {
+        "name": "duration_ms",
+        "type": "INT"
+      },
+      {
+        "name": "shot_count",
+        "type": "INT"
+      },
+      {
+        "name": "smash_count",
+        "type": "INT"
+      },
+      {
+        "name": "avg_intensity",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "peak_intensity",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "direction_changes",
+        "type": "INT"
+      },
+      {
+        "name": "recorded_by",
+        "type": "UUID"
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMPTZ"
+      }
+    ],
+    "policies": [
+      {
+        "name": "mrs_public_read",
+        "action": "SELECT",
+        "using": "true",
+        "check": null
+      },
+      {
+        "name": "mrs_auth_insert",
+        "action": "INSERT",
+        "using": null,
+        "check": "auth.uid("
+      },
+      {
+        "name": "mrs_auth_update_own",
+        "action": "UPDATE",
+        "using": "recorded_by = auth.uid(",
+        "check": null
+      }
+    ]
+  },
+  "match_video_calibration": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID"
+      },
+      {
+        "name": "match_id",
+        "type": "UUID"
+      },
+      {
+        "name": "match_source",
+        "type": "TEXT"
+      },
+      {
+        "name": "court_width_m",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "court_length_m",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "src_points",
+        "type": "JSONB"
+      },
+      {
+        "name": "--",
+        "type": "[[px"
+      },
+      {
+        "name": "py]x4]",
+        "type": "tapped"
+      },
+      {
+        "name": "farLeft",
+        "type": "dst_points"
+      },
+      {
+        "name": "--",
+        "type": "matching"
+      },
+      {
+        "name": "same",
+        "type": "order"
+      },
+      {
+        "name": "--",
+        "type": "flattened"
+      },
+      {
+        "name": "h33",
+        "type": "normalized"
+      },
+      {
+        "name": "video_frame_height",
+        "type": "INT"
+      },
+      {
+        "name": "sync_anchor_rally_number",
+        "type": "INT"
+      },
+      {
+        "name": "sync_anchor_wallclock",
+        "type": "TIMESTAMPTZ"
+      },
+      {
+        "name": "--",
+        "type": "copied"
+      },
+      {
+        "name": "--",
+        "type": "video.currentTime*1000"
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMPTZ"
+      }
+    ],
+    "policies": [
+      {
+        "name": "mvc_public_read",
+        "action": "SELECT",
+        "using": "true",
+        "check": null
+      },
+      {
+        "name": "mvc_auth_insert",
+        "action": "INSERT",
+        "using": null,
+        "check": "auth.uid("
+      },
+      {
+        "name": "mvc_auth_update_own",
+        "action": "UPDATE",
+        "using": "created_by = auth.uid(",
+        "check": null
+      }
+    ]
+  },
+  "match_player_paths": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID"
+      },
+      {
+        "name": "match_id",
+        "type": "UUID"
+      },
+      {
+        "name": "match_source",
+        "type": "TEXT"
+      },
+      {
+        "name": "rally_number",
+        "type": "INT"
+      },
+      {
+        "name": "side",
+        "type": "TEXT"
+      },
+      {
+        "name": "player_label",
+        "type": "TEXT"
+      },
+      {
+        "name": "points",
+        "type": "JSONB"
+      },
+      {
+        "name": "--",
+        "type": "[{t_ms"
+      },
+      {
+        "name": "t_ms",
+        "type": "relative"
+      },
+      {
+        "name": "avg_speed_mps",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "peak_speed_mps",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "distance_covered_m",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "calibration_id",
+        "type": "UUID"
+      },
+      {
+        "name": "processed_by",
+        "type": "UUID"
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMPTZ"
+      }
+    ],
+    "policies": [
+      {
+        "name": "mpp_public_read",
+        "action": "SELECT",
+        "using": "true",
+        "check": null
+      },
+      {
+        "name": "mpp_auth_insert",
+        "action": "INSERT",
+        "using": null,
+        "check": "auth.uid("
+      },
+      {
+        "name": "mpp_auth_update_own",
+        "action": "UPDATE",
+        "using": "processed_by = auth.uid(",
+        "check": null
+      }
+    ]
+  },
+  "match_stroke_analytics": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID"
+      },
+      {
+        "name": "match_id",
+        "type": "UUID"
+      },
+      {
+        "name": "match_source",
+        "type": "TEXT"
+      },
+      {
+        "name": "rally_number",
+        "type": "INT"
+      },
+      {
+        "name": "stroke_type",
+        "type": "TEXT"
+      },
+      {
+        "name": "confidence",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "peak_acceleration",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "processed_by",
+        "type": "UUID"
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMPTZ"
+      }
+    ],
+    "policies": [
+      {
+        "name": "Public read access for match strokes",
+        "action": "SELECT",
+        "using": "true",
+        "check": null
+      },
+      {
+        "name": "Authenticated users can insert match strokes",
+        "action": "INSERT",
+        "using": null,
+        "check": "auth.uid("
+      },
+      {
+        "name": "Users can update strokes they processed",
+        "action": "UPDATE",
+        "using": "auth.uid(",
+        "check": null
+      }
+    ]
+  },
+  "club_courts": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID"
+      },
+      {
+        "name": "court_number",
+        "type": "INT"
+      },
+      {
+        "name": "status",
+        "type": "TEXT"
+      },
+      {
+        "name": "current_match_id",
+        "type": "UUID"
+      },
+      {
+        "name": "last_updated",
+        "type": "TIMESTAMPTZ"
+      }
+    ],
+    "policies": [
+      {
+        "name": "Anyone can read courts",
+        "action": "SELECT",
+        "using": "true",
+        "check": null
+      },
+      {
+        "name": "Auth users can update courts",
+        "action": "UPDATE",
+        "using": "auth.uid(",
+        "check": null
+      },
+      {
+        "name": "Auth users can insert courts",
+        "action": "INSERT",
+        "using": null,
+        "check": "auth.uid("
+      }
+    ]
+  }
+}

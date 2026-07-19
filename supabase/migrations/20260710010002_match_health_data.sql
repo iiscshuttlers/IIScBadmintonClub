@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS match_health_data (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   match_id        UUID NOT NULL,
   match_source    TEXT NOT NULL,
-  player_id       UUID REFERENCES players(id),
+  player_id       UUID NOT NULL REFERENCES players(id),
 
   -- Heart rate
   hr_avg          NUMERIC,
@@ -25,14 +25,41 @@ CREATE TABLE IF NOT EXISTS match_health_data (
   UNIQUE(match_id, match_source, player_id)
 );
 
+-- Backfill guard: this table may already exist from an earlier, looser migration.
+-- Purge any rows that predate the NOT NULL constraint and enforce it going forward.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'match_health_data' AND column_name = 'player_id' AND is_nullable = 'YES'
+  ) THEN
+    DELETE FROM match_health_data WHERE player_id IS NULL;
+    ALTER TABLE match_health_data ALTER COLUMN player_id SET NOT NULL;
+  END IF;
+END $$;
+
 -- Add enable_rls and policies for the new table
 ALTER TABLE match_health_data ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Anyone can read match health data" 
-  ON match_health_data FOR SELECT USING (true);
+-- Health data (heart rate, HRV, SpO2) is sensitive per-player data. Only the
+-- owning player (and admins) may read or write their own rows.
 
-CREATE POLICY "Admins, umpires, and players can insert/update match health data" 
-  ON match_health_data FOR ALL USING (auth.uid() IS NOT NULL);
+DROP POLICY IF EXISTS "Players can read own match health data" ON match_health_data;
+CREATE POLICY "Players can read own match health data" ON match_health_data FOR SELECT USING (player_id = auth.uid());
+
+DROP POLICY IF EXISTS "Players can insert own match health data" ON match_health_data;
+CREATE POLICY "Players can insert own match health data" ON match_health_data FOR INSERT WITH CHECK (player_id = auth.uid());
+
+DROP POLICY IF EXISTS "Players can update own match health data" ON match_health_data;
+CREATE POLICY "Players can update own match health data" ON match_health_data FOR UPDATE USING (player_id = auth.uid()) WITH CHECK (player_id = auth.uid());
+
+DROP POLICY IF EXISTS "Players can delete own match health data" ON match_health_data;
+CREATE POLICY "Players can delete own match health data" ON match_health_data FOR DELETE USING (player_id = auth.uid());
+
+DROP POLICY IF EXISTS "Admins can read all match health data" ON match_health_data;
+CREATE POLICY "Admins can read all match health data" ON match_health_data FOR SELECT USING (
+    EXISTS (SELECT 1 FROM players WHERE id = auth.uid() AND role IN ('admin','master_admin'))
+  );
 
 -- Add started_at and ended_at to relevant match tables if not already present.
 -- Assuming `matches` and `tournament_matches`

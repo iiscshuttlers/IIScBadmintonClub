@@ -581,11 +581,16 @@ export function useUmpireState({
     const saveMatchToProfile = async () => {
       if (match.status !== "finished") return;
 
+      // Real match window, derived from the first/last scored point — used to
+      // correlate Health Connect watch data instead of guessing a fixed window.
+      const matchStartTs = match.pointLog.length > 0 ? match.pointLog[0].ts : Date.now();
+      const matchEndTs = match.pointLog.length > 0 ? match.pointLog[match.pointLog.length - 1].ts : Date.now();
+
       // Tournament match path — submit to tournament_matches, no ELO impact
       if (tournamentMatch || match.isTournamentMatch) {
         const matchId = tournamentMatch?.id || match.dbId;
         if (!matchId) return toast.error("Match ID missing");
-        
+
         const winnerSide: 1 | 2 = match.winner === 1 ? 1 : 2;
         const scoreStr = match.setsHistory.join(", ");
         try {
@@ -597,6 +602,14 @@ export function useUmpireState({
             p_umpire_id: userId || null,
           });
           if (error) throw error;
+          // Best-effort: a failure here shouldn't block the match result itself from saving.
+          await supabase.rpc("set_tournament_match_times", {
+            p_match_id: matchId,
+            p_started_at: new Date(matchStartTs).toISOString(),
+            p_ended_at: new Date(matchEndTs).toISOString(),
+          }).then(({ error: timesError }) => {
+            if (timesError) console.error("Failed to persist match start/end times", timesError);
+          });
           await supabase.from("site_data").upsert({
             key: "match_alert",
             value: { message: `🏆 Tournament: ${match.t1.p1Name}${match.t1.p2Name ? ` & ${match.t1.p2Name}` : ""} vs ${match.t2.p1Name}${match.t2.p2Name ? ` & ${match.t2.p2Name}` : ""} — ${scoreStr}`, time: Date.now() },
@@ -628,8 +641,6 @@ export function useUmpireState({
         finalScoreStr += ` [${match.t1.p1Name}+${match.t1.p2Name ?? ""} vs ${match.t2.p1Name}+${match.t2.p2Name ?? ""}]`;
       }
       try {
-        const matchStartTs = match.pointLog.length > 0 ? match.pointLog[0].ts : Date.now();
-        const matchEndTs = match.pointLog.length > 0 ? match.pointLog[match.pointLog.length - 1].ts : Date.now();
         const durationMinutes = Math.max(1, Math.round((matchEndTs - matchStartTs) / 60000));
         const roundLabel = `${match.matchNumber || (match.isFriendly ? "Friendly" : "Tournament")} • ${durationMinutes}m`;
   
@@ -651,6 +662,8 @@ export function useUmpireState({
           match_round:        roundLabel,
           is_friendly:        match.isFriendly,
           sets_history:       match.setsHistory,
+          started_at:         new Date(matchStartTs).toISOString(),
+          ended_at:           new Date(matchEndTs).toISOString(),
         };
         
         let newMatchId = "";

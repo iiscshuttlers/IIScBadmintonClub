@@ -183,9 +183,16 @@ export default function PersonalProfilePage() {
           <h1 className="text-2xl font-bold text-foreground dark:text-foreground truncate">
             {profile?.full_name || "Your Profile"}
           </h1>
-          <p className="text-muted-foreground dark:text-muted-foreground truncate">
-            {profile?.email || ""}
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-muted-foreground dark:text-muted-foreground truncate">
+              {profile?.email || ""}
+            </p>
+            {profile?.email && (
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-800/50">
+                ACE Linked
+              </span>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-1">
             Member since{" "}
             {profile?.created_at

@@ -3,8 +3,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Trophy, Swords, TrendingUp, TrendingDown, Calendar, Flag, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { MatchAnalyticsSection } from "./MatchAnalyticsSection";
 
 import { createPortal } from "react-dom";
+import { PathTracingEntry } from "@/components/pathTracing/PathTracingEntry";
+import { PathTraceViewer } from "@/components/pathTracing/PathTraceViewer";
 
 interface MatchScorecardModalProps {
   match: any;
@@ -190,6 +193,27 @@ export function MatchScorecardModal({ match, isOpen, onClose, currentUser }: Mat
                     </div>
                   )}
                 </div>
+              )}
+
+              {/* Court Path Tracing (singles only, v1) */}
+              {!isDoubles && match.id && (
+                <PathTracingEntry
+                  matchId={match.id}
+                  matchSource={match.is_friendly === false ? "tournament" : "friendly"}
+                  userId={currentUser?.id ?? null}
+                />
+              )}
+              {!isDoubles && match.id && (
+                <PathTraceViewer
+                  matchId={match.id}
+                  matchSource={match.is_friendly === false ? "tournament" : "friendly"}
+                  hideIfEmpty={true}
+                />
+              )}
+
+              {/* AI Match Analysis (Per-match AI Insights & Stroke Data) */}
+              {match.id && (
+                <MatchAnalyticsSection matchId={match.id} />
               )}
 
               {/* Dispute Section */}

@@ -20,6 +20,7 @@ public class MainActivity extends BridgeActivity {
     registerPlugin(WidgetManagerPlugin.class);
     registerPlugin(GeofencePlugin.class);
     registerPlugin(HealthConnectPlugin.class);
+    registerPlugin(MediaPermissionsPlugin.class);
     super.onCreate(savedInstanceState);
     createNotificationChannels();
   }

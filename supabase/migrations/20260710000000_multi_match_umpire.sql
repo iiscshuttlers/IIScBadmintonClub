@@ -40,10 +40,12 @@ CREATE TABLE IF NOT EXISTS umpire_assignments (
 -- Policies for umpire_assignments
 ALTER TABLE umpire_assignments ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Anyone can view umpire assignments" ON umpire_assignments;
 CREATE POLICY "Anyone can view umpire assignments" ON umpire_assignments
   FOR SELECT USING (true);
 
 -- Assuming only authenticated admins can manage assignments via service role,
 -- or we can add a policy for admins
+DROP POLICY IF EXISTS "Admins can manage umpire assignments" ON umpire_assignments;
 CREATE POLICY "Admins can manage umpire assignments" ON umpire_assignments
   FOR ALL USING (auth.role() = 'authenticated'); -- Simple for now, UI restricts admin pages

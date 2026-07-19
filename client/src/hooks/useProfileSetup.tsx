@@ -274,7 +274,6 @@ export function useProfileSetup() {
     const payload = {
       full_name: fullName,
       nickname: nickname || null,
-      status: status,
       is_looking_to_play: status === 'looking',
       is_guest: isGuest,
       is_retired: isRetired,

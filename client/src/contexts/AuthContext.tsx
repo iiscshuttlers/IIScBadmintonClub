@@ -10,6 +10,7 @@ import { supabase } from "@/lib/supabase";
 import { isMasterAdminEmail } from "@/lib/admin";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useGeofenceAuthSync } from "@/hooks/useGeofenceAuthSync";
 import { toast } from "sonner";
 import { Badge } from "@capawesome/capacitor-badge";
 import { useMatchNotifications } from "@/hooks/useMatchNotifications";
@@ -56,13 +57,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {}
   };
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (userId: string, email?: string) => {
     try {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from("players")
         .select("*")
         .eq("id", userId)
         .maybeSingle();
+
+      if (!data && email) {
+        const res = await supabase
+          .from("players")
+          .select("*")
+          .eq("email", email)
+          .maybeSingle();
+        if (res.data) {
+          data = res.data;
+          error = res.error;
+        }
+      }
+
       if (!error && data) {
         setProfile(data as PlayerProfile);
       } else {
@@ -81,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (session?.user?.id) {
       setProfileLoading(true);
-      fetchProfile(session.user.id);
+      fetchProfile(session.user.id, session.user.email);
     } else {
       setProfile(null);
       setProfileLoading(false);
@@ -95,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshProfile = async () => {
     if (session?.user?.id) {
-      await fetchProfile(session.user.id);
+      await fetchProfile(session.user.id, session.user.email);
     }
   };
 
@@ -117,6 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     : (isAdmin || playerRole === 'umpire');
 
   usePushNotifications(profile?.id);
+  useGeofenceAuthSync(session);
 
   const updateRole = async (playerId: string, role: string) => {
     const { error } = await supabase

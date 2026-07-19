@@ -5,6 +5,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.PowerManager;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -20,6 +21,7 @@ public class PlayerMotionPlugin extends Plugin implements SensorEventListener {
     private Sensor gyroscopeSensor;
     private boolean isListening = false;
     private boolean hasGyro = false;
+    private PowerManager.WakeLock wakeLock;
     
     // Fallback variables
     private float lastAccelMagnitude = 0;
@@ -51,9 +53,10 @@ public class PlayerMotionPlugin extends Plugin implements SensorEventListener {
             if (hasGyro) {
                 sensorManager.registerListener(this, gyroscopeSensor, SensorManager.SENSOR_DELAY_GAME);
             }
+            acquireWakeLock();
             isListening = true;
         }
-        
+
         JSObject ret = new JSObject();
         ret.put("hasGyro", hasGyro);
         call.resolve(ret);
@@ -63,9 +66,35 @@ public class PlayerMotionPlugin extends Plugin implements SensorEventListener {
     public void stopTracking(PluginCall call) {
         if (isListening) {
             sensorManager.unregisterListener(this);
+            releaseWakeLock();
             isListening = false;
         }
         call.resolve();
+    }
+
+    private void acquireWakeLock() {
+        if (wakeLock != null && wakeLock.isHeld()) return;
+        PowerManager powerManager = (PowerManager) getContext().getSystemService(Context.POWER_SERVICE);
+        if (powerManager == null) return;
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "IISc:PlayerMotionWakeLock");
+        wakeLock.acquire();
+    }
+
+    private void releaseWakeLock() {
+        if (wakeLock != null && wakeLock.isHeld()) {
+            wakeLock.release();
+        }
+        wakeLock = null;
+    }
+
+    @Override
+    protected void handleOnDestroy() {
+        if (isListening) {
+            sensorManager.unregisterListener(this);
+            isListening = false;
+        }
+        releaseWakeLock();
+        super.handleOnDestroy();
     }
 
     @Override
@@ -129,6 +158,7 @@ public class PlayerMotionPlugin extends Plugin implements SensorEventListener {
         }
 
         JSObject ret = new JSObject();
+        ret.put("timestampMs", System.currentTimeMillis());
         ret.put("x", lastAccelX);
         ret.put("y", lastAccelY);
         ret.put("z", lastAccelZ);
