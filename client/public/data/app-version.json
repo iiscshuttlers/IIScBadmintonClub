@@ -1,6 +1,6 @@
 {
-  "versionCode": 203,
-  "versionName": "1.24",
+  "versionCode": 204,
+  "versionName": "1.25",
   "downloadUrl": "https://play.google.com/store/apps/details?id=com.iiscshuttlers.app",
-  "changelog": "- Update from local"
+  "changelog": "Fix push notifications and match umpiring layout"
 }
