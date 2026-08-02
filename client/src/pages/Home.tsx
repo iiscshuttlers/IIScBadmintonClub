@@ -247,8 +247,8 @@ export default function Home() {
                 50% { transform: translateY(-22px) scale(1.4); opacity: 1; }
               }
               @keyframes pulse-glow {
-                0%, 100% { box-shadow: 0 0 20px rgba(52, 211, 153, 0.15), 0 0 60px rgba(52, 211, 153, 0.05); }
-                50% { box-shadow: 0 0 30px rgba(52, 211, 153, 0.3), 0 0 80px rgba(52, 211, 153, 0.1); }
+                0%, 100% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.15), 0 0 60px rgba(139, 92, 246, 0.05); }
+                50% { box-shadow: 0 0 30px rgba(139, 92, 246, 0.3), 0 0 80px rgba(139, 92, 246, 0.1); }
               }
               @keyframes progress-shine {
                 0% { left: -40%; }
@@ -260,7 +260,7 @@ export default function Home() {
               }
               .beta-card { animation: pulse-glow 4s ease-in-out infinite; }
               .shimmer-border-wrap {
-                background: linear-gradient(90deg, #10b981, #14b8a6, #06b6d4, #10b981, #14b8a6);
+                background: linear-gradient(90deg, #8b5cf6, #a78bfa, #f59e0b, #8b5cf6, #a78bfa);
                 background-size: 300% 100%;
                 animation: shimmer-border 4s ease-in-out infinite;
                 padding: 1.5px;
@@ -284,29 +284,29 @@ export default function Home() {
                 >
                   {/* Animated shimmer border wrapper */}
                   <div className="shimmer-border-wrap">
-                    <div className="beta-card bg-gradient-to-br from-slate-900 via-slate-900/98 to-emerald-950/40 rounded-2xl p-6 sm:p-8 relative overflow-hidden">
+                    <div className="beta-card bg-gradient-to-br from-slate-900 via-slate-900/98 to-violet-950/40 rounded-2xl p-6 sm:p-8 relative overflow-hidden">
 
                       {/* Floating sparkle particles */}
-                      <div className="sparkle-1 absolute top-4 right-8 text-emerald-400/60 pointer-events-none"><Sparkles className="w-3 h-3" /></div>
-                      <div className="sparkle-2 absolute top-12 right-24 text-teal-400/50 pointer-events-none"><Sparkles className="w-4 h-4" /></div>
-                      <div className="sparkle-3 absolute bottom-8 right-16 text-cyan-400/40 pointer-events-none"><Sparkles className="w-3.5 h-3.5" /></div>
-                      <div className="sparkle-4 absolute top-6 left-[30%] text-emerald-300/40 pointer-events-none"><Sparkles className="w-2.5 h-2.5" /></div>
-                      <div className="sparkle-5 absolute bottom-12 left-[20%] text-teal-300/30 pointer-events-none"><Sparkles className="w-3 h-3" /></div>
-                      <div className="sparkle-6 absolute top-16 right-[40%] text-emerald-400/35 pointer-events-none"><Sparkles className="w-2 h-2" /></div>
+                      <div className="sparkle-1 absolute top-4 right-8 text-violet-400/60 pointer-events-none"><Sparkles className="w-3 h-3" /></div>
+                      <div className="sparkle-2 absolute top-12 right-24 text-amber-400/50 pointer-events-none"><Sparkles className="w-4 h-4" /></div>
+                      <div className="sparkle-3 absolute bottom-8 right-16 text-purple-400/40 pointer-events-none"><Sparkles className="w-3.5 h-3.5" /></div>
+                      <div className="sparkle-4 absolute top-6 left-[30%] text-amber-300/40 pointer-events-none"><Sparkles className="w-2.5 h-2.5" /></div>
+                      <div className="sparkle-5 absolute bottom-12 left-[20%] text-violet-300/30 pointer-events-none"><Sparkles className="w-3 h-3" /></div>
+                      <div className="sparkle-6 absolute top-16 right-[40%] text-amber-400/35 pointer-events-none"><Sparkles className="w-2 h-2" /></div>
 
                       {/* Background glow orbs */}
-                      <div className="absolute -top-20 -right-20 w-60 h-60 bg-emerald-500/8 rounded-full blur-3xl pointer-events-none" />
-                      <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-teal-500/6 rounded-full blur-3xl pointer-events-none" />
+                      <div className="absolute -top-20 -right-20 w-60 h-60 bg-violet-500/8 rounded-full blur-3xl pointer-events-none" />
+                      <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-amber-500/6 rounded-full blur-3xl pointer-events-none" />
 
                       <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 sm:gap-7 relative z-10">
                         {/* Android icon with glow ring */}
                         <div className="relative flex-shrink-0">
-                          <div className="absolute inset-0 bg-emerald-400/20 rounded-2xl blur-xl scale-150" />
-                          <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-emerald-500/30 to-teal-500/20 flex items-center justify-center border border-emerald-400/40 shadow-lg shadow-emerald-500/10">
-                            <svg className="w-8 h-8 sm:w-9 sm:h-9 text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]" fill="currentColor" viewBox="0 0 24 24"><path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993.0004.5511-.4482.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592c.1158-.201.0464-.4581-.1551-.5739-.201-.1158-.4581-.046-.5739.1551l-2.022 3.501c-1.4284-.652-3.0305-1.016-4.7278-1.016-1.6976 0-3.2997.364-4.7278 1.016l-2.022-3.501c-.1158-.201-.3729-.2709-.5739-.1551-.2015.1158-.2709.3729-.1551.5739l1.9973 3.4592C2.6974 11.2382.2592 14.8876.103 19.349h23.794c-.1562-4.4614-2.5944-8.1108-6.9695-10.0276"/></svg>
+                          <div className="absolute inset-0 bg-violet-400/20 rounded-2xl blur-xl scale-150" />
+                          <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-violet-500/30 to-purple-500/20 flex items-center justify-center border border-violet-400/40 shadow-lg shadow-violet-500/10">
+                            <svg className="w-8 h-8 sm:w-9 sm:h-9 text-violet-400 drop-shadow-[0_0_8px_rgba(139,92,246,0.5)]" fill="currentColor" viewBox="0 0 24 24"><path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993.0004.5511-.4482.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592c.1158-.201.0464-.4581-.1551-.5739-.201-.1158-.4581-.046-.5739.1551l-2.022 3.501c-1.4284-.652-3.0305-1.016-4.7278-1.016-1.6976 0-3.2997.364-4.7278 1.016l-2.022-3.501c-.1158-.201-.3729-.2709-.5739-.1551-.2015.1158-.2709.3729-.1551.5739l1.9973 3.4592C2.6974 11.2382.2592 14.8876.103 19.349h23.794c-.1562-4.4614-2.5944-8.1108-6.9695-10.0276"/></svg>
                           </div>
                           {/* BETA badge */}
-                          <div className="beta-badge absolute -top-2 -right-2 bg-gradient-to-r from-emerald-400 to-teal-400 text-slate-900 text-[9px] font-black px-1.5 py-0.5 rounded-md shadow-lg shadow-emerald-500/30 uppercase tracking-widest">
+                          <div className="beta-badge absolute -top-2 -right-2 bg-gradient-to-r from-amber-400 to-orange-400 text-slate-900 text-[9px] font-black px-1.5 py-0.5 rounded-md shadow-lg shadow-amber-500/30 uppercase tracking-widest">
                             Beta
                           </div>
                         </div>
@@ -315,13 +315,13 @@ export default function Home() {
                         <div className="space-y-4 flex-1 text-center sm:text-left">
                           <div>
                             <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
-                              <h3 className="font-black text-white text-xl sm:text-2xl leading-tight bg-gradient-to-r from-white via-emerald-100 to-emerald-300 bg-clip-text text-transparent">
+                              <h3 className="font-black text-white text-xl sm:text-2xl leading-tight bg-gradient-to-r from-white via-violet-200 to-amber-300 bg-clip-text text-transparent">
                                 Help test our new Android App!
                               </h3>
-                              <Sparkles className="w-5 h-5 text-emerald-400 sparkle-1 hidden sm:block" />
+                              <Sparkles className="w-5 h-5 text-amber-400 sparkle-1 hidden sm:block" />
                             </div>
                             <p className="text-sm font-medium text-slate-300 leading-relaxed mt-2 max-w-2xl">
-                              We are getting ready to launch our brand new app on the Google Play Store! We need <span className="text-emerald-400 font-bold">20 active testers</span> for the next <span className="text-emerald-400 font-bold">14 days</span> before Google allows us to publish it to the public. If you have an Android phone, please help us out!
+                              We are getting ready to launch our brand new app on the Google Play Store! We need <span className="text-amber-400 font-bold">20 active testers</span> for the next <span className="text-amber-400 font-bold">14 days</span> before Google allows us to publish it to the public. If you have an Android phone, please help us out!
                             </p>
                           </div>
 
@@ -329,10 +329,10 @@ export default function Home() {
                           <div className="max-w-md mx-auto sm:mx-0">
                             <div className="flex items-center justify-between text-xs font-bold mb-1.5">
                               <span className="text-slate-400 uppercase tracking-wider">Testers needed</span>
-                              <span className="text-emerald-400 tabular-nums">Goal: 20</span>
+                              <span className="text-amber-400 tabular-nums">Goal: 20</span>
                             </div>
                             <div className="h-2.5 bg-slate-800/80 rounded-full overflow-hidden border border-slate-700/50 relative">
-                              <div className="h-full bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-400 rounded-full relative overflow-hidden" style={{ width: "15%" }}>
+                              <div className="h-full bg-gradient-to-r from-violet-500 via-purple-400 to-amber-400 rounded-full relative overflow-hidden" style={{ width: "15%" }}>
                                 {/* Shine sweep on progress bar */}
                                 <div className="absolute inset-y-0 w-[40%] bg-gradient-to-r from-transparent via-white/30 to-transparent" style={{ animation: "progress-shine 2.5s ease-in-out infinite" }} />
                               </div>
@@ -343,24 +343,24 @@ export default function Home() {
                           {/* Two-step CTA buttons */}
                           <div className="flex flex-col sm:flex-row gap-3 pt-1">
                             <a href="https://groups.google.com/g/iisc-badminton-app-testers/about" target="_blank" rel="noreferrer"
-                              className="group/btn text-sm font-bold text-emerald-400 bg-emerald-400/10 hover:bg-emerald-400/20 px-5 py-3.5 rounded-xl transition-all inline-flex items-center justify-center gap-3 hover:-translate-y-1 hover:shadow-lg hover:shadow-emerald-500/20 border border-emerald-500/25">
-                              <span className="bg-emerald-400 text-slate-900 rounded-full w-7 h-7 flex items-center justify-center text-sm font-black shadow-md">1</span>
+                              className="group/btn text-sm font-bold text-violet-300 bg-violet-500/15 hover:bg-violet-500/25 px-5 py-3.5 rounded-xl transition-all inline-flex items-center justify-center gap-3 hover:-translate-y-1 hover:shadow-lg hover:shadow-violet-500/20 border border-violet-500/25">
+                              <span className="bg-violet-400 text-slate-900 rounded-full w-7 h-7 flex items-center justify-center text-sm font-black shadow-md">1</span>
                               <span>Join Testing Group</span>
                               <ArrowRight className="w-4 h-4 opacity-0 -ml-2 group-hover/btn:opacity-100 group-hover/btn:ml-0 transition-all" />
                             </a>
                             <a href="https://play.google.com/apps/testing/shuttlers.iisc.com" target="_blank" rel="noreferrer"
-                              className="group/btn text-sm font-bold text-white bg-gradient-to-r from-slate-800 to-slate-800 hover:from-slate-700 hover:to-slate-700 border border-slate-600/50 px-5 py-3.5 rounded-xl transition-all inline-flex items-center justify-center gap-3 hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-500/10">
-                              <span className="bg-slate-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm font-black shadow-md">2</span>
+                              className="group/btn text-sm font-bold text-amber-300 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/25 px-5 py-3.5 rounded-xl transition-all inline-flex items-center justify-center gap-3 hover:-translate-y-1 hover:shadow-lg hover:shadow-amber-500/20">
+                              <span className="bg-amber-400 text-slate-900 rounded-full w-7 h-7 flex items-center justify-center text-sm font-black shadow-md">2</span>
                               <span>Download on Play Store</span>
                               <ArrowRight className="w-4 h-4 opacity-0 -ml-2 group-hover/btn:opacity-100 group-hover/btn:ml-0 transition-all" />
                             </a>
                           </div>
 
                           {/* Important note */}
-                          <div className="flex items-start gap-2 bg-emerald-500/5 border border-emerald-500/15 rounded-xl px-4 py-3 max-w-2xl mx-auto sm:mx-0">
-                            <Zap className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
-                            <p className="text-xs font-medium text-emerald-300/80 leading-relaxed">
-                              <span className="font-bold text-emerald-400">Important:</span> Please open the app every few days — check the Pulse feed, view tournaments, or just log in — so Google counts you as an active tester!
+                          <div className="flex items-start gap-2 bg-amber-500/5 border border-amber-500/15 rounded-xl px-4 py-3 max-w-2xl mx-auto sm:mx-0">
+                            <Zap className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                            <p className="text-xs font-medium text-amber-200/70 leading-relaxed">
+                              <span className="font-bold text-amber-400">Important:</span> Please open the app every few days — check the Pulse feed, view tournaments, or just log in — so Google counts you as an active tester!
                             </p>
                           </div>
                         </div>
