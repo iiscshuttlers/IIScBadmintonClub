@@ -222,6 +222,9 @@ export default function Home() {
             <div className="w-5 h-8 rounded-full border-2 border-white/20 flex items-start justify-center pt-1.5">
               <div className="w-1 h-2 bg-white/40 rounded-full" />
             </div>
+          </div>
+        </section>
+        
         {/* Android App Beta Callout */}
         {!Capacitor.isNativePlatform() && (
           <div className="container mx-auto px-4 pb-8">
