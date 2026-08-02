@@ -199,8 +199,11 @@ export default function Home() {
                       <div className="space-y-2.5 flex-1">
                         <div>
                           <h3 className="font-black text-white text-base leading-tight">Help test our new Android App!</h3>
-                          <p className="text-xs font-medium text-slate-300 leading-relaxed mt-1">
-                            We need 20 testers before we can launch on the Play Store. Follow these two steps:
+                          <p className="text-xs font-medium text-slate-300 leading-relaxed mt-1.5">
+                            We need 20 testers to actively use the app for the next 14 days before Google allows us to publish it to the public. If you have an Android phone, please help us out by following these two steps:
+                          </p>
+                          <p className="text-[11px] font-semibold text-emerald-400/90 leading-relaxed mt-1.5">
+                            *Important: Please remember to open the app every few days (to check the Pulse feed, or view tournaments) so Google knows you are actively testing it!
                           </p>
                         </div>
                         <div className="flex flex-col gap-2 pt-1">
