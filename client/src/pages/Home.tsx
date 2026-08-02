@@ -188,6 +188,34 @@ export default function Home() {
                   </Link>
                 </div>
 
+                {/* Android App Beta Callout */}
+                {!Capacitor.isNativePlatform() && (
+                  <div className="mt-8 bg-slate-900/80 border border-emerald-500/30 p-5 rounded-2xl backdrop-blur-md max-w-lg shadow-2xl relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div className="flex items-start gap-4 relative z-10">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex flex-shrink-0 items-center justify-center border border-emerald-500/30 shadow-inner">
+                         <svg className="w-6 h-6 text-emerald-400" fill="currentColor" viewBox="0 0 24 24"><path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993.0004.5511-.4482.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592c.1158-.201.0464-.4581-.1551-.5739-.201-.1158-.4581-.046-.5739.1551l-2.022 3.501c-1.4284-.652-3.0305-1.016-4.7278-1.016-1.6976 0-3.2997.364-4.7278 1.016l-2.022-3.501c-.1158-.201-.3729-.2709-.5739-.1551-.2015.1158-.2709.3729-.1551.5739l1.9973 3.4592C2.6974 11.2382.2592 14.8876.103 19.349h23.794c-.1562-4.4614-2.5944-8.1108-6.9695-10.0276"/></svg>
+                      </div>
+                      <div className="space-y-2.5 flex-1">
+                        <div>
+                          <h3 className="font-black text-white text-base leading-tight">Help test our new Android App!</h3>
+                          <p className="text-xs font-medium text-slate-300 leading-relaxed mt-1">
+                            We need 20 testers before we can launch on the Play Store. Follow these two steps:
+                          </p>
+                        </div>
+                        <div className="flex flex-col gap-2 pt-1">
+                          <a href="https://groups.google.com/g/iisc-badminton-app-testers" target="_blank" rel="noreferrer" className="text-xs font-bold text-emerald-400 bg-emerald-400/10 hover:bg-emerald-400/20 px-3 py-2.5 rounded-xl transition-all inline-flex items-center gap-2.5 hover:translate-x-1">
+                            <span className="bg-emerald-400 text-slate-900 rounded-full w-5 h-5 flex items-center justify-center text-[10px] shadow-sm">1</span> Join Testing Group
+                          </a>
+                          <a href="https://play.google.com/apps/testing/shuttlers.iisc.com" target="_blank" rel="noreferrer" className="text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/10 px-3 py-2.5 rounded-xl transition-all inline-flex items-center gap-2.5 hover:translate-x-1">
+                            <span className="bg-slate-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] shadow-sm">2</span> Download on Play Store
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Inline mini-stats */}
                 <div className="flex items-center justify-center gap-4 pt-1 border-t border-white/10 max-w-lg">
                   {[
