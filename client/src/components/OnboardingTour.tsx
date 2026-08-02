@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronRight, ChevronLeft, Trophy, Swords, Flame, Star, CheckCircle } from "lucide-react";
+import { X, ChevronRight, ChevronLeft, Trophy, Swords, Flame, Star, CheckCircle, Smartphone } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
 
 const STORAGE_KEY = "onboarding_completed_v1";
 
@@ -96,6 +97,32 @@ const STEPS = [
   },
 ];
 
+const getSteps = () => {
+  const steps = [...STEPS];
+  // Insert the Android Beta Testing slide right after the Welcome slide if they are on the web
+  if (!Capacitor.isNativePlatform()) {
+    steps.splice(1, 0, {
+      emoji: null,
+      title: "Help test our Android App!",
+      body: "We are launching our new app on the Play Store, but we need 20 active testers for 14 days before we can publish it. If you have an Android phone, you can help us out!",
+      cta: null,
+      accent: "from-violet-500 to-amber-500",
+      icon: <Smartphone className="w-12 h-12 text-amber-400 opacity-90" />,
+      detail: (
+        <div className="flex flex-col gap-2 mt-4 text-xs font-semibold">
+          <a href="https://groups.google.com/g/iisc-badminton-app-testers/about" target="_blank" rel="noreferrer" className="bg-violet-500/20 text-violet-300 py-2 px-3 rounded-lg flex items-center justify-center gap-2 border border-violet-500/30 hover:bg-violet-500/30 transition-colors">
+            <span className="w-5 h-5 rounded-full bg-violet-500 flex items-center justify-center text-slate-900 font-black">1</span> Join Testing Group
+          </a>
+          <a href="https://play.google.com/apps/testing/shuttlers.iisc.com" target="_blank" rel="noreferrer" className="bg-slate-800 text-white py-2 px-3 rounded-lg flex items-center justify-center gap-2 border border-slate-700 hover:bg-slate-700 transition-colors">
+            <span className="w-5 h-5 rounded-full bg-slate-600 flex items-center justify-center text-white font-black">2</span> Download on Play Store
+          </a>
+        </div>
+      ),
+    });
+  }
+  return steps;
+};
+
 interface OnboardingTourProps {
   onComplete?: () => void;
 }
@@ -115,8 +142,10 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
     onComplete?.();
   };
 
+  const steps = getSteps();
+
   const next = () => {
-    if (step < STEPS.length - 1) setStep(step + 1);
+    if (step < steps.length - 1) setStep(step + 1);
     else dismiss();
   };
 
@@ -126,7 +155,7 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
 
   if (!visible) return null;
 
-  const s = STEPS[step];
+  const s = steps[step];
 
   return (
     <AnimatePresence>
@@ -172,7 +201,7 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
 
           {/* Step dots */}
           <div className="flex justify-center gap-1.5 pb-2">
-            {STEPS.map((_, i) => (
+            {steps.map((_, i) => (
               <div
                 key={i}
                 className={`h-1.5 rounded-full transition-all duration-300 ${
