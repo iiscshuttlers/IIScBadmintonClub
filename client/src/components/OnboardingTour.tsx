@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronRight, ChevronLeft, Trophy, Swords, Flame, Star, CheckCircle, Smartphone } from "lucide-react";
+import { X, ChevronRight, ChevronLeft, Trophy, Activity, Flame, CheckCircle, Smartphone } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 
 const STORAGE_KEY = "onboarding_completed_v1";
@@ -16,72 +16,32 @@ const STEPS = [
   },
   {
     emoji: null,
-    title: "Your ELO Rating",
-    body: "Every player starts at 1200 ELO. Win matches to gain points — especially against higher-ranked players. Lose and you'll drop, but never give up!",
+    title: "The Pulse",
+    body: "Stay up to date with the latest from the club! View the social feed, check out live updates, and see what others are up to.",
     cta: null,
     accent: "from-blue-500 to-indigo-500",
-    icon: <Trophy className="w-12 h-12 text-blue-400 opacity-80" />,
-    detail: (
-      <div className="bg-slate-800/60 rounded-xl p-3 text-xs font-mono text-slate-300 text-center mt-3">
-        Expected = 1 / (1 + 10^((Opp ELO − Your ELO) / 400))
-      </div>
-    ),
+    icon: <Activity className="w-12 h-12 text-blue-400 opacity-80" />,
   },
   {
     emoji: null,
-    title: "Climb the Tiers",
-    body: "As your ELO grows, you'll earn tier badges — from Bronze all the way to Grandmaster. Check your profile to see how close you are to the next tier!",
+    title: "Tournaments & Live Scores",
+    body: "Track ongoing tournaments in real-time. View live scores from active matches and follow tournament brackets directly from your phone.",
     cta: null,
     accent: "from-amber-500 to-orange-500",
-    icon: <Star className="w-12 h-12 text-amber-400 opacity-80" />,
-    detail: (
-      <div className="grid grid-cols-3 gap-2 mt-3 text-xs text-center">
-        {[
-          { name: "Bronze", elo: "0+", color: "text-orange-400" },
-          { name: "Silver", elo: "1000+", color: "text-slate-300" },
-          { name: "Gold", elo: "1200+", color: "text-yellow-400" },
-          { name: "Platinum", elo: "1400+", color: "text-cyan-300" },
-          { name: "Diamond", elo: "1600+", color: "text-blue-400" },
-          { name: "Grandmaster", elo: "1800+", color: "text-rose-400" },
-        ].map((t) => (
-          <div key={t.name} className={`font-bold ${t.color}`}>
-            <div>{t.name}</div>
-            <div className="text-[10px] text-muted-foreground font-normal">{t.elo}</div>
-          </div>
-        ))}
-      </div>
-    ),
+    icon: <Trophy className="w-12 h-12 text-amber-400 opacity-80" />,
   },
   {
     emoji: null,
-    title: "Log a Match",
-    body: "After playing, one player submits the result. The opponent then confirms it — only then does ELO update. This two-step system prevents fraud.",
+    title: "The Hub",
+    body: "The central place for all club utilities. Did you lose a racket? Want to buy or sell gear? The Hub's Lost & Found and Exchange got you covered.",
     cta: null,
     accent: "from-violet-500 to-purple-500",
-    icon: <Swords className="w-12 h-12 text-violet-400 opacity-80" />,
-    detail: (
-      <div className="flex items-center justify-center gap-3 mt-3 text-xs text-muted-foreground">
-        <div className="text-center">
-          <div className="w-8 h-8 rounded-full bg-violet-500/20 text-violet-300 flex items-center justify-center font-black mx-auto mb-1">1</div>
-          Submit
-        </div>
-        <ChevronRight className="w-4 h-4 shrink-0" />
-        <div className="text-center">
-          <div className="w-8 h-8 rounded-full bg-violet-500/20 text-violet-300 flex items-center justify-center font-black mx-auto mb-1">2</div>
-          Opponent Confirms
-        </div>
-        <ChevronRight className="w-4 h-4 shrink-0" />
-        <div className="text-center">
-          <div className="w-8 h-8 rounded-full bg-primary/20 text-primary/70 flex items-center justify-center font-black mx-auto mb-1">✓</div>
-          ELO Updates
-        </div>
-      </div>
-    ),
+    icon: <CheckCircle className="w-12 h-12 text-violet-400 opacity-80" />,
   },
   {
     emoji: null,
-    title: "Ironman Endurance",
-    body: "The Ironman leaderboard ranks you by total matches played — regardless of wins. Play the most matches in a month and earn the exclusive Ironman badge!",
+    title: "Legacy & Hall of Fame",
+    body: "View past champions, tournament archives, and our club's history. See who cemented their name in the IISc Badminton Hall of Fame!",
     cta: null,
     accent: "from-rose-500 to-orange-500",
     icon: <Flame className="w-12 h-12 text-rose-400 opacity-80" />,
@@ -89,9 +49,9 @@ const STEPS = [
   {
     emoji: "🎉",
     title: "You're all set!",
-    body: "Head to the Leaderboard to see where you stand, log your first match, and start climbing the ranks. Good luck on court!",
-    cta: "Go to Leaderboard",
-    ctaHref: "/",
+    body: "Head to the Pulse to see what's happening right now, or explore Tournaments. See you on the courts!",
+    cta: "Go to Pulse",
+    ctaHref: "/pulse",
     accent: "from-primary to-cyan-500",
     icon: <CheckCircle className="w-12 h-12 text-primary opacity-80" />,
   },
