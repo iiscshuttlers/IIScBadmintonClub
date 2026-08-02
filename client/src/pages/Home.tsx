@@ -204,7 +204,7 @@ export default function Home() {
                           </p>
                         </div>
                         <div className="flex flex-col gap-2 pt-1">
-                          <a href="https://groups.google.com/g/iisc-badminton-app-testers" target="_blank" rel="noreferrer" className="text-xs font-bold text-emerald-400 bg-emerald-400/10 hover:bg-emerald-400/20 px-3 py-2.5 rounded-xl transition-all inline-flex items-center gap-2.5 hover:translate-x-1">
+                          <a href="https://groups.google.com/g/iisc-badminton-app-testers/about" target="_blank" rel="noreferrer" className="text-xs font-bold text-emerald-400 bg-emerald-400/10 hover:bg-emerald-400/20 px-3 py-2.5 rounded-xl transition-all inline-flex items-center gap-2.5 hover:translate-x-1">
                             <span className="bg-emerald-400 text-slate-900 rounded-full w-5 h-5 flex items-center justify-center text-[10px] shadow-sm">1</span> Join Testing Group
                           </a>
                           <a href="https://play.google.com/apps/testing/shuttlers.iisc.com" target="_blank" rel="noreferrer" className="text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/10 px-3 py-2.5 rounded-xl transition-all inline-flex items-center gap-2.5 hover:translate-x-1">
