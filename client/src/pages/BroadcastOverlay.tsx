@@ -92,7 +92,7 @@ export default function BroadcastOverlay() {
         
         {/* Tournament / Event Bug */}
         <div className="bg-slate-900 text-white flex flex-col items-center justify-center px-6 py-2 border-r border-slate-700">
-          <div className="text-xl font-black tracking-tighter text-blue-500">IISC</div>
+          <div className="text-xl font-black tracking-tighter text-blue-500">IISc</div>
           <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Badminton</div>
         </div>
 

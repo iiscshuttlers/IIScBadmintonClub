@@ -144,7 +144,7 @@ export function WrappedCard({ playerName, avatarUrl, elo, matches, playerId, yea
           )}
 
           <div className="mt-4 text-center">
-            <p className="text-[10px] text-foreground/30 font-bold uppercase tracking-wider">IISc Badminton Club</p>
+            <p className="text-[10px] text-foreground/30 font-bold uppercase tracking-wider"><span className="normal-case">IISc</span> Badminton Club</p>
           </div>
         </div>
       </div>

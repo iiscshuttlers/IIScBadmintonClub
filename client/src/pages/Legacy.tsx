@@ -108,19 +108,50 @@ export default function Legacy() {
   );
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [likedPhotos, setLikedPhotos] = useState<Set<string>>(new Set());
+  const [galleryLikes, setGalleryLikes] = useState<Record<string, string[]>>({});
   const [subscribedTags, setSubscribedTags] = useState<Set<string>>(() => {
     try { return new Set(JSON.parse(localStorage.getItem("gallery_subscriptions") || "[]")); }
     catch { return new Set(); }
   });
 
-  const handleLike = (e: React.MouseEvent, path: string) => {
+  const handleLike = async (e: React.MouseEvent, path: string) => {
     e.stopPropagation();
+    if (!session?.user) {
+      toast.error("You must be signed in to like photos.");
+      return;
+    }
+    const userId = session.user.id;
+    const isLikedLocally = likedPhotos.has(path) || (galleryLikes[path] || []).includes(userId);
+
+    // Optimistic UI update
     setLikedPhotos(prev => {
       const next = new Set(prev);
-      if (next.has(path)) next.delete(path);
+      if (isLikedLocally) next.delete(path);
       else next.add(path);
       return next;
     });
+
+    setGalleryLikes(prev => {
+      const current = prev[path] || [];
+      return {
+        ...prev,
+        [path]: isLikedLocally ? current.filter(id => id !== userId) : [...current, userId]
+      };
+    });
+
+    try {
+      const { data } = await supabase.from("site_data").select("value").eq("key", "gallery_likes").maybeSingle();
+      const currentDb = (data?.value as Record<string, string[]>) || {};
+      const pathLikes = currentDb[path] || [];
+      const newPathLikes = isLikedLocally 
+        ? pathLikes.filter(id => id !== userId)
+        : Array.from(new Set([...pathLikes, userId]));
+      
+      const updatedDb = { ...currentDb, [path]: newPathLikes };
+      await supabase.from("site_data").upsert({ key: "gallery_likes", value: updatedDb }, { onConflict: "key" });
+    } catch (err) {
+      console.error("Failed to sync like", err);
+    }
   };
 
   const handleSubscribe = (e: React.MouseEvent, tag: string) => {
@@ -247,6 +278,9 @@ export default function Legacy() {
     fetchSiteData<Record<string, TagEntry[]>>("gallery_pending_tags", null)
       .then((data) => { if (data) setPendingTags(data); })
       .catch(() => {});
+    fetchSiteData<Record<string, string[]>>("gallery_likes", null)
+      .then((data) => { if (data) setGalleryLikes(data); })
+      .catch(() => {});
   }, []);
 
   // Fetch player list lazily when lightbox first opens
@@ -276,9 +310,14 @@ export default function Legacy() {
 
   const requestTag = async (photoPath: string) => {
     if (!session?.user) return;
-    const currentUserPlayer = tagPlayers.find((p) => p.id === session.user.id);
+    const currentUserPlayer = tagPlayers.find((p) => p.id === profile?.id);
     if (!currentUserPlayer) {
-      toast.error("Your player profile could not be found.");
+      toast.error("Your email is registered, but you must complete your basic profile before requesting a tag.", {
+        action: {
+          label: "Complete Profile",
+          onClick: () => setLocation("/profile/setup"),
+        },
+      });
       return;
     }
 
@@ -953,21 +992,33 @@ export default function Legacy() {
                       <p className="text-foreground text-base md:text-xl font-bold tracking-wide drop-shadow-lg leading-tight text-center">
                         {item?.title}
                       </p>
-                      <motion.button
-                        onClick={(e) => handleLike(e, item?.path || "")}
-                        whileTap={{ scale: 0.8 }}
-                        animate={likedPhotos.has(item?.path || "") ? { scale: [1, 1.4, 1] } : {}}
-                        transition={{ duration: 0.3 }}
-                        className="p-2 -mr-2"
-                      >
-                        <Heart 
-                          className={`w-6 h-6 md:w-7 md:h-7 drop-shadow-lg transition-colors ${
-                            likedPhotos.has(item?.path || "") 
-                              ? "fill-rose-500 text-rose-500" 
-                              : "text-foreground hover:text-rose-400"
-                          }`} 
-                        />
-                      </motion.button>
+                      {(() => {
+                        const path = item?.path || "";
+                        const count = galleryLikes[path]?.length || 0;
+                        const isLiked = likedPhotos.has(path) || (galleryLikes[path] || []).includes(session?.user?.id || "");
+                        return (
+                          <div className="flex items-center gap-1.5 p-2 -mr-2">
+                            <motion.button
+                              onClick={(e) => handleLike(e, path)}
+                              whileTap={{ scale: 0.8 }}
+                              animate={isLiked ? { scale: [1, 1.4, 1] } : {}}
+                              transition={{ duration: 0.3 }}
+                              className="flex items-center"
+                            >
+                              <Heart 
+                                className={`w-6 h-6 md:w-7 md:h-7 drop-shadow-lg transition-colors ${
+                                  isLiked 
+                                    ? "fill-rose-500 text-rose-500" 
+                                    : "text-foreground hover:text-rose-400"
+                                }`} 
+                              />
+                            </motion.button>
+                            <span className="text-foreground font-bold text-sm drop-shadow-lg min-w-[3rem] text-left">
+                              {count} {count === 1 ? 'like' : 'likes'}
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </div>
                     {item?.subfolder && (
                       <p className="text-primary/70 font-medium text-xs uppercase tracking-widest drop-shadow-md">

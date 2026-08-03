@@ -1,4 +1,5 @@
 export const PREDEFINED_DEPARTMENTS = [
+  "Administration",
   "Aerospace Engineering",
   "Bioengineering",
   "Biophysics",
@@ -32,5 +33,4 @@ export const PREDEFINED_DEPARTMENTS = [
   "Neuroscience",
   "Physics",
   "Solid State and Structural Chemistry Unit",
-  "Other",
 ];

@@ -346,7 +346,7 @@ export function FacilitiesSection() {
 
                     <div className="bg-primary/10 dark:bg-primary/20 border border-primary/40 dark:border-primary/50 rounded-2xl p-5 mb-5">
                       <h3 className="font-black text-primary dark:text-primary text-sm uppercase tracking-wider mb-2">
-                        IISc Members
+                        <span className="normal-case">IISc</span> Members
                       </h3>
                       <p className="text-muted-foreground dark:text-muted-foreground text-sm leading-relaxed">
                         Students, faculty, staff, and eligible members can

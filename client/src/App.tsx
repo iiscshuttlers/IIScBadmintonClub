@@ -208,6 +208,28 @@ function GlobalAuthHooks() {
   return null;
 }
 
+function GlobalAuthGuard() {
+  const { session, profile, isInitializing } = useAuth();
+  const [location, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (isInitializing) return;
+    
+    // If a user is signed in but has no profile, force them to the profile setup page
+    if (session && !profile) {
+      if (
+        !location.startsWith("/profile/setup") && 
+        !location.startsWith("/join") &&
+        !location.startsWith("/404")
+      ) {
+        setLocation("/profile/setup");
+      }
+    }
+  }, [session, profile, isInitializing, location, setLocation]);
+
+  return null;
+}
+
 function AppContent() {
   const { updateInfo, isDialogOpen, dismissUpdate } = useAppUpdate();
   const [isLogMatchOpen, setIsLogMatchOpen] = useState(false);
@@ -324,6 +346,7 @@ function AppContent() {
                 defaultOpponentId={defaultOpponentId}
               />
             )}
+            <GlobalAuthGuard />
             <GlobalAuthHooks />
             <OnboardingTour />
             {isDialogOpen && updateInfo && (

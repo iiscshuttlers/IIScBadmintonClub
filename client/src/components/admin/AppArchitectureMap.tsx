@@ -302,7 +302,7 @@ export function AppArchitectureMap() {
               ]}
             />
           </h2>
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">IISc Badminton Ecosystem</p>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest"><span className="normal-case">IISc</span> Badminton Ecosystem</p>
         </div>
       </div>
       
