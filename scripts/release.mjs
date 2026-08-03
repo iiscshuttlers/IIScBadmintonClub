@@ -78,8 +78,15 @@ if (!codeMatch || !nameMatch)
   fail("Could not parse versionCode/versionName from build.gradle");
 
 // Check if a previous run already bumped but didn't commit (retry-safe)
-const dirtyFiles = execSync("git status --porcelain", { cwd: root }).toString();
-const alreadyBumped = dirtyFiles.includes("android/app/build.gradle");
+let headGradle = "";
+try {
+  headGradle = execSync("git show HEAD:android/app/build.gradle", { cwd: root, stdio: "pipe" }).toString();
+} catch (e) {}
+const headCodeMatch = headGradle.match(/versionCode (\d+)/);
+const headCode = headCodeMatch ? parseInt(headCodeMatch[1]) : 0;
+const currentCode = parseInt(codeMatch[1]);
+
+const alreadyBumped = currentCode > headCode;
 
 let oldCode, oldName, newCode, newName;
 if (alreadyBumped) {
