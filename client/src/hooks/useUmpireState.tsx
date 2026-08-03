@@ -38,7 +38,6 @@ export function useUmpireState({
   onMatchSaved
 }: UmpireStateProps) {
   const isAdmin = isAdminEmail(userEmail);
-  const [players, setPlayers] = useState<Player[]>([]);
   // Use Zustand store instead
   const {
     match: storeMatch, setMatch, updateMatch: storeUpdateMatch,
@@ -325,11 +324,7 @@ export function useUmpireState({
   }, [breakSecondsLeft]);
   
     const { data: playersData } = usePlayers();
-    useEffect(() => {
-      if (playersData) {
-        setPlayers(playersData as unknown as Player[]);
-      }
-    }, [playersData]);
+  const players = useMemo(() => (playersData as unknown as Player[]) || [], [playersData]);
   
     const { getName, getGender, getInferredCategory, deduceCategory } = useUmpireHelpers(players, match);
     const updateMatch = async (updates: Partial<BwfMatchState>) => {
@@ -700,7 +695,11 @@ export function useUmpireState({
     };
   
     const handleClose = async () => {
-      await MatchService.removeLiveMatch(userId);
+      try {
+        await MatchService.removeLiveMatch(userId);
+      } catch (err) {
+        console.error("Failed to remove live match:", err);
+      }
       onClose();
     };
   
@@ -748,7 +747,6 @@ export function useUmpireState({
     breakSecondsLeft,
     breakTotalSeconds,
     breakLabel,
-    setPlayers,
     setMatch,
     setCards,
     setShowLog,

@@ -21,6 +21,7 @@ export function ShadowDrillEngine() {
   const [drillCount, setDrillCount] = useState(0);
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const initialDelayRef = useRef<NodeJS.Timeout | null>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
@@ -78,7 +79,7 @@ export function ShadowDrillEngine() {
     speak("Starting shadow drills. Ready.");
     
     // Initial delay before first move
-    setTimeout(() => {
+    initialDelayRef.current = setTimeout(() => {
       nextMove();
       timerRef.current = setInterval(nextMove, intervalMs);
     }, 2000);
@@ -86,6 +87,10 @@ export function ShadowDrillEngine() {
 
   const stopDrill = () => {
     setIsActive(false);
+    if (initialDelayRef.current) {
+      clearTimeout(initialDelayRef.current);
+      initialDelayRef.current = null;
+    }
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;

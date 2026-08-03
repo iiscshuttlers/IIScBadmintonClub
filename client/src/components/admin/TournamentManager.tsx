@@ -964,9 +964,13 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                                 onClick={() => {
                                   const p1Data = sessionStorage.getItem(`tp_p1_${cat}`);
                                   if (p1Data) {
-                                    const p1 = JSON.parse(p1Data);
-                                    addParticipant(cat, p1.id, pl.id, `${p1.name} & ${pl.full_name}`);
-                                    sessionStorage.removeItem(`tp_p1_${cat}`);
+                                    try {
+                                      const p1 = JSON.parse(p1Data);
+                                      addParticipant(cat, p1.id, pl.id, `${p1.name} & ${pl.full_name}`);
+                                      sessionStorage.removeItem(`tp_p1_${cat}`);
+                                    } catch (e) {
+                                      sessionStorage.removeItem(`tp_p1_${cat}`);
+                                    }
                                   }
                                 }}>
                               {pl.full_name}

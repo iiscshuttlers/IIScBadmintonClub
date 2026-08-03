@@ -80,7 +80,16 @@ function MatchBroadcastCard({
         gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
         osc.start();
         osc.stop(ctx.currentTime + 0.2);
-      } catch (e) {}
+        
+        // CRITICAL FIX: Close the context after the beep to release the hardware slot limit
+        setTimeout(() => {
+          if (ctx.state !== "closed") {
+            ctx.close().catch(console.error);
+          }
+        }, 300);
+      } catch (e) {
+        console.error("Audio beep failed", e);
+      }
 
       if (voiceEnabled) {
         const t1Name = match.t1.p1Name + (match.t1.p2Name ? " and " + match.t1.p2Name : "");
@@ -347,13 +356,18 @@ export function LiveScoreSection() {
   const { session, profile, isAdmin, isUmpire } = useAuth();
   const [, navigate] = useLocation();
   const [liveMatches, setLiveMatches] = useState<Record<string, BwfMatchState>>({});
-  const [voiceEnabled, setVoiceEnabled] = useState(false);
-  const [flashEnabled, setFlashEnabled] = useState(true);
-  const [vibrateEnabled, setVibrateEnabled] = useState(true);
+  const [voiceEnabled, setVoiceEnabled] = useState(() => localStorage.getItem("live_voice") === "true");
+  const [flashEnabled, setFlashEnabled] = useState(() => localStorage.getItem("live_flash") !== "false");
+  const [vibrateEnabled, setVibrateEnabled] = useState(() => localStorage.getItem("live_vibrate") !== "false");
+
+  useEffect(() => { localStorage.setItem("live_voice", String(voiceEnabled)); }, [voiceEnabled]);
+  useEffect(() => { localStorage.setItem("live_flash", String(flashEnabled)); }, [flashEnabled]);
+  useEffect(() => { localStorage.setItem("live_vibrate", String(vibrateEnabled)); }, [vibrateEnabled]);
   const [takeoverTarget, setTakeoverTarget] = useState<BwfMatchState | null>(null);
   const [pinnedMatchIds, setPinnedMatchIds] = useState<string[]>([]);
   const prevScoresRef = useRef<Record<string, { t1: number; t2: number }>>({});
   const killedMatchesRef = useRef<Set<string>>(new Set());
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // ── Admin: jump into the umpire panel to control a running broadcast ──
   const handleForceTakeover = (matchId: string) => {
@@ -372,7 +386,7 @@ export function LiveScoreSection() {
   };
 
   const sendTakeoverRequest = async (matchId: string) => {
-    const { data } = await supabase.from("site_data").select("value").eq("key", "live_matches").single();
+    const { data } = await supabase.from("site_data").select("value").eq("key", "live_matches").maybeSingle();
     if (!data?.value) return;
     
     const lm = data.value as Record<string, BwfMatchState>;
@@ -389,13 +403,20 @@ export function LiveScoreSection() {
   };
 
   const fetchLiveMatches = async () => {
-    const { data } = await supabase
-      .from("site_data")
-      .select("value")
-      .eq("key", "live_matches")
-      .single();
-    if (data?.value) {
-      // Seed baseline scores so the first load doesn't trigger sounds
+    try {
+      const { data, error } = await supabase
+        .from("site_data")
+        .select("value")
+        .eq("key", "live_matches")
+        .single();
+        
+      if (error && error.code !== 'PGRST116') {
+        if (pollRef.current) clearInterval(pollRef.current);
+        return;
+      }
+      
+      if (data?.value) {
+        // Seed baseline scores so the first load doesn't trigger sounds
       const matches: Record<string, BwfMatchState> = data.value;
       if (killedMatchesRef.current) {
         Array.from(killedMatchesRef.current).forEach(id => delete matches[id]);
@@ -404,6 +425,9 @@ export function LiveScoreSection() {
         prevScoresRef.current[m.id] = { t1: m.t1.score, t2: m.t2.score };
       });
       setLiveMatches(matches);
+    }
+    } catch (e) {
+      if (pollRef.current) clearInterval(pollRef.current);
     }
   };
 
@@ -464,11 +488,11 @@ export function LiveScoreSection() {
       .subscribe();
 
     // Polling fallback every 5s in case realtime subscription lags
-    const poll = setInterval(fetchLiveMatches, 5_000);
+    pollRef.current = setInterval(fetchLiveMatches, 5_000);
 
     return () => {
       supabase.removeChannel(sub);
-      clearInterval(poll);
+      if (pollRef.current) clearInterval(pollRef.current);
     };
   }, []);
 
@@ -560,7 +584,13 @@ export function LiveScoreSection() {
 
     // 1. Optimistic UI update & ignore list
     killedMatchesRef.current.add(matchId);
-    const killed = new Set(JSON.parse(sessionStorage.getItem("killed_match_ids") || "[]"));
+    let parsedKilled: string[] = [];
+    try {
+      parsedKilled = JSON.parse(sessionStorage.getItem("killed_match_ids") || "[]");
+    } catch (e) {
+      parsedKilled = [];
+    }
+    const killed = new Set<string>(parsedKilled);
     killed.add(matchId);
     sessionStorage.setItem("killed_match_ids", JSON.stringify(Array.from(killed)));
 
@@ -576,7 +606,7 @@ export function LiveScoreSection() {
 
       // 3. Verify deletion by checking the database
       await new Promise(resolve => setTimeout(resolve, 500)); // Wait for realtime sync
-      const { data } = await supabase.from("site_data").select("value").eq("key", "live_matches").single();
+      const { data } = await supabase.from("site_data").select("value").eq("key", "live_matches").maybeSingle();
       if (data?.value && data.value[matchId]) {
         throw new Error("Deletion verification failed - match still exists in database");
       }

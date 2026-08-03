@@ -94,11 +94,23 @@ serve(async (req) => {
     return new Response(JSON.stringify({ sent: 0, reason: "opted_out" }), { headers: corsHeaders });
   }
 
+  // Create in-app notification
+  const notifTitle = "Someone liked your match! ❤️";
+  const notifBody = `${giver_name} gave kudos on your match.`;
+
+  await supabase.from("notifications").insert({
+    user_id: winnerId,
+    title: notifTitle,
+    message: notifBody,
+    type: "kudos",
+    link: "/my-matches"
+  });
+
   // Fetch winner's push tokens
   const { data: tokens } = await supabase
     .from("user_push_tokens")
     .select("token")
-    .eq("player_id", winnerId);
+    .eq("user_id", winnerId);
 
   if (!tokens || tokens.length === 0) {
     return new Response(JSON.stringify({ sent: 0, reason: "no_tokens" }), { headers: corsHeaders });
@@ -128,7 +140,7 @@ serve(async (req) => {
             data: { type: "kudos", match_id },
             android: {
               priority: "high",
-              notification: { channelId: "notify_friendly" }
+              notification: { channel_id: "notify_victory" }
             },
           },
         }),

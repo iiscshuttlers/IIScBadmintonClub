@@ -8,7 +8,10 @@ type OfflineAction =
   | { type: "withdraw"; matchId: string };
 
 export function queueOfflineAction(action: OfflineAction) {
-  const queue: OfflineAction[] = JSON.parse(localStorage.getItem("offline_match_actions") || "[]");
+  let queue: OfflineAction[] = [];
+  try {
+    queue = JSON.parse(localStorage.getItem("offline_match_actions") || "[]");
+  } catch (e) {}
   queue.push(action);
   localStorage.setItem("offline_match_actions", JSON.stringify(queue));
 }

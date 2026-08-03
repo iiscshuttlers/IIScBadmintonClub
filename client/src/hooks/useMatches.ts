@@ -28,6 +28,8 @@ export function useLiveSiteData(key: string, refetchInterval: number | false = f
       return data?.value as any;
     },
     staleTime: 1000 * 60 * 60, // 1 hour (revalidated by real-time)
-    refetchInterval,
+    refetchInterval: typeof refetchInterval === 'number' 
+      ? (query) => (query.state.error ? false : refetchInterval) 
+      : false,
   });
 }

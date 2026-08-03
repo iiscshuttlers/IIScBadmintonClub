@@ -200,7 +200,7 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
                       </span>
                       <button
                         onClick={(e) => deleteNotification(e, n)}
-                        className="p-0.5 rounded-md text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 opacity-0 group-hover:opacity-100 transition"
+                        className="p-0.5 rounded-md text-slate-400 dark:text-slate-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
                         title="Remove notification"
                       >
                         <X className="w-3.5 h-3.5" />

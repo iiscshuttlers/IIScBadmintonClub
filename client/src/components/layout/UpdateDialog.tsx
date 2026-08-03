@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { FileOpener } from "@capacitor-community/file-opener";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import type { AppUpdateInfo } from "@/hooks/useAppUpdate";
 
 export function UpdateDialog({
@@ -50,8 +51,10 @@ export function UpdateDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-sm w-full p-7 space-y-5">
+    <Dialog open={true} onOpenChange={(open) => !open && onDismiss()}>
+      <DialogContent className="sm:max-w-sm border-0 bg-white dark:bg-slate-900 rounded-3xl p-7 shadow-2xl">
+        <DialogTitle className="sr-only">Update Available</DialogTitle>
+        <DialogDescription className="sr-only">Download version {info.versionName}</DialogDescription>
         <div className="text-center space-y-1">
           <div className="text-4xl mb-2">🏸</div>
           <h2 className="text-xl font-black text-foreground dark:text-foreground">
@@ -77,7 +80,7 @@ export function UpdateDialog({
             Remind me later
           </button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

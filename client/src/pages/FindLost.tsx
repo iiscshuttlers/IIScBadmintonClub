@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
+import { useLocation } from "wouter";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { useFormDraft } from "@/hooks/useFormDraft";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { InfoModal } from "@/components/InfoModal";
@@ -26,6 +28,7 @@ import {
   ZoomOut,
   ChevronLeft,
   ChevronRight,
+  RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -44,7 +47,11 @@ interface Post {
   resolved: boolean;
   claimed_by_id?: string;
   claimed_by_name?: string;
+  claimed_at?: string;
+  claim_message?: string;
+  remarks?: string;
   created_at: string;
+  updated_at?: string;
   author?: { full_name: string; avatar_url?: string };
 }
 
@@ -65,6 +72,7 @@ const TYPE_STYLES: Record<PostType, { bg: string; badge: string; icon: any; labe
 
 export default function FindLost() {
   usePageMeta({ title: "Find & Lost", description: "Lost or found items at the IISc badminton courts" });
+  const [, setLocation] = useLocation();
 
   const { session, profile, isAdmin } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
@@ -103,10 +111,12 @@ export default function FindLost() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const [form, setForm] = useState({ type: "lost" as PostType, title: "", description: "", location: "", contact: "", images: [] as string[] });
+  const [form, setForm, clearDraft] = useFormDraft("find-lost", { type: "lost" as PostType, title: "", description: "", location: "", contact: "", remarks: "", images: [] as string[] });
   const [submitting, setSubmitting] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+  const [claimingPostId, setClaimingPostId] = useState<string | null>(null);
+  const [claimContactInput, setClaimContactInput] = useState("");
 
   const MAX_IMAGES = 5;
 
@@ -190,7 +200,11 @@ export default function FindLost() {
       .select("*, author:players!author_id(full_name, avatar_url)")
       .order("created_at", { ascending: false });
 
-    if (!showResolved) query.eq("resolved", false);
+    if (showResolved) {
+      query.eq("resolved", true);
+    } else {
+      query.eq("resolved", false);
+    }
     if (filter !== "all") query.eq("type", filter);
 
     const { data, error } = await query;
@@ -242,7 +256,7 @@ export default function FindLost() {
 
       let error;
       if (editingId) {
-        ({ error } = await supabase.from("find_lost_posts").update(payload).eq("id", editingId));
+        ({ error } = await supabase.from("find_lost_posts").update({ ...payload, updated_at: new Date().toISOString() }).eq("id", editingId));
       } else {
         ({ error } = await supabase.from("find_lost_posts").insert({ ...payload, author_id: profile.id }));
       }
@@ -261,7 +275,7 @@ export default function FindLost() {
         }).catch((err) => console.error("Failed to broadcast Find & Lost notification:", err));
       }
 
-      setForm({ type: "lost", title: "", description: "", location: "", contact: "", images: [] });
+      clearDraft();
       setEditingId(null);
       setShowForm(false);
       load();
@@ -282,20 +296,40 @@ export default function FindLost() {
     }
   };
 
-  const claimItem = async (post: Post) => {
+  const claimItem = async (post: Post, claimMsg?: string, claimContact?: string) => {
     if (!profile?.id) return;
     
     const { error } = await supabase.rpc("claim_find_lost_item", {
       post_uuid: post.id,
       claimer_id: profile.id,
-      claimer_name: profile.full_name
+      claimer_name: profile.full_name,
+      claim_msg: claimMsg || null,
+      claim_contact_info: claimContact || null
     });
     
     if (!error) {
-      toast.success("Successfully claimed!");
+      toast.success(post.type === "lost" ? "Thanks for reporting this found!" : "Successfully claimed!");
+      setClaimingPostId(null);
+      setClaimContactInput("");
       load(); // Reload to get updated state
     } else {
       toast.error(error.message || "Failed to claim item. Check if columns exist.");
+    }
+  };
+
+  const unclaimItem = async (post: Post) => {
+    if (!profile?.id) return;
+    
+    const { error } = await supabase.rpc("unclaim_find_lost_item", {
+      post_uuid: post.id,
+      user_id: profile.id
+    });
+    
+    if (!error) {
+      toast.success("Successfully unclaimed!");
+      load();
+    } else {
+      toast.error(error.message || "Failed to unclaim item.");
     }
   };
 
@@ -365,10 +399,25 @@ export default function FindLost() {
       </div>
 
       <div className="container mx-auto px-4 max-w-3xl mt-8 space-y-6">
-        {/* New Post Form */}
-        <AnimatePresence>
-          {showForm && session && (
-            <motion.div
+        {!session ? (
+          <div className="flex flex-col items-center justify-center py-16 px-4 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 text-center shadow-sm">
+            <Search className="w-12 h-12 text-slate-300 dark:text-slate-600 mb-4" />
+            <h2 className="text-xl font-black text-slate-800 dark:text-slate-200 mb-2">Sign in to view Lost & Found</h2>
+            <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
+              You must be logged in to see or post items in this section.
+            </p>
+            <button 
+              onClick={() => setLocation('/join')}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl px-6 h-11 transition">
+              Sign In / Join
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* New Post Form */}
+            <AnimatePresence>
+              {showForm && (
+                <motion.div
               initial={{ opacity: 0, y: -16 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -16 }}
@@ -452,7 +501,7 @@ export default function FindLost() {
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
+                  <div className="flex flex-col">
                     <label className={labelCls}>Location</label>
                     <input
                       value={form.location}
@@ -473,6 +522,30 @@ export default function FindLost() {
                     />
                   </div>
                 </div>
+                {form.type === "found" && (
+                  <div className="flex flex-col mt-3">
+                    <label className={labelCls}>Remarks / Action Taken</label>
+                    <input
+                      value={form.remarks || ""}
+                      onChange={(e) => setForm((f) => ({ ...f, remarks: e.target.value }))}
+                      placeholder="e.g. Kept at table"
+                      maxLength={100}
+                      className={inputCls}
+                    />
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {["Kept at table", "Kept in wooden wardrobe", "Handed to Court Staff", "It's with me"].map(msg => (
+                        <button
+                          key={msg}
+                          type="button"
+                          onClick={() => setForm(f => ({ ...f, remarks: msg }))}
+                          className="text-[10px] font-bold bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 px-2 py-1 rounded-md transition text-left"
+                        >
+                          {msg}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end gap-3 mt-4">
@@ -503,9 +576,9 @@ export default function FindLost() {
           ))}
           <button
             onClick={() => setShowResolved((v) => !v)}
-            className={`ml-auto px-3 py-1.5 rounded-full text-xs font-bold transition ${showResolved ? "bg-slate-800 text-foreground" : "bg-white dark:bg-slate-900 text-muted-foreground border border-slate-200 dark:border-slate-700"}`}
+            className={`ml-auto px-3 py-1.5 rounded-full text-xs font-bold transition ${showResolved ? "bg-indigo-600 text-white" : "bg-white dark:bg-slate-900 text-muted-foreground border border-slate-200 dark:border-slate-700"}`}
           >
-            {showResolved ? "Hide Resolved" : "Show Resolved"}
+            {showResolved ? "Show Active" : "Show Resolved"}
           </button>
         </div>
 
@@ -533,11 +606,12 @@ export default function FindLost() {
                   animate={{ opacity: 1, y: 0 }}
                   className={`bg-white dark:bg-slate-900 rounded-2xl p-5 border shadow-sm ${post.resolved ? "opacity-60" : ""} ${style.bg}`}
                 >
-                  <div className="flex items-start gap-3">
-                    <div className={`p-2 rounded-xl ${style.badge} shrink-0`}>
-                      <Icon className="w-4 h-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
+                  <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-3">
+                    <div className="flex items-start gap-3 flex-1 min-w-0 w-full">
+                      <div className={`p-2 rounded-xl ${style.badge} shrink-0`}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${style.badge}`}>
                           {style.label}
@@ -583,22 +657,53 @@ export default function FindLost() {
                         )}
                         {post.contact && (
                           <span className="flex items-center gap-1">
-                            <Phone className="w-3.5 h-3.5" /> {post.contact}
+                            <Phone className="w-3.5 h-3.5" />
+                            {(() => {
+                              const isEmail = post.contact.includes("@");
+                              const isPhone = !isEmail && /\d/.test(post.contact);
+                              
+                              let href = undefined;
+                              if (isEmail) {
+                                href = `mailto:${post.contact}`;
+                              } else if (isPhone) {
+                                const cleanPhone = post.contact.replace(/\D/g, '');
+                                href = `https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}`;
+                              }
+                              
+                              return href ? (
+                                <a href={href} target="_blank" rel="noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline transition">
+                                  {post.contact}
+                                </a>
+                              ) : (
+                                <span>{post.contact}</span>
+                              );
+                            })()}
                           </span>
                         )}
-                        <span className="flex items-center gap-1">
+                        {post.remarks && (
+                          <span className="flex items-center gap-1">
+                            <CheckCircle className="w-3.5 h-3.5 text-indigo-500" /> <span className="text-indigo-600 dark:text-indigo-400 font-medium">{post.remarks}</span>
+                          </span>
+                        )}
+                        <span className="flex items-center gap-1 whitespace-nowrap">
                           <Clock className="w-3.5 h-3.5" />
                           {new Date(post.created_at).toLocaleString([], { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                          {post.updated_at && (
+                            <span className="italic ml-1" title={new Date(post.updated_at).toLocaleString()}>
+                              (edited)
+                            </span>
+                          )}
                         </span>
                         {post.author && (
-                          <span className="flex items-center gap-1">
-                            by <strong className="text-muted-foreground dark:text-slate-300">{post.author.full_name}</strong>
+                          <span className="flex items-center gap-1 whitespace-nowrap">
+                            by <strong className="text-muted-foreground dark:text-slate-300 truncate max-w-[140px]">{post.author.full_name}</strong>
                           </span>
                         )}
                       </div>
                     </div>
+                    </div>
 
-                    <div className="flex flex-col gap-2 shrink-0 ml-3">
+                    <div className="flex flex-col gap-2 shrink-0 w-full sm:w-auto sm:items-end">
                       {post.resolved ? (
                         <>
                           {/* Resolved status (replaces the "Mark as Resolved" action) */}
@@ -610,75 +715,150 @@ export default function FindLost() {
                           </span>
                           {/* Claim status (replaces the "Claim" action) */}
                           {post.claimed_by_name && (
-                            <span
-                              title={`Claimed by ${post.claimed_by_name}`}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 cursor-default max-w-[12rem]"
-                            >
-                              <CheckCircle className="w-4 h-4 shrink-0" />
-                              <span className="truncate">Claimed by {post.claimed_by_name}</span>
-                            </span>
+                            <div className="flex flex-col gap-1 items-end">
+                              <span
+                                title={post.claimed_at ? `${post.type === 'lost' ? 'Found' : 'Claimed'} on ${new Date(post.claimed_at).toLocaleString()}` : `${post.type === 'lost' ? 'Found' : 'Claimed'} by ${post.claimed_by_name}`}
+                                className="flex flex-col px-3 py-1.5 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 cursor-default max-w-[12rem] text-right"
+                              >
+                                <span className="flex items-center justify-end gap-1.5 text-xs font-bold">
+                                  <span className="truncate">{post.type === 'lost' ? 'Found' : 'Claimed'} by {post.claimed_by_name}</span>
+                                  <CheckCircle className="w-4 h-4 shrink-0" />
+                                </span>
+                                {post.claimed_at && (
+                                  <span className="text-[10px] font-medium opacity-80 mt-0.5">
+                                    {new Date(post.claimed_at).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                                  </span>
+                                )}
+                                {post.claim_message && (
+                                  <span className="text-[10px] font-medium mt-1 bg-white/50 dark:bg-black/20 px-1.5 py-0.5 rounded text-indigo-800 dark:text-indigo-300 inline-block w-full text-right leading-tight">
+                                    {post.claim_message}
+                                  </span>
+                                )}
+                                {post.claim_contact && (
+                                  <span className="text-[10px] font-medium mt-0.5 bg-white/50 dark:bg-black/20 px-1.5 py-0.5 rounded text-indigo-800 dark:text-indigo-300 inline-flex items-center justify-end gap-1 w-full text-right leading-tight">
+                                    <Phone className="w-2.5 h-2.5" />
+                                    {(() => {
+                                      const isEmail = post.claim_contact.includes("@");
+                                      const isPhone = !isEmail && /\d/.test(post.claim_contact);
+                                      let href = undefined;
+                                      if (isEmail) href = `mailto:${post.claim_contact}`;
+                                      else if (isPhone) {
+                                        const cleanPhone = post.claim_contact.replace(/\D/g, '');
+                                        href = `https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}`;
+                                      }
+                                      return href ? (
+                                        <a href={href} target="_blank" rel="noreferrer" className="hover:underline text-indigo-600 dark:text-indigo-400">{post.claim_contact}</a>
+                                      ) : <span>{post.claim_contact}</span>;
+                                    })()}
+                                  </span>
+                                )}
+                              </span>
+                              {(post.claimed_by_id === profile?.id || isOwn || isAdmin) && (
+                                <button
+                                  onClick={() => unclaimItem(post)}
+                                  className="flex items-center gap-1 text-[10px] font-bold text-rose-500 hover:text-rose-600 transition px-1"
+                                >
+                                  <RotateCcw className="w-3 h-3" /> Undo {post.type === 'lost' ? 'Find' : 'Claim'}
+                                </button>
+                              )}
+                            </div>
                           )}
                         </>
                       ) : (
                         <>
                           {(isOwn || isAdmin) && (
-                            <>
-                              <button
-                                onClick={() => resolve(post)}
-                                title="Mark as resolved"
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary hover:bg-primary/20 dark:hover:bg-primary/80/60 transition"
-                              >
-                                <CheckCircle className="w-4 h-4" /> Mark as Resolved
-                              </button>
-                              <button
-                                onClick={() => editPost(post)}
-                                title="Edit post"
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/60 transition"
-                              >
-                                <Edit2 className="w-4 h-4" /> Edit
-                              </button>
-                            </>
-                          )}
-                          {!isOwn && session && (
                             <button
-                              onClick={() => claimItem(post)}
-                              title="Claim this item"
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-900/60 transition"
+                              onClick={() => resolve(post)}
+                              title="Mark as resolved"
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400 hover:bg-teal-200 dark:hover:bg-teal-900/60 transition w-full justify-center"
                             >
-                              <CheckCircle className="w-4 h-4" /> Claim
+                              <CheckCircle className="w-4 h-4" /> Mark as Resolved
                             </button>
+                          )}
+                          {!isOwn && session && claimingPostId !== post.id && (
+                            <button
+                              onClick={() => setClaimingPostId(post.id)}
+                              title={post.type === "lost" ? "I found this item!" : "Claim this item"}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-900/60 transition w-full justify-center"
+                            >
+                              <CheckCircle className="w-4 h-4" /> {post.type === "lost" ? "I found this!" : "Claim"}
+                            </button>
+                          )}
+                          {!isOwn && session && claimingPostId === post.id && (
+                            <div className="flex flex-col gap-1.5 items-end mt-1 w-full max-w-[140px]">
+                              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Your Contact / WhatsApp</span>
+                              <input 
+                                value={claimContactInput}
+                                onChange={e => setClaimContactInput(e.target.value)}
+                                placeholder="Phone or Email (Optional)"
+                                className="text-[10px] w-full text-right bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                              />
+                              {post.type === "lost" ? (
+                                <>
+                                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1">Where did you keep it?</span>
+                                  <div className="flex flex-col items-end gap-1.5 w-full">
+                                    {["Kept at table", "Kept in wooden wardrobe", "Handed to Court Staff", "It's with me"].map(msg => (
+                                      <button
+                                        key={msg}
+                                        onClick={() => claimItem(post, msg, claimContactInput)}
+                                        className="text-[10px] font-bold bg-indigo-50 dark:bg-indigo-900/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 px-2 py-1.5 rounded-lg transition w-full text-right"
+                                      >
+                                        {msg}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </>
+                              ) : (
+                                <button
+                                  onClick={() => claimItem(post, undefined, claimContactInput)}
+                                  className="text-[10px] font-bold bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg transition w-full text-center mt-1"
+                                >
+                                  Confirm Claim
+                                </button>
+                              )}
+                              <button onClick={() => setClaimingPostId(null)} className="text-[10px] text-muted-foreground hover:underline px-1 py-0.5 mt-0.5">Cancel</button>
+                            </div>
                           )}
                         </>
                       )}
 
-                      {/* Delete is always available to author/admin */}
                       {(isOwn || isAdmin) && (
-                        pendingDelete === post.id ? (
-                          <div className="flex gap-1">
-                            <button
-                              onClick={() => deletePost(post)}
-                              title="Confirm delete"
-                              className="flex items-center gap-1 px-2 py-1.5 rounded-xl text-xs font-bold bg-rose-500 text-foreground hover:bg-rose-600 transition"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" /> Confirm
-                            </button>
-                            <button
-                              onClick={() => setPendingDelete(null)}
-                              title="Cancel"
-                              className="px-2 py-1.5 rounded-xl text-xs font-bold bg-slate-200 dark:bg-slate-700 text-muted-foreground dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        ) : (
+                        <div className="flex gap-2 justify-end w-full mt-0.5">
                           <button
-                            onClick={() => deletePost(post)}
-                            title="Delete post"
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400 hover:bg-rose-200 dark:hover:bg-rose-900/60 transition"
+                            onClick={() => editPost(post)}
+                            title="Edit post"
+                            className="flex items-center justify-center w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/60 transition shrink-0"
                           >
-                            <Trash2 className="w-4 h-4" /> Delete
+                            <Edit2 className="w-4 h-4" />
                           </button>
-                        )
+                          
+                          {pendingDelete === post.id ? (
+                            <div className="flex gap-1 bg-rose-50 dark:bg-rose-900/20 p-1 rounded-xl shrink-0">
+                              <button
+                                onClick={() => deletePost(post)}
+                                title="Confirm delete"
+                                className="flex items-center justify-center w-6 h-6 rounded-lg font-bold bg-rose-500 text-foreground hover:bg-rose-600 transition"
+                              >
+                                <CheckCircle className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => setPendingDelete(null)}
+                                title="Cancel"
+                                className="flex items-center justify-center w-6 h-6 rounded-lg font-bold bg-slate-200 dark:bg-slate-700 text-muted-foreground dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setPendingDelete(post.id)}
+                              title="Delete post"
+                              className="flex items-center justify-center w-8 h-8 rounded-xl bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400 hover:bg-rose-200 dark:hover:bg-rose-900/60 transition shrink-0"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -688,11 +868,7 @@ export default function FindLost() {
           </div>
         )}
 
-        {!session && (
-          <div className="text-center py-6 bg-indigo-50 dark:bg-indigo-950/20 rounded-2xl border border-indigo-100 dark:border-indigo-900/40">
-            <Bell className="w-8 h-8 text-indigo-400 mx-auto mb-2" />
-            <p className="text-sm font-bold text-muted-foreground dark:text-slate-300">Sign in to post items and get notifications</p>
-          </div>
+          </>
         )}
       </div>
 

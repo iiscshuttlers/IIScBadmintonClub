@@ -178,7 +178,7 @@ export default function Legacy() {
 
   const [galleryTags, setGalleryTags] = useState<Record<string, TagEntry[]>>({});
   const [pendingTags, setPendingTags] = useState<Record<string, TagEntry[]>>({});
-  const [tagPlayers, setTagPlayers] = useState<{ id: string; full_name: string }[]>([]);
+  const [tagPlayers, setTagPlayers] = useState<any[]>([]);
 
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
@@ -226,13 +226,13 @@ export default function Legacy() {
   const { data: queryVideos = [] } = useQuery({
     queryKey: ["gallery-videos"],
     queryFn: () => fetchSiteData<any[]>("videos", "videos.json").then((d) => d || []),
-    refetchInterval: 120_000,
+    refetchInterval: (query) => (query.state.error ? false : 120_000),
   });
 
   const { data: remotePhotos = [], isLoading: loadingRemote } = useQuery({
     queryKey: ["gallery-remote-photos"],
     queryFn: fetchRemoteGalleryImages,
-    refetchInterval: 300_000, // Refetch every 5 minutes
+    refetchInterval: (query) => (query.state.error ? false : 300_000), // Refetch every 5 minutes
   });
 
   useEffect(() => {
@@ -276,11 +276,11 @@ export default function Legacy() {
 
   const requestTag = async (photoPath: string) => {
     if (!session?.user) return;
-    const currentUserPlayer = tagPlayers.find((p) => p.id === session.user.id);
-    if (!currentUserPlayer) {
+    if (!profile) {
       toast.error("Your player profile could not be found.");
       return;
     }
+    const currentUserPlayer = { id: profile.id, full_name: profile.full_name };
 
     const currentPending = pendingTags[photoPath] || [];
     if (currentPending.some((t) => t.id === currentUserPlayer.id)) return;

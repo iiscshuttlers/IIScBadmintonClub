@@ -1,14 +1,13 @@
 import { usePageMeta } from "@/hooks/usePageMeta";
-import { Info, MapPin, BookOpen, ShieldCheck, MonitorPlay } from "lucide-react";
+import { Info, MapPin, ShieldCheck, MonitorPlay } from "lucide-react";
 import { InfoModal } from "@/components/InfoModal";
 import { ContactSection } from "@/components/about/ContactSection";
 import { FacilitiesSection } from "@/components/about/FacilitiesSection";
-import { GlossarySection } from "@/components/about/GlossarySection";
 import { useState, useEffect, useCallback } from "react";
 import { safeReplaceState, safePushState, safeGetSearchParams } from "@/lib/navUtils";
 import ExchangeTab from "@/components/hub/ExchangeTab";
-import { Store } from "lucide-react";
-import { LiveCourtsDashboard } from "@/components/club/LiveCourtsDashboard";
+import FindLost from "@/pages/FindLost";
+import { Store, Search } from "lucide-react";
 
 export default function Hub() {
   usePageMeta({
@@ -19,14 +18,14 @@ export default function Hub() {
   const [activeTab, setActiveTab] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
-    return ["courts", "contact", "facilities", "glossary", "exchange"].includes(tab as string) ? tab : "courts";
+    return ["lost-found", "buy-sell", "facilities", "contact"].includes(tab as string) ? tab : "lost-found";
   });
 
   useEffect(() => {
     const handlePopState = () => {
       const params = new URLSearchParams(window.location.search);
       const tab = params.get("tab");
-      setActiveTab(["courts", "contact", "facilities", "glossary", "exchange"].includes(tab as string) ? tab as any : "courts");
+      setActiveTab(["lost-found", "buy-sell", "facilities", "contact"].includes(tab as string) ? tab as any : "lost-found");
     };
     window.addEventListener("popstate", handlePopState);
     
@@ -59,8 +58,7 @@ export default function Hub() {
             <InfoModal
               title="ABOUT THE CLUB"
               items={[
-                { badge: "HELP", title: "Support", desc: "If you have issues with the app, check the FAQ or contact the admins here." },
-                { badge: "GUIDE", title: "Glossary", desc: "Confused by some terms? The glossary explains all the badminton jargon we use." }
+                { badge: "HELP", title: "Support", desc: "If you have issues with the app, check the FAQ or contact the admins here." }
               ]}
               triggerClassName="text-white hover:text-lime-200"
             />
@@ -74,30 +72,30 @@ export default function Hub() {
 
           {/* View Toggle */}
           <div className="mt-4 flex justify-center w-full px-2">
-            <div className="grid grid-cols-2 sm:flex bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 sm:flex-wrap sm:justify-center gap-1.5 sm:gap-0 w-full sm:w-auto">
+            <div className="flex flex-wrap justify-center bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 gap-1.5 w-full sm:w-auto">
               <button
-                onClick={() => handleTabChange("courts")}
-                className={`flex w-full sm:w-auto items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
-                  activeTab === "courts"
+                onClick={() => handleTabChange("lost-found")}
+                className={`flex w-full sm:w-auto flex-1 sm:flex-none items-center justify-center min-w-[140px] gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
+                  activeTab === "lost-found"
                     ? "bg-white text-blue-900 shadow-md scale-100"
                     : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
                 }`}
               >
-                <MonitorPlay className="w-4 h-4" /> Live Courts
+                <Search className="w-4 h-4" /> Lost & Found
               </button>
               <button
-                onClick={() => handleTabChange("contact")}
-                className={`flex w-full sm:w-auto items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
-                  activeTab === "contact"
+                onClick={() => handleTabChange("buy-sell")}
+                className={`flex w-full sm:w-auto flex-1 sm:flex-none items-center justify-center min-w-[140px] gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
+                  activeTab === "buy-sell"
                     ? "bg-white text-blue-900 shadow-md scale-100"
                     : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
                 }`}
               >
-                <Info className="w-4 h-4" /> Contact & FAQ
+                <Store className="w-4 h-4" /> Buy & Sell
               </button>
               <button
                 onClick={() => handleTabChange("facilities")}
-                className={`flex w-full sm:w-auto items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
+                className={`flex w-full sm:w-auto flex-1 sm:flex-none items-center justify-center min-w-[140px] gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
                   activeTab === "facilities"
                     ? "bg-white text-blue-900 shadow-md scale-100"
                     : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
@@ -106,24 +104,14 @@ export default function Hub() {
                 <MapPin className="w-4 h-4" /> Facilities
               </button>
               <button
-                onClick={() => handleTabChange("glossary")}
-                className={`flex w-full sm:w-auto items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
-                  activeTab === "glossary"
+                onClick={() => handleTabChange("contact")}
+                className={`flex w-full sm:w-auto flex-1 sm:flex-none items-center justify-center min-w-[140px] gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
+                  activeTab === "contact"
                     ? "bg-white text-blue-900 shadow-md scale-100"
                     : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
                 }`}
               >
-                <BookOpen className="w-4 h-4" /> Glossary
-              </button>
-              <button
-                onClick={() => handleTabChange("exchange")}
-                className={`flex w-full sm:w-auto items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
-                  activeTab === "exchange"
-                    ? "bg-white text-blue-900 shadow-md scale-100"
-                    : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
-                }`}
-              >
-                <Store className="w-4 h-4" /> Exchange
+                <Info className="w-4 h-4" /> Contact & FAQ
               </button>
             </div>
           </div>
@@ -131,11 +119,10 @@ export default function Hub() {
       </div>
 
       <div className="container mx-auto px-4 max-w-4xl pt-6">
-        {activeTab === "courts" && <LiveCourtsDashboard />}
         {activeTab === "contact" && <ContactSection />}
         {activeTab === "facilities" && <FacilitiesSection />}
-        {activeTab === "glossary" && <GlossarySection />}
-        {activeTab === "exchange" && <ExchangeTab />}
+        {activeTab === "buy-sell" && <ExchangeTab />}
+        {activeTab === "lost-found" && <FindLost />}
       </div>
     </div>
   );

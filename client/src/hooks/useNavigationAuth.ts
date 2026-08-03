@@ -71,6 +71,8 @@ export function useNavigationAuth() {
       setPendingActionCount(0);
       return;
     }
+    
+    let intervalId: ReturnType<typeof setInterval> | null = null;
 
     const fetchPending = async () => {
       try {
@@ -87,13 +89,15 @@ export function useNavigationAuth() {
           setPendingActionCount(count);
         }
       } catch {
-        // silent
+        if (intervalId) clearInterval(intervalId);
       }
     };
 
     fetchPending();
-    const interval = setInterval(fetchPending, 60000);
-    return () => clearInterval(interval);
+    intervalId = setInterval(fetchPending, 60000);
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [profile?.id]);
 
   const signOut = async () => {

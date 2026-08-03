@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
+import { useRHFDraft } from "@/hooks/useFormDraft";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Tag, MapPin, IndianRupee, Image as ImageIcon, CheckCircle, Package } from "lucide-react";
@@ -16,7 +17,9 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGiveaway, setIsGiveaway] = useState(false);
   const [listingType, setListingType] = useState<'sell' | 'buy'>('sell');
-  const { register, handleSubmit, formState: { errors }, reset, getValues } = useForm();
+  const methods = useForm();
+  const { register, handleSubmit, formState: { errors }, reset, getValues } = methods;
+  const { clearDraft } = useRHFDraft("marketplace-listing", methods);
 
   const onSubmit = async (data: any) => {
     setIsSubmitting(true);
@@ -38,7 +41,7 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
       if (error) throw error;
       
       toast.success("Item listed successfully!");
-      reset();
+      clearDraft();
       onSuccess();
       onClose();
     } catch (err: any) {

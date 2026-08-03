@@ -79,7 +79,7 @@ export default function ProfileSetup() {
 
           {/* Sleek Tab Navigation */}
           {tabs.length > 1 && (
-            <div className="-mx-4 sm:mx-0 px-4 sm:px-0 grid grid-cols-2 md:flex md:flex-wrap border-b border-slate-200 dark:border-slate-800 mb-6 sm:mb-8 gap-2 pb-2">
+            <div className="-mx-4 sm:mx-0 px-4 sm:px-0 flex flex-wrap border-b border-slate-200 dark:border-slate-800 mb-6 sm:mb-8 gap-2 pb-2">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = setup.activeTab === tab.id;
@@ -87,7 +87,7 @@ export default function ProfileSetup() {
                 <button
                   key={tab.id}
                   onClick={() => setup.setActiveTab(tab.id as any)}
-                  className={`snap-start shrink-0 flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 font-semibold text-sm rounded-xl transition-all whitespace-nowrap outline-none
+                  className={`flex-auto md:flex-initial flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 font-semibold text-sm rounded-xl transition-all whitespace-nowrap outline-none
                     ${isActive
                       ? "bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary border-b-2 border-primary"
                       : "text-muted-foreground hover:text-slate-800 dark:text-muted-foreground dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900/50"
@@ -117,6 +117,7 @@ export default function ProfileSetup() {
                     department={setup.department} setDepartment={setup.setDepartment}
                     customDepartment={setup.customDepartment} setCustomDepartment={setup.setCustomDepartment}
                     isRetired={setup.isRetired} setIsRetired={setup.setIsRetired}
+                    instagram={setup.instagram} setInstagram={setup.setInstagram}
                     handleAvatarUpload={setup.handleAvatarUpload}
                   />
                 )}
@@ -194,8 +195,9 @@ export default function ProfileSetup() {
                 ) : (
                   <Button
                     type="button"
-                    onClick={(e) => {
+                    onClick={async (e) => {
                       e.preventDefault();
+                      await setup.saveNow(true);
                       setup.setActiveTab(nextTabId as any);
                       window.scrollTo({ top: 0, behavior: "smooth" });
                     }}

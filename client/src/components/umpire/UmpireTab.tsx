@@ -1,19 +1,45 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLiveSiteData } from "@/hooks/useMatches";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { UmpireEngine } from "./UmpireEngine";
 import { BwfMatchState, MatchEditState } from "@/types/umpire";
-import { Play, Tv2, AlertTriangle, Swords } from "lucide-react";
+import { Play, Tv2, AlertTriangle, Swords, Lock, CalendarX } from "lucide-react";
 import { useUmpireStore } from "@/store/umpireStore";
 import { fetchSiteData } from "@/lib/siteData";
 import { BeautifulScoreDisplay } from "@/components/feed/BeautifulScoreDisplay";
 import { UmpireTournamentTab, type TournamentMatchForUmpire } from "./UmpireTournamentTab";
 
+const SETUP_STORAGE_KEY = "umpire_setup_matches_v1";
+
 export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean }) {
-  const { session, isUmpire } = useAuth();
-  const [activeMatches, setActiveMatches] = useState<(BwfMatchState | MatchEditState | TournamentMatchForUmpire)[]>([]);
-  const [activeMatchIndex, setActiveMatchIndex] = useState<number>(-1);
+  const { session, isUmpire, profile } = useAuth();
+  // Only master_admin and umpire roles can run tournament matches
+  const hasElevatedRole = isUmpire && (
+    profile?.role === 'master_admin' || profile?.role === 'umpire'
+  );
+  const [hasActiveTournament, setHasActiveTournament] = useState(false);
+  // canRunTournament = elevated role + active tournament exists
+  const canRunTournament = hasElevatedRole && hasActiveTournament;
+  const [activeMatches, setActiveMatches] = useState<(BwfMatchState | MatchEditState | TournamentMatchForUmpire)[]>(() => {
+    // Restore any setup-state matches from localStorage on first render
+    try {
+      const saved = localStorage.getItem(SETUP_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [activeMatchIndex, setActiveMatchIndex] = useState<number>(() => {
+    // Restore last active tab index
+    try {
+      const saved = localStorage.getItem(SETUP_STORAGE_KEY);
+      const matches = saved ? JSON.parse(saved) : [];
+      return matches.length > 0 ? 0 : -1;
+    } catch {
+      return -1;
+    }
+  });
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const resetUmpireStore = useUmpireStore((s) => s.reset);
 
@@ -24,6 +50,31 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
     }
   }, [activeMatches.length, activeMatchIndex]);
 
+  // Persist setup-state matches to localStorage whenever they change
+  useEffect(() => {
+    try {
+      // Only save BwfMatchState entries (friendly setup matches), not tournament matches
+      const toSave = activeMatches.filter((m): m is BwfMatchState => 
+        !('match_code' in m) && (m as BwfMatchState).status === 'setup'
+      );
+      if (toSave.length > 0) {
+        localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify(toSave));
+      } else {
+        // Clear storage once matches progress past setup
+        localStorage.removeItem(SETUP_STORAGE_KEY);
+      }
+    } catch {}
+  }, [activeMatches]);
+
+  // Check if there's an active tournament
+  useEffect(() => {
+    supabase
+      .from("tournaments")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "active")
+      .then(({ count }) => setHasActiveTournament((count ?? 0) > 0));
+  }, []);
+
   useEffect(() => {
     if (!session?.user?.id) return;
     const key = sessionStorage.getItem("umpire_takeover_key");
@@ -33,7 +84,7 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
       .from("site_data")
       .select("value")
       .eq("key", "live_matches")
-      .single()
+      .maybeSingle()
       .then(({ data }) => {
         const m = data?.value?.[key] as BwfMatchState | undefined;
         if (m && m.status && m.status !== "setup") {
@@ -49,11 +100,11 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
       .from("site_data")
       .select("value")
       .eq("key", "live_matches")
-      .single()
+      .maybeSingle()
       .then(({ data }) => {
-        if (data?.value) {
+        if (data?.value && typeof data.value === 'object') {
           const myMatches = Object.values(data.value).filter(
-            (m: any) => m.umpireId === session.user.id
+            (m: any) => m && m.umpireId === session.user.id
           ) as BwfMatchState[];
           
           if (myMatches.length > 0) {
@@ -112,6 +163,7 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
       const newMatches = prev.filter((_, i) => i !== indexToRemove);
       if (newMatches.length === 0) {
         setActiveMatchIndex(-1);
+        try { localStorage.removeItem(SETUP_STORAGE_KEY); } catch {}
       } else if (activeMatchIndex === indexToRemove) {
         setActiveMatchIndex(Math.max(0, indexToRemove - 1));
       } else if (activeMatchIndex > indexToRemove) {
@@ -184,7 +236,7 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
             userId={session.user.id}
             userEmail={session.user.email!}
             userName={session.user.user_metadata?.full_name || "Guest"}
-            isTournamentUmpire={isUmpire}
+            isTournamentUmpire={canRunTournament}
             initialMatchState={isTournamentMatch ? null : currentMatch as BwfMatchState | MatchEditState}
             tournamentMatch={isTournamentMatch ? currentMatch as TournamentMatchForUmpire : undefined}
             onClose={() => removeMatch(activeMatchIndex)}
@@ -208,13 +260,42 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
               </button>
             </div>
             
-            <h2 className="text-xl font-black text-foreground mb-5">Tournament Matches</h2>
-            <UmpireTournamentTab onStartMatch={startMatch} />
+            {hasActiveTournament && canRunTournament && (
+              <>
+                <h2 className="text-xl font-black text-foreground mb-5">Tournament Matches</h2>
+                <UmpireTournamentTab onStartMatch={startMatch} />
+              </>
+            )}
+
+            {/* Show reason why tournament umpiring is unavailable */}
+            {!canRunTournament && (
+              <div className="mt-4 rounded-2xl border border-slate-700 bg-slate-800/50 p-4 flex gap-3 items-start">
+                {!hasActiveTournament ? (
+                  <>
+                    <CalendarX className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-bold text-slate-300">No Active Tournament</p>
+                      <p className="text-xs text-slate-500 mt-0.5">Tournament umpiring is only available when an official tournament is in progress. Check back when one is scheduled.</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Lock className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-bold text-amber-300">Umpire Access Required</p>
+                      <p className="text-xs text-slate-500 mt-0.5">Tournament match umpiring requires the <span className="text-amber-400 font-semibold">Umpire</span> or <span className="text-amber-400 font-semibold">Admin</span> role. Contact an admin to get access.</p>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </div>
-          <RecentUmpireMatches
-            isTournament={true}
-            onEdit={startMatch}
-          />
+          {hasActiveTournament && canRunTournament && (
+            <RecentUmpireMatches
+              isTournament={true}
+              onEdit={startMatch}
+            />
+          )}
         </div>
       )}
     </div>
@@ -248,6 +329,8 @@ function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditSt
 
   const [filterFormat, setFilterFormat] = useState<string>("ALL");
 
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   useEffect(() => {
     if (!profile?.id) return;
     const fetchRecent = async () => {
@@ -265,6 +348,10 @@ function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditSt
           query = query.eq("scored_by", profile.id).gte("scored_at", fifteenMinsAgo).limit(10);
         }
         const res = await query;
+        if (res.error) {
+          if (intervalRef.current) clearInterval(intervalRef.current);
+          return;
+        }
         data = res.data?.map(m => ({ ...m, is_friendly: false, is_tournament_match: true }));
       } else {
         let query = supabase
@@ -279,13 +366,19 @@ function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditSt
           query = query.eq("submitted_by", profile.id).gte("created_at", fifteenMinsAgo).limit(10);
         }
         const res = await query;
+        if (res.error) {
+          if (intervalRef.current) clearInterval(intervalRef.current);
+          return;
+        }
         data = res.data;
       }
       if (data) setRecent(data as any);
     };
     fetchRecent();
-    const interval = setInterval(fetchRecent, 30000);
-    return () => clearInterval(interval);
+    intervalRef.current = setInterval(fetchRecent, 30000);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
   }, [profile?.id, isAdmin, isTournament]);
 
   if (recent.length === 0) return null;

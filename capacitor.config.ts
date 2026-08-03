@@ -12,10 +12,11 @@ const config: CapacitorConfig = {
     allowMixedContent: false,
     captureInput: true,
     webContentsDebuggingEnabled: false,
+    useLegacyWebView: false,
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 1200,
+      launchShowDuration: 0,
       launchAutoHide: true,
       backgroundColor: "#ffffff",
       androidScaleType: "CENTER_CROP",

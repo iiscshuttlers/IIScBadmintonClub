@@ -12,6 +12,8 @@ import { useOtherPlayersSlim } from "@/hooks/usePlayers";
 import { useAuth } from "@/contexts/AuthContext";
 import confetti from "canvas-confetti";
 import { InfoModal } from "@/components/InfoModal";
+import { useFormDraft } from "@/hooks/useFormDraft";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 import type { PlayerSlim as Player } from "@/types";
 
@@ -172,18 +174,18 @@ export default function LogMatchModal({
     profile?.id,
   );
   const otherPlayers = fetchedPlayers as Player[];
-  const [step, setStep] = useState(0);
-  const [matchType, setMatchType] = useState<"singles" | "doubles" | "hybrid">("singles");
-  const [matchCategory, setMatchCategory] = useState<"friendly" | "tournament">("friendly");
-  const [opponentId, setOpponentId] = useState(defaultOpponentId ?? "");
-  const [partnerId, setPartnerId] = useState("");
-  const [opponentPartnerId, setOpponentPartnerId] = useState("");
-  const [sets, setSets] = useState<SetScore[]>([{ p1: "", p2: "" }]);
+  const [step, setStep, clearStep] = useFormDraft("lm_step", 0);
+  const [matchType, setMatchType, clearMatchType] = useFormDraft<"singles" | "doubles" | "hybrid">("lm_type", "singles");
+  const [matchCategory, setMatchCategory, clearMatchCat] = useFormDraft<"friendly" | "tournament">("lm_cat", "friendly");
+  const [opponentId, setOpponentId, clearOppId] = useFormDraft("lm_opp", defaultOpponentId ?? "");
+  const [partnerId, setPartnerId, clearPartId] = useFormDraft("lm_part", "");
+  const [opponentPartnerId, setOpponentPartnerId, clearOppPart] = useFormDraft("lm_opart", "");
+  const [sets, setSets, clearSets] = useFormDraft<SetScore[]>("lm_sets", [{ p1: "", p2: "" }]);
   const [myTeamWon, setMyTeamWon] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [videoUrl, setVideoUrl] = useState("");
-  const [matchNotes, setMatchNotes] = useState("");
+  const [videoUrl, setVideoUrl, clearVideo] = useFormDraft("lm_vid", "");
+  const [matchNotes, setMatchNotes, clearNotes] = useFormDraft("lm_notes", "");
   const [recentOpponentIds, setRecentOpponentIds] = useState<string[]>([]);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [offlineQueueCount, setOfflineQueueCount] = useState(0);
@@ -225,10 +227,14 @@ export default function LogMatchModal({
   // Reset wizard state when modal opens/closes
   useEffect(() => {
     if (!isOpen) {
-      setStep(0);
       setError(null);
     }
   }, [isOpen]);
+
+  const clearAllDrafts = () => {
+    clearStep(); clearMatchType(); clearMatchCat(); clearOppId(); clearPartId(); 
+    clearOppPart(); clearSets(); clearVideo(); clearNotes();
+  };
 
   const isAdmin = isAdminEmail(userEmail);
   const now = new Date();
@@ -394,7 +400,10 @@ export default function LogMatchModal({
     };
 
     if (!navigator.onLine) {
-      const existingQueue = JSON.parse(localStorage.getItem("offline_matches") || "[]");
+      let existingQueue: any[] = [];
+      try {
+        existingQueue = JSON.parse(localStorage.getItem("offline_matches") || "[]");
+      } catch (e) {}
       existingQueue.push({ ...rpcPayload, match_category: matchCategory, timestamp: Date.now() });
       localStorage.setItem("offline_matches", JSON.stringify(existingQueue));
       toast.success("Offline (Gym Mode) — match queued, will sync when reconnected.", { duration: 5000 });
@@ -435,6 +444,7 @@ export default function LogMatchModal({
             ? "Match submitted! Waiting for opponent to confirm."
             : "Tournament match logged! Waiting for opponent to confirm.",
       );
+      clearAllDrafts();
       onSuccess(); onClose();
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -450,33 +460,25 @@ export default function LogMatchModal({
   if (!isOpen) return null;
 
   return (
-    <>
-      <AnimatePresence>
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto"
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
-              <h2 className="text-lg font-black text-foreground dark:text-foreground flex items-center gap-2">
-                <Sword className="w-5 h-5 text-primary" />
-                Log {matchCategory === "tournament" ? "Tournament" : "Friendly"} Match
-                <InfoModal
-                  title="LOGGING MATCHES"
-                  items={[
-                    { badge: "VALIDATE", title: "Confirmation", desc: "Your opponent must confirm the score before ELO is updated." },
-                    { badge: "OFFLINE", title: "Gym Mode", desc: "If you lose internet connection on court, matches are queued locally and sync automatically." }
-                  ]}
-                />
-              </h2>
-              <button onClick={onClose} className="p-2 text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-lg bg-white dark:bg-slate-900 rounded-3xl p-0 overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
+        <DialogTitle className="sr-only">Log Match</DialogTitle>
+        <DialogDescription className="sr-only">Log a new match in the system</DialogDescription>
+        
+        {/* Header */}
+        <DialogHeader className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between bg-slate-50/50 dark:bg-slate-800/50 m-0">
+          <div className="flex items-center gap-2 m-0 text-lg font-black text-foreground dark:text-foreground">
+            <Sword className="w-5 h-5 text-primary" />
+            Log {matchCategory === "tournament" ? "Tournament" : "Friendly"} Match
+            <InfoModal
+              title="LOGGING MATCHES"
+              items={[
+                { badge: "VALIDATE", title: "Confirmation", desc: "Your opponent must confirm the score before ELO is updated." },
+                { badge: "OFFLINE", title: "Gym Mode", desc: "If you lose internet connection on court, matches are queued locally and sync automatically." }
+              ]}
+            />
+          </div>
+        </DialogHeader>
 
             <StepBar step={step} />
 
@@ -738,10 +740,7 @@ export default function LogMatchModal({
                 )}
               </div>
             </div>
-          </motion.div>
-        </div>
-      </AnimatePresence>
-
-    </>
+      </DialogContent>
+    </Dialog>
   );
 }

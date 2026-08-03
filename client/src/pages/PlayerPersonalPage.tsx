@@ -2620,7 +2620,7 @@ export default function PlayerPersonalPage() {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 lg:pl-64">
+      <div className="flex-1">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-4 lg:pt-8 pb-8">
         {/* Hero */}
         <div className="relative overflow-hidden px-5 pt-6 pb-7 lg:px-8 lg:pt-8 mb-6">
@@ -2665,11 +2665,11 @@ export default function PlayerPersonalPage() {
                     )}
                   </div>
                   <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground">
-                    {player?.email && (
+                    {player?.email && player?.is_guest === false && player?.status && (
                       <div className="flex items-center gap-1.5">
                         <span className="truncate max-w-[200px] sm:max-w-xs">{player.email}</span>
                         <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400 px-1.5 py-0.5 rounded-md border border-blue-200 dark:border-blue-800/50">
-                          ACE Linked
+                          BRAINMINTON Linked
                         </span>
                       </div>
                     )}

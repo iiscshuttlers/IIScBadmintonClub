@@ -30,6 +30,13 @@ export const supabase = createClient(
       // Auto-refresh: keep enabled but we add a startup health check.
       autoRefreshToken: true,
     },
+    global: {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+        "Pragma": "no-cache",
+        "Expires": "0"
+      }
+    }
   },
 );
 
@@ -67,9 +74,17 @@ export async function validateStoredSession(): Promise<void> {
     ]);
 
     if (result.error || !result.data.user) {
+      const errorMsg = result.error?.message || "";
+      
+      // Preserve session if offline or if validation timed out
+      if (errorMsg === "Session validation timed out" || errorMsg.includes("Failed to fetch") || errorMsg.includes("Network")) {
+        console.warn("[Auth] Network timeout or offline during validation. Preserving session for offline use.");
+        return;
+      }
+
       console.warn(
-        "[Auth] Stored session is invalid/expired — clearing to prevent auth limbo:",
-        result.error?.message,
+        "[Auth] Stored session explicitly rejected — clearing to prevent auth limbo:",
+        errorMsg,
       );
       // Clear everything to break the deadlock
       await supabase.auth.signOut({ scope: "local" });

@@ -94,7 +94,7 @@ export function AnnouncementsSection() {
   const { data: queryData, isLoading: isQueryLoading } = useQuery({
     queryKey: ["announcements"],
     queryFn: () => fetchSiteData<{ recent: Announcement[] }>("announcements", "announcements.json"),
-    refetchInterval: 60_000,
+    refetchInterval: (query) => (query.state.error ? false : 60_000),
   });
 
   useEffect(() => {

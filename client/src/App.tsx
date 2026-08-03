@@ -9,9 +9,12 @@ import { ArrowUp, WifiOff } from "lucide-react";
 
 import StatusBanner from "@/components/StatusBanner";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { GlobalErrorBoundary } from "./components/GlobalErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import { ProtectedRoute } from "./components/ProtectedRoute";
+import { supabase } from "@/lib/supabase";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { UmpireEngine } from "@/components/umpire/UmpireEngine";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { PwaInstallPrompt } from "./components/pwa/PwaInstallPrompt";
@@ -26,10 +29,12 @@ import { useNativeBackButton } from "./hooks/useNativeBackButton";
 import { usePullToRefresh } from "./hooks/usePullToRefresh";
 import { useOfflineSync } from "./hooks/useOfflineSync";
 import { useOverflowGuard } from "./hooks/useOverflowGuard";
-import { useBroadcastNotification } from "./hooks/useBroadcastNotification";
-import { usePingsNotification } from "./hooks/usePingsNotification";
+import { useGlobalNotifications } from "./hooks/useGlobalNotifications";
+import { useEngagementReminders } from "./hooks/useEngagementReminders";
 import { initSounds, playOnUnlock, playSmashSound } from "./lib/sounds";
 import { OnboardingTour } from "./components/OnboardingTour";
+import { useShakeToFeedback } from "./hooks/useShakeToFeedback";
+import { BetaFeedbackModal } from "@/components/BetaFeedbackModal";
 
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { FileOpener } from "@capacitor-community/file-opener";
@@ -41,7 +46,8 @@ import { BackToTop } from "./components/layout/BackToTop";
 import { ScrollProgress } from "./components/layout/ScrollProgress";
 import { ScrollToTop } from "./components/layout/ScrollToTop";
 import { RoutePersistence } from "./components/layout/RoutePersistence";
-import { AppModeProvider, useAppMode } from "./contexts/AppModeContext";
+import { useAppMode } from "./contexts/AppModeContext";
+import { AppProviders } from "./AppProviders";
 
 // NotFound is eagerly loaded (tiny, always needed as fallback)
 import NotFound from "./pages/NotFound";
@@ -60,6 +66,8 @@ const PlayerProfile = lazy(() => import("./pages/PlayerProfile"));
 const PlayerPersonalPage = lazy(() => import("./pages/PlayerPersonalPage"));
 const Join = lazy(() => import("./pages/Join"));
 const ProfileSetup = lazy(() => import("./pages/ProfileSetup"));
+const MyMatchesPage = lazy(() => import("./pages/MyMatchesPage"));
+const TournamentStandingsPage = lazy(() => import("./pages/TournamentStandingsPage"));
 
 const ComparePlayers = lazy(() => import("./pages/ComparePlayers"));
 const ChangePassword = lazy(() => import("./pages/ChangePassword"));
@@ -68,6 +76,7 @@ const DeleteAccount = lazy(() => import("./pages/DeleteAccount"));
 const DoublesPairProfile = lazy(() => import("./pages/DoublesPairProfile"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const Glossary = lazy(() => import("./pages/Glossary"));
 
 const TournamentAdmin = lazy(() => import("./pages/TournamentAdmin"));
 
@@ -138,12 +147,17 @@ function AppRoutes() {
           <Route path="/exchange" component={() => { window.location.href='/hub?tab=exchange'; return null; }} />
           <Route path="/find-lost" component={() => { window.location.href='/hub?tab=exchange&sub=lost-found'; return null; }} />
           <Route path="/umpire" component={() => { window.location.href='/hub?tab=my_matches'; return null; }} />
+          <Route path="/feed/announcements" component={() => { window.location.href='/pulse#announcements'; return null; }} />
           <Route path="/privacy" component={PrivacyPolicy} />
           <Route path="/terms" component={TermsOfService} />
+          <Route path="/glossary" component={Glossary} />
 
           <Route path="/admin"><ProtectedRoute><SiteAdmin /></ProtectedRoute></Route>
           <Route path="/tournament-admin"><ProtectedRoute><TournamentAdmin /></ProtectedRoute></Route>
           <Route path="/profile/setup"><ProtectedRoute><ProfileSetup /></ProtectedRoute></Route>
+          
+          <Route path="/my-matches"><ProtectedRoute><MyMatchesPage /></ProtectedRoute></Route>
+          <Route path="/standings" component={TournamentStandingsPage} />
 
           <Route path="/player/:id/edit"><ProtectedRoute><ProfileSetup /></ProtectedRoute></Route>
           <Route path="/profile/password"><ProtectedRoute><ChangePassword /></ProtectedRoute></Route>
@@ -162,6 +176,26 @@ function AppRoutes() {
           
           <Route path="/broadcast/:matchId" component={BroadcastOverlay} />
 
+          {/* Test route exclusively for Playwright E2E */}
+          <Route path="/test-umpire-engine" component={() => (
+             <UmpireEngine 
+               initialMatchState={{
+                 id: "test-match-123",
+                 status: "playing",
+                 t1: { p1Name: "P1", score: 0, games: 0 },
+                 t2: { p1Name: "P2", score: 0, games: 0 },
+                 serverTeam: 1,
+                 bestOfSets: 3,
+                 category: "MS",
+                 pointLog: []
+               } as any}
+               userId="test-user-123"
+               userName="Test Umpire"
+               userEmail="test@test.com"
+               onClose={() => {}}
+             />
+          )} />
+
           <Route path="/404" component={NotFound} />
           <Route component={NotFound} />
         </Switch>
@@ -175,11 +209,44 @@ function OfflineBanner() {
   const [offline, setOffline] = useState(!navigator.onLine);
 
   useEffect(() => {
-    const goOffline = () => setOffline(true);
-    const goOnline = () => setOffline(false);
+    let pollingTimer: ReturnType<typeof setTimeout>;
+
+    const checkActualConnection = async () => {
+      if (!navigator.onLine) {
+        setOffline(true);
+        return;
+      }
+      try {
+        // Lightweight ping to our own server to detect Lie-Fi
+        await fetch(window.location.origin + "/favicon.ico?_t=" + Date.now(), {
+          mode: "no-cors",
+          cache: "no-store",
+          // The fetch will fail if there is no actual internet (Lie-Fi)
+        });
+        setOffline(false);
+      } catch (e) {
+        setOffline(true);
+      }
+      // Re-verify periodically with backoff (15s)
+      pollingTimer = setTimeout(checkActualConnection, 15000);
+    };
+
+    const goOffline = () => {
+      clearTimeout(pollingTimer);
+      setOffline(true);
+    };
+    const goOnline = () => {
+      checkActualConnection(); // Verify it's not Lie-Fi
+    };
+
     window.addEventListener("offline", goOffline);
     window.addEventListener("online", goOnline);
+
+    // Initial check
+    checkActualConnection();
+
     return () => {
+      clearTimeout(pollingTimer);
       window.removeEventListener("offline", goOffline);
       window.removeEventListener("online", goOnline);
     };
@@ -199,11 +266,23 @@ function OfflineBanner() {
 }
 
 function GlobalAuthHooks() {
-  usePingsNotification();
-  useBroadcastNotification();
+  useGlobalNotifications();
+  useEngagementReminders();
   useEffect(() => {
-    initSounds();
-    playOnUnlock(playSmashSound); // shuttle smash on every page load/refresh
+    const unlockAudio = () => {
+      initSounds();
+      playOnUnlock(playSmashSound); // lazy load audio
+      window.removeEventListener("pointerdown", unlockAudio);
+      window.removeEventListener("keydown", unlockAudio);
+    };
+
+    window.addEventListener("pointerdown", unlockAudio);
+    window.addEventListener("keydown", unlockAudio);
+
+    return () => {
+      window.removeEventListener("pointerdown", unlockAudio);
+      window.removeEventListener("keydown", unlockAudio);
+    };
   }, []);
   return null;
 }
@@ -211,10 +290,15 @@ function GlobalAuthHooks() {
 function AppContent() {
   const { updateInfo, isDialogOpen, dismissUpdate } = useAppUpdate();
   const [isLogMatchOpen, setIsLogMatchOpen] = useState(false);
+  const [isBetaFeedbackOpen, setIsBetaFeedbackOpen] = useState(false);
   const [defaultOpponentId, setDefaultOpponentId] = useState<string | undefined>(undefined);
   const { profile, session } = useAuth();
   const [location, setLocation] = useLocation();
   const { mode } = useAppMode();
+
+  useShakeToFeedback(() => {
+    setIsBetaFeedbackOpen(true);
+  });
 
   useInactivityLogout();
   useNativeBackButton();
@@ -233,8 +317,23 @@ function AppContent() {
           // Handle iiscshuttlers:// scheme
           if (url.startsWith("iiscshuttlers://")) {
             const path = url.slice("iiscshuttlers://".length);
-            // Preserve the full path including query params and hash
-            setLocation("/" + path);
+            
+            // CRITICAL: Feed auth tokens to Supabase before routing
+            if (url.includes('#access_token=') || url.includes('?code=')) {
+              if (url.includes('#')) {
+                const hashPart = url.substring(url.indexOf('#'));
+                // Sanitize: Allow only valid URI characters for Supabase OAuth hash
+                if (/^[a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,;=%]+$/.test(hashPart)) {
+                  window.location.hash = hashPart;
+                  // Supabase is statically imported, just call getSession to process the hash synchronously
+                  supabase.auth.getSession();
+                }
+              }
+            }
+            
+            // Preserve the full path including query params and hash, strictly sanitized
+            const safePath = path.replace(/[^a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,;=%]/g, "");
+            setLocation("/" + safePath);
             return;
           }
           // Handle https URLs
@@ -243,7 +342,8 @@ function AppContent() {
             // Extract everything after /iiscshuttlers, preserving query + hash
             const pathAfterBase = parsed.pathname.replace(/^\/iiscshuttlers/, "") || "/";
             const fullPath = pathAfterBase + parsed.search + parsed.hash;
-            setLocation(fullPath);
+            const safeFullPath = fullPath.replace(/[^a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,;=%]/g, "");
+            setLocation(safeFullPath);
           }
         } catch {
           // Fallback for malformed URLs
@@ -290,7 +390,7 @@ function AppContent() {
               <ScrollToTop />
               <RoutePersistence />
               <ScrollProgress />
-              <div data-overflow-root className={`flex flex-col min-h-screen overflow-x-clip ${session && mode === "personal" && !location.startsWith("/tv") ? "lg:ml-64" : ""}`}>
+              <div data-overflow-root className={`flex flex-col min-h-screen overflow-x-clip ${/^\/player\/[^/]+\/personal/.test(location) && !location.startsWith("/tv") ? "lg:ml-64" : ""}`}>
                 {/* Skip-to-content for keyboard / screen-reader users */}
                 <a
                   href="#main-content"
@@ -302,7 +402,7 @@ function AppContent() {
                 {!location.startsWith("/tv") && <PwaInstallPrompt />}
                 {!location.startsWith("/tv") && <Navigation />}
                 {!location.startsWith("/tv") && <StatusBanner />}
-                <main id="main-content" className={`flex-1 flex flex-col ${location.startsWith("/tv") ? "" : session ? "pb-24 lg:pb-0" : mode === "club" ? "pb-20 lg:pb-0" : ""} ${location.startsWith("/tv") ? "" : mode === "personal" ? "pt-[calc(3rem+env(safe-area-inset-top))] lg:pt-0" : ""}`}>
+                <main id="main-content" className={`flex-1 flex flex-col ${location.startsWith("/tv") ? "" : session ? "pb-24 lg:pb-0" : mode === "club" ? "pb-20 lg:pb-0" : ""} ${location.startsWith("/tv") ? "" : /^\/player\/[^/]+\/personal/.test(location) ? "pt-[calc(3rem+env(safe-area-inset-top))] lg:pt-0" : ""}`}>
                   <AppRoutes />
                 </main>
                 {!location.startsWith("/tv") && <Footer />}
@@ -326,6 +426,7 @@ function AppContent() {
             )}
             <GlobalAuthHooks />
             <OnboardingTour />
+            <BetaFeedbackModal isOpen={isBetaFeedbackOpen} onClose={() => setIsBetaFeedbackOpen(false)} />
             {isDialogOpen && updateInfo && (
               <UpdateDialog info={updateInfo} onDismiss={dismissUpdate} />
             )}
@@ -333,31 +434,13 @@ function AppContent() {
   );
 }
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
-    },
-  },
-});
-
 function App() {
   return (
-    <ErrorBoundary>
-      <ThemeProvider defaultTheme="dark" switchable>
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <AppUpdateProvider>
-              <AppModeProvider>
-                <AppContent />
-              </AppModeProvider>
-            </AppUpdateProvider>
-          </AuthProvider>
-          {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
-        </QueryClientProvider>
-      </ThemeProvider>
-    </ErrorBoundary>
+    <GlobalErrorBoundary>
+      <AppProviders>
+        <AppContent />
+      </AppProviders>
+    </GlobalErrorBoundary>
   );
 }
 

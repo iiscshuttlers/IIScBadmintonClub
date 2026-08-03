@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useLocation } from "wouter";
+import { App as CapacitorApp } from "@capacitor/app";
 
 const ROUTE_KEY = "iiscshuttlers:last_route";
 
@@ -43,12 +44,25 @@ export function RoutePersistence() {
 
   // Persist on every route change (including query string + hash).
   useEffect(() => {
-    try {
-      const full = location + window.location.search + window.location.hash;
-      localStorage.setItem(ROUTE_KEY, full);
-    } catch {
-      // ignore write failures
-    }
+    const saveState = () => {
+      try {
+        const full = location + window.location.search + window.location.hash;
+        localStorage.setItem(ROUTE_KEY, full);
+      } catch {
+        // ignore write failures
+      }
+    };
+
+    saveState();
+
+    let sub: any;
+    CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      if (!isActive) saveState();
+    }).then(res => sub = res);
+
+    return () => {
+      if (sub) sub.remove();
+    };
   }, [location]);
 
   return null;

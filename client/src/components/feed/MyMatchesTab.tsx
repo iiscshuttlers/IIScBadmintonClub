@@ -22,7 +22,7 @@ export function MyMatchesTab() {
   const [kudosState, setKudosState] = useState<Record<string, boolean>>({});
   
   // Sub-tab — synced to URL hash for back/forward support
-  const SUB_TABS = ["all", "friendly-accepted", "friendly-requested", "tournament"] as const;
+  const SUB_TABS = ["all", "pending"] as const;
   const [subTab, setSubTab] = useHashTab(SUB_TABS, "all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -43,6 +43,7 @@ export function MyMatchesTab() {
           submitter:players!submitted_by(id, full_name)
         `)
         .or(`player1_id.eq.${profile.id},player2_id.eq.${profile.id},team1_partner_id.eq.${profile.id},team2_partner_id.eq.${profile.id},submitted_by.eq.${profile.id}`)
+        .eq("is_friendly", false)
         .not("status", "eq", "rejected")
         .order("date", { ascending: false });
 
@@ -65,12 +66,8 @@ export function MyMatchesTab() {
     let result = matches;
     
     // Sub-tab filter
-    if (subTab === "friendly-requested") {
-      result = result.filter(m => m.is_friendly !== false && m.status === "pending");
-    } else if (subTab === "friendly-accepted") {
-      result = result.filter(m => m.is_friendly !== false && m.status === "confirmed");
-    } else if (subTab === "tournament") {
-      result = result.filter(m => m.is_friendly === false);
+    if (subTab === "pending") {
+      result = result.filter(m => m.status === "pending");
     } else {
       // all
       result = result.filter(m => m.status === "confirmed");
@@ -193,58 +190,26 @@ export function MyMatchesTab() {
       <div className={`sticky ${mode === "personal" ? "top-0 lg:top-0" : "top-[56px] lg:top-[72px]"} z-30 bg-slate-50 dark:bg-slate-950 -mx-4 px-4 py-2 mb-2`}>
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-3 shadow-sm border border-slate-200 dark:border-slate-800">
         
-        {/* Tabs - 3 Rows */}
+        {/* Tabs - 1 Row */}
         <div className="flex flex-col gap-2 mb-3">
           
-          {/* Row 1: All */}
           <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-2xl">
             <button 
               onClick={() => setSubTab("all")}
               className={`flex-1 py-2 text-[11px] sm:text-xs font-bold rounded-xl transition-colors ${subTab === "all" ? "bg-white dark:bg-slate-700 shadow-sm text-foreground dark:text-foreground" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}
             >
-              All
+              Confirmed Matches
             </button>
-          </div>
-
-          {/* Row 2: Friendly | Tournament */}
-          <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-2xl">
             <button 
-              onClick={() => setSubTab("friendly-accepted")}
-              className={`flex-1 py-2 text-[11px] sm:text-xs font-bold rounded-xl transition-colors relative ${subTab.startsWith("friendly") ? "bg-white dark:bg-slate-700 shadow-sm text-primary dark:text-primary" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}
+              onClick={() => setSubTab("pending")}
+              className={`flex-1 py-2 text-[11px] sm:text-xs font-bold rounded-xl transition-colors relative ${subTab === "pending" ? "bg-white dark:bg-slate-700 shadow-sm text-amber-600 dark:text-amber-400" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}
             >
-              Friendly
-              {matches.some((m: any) => m.is_friendly !== false && m.status === "pending" && m.submitted_by !== profile.id) && (
+              Pending Approval
+              {matches.some((m: any) => m.status === "pending" && m.submitted_by !== profile.id) && (
                 <span className="absolute top-1 right-1 sm:right-2 w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
               )}
             </button>
-            <button 
-              onClick={() => setSubTab("tournament")}
-              className={`flex-1 py-2 text-[11px] sm:text-xs font-bold rounded-xl transition-colors relative ${subTab === "tournament" ? "bg-white dark:bg-slate-700 shadow-sm text-amber-600 dark:text-amber-400" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}
-            >
-              Tournament
-            </button>
           </div>
-
-          {/* Row 3: Requested | Accepted (Only visible if Friendly is selected) */}
-          {subTab.startsWith("friendly") && (
-            <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-2xl animate-in fade-in slide-in-from-top-2">
-              <button 
-                onClick={() => setSubTab("friendly-requested")}
-                className={`flex-1 py-2 text-[11px] sm:text-xs font-bold rounded-xl transition-colors relative ${subTab === "friendly-requested" ? "bg-white dark:bg-slate-700 shadow-sm text-amber-600 dark:text-amber-400" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}
-              >
-                Requested
-                {matches.some((m: any) => m.is_friendly !== false && m.status === "pending" && m.submitted_by !== profile.id) && (
-                  <span className="absolute top-1 right-1 sm:right-2 w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-                )}
-              </button>
-              <button 
-                onClick={() => setSubTab("friendly-accepted")}
-                className={`flex-1 py-2 text-[11px] sm:text-xs font-bold rounded-xl transition-colors relative ${subTab === "friendly-accepted" ? "bg-white dark:bg-slate-700 shadow-sm text-primary dark:text-primary" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}
-              >
-                Accepted
-              </button>
-            </div>
-          )}
 
         </div>
 
@@ -290,7 +255,7 @@ export function MyMatchesTab() {
             <Calendar className="w-8 h-8 text-muted-foreground" />
           </div>
           <h3 className="text-lg font-black text-foreground dark:text-foreground mb-2">No Matches Found</h3>
-          <p className="text-muted-foreground text-sm">You don't have any {subTab !== "all" ? subTab === "friendly-requested" ? "requested" : "accepted" : ""} matches matching your filters.</p>
+          <p className="text-muted-foreground text-sm">You don't have any {subTab === "pending" ? "pending" : "confirmed"} tournament matches matching your filters.</p>
         </div>
       ) : (
         <div className="space-y-4">

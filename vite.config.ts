@@ -169,7 +169,7 @@ export default defineConfig(() => {
           description: "IISc Badminton Club Application",
           theme_color: "#10b981",
           background_color: "#ffffff",
-          display: "standalone",
+          display: "fullscreen",
           start_url: isGithubPages ? "/iiscshuttlers/" : "/",
           scope: isGithubPages ? "/iiscshuttlers/" : "/",
           // gcm_sender_id is required for legacy FCM web push but is not in the ManifestOptions type

@@ -22,12 +22,13 @@ import { usePlayerStats } from "@/hooks/usePlayerStats";
 import { useTournamentMatchHistory } from "@/hooks/useTournamentMatchHistory";
 import { useMatchActions } from "@/hooks/useMatchActions";
 import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
+import { ARCHIVED_TOURNAMENTS } from "@/data/tournamentArchive";
 import { MatchHistorySection } from "@/components/player-profile/MatchHistorySection";
 import {
   EquipmentArsenalSection,
   CareerHighlightsSection,
 } from "@/components/player-profile/PlayerProfileSections";
-import { EloAuditModal } from "@/components/player-profile/EloAuditModal";
+
 import { LoadingScreen } from "@/components/player-profile/PlayerProfileWidgets";
 import { HeadToHeadWidget } from "@/components/player-profile/HeadToHeadWidget";
 import { AchievementBadges } from "@/components/player-profile/AchievementBadges";
@@ -41,6 +42,12 @@ import { PlayerPhotosSection } from "@/components/player-profile/PlayerPhotosSec
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { ChallengeModal } from "@/components/ChallengeModal";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Extracted Hooks & Components
 import { usePlayerProfileQuery } from "@/hooks/queries/usePlayerProfileQuery";
@@ -83,7 +90,7 @@ export default function PlayerProfile() {
   const [activeTab, setActiveTab] = useHashTab(["OVERVIEW", "RANKING", "STATS", "MATCHES", "PHOTOS"] as const, "OVERVIEW");
 
   const [isChallengeModalOpen, setIsChallengeModalOpen] = useState(false);
-  const [showEloAudit, setShowEloAudit] = useState(false);
+
 
   // Own player profile
   const [ownPlayerProfile, setOwnPlayerProfile] = useState<any | null>(null);
@@ -126,9 +133,77 @@ export default function PlayerProfile() {
     handleResendRequest,
   } = useMatchActions(ownPlayerProfile, () => silentRefresh(), () => {}, liveMatches);
 
-  const validAchievements = useMemo(() => {
-    return player?.achievements?.filter((a: string) => a.trim().length > 0) || [];
+  const dynamicTournamentData = useMemo(() => {
+    if (!player) return { achievements: [], tournaments: [] };
+
+    const achievements: string[] = [];
+    const tournaments = new Set<string>();
+
+    const isPlayerInString = (str?: string) => {
+      if (!str) return false;
+      const cleanStr = str.toLowerCase().replace(/\(.*?\)/g, "").trim();
+      const playerName = (player.fullName || "").toLowerCase();
+      const firstName = playerName.split(" ")[0];
+      return cleanStr.includes(playerName) || cleanStr.includes(firstName);
+    };
+
+    ARCHIVED_TOURNAMENTS.forEach((t) => {
+      let playerPlayed = false;
+      if (t.winners) {
+        t.winners.forEach((w) => {
+          const isWinner = isPlayerInString(w.winner);
+          const isRunnerUp = isPlayerInString(w.runnerUp);
+          const isBronze = w.bronze?.some(b => isPlayerInString(b));
+
+          if (isWinner || isRunnerUp || isBronze) {
+            playerPlayed = true;
+            const yearMatch = t.startDate.match(/^(\d{4})/);
+            const year = yearMatch ? yearMatch[1] : new Date().getFullYear().toString();
+            
+            const position = isWinner ? "Winner" : isRunnerUp ? "Runner-Up" : "Bronze";
+            // e.g. "Men's Doubles Winner - Farewell 2026"
+            const achText = `${w.category} ${position} - ${t.name.replace(/ 20\d{2}$/, "")} ${year}`;
+            achievements.push(achText);
+          }
+        });
+      }
+      
+      if (t.podium && t.podium.some(p => isPlayerInString(p))) {
+         playerPlayed = true;
+      }
+
+      if (playerPlayed) {
+        tournaments.add(t.name);
+      }
+    });
+
+    return { achievements, tournaments: Array.from(tournaments) };
   }, [player]);
+
+  const validAchievements = useMemo(() => {
+    const manual = player?.achievements?.filter((a: string) => a.trim().length > 0) || [];
+    const combined = [...manual];
+    
+    // Simple deduplication based on text similarity
+    dynamicTournamentData.achievements.forEach(dynAch => {
+       const dynLower = dynAch.toLowerCase().replace(/[^\w\s]/g, "");
+       const exists = manual.some((m: string) => m.toLowerCase().replace(/[^\w\s]/g, "") === dynLower);
+       if (!exists) {
+         combined.push(dynAch);
+       }
+    });
+    return combined;
+  }, [player, dynamicTournamentData]);
+
+  const augmentedPlayer = useMemo(() => {
+    if (!player) return null;
+    const manualTournaments = player.tournamentHistory || [];
+    const combinedTourneys = Array.from(new Set([...manualTournaments, ...dynamicTournamentData.tournaments]));
+    return {
+      ...player,
+      tournamentHistory: combinedTourneys
+    };
+  }, [player, dynamicTournamentData]);
 
   const { data: tournamentRuns } = useTournamentMatchHistory(id);
 
@@ -145,16 +220,37 @@ export default function PlayerProfile() {
     );
   }, [liveMatches, player, isMatchParticipant]);
 
+  const currentYearNow = new Date().getFullYear();
+  const profileYear = player?.joinedYear || (player?.created_at ? new Date(player.created_at).getFullYear() : currentYearNow);
+  const minYear = profileYear;
+  const wrappedYears = Array.from({ length: Math.max(1, currentYearNow - minYear + 1) }, (_, i) => currentYearNow - i);
+
   const handleShare = async () => {
     if (!player) return;
     try {
       const shareUrl = `${getBaseShareUrl()}/player/${player.id}`;
-      const shareText = `🏸 ${player.fullName}'s Badminton Profile\n🏆 ELO Rating: ${player.elo_rating || 1200}\n📈 Win Rate: ${splitStats?.all?.winPct || 0}%\n⚔️ Matches Played: ${splitStats?.all?.total || 0}\n\nCheck out the full stats here:\n${shareUrl}`;
+      
+      // Build ranking line
+      const rankParts: string[] = [];
+      if (eloRank?.overall) rankParts.push(`#${eloRank.overall} Overall`);
+      if (eloRank?.singles) rankParts.push(`#${eloRank.singles} Singles`);
+      if (eloRank?.doubles) rankParts.push(`#${eloRank.doubles} Doubles`);
+      if (eloRank?.mixed) rankParts.push(`#${eloRank.mixed} XD`);
+      const rankLine = rankParts.length > 0 ? `🏆 Ranking: ${rankParts.join(' · ')}` : '';
+
+      const shareText = [
+        `🏸 ${player.fullName}'s Badminton Profile`,
+        rankLine,
+        `📈 Win Rate: ${splitStats?.all?.winPct || 0}%`,
+        `⚔️ Matches Played: ${splitStats?.all?.total || 0}`,
+        ``,
+        `Check out the full stats here:`,
+        shareUrl
+      ].filter(Boolean).join('\n');
 
       let file: File | undefined;
       if (player.avatar) {
         try {
-          // Add cache-busting to bypass CORS issues if any, though Supabase storage usually has CORS enabled
           const response = await fetch(player.avatar + '?download=true');
           const blob = await response.blob();
           file = new File([blob], "profile_picture.jpg", { type: blob.type || "image/jpeg" });
@@ -189,20 +285,24 @@ export default function PlayerProfile() {
           dialogTitle: 'Share Profile'
         });
       } else {
+        // For web on Android: use an intent:// URL so the app opens if installed
+        const isAndroid = /android/i.test(navigator.userAgent);
+        const playerPath = `/player/${player.id}`;
+        // intent:// URL triggers the app; fallback goes to the web URL
+        const intentUrl = `intent://${playerPath}#Intent;scheme=iiscshuttlers;package=shuttlers.iisc.com;S.browser_fallback_url=${encodeURIComponent(shareUrl)};end`;
+        const deepLinkUrl = isAndroid ? intentUrl : shareUrl;
+
         const shareData: any = {
           title: `${player.fullName} - Player Profile`,
           text: shareText,
+          url: deepLinkUrl,
         };
 
-        // NOTE: We intentionally do NOT include `files` here for the Web fallback. 
-        // The Web Share API is notoriously buggy across different OS/Browser combinations. 
-        // If `files` is included, many share targets (like WhatsApp on Windows/Android) 
-        // will completely drop the `text` and `url` and ONLY share the image.
-        
         if (navigator.share) {
           await navigator.share(shareData);
         } else {
-          await navigator.clipboard.writeText(shareText);
+          // Fallback: copy the web URL
+          await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
           toast.success("Profile info copied to clipboard!");
         }
       }
@@ -218,18 +318,25 @@ export default function PlayerProfile() {
     }
   };
 
-  const handleWrapped = async () => {
+  const handleWrapped = async (year: number) => {
     if (!player) return;
-    const toastId = toast.loading("Generating your 2024 Wrapped...");
+    const currentYear = year;
+    const toastId = toast.loading(`Generating your ${currentYear} Wrapped...`);
     try {
       const canvas = await renderWrappedShareCard({
+        year: currentYear,
         playerName: player.fullName,
         avatarUrl: player.avatar,
         totalMatches: splitStats?.all?.total || 0,
         winRate: `${splitStats?.all?.winPct || 0}%`,
         biggestRival: bestOpponent?.full_name || "N/A",
         bestStreak: streakStats.max,
-        highestElo: player.elo_rating || 1200
+        ranking: {
+          overall: eloRank?.overall,
+          singles: eloRank?.singles,
+          doubles: eloRank?.doubles,
+          mixed: eloRank?.mixed
+        }
       });
       if (!canvas) throw new Error("Failed to render canvas");
       const dataUrl = canvas.toDataURL("image/png");
@@ -238,7 +345,7 @@ export default function PlayerProfile() {
       toast.dismiss(toastId);
 
       if (Capacitor.isNativePlatform()) {
-        const fileName = `wrapped_2024_${Date.now()}.png`;
+        const fileName = `wrapped_${currentYear}_${Date.now()}.png`;
         const result = await Filesystem.writeFile({
           path: fileName,
           data: base64Data,
@@ -246,8 +353,8 @@ export default function PlayerProfile() {
         });
         
         await Share.share({
-          title: "My 2024 Badminton Wrapped",
-          text: "Check out my badminton stats for 2024!",
+          title: `My ${currentYear} Badminton Wrapped`,
+          text: `Check out my badminton stats for ${currentYear}!`,
           url: result.uri,
           dialogTitle: 'Share your Wrapped'
         });
@@ -258,20 +365,20 @@ export default function PlayerProfile() {
         for (let i = 0; i < byteString.length; i++) {
           ia[i] = byteString.charCodeAt(i);
         }
-        const file = new File([ab], "wrapped_2024.png", { type: "image/png" });
+        const file = new File([ab], `wrapped_${currentYear}.png`, { type: "image/png" });
 
         if (navigator.share) {
           try {
             await navigator.share({
-              title: "My 2024 Badminton Wrapped",
-              text: "Check out my badminton stats for 2024!",
+              title: `My ${currentYear} Badminton Wrapped`,
+              text: `Check out my badminton stats for ${currentYear}!`,
               files: [file],
             });
           } catch (e) {
             // Fallback if sharing files is unsupported
             const link = document.createElement("a");
             link.href = dataUrl;
-            link.download = "wrapped_2024.png";
+            link.download = `wrapped_${currentYear}.png`;
             link.click();
             toast.success("Wrapped image downloaded!");
           }
@@ -294,7 +401,7 @@ export default function PlayerProfile() {
   if (loading || !player) return <LoadingScreen />;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0a1628] selection:bg-amber-500/30 overflow-x-hidden">
+    <div id="profile-container" className="min-h-screen bg-slate-50 dark:bg-[#0a1628] selection:bg-amber-500/30 overflow-x-hidden">
       {/* Background patterns */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 dark:bg-primary/5 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen opacity-70" />
@@ -311,7 +418,8 @@ export default function PlayerProfile() {
           </Link>
 
           <div className="flex items-center gap-2 md:gap-3">
-            {!ownPlayerProfile && (
+            {/* Report — shown to others only */}
+            {currentUser && currentUser.id !== player.userId && (
               <button
                 onClick={handleReport}
                 title="Report User"
@@ -320,89 +428,67 @@ export default function PlayerProfile() {
                 <Flag className="w-4 h-4 md:w-5 md:h-5" />
               </button>
             )}
-            <button
-              onClick={handleShare}
-              className="w-10 h-10 md:w-12 md:h-12 bg-white/90 hover:bg-white text-slate-700 dark:bg-black/40 dark:hover:bg-black/60 dark:text-white backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-slate-200 dark:border-white/10"
-            >
-              <Share2 className="w-4 h-4 md:w-5 md:h-5" />
-            </button>
-            <button
-              onClick={handleWrapped}
-              className="px-3 md:px-5 py-2 md:py-2.5 h-10 md:h-12 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 shadow-lg text-white font-black text-xs md:text-sm uppercase tracking-wider rounded-full flex items-center gap-2 transition-all hover:scale-105 active:scale-95 whitespace-nowrap"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span className="hidden sm:inline">2024 Wrapped</span>
-              <span className="sm:hidden">Wrapped</span>
-            </button>
-            <button
-              onClick={() => exportProfilePdf({
-                name: player.fullName,
-                elo: player.elo_rating || 1200,
-                wins: splitStats?.all?.wins || 0,
-                losses: splitStats?.all?.losses || 0,
-                rank: eloRank?.overall,
-                streak: streakStats?.max || 0,
-                avatarUrl: player.avatar,
-                recentMatches: (liveMatches || []).slice(0, 15).map((m: any) => {
-                  const isTeam1 = m.player1?.id === player.id || m.partner1?.id === player.id;
-                  
-                  let me, partner, opponents: any[] = [];
-                  if (isTeam1) {
-                    me = m.player1?.id === player.id ? m.player1 : m.partner1;
-                    partner = m.player1?.id === player.id ? m.partner1 : m.player1;
-                    if (m.player2) opponents.push(m.player2);
-                    if (m.partner2) opponents.push(m.partner2);
-                  } else {
-                    me = m.player2?.id === player.id ? m.player2 : m.partner2;
-                    partner = m.player2?.id === player.id ? m.partner2 : m.player2;
-                    if (m.player1) opponents.push(m.player1);
-                    if (m.partner1) opponents.push(m.partner1);
-                  }
 
-                  let formatLabel = "S";
-                  const allGenders = [me?.gender, partner?.gender, ...opponents.map(o => o?.gender)]
-                    .map(g => (g || '').toLowerCase())
-                    .filter(Boolean);
-                    
-                  if (partner || opponents.length > 1) {
-                    const hasMale = allGenders.includes('male');
-                    const hasFemale = allGenders.includes('female');
-                    if (hasMale && hasFemale) formatLabel = "XD";
-                    else if (hasFemale) formatLabel = "WD";
-                    else formatLabel = "MD";
-                  } else {
-                    if (me?.gender?.toLowerCase() === 'female' || opponents[0]?.gender?.toLowerCase() === 'female') {
-                      formatLabel = "WS";
-                    } else {
-                      formatLabel = "MS";
-                    }
-                  }
-
-                  let displayScore = m.score || m.match_score || "";
-                  if (displayScore.includes(" | ")) displayScore = displayScore.split(" | ")[0];
-                  displayScore = displayScore.replace(/\s*\[.*$/, "").trim();
-
-                  const getFirstName = (p: any) => p?.full_name?.split(" ")[0] || "";
-                  const opponentStr = opponents.map(getFirstName).filter(Boolean).join(" & ");
-
-                  const isTeam1Winner = m.winner_id === m.player1_id || (m.team1_partner_id && m.winner_id === m.team1_partner_id);
-                  const won = isTeam1 ? isTeam1Winner : !isTeam1Winner;
-
-                  return {
-                    date: m.date_played || m.created_at || new Date().toISOString(),
-                    opponent: opponentStr,
-                    partner: partner ? getFirstName(partner) : undefined,
-                    score: displayScore,
-                    result: won ? "W" : "L",
-                    format: formatLabel
-                  };
-                })
-              })}
-              className="px-3 md:px-5 py-2 md:py-2.5 h-10 md:h-12 bg-white/90 hover:bg-white text-slate-700 dark:bg-black/40 dark:hover:bg-black/60 dark:text-white backdrop-blur-md shadow-sm font-black text-xs md:text-sm uppercase tracking-wider rounded-full flex items-center gap-2 transition-all border border-slate-200 dark:border-white/10 whitespace-nowrap"
-            >
-              <span className="hidden sm:inline">Export PDF</span>
-              <span className="sm:hidden">PDF</span>
-            </button>
+            {/* Share, Wrapped, Export — own profile only */}
+            {currentUser && currentUser.id === player.userId && (
+              <>
+                <button
+                  onClick={handleShare}
+                  className="w-10 h-10 md:w-12 md:h-12 bg-white/90 hover:bg-white text-slate-700 dark:bg-black/40 dark:hover:bg-black/60 dark:text-white backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-slate-200 dark:border-white/10"
+                >
+                  <Share2 className="w-4 h-4 md:w-5 md:h-5" />
+                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className="px-3 md:px-5 py-2 md:py-2.5 h-10 md:h-12 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 shadow-lg text-white font-black text-xs md:text-sm uppercase tracking-wider rounded-full flex items-center gap-2 transition-all hover:scale-105 active:scale-95 whitespace-nowrap"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      <span className="hidden sm:inline">{currentYearNow} Wrapped</span>
+                      <span className="sm:hidden">Wrapped</span>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-slate-200 dark:border-slate-800">
+                    {wrappedYears.map((year) => (
+                      <DropdownMenuItem
+                        key={year}
+                        onClick={() => handleWrapped(year)}
+                        className="font-bold text-slate-700 dark:text-slate-200 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800"
+                      >
+                        <Sparkles className="w-4 h-4 mr-2 text-amber-500" />
+                        {year} Wrapped
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <button
+                  onClick={() => exportProfilePdf({
+                    playerName: player.fullName,
+                    avatarUrl: player.avatar,
+                    department: player.department,
+                    joinedYear: player.joinedYear,
+                    playingLevel: player.playingLevel,
+                    favoriteShot: player.favoriteShot,
+                    favoriteFormat: player.favoriteFormat,
+                    winRate: splitStats?.all?.winPct || 0,
+                    totalMatches: splitStats?.all?.total || 0,
+                    wins: splitStats?.all?.wins || 0,
+                    losses: splitStats?.all?.losses || 0,
+                    ranking: {
+                      overall: eloRank?.overall,
+                      singles: eloRank?.singles,
+                      doubles: eloRank?.doubles,
+                      mixed: eloRank?.mixed,
+                    },
+                    instagram: player.social?.instagram,
+                  })}
+                  className="px-3 md:px-5 py-2 md:py-2.5 h-10 md:h-12 bg-white/90 hover:bg-white text-slate-700 dark:bg-black/40 dark:hover:bg-black/60 dark:text-white backdrop-blur-md shadow-sm font-black text-xs md:text-sm uppercase tracking-wider rounded-full flex items-center gap-2 transition-all border border-slate-200 dark:border-white/10 whitespace-nowrap"
+                >
+                  <span className="hidden sm:inline">Export PDF</span>
+                  <span className="sm:hidden">PDF</span>
+                </button>
+              </>
+            )}
             {currentUser && currentUser.id === player.userId && (
               <Link href="/profile/setup">
                 <button className="w-10 h-10 md:w-12 md:h-12 bg-white/90 hover:bg-white text-slate-700 dark:bg-black/40 dark:hover:bg-black/60 dark:text-white backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-slate-200 dark:border-white/10">
@@ -422,12 +508,12 @@ export default function PlayerProfile() {
         </div>
 
         {/* Hero Section */}
-        <PlayerHeroBanner player={player} eloRank={eloRank?.overall || null} theme={theme} />
+        <PlayerHeroBanner player={augmentedPlayer || player} eloRank={eloRank?.overall || null} theme={theme} />
 
         <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pb-8 mt-2 md:mt-8">
           <div className="flex flex-col lg:flex-row gap-6 justify-between items-start">
             <PlayerActionBar
-              player={player}
+              player={augmentedPlayer || player}
               currentUser={currentUser}
               ownPlayerProfile={ownPlayerProfile}
               setIsChallengeModalOpen={setIsChallengeModalOpen}
@@ -438,12 +524,12 @@ export default function PlayerProfile() {
         {/* Tab Navigation */}
         <div className="w-full border-b border-slate-200 dark:border-amber-900/20 bg-white dark:bg-[#0a1628] sticky top-0 z-30 shadow-sm dark:shadow-amber-900/10">
           <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-10">
-            <div className="grid grid-cols-2 md:flex md:items-center gap-x-2 md:gap-6 w-full md:min-w-max">
+            <div className="flex flex-wrap items-center gap-2 md:gap-6 w-full md:min-w-max">
               {["OVERVIEW", "RANKING", "STATS", "MATCHES", "PHOTOS"].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab as any)}
-                  className={`py-3 md:py-4 text-xs md:text-sm font-black tracking-widest uppercase transition-colors relative ${
+                  className={`flex-auto md:flex-none min-w-[100px] py-3 md:py-4 text-[11px] md:text-sm font-black tracking-widest uppercase transition-colors relative text-center ${
                     activeTab === tab
                       ? "text-amber-600 dark:text-amber-400"
                       : "text-muted-foreground hover:text-foreground dark:hover:text-slate-300"
@@ -530,7 +616,7 @@ export default function PlayerProfile() {
           <div className="lg:col-span-7 xl:col-span-8 space-y-6">
             {activeTab === "OVERVIEW" && (
               <ProfileOverviewTab
-                player={player}
+                player={augmentedPlayer || player}
                 splitStats={splitStats}
                 streakStats={streakStats}
                 bestOpponent={bestOpponent}
@@ -549,23 +635,20 @@ export default function PlayerProfile() {
 
             {activeTab === "RANKING" && (
               <ProfileRankingTab
-                player={player}
+                player={augmentedPlayer || player}
                 authSession={authSession}
                 liveMatches={liveMatches}
-                eloHistoryData={eloHistoryData}
-                eloChartFilter={eloChartFilter}
-                setEloChartFilter={setEloChartFilter}
-                setShowEloAudit={setShowEloAudit}
                 HeadToHeadWidget={HeadToHeadWidget}
                 Badges={Badges}
                 id={id!}
                 eloRank={eloRank}
+                eloHistoryData={eloLogs || []}
               />
             )}
 
             {activeTab === "STATS" && (
               <ProfileStatsTabLeft
-                player={player}
+                player={augmentedPlayer || player}
                 liveMatches={liveMatches}
                 allPlayers={allPlayers}
                 id={id!}
@@ -600,14 +683,14 @@ export default function PlayerProfile() {
           <div className="lg:col-span-5 xl:col-span-4 space-y-5">
             {activeTab === "OVERVIEW" && (
               <ProfileOverviewTabRight
-                player={player}
+                player={augmentedPlayer || player}
                 validAchievements={validAchievements}
                 splitStats={splitStats}
                 tournamentRuns={tournamentRuns}
               />
             )}
             {activeTab === "STATS" && (
-              <ProfileStatsTabRight player={player} setLocation={setLocation} />
+              <ProfileStatsTabRight player={augmentedPlayer || player} setLocation={setLocation} />
             )}
           </div>
         </div>
@@ -620,12 +703,7 @@ export default function PlayerProfile() {
         currentUser={ownPlayerProfile}
       />
 
-      <EloAuditModal
-        isOpen={showEloAudit}
-        onClose={() => setShowEloAudit(false)}
-        playerId={id!}
-        matches={liveMatches}
-      />
+
     </div>
   );
 }

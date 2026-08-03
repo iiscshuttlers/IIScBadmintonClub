@@ -2,6 +2,7 @@ import { UmpireSetupFlow } from "./UmpireSetupFlow";
 import { PlayerSelect } from "./PlayerSelect";
 import { ScoringLogic, type MatchFormat } from "@/lib/umpire/scoringLogic";
 import { useState, useEffect, useRef } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import {
   Trophy, Activity, Plus, Minus, X, Settings, Save, Timer, Play,
@@ -62,7 +63,7 @@ export function UmpireEngine({
   tournamentMatch?: TournamentMatchForUmpire | null;
 }) {
   const [confirmAction, setConfirmAction] = useState<{ title: string; message: string; onConfirm: () => void; confirmLabel?: string; confirmColor?: string } | null>(null);
-
+  
   const [isScorePinned, setIsScorePinned] = useState(false);
   const [isMotionTracking, setIsMotionTracking] = useState(false);
   const [motionData, setMotionData] = useState<MotionData | null>(null);
@@ -293,11 +294,39 @@ export function UmpireEngine({
     userEmail,
     userName,
     isTournamentUmpire,
-    friendlyOnly: !isAdminEmail(userEmail) && !isTournamentUmpire,
+    friendlyOnly: !isTournamentUmpire,
     initialMatchState,
     tournamentMatch,
     onClose,
     onMatchSaved: saveMotionStats,
+  });
+
+  const queryClient = useQueryClient();
+  const { mutate: addPointMutate, isPending: isSyncing } = useMutation({
+    mutationFn: async ({ team, matchId }: { team: 1 | 2, matchId: string }) => {
+      if (!tournamentMatch && !match.isTournamentMatch) {
+        // Friendly matches are only synced to the DB when finished.
+        // During live play, they only update via site_data (handled synchronously).
+        return;
+      }
+      
+      const { error } = await supabase.rpc('increment_match_score', {
+        match_id: matchId,
+        p1_increment: team === 1 ? 1 : 0,
+        p2_increment: team === 2 ? 1 : 0
+      });
+      if (error) throw error;
+    },
+    onMutate: async ({ team }) => {
+      await queryClient.cancelQueries({ queryKey: ["matches"] });
+      const previousMatch = queryClient.getQueryData(["matches"]);
+      umpireState.addPoint(team);
+      return { previousMatch };
+    },
+    onError: (err, variables, context) => {
+      toast.error("Network error: Failed to sync point. Score rolled back.");
+      queryClient.setQueryData(["matches"], context?.previousMatch);
+    },
   });
 
   const {
@@ -305,7 +334,7 @@ export function UmpireEngine({
     pendingBreakAfterEnds, showCardPanel, cardTarget, showRetireModal,
     isEditSetupOpen, showToolsMenu, isDirectScoreOpen, showFullTimer,
     directSetsText, directWinner, myBuddies, breakSecondsLeft, breakTotalSeconds, breakLabel,
-    setPlayers, setMatch, setCards, setShowLog, setShowChangeEnds, setChangeEndsReason,
+    setMatch, setCards, setShowLog, setShowChangeEnds, setChangeEndsReason,
     setPendingBreakAfterEnds, setShowCardPanel, setCardTarget, setShowRetireModal,
     setIsEditSetupOpen, setShowToolsMenu, setIsDirectScoreOpen, setShowFullTimer,
     setDirectSetsText, setDirectWinner, setBreakSecondsLeft, setBreakLabel,
@@ -317,7 +346,8 @@ export function UmpireEngine({
   } = umpireState;
 
   // Render variables
-  const friendlyOnly = !isAdminEmail(userEmail) && !isTournamentUmpire;
+  // friendlyOnly = no tournament in progress OR user lacks umpire/admin role
+  const friendlyOnly = !isTournamentUmpire;
 
   // ── Rally segmentation (Path A) ──
   // Every new match.pointLog entry is a scored point, i.e. a rally boundary with a
@@ -555,10 +585,13 @@ export function UmpireEngine({
     if (!isEditSetupOpen) return null;
     return (
       <div 
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto"
+        className="fixed inset-0 z-50 flex flex-col justify-end p-2 sm:p-4 bg-slate-950/80 backdrop-blur-sm"
         onClick={() => setIsEditSetupOpen(false)}
       >
-        <div className="w-full max-w-xl my-8" onClick={e => e.stopPropagation()}>
+        <div 
+          className="w-full max-w-xl mx-auto max-h-[85vh] overflow-y-auto custom-scrollbar animate-in slide-in-from-bottom duration-300 rounded-3xl" 
+          onClick={e => e.stopPropagation()}
+        >
           {renderSetupContent()}
         </div>
       </div>
@@ -741,7 +774,8 @@ export function UmpireEngine({
               return (
                 <div
                   key={team}
-                  onClick={() => addPoint(team)}
+                  data-testid={`btn-add-point-t${team}`}
+                  onClick={() => !isSyncing && addPointMutate({ team, matchId: match.id || tournamentMatch?.id || "" })}
                   style={{ order }}
                   className={`relative cursor-pointer select-none active:scale-[0.97] rounded-3xl border-2 p-3 sm:p-5 md:p-7 flex flex-col items-center transition-all ${
                     isServing
@@ -786,7 +820,7 @@ export function UmpireEngine({
                   </div>
 
                   {/* Score */}
-                  <div className={`text-[4.5rem] sm:text-[7rem] md:text-[9rem] leading-none font-black tracking-tighter tabular-nums drop-shadow-md ${scoreColor}`}>
+                  <div data-testid={`t${team}-score`} className={`text-[4.5rem] sm:text-[7rem] md:text-[9rem] leading-none font-black tracking-tighter tabular-nums drop-shadow-md ${scoreColor}`}>
                     {t.score}
                   </div>
 
@@ -1021,15 +1055,31 @@ export function UmpireEngine({
               </button>
               
               <button 
-                onClick={() => {
+                onClick={async () => {
                   const t1Name = match.t1.p2Name ? `${match.t1.p1Name} & ${match.t1.p2Name}` : match.t1.p1Name;
                   const t2Name = match.t2.p2Name ? `${match.t2.p1Name} & ${match.t2.p2Name}` : match.t2.p1Name;
                   const fullScore = `${t1Name} [${match.t1.score} - ${match.t2.score}] ${t2Name}`;
-                  supabase.from("site_data").upsert({ 
-                    key: "match_alert", 
-                    value: { message: `🏆 Live Score: ${fullScore}`, time: Date.now() } 
+                  const scoreMessage = `🏸 Live Score: ${fullScore}`;
+
+                  // Realtime in-app banner for users currently on the site
+                  const { error } = await supabase.rpc("push_match_alert", {
+                    p_message: scoreMessage,
                   });
-                  toast.success("Score pushed to all users!");
+
+                  // Actual FCM push so it also reaches devices with the app closed/backgrounded
+                  const { data: pushResp, error: pushErr } = await supabase.functions.invoke("push-live-score", {
+                    body: { message: scoreMessage, match_id: match.id },
+                  });
+
+                  if (error && pushErr) {
+                    toast.error("Failed to push score — " + error.message);
+                  } else if (pushErr) {
+                    toast.warning("Live banner shown, but device push failed: " + pushErr.message);
+                  } else if (pushResp?.total === 0) {
+                    toast.success("Score pushed! (No devices registered for push notifications)");
+                  } else {
+                    toast.success(`Score pushed to all users! (${pushResp?.sent ?? 0} devices notified)`);
+                  }
                 }}
                 className="px-1 py-3 bg-slate-800 hover:bg-sky-500/20 text-sky-400 font-bold text-[10px] sm:text-xs rounded-xl flex flex-col sm:flex-row justify-center items-center gap-1 sm:gap-1.5 border border-slate-700 hover:border-sky-500/30 transition shadow-sm"
               >
@@ -1051,7 +1101,7 @@ export function UmpireEngine({
                 confirmColor: "bg-rose-600 hover:bg-rose-500",
                 onConfirm: async () => {
                   try {
-                    const { data } = await supabase.from("site_data").select("value").eq("key", "live_matches").single();
+                    const { data } = await supabase.from("site_data").select("value").eq("key", "live_matches").maybeSingle();
                     const lm = (data?.value as Record<string, any>) || {};
                     if (lm[match.id]) {
                       delete lm[match.id];

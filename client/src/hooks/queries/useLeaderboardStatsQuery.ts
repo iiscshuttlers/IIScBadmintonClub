@@ -168,6 +168,6 @@ export function useLeaderboardStatsQuery(categoryFilter: string, eloMode: "club"
       };
     },
     enabled: enabled,
-    refetchInterval: 60_000,
+    refetchInterval: (query) => (query.state.error ? false : 60_000),
   });
 }

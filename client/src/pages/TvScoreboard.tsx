@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { useLiveSiteData } from "@/hooks/useMatches";
 import type { BwfMatchState } from "@/types/umpire";
 import { Loader2, ArrowLeft, X } from "lucide-react";
@@ -11,29 +12,34 @@ export default function TvScoreboard() {
   const [matchState, setMatchState] = useState<BwfMatchState | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Initial fetch and subscription
-  useEffect(() => {
-    if (!matchId) return;
-    
-    const fetchInitial = () => {
-      supabase
+  const { data: queryData, isLoading } = useQuery({
+    queryKey: ['tv_scoreboard', matchId],
+    queryFn: async () => {
+      if (!matchId) return null;
+      const { data } = await supabase
         .from("site_data")
         .select("value")
         .eq("key", "live_matches")
-        .single()
-        .then(({ data }) => {
-          if (data?.value && data.value[matchId]) {
-            setMatchState(data.value[matchId] as BwfMatchState);
-          } else {
-            setMatchState(null);
-          }
-          setLoading(false);
-        });
-    };
+        .maybeSingle();
+      
+      if (data?.value && data.value[matchId]) {
+        return data.value[matchId] as BwfMatchState;
+      }
+      return null;
+    },
+    refetchInterval: (query) => (query.state.error ? false : 5000),
+    staleTime: 2000,
+    gcTime: 1000 * 60 * 10,
+    enabled: !!matchId,
+  });
 
-    fetchInitial();
-    const interval = setInterval(fetchInitial, 5000); // Fallback polling
+  useEffect(() => {
+    if (!matchId) return;
 
+    if (queryData && !matchState) {
+      setMatchState(queryData);
+    }
+    
     // Subscribe
     const sub = supabase
       .channel(`tv_scoreboard_${matchId}`)
@@ -59,9 +65,12 @@ export default function TvScoreboard() {
 
     return () => {
       supabase.removeChannel(sub);
-      clearInterval(interval);
     };
-  }, [matchId]);
+  }, [matchId, queryData]);
+
+  useEffect(() => {
+    if (!isLoading) setLoading(false);
+  }, [isLoading]);
 
   if (loading) {
     return (
@@ -203,7 +212,7 @@ export default function TvScoreboard() {
       {/* Bottom Footer info */}
       <div className="h-24 lg:h-32 w-full flex items-center justify-center px-12 bg-gradient-to-t from-slate-900 to-black/0">
         <div className="flex items-center gap-8 text-3xl font-bold text-slate-500 tracking-wider">
-          {matchState.setsHistory.length > 0 ? (
+          {matchState.setsHistory?.length > 0 ? (
             <>
               <span>PREVIOUS SETS:</span>
               <span className="text-white drop-shadow-md">{matchState.setsHistory.join("  |  ")}</span>

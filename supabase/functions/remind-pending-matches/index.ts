@@ -60,9 +60,10 @@ async function sendFcmNotification(
       message: {
         token,
         notification: { title, body },
+        data: { type: "match_confirmation", action: "view_match" },
         android: {
           priority: "high",
-          notification: { channelId: "notify_confirmation" }
+          notification: { channel_id: "notify_point" }
         },
         webpush: { headers: { Urgency: "high" } },
         apns: { headers: { "apns-priority": "10" } },
@@ -97,6 +98,18 @@ serve(async () => {
       const confirmer = confirmerIsP1 ? match.player1 : match.player2;
       const submitter = confirmerIsP1 ? match.player2 : match.player1;
 
+      const notifTitle = "⏳ Pending Match Reminder";
+      const notifBody = `${submitter?.full_name ?? "Your opponent"} is waiting for you to confirm a match. Tap to review it.`;
+
+      // Create in-app notification
+      await supabase.from("notifications").insert({
+        user_id: confirmerId,
+        title: notifTitle,
+        message: notifBody,
+        type: "match_confirmation",
+        link: "/my-matches#pending"
+      });
+
       // Get confirmer's push tokens from user_push_tokens table
       const { data: tokens } = await supabase
         .from("user_push_tokens")
@@ -107,8 +120,8 @@ serve(async () => {
         for (const { token } of tokens) {
           await sendFcmNotification(
             token as string,
-            "⏳ Pending Match Reminder",
-            `${submitter?.full_name ?? "Your opponent"} is waiting for you to confirm a match. Tap to review it.`,
+            notifTitle,
+            notifBody,
             serviceAccount.project_id,
             accessToken
           );

@@ -46,7 +46,7 @@ export function PlayerSelect({
   }, [value, players, fallbackName]);
 
   const filtered = players.filter((p) =>
-    p.full_name.toLowerCase().includes(search.toLowerCase())
+    (p.full_name || "").toLowerCase().includes((search || "").toLowerCase())
   );
 
   useEffect(() => {
@@ -98,9 +98,9 @@ export function PlayerSelect({
         onChange={(e) => { setSearch(e.target.value); setIsOpen(true); onChange(e.target.value); }}
         onFocus={() => setIsOpen(true)}
         onKeyDown={handleKeyDown}
-        className="w-full text-sm font-bold bg-slate-900/50 border border-slate-700 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
+        className="w-full text-sm font-bold bg-slate-900/50 border border-slate-700 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground truncate"
       />
-      {isOpen && search.length > 0 && (
+      {isOpen && (
         <div ref={listboxRef} className="absolute z-60 w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl max-h-48 overflow-y-auto">
           {filtered.length === 0 ? (
             <div

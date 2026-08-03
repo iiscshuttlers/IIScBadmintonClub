@@ -65,7 +65,7 @@ async function sendFcmToAll(tokens: string[], title: string, body: string) {
             data: { type: "weekly_digest" },
             android: {
               priority: "normal",
-              notification: { channelId: "notify_weekly_digest" }
+              notification: { channel_id: "notify_whistle" }
             },
             webpush: { headers: { Urgency: "normal" } },
             apns: { headers: { "apns-priority": "10" } },
@@ -138,7 +138,22 @@ serve(async () => {
       biggestUpset && biggestUpset.upsetScore > 20 ? `😱 Biggest upset: +${biggestUpset.upsetScore} ELO won!` : null,
     ].filter(Boolean).join("\n");
 
-    // 5. Post to announcements feed (site_data)
+    // 5. Create in-app notifications for all players
+    const { data: allPlayers } = await supabase.from("players").select("id");
+    if (allPlayers && allPlayers.length > 0) {
+      const digestTitle = `📊 Weekly Digest`;
+      await supabase.from("notifications").insert(
+        allPlayers.map(p => ({
+          user_id: p.id,
+          title: digestTitle,
+          message: lines.slice(0, 100),
+          type: "weekly_digest",
+          link: "/my-matches"
+        }))
+      );
+    }
+
+    // 6. Post to announcements feed (site_data)
     const digestAnnouncement = {
       title: `📊 Weekly Digest — ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short" })}`,
       date: new Date().toISOString(),

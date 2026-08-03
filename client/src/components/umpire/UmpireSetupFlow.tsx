@@ -52,10 +52,10 @@ export function UmpireSetupFlow({
   const initials = (name: string) => name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
 
   return (
-    <div className="bg-slate-900 rounded-3xl text-foreground max-w-lg mx-auto shadow-2xl overflow-hidden">
+    <div className="bg-slate-900 rounded-3xl text-foreground max-w-lg mx-auto shadow-2xl">
 
       {/* ── Header ── */}
-      <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 px-6 pt-6 pb-5">
+      <div className="sticky top-0 z-20 bg-gradient-to-br from-slate-800 to-slate-900 px-6 pt-6 pb-5 shadow-md">
         <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-primary via-teal-400 to-primary" />
         <div className="flex items-center justify-between">
           <div>
@@ -94,7 +94,7 @@ export function UmpireSetupFlow({
         </div>
       </div>
 
-      <div className="px-6 pb-6 space-y-5 mt-5">
+      <div className="px-6 pb-28 space-y-5 mt-5">
 
         {/* ── Match number (tournament only) ── */}
         {!match.isFriendly && (
@@ -112,20 +112,23 @@ export function UmpireSetupFlow({
         {/* ── Format row ── */}
         <div className="bg-slate-800/60 rounded-2xl p-4 space-y-3">
           <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Match Format</p>
-          <div className="flex gap-2">
-            {[1, 3, 5].map(sets => (
-              <button key={sets}
-                onClick={() => setMatch({ ...match, bestOfSets: sets })}
-                className={`flex-1 py-2 rounded-xl font-black text-sm border transition ${match.bestOfSets === sets ? "bg-sky-500/20 border-sky-500 text-sky-400" : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"}`}
-              >BO{sets}</button>
-            ))}
-            <div className="w-px bg-slate-700 self-stretch mx-1" />
-            {[11, 15, 21].map(pts => (
-              <button key={pts}
-                onClick={() => setMatch({ ...match, pointsToWin: pts, goldenPoint: pts === 21 ? 30 : pts === 15 ? 21 : 15 })}
-                className={`flex-1 py-2 rounded-xl font-black text-sm border transition ${match.pointsToWin === pts ? "bg-primary/20 border-primary text-primary" : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"}`}
-              >{pts}pts</button>
-            ))}
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              {[1, 3, 5].map(sets => (
+                <button key={sets}
+                  onClick={() => setMatch({ ...match, bestOfSets: sets })}
+                  className={`flex-1 py-2 rounded-xl font-black text-sm border transition ${match.bestOfSets === sets ? "bg-sky-500/20 border-sky-500 text-sky-400" : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"}`}
+                >BO{sets}</button>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              {[11, 15, 21, 30].map(pts => (
+                <button key={pts}
+                  onClick={() => setMatch({ ...match, pointsToWin: pts, goldenPoint: pts === 30 ? 30 : pts === 21 ? 30 : pts === 15 ? 21 : 15 })}
+                  className={`flex-1 py-2 rounded-xl font-black text-sm border transition ${match.pointsToWin === pts ? "bg-primary/20 border-primary text-primary" : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"}`}
+                >{pts}pts</button>
+              ))}
+            </div>
           </div>
           <div className="flex items-center gap-3 pt-1">
             <span className="text-xs text-muted-foreground shrink-0">Golden point cap:</span>
@@ -155,7 +158,7 @@ export function UmpireSetupFlow({
                     <div className="w-7 h-7 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center text-[10px] font-black text-primary shrink-0">
                       {initials(t1p1Name)}
                     </div>
-                    <span className="text-sm font-black text-foreground truncate">{t1p1Name}</span>
+                    <span className="text-sm font-black text-foreground">{t1p1Name}</span>
                   </>
                 ) : (
                   <span className="text-xs text-muted-foreground italic">Team 1</span>
@@ -166,7 +169,7 @@ export function UmpireSetupFlow({
                   <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-[10px] font-black text-primary shrink-0">
                     {initials(t1p2Name)}
                   </div>
-                  <span className="text-sm font-black text-foreground truncate">{t1p2Name}</span>
+                  <span className="text-sm font-black text-foreground">{t1p2Name}</span>
                 </div>
               )}
               <div className="space-y-1.5 pt-1 border-t border-slate-700/50">
@@ -202,7 +205,7 @@ export function UmpireSetupFlow({
                     <div className="w-7 h-7 rounded-full bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-[10px] font-black text-sky-400 shrink-0">
                       {initials(t2p1Name)}
                     </div>
-                    <span className="text-sm font-black text-foreground truncate">{t2p1Name}</span>
+                    <span className="text-sm font-black text-foreground">{t2p1Name}</span>
                   </>
                 ) : (
                   <span className="text-xs text-muted-foreground italic">Team 2</span>
@@ -213,7 +216,7 @@ export function UmpireSetupFlow({
                   <div className="w-7 h-7 rounded-full bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-[10px] font-black text-sky-500 shrink-0">
                     {initials(t2p2Name)}
                   </div>
-                  <span className="text-sm font-black text-foreground truncate">{t2p2Name}</span>
+                  <span className="text-sm font-black text-foreground">{t2p2Name}</span>
                 </div>
               )}
               <div className="space-y-1.5 pt-1 border-t border-slate-700/50">

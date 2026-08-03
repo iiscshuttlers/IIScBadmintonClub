@@ -24,6 +24,8 @@ export function EquipmentArsenalSection({
   const [isOpen, setIsOpen] = useState(false);
   const [isReplaying, setIsReplaying] = useState(false);
 
+  const bagTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     if (isInView) {
       const t = setTimeout(() => setIsOpen(true), 600);
@@ -31,11 +33,17 @@ export function EquipmentArsenalSection({
     }
   }, [isInView]);
 
+  useEffect(() => {
+    return () => {
+      if (bagTimerRef.current) clearTimeout(bagTimerRef.current);
+    };
+  }, []);
+
   const handleBagClick = () => {
     if (isReplaying) return;
     setIsReplaying(true);
     setIsOpen(false);
-    setTimeout(() => {
+    bagTimerRef.current = setTimeout(() => {
       setIsOpen(true);
       setIsReplaying(false);
     }, 800);
@@ -437,8 +445,95 @@ const TIMELINE_COLORS = [
   },
 ];
 
+import { ARCHIVED_TOURNAMENTS } from "@/data/tournamentArchive";
+
 export function CareerHighlightsSection({ player }: { player: any }) {
-  if (!player.careerHighlights || player.careerHighlights.length === 0) {
+  // Extract tournament highlights dynamically
+  const tournamentHighlights = ARCHIVED_TOURNAMENTS.flatMap((t) => {
+    if (!t.winners) return [];
+    
+    // Helper to check if player name matches winner string
+    const isPlayerInString = (str?: string) => {
+      if (!str) return false;
+      const cleanStr = str.toLowerCase().replace(/\(.*?\)/g, "").trim();
+      const playerName = (player.fullName || "").toLowerCase();
+      const firstName = playerName.split(" ")[0];
+      
+      // If full name or first name matches, we count it
+      return cleanStr.includes(playerName) || cleanStr.includes(firstName);
+    };
+
+    return t.winners
+      .filter((w) => isPlayerInString(w.winner) || isPlayerInString(w.runnerUp))
+      .map((w) => {
+        const isWinner = isPlayerInString(w.winner);
+        const yearMatch = t.startDate.match(/^(\d{4})/);
+        const year = yearMatch ? yearMatch[1] : new Date().getFullYear().toString();
+        
+        return {
+          year,
+          title: `${w.category} ${isWinner ? "Champion" : "Runner Up"}`,
+          description: isWinner
+            ? `Won ${w.category} at ${t.name}`
+            : `Runner Up in ${w.category} at ${t.name}`,
+          isDynamic: true
+        };
+      });
+  });
+
+  const dynamicHighlights = tournamentHighlights;
+  const manualHighlights = player.careerHighlights || [];
+
+  const uniqueHighlights: any[] = [...dynamicHighlights];
+
+  manualHighlights.forEach((m: any) => {
+    const mYear = String(m.year);
+    const mStr = `${m.title} ${m.description}`.toLowerCase().replace(/[^\w\s]/g, " ");
+    
+    const hasDuplicate = dynamicHighlights.some((d: any) => {
+      // Normalize both years to string for safe comparison
+      if (String(d.year) !== mYear) return false;
+
+      const dStr = `${d.title} ${d.description}`.toLowerCase().replace(/[^\w\s]/g, " ");
+
+      // Extract meaningful words (length > 3, not generic) from the dynamic entry
+      const stopWords = new Set(["champion", "runner", "winner", "won", "the", "at", "and", "for", "with", "tournament", "badminton", "open", "doubles", "singles", "mixed", "mens", "womens"]);
+      const dTokens = dStr.split(/\s+/).filter(t => t.length > 3 && !stopWords.has(t) && !/^\d+$/.test(t));
+      const mTokens = mStr.split(/\s+/).filter(t => t.length > 3 && !stopWords.has(t) && !/^\d+$/.test(t));
+
+      // Check category alignment (doubles / singles / mixed)
+      const categoriesD = ["mixed", "singles", "doubles"].filter(c => dStr.includes(c));
+      const categoriesM = ["mixed", "singles", "doubles", "xd", "ms", "md", "wd", "ws"].filter(c => mStr.includes(c));
+      
+      // Map abbreviations
+      const categoryMap: Record<string, string> = { xd: "mixed", md: "doubles", wd: "doubles", ms: "singles", ws: "singles" };
+      const mCategoriesNormalized = categoriesM.map(c => categoryMap[c] || c);
+      const categoryOverlap = categoriesD.some(c => mCategoriesNormalized.includes(c) || mStr.includes(c));
+
+      // Check tournament name overlap
+      const tourneyMatch = d.description.match(/at\s+(.+)$/i);
+      const tourneyWords = tourneyMatch
+        ? tourneyMatch[1].toLowerCase().replace(/[^\w\s]/g, " ").split(/\s+/).filter(t => t.length > 3 && t !== "tournament" && t !== "badminton" && t !== mYear)
+        : [];
+      const tourneyOverlap = tourneyWords.some(t => mStr.includes(t));
+
+      // Also check for direct meaningful token overlap (e.g. "farewell" in both)
+      const directOverlap = dTokens.some(t => mTokens.includes(t));
+
+      return categoryOverlap && (tourneyOverlap || directOverlap);
+    });
+
+    if (!hasDuplicate) {
+      uniqueHighlights.push(m);
+    }
+  });
+
+  // Final exact deduplication just in case
+  const finalHighlights = Array.from(new Map(
+    uniqueHighlights.map(h => [`${h.year}-${h.title}`, h])
+  ).values());
+
+  if (finalHighlights.length === 0) {
     return null;
   }
 
@@ -457,7 +552,7 @@ export function CareerHighlightsSection({ player }: { player: any }) {
         <div className="absolute left-0 top-3 bottom-3 w-px bg-linear-to-b from-primary/50 via-blue-500/50 to-purple-500/50 rounded-full" />
 
         <div className="space-y-5">
-          {[...player.careerHighlights]
+          {finalHighlights
             .sort(
               (a: any, b: any) =>
                 parseInt(b.year || "0", 10) - parseInt(a.year || "0", 10),

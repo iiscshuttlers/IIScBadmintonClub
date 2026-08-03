@@ -100,10 +100,28 @@ serve(async () => {
   }
 
   for (const [playerId, challenges] of byPlayer) {
+    // Create in-app notification
+    const challengeList = challenges
+      .map((c: any) => `${c.challenge.title} (${c.progress}/${c.challenge.target})`)
+      .join(", ");
+
+    const notifTitle = "⏰ Challenges expire tonight!";
+    const notifBody = challenges.length === 1
+      ? `You're close! Finish "${challenges[0].challenge.title}" before midnight.`
+      : `${challenges.length} challenges in progress: ${challengeList}`;
+
+    await supabase.from("notifications").insert({
+      user_id: playerId,
+      title: notifTitle,
+      message: notifBody,
+      type: "challenge_expiry",
+      link: "/my-matches"
+    });
+
     const { data: tokens } = await supabase
       .from("user_push_tokens")
       .select("token")
-      .eq("player_id", playerId);
+      .eq("user_id", playerId);
 
     if (!tokens || tokens.length === 0) continue;
 
@@ -116,14 +134,8 @@ serve(async () => {
 
     if (player && player.notify_challenges === false) continue;
 
-    const challengeList = challenges
-      .map((c: any) => `${c.challenge.title} (${c.progress}/${c.challenge.target})`)
-      .join(", ");
-
-    const title = "⏰ Challenges expire tonight!";
-    const body = challenges.length === 1
-      ? `You're close! Finish "${challenges[0].challenge.title}" before midnight.`
-      : `${challenges.length} challenges in progress: ${challengeList}`;
+    const title = notifTitle;
+    const body = notifBody;
 
     for (const { token } of tokens) {
       const res = await fetch(
@@ -141,7 +153,7 @@ serve(async () => {
               data: { type: "challenge_expiry", tab: "challenges" },
               android: {
                 priority: "high",
-                notification: { channelId: "notify_challenges" }
+                notification: { channel_id: "notify_serve" }
               },
             },
           }),

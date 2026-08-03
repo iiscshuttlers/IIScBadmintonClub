@@ -111,7 +111,7 @@ export function usePlayerProfileQuery(id: string | undefined, ownPlayerProfileId
   return {
     player: profileQuery.data as PlayerProfileType | null | undefined,
     loading,
-    eloRank: rankQuery.data,
+    eloRank: liveMatches.some(m => m.status === 'confirmed') ? rankQuery.data : null,
     liveMatches,
     eloLogs: eloLogsQuery.data || [],
     silentRefresh,

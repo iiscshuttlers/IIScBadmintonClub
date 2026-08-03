@@ -10,6 +10,7 @@ import {
   CalendarDays,
   Trash2,
   Shield,
+  ShieldAlert,
   AlertTriangle,
   Users,
   Activity,
@@ -26,6 +27,7 @@ import {
   ExternalLink,
   LayoutGrid,
   UserRound,
+  MessageSquare,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
@@ -48,6 +50,7 @@ import { AdminActivityLog } from "@/components/admin/AdminActivityLog";
 import { EloAuditPanel } from "@/components/admin/EloAuditPanel";
 import { AdminFeaturesPanel } from "@/components/admin/AdminFeaturesPanel";
 import { AdminAllFeaturesPanel } from "@/components/admin/AdminAllFeaturesPanel";
+import { AdminFeedbackPanel } from "@/components/admin/AdminFeedbackPanel";
 import { TooltipRegistryPanel } from "@/components/admin/TooltipRegistryPanel";
 import { TournamentManager } from "@/components/admin/TournamentManager";
 import { RecycleBin } from "@/components/admin/RecycleBin";
@@ -55,6 +58,7 @@ import { GuestPlayersPanel } from "@/components/admin/GuestPlayersPanel";
 import { UndoHistory } from "@/components/admin/UndoHistory";
 import { AdminHistoryProvider, useAdminHistory } from "@/contexts/AdminHistoryContext";
 import { ContentEditorWrapper } from "@/components/admin/ContentEditorWrapper";
+import { RoleManagerPanel } from "@/components/admin/RoleManagerPanel";
 
 import { AppArchitectureMap } from "@/components/admin/AppArchitectureMap";
 import { FeatureMapDashboard } from "@/components/admin/FeatureMapDashboard";
@@ -82,6 +86,7 @@ type TabId =
   | "elo_audit"
   | "settings"
   | "activity_log"
+  | "feedback"
   | "features"
   | "all_features"
   | "features_guide"
@@ -92,7 +97,8 @@ type TabId =
   | "feature_registry"
   | "database_schema"
   | "neural_graph"
-  | "convener_photos";
+  | "convener_photos"
+  | "role_manager";
 
 interface TabGroup {
   title: string;
@@ -133,6 +139,7 @@ const TAB_GROUPS: TabGroup[] = [
     description: "Manage players, guests, and ELO analytics",
     tabs: [
       { id: "players", label: "Players", icon: Users },
+      { id: "role_manager", label: "Role Manager", icon: ShieldAlert },
       { id: "guests", label: "Guests", icon: Ghost },
       { id: "elo_audit", label: "ELO Audit", icon: BarChart2 },
     ],
@@ -156,6 +163,7 @@ const TAB_GROUPS: TabGroup[] = [
     description: "System configuration, logs, and settings",
     tabs: [
       { id: "settings", label: "Settings", icon: Settings },
+      { id: "feedback", label: "User Feedback", icon: MessageSquare },
       { id: "activity_log", label: "Activity Log", icon: ClipboardList },
       { id: "changelog", label: "System Logs", icon: FileCode2 },
       { id: "undo_history", label: "Undo History", icon: Undo2 },
@@ -226,6 +234,7 @@ function SiteAdminInner() {
     if (isInitializing) setAuthState("loading");
     else if (session) {
       if (isMasterAdmin) setAuthState("ok");
+      else if (activeTab === "role_manager") setAuthState("denied");
       else if (activeTab === "umpire") setAuthState(isUmpire ? "ok" : "denied");
       else setAuthState(isAdmin ? "ok" : "denied");
     } else setAuthState("denied");
@@ -311,7 +320,10 @@ function SiteAdminInner() {
                         <div className="p-3" style={{ paddingBottom: "100px" }}>
                           <div className="space-y-4">
                           {TAB_GROUPS.map((group) => {
-                            const visibleTabs = group.tabs.filter((tab) => isAdmin || tab.id === "umpire");
+                            const visibleTabs = group.tabs.filter((tab) => {
+                              if (tab.id === "role_manager") return isMasterAdmin;
+                              return isAdmin || tab.id === "umpire";
+                            });
                             if (visibleTabs.length === 0) return null;
                             return (
                               <div key={group.title}>
@@ -465,12 +477,14 @@ function SiteAdminInner() {
               />
             )}
             {activeTab === "players" && <PlayersManager />}
+            {activeTab === "role_manager" && <RoleManagerPanel />}
             {activeTab === "guests" && <GuestPlayersPanel />}
             {activeTab === "matches" && <MatchesManager />}
             {activeTab === "disputes" && <DisputePanel />}
             {activeTab === "elo_audit" && <EloAuditPanel />}
             {activeTab === "umpire" && <UmpireTab />}
             {activeTab === "settings" && <AdminSettings />}
+            {activeTab === "feedback" && <AdminFeedbackPanel />}
             {activeTab === "activity_log" && <AdminActivityLog />}
             {activeTab === "changelog" && <ChangelogViewer />}
             {activeTab === "features" && <AdminFeaturesPanel />}

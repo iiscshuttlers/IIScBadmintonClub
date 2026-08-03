@@ -4,11 +4,18 @@ export function ScrollProgress() {
   const [pct, setPct] = useState(0);
 
   useEffect(() => {
+    let ticking = false;
     const onScroll = () => {
-      const el = document.documentElement;
-      const scrolled = el.scrollTop || document.body.scrollTop;
-      const total = el.scrollHeight - el.clientHeight;
-      setPct(total > 0 ? (scrolled / total) * 100 : 0);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const el = document.documentElement;
+          const scrolled = el.scrollTop || document.body.scrollTop;
+          const total = el.scrollHeight - el.clientHeight;
+          setPct(total > 0 ? (scrolled / total) * 100 : 0);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);

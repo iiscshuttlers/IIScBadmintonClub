@@ -336,12 +336,20 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
                 // If user is admin/umpire, allow by default? The prompt says "they should have the right to umpire those matches and also time bounded umpiring".
                 // If they have admin/umpire role globally, we can let them bypass, or we force the assignment check. 
                 // Let's check assignments anyway if they are not an admin.
+                const sessionResponse = await supabase.auth.getSession();
+                const userId = sessionResponse.data.session?.user?.id;
+                
+                if (!userId) {
+                  toast.error("Session expired. Please sign in again.");
+                  return;
+                }
+
                 const { data: assignments } = await supabase
                   .from("umpire_assignments")
                   .select("*")
-                  .eq("user_id", (await supabase.auth.getSession()).data.session?.user.id);
+                  .eq("user_id", userId);
 
-                const hasAdmin = (await supabase.from("players").select("role").eq("id", (await supabase.auth.getSession()).data.session?.user.id!).single()).data?.role === 'admin';
+                const hasAdmin = (await supabase.from("players").select("role").eq("id", userId).single()).data?.role === 'admin';
                 
                 if (hasAdmin) {
                   onStartMatch(selectedMatch);

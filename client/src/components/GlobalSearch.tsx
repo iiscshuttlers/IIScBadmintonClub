@@ -80,11 +80,9 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
 
       const [playersRes, playerIdRes, annRes, eventsRes, teamsRes] = await Promise.all([
         supabase
-          .from("players")
-          .select("id, full_name, avatar_url, department, elo_rating")
+          .from("search_players_view")
+          .select("id, full_name, avatar_url, department, overall_rank")
           .ilike("full_name", `%${q}%`)
-          .is("deleted_at", null)
-          .eq("is_guest", false)
           .limit(5),
         // Separate ID-only query used to filter matches safely (avoids raw subquery injection)
         supabase
@@ -114,7 +112,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
         type: "player",
         id: p.id,
         title: p.full_name,
-        subtitle: `${p.department ?? ""}${p.elo_rating ? ` · ${p.elo_rating} ELO` : ""}`,
+        subtitle: `${p.department ?? ""}${p.department ? " · " : ""}${p.overall_rank ? `Rank #${p.overall_rank}` : "Unranked"}`,
         avatar: p.avatar_url,
         href: `/player/${p.id}`,
       }));
@@ -143,7 +141,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
         type: "team",
         id: t.id,
         title: t.team_name,
-        subtitle: t.elo_rating ? `${t.elo_rating} ELO` : undefined,
+        subtitle: undefined,
         href: `/doubles/${t.player1_id}/${t.player2_id}`,
       }));
 

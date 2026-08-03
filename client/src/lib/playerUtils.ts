@@ -118,9 +118,14 @@ export function formatPlayerData(data: any) {
     careerHighlights: data.career_highlights,
     shoes:
       data.shoes && data.shoes.startsWith("[")
-        ? JSON.parse(data.shoes).find((s: any) => s.primary)?.name ||
-        JSON.parse(data.shoes)[0]?.name ||
-        ""
+        ? (() => {
+            try {
+              const parsed = JSON.parse(data.shoes);
+              return parsed.find((s: any) => s.primary)?.name || parsed[0]?.name || "";
+            } catch {
+              return data.shoes;
+            }
+          })()
         : data.shoes,
     shoesList: parseShoesList(data.shoes),
     apparel: data.apparel,

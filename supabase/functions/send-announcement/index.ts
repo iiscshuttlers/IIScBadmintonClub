@@ -1,14 +1,14 @@
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.10.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { SignJWT, importPKCS8 } from "https://esm.sh/jose@5.2.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, cache-control, pragma, expires",
 };
 
 async function getFirebaseAccessToken(): Promise<string> {
-  const serviceAccountStr = Deno.env.get("FIREBASE_SERVICE_ACCOUNT")!;
+  const serviceAccountStr = Deno.env.get("FIREBASE_SERVICE_ACCOUNT");
+  if (!serviceAccountStr) throw new Error("Missing FIREBASE_SERVICE_ACCOUNT");
   const serviceAccount = JSON.parse(serviceAccountStr);
   const privateKey = await importPKCS8(serviceAccount.private_key, "RS256");
   const jwt = await new SignJWT({
@@ -32,8 +32,10 @@ async function getFirebaseAccessToken(): Promise<string> {
   return data.access_token;
 }
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
 
   try {
     const { title, body, admin_email } = await req.json() as { title: string; body: string; admin_email?: string };
@@ -48,17 +50,47 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
-    // Fetch all push tokens
+    // Create in-app notifications for ALL users (regardless of push token status)
+    console.log("Fetching all players...");
+    const { data: allUsers, error: usersErr } = await supabase
+      .from("players")
+      .select("id");
+
+    console.log(`Players fetched: ${allUsers?.length || 0}, Error: ${usersErr?.message || "none"}`);
+    if (usersErr) throw new Error(`Failed to fetch players: ${usersErr.message}`);
+
+    if (allUsers && allUsers.length > 0) {
+      console.log(`Creating notifications for ${allUsers.length} users...`);
+      const { error: notifErr } = await supabase.from("notifications").insert(
+        allUsers.map((u: any) => ({
+          user_id: u.id,
+          title: `📢 ${title}`,
+          message: body,
+          type: "announcement",
+          link: "/pulse#announcements"
+        }))
+      );
+      console.log(`Notifications insert result: ${notifErr?.message || "success"}`);
+      if (notifErr) throw new Error(`Failed to insert notifications: ${notifErr.message}`);
+    } else {
+      console.log("No players found!");
+    }
+
+    // Fetch all push tokens for Firebase push notifications
     const { data: tokens, error: tokErr } = await supabase
       .from("user_push_tokens")
-      .select("token");
+      .select("token, user_id");
 
     if (tokErr) throw new Error(tokErr.message);
+
+    // If no push tokens, just return success (in-app notifications are created anyway)
     if (!tokens || tokens.length === 0) {
-      return new Response(JSON.stringify({ message: "No push tokens registered" }), {
+      return new Response(JSON.stringify({ message: "Announcement sent (in-app only, no push tokens registered)", sent: 0, failed: 0, total: 0 }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const uniqueUserIds = [...new Set(tokens.map((t) => t.user_id).filter(Boolean))];
 
     const fcmToken = await getFirebaseAccessToken();
     const projectId = JSON.parse(Deno.env.get("FIREBASE_SERVICE_ACCOUNT")!).project_id;
@@ -70,10 +102,10 @@ serve(async (req) => {
           message: {
             token: t.token,
             notification: { title: `📢 ${title}`, body },
-            data: { action: "view_announcements" },
+            data: { type: "announcement", action: "view_announcements" },
             android: {
-              priority: "normal",
-              notification: { channelId: "notify_announcements" }
+              priority: "high",
+              notification: { channel_id: "notify_whistle" }
             },
           },
         };
@@ -87,25 +119,28 @@ serve(async (req) => {
         );
         if (!res.ok) {
           const err = await res.text();
+          // Delete invalid tokens (404 = token invalid/unregistered, 400 = bad request/expired)
           if (res.status === 404 || res.status === 400) {
             await supabase.from("user_push_tokens").delete().eq("token", t.token);
           }
-          throw new Error(err);
+          throw new Error(`FCM ${res.status}: ${err.slice(0, 100)}`);
         }
       }),
     );
 
     const sent = results.filter((r) => r.status === "fulfilled").length;
-    const failed = results.filter((r) => r.status === "rejected").length;
+    const failedResults = results.filter((r) => r.status === "rejected") as PromiseRejectedResult[];
+    const failed = failedResults.length;
+    const errors = failedResults.map(r => r.reason.message || String(r.reason));
 
     // Log to admin_logs
     await supabase.from("admin_logs").insert({
       admin_email: admin_email ?? "admin",
       action: "announcement_push_sent",
-      details: `"${title}" → ${sent} sent, ${failed} failed`,
+      details: `"${title}" → ${sent} sent, ${failed} failed. Errors: ${errors.slice(0, 3).join(" | ")}`,
     });
 
-    return new Response(JSON.stringify({ sent, failed, total: uniqueTokens.length }), {
+    return new Response(JSON.stringify({ sent, failed, total: uniqueTokens.length, errors }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err: any) {

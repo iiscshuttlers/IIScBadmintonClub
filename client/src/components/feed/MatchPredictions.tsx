@@ -248,7 +248,11 @@ export function MatchPredictions() {
 
   useEffect(() => {
     const parse = (val: Record<string, BwfMatchState>) => {
-      const killedMatchIds = new Set(JSON.parse(sessionStorage.getItem("killed_match_ids") || "[]"));
+      let killed = [];
+      try {
+        killed = JSON.parse(sessionStorage.getItem("killed_match_ids") || "[]");
+      } catch (e) {}
+      const killedMatchIds = new Set(killed);
       setLiveMatches(Object.values(val).filter((m) => {
         // Don't show matches that were just killed
         if (killedMatchIds.has(m.id)) return false;

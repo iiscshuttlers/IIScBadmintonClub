@@ -34,7 +34,7 @@ export function FacilitiesSection() {
   const { data: queryHolidays = [] } = useQuery({
     queryKey: ["holidays"],
     queryFn: () => fetchSiteData<Holiday[]>("holidays", "holidays.json"),
-    refetchInterval: 300_000,
+    refetchInterval: (query) => (query.state.error ? false : 300_000),
   });
 
   useEffect(() => {

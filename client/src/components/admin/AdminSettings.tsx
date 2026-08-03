@@ -16,6 +16,7 @@ interface ClubSettings {
   challengeExpiryHours: number;
   confirmationNudgeHours: number;
   maxMatchesPerDay: number;
+  showTournamentStandings: boolean;
 }
 
 const DEFAULTS: ClubSettings = {
@@ -25,6 +26,7 @@ const DEFAULTS: ClubSettings = {
   challengeExpiryHours: 48,
   confirmationNudgeHours: 12,
   maxMatchesPerDay: 10,
+  showTournamentStandings: false,
 };
 
 export function AdminSettings() {
@@ -149,6 +151,25 @@ export function AdminSettings() {
       </div>
 
 
+      {/* Feature Toggles */}
+      <div className={cardCls}>
+        <div className="flex items-center gap-2 mb-4">
+          <Zap className="w-5 h-5 text-amber-500" />
+          <h3 className="font-black text-slate-800 dark:text-foreground">Feature Toggles</h3>
+        </div>
+        <div className="flex items-center justify-between mb-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div>
+            <p className="font-bold text-slate-800 dark:text-foreground text-sm">Show Tournament Standings</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Allow players to see the /standings page. (Admins can always see it)</p>
+          </div>
+          <button
+            onClick={() => update("showTournamentStandings", !settings.showTournamentStandings)}
+            className={`relative w-12 h-6 rounded-full transition-colors ${settings.showTournamentStandings ? "bg-amber-500" : "bg-slate-300 dark:bg-slate-600"}`}
+          >
+            <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${settings.showTournamentStandings ? "left-6" : "left-0.5"}`} />
+          </button>
+        </div>
+      </div>
 
       {/* Notification Settings */}
       <div className={cardCls}>

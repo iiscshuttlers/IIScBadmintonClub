@@ -35,6 +35,6 @@ export function useIronmanMonthlyQuery(eloMode: "club" | "tournament", enabled: 
       return counts;
     },
     enabled: enabled,
-    refetchInterval: 60_000,
+    refetchInterval: (query) => (query.state.error ? false : 60_000),
   });
 }

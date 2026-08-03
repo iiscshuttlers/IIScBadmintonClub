@@ -28,6 +28,7 @@ import {
   Download,
   Trophy,
   LayoutDashboard,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,6 +50,7 @@ import { PreferencesModal } from "@/components/QuickSettings";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { NotificationsMenu } from "@/components/NotificationsMenu";
+import { BetaFeedbackModal } from "@/components/BetaFeedbackModal";
 
 const CLUB_LINKS = [
   { href: "/pulse", label: "Pulse" },
@@ -61,6 +63,7 @@ const CLUB_LINKS = [
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [location, setLocation] = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [liveEventCount, setLiveEventCount] = useState(0);
@@ -88,7 +91,16 @@ export default function Navigation() {
   const currentLinks = CLUB_LINKS;
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
+    let ticking = false;
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setScrolled(window.scrollY > 12);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -308,6 +320,10 @@ export default function Navigation() {
                               <span>My Personal Space</span>
                             </DropdownMenuItem>
                           )}
+                          <DropdownMenuItem onClick={() => setLocation("/my-matches")} className="cursor-pointer">
+                            <Trophy className="mr-2 h-4 w-4 text-amber-500" />
+                            <span>My Matches</span>
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => setLocation("/personal/me")} className="cursor-pointer">
                             <Settings className="mr-2 h-4 w-4" />
                             <span>Account Settings</span>
@@ -371,10 +387,16 @@ export default function Navigation() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-56 mt-2">
                         {myPlayerId && (
-                          <DropdownMenuItem onClick={() => setLocation(`/player/${myPlayerId}/personal`)} className="cursor-pointer font-bold text-primary">
-                            <User className="mr-2 h-4 w-4" />
-                            <span>My Personal Space</span>
-                          </DropdownMenuItem>
+                          <>
+                            <DropdownMenuItem onClick={() => setLocation(`/player/${myPlayerId}`)} className="cursor-pointer font-bold text-amber-600 dark:text-amber-500">
+                              <UserCircle className="mr-2 h-4 w-4" />
+                              <span>My Public Profile</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setLocation(`/player/${myPlayerId}/personal`)} className="cursor-pointer font-bold text-primary">
+                              <User className="mr-2 h-4 w-4" />
+                              <span>My Personal Space</span>
+                            </DropdownMenuItem>
+                          </>
                         )}
                         <DropdownMenuItem onClick={() => setLocation("/personal/me")} className="cursor-pointer">
                           <Settings className="mr-2 h-4 w-4" />
@@ -469,6 +491,20 @@ export default function Navigation() {
                       onClick={() => {
                         setIsOpen(false);
                         if (myPlayerId) {
+                          setLocation(`/player/${myPlayerId}`);
+                        } else {
+                          toast.info("Please set up your profile to view your public profile.");
+                          setLocation("/personal/me");
+                        }
+                      }}
+                    >
+                      <UserCircle className="h-4 w-4 text-amber-500" /> My Public Profile
+                    </button>
+                    <button
+                      className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer"
+                      onClick={() => {
+                        setIsOpen(false);
+                        if (myPlayerId) {
                           setLocation(`/player/${myPlayerId}/personal`);
                         } else {
                           toast.info("Please set up your profile to access your Personal Space.");
@@ -489,16 +525,34 @@ export default function Navigation() {
                     </button>
                     <button
                       className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer"
-                      onClick={handleInvite}
+                      onClick={() => {
+                        setIsOpen(false);
+                        handleInvite();
+                      }}
                     >
                       <UserPlus className="h-4 w-4 text-primary" /> Invite Friends
                     </button>
                     <Link href="/privacy" className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
                       <Shield className="h-4 w-4 text-muted-foreground" /> Privacy Policy
                     </Link>
+                    <Link href="/glossary" className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer" onClick={() => setIsOpen(false)}>
+                      <BookOpen className="h-4 w-4 text-muted-foreground" /> Glossary
+                    </Link>
+                    <button
+                      className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-950/30 text-amber-600 font-medium text-sm transition-colors cursor-pointer"
+                      onClick={() => {
+                        setIsOpen(false);
+                        setIsFeedbackOpen(true);
+                      }}
+                    >
+                      <MessageSquare className="h-4 w-4" /> Send Beta Feedback
+                    </button>
                     <button
                       className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-600 font-medium text-sm transition-colors cursor-pointer"
-                      onClick={() => handleSignOut()}
+                      onClick={() => {
+                        setIsOpen(false);
+                        handleSignOut();
+                      }}
                     >
                       <LogOut className="h-4 w-4" /> Sign Out
                     </button>
@@ -576,7 +630,14 @@ export default function Navigation() {
       {/* Global Search Modal */}
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
 
-      <PreferencesModal isOpen={isPreferencesOpen} onClose={() => setIsPreferencesOpen(false)} />
+      <PreferencesModal
+        isOpen={isPreferencesOpen}
+        onClose={() => setIsPreferencesOpen(false)}
+      />
+      <BetaFeedbackModal
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
+      />
 
       <ConfirmDialog
         open={signOutDialog.open}

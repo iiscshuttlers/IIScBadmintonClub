@@ -56,6 +56,7 @@ export function usePushNotifications(userId: string | undefined) {
                   user_id: userId,
                   token: token.value,
                   platform: Capacitor.getPlatform(),
+                  updated_at: new Date().toISOString(),
                 },
                 { onConflict: "user_id,token" },
               );
@@ -113,20 +114,22 @@ export function usePushNotifications(userId: string | undefined) {
               const action = data.action;
               const matchId = data.matchId || data.match_id;
 
-              if (type === "player_profile" && data.player_id) {
+              if ((type === "player_profile" || type === "buddy_request" || type === "follow" || type === "status_update" || type === "elo_milestone") && data.player_id) {
                 window.location.href = `${baseUrl}/player/${data.player_id}`;
-              } else if (action === "view_match" || type === "match_confirmation") {
-                window.location.href = `${baseUrl}/personal/matches${matchId ? `?highlight=${matchId}` : ""}`;
-              } else if (type === "kudos") {
-                window.location.href = `${baseUrl}/feed/activity${matchId ? `?highlight=${matchId}` : ""}`;
-              } else if (type === "challenge_expiry" || data.tab === "challenges") {
-                window.location.href = `${baseUrl}/personal/matches?tab=challenges`;
-              } else if (action === "view_announcements") {
-                window.location.href = `${baseUrl}/feed/announcements`;
+              } else if (action === "view_match" || type === "match_confirmation" || type === "match_logged" || type === "kudos") {
+                window.location.href = `${baseUrl}/my-matches${matchId ? `?highlight=${matchId}` : ""}`;
+              } else if (type === "challenge_expiry" || type === "new_challenge" || action === "view_challenges" || data.tab === "challenges") {
+                window.location.href = `${baseUrl}/my-matches`;
+              } else if (type === "find_lost" || type === "find_lost_post" || action === "view_find_lost") {
+                window.location.href = `${baseUrl}/hub?tab=lost-found`;
+              } else if (type === "live_score" || action === "view_live_score") {
+                window.location.href = `${baseUrl}/pulse`;
+              } else if (type === "announcement" || type === "weekly_digest" || action === "view_announcements") {
+                window.location.href = `${baseUrl}/pulse#announcements`;
               } else if (matchId) {
-                window.location.href = `${baseUrl}/personal/matches?highlight=${matchId}`;
+                window.location.href = `${baseUrl}/my-matches?highlight=${matchId}`;
               } else {
-                window.location.href = `${baseUrl}/feed`;
+                window.location.href = `${baseUrl}/pulse`;
               }
             }
           },
@@ -153,7 +156,15 @@ export function usePushNotifications(userId: string | undefined) {
 
     setup();
 
+    // Refresh token periodically to prevent FCM expiration (~7 days without refresh)
+    const refreshInterval = setInterval(() => {
+      PushNotifications.register().catch((err) =>
+        console.warn("Push token refresh failed", err),
+      );
+    }, 6 * 60 * 60 * 1000);
+
     return () => {
+      clearInterval(refreshInterval);
       if (isRegistered) {
         PushNotifications.removeAllListeners();
       }
@@ -194,7 +205,7 @@ export function usePushNotifications(userId: string | undefined) {
             await supabase
               .from("user_push_tokens")
               .upsert(
-                { user_id: userId, token, platform: "web" },
+                { user_id: userId, token, platform: "web", updated_at: new Date().toISOString() },
                 { onConflict: "user_id,token" }
               );
 

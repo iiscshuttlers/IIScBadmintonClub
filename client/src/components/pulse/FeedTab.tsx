@@ -78,7 +78,6 @@ export default function FeedTab() {
     supabase
       .from("tournaments")
       .select("id, name")
-      .eq("status", "active") // Or allow all non-deleted? Let's just get all non-deleted.
       .neq("status", "deleted")
       .order("created_at", { ascending: false })
       .then(({ data }) => {
@@ -329,7 +328,7 @@ export default function FeedTab() {
                   }
 
                   // Parse video URL
-                  let displayScore = match.score;
+                  let displayScore = match.score || "";
                   let highlightUrl = null;
                   if (displayScore.includes(" | ")) {
                     const parts = displayScore.split(" | ");

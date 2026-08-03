@@ -97,16 +97,28 @@ serve(async () => {
 
     if (player && player.notify_confirmation === false) continue;
 
+    // Create in-app notification
+    const notifTitle = "Match awaiting your confirmation";
+    const notifBody = `${submitterName} logged a match. Open the app to confirm or dispute the result.`;
+
+    await supabase.from("notifications").insert({
+      user_id: confirmerId,
+      title: notifTitle,
+      message: notifBody,
+      type: "match_confirmation",
+      link: "/my-matches#pending"
+    });
+
     // Fetch confirmer's push tokens
     const { data: tokens } = await supabase
       .from("user_push_tokens")
       .select("token")
-      .eq("player_id", confirmerId);
+      .eq("user_id", confirmerId);
 
     if (!tokens || tokens.length === 0) continue;
 
-    const title = "Match awaiting your confirmation";
-    const body = `${submitterName} logged a match. Open the app to confirm or dispute the result.`;
+    const title = notifTitle;
+    const body = notifBody;
 
     for (const { token } of tokens) {
       const res = await fetch(
@@ -124,7 +136,7 @@ serve(async () => {
               data: { type: "match_confirmation", match_id: match.id as string, tab: "my_matches" },
               android: {
                 priority: "high",
-                notification: { channelId: "notify_confirmation" }
+                notification: { channel_id: "notify_point" }
               },
             },
           }),

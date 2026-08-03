@@ -207,8 +207,37 @@ serve(async (req) => {
 
     console.log(`[notify-match] Recipients: ${recipientIds.size}`);
 
-    // 4. Fetch push tokens for all recipients
+    // 4. Create in-app notifications for all recipients
     const recipientArr = [...recipientIds];
+
+    if (recipientArr.length > 0) {
+      const notificationTitle = isFriendly
+        ? "🏸 Friendly Match Logged!"
+        : "🏸 New Tournament Match!";
+      const notificationBody = isFriendly
+        ? `${challengerName} just played a friendly match. Tap to view.`
+        : `${challengerName} logged a tournament match against you. Open the app to confirm.`;
+
+      const notificationRecords = recipientArr.map((userId) => ({
+        user_id: userId,
+        title: notificationTitle,
+        message: notificationBody,
+        type: isFriendly ? "match_logged" : "match_confirmation",
+        link: "/my-matches",
+      }));
+
+      const { error: notifErr } = await supabaseClient
+        .from("notifications")
+        .insert(notificationRecords);
+
+      if (notifErr) {
+        console.error("[notify-match] Failed to create in-app notifications:", notifErr.message);
+      } else {
+        console.log(`[notify-match] Created ${recipientArr.length} in-app notifications`);
+      }
+    }
+
+    // 5. Fetch push tokens for all recipients
     let allTokensToSend: { token: string }[] = [];
 
     if (recipientArr.length > 0) {
@@ -223,7 +252,7 @@ serve(async (req) => {
 
     if (allTokensToSend.length === 0) {
       return new Response(
-        JSON.stringify({ message: "No push tokens found for any recipient" }),
+        JSON.stringify({ message: "In-app notifications created, no push tokens available" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -261,13 +290,14 @@ serve(async (req) => {
               priority: "high",
               notification: {
                 sound: "smash",
-                channel_id: isFriendly ? "notify_friendly" : "notify_tournament",
+                channel_id: "notify_smash",
               },
             },
             webpush: { headers: { Urgency: "high" } },
             apns: { headers: { "apns-priority": "10" } },
             data: {
               matchId: matchRecord.id,
+              type: isFriendly ? "match_logged" : "match_confirmation",
               action: "view_match",
             },
           },

@@ -7,45 +7,49 @@ import { playSmashSound } from "./sounds";
 function handleDeepLink(data: Record<string, string> | undefined) {
   if (!data) return;
 
-  const type = data.type;
+  // Some senders only set `action`, others only set `type` — check both.
+  const type = data.type || data.action;
   if (!type) return;
 
   switch (type) {
     case "match_confirmation":
-      window.location.href = "/personal/matches";
+    case "match_logged":
+    case "view_match":
+      window.location.href = "/my-matches";
       break;
     case "challenge_expiry":
-      window.location.href = "/personal/matches?tab=challenges";
-      break;
     case "new_challenge":
-      if (data.challenge_id) {
-        window.location.href = `/personal/matches?tab=challenges`;
-      }
+    case "view_challenges":
+      window.location.href = "/my-matches";
       break;
     case "find_lost":
-      window.location.href = "/find-lost";
+    case "find_lost_post":
+    case "view_find_lost":
+      window.location.href = "/hub?tab=lost-found";
       break;
     case "announcement":
-      window.location.href = "/feed/announcements";
+    case "view_announcements":
+      window.location.href = "/pulse#announcements";
       break;
     case "kudos":
-    case "player_profile":
-      if (data.player_id) {
-        window.location.href = `/player/${data.player_id}`;
-      } else {
-        window.location.href = "/feed";
-      }
+      window.location.href = "/my-matches";
       break;
+    case "player_profile":
+    case "buddy_request":
+    case "follow":
+    case "status_update":
     case "elo_milestone":
       if (data.player_id) {
         window.location.href = `/player/${data.player_id}`;
+      } else {
+        window.location.href = "/pulse";
       }
       break;
     case "weekly_digest":
-      window.location.href = "/personal/matches";
+      window.location.href = "/my-matches";
       break;
     default:
-      window.location.href = "/feed";
+      window.location.href = "/pulse";
   }
 }
 
@@ -69,7 +73,7 @@ export const registerPushNotifications = async (userId: string) => {
 
   PushNotifications.addListener("registration", async (token) => {
     await supabase.from("user_push_tokens").upsert(
-      { user_id: userId, token: token.value, platform: Capacitor.getPlatform() },
+      { user_id: userId, token: token.value, platform: Capacitor.getPlatform(), updated_at: new Date().toISOString() },
       { onConflict: "user_id, token" },
     );
   });
@@ -86,4 +90,9 @@ export const registerPushNotifications = async (userId: string) => {
     const data = action.notification?.data as Record<string, string> | undefined;
     handleDeepLink(data);
   });
+
+  // Refresh token every 6 hours to prevent expiration (FCM tokens expire after ~7 days without refresh)
+  setInterval(() => {
+    PushNotifications.register().catch(err => console.error("Token refresh failed:", err));
+  }, 6 * 60 * 60 * 1000);
 };

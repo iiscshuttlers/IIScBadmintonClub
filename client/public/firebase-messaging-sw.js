@@ -8,7 +8,7 @@ importScripts('https://www.gstatic.com/firebasejs/10.8.1/firebase-messaging-comp
 // your app's Firebase config object.
 // https://firebase.google.com/docs/web/setup#config-object
 firebase.initializeApp({
-  apiKey: "AIzaSyBXr8e2dtNlwuXpIsINX9Cl5JOk-6jLsdw",
+  apiKey: "AIzaSyBswPW816r-G3UDRoQSf5eZLRSIlFHtJnc",
   authDomain: "iisc-badminton-hub.firebaseapp.com",
   projectId: "iisc-badminton-hub",
   storageBucket: "iisc-badminton-hub.firebasestorage.app",
@@ -39,18 +39,20 @@ self.addEventListener('notificationclick', (event) => {
   const type = data.type || '';
   const action = data.action || '';
   const playerId = data.player_id || data.from_player_id || '';
-  let path = '/feed';
+  let path = '/pulse';
 
   if (type === 'match_confirmation' || type === 'match_logged' || type === 'kudos' || action === 'view_match') {
-    path = '/feed/my-matches';
-  } else if (type === 'challenge_expiry' || action === 'view_challenges') {
-    path = '/feed/challenges';
+    path = '/my-matches';
+  } else if (type === 'challenge_expiry' || type === 'new_challenge' || action === 'view_challenges') {
+    path = '/my-matches';
   } else if (type === 'find_lost_post' || type === 'find_lost' || action === 'view_find_lost') {
-    path = '/find-lost';
+    path = '/hub?tab=lost-found';
+  } else if (type === 'live_score' || action === 'view_live_score') {
+    path = '/pulse';
   } else if (type === 'announcement' || type === 'weekly_digest' || action === 'view_announcements') {
-    path = '/feed/announcements';
-  } else if (type === 'player_profile' || type === 'buddy_request' || type === 'follow' || type === 'elo_milestone') {
-    path = playerId ? `/player/${playerId}` : '/feed';
+    path = '/pulse#announcements';
+  } else if (type === 'player_profile' || type === 'buddy_request' || type === 'follow' || type === 'status_update' || type === 'elo_milestone') {
+    path = playerId ? `/player/${playerId}` : '/pulse';
   }
 
   event.waitUntil(

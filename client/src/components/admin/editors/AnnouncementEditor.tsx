@@ -26,11 +26,18 @@ export function AnnouncementEditor({
     const idx = data.indexOf(a);
     setPushingIdx(idx);
     try {
-      const { error } = await supabase.functions.invoke("send-announcement", {
+      const { data: respData, error } = await supabase.functions.invoke("send-announcement", {
         body: { title: a.title, body: a.content.slice(0, 120) },
       });
       if (error) throw error;
-      toast.success(`Push sent for "${a.title}"!`);
+      
+      if (respData?.message === "No push tokens registered" || respData?.total === 0) {
+        toast.warning("Announcement saved, but no users have push notifications enabled.");
+      } else if (respData?.failed > 0) {
+        toast.error(`${respData.failed} pushes failed to send (tokens were expired/invalid and have been cleaned up).`);
+      } else {
+        toast.success(`Push sent to ${respData?.sent || 0} devices!`);
+      }
     } catch (err: any) {
       toast.error("Push failed: " + (err.message ?? String(err)));
     } finally {

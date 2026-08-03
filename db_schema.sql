@@ -113,3 +113,33 @@ BEGIN
   RETURN new_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Find & Lost Posts
+CREATE TABLE public.find_lost_posts (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  author_id uuid REFERENCES public.players(id) NOT NULL,
+  type text NOT NULL,
+  title text NOT NULL,
+  description text,
+  location text,
+  contact text,
+  image_url text,
+  image_urls jsonb DEFAULT '[]'::jsonb,
+  resolved boolean DEFAULT false,
+  claimed_by_id uuid REFERENCES auth.users,
+  claimed_by_name text
+);
+
+ALTER TABLE public.find_lost_posts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public can read find_lost_posts" ON public.find_lost_posts FOR SELECT USING (true);
+CREATE POLICY "Authenticated users can insert find_lost_posts" ON public.find_lost_posts FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "Authors can update find_lost_posts" ON public.find_lost_posts FOR UPDATE USING (auth.uid() = author_id);
+CREATE POLICY "Authors can delete find_lost_posts" ON public.find_lost_posts FOR DELETE USING (auth.uid() = author_id);
+
+-- Find & Lost Images Bucket
+INSERT INTO storage.buckets (id, name, public) VALUES ('find-lost', 'find-lost', true) ON CONFLICT (id) DO NOTHING;
+CREATE POLICY "Public Access" ON storage.objects FOR SELECT USING (bucket_id = 'find-lost');
+CREATE POLICY "Auth Upload" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'find-lost' AND auth.uid() IS NOT NULL);
+CREATE POLICY "Auth Delete" ON storage.objects FOR DELETE USING (bucket_id = 'find-lost' AND auth.uid() IS NOT NULL);

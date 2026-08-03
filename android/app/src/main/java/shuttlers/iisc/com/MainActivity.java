@@ -8,10 +8,12 @@ import android.net.Uri;
 import android.os.Build;
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.PluginHandle;
+import androidx.activity.EdgeToEdge;
 
 public class MainActivity extends BridgeActivity {
   @Override
   public void onCreate(android.os.Bundle savedInstanceState) {
+    EdgeToEdge.enable(this);
     registerPlugin(FloatingScorePlugin.class);
     registerPlugin(UmpireBackgroundPlugin.class);
     registerPlugin(MatchAlarmPlugin.class);
@@ -22,6 +24,9 @@ public class MainActivity extends BridgeActivity {
     registerPlugin(HealthConnectPlugin.class);
     registerPlugin(MediaPermissionsPlugin.class);
     super.onCreate(savedInstanceState);
+    if (getSupportActionBar() != null) {
+      getSupportActionBar().hide();
+    }
     createNotificationChannels();
   }
 

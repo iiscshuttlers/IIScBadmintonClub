@@ -98,6 +98,14 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
                   {heroLastWord}
                 </h1>
               </div>
+              
+              {player.joinedYear && (
+                <div className="mt-3 md:mt-4 flex flex-wrap items-center gap-2">
+                  <span className="px-3 md:px-4 py-1.5 md:py-2 bg-black/5 dark:bg-white/10 border border-black/10 dark:border-white/20 rounded-full text-[10px] md:text-xs font-black tracking-widest uppercase shadow-sm backdrop-blur-md text-slate-800 dark:text-slate-200">
+                    Member Since {player.joinedYear}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>

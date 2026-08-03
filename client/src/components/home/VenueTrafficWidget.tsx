@@ -44,9 +44,15 @@ export function VenueTrafficWidget() {
   useEffect(() => {
     let cancelled = false;
 
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+
     const loadActiveCount = async () => {
       const { data, error } = await supabase.rpc("get_venue_active_count");
-      if (!cancelled && !error && typeof data === "number") {
+      if (error) {
+        if (intervalId) clearInterval(intervalId);
+        return;
+      }
+      if (!cancelled && typeof data === "number") {
         setActiveCount(data);
       }
     };
@@ -64,10 +70,10 @@ export function VenueTrafficWidget() {
     loadActiveCount();
     loadHourlyPattern();
 
-    const interval = setInterval(loadActiveCount, POLL_INTERVAL_MS);
+    intervalId = setInterval(loadActiveCount, POLL_INTERVAL_MS);
     return () => {
       cancelled = true;
-      clearInterval(interval);
+      if (intervalId) clearInterval(intervalId);
     };
   }, []);
 

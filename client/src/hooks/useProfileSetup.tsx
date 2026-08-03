@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useParams } from "wouter";
 import { supabase } from "@/lib/supabase";
 import { playerService } from "@/services/playerService";
@@ -13,6 +13,7 @@ import { useProfileEquipmentState } from "./profile/useProfileEquipmentState";
 import { useProfileHighlightsState } from "./profile/useProfileHighlightsState";
 import { useProfileMediaState } from "./profile/useProfileMediaState";
 import { safeReplaceState, safeGetHash } from "@/lib/navUtils";
+import { useQueryClient } from "@tanstack/react-query";
 
 const PASSWORD_UPDATE_TIMEOUT_MS = 12_000;
 
@@ -23,6 +24,7 @@ export function useProfileSetup() {
   const { session, profile: authProfile, isInitializing, isAdmin } = useAuth();
   const [targetUserId, setTargetUserId] = useState<string | null>(null);
   const profileLoadedRef = useRef<string | null>(null);
+  const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState<"basic" | "badminton" | "equipment" | "highlights" | "media">(() => {
     const hash = safeGetHash();
@@ -250,19 +252,13 @@ export function useProfileSetup() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!session) return;
-    setLoading(true);
-
+  const buildPayload = useCallback(() => {
     const validRackets = rackets.filter((r) => r.name.trim() !== "");
     const validShoes = shoesList.filter((s) => s.name.trim() !== "");
     const validImages = mediaImages.filter((img) => img.url.trim() !== "");
     const validVideos = mediaVideos.filter((vid) => vid.url.trim() !== "");
-
     const finalPrimaryRacketIdx = primaryRacketIndex < validRackets.length ? primaryRacketIndex : 0;
     const finalPrimaryShoeIdx = primaryShoeIndex < validShoes.length ? primaryShoeIndex : 0;
-
     const packedStats = {
       ...originalStats,
       media: [
@@ -270,8 +266,7 @@ export function useProfileSetup() {
         ...validVideos.map((vid) => ({ type: "video", url: vid.url, caption: vid.caption })),
       ],
     };
-
-    const payload = {
+    return {
       full_name: fullName,
       nickname: nickname || null,
       is_looking_to_play: status === 'looking',
@@ -312,23 +307,74 @@ export function useProfileSetup() {
       career_highlights: careerHighlights.filter((h) => h.year && h.title),
       deleted_at: null,
     };
+  }, [
+    rackets, shoesList, mediaImages, mediaVideos, primaryRacketIndex, primaryShoeIndex,
+    originalStats, fullName, nickname, status, isGuest, isRetired, iiscEmail, contactNumber,
+    department, customDepartment, joinedYear, playingLevel, playingStyle, dominantHand,
+    favoriteShot, favoriteIdol, gender, favoriteFormat, quote, avatarUrl, nationality,
+    homeState, height, yearsPlaying, coach, bio, apparel, instagram, achievementsRaw,
+    tournamentsRaw, careerHighlights,
+  ]);
 
-    const timeoutMs = 60000;
-    const mkTimeout = () => new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Save timed out — please check your connection and try again.")), timeoutMs));
+  // Silently save (no toast) used for auto-save
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isFirstRenderRef = useRef(true);
 
+  const saveNow = useCallback(async (silent = false) => {
+    if (!session) return;
+    if (!silent) setLoading(true);
+    const payload = buildPayload();
+    const timeoutMs = 30000;
+    const mkTimeout = () => new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Save timed out")), timeoutMs));
     try {
       await Promise.race([
         playerService.upsertProfile(targetUserId || session.user.id, isEditing, payload, session.user.email),
         mkTimeout()
       ]);
-      if (isEditing) setLocation(`/player/${playerSlug}`);
-      else setLocation(`/player/${session.user.id}`);
+      queryClient.invalidateQueries({ queryKey: ["playerProfile", targetUserId || session.user.id] });
+      queryClient.invalidateQueries({ queryKey: ["playerRank", targetUserId || session.user.id] });
+      queryClient.invalidateQueries({ queryKey: ["allPlayers"] });
+      if (!silent) {
+        // redirect after explicit save
+        if (isEditing) setLocation(`/player/${playerSlug}`);
+        else setLocation(`/player/${session.user.id}`);
+      }
     } catch (err: any) {
-      if (err.code === "23505") toast.error("Duplicate profile", { description: "A profile with this email or name already exists!" });
-      else { console.error("Error saving profile:", err); toast.error("Failed to save profile", { description: err.message }); }
+      if (!silent) {
+        if (err.code === "23505") toast.error("Duplicate profile", { description: "A profile with this email or name already exists!" });
+        else { console.error("Error saving profile:", err); toast.error("Failed to save", { description: err.message }); }
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
+  }, [session, buildPayload, targetUserId, isEditing, playerSlug, setLocation]);
+
+  // Auto-save: debounce 1.5s after any field change (skip on first load)
+  useEffect(() => {
+    if (isFirstRenderRef.current) {
+      isFirstRenderRef.current = false;
+      return;
+    }
+    if (!session || !isEditing) return;
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    autoSaveTimerRef.current = setTimeout(() => {
+      saveNow(true);
+    }, 300);
+    return () => {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    };
+  }, [
+    fullName, nickname, status, iiscEmail, contactNumber, department, customDepartment,
+    joinedYear, nationality, homeState, height, instagram, gender, isGuest, isRetired,
+    playingLevel, playingStyle, dominantHand, favoriteShot, yearsPlaying, coach,
+    favoriteIdol, favoriteFormat, rackets, primaryRacketIndex, shoesList, primaryShoeIndex,
+    apparel, bio, quote, achievementsRaw, tournamentsRaw, careerHighlights,
+    mediaImages, mediaVideos,
+  ]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await saveNow(false);
   };
 
   return {
@@ -360,6 +406,6 @@ export function useProfileSetup() {
     // Password (if needed)
     newPassword, setNewPassword, passwordLoading, setPasswordLoading,
     // Handlers
-    handleImageBlur, handleVideoBlur, handlePasswordChange, handleSignOut, handleAvatarUpload, handleSubmit,
+    handleImageBlur, handleVideoBlur, handlePasswordChange, handleSignOut, handleAvatarUpload, handleSubmit, saveNow,
   };
 }

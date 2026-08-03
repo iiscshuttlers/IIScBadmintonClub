@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
@@ -7,7 +8,6 @@ import { Store, Plus, Search, Filter, Phone, Mail, Clock, Package, MapPin, Exter
 import { toast } from "sonner";
 import { CreateListingModal } from "@/components/marketplace/CreateListingModal";
 import { InfoModal } from "@/components/InfoModal";
-import FindLost from "@/pages/FindLost";
 import { safeReplaceState, safeGetSearchParams, safeGetHash, isCapacitor } from "@/lib/navUtils";
 
 interface Listing {
@@ -33,6 +33,7 @@ interface Listing {
 }
 
 export default function ExchangeTab() {
+  const [, setLocation] = useLocation();
   const { session } = useAuth();
   const [listings, setListings] = useState<Listing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -48,15 +49,6 @@ export default function ExchangeTab() {
     return 'all';
   });
 
-  const [activeTab, setActiveTab] = useState<"marketplace" | "findlost">(() => {
-    if (isCapacitor) return "marketplace";
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const sub = params.get("sub");
-      if (sub === "lost-found" || window.location.pathname.includes("find-lost") || window.location.hash.includes("lost")) return "findlost";
-      return "marketplace";
-    } catch { return "marketplace"; }
-  });
 
   const [showSold, setShowSold] = useState(() => {
     const params = new URLSearchParams(window.location.search);
@@ -69,8 +61,6 @@ export default function ExchangeTab() {
       setFilter(params.get("cat") || "All");
       const type = params.get("type");
       setTypeFilter(type === "sell" || type === "buy" ? type : "all");
-      const sub = params.get("sub");
-      setActiveTab(sub === "lost-found" || window.location.hash.includes("lost") ? "findlost" : "marketplace");
       setShowSold(params.get("showSold") === "true");
     };
     window.addEventListener("popstate", handlePopState);
@@ -83,9 +73,6 @@ export default function ExchangeTab() {
     if (typeFilter === "all") params.delete("type");
     else params.set("type", typeFilter);
 
-    if (activeTab === "marketplace") params.delete("sub");
-    else params.set("sub", "lost-found");
-
     if (!showSold) params.delete("showSold");
     else params.set("showSold", "true");
 
@@ -97,7 +84,7 @@ export default function ExchangeTab() {
     }
 
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [filter, typeFilter, activeTab, showSold]);
+  }, [filter, typeFilter, showSold]);
   
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -216,43 +203,27 @@ export default function ExchangeTab() {
     .filter(l => showSold ? true : l.status === 'active')
     .filter(l => filter === "All" ? true : l.category === filter)
     .filter(l => typeFilter === 'all' ? true : l.listing_type === typeFilter);
-
   return (
     <div className="w-full">
-      {/* Top Tab Bar for Unified Noticeboard */}
-      <div className="bg-slate-100 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40">
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-center gap-2">
+      {!session ? (
+        <div className="flex flex-col items-center justify-center py-16 px-4 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 text-center shadow-sm m-4 mt-8">
+          <div className="w-12 h-12 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 mb-4">
+            <Store className="w-6 h-6 text-slate-400 dark:text-slate-500" />
+          </div>
+          <h2 className="text-xl font-black text-slate-800 dark:text-slate-200 mb-2">Sign in to view Marketplace</h2>
+          <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
+            You must be logged in to buy, sell, or view items in this section.
+          </p>
           <button 
-            onClick={() => { 
-              setActiveTab("marketplace"); 
-              setFilter("All");
-            }} 
-            className={`px-5 py-2 rounded-xl font-black text-sm transition-all ${
-              activeTab === "marketplace" 
-                ? "bg-white dark:bg-slate-800 text-primary dark:text-primary shadow-sm" 
-                : "text-muted-foreground hover:bg-slate-200 dark:hover:bg-slate-800/80"
-            }`}
+            onClick={() => setLocation('/join')}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl px-6 h-11 transition"
           >
-            🛍️ Buy & Sell
-          </button>
-          <button 
-            onClick={() => { 
-              setActiveTab("findlost"); 
-            }} 
-            className={`px-5 py-2 rounded-xl font-black text-sm transition-all ${
-              activeTab === "findlost" 
-                ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm" 
-                : "text-muted-foreground hover:bg-slate-200 dark:hover:bg-slate-800/80"
-            }`}
-          >
-            🔍 Lost & Found
+            Sign In / Join
           </button>
         </div>
-      </div>
-
-      {activeTab === "marketplace" ? (
+      ) : (
         <>
-          {/* Header */}
+      {/* Header */}
           <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-14 z-30 shadow-sm">
             <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -514,6 +485,8 @@ export default function ExchangeTab() {
           </div>
         )}
       </div>
+        </>
+      )}
 
       {session?.user && (
         <CreateListingModal 
@@ -523,10 +496,7 @@ export default function ExchangeTab() {
           onSuccess={fetchListings}
         />
       )}
-      </>
-      ) : (
-        <FindLost />
-      )}
+
     </div>
   );
 }

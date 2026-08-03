@@ -51,7 +51,7 @@ export function LiveBracketsSection({ tournamentId }: { tournamentId: string | n
         byFormat[m.category].push(m as BracketMatch);
       }
 
-      const fmts = (tournament.categories as string[])
+      const fmts = (tournament.categories as string[] || [])
         .filter((c) => byFormat[c])
         .sort((a, b) => CATEGORY_ORDER.indexOf(a) - CATEGORY_ORDER.indexOf(b));
 

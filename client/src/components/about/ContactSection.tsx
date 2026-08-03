@@ -97,7 +97,7 @@ export function ContactSection() {
               <CardContent>
                 <a
                   href="mailto:iiscbadmintonclub@gmail.com"
-                  className="font-bold text-foreground dark:text-foreground hover:text-primary transition-colors"
+                  className="font-bold text-foreground dark:text-foreground hover:text-primary transition-colors break-all"
                 >
                   iiscbadmintonclub@gmail.com
                 </a>

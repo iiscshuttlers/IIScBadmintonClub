@@ -18,6 +18,13 @@ export function useMatchNotification() {
     opponentName?: string;
   } | null>(null);
   const shownRef = useRef<Set<string>>(new Set());
+  const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!profile?.id) return;
@@ -154,7 +161,8 @@ export function useMatchNotification() {
           });
 
           // Auto-dismiss after 2 seconds
-          setTimeout(() => {
+          if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
+          dismissTimerRef.current = setTimeout(() => {
             setNotification(null);
           }, 2000);
         },

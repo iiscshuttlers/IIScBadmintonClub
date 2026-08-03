@@ -253,7 +253,7 @@ export default function Pulse() {
       const data = await getTournaments();
       return data.map((e: any) => ({ ...e, status: e.status as TournamentStatus }));
     },
-    refetchInterval: 60_000,
+    refetchInterval: (query) => (query.state.error ? false : 60_000),
   });
 
   useEffect(() => {

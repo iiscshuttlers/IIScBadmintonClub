@@ -63,9 +63,10 @@ async function sendFcm(
         message: {
           token,
           notification: { title, body },
+          data: { type: "notification" },
           android: {
             priority: "high",
-            notification: { channelId: "notify_announcements" }
+            notification: { channel_id: "notify_whistle" }
           },
           webpush: { headers: { Urgency: "high" } },
           apns: { headers: { "apns-priority": "10" } },
@@ -111,6 +112,26 @@ serve(async () => {
   const staleTokens: string[] = [];
 
   for (const [playerId, notifs] of byPlayer) {
+    // Build digest title/body
+    let title: string;
+    let body: string;
+    if (notifs.length === 1) {
+      title = notifs[0].title as string;
+      body = notifs[0].body as string;
+    } else {
+      title = `${notifs.length} new notifications`;
+      body = notifs.map((n: any) => `• ${n.title}`).slice(0, 5).join("\n");
+    }
+
+    // Create in-app notification
+    await supabase.from("notifications").insert({
+      user_id: playerId,
+      title,
+      message: body,
+      type: "notification",
+      link: "/personal/me"
+    });
+
     // player_id in notification_queue is now the auth UUID directly
     const { data: tokens } = await supabase
       .from("user_push_tokens")
@@ -121,17 +142,6 @@ serve(async () => {
       // No token — mark as sent anyway to clear queue
       processedIds.push(...notifs.map((n: any) => n.id));
       continue;
-    }
-
-    // Build digest title/body
-    let title: string;
-    let body: string;
-    if (notifs.length === 1) {
-      title = notifs[0].title as string;
-      body = notifs[0].body as string;
-    } else {
-      title = `${notifs.length} new notifications`;
-      body = notifs.map((n: any) => `• ${n.title}`).slice(0, 5).join("\n");
     }
 
     for (const { token } of tokens) {

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { playVictorySound } from "@/lib/sounds"; // A nice sound for welcome!
 
 export function VenueWelcomeModal() {
@@ -79,34 +80,19 @@ export function VenueWelcomeModal() {
   if (loading) return null;
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-        {/* Backdrop */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={() => setIsOpen(false)}
-          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        />
-
-        {/* Modal Content */}
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent className="sm:max-w-sm p-0 overflow-hidden border-0 bg-transparent shadow-none">
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800"
+          className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 mx-auto"
         >
-          <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 opacity-20 dark:opacity-30" />
+          <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 opacity-20 dark:opacity-30 pointer-events-none" />
           
-          <button
-            onClick={() => setIsOpen(false)}
-            className="absolute top-3 right-3 p-2 rounded-full bg-black/5 hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10 transition-colors z-50 text-slate-500 dark:text-slate-400 cursor-pointer"
-          >
-            <X className="w-5 h-5 pointer-events-none" />
-          </button>
+          <DialogTitle className="sr-only">Welcome to Gymkhana</DialogTitle>
+          <DialogDescription className="sr-only">Venue check-in modal</DialogDescription>
 
           <div className="px-6 pt-10 pb-6 relative z-10 flex flex-col items-center text-center">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30 mb-5 text-white transform -rotate-6">
@@ -139,8 +125,7 @@ export function VenueWelcomeModal() {
             </div>
           </div>
         </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+      </DialogContent>
+    </Dialog>
   );
 }

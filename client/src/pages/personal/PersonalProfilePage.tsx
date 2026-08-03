@@ -22,7 +22,11 @@ import {
   ZoomIn,
   ZoomOut,
   X as CloseIcon,
+  MessageSquare,
+  Bell,
 } from "lucide-react";
+import { FeedbackModal } from "@/components/profile/FeedbackModal";
+import { NotificationSettingsModal } from "@/components/profile/NotificationSettingsModal";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Avatar } from "@/components/ui/Avatar";
@@ -67,6 +71,8 @@ export default function PersonalProfilePage() {
   
   // Avatar Zoom State
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
   const { theme, toggleTheme } = useTheme();
   const { setMode } = useAppMode();
@@ -156,6 +162,18 @@ export default function PersonalProfilePage() {
       adminIcon: true,
     }] : []),
     {
+      icon: Bell,
+      label: "Push Notifications",
+      description: "Manage your notification preferences",
+      onClick: () => setIsNotificationModalOpen(true),
+    },
+    {
+      icon: MessageSquare,
+      label: "Give Feedback",
+      description: "Report a bug or suggest a feature",
+      onClick: () => setIsFeedbackModalOpen(true),
+    },
+    {
       icon: Shield,
       label: "Privacy Policy",
       description: "Read our privacy policy",
@@ -189,7 +207,7 @@ export default function PersonalProfilePage() {
             </p>
             {profile?.email && (
               <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-800/50">
-                ACE Linked
+                BRAINMINTON Linked
               </span>
             )}
           </div>
@@ -414,6 +432,9 @@ export default function PersonalProfilePage() {
           </div>
         </DialogContent>
       </Dialog>
+      
+      <FeedbackModal open={isFeedbackModalOpen} onOpenChange={setIsFeedbackModalOpen} />
+      <NotificationSettingsModal open={isNotificationModalOpen} onOpenChange={setIsNotificationModalOpen} />
     </div>
   );
 }

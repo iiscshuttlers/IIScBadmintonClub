@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFormDraft } from "@/hooks/useFormDraft";
 import { toast } from "sonner";
 
 export type Mode = "welcome" | "signin" | "signup" | "otp-email" | "otp-verify";
@@ -19,8 +20,8 @@ export function getPasswordStrength(pwd: string) {
 export function useJoinAuth() {
   const [, setLocation] = useLocation();
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState<Mode>("welcome");
-  const [email, setEmail] = useState("");
+  const [mode, setMode] = useFormDraft<Mode>("join-auth-mode", "welcome");
+  const [email, setEmail] = useFormDraft("join-auth-email", "");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [showPwd, setShowPwd] = useState(false);
@@ -124,7 +125,13 @@ export function useJoinAuth() {
     setLoading(true);
     setErrorMsg("");
     try {
-      const { data: emailExists } = await supabase.rpc("check_email_exists", { lookup_email: email });
+      const { data: emailExists, error: rpcError } = await supabase.rpc("check_email_exists", { lookup_email: email });
+      if (rpcError) {
+        setErrorMsg("Failed to verify email. Please try again.");
+        setLoading(false);
+        return;
+      }
+      
       if (emailExists) {
         setErrorMsg("You already have an account! Please go to Sign In (if you haven't verified yet, log in to resend the link).");
         setLoading(false);

@@ -59,6 +59,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfile = async (userId: string, email?: string) => {
     try {
+      // Check if user still exists on the server (handles deleted users while JWT is still valid locally)
+      const { error: authError } = await supabase.auth.getUser();
+      if (authError && (authError.status === 404 || authError.status === 400 || authError.message.toLowerCase().includes("user not found"))) {
+        await supabase.auth.signOut();
+        setProfile(null);
+        setProfileLoading(false);
+        return;
+      }
+
       let { data, error } = await supabase
         .from("players")
         .select("*")

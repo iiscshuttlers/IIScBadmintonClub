@@ -162,9 +162,9 @@ export function ProfileOverviewTab({
       {/* Split Stats (Friendly / Tournament / Overall) */}
       {splitStats && splitStats.all.total > 0 && (
         <motion.div variants={itemVariants}>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="flex flex-wrap gap-4">
             {/* Overall */}
-            <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden group hover:shadow-md transition-shadow">
+            <div className="flex-1 min-w-[280px] bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden group hover:shadow-md transition-shadow">
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500" />
               <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-primary/[0.05] rounded-full blur-2xl" />
               <div className="relative z-10">
@@ -222,7 +222,7 @@ export function ProfileOverviewTab({
             </div>
 
             {/* Friendly */}
-            <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden group hover:shadow-md transition-shadow">
+            <div className="flex-1 min-w-[280px] bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden group hover:shadow-md transition-shadow">
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary/50 to-primary" />
               <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-primary/[0.04] rounded-full blur-2xl" />
               <div className="relative z-10">
@@ -264,8 +264,8 @@ export function ProfileOverviewTab({
             </div>
 
             {/* Tournament */}
-            <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden group hover:shadow-md transition-shadow">
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-300 to-orange-500" />
+            <div className="flex-1 min-w-[280px] bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden group hover:shadow-md transition-shadow">
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-400 to-emerald-600" />
               <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-amber-500/[0.04] rounded-full blur-2xl" />
               <div className="relative z-10">
                 <div className="flex items-center gap-2.5 mb-4">
@@ -315,7 +315,7 @@ export function ProfileOverviewTab({
             </div>
 
             {/* Singles */}
-            <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden group hover:shadow-md transition-shadow">
+            <div className="flex-1 min-w-[280px] bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden group hover:shadow-md transition-shadow">
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-300 to-blue-500" />
               <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-blue-500/[0.04] rounded-full blur-2xl" />
               <div className="relative z-10">
@@ -355,7 +355,7 @@ export function ProfileOverviewTab({
             </div>
 
             {/* Doubles */}
-            <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden group hover:shadow-md transition-shadow">
+            <div className="flex-1 min-w-[280px] bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden group hover:shadow-md transition-shadow">
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-purple-300 to-purple-500" />
               <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-purple-500/[0.04] rounded-full blur-2xl" />
               <div className="relative z-10">
@@ -395,7 +395,7 @@ export function ProfileOverviewTab({
             </div>
 
             {/* Mixed */}
-            <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden group hover:shadow-md transition-shadow">
+            <div className="flex-1 min-w-[280px] bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden group hover:shadow-md transition-shadow">
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-rose-300 to-rose-500" />
               <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-rose-500/[0.04] rounded-full blur-2xl" />
               <div className="relative z-10">
@@ -446,7 +446,7 @@ export function ProfileOverviewTab({
           </span>
           <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
         </div>
-        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+        <div className="flex flex-wrap gap-3 sm:gap-4">
           {(
             [
               {
@@ -493,7 +493,9 @@ export function ProfileOverviewTab({
           ).map((attr) => (
             <div
               key={attr.label}
-              className="relative overflow-hidden bg-white/5 rounded-2xl p-5 sm:p-6 border border-slate-200 dark:border-white/8 hover:border-slate-300 dark:hover:border-white/14 hover:bg-slate-50 dark:hover:bg-white/12 dark:bg-white/8 hover:-translate-y-0.5 transition-all duration-300 group"
+              className={`flex-1 min-w-[140px] relative overflow-hidden bg-white/5 rounded-2xl p-5 sm:p-6 border border-slate-200 dark:border-white/8 hover:border-slate-300 dark:hover:border-white/14 hover:bg-slate-50 dark:hover:bg-white/12 dark:bg-white/8 hover:-translate-y-0.5 transition-all duration-300 group ${
+                attr.label === "Favorite Format" ? "flex flex-col items-center text-center" : ""
+              }`}
             >
               <div
                 className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${attr.accent}`}
@@ -515,7 +517,7 @@ export function ProfileOverviewTab({
       </motion.section>
 
       {/* Performance Breakdown */}
-      {player.stats?.categoryStats && (
+      {(splitStats?.singles?.total > 0 || splitStats?.doubles?.total > 0 || splitStats?.mixed?.total > 0) && (
         <motion.section variants={itemVariants}>
           <div className="flex items-center gap-3 mb-5">
             <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
@@ -526,27 +528,27 @@ export function ProfileOverviewTab({
           </div>
           <div className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 space-y-5 relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-400 via-blue-500 to-blue-700" />
-            {player.stats.categoryStats.singles && (
+            {splitStats.singles && splitStats.singles.total > 0 && (
               <CategoryBar
                 label="Singles"
-                wins={player.stats.categoryStats.singles.wins}
-                losses={player.stats.categoryStats.singles.losses}
+                wins={splitStats.singles.wins}
+                losses={splitStats.singles.losses}
                 color="bg-primary"
               />
             )}
-            {player.stats.categoryStats.doubles && (
+            {splitStats.doubles && splitStats.doubles.total > 0 && (
               <CategoryBar
                 label="Doubles"
-                wins={player.stats.categoryStats.doubles.wins}
-                losses={player.stats.categoryStats.doubles.losses}
+                wins={splitStats.doubles.wins}
+                losses={splitStats.doubles.losses}
                 color="bg-blue-500"
               />
             )}
-            {player.stats.categoryStats.mixed && (
+            {splitStats.mixed && splitStats.mixed.total > 0 && (
               <CategoryBar
                 label="Mixed"
-                wins={player.stats.categoryStats.mixed.wins}
-                losses={player.stats.categoryStats.mixed.losses}
+                wins={splitStats.mixed.wins}
+                losses={splitStats.mixed.losses}
                 color="bg-violet-500"
               />
             )}
@@ -555,23 +557,27 @@ export function ProfileOverviewTab({
       )}
 
       {/* Match History */}
-      <div className="flex items-center gap-3 mb-4">
-        <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
-        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground dark:text-foreground/35 shrink-0 flex items-center gap-2">
-          <Swords className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" /> Match
-          History
-        </span>
-        <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
-      </div>
-      <MatchHistorySection
-        id={id}
-        liveMatches={liveMatches}
-        ownPlayerProfile={ownPlayerProfile}
-        handleWithdrawMatch={handleWithdrawMatch}
-        handleConfirmMatch={handleConfirmMatch}
-        handleRejectMatch={handleRejectMatch}
-        handleResendRequest={handleResendRequest}
-      />
+      {liveMatches.some((m) => m.status === "confirmed" || m.status === "pending") && (
+        <>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
+            <span className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground dark:text-foreground/35 shrink-0 flex items-center gap-2">
+              <Swords className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" /> Match
+              History
+            </span>
+            <div className="h-px flex-1 bg-slate-200 dark:bg-white/8" />
+          </div>
+          <MatchHistorySection
+            id={id}
+            liveMatches={liveMatches}
+            ownPlayerProfile={ownPlayerProfile}
+            handleWithdrawMatch={handleWithdrawMatch}
+            handleConfirmMatch={handleConfirmMatch}
+            handleRejectMatch={handleRejectMatch}
+            handleResendRequest={handleResendRequest}
+          />
+        </>
+      )}
 
       {/* Equipment Arsenal */}
       <EquipmentArsenalSection player={player} />

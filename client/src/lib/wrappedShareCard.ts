@@ -27,26 +27,33 @@ function drawRoundedRect(
 }
 
 export interface WrappedShareData {
+  year: number;
   playerName: string;
   avatarUrl?: string;
   totalMatches: number;
   winRate: string;
   biggestRival: string;
   bestStreak: number;
-  highestElo: number;
+  ranking: {
+    overall?: number;
+    singles?: number;
+    doubles?: number;
+    mixed?: number;
+  };
 }
 
 export async function renderWrappedShareCard(
   data: WrappedShareData,
 ): Promise<HTMLCanvasElement | null> {
   const {
+    year,
     playerName,
     avatarUrl,
     totalMatches,
     winRate,
     biggestRival,
     bestStreak,
-    highestElo
+    ranking
   } = data;
 
   const playerImg = await loadImg(avatarUrl || "");
@@ -83,7 +90,7 @@ export async function renderWrappedShareCard(
   
   ctx.font = "900 110px sans-serif";
   ctx.fillStyle = "#ffffff";
-  ctx.fillText("YEAR IN", W / 2, 250);
+  ctx.fillText(`${year} IN`, W / 2, 250);
   ctx.fillText("REVIEW", W / 2, 360);
 
   // Profile Avatar
@@ -144,13 +151,40 @@ export async function renderWrappedShareCard(
   renderStat(startY + gapY, "WIN RATE", winRate);
   renderStat(startY + gapY * 2, "BIGGEST RIVAL", biggestRival);
   renderStat(startY + gapY * 3, "BEST STREAK", `${bestStreak} 🔥`);
-  renderStat(startY + gapY * 4, "HIGHEST ELO", highestElo.toString());
+
+  // 2x2 Rankings Grid Box
+  const rankY = startY + gapY * 4;
+  ctx.save();
+  drawRoundedRect(ctx, 100, rankY, W - 200, 240, 40);
+  ctx.fillStyle = "rgba(0,0,0,0.2)";
+  ctx.fill();
+  ctx.restore();
+
+  const drawRankItem = (x: number, y: number, label: string, val?: number) => {
+    ctx.textAlign = "left";
+    ctx.fillStyle = "rgba(255,255,255,0.8)";
+    ctx.font = "bold 26px sans-serif";
+    ctx.fillText(label, x, y);
+    
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "900 40px sans-serif";
+    ctx.fillText(val ? `#${val}` : "N/A", x + 350, y);
+  };
+
+  // Top Row (Overall, Singles)
+  drawRankItem(150, rankY + 65, "OVERALL RANK", ranking.overall);
+  drawRankItem(W / 2 + 30, rankY + 65, "SINGLES", ranking.singles);
+  
+  // Bottom Row (Doubles, Mixed)
+  drawRankItem(150, rankY + 175, "DOUBLES", ranking.doubles);
+  drawRankItem(W / 2 + 30, rankY + 175, "MIXED", ranking.mixed);
 
   // Footer
-  ctx.fillStyle = "rgba(255,255,255,0.6)";
-  ctx.font = "bold 30px sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText("iiscshuttlers.github.io/iiscshuttlers", W / 2, H - 60);
+  // ctx.fillStyle = "rgba(255,255,255,0.6)";
+  // ctx.font = "bold 30px sans-serif";
+  // ctx.textAlign = "center";
+  // ctx.fillText("iiscshuttlers.github.io/iiscshuttlers", W / 2, H - 60);
 
   return canvas;
 }

@@ -72,24 +72,24 @@ export function ContentEditorWrapper<T>({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-[88px] lg:bottom-6 left-0 right-0 mx-auto w-[90%] sm:w-max z-[9998] flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-3 sm:gap-4 px-4 sm:px-6 py-3 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-foreground shadow-2xl border border-slate-700 dark:border-slate-300"
+            className="fixed bottom-[88px] lg:bottom-6 left-0 right-0 mx-auto w-[90%] sm:w-max z-[9998] flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-3 sm:gap-4 px-4 sm:px-6 py-3 rounded-2xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-2xl border border-slate-200 dark:border-slate-700"
           >
             <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-400 dark:text-amber-600 shrink-0" />
+              <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
               <span className="text-sm font-bold whitespace-nowrap">Unsaved changes</span>
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto justify-center">
               <button
                 onClick={discard}
                 disabled={isSaving}
-                className="px-4 py-2 rounded-xl text-muted-foreground hover:text-white dark:text-muted-foreground dark:hover:text-foreground text-sm font-bold transition disabled:opacity-50"
+                className="px-4 py-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white text-sm font-bold transition disabled:opacity-50"
               >
                 Undo
               </button>
               <button
                 onClick={() => setShowConfirm(true)}
                 disabled={isSaving}
-                className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-primary text-primary-foreground text-sm font-bold transition disabled:opacity-50 shadow-md w-full sm:w-auto min-w-[140px]"
+                className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold transition disabled:opacity-50 shadow-md w-full sm:w-auto min-w-[140px]"
               >
                 {isSaving ? (
                   <Loader2 className="w-4 h-4 animate-spin shrink-0" />

@@ -65,7 +65,7 @@ async function sendFcm(
           notification: { title, body },
           android: {
             priority: "high",
-            notification: { channel_id: "notify_find_lost" },
+            notification: { channel_id: "notify_whistle" },
           },
           data,
         },
@@ -110,6 +110,29 @@ serve(async (req) => {
       console.warn("[notify-find-lost] Could not filter by pref_notify_find_lost, broadcasting to everyone except author:", prefError);
     }
 
+    // Determine notification message
+    const notifTitle = type === "lost" ? "🔍 Item Lost" : "✅ Item Found";
+    const notifBody = type === "lost"
+      ? `${author_name} posted a lost item: ${title}`
+      : `${author_name} posted a found item: ${title}`;
+
+    // Create in-app notifications for all target users
+    const notifRecipients = targetUserIds ||
+      (await supabase.from("players").select("id")).data?.map(p => p.id) || [];
+
+    const filteredRecipients = notifRecipients.filter(id => id !== author_id);
+    if (filteredRecipients.length > 0) {
+      await supabase.from("notifications").insert(
+        filteredRecipients.map(userId => ({
+          user_id: userId,
+          title: notifTitle,
+          message: notifBody,
+          type: "find_lost",
+          link: "/hub?tab=lost-found"
+        }))
+      );
+    }
+
     // Fetch tokens
     let tokensQuery = supabase.from("user_push_tokens").select("token, user_id").neq("user_id", author_id);
     if (targetUserIds) {
@@ -128,11 +151,6 @@ serve(async (req) => {
 
     const sa: ServiceAccount = JSON.parse(FIREBASE_SERVICE_ACCOUNT);
     const accessToken = await getFirebaseAccessToken(sa);
-
-    const notifTitle = type === "lost" ? "Item Lost" : "Item Found";
-    const notifBody = type === "lost" 
-      ? `${author_name} posted a lost item: ${title}`
-      : `${author_name} posted a found item: ${title}`;
 
     const notifData: Record<string, string> = {
       action: "view_find_lost",

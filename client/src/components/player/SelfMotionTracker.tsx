@@ -21,10 +21,15 @@ export function SelfMotionTracker({ userId, onSaved }: { userId: string, onSaved
     const hcEnabled = localStorage.getItem("hc_enabled") === "true";
     if (!hcEnabled || !Capacitor.isNativePlatform()) return;
 
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+
     const checkHeartRate = async () => {
       try {
         const { available } = await HealthConnect.isAvailable();
-        if (!available) return;
+        if (!available) {
+          if (intervalId) clearInterval(intervalId);
+          return;
+        }
 
         const endTime = new Date();
         const startTime = new Date(endTime.getTime() - 60000); // last 1 minute
@@ -45,11 +50,14 @@ export function SelfMotionTracker({ userId, onSaved }: { userId: string, onSaved
         }
       } catch (err) {
         console.error("Danger zone check failed:", err);
+        if (intervalId) clearInterval(intervalId);
       }
     };
 
-    const intervalId = setInterval(checkHeartRate, 30000); // Check every 30s
-    return () => clearInterval(intervalId);
+    intervalId = setInterval(checkHeartRate, 30000); // Check every 30s
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [isTracking]);
   
   const motionStatsRef = useRef({

@@ -9,22 +9,24 @@ export function useLiveMatches() {
     const parseLiveData = (val: Record<string, any>) => {
       const ids = new Set<string>();
       let anyLive = false;
-      Object.values(val).forEach((m: any) => {
-        if (m.status === "playing" || (m.status === "setup" && m.t1?.p1Id && m.t2?.p1Id)) {
-          anyLive = true;
-          if (!m.isFriendly) {
-            [m.t1?.p1Id, m.t1?.p2Id, m.t2?.p1Id, m.t2?.p2Id]
-              .filter(Boolean)
-              .forEach((id: string) => ids.add(id));
+      if (val && typeof val === 'object') {
+        Object.values(val).forEach((m: any) => {
+          if (m && (m.status === "playing" || (m.status === "setup" && m.t1?.p1Id && m.t2?.p1Id))) {
+            anyLive = true;
+            if (!m.isFriendly) {
+              [m.t1?.p1Id, m.t1?.p2Id, m.t2?.p1Id, m.t2?.p2Id]
+                .filter(Boolean)
+                .forEach((id: string) => ids.add(id));
+            }
           }
-        }
-      });
+        });
+      }
       setLiveMatchIds(ids);
       setHasLiveMatches(anyLive);
     };
 
     const fetchLive = async () => {
-      const { data } = await supabase.from("site_data").select("value").eq("key", "live_matches").single();
+      const { data } = await supabase.from("site_data").select("value").eq("key", "live_matches").maybeSingle();
       if (data?.value) parseLiveData(data.value as Record<string, any>);
     };
 

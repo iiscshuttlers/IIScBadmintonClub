@@ -24,6 +24,7 @@ export default function Footer() {
     { href: "/pulse", label: "Pulse" },
     { href: "/hub", label: "Hub" },
     { href: "/legacy", label: "Legacy" },
+    { href: "/glossary", label: "Glossary" },
     { href: "/privacy", label: "Privacy Policy" },
     { href: "/terms", label: "Terms of Service" },
     { href: "/delete-account", label: "Delete Account" },

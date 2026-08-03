@@ -4,7 +4,7 @@ import type { PlayerRow } from "@/types";
 
 
 export const PLAYER_SELECT =
-  "id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, elo_rating, singles_elo, doubles_elo, mixed_elo, tournament_elo, win_loss_record, singles_record, doubles_record, mixed_record, recent_form, is_looking_to_play, status, buddies, following, buddy_requests, gender";
+  "id, full_name, nickname, department, joined_year, playing_level, playing_style, dominant_hand, avatar_url, current_racket, elo_rating, singles_elo, doubles_elo, mixed_elo, tournament_elo, win_loss_record, recent_form, is_looking_to_play, buddies, following, gender, favorite_format, instagram";
 
 export const playerService = {
   async getAllPlayers(): Promise<PlayerRow[]> {
@@ -246,9 +246,14 @@ export function formatPlayerData(data: any): import("@/types").PlayerProfileType
     careerHighlights: data.career_highlights,
     shoes:
       data.shoes && data.shoes.startsWith("[")
-        ? JSON.parse(data.shoes).find((s: any) => s.primary)?.name ||
-        JSON.parse(data.shoes)[0]?.name ||
-        ""
+        ? (() => {
+            try {
+              const parsed = JSON.parse(data.shoes);
+              return parsed.find((s: any) => s.primary)?.name || parsed[0]?.name || "";
+            } catch {
+              return data.shoes;
+            }
+          })()
         : data.shoes,
     shoesList: parseShoesList(data.shoes),
     apparel: data.apparel,

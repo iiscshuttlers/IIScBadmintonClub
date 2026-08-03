@@ -73,7 +73,7 @@ async function sendFcm(
           notification: { title, body },
           android: {
             priority: "high",
-            notification: { channel_id: "notify_friendly" },
+            notification: { channel_id: "notify_victory" },
           },
           data,
         },
@@ -149,6 +149,38 @@ serve(async (req) => {
       targetUserIds = [to_player_id!];
     }
 
+    // Determine notification content
+    let title = "";
+    let body = "";
+    let notifType = "";
+    if (type === "buddy_request") {
+      title = "👋 New Buddy Request";
+      body = `${from_name} wants to be your badminton buddy!`;
+      notifType = "buddy_request";
+    } else if (type === "follow") {
+      title = "❤️ New Follower";
+      body = `${from_name} started following you.`;
+      notifType = "new_follower";
+    } else if (type === "status_update") {
+      const statusLabel = new_status === "playing" ? "Playing Right Now" : "Looking to play";
+      title = "🏸 Buddy Status Update";
+      body = `${from_name} is now ${statusLabel}!`;
+      notifType = "status_update";
+    }
+
+    // Create in-app notifications for all target users
+    if (targetUserIds.length > 0) {
+      await supabase.from("notifications").insert(
+        targetUserIds.map(userId => ({
+          user_id: userId,
+          title,
+          message: body,
+          type: notifType,
+          link: `/player/${from_player_id}`
+        }))
+      );
+    }
+
     // to_player_id is now the auth UUID directly
     const { data: tokens } = await supabase
       .from("user_push_tokens")
@@ -165,20 +197,6 @@ serve(async (req) => {
 
     const sa: ServiceAccount = JSON.parse(FIREBASE_SERVICE_ACCOUNT);
     const accessToken = await getFirebaseAccessToken(sa);
-
-    let title = "";
-    let body = "";
-    if (type === "buddy_request") {
-      title = "👋 New Buddy Request";
-      body = `${from_name} wants to be your badminton buddy!`;
-    } else if (type === "follow") {
-      title = "❤️ New Follower";
-      body = `${from_name} started following you.`;
-    } else if (type === "status_update") {
-      const statusLabel = new_status === "playing" ? "Playing Right Now" : "Looking to play";
-      title = "🏸 Buddy Status Update";
-      body = `${from_name} is now ${statusLabel}!`;
-    }
 
     const notifData: Record<string, string> = {
       type: "player_profile",

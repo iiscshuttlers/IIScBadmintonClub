@@ -102,22 +102,7 @@ const BADGES: BadgeDef[] = [
     color: "bg-yellow-100 dark:bg-yellow-950/40 text-yellow-600 dark:text-yellow-400",
     getProgress: ({ wins }) => ({ earned: wins >= 50, current: Math.min(wins, 50), max: 50 }),
   },
-  {
-    id: "elo_1300",
-    label: "ELO 1300",
-    description: "Reach 1300 ELO rating",
-    icon: TrendingUp,
-    color: "bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary",
-    getProgress: ({ elo }) => ({ earned: elo >= 1300, current: Math.min(Math.floor(elo), 1300), max: 1300 }),
-  },
-  {
-    id: "elo_1400",
-    label: "Elite",
-    description: "Reach 1400 ELO rating",
-    icon: Zap,
-    color: "bg-violet-100 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400",
-    getProgress: ({ elo }) => ({ earned: elo >= 1400, current: Math.min(Math.floor(elo), 1400), max: 1400 }),
-  },
+
   {
     id: "rubber_sets",
     label: "Rubber Setter",
@@ -174,7 +159,9 @@ interface Props {
   elo: number;
 }
 
-export function AchievementBadges({ matches, playerId, elo }: Props) {
+export function AchievementBadges({ matches: allMatches, playerId, elo }: Props) {
+  const matches = useMemo(() => allMatches.filter(m => !!(m as any).tournament_slug), [allMatches]);
+
   const { wins, losses } = useMemo(() => {
     let w = 0;
     let l = 0;

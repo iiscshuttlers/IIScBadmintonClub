@@ -134,7 +134,7 @@ export function PlayerCard({
       setIsPinged(true);
       
       // Broadcast the ping to all listening clients (real-time, only works if app is open)
-      supabase.channel("pings").send({
+      supabase.channel("global-notifications").send({
         type: "broadcast",
         event: "ping",
         payload: {

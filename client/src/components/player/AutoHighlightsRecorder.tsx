@@ -24,6 +24,9 @@ export function AutoHighlightsRecorder() {
   
   // Cooldown to prevent multiple triggers for the same rally
   const lastTriggerRef = useRef<number>(0);
+  
+  // Timeout for capture
+  const captureTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const startRecording = async () => {
     try {
@@ -68,6 +71,14 @@ export function AutoHighlightsRecorder() {
       audioContextRef.current.close();
     }
     cancelAnimationFrame(animationFrameRef.current);
+    if (audioContextRef.current) {
+      audioContextRef.current.close().catch(() => {});
+      audioContextRef.current = null;
+    }
+    if (captureTimerRef.current) {
+      clearTimeout(captureTimerRef.current);
+      captureTimerRef.current = null;
+    }
     
     setIsRecording(false);
   };
@@ -133,8 +144,10 @@ export function AutoHighlightsRecorder() {
   const triggerHighlightCapture = () => {
     toast.success("💥 Huge smash detected! Saving highlight...");
     
+    if (captureTimerRef.current) clearTimeout(captureTimerRef.current);
+    
     // We want to wait a few seconds to capture the *aftermath* of the smash
-    setTimeout(() => {
+    captureTimerRef.current = setTimeout(() => {
       if (chunksRef.current.length === 0) return;
       
       const blob = new Blob(chunksRef.current, { type: 'video/webm' });

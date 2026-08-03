@@ -26,6 +26,8 @@ interface BasicInfoTabProps {
   setCustomDepartment: (val: string) => void;
   isRetired: boolean;
   setIsRetired: (val: boolean) => void;
+  instagram: string;
+  setInstagram: (val: string) => void;
   handleAvatarUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
@@ -52,6 +54,8 @@ export function BasicInfoTab({
   setCustomDepartment,
   isRetired,
   setIsRetired,
+  instagram,
+  setInstagram,
   handleAvatarUpload,
 }: BasicInfoTabProps) {
   return (
@@ -155,7 +159,7 @@ export function BasicInfoTab({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-semibold text-muted-foreground dark:text-slate-300 mb-2">
             IISc Email *
@@ -226,6 +230,27 @@ export function BasicInfoTab({
               </option>
             ))}
           </select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6">
+        <div>
+          <label className="block text-sm font-semibold text-muted-foreground dark:text-slate-300 mb-2">
+            Instagram Handle (Optional)
+          </label>
+          <div className="flex items-center">
+            <span className="px-4 py-3 rounded-l-xl border border-r-0 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/60 text-muted-foreground text-sm border-r-transparent">
+              @
+            </span>
+            <input
+              type="text"
+              value={instagram}
+              onChange={(e) => setInstagram(e.target.value.replace("@", ""))}
+              className="w-full px-4 py-3 rounded-r-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
+              placeholder="username"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">Please enter your username without the '@'. If provided, an Instagram button will appear on your profile.</p>
         </div>
       </div>
 
