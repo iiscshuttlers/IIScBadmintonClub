@@ -43,8 +43,8 @@ export function ProfileOverviewTabRight({
         </motion.div>
       )}
 
-      {/* Bio */}
-      {player.bio && (
+      {/* Bio & Details */}
+      {(player.bio || player.coach || player.startedPlayingYear != null || player.highestRanking != null || player.favoriteFormat) && (
         <motion.section
           variants={itemVariants}
           className="bg-white dark:bg-white/5 shadow-sm dark:shadow-none rounded-2xl p-6 border border-slate-200 dark:border-white/8 relative overflow-hidden"
@@ -54,13 +54,16 @@ export function ProfileOverviewTabRight({
             <BookOpen className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />{" "}
             About
           </h2>
-          <p className="text-sm leading-relaxed text-muted-foreground dark:text-foreground/65">
-            {player.bio}
-          </p>
+          {player.bio && (
+            <p className="text-sm leading-relaxed text-muted-foreground dark:text-foreground/65">
+              {player.bio}
+            </p>
+          )}
           {(player.coach ||
-            player.yearsPlaying != null ||
-            player.highestRanking != null) && (
-            <div className="mt-4 pt-4 border-t border-slate-200 dark:border-white/8 space-y-2.5">
+            player.startedPlayingYear != null ||
+            player.highestRanking != null ||
+            player.favoriteFormat) && (
+            <div className={`${player.bio ? "mt-4 pt-4 border-t border-slate-200 dark:border-white/8" : ""} space-y-2.5`}>
               {player.coach && (
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-muted-foreground dark:text-foreground/35 font-medium">
@@ -71,13 +74,23 @@ export function ProfileOverviewTabRight({
                   </span>
                 </div>
               )}
-              {player.yearsPlaying != null && (
+              {player.favoriteFormat && (
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground dark:text-foreground/35 font-medium">
+                    Favorite Format
+                  </span>
+                  <span className="font-bold text-slate-800 dark:text-foreground/90">
+                    {player.favoriteFormat}
+                  </span>
+                </div>
+              )}
+              {player.startedPlayingYear != null && (
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-muted-foreground dark:text-foreground/35 font-medium">
                     Years Playing
                   </span>
                   <span className="font-bold text-slate-800 dark:text-foreground/90">
-                    {player.yearsPlaying} yrs
+                    {new Date().getFullYear() - player.startedPlayingYear} yrs
                   </span>
                 </div>
               )}

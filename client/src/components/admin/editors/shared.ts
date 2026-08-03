@@ -54,6 +54,7 @@ export type Player = {
   sr_number?: string;
   role?: string;
   is_retired?: boolean;
+  gender?: string;
 };
 export type AuthUser = {
   id: string;

@@ -5,6 +5,8 @@ import { usePageMeta } from "@/hooks/usePageMeta";
 import { Trophy, Users, TrendingUp, Swords, ArrowLeft, Loader2 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { InfoModal } from "@/components/InfoModal";
+import { TeaserOverlay } from "@/components/TeaserOverlay";
+import { useAuth } from "@/contexts/AuthContext";
 
 import type { PlayerRow as Player } from "@/types";
 
@@ -33,6 +35,7 @@ export default function DoublesPairProfile() {
   const [player2, setPlayer2] = useState<Player | null>(null);
   const [pairMatches, setPairMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
+  const { session } = useAuth();
 
   usePageMeta({ title: "Doubles Pair Profile", description: "Head-to-head doubles stats" });
 
@@ -85,7 +88,7 @@ export default function DoublesPairProfile() {
       <div className="flex flex-col items-center justify-center min-h-screen">
         <h1 className="text-2xl font-bold mb-4">Pair not found</h1>
         <p className="text-muted-foreground">Players not found</p>
-        <Link href="/hub" className="text-primary font-bold">Browse Players</Link>
+        <Link href="/pulse#h2h" className="text-primary font-bold">Browse H2H</Link>
       </div>
   );
 
@@ -115,8 +118,8 @@ export default function DoublesPairProfile() {
       <div className="bg-gradient-to-br from-teal-800 via-emerald-700 to-teal-800 text-foreground py-6 relative overflow-hidden">
         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,rgba(34,197,94,0.5),transparent)] pointer-events-none" />
         <div className="container mx-auto px-4 max-w-3xl relative z-10">
-          <Link href="/hub" className="inline-flex items-center gap-1.5 text-foreground/60 hover:text-foreground text-sm font-bold mb-6 transition">
-            <ArrowLeft className="w-4 h-4" /> Back to Players
+          <Link href="/pulse#h2h" className="inline-flex items-center gap-1.5 text-foreground/60 hover:text-foreground text-sm font-bold mb-6 transition">
+            <ArrowLeft className="w-4 h-4" /> Back to H2H
           </Link>
           <div className="flex flex-col items-center gap-6">
             <div className="flex items-center gap-4">
@@ -144,76 +147,78 @@ export default function DoublesPairProfile() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 max-w-3xl mt-8 space-y-6">
-        {/* Stats grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {stats.map((s) => (
-            <div key={s.label} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 text-center shadow-sm">
-              <div className={`text-3xl font-black ${s.color}`}>{s.value}</div>
-              <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-1">{s.label}</div>
+      <TeaserOverlay isLocked={!session}>
+        <div className="container mx-auto px-4 max-w-3xl mt-8 space-y-6">
+          {/* Stats grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {stats.map((s) => (
+              <div key={s.label} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 text-center shadow-sm">
+                <div className={`text-3xl font-black ${s.color}`}>{s.value}</div>
+                <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-1">{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Pair ELO Journey */}
+          {eloHistory.length >= 2 && (
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="font-black text-slate-800 dark:text-foreground">Pair ELO Journey</h3>
+                <span className="text-[10px] text-muted-foreground font-medium">Estimated from match results</span>
+              </div>
+              <p className="text-xs text-muted-foreground mb-4">Starting from 1200 · ±18 per match</p>
+              <ResponsiveContainer width="100%" height={160}>
+                <AreaChart data={eloHistory} margin={{ top: 4, right: 8, left: -24, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="pairEloGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#94a3b8" }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+                  <YAxis tick={{ fontSize: 10, fill: "#94a3b8" }} tickLine={false} axisLine={false} />
+                  <Tooltip
+                    contentStyle={{ background: "var(--tw-bg, #1e293b)", border: "1px solid #334155", borderRadius: 12, fontSize: 12 }}
+                    labelStyle={{ color: "#94a3b8" }}
+                    itemStyle={{ color: "#60a5fa" }}
+                  />
+                  <Area type="monotone" dataKey="elo" stroke="#3b82f6" strokeWidth={2} fill="url(#pairEloGrad)" dot={false} />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
-          ))}
+          )}
+
+          {/* Match history */}
+          {pairMatches.length > 0 && (
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
+              <h3 className="font-black text-slate-800 dark:text-foreground mb-4">Recent Matches Together</h3>
+              <div className="space-y-2">
+                {pairMatches.slice(0, 10).map((m) => {
+                  const won = m.winner_id === p1 || m.winner_id === p2;
+                  return (
+                    <div key={m.id} className="flex items-center gap-3 py-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
+                      <span className={`text-xs font-black px-2 py-0.5 rounded-full ${won ? "bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary" : "bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400"}`}>
+                        {won ? "W" : "L"}
+                      </span>
+                      <span className="text-xs text-muted-foreground dark:text-slate-300 flex-1 font-mono">
+                        {m.match_score?.split("[")[0]?.trim() ?? "—"}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">{new Date(m.created_at!).toLocaleDateString()}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {pairMatches.length === 0 && (
+            <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
+              <Users className="w-12 h-12 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
+              <p className="font-bold text-muted-foreground dark:text-slate-300">No confirmed doubles matches found together yet.</p>
+            </div>
+          )}
         </div>
-
-        {/* Pair ELO Journey */}
-        {eloHistory.length >= 2 && (
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="font-black text-slate-800 dark:text-foreground">Pair ELO Journey</h3>
-              <span className="text-[10px] text-muted-foreground font-medium">Estimated from match results</span>
-            </div>
-            <p className="text-xs text-muted-foreground mb-4">Starting from 1200 · ±18 per match</p>
-            <ResponsiveContainer width="100%" height={160}>
-              <AreaChart data={eloHistory} margin={{ top: 4, right: 8, left: -24, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="pairEloGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#94a3b8" }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-                <YAxis tick={{ fontSize: 10, fill: "#94a3b8" }} tickLine={false} axisLine={false} />
-                <Tooltip
-                  contentStyle={{ background: "var(--tw-bg, #1e293b)", border: "1px solid #334155", borderRadius: 12, fontSize: 12 }}
-                  labelStyle={{ color: "#94a3b8" }}
-                  itemStyle={{ color: "#60a5fa" }}
-                />
-                <Area type="monotone" dataKey="elo" stroke="#3b82f6" strokeWidth={2} fill="url(#pairEloGrad)" dot={false} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-
-        {/* Match history */}
-        {pairMatches.length > 0 && (
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
-            <h3 className="font-black text-slate-800 dark:text-foreground mb-4">Recent Matches Together</h3>
-            <div className="space-y-2">
-              {pairMatches.slice(0, 10).map((m) => {
-                const won = m.winner_id === p1 || m.winner_id === p2;
-                return (
-                  <div key={m.id} className="flex items-center gap-3 py-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
-                    <span className={`text-xs font-black px-2 py-0.5 rounded-full ${won ? "bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary" : "bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400"}`}>
-                      {won ? "W" : "L"}
-                    </span>
-                    <span className="text-xs text-muted-foreground dark:text-slate-300 flex-1 font-mono">
-                      {m.match_score?.split("[")[0]?.trim() ?? "—"}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground">{new Date(m.created_at!).toLocaleDateString()}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {pairMatches.length === 0 && (
-          <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
-            <Users className="w-12 h-12 text-slate-300 dark:text-muted-foreground mx-auto mb-3" />
-            <p className="font-bold text-muted-foreground dark:text-slate-300">No confirmed doubles matches found together yet.</p>
-          </div>
-        )}
-      </div>
+      </TeaserOverlay>
     </div>
   );
 }

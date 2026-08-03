@@ -25,6 +25,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { MatchCard } from "@/components/feed/MatchCard";
 import { InfoModal } from "@/components/InfoModal";
+import { TeaserOverlay } from "@/components/TeaserOverlay";
 
 export default function ComparePlayers() {
   const [match, rawParams] = useRoute("/compare/:p1/:p2");
@@ -152,12 +153,15 @@ export default function ComparePlayers() {
   const fmtColor1 = "text-primary dark:text-primary";
   const fmtColor2 = "text-blue-600 dark:text-blue-400";
 
+  const p1Rank = [...allPlayers].sort((a, b) => (b.elo_rating || 0) - (a.elo_rating || 0)).findIndex(p => p.id === player1.id) + 1 || "?";
+  const p2Rank = [...allPlayers].sort((a, b) => (b.elo_rating || 0) - (a.elo_rating || 0)).findIndex(p => p.id === player2.id) + 1 || "?";
+
   return (
     <div className="pb-24 pt-6 max-w-4xl mx-auto px-4">
-      <Link href="/hub">
+      <Link href="/pulse#h2h">
         <button className="flex items-center text-muted-foreground hover:text-slate-800 dark:hover:text-foreground mb-6 transition-colors">
           <ChevronLeft className="w-5 h-5 mr-1" />
-          Back to Directory
+          Back to H2H
         </button>
       </Link>
 
@@ -228,7 +232,7 @@ export default function ComparePlayers() {
           </div>
           
           <div className={`mt-2 px-3 py-1 rounded-lg backdrop-blur-md border border-white/25 text-xs font-black uppercase shadow-sm flex items-center gap-1.5 ${getEloTier(player1.elo_rating).bg} ${getEloTier(player1.elo_rating).text}`}>
-             <Trophy className="w-3 h-3" /> {getEloTier(player1.elo_rating).name} • {player1.elo_rating} OVR
+             <Trophy className="w-3 h-3" /> {getEloTier(player1.elo_rating).name} • OVR: #{p1Rank}
           </div>
         </div>
 
@@ -258,7 +262,7 @@ export default function ComparePlayers() {
           </div>
           
           <div className={`mt-2 px-3 py-1 rounded-lg backdrop-blur-md border border-white/25 text-xs font-black uppercase shadow-sm flex items-center gap-1.5 ${getEloTier(player2.elo_rating).bg} ${getEloTier(player2.elo_rating).text}`}>
-             <Trophy className="w-3 h-3" /> {getEloTier(player2.elo_rating).name} • {player2.elo_rating} OVR
+             <Trophy className="w-3 h-3" /> {getEloTier(player2.elo_rating).name} • OVR: #{p2Rank}
           </div>
         </div>
       </div>
@@ -291,7 +295,8 @@ export default function ComparePlayers() {
         </div>
       )}
 
-      {/* AI Prediction Pundit Card */}
+      <TeaserOverlay isLocked={!session}>
+        {/* AI Prediction Pundit Card */}
       <AiPredictionCard player1={player1} player2={player2} p1Wins={p1Wins} p2Wins={p2Wins} matches={matches} />
 
       {/* Tale of the Tape */}
@@ -305,8 +310,9 @@ export default function ComparePlayers() {
             { label: "Department", icon: MapPin, p1Val: player1.department, p2Val: player2.department, color: "text-rose-500 dark:text-rose-400", chip: "bg-rose-100 dark:bg-rose-500/15" },
             { label: "Playing Style", icon: Activity, p1Val: player1.playing_style || "Balanced", p2Val: player2.playing_style || "Balanced", color: "text-amber-500 dark:text-amber-400", chip: "bg-amber-100 dark:bg-amber-500/15" },
             { label: "Dominant Hand", icon: User, p1Val: player1.dominant_hand || "Right-handed", p2Val: player2.dominant_hand || "Right-handed", color: "text-violet-500 dark:text-violet-400", chip: "bg-violet-100 dark:bg-violet-500/15" },
-            { label: "Height", icon: Ruler, p1Val: player1.height || "N/A", p2Val: player2.height || "N/A", color: "text-cyan-500 dark:text-cyan-400", chip: "bg-cyan-100 dark:bg-cyan-500/15" },
-            { label: "Joined", icon: Calendar, p1Val: player1.joined_year || "N/A", p2Val: player2.joined_year || "N/A", color: "text-fuchsia-500 dark:text-fuchsia-400", chip: "bg-fuchsia-100 dark:bg-fuchsia-500/15" }
+            { label: "Medals", icon: Trophy, p1Val: player1.achievements?.length || 0, p2Val: player2.achievements?.length || 0, color: "text-amber-500 dark:text-amber-400", chip: "bg-amber-100 dark:bg-amber-500/15" },
+            { label: "Experience", icon: Flame, p1Val: player1.started_playing_year ? `${new Date().getFullYear() - player1.started_playing_year} yrs` : "N/A", p2Val: player2.started_playing_year ? `${new Date().getFullYear() - player2.started_playing_year} yrs` : "N/A", color: "text-orange-500 dark:text-orange-400", chip: "bg-orange-100 dark:bg-orange-500/15" },
+            { label: "Fav Format", icon: Activity, p1Val: player1.favorite_format || "N/A", p2Val: player2.favorite_format || "N/A", color: "text-emerald-500 dark:text-emerald-400", chip: "bg-emerald-100 dark:bg-emerald-500/15" }
           ].map((stat, idx) => (
             <div key={idx} className="flex items-center justify-between py-2 border-b border-slate-50 dark:border-slate-800/50 last:border-0">
               <div className="flex-1 text-right text-sm font-bold text-primary dark:text-primary pr-4">{stat.p1Val}</div>
@@ -351,50 +357,50 @@ export default function ComparePlayers() {
         </Card>
       )}
 
-      {/* Trend Chart */}
-      {eloHistory.length > 0 && (
-        <Card className="p-6 bg-white dark:bg-slate-900 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800">
-          <h3 className="text-sm font-black text-slate-800 dark:text-foreground mb-6 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-primary" /> Rivalry ELO Trend
+
+        {/* Form Trends */}
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xl border border-slate-100 dark:border-slate-800 mb-8">
+          <h3 className="text-sm font-black text-slate-800 dark:text-foreground mb-4 flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-muted-foreground" /> ELO Trajectory (H2H)
           </h3>
-          <div className="h-64 w-full">
+          <div className="h-48 w-full -ml-4">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={eloHistory} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} />
-                <XAxis dataKey="date" stroke="#64748b" fontSize={10} tickMargin={10} />
-                <YAxis stroke="#64748b" fontSize={10} domain={['auto', 'auto']} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: "#1e293b", borderColor: "#334155", borderRadius: "12px", color: "#fff", fontSize: "12px" }}
+              <LineChart data={eloHistory}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} vertical={false} />
+                <XAxis dataKey="matchDate" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
+                <YAxis domain={["dataMin - 10", "dataMax + 10"]} tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: "#0f172a", border: "none", borderRadius: "12px", color: "#fff", fontSize: "12px", fontWeight: "bold" }}
                   itemStyle={{ fontSize: "12px", fontWeight: "bold" }}
                 />
-                <Line type="monotone" dataKey={player1.full_name} stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: "#10b981", strokeWidth: 2 }} activeDot={{ r: 6 }} />
-                <Line type="monotone" dataKey={player2.full_name} stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, fill: "#3b82f6", strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                <Line type="monotone" dataKey="p1Elo" name={player1.full_name} stroke="#10b981" strokeWidth={3} dot={{ r: 3, fill: "#10b981", strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                <Line type="monotone" dataKey="p2Elo" name={player2.full_name} stroke="#3b82f6" strokeWidth={3} dot={{ r: 3, fill: "#3b82f6", strokeWidth: 0 }} activeDot={{ r: 6 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
-        </Card>
-      )}
-
-      {/* Recent Matches */}
-      {matches.length > 0 && (
-        <div className="mt-8">
-          <h3 className="text-sm font-black text-slate-800 dark:text-foreground mb-4 flex items-center gap-2">
-            <Swords className="w-4 h-4 text-muted-foreground" /> Recent Encounters
-          </h3>
-          <div className="space-y-3">
-            {[...matches].reverse().slice(0, 5).map((m) => (
-              <MatchCard
-                key={m.id}
-                match={m}
-                currentUser={session?.user}
-                isKudosed={false}
-                kudosCount={0}
-                hideActions={true}
-              />
-            ))}
-          </div>
         </div>
-      )}
+
+        {/* Matches List */}
+        {matches.length > 0 && (
+          <div>
+            <h3 className="text-sm font-black text-slate-800 dark:text-foreground mb-4 flex items-center gap-2">
+              <Swords className="w-4 h-4 text-muted-foreground" /> Recent Encounters
+            </h3>
+            <div className="space-y-3">
+              {[...matches].reverse().slice(0, 5).map((m) => (
+                <MatchCard
+                  key={m.id}
+                  match={m}
+                  currentUser={session?.user}
+                  isKudosed={false}
+                  kudosCount={0}
+                  hideActions={true}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </TeaserOverlay>
 
       {matches.length === 0 && (
         <div className="text-center p-6 text-muted-foreground bg-slate-50 dark:bg-slate-800/50 rounded-3xl mt-6 border border-slate-200 dark:border-slate-700">

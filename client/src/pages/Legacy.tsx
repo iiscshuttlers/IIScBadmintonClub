@@ -30,11 +30,12 @@ import { lazy, Suspense } from "react";
 const VideoPlayerModal = lazy(() => import("@/components/VideoPlayerModal").then(mod => ({ default: mod.VideoPlayerModal })));
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation } from "wouter";
-import { fetchRemoteGalleryImages, deleteRemoteGalleryImage, deleteRemoteGalleryImages, type RemoteGalleryItem } from "@/lib/galleryStorage";
+import { fetchRemoteGalleryImages, saveRemoteGalleryImages, deleteRemoteGalleryImage, deleteRemoteGalleryImages, type RemoteGalleryItem } from "@/lib/galleryStorage";
 import { GalleryUploader } from "@/components/admin/GalleryUploader";
 import { useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
 import { GalleryLightboxTags, type TagEntry } from "@/components/gallery/GalleryLightboxTags";
+import { TeaserOverlay } from "@/components/TeaserOverlay";
 
 // ─── Lazy Image Component ───────────────────────────────────────────────────
 function LazyImage({
@@ -310,10 +311,6 @@ export default function Legacy() {
 
   const requestTag = async (photoPath: string) => {
     if (!session?.user) return;
-<<<<<<< HEAD
-    if (!profile) {
-      toast.error("Your player profile could not be found.");
-=======
     const currentUserPlayer = tagPlayers.find((p) => p.id === profile?.id);
     if (!currentUserPlayer) {
       toast.error("Your email is registered, but you must complete your basic profile before requesting a tag.", {
@@ -322,10 +319,8 @@ export default function Legacy() {
           onClick: () => setLocation("/profile/setup"),
         },
       });
->>>>>>> origin/feature/admin-profile-updates
       return;
     }
-    const currentUserPlayer = { id: profile.id, full_name: profile.full_name };
 
     const currentPending = pendingTags[photoPath] || [];
     if (currentPending.some((t) => t.id === currentUserPlayer.id)) return;
@@ -356,6 +351,26 @@ export default function Legacy() {
     const updatedPending = { ...pendingTags, [photoPath]: currentPending.filter((t) => t.id !== tag.id) };
     setPendingTags(updatedPending);
     await supabase.from("site_data").upsert({ key: "gallery_pending_tags", value: updatedPending }, { onConflict: "key" });
+  };
+
+  const handleEditTitle = async (item: UnifiedGalleryItem) => {
+    if (!item.url || !item.path) return;
+    const newTitle = window.prompt("Enter new title for this photo:", item.title);
+    if (!newTitle || newTitle.trim() === "" || newTitle === item.title) return;
+
+    try {
+      const currentPhotos = await fetchRemoteGalleryImages();
+      const updatedPhotos = currentPhotos.map(p => 
+        p.path === item.path ? { ...p, title: newTitle.trim() } : p
+      );
+      
+      await saveRemoteGalleryImages(updatedPhotos);
+      queryClient.invalidateQueries({ queryKey: ["gallery-remote-photos"] });
+      toast.success("Photo title updated successfully!");
+    } catch (err: any) {
+      console.error("Failed to update title:", err);
+      toast.error("Failed to update title: " + err.message);
+    }
   };
 
   // ── LAZY glob (not eager) ──────────────────────────────────────────
@@ -595,7 +610,8 @@ export default function Legacy() {
       {activeTab === "champions" && <WinnersWallSection />}
 
       {(activeTab === "albums" || activeTab === "photos") && (
-      <section className="py-16 bg-white dark:bg-slate-950">
+      <section className="py-16 bg-white dark:bg-slate-950 relative">
+        <TeaserOverlay isLocked={!session}>
         <div className="container mx-auto px-4">
           {/* Main Category Filter */}
           {(activeTab === "albums" || activeTab === "photos") && categories.length > 2 && (
@@ -807,11 +823,13 @@ export default function Legacy() {
             </div>
           )}
         </div>
+        </TeaserOverlay>
       </section>
       )}
 
       {activeTab === "videos" && (
-      <section className="py-16 bg-white dark:bg-slate-950">
+      <section className="py-16 bg-white dark:bg-slate-950 relative">
+        <TeaserOverlay isLocked={!session}>
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <div className="flex items-center justify-center gap-3 mb-3">
@@ -913,6 +931,7 @@ export default function Legacy() {
             </a>
           </div>
         </div>
+        </TeaserOverlay>
       </section>
       )}
 
@@ -937,11 +956,11 @@ export default function Legacy() {
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
         >
-          <div className="absolute top-5 left-1/2 -translate-x-1/2 text-foreground/60 text-sm font-medium select-none">
+          <div className="absolute top-12 md:top-6 left-1/2 -translate-x-1/2 text-foreground/60 text-sm font-medium select-none z-50">
             {selectedIndex + 1} / {filteredItems.length}
           </div>
           <button
-            className="absolute top-4 right-2 md:right-4 text-foreground hover:text-primary transition-colors p-2 z-50"
+            className="absolute top-10 md:top-4 right-2 md:right-4 text-foreground hover:text-primary transition-colors p-2 z-50"
             onClick={() => {
               setSelectedIndex(null);
               setLightboxSrc(null);
@@ -995,9 +1014,20 @@ export default function Legacy() {
                 return (
                   <>
                     <div className="flex items-center gap-3">
-                      <p className="text-foreground text-base md:text-xl font-bold tracking-wide drop-shadow-lg leading-tight text-center">
-                        {item?.title}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-foreground text-base md:text-xl font-bold tracking-wide drop-shadow-lg leading-tight text-center">
+                          {item?.title}
+                        </p>
+                        {isAdmin && item?.url && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleEditTitle(item); }}
+                            className="p-1.5 bg-white/10 hover:bg-primary/20 text-foreground/50 hover:text-primary rounded-full backdrop-blur-sm border border-white/10 transition-all pointer-events-auto"
+                            title="Edit Title"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                          </button>
+                        )}
+                      </div>
                       {(() => {
                         const path = item?.path || "";
                         const count = galleryLikes[path]?.length || 0;

@@ -136,22 +136,63 @@ export function GalleryLightboxTags({
                     placeholder="Search player…"
                     className="flex-1 bg-transparent text-foreground text-sm placeholder-slate-500 outline-none"
                   />
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setShowTagPanel(false); }}
+                    className="p-1 hover:bg-white/10 rounded-full transition-colors text-muted-foreground hover:text-foreground shrink-0"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
                 <div className="max-h-48 overflow-y-auto">
                   {filteredPlayers.length === 0 ? (
                     <p className="text-muted-foreground text-xs text-center py-4">No players found</p>
                   ) : (
-                    filteredPlayers.map((p) => (
-                      <button
-                        key={p.id}
-                        className="w-full text-left px-4 py-2.5 text-sm text-foreground hover:bg-primary/20 transition-colors flex items-center gap-2"
-                        onClick={() => { saveTag(itemPath, p); setShowTagPanel(false); }}
-                      >
-                        <UserPlus className="w-3.5 h-3.5 text-primary shrink-0" />
-                        {p.full_name}
-                      </button>
-                    ))
+                    filteredPlayers.map((p) => {
+                      const isTagged = tags.some((t) => t.id === p.id);
+                      const isPending = pendingTags.some((t) => t.id === p.id);
+                      
+                      return (
+                        <button
+                          key={p.id}
+                          className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between ${
+                            isTagged || isPending
+                              ? "bg-primary/10 text-primary hover:bg-primary/20 font-semibold"
+                              : "text-foreground hover:bg-slate-800"
+                          }`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (isTagged || isPending) {
+                              removeTag(itemPath, p.id);
+                            } else {
+                              saveTag(itemPath, p);
+                            }
+                          }}
+                        >
+                          <div className="flex items-center gap-2">
+                            {isTagged || isPending ? (
+                              <Check className="w-3.5 h-3.5 shrink-0" />
+                            ) : (
+                              <UserPlus className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                            )}
+                            {p.full_name}
+                          </div>
+                          {(isTagged || isPending) && (
+                            <span className="text-[10px] uppercase font-bold text-primary/70">
+                              {isPending ? "Pending" : "Tagged"}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })
                   )}
+                </div>
+                <div className="p-2 border-t border-slate-700 bg-slate-800/50">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowTagPanel(false); }}
+                    className="w-full py-2 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold rounded-xl transition-colors"
+                  >
+                    Done
+                  </button>
                 </div>
               </div>
             )}

@@ -23,15 +23,7 @@ interface BasicInfoTabProps {
   setDepartment: (val: string) => void;
   customDepartment: string;
   setCustomDepartment: (val: string) => void;
-<<<<<<< HEAD
-  isRetired: boolean;
-  setIsRetired: (val: boolean) => void;
-  instagram: string;
-  setInstagram: (val: string) => void;
-  handleAvatarUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-=======
   isGuest: boolean;
->>>>>>> origin/feature/admin-profile-updates
 }
 
 export function BasicInfoTab({
@@ -54,15 +46,7 @@ export function BasicInfoTab({
   setDepartment,
   customDepartment,
   setCustomDepartment,
-<<<<<<< HEAD
-  isRetired,
-  setIsRetired,
-  instagram,
-  setInstagram,
-  handleAvatarUpload,
-=======
   isGuest,
->>>>>>> origin/feature/admin-profile-updates
 }: BasicInfoTabProps) {
   return (
     <motion.div
@@ -184,9 +168,10 @@ export function BasicInfoTab({
 
         <div>
           <label className="block text-sm font-semibold text-muted-foreground dark:text-slate-300 mb-2">
-            Contact Number
+            Contact Number *
           </label>
           <input
+            required
             type="tel"
             pattern="[0-9]{10}"
             title="Please enter exactly 10 digits"
@@ -231,59 +216,7 @@ export function BasicInfoTab({
             value={joinedYear}
             onChange={(e) => setJoinedYear(e.target.value)}
             className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
-<<<<<<< HEAD
-          >
-            <option value="" disabled>
-              Select year
-            </option>
-            {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 8 + i).map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6">
-        <div>
-          <label className="block text-sm font-semibold text-muted-foreground dark:text-slate-300 mb-2">
-            Instagram Handle (Optional)
-          </label>
-          <div className="flex items-center">
-            <span className="px-4 py-3 rounded-l-xl border border-r-0 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/60 text-muted-foreground text-sm border-r-transparent">
-              @
-            </span>
-            <input
-              type="text"
-              value={instagram}
-              onChange={(e) => setInstagram(e.target.value.replace("@", ""))}
-              className="w-full px-4 py-3 rounded-r-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
-              placeholder="username"
-            />
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">Please enter your username without the '@'. If provided, an Instagram button will appear on your profile.</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700">
-          <input
-            type="checkbox"
-            id="isGuest"
-            checked={isGuest}
-            onChange={(e) => {
-              setIsGuest(e.target.checked);
-              if (e.target.checked) {
-                setDepartment("Guest");
-              } else if (department === "Guest") {
-                setDepartment("");
-              }
-            }}
-            className="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary bg-white dark:bg-slate-900"
-=======
             placeholder="e.g. 2023"
->>>>>>> origin/feature/admin-profile-updates
           />
         </div>
       </div>

@@ -53,7 +53,7 @@ export function useProfileSetup() {
 
   const { 
     playingLevel, setPlayingLevel, playingStyle, setPlayingStyle, dominantHand, setDominantHand,
-    favoriteShot, setFavoriteShot, yearsPlaying, setYearsPlaying, coach, setCoach,
+    favoriteShot, setFavoriteShot, startedPlayingYear, setStartedPlayingYear, coach, setCoach,
     favoriteIdol, setFavoriteIdol, favoriteFormat, setFavoriteFormat 
   } = badminton;
 
@@ -200,7 +200,7 @@ export function useProfileSetup() {
           setGender(profile.gender || "");
           setFavoriteFormat(profile.favorite_format || "");
           setHeight(profile.height || "");
-          setYearsPlaying(profile.years_playing?.toString() || "");
+          setStartedPlayingYear(profile.started_playing_year?.toString() || "");
           setIsGuest(profile.is_guest || false);
           setIsRetired(profile.is_retired || false);
           setCoach(profile.coach || "");
@@ -254,32 +254,11 @@ export function useProfileSetup() {
     }
   };
 
-<<<<<<< HEAD
   const buildPayload = useCallback(() => {
-=======
-  const handleSubmit = async (e?: React.FormEvent, nextTab?: string) => {
-    if (e) e.preventDefault();
-    if (!session) return;
-    setLoading(true);
-
->>>>>>> origin/feature/admin-profile-updates
     const validRackets = rackets.filter((r) => r.name.trim() !== "");
     const validShoes = shoesList.filter((s) => s.name.trim() !== "");
     const validImages = mediaImages.filter((img) => img.url.trim() !== "");
     const validVideos = mediaVideos.filter((vid) => vid.url.trim() !== "");
-<<<<<<< HEAD
-=======
-
-    if (iiscEmail) {
-      const e = iiscEmail.toLowerCase();
-      if (!e.endsWith("@iisc.ac.in") && !e.endsWith("@alum.iisc.ac.in")) {
-        toast.error("Invalid IISc Email", { description: "Email must end with @iisc.ac.in or @alum.iisc.ac.in" });
-        setLoading(false);
-        return;
-      }
-    }
-
->>>>>>> origin/feature/admin-profile-updates
     const finalPrimaryRacketIdx = primaryRacketIndex < validRackets.length ? primaryRacketIndex : 0;
     const finalPrimaryShoeIdx = primaryShoeIndex < validShoes.length ? primaryShoeIndex : 0;
     const packedStats = {
@@ -320,7 +299,7 @@ export function useProfileSetup() {
       nationality: nationality || null,
       home_state: homeState || null,
       height: height || null,
-      years_playing: yearsPlaying ? parseInt(yearsPlaying) : null,
+      started_playing_year: startedPlayingYear ? parseInt(startedPlayingYear) : null,
       coach: coach || null,
       bio: bio || null,
       apparel: apparel || null,
@@ -335,7 +314,7 @@ export function useProfileSetup() {
     originalStats, fullName, nickname, status, isGuest, isRetired, iiscEmail, contactNumber,
     department, customDepartment, joinedYear, playingLevel, playingStyle, dominantHand,
     favoriteShot, favoriteIdol, gender, favoriteFormat, quote, avatarUrl, nationality,
-    homeState, height, yearsPlaying, coach, bio, apparel, instagram, achievementsRaw,
+    homeState, height, startedPlayingYear, coach, bio, apparel, instagram, achievementsRaw,
     tournamentsRaw, careerHighlights,
   ]);
 
@@ -343,8 +322,17 @@ export function useProfileSetup() {
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFirstRenderRef = useRef(true);
 
-  const saveNow = useCallback(async (silent = false) => {
+  const saveNow = useCallback(async (silent = false, nextTab?: string) => {
     if (!session) return;
+    
+    if (iiscEmail && !silent) {
+      const e = iiscEmail.toLowerCase();
+      if (!e.endsWith("@iisc.ac.in") && !e.endsWith("@alum.iisc.ac.in")) {
+        toast.error("Invalid IISc Email", { description: "Email must end with @iisc.ac.in or @alum.iisc.ac.in" });
+        return;
+      }
+    }
+
     if (!silent) setLoading(true);
     const payload = buildPayload();
     const timeoutMs = 30000;
@@ -354,14 +342,11 @@ export function useProfileSetup() {
         playerService.upsertProfile(targetUserId || session.user.id, isEditing, payload, session.user.email),
         mkTimeout()
       ]);
-<<<<<<< HEAD
+      
       queryClient.invalidateQueries({ queryKey: ["playerProfile", targetUserId || session.user.id] });
       queryClient.invalidateQueries({ queryKey: ["playerRank", targetUserId || session.user.id] });
       queryClient.invalidateQueries({ queryKey: ["allPlayers"] });
-      if (!silent) {
-        // redirect after explicit save
-=======
-      
+
       // Clear all sticky drafts after successful save
       Object.keys(window.localStorage).forEach((key) => {
         if (key.startsWith("profile_draft_")) {
@@ -369,14 +354,15 @@ export function useProfileSetup() {
         }
       });
 
-      if (nextTab) {
-        toast.success("Progress saved!");
-        setActiveTab(nextTab as any);
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      } else {
->>>>>>> origin/feature/admin-profile-updates
-        if (isEditing) setLocation(`/player/${playerSlug}`);
-        else setLocation(`/player/${session.user.id}`);
+      if (!silent) {
+        if (nextTab) {
+          toast.success("Progress saved!");
+          setActiveTab(nextTab as any);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        } else {
+          if (isEditing) setLocation(`/player/${playerSlug}`);
+          else setLocation(`/player/${session.user.id}`);
+        }
       }
     } catch (err: any) {
       if (!silent) {
@@ -386,7 +372,7 @@ export function useProfileSetup() {
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [session, buildPayload, targetUserId, isEditing, playerSlug, setLocation]);
+  }, [session, buildPayload, targetUserId, isEditing, playerSlug, setLocation, iiscEmail]);
 
   // Auto-save: debounce 1.5s after any field change (skip on first load)
   useEffect(() => {
@@ -405,15 +391,15 @@ export function useProfileSetup() {
   }, [
     fullName, nickname, status, iiscEmail, contactNumber, department, customDepartment,
     joinedYear, nationality, homeState, height, instagram, gender, isGuest, isRetired,
-    playingLevel, playingStyle, dominantHand, favoriteShot, yearsPlaying, coach,
+    playingLevel, playingStyle, dominantHand, favoriteShot, startedPlayingYear, coach,
     favoriteIdol, favoriteFormat, rackets, primaryRacketIndex, shoesList, primaryShoeIndex,
     apparel, bio, quote, achievementsRaw, tournamentsRaw, careerHighlights,
     mediaImages, mediaVideos,
   ]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await saveNow(false);
+  const handleSubmit = async (e?: React.FormEvent, nextTab?: string) => {
+    if (e) e.preventDefault();
+    await saveNow(false, nextTab);
   };
 
   return {
@@ -429,7 +415,7 @@ export function useProfileSetup() {
     instagram, setInstagram, avatarUrl, setAvatarUrl, gender, setGender, isGuest, setIsGuest, isRetired, setIsRetired,
     // Badminton
     playingLevel, setPlayingLevel, playingStyle, setPlayingStyle, dominantHand, setDominantHand,
-    favoriteShot, setFavoriteShot, yearsPlaying, setYearsPlaying, coach, setCoach,
+    favoriteShot, setFavoriteShot, startedPlayingYear, setStartedPlayingYear, coach, setCoach,
     favoriteIdol, setFavoriteIdol, favoriteFormat, setFavoriteFormat,
     // Equipment
     rackets, setRackets, primaryRacketIndex, setPrimaryRacketIndex,

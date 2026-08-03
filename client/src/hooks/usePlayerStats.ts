@@ -17,7 +17,7 @@ export function usePlayerStats(
       !!player.nationality,
       !!player.height,
       !!player.coach,
-      player.years_playing != null,
+      player.started_playing_year != null,
       player.racket_details && player.racket_details.length > 0,
       !!player.shoes,
       !!player.instagram,

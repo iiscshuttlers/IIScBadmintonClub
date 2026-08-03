@@ -37,6 +37,7 @@ import { MatchCard } from "@/components/feed/MatchCard";
 import { PollsSection } from "@/components/feed/PollsSection";
 import { RivalryCards } from "@/components/feed/RivalryCards";
 import { MatchPredictions } from "@/components/feed/MatchPredictions";
+import { H2HSection } from "@/components/players-directory/H2HSection";
 
 import { useHashTab } from "@/hooks/useHashTab";
 
@@ -44,7 +45,7 @@ export default function FeedTab() {
   const { session, profile: ownProfile, isUmpire, isAdmin } = useAuth();
   const [, setLocation] = useLocation();
   const [activeTab, handleTabChange] = useHashTab(
-    ["feed-matches", "announcements", "umpire-panel"] as const,
+    ["feed-matches", "announcements", "h2h", "umpire-panel"] as const,
     "feed-matches"
   );
 
@@ -137,6 +138,16 @@ export default function FeedTab() {
           >
             Announcements
           </button>
+          <button
+            onClick={() => handleTabChange("h2h")}
+            className={`whitespace-nowrap flex-shrink-0 flex justify-center items-center px-3 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all ${
+              activeTab === "h2h"
+                ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-md ring-1 ring-slate-200/50 dark:ring-slate-700/50"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50"
+            }`}
+          >
+            H2H
+          </button>
           {(isUmpire || isAdmin) && (
             <button
               onClick={() => handleTabChange("umpire-panel")}
@@ -154,6 +165,8 @@ export default function FeedTab() {
       <div className="container mx-auto px-4 max-w-3xl mt-8">
         {activeTab === "announcements" ? (
           <AnnouncementsSection />
+        ) : activeTab === "h2h" ? (
+          <H2HSection />
         ) : activeTab === "umpire-panel" && (isUmpire || isAdmin) ? (
           <UmpireTab />
         ) : (

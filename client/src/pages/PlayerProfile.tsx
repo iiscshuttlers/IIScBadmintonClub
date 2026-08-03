@@ -50,6 +50,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 // Extracted Hooks & Components
+import { TeaserOverlay } from "@/components/TeaserOverlay";
 import { usePlayerProfileQuery } from "@/hooks/queries/usePlayerProfileQuery";
 import { useProfileAnalytics } from "@/hooks/useProfileAnalytics";
 import { PlayerHeroBanner } from "@/components/player-profile/PlayerHeroBanner";
@@ -411,11 +412,13 @@ export default function PlayerProfile() {
       <div className="relative z-10 w-full bg-white dark:bg-[#060d1b]">
         {/* Navigation Bar */}
         <div className="relative z-50 w-full px-4 py-4 flex flex-wrap items-center justify-between gap-3">
-          <Link href="/">
-            <button className="w-10 h-10 md:w-12 md:h-12 bg-white/90 hover:bg-white text-slate-700 dark:bg-black/40 dark:hover:bg-black/60 dark:text-white backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-slate-200 dark:border-white/10">
-              <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
-            </button>
-          </Link>
+          <button
+            onClick={() => window.history.length > 2 ? window.history.back() : window.location.href = "/pulse#h2h"}
+            className="w-10 h-10 md:w-12 md:h-12 bg-white/90 hover:bg-white text-slate-700 dark:bg-black/40 dark:hover:bg-black/60 dark:text-white backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-slate-200 dark:border-white/10"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
+          </button>
 
           <div className="flex items-center gap-2 md:gap-3">
             {/* Report — shown to others only */}
@@ -611,89 +614,91 @@ export default function PlayerProfile() {
             </motion.div>
           )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-8">
-          {/* ── LEFT COLUMN ── */}
-          <div className="lg:col-span-7 xl:col-span-8 space-y-6">
-            {activeTab === "OVERVIEW" && (
-              <ProfileOverviewTab
-                player={augmentedPlayer || player}
-                splitStats={splitStats}
-                streakStats={streakStats}
-                bestOpponent={bestOpponent}
-                MatchHistorySection={MatchHistorySection}
-                EquipmentArsenalSection={EquipmentArsenalSection}
-                CareerHighlightsSection={CareerHighlightsSection}
-                id={id!}
-                liveMatches={liveMatches}
-                ownPlayerProfile={ownPlayerProfile}
-                handleWithdrawMatch={handleWithdrawMatch}
-                handleConfirmMatch={handleConfirmMatch}
-                handleRejectMatch={handleRejectMatch}
-                handleResendRequest={handleResendRequest}
-              />
-            )}
+        <TeaserOverlay isLocked={!authSession}>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-8">
+            {/* ── LEFT COLUMN ── */}
+            <div className="lg:col-span-7 xl:col-span-8 space-y-6">
+              {activeTab === "OVERVIEW" && (
+                <ProfileOverviewTab
+                  player={augmentedPlayer || player}
+                  splitStats={splitStats}
+                  streakStats={streakStats}
+                  bestOpponent={bestOpponent}
+                  MatchHistorySection={MatchHistorySection}
+                  EquipmentArsenalSection={EquipmentArsenalSection}
+                  CareerHighlightsSection={CareerHighlightsSection}
+                  id={id!}
+                  liveMatches={liveMatches}
+                  ownPlayerProfile={ownPlayerProfile}
+                  handleWithdrawMatch={handleWithdrawMatch}
+                  handleConfirmMatch={handleConfirmMatch}
+                  handleRejectMatch={handleRejectMatch}
+                  handleResendRequest={handleResendRequest}
+                />
+              )}
 
-            {activeTab === "RANKING" && (
-              <ProfileRankingTab
-                player={augmentedPlayer || player}
-                authSession={authSession}
-                liveMatches={liveMatches}
-                HeadToHeadWidget={HeadToHeadWidget}
-                Badges={Badges}
-                id={id!}
-                eloRank={eloRank}
-                eloHistoryData={eloLogs || []}
-              />
-            )}
+              {activeTab === "RANKING" && (
+                <ProfileRankingTab
+                  player={augmentedPlayer || player}
+                  authSession={authSession}
+                  liveMatches={liveMatches}
+                  HeadToHeadWidget={HeadToHeadWidget}
+                  Badges={Badges}
+                  id={id!}
+                  eloRank={eloRank}
+                  eloHistoryData={eloLogs || []}
+                />
+              )}
 
-            {activeTab === "STATS" && (
-              <ProfileStatsTabLeft
-                player={augmentedPlayer || player}
-                liveMatches={liveMatches}
-                allPlayers={allPlayers}
-                id={id!}
-                setLocation={setLocation}
-                DoublesSynergyWidget={DoublesSynergyWidget}
-                AchievementBadges={AchievementBadges}
-                PerformanceTrends={PerformanceTrends}
-                WrappedCard={WrappedCard}
-                PlayerAnalyticsWidget={PlayerAnalyticsWidget}
-                ActivityHeatmap={ActivityHeatmap}
-              />
-            )}
+              {activeTab === "STATS" && (
+                <ProfileStatsTabLeft
+                  player={augmentedPlayer || player}
+                  liveMatches={liveMatches}
+                  allPlayers={allPlayers}
+                  id={id!}
+                  setLocation={setLocation}
+                  DoublesSynergyWidget={DoublesSynergyWidget}
+                  AchievementBadges={AchievementBadges}
+                  PerformanceTrends={PerformanceTrends}
+                  WrappedCard={WrappedCard}
+                  PlayerAnalyticsWidget={PlayerAnalyticsWidget}
+                  ActivityHeatmap={ActivityHeatmap}
+                />
+              )}
 
-            {activeTab === "MATCHES" && (
-              <MatchHistorySection
-                id={id!}
-                liveMatches={liveMatches}
-                ownPlayerProfile={ownPlayerProfile}
-                handleWithdrawMatch={handleWithdrawMatch}
-                handleConfirmMatch={handleConfirmMatch}
-                handleRejectMatch={handleRejectMatch}
-                handleResendRequest={handleResendRequest}
-              />
-            )}
+              {activeTab === "MATCHES" && (
+                <MatchHistorySection
+                  id={id!}
+                  liveMatches={liveMatches}
+                  ownPlayerProfile={ownPlayerProfile}
+                  handleWithdrawMatch={handleWithdrawMatch}
+                  handleConfirmMatch={handleConfirmMatch}
+                  handleRejectMatch={handleRejectMatch}
+                  handleResendRequest={handleResendRequest}
+                />
+              )}
 
-            {activeTab === "PHOTOS" && (
-              <PlayerPhotosSection playerId={id!} />
-            )}
+              {activeTab === "PHOTOS" && (
+                <PlayerPhotosSection playerId={id!} />
+              )}
+            </div>
+
+            {/* ── RIGHT COLUMN ── */}
+            <div className="lg:col-span-5 xl:col-span-4 space-y-5">
+              {activeTab === "OVERVIEW" && (
+                <ProfileOverviewTabRight
+                  player={augmentedPlayer || player}
+                  validAchievements={validAchievements}
+                  splitStats={splitStats}
+                  tournamentRuns={tournamentRuns}
+                />
+              )}
+              {activeTab === "STATS" && (
+                <ProfileStatsTabRight player={augmentedPlayer || player} setLocation={setLocation} />
+              )}
+            </div>
           </div>
-
-          {/* ── RIGHT COLUMN ── */}
-          <div className="lg:col-span-5 xl:col-span-4 space-y-5">
-            {activeTab === "OVERVIEW" && (
-              <ProfileOverviewTabRight
-                player={augmentedPlayer || player}
-                validAchievements={validAchievements}
-                splitStats={splitStats}
-                tournamentRuns={tournamentRuns}
-              />
-            )}
-            {activeTab === "STATS" && (
-              <ProfileStatsTabRight player={augmentedPlayer || player} setLocation={setLocation} />
-            )}
-          </div>
-        </div>
+        </TeaserOverlay>
       </motion.div>
 
       <ChallengeModal

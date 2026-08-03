@@ -1,5 +1,29 @@
 [
   {
+    "versionCode": 252,
+    "versionName": "1.31",
+    "date": "2026-08-03T21:00:59.497Z",
+    "changes": [
+      "- Saved my upgraded code",
+      "- Merge remote-tracking branch 'origin/feature/admin-profile-updates'",
+      "- Saved my upgraded code",
+      "- Refactored Admin Players Table and Profile Setup Tabs",
+      "- chore: remove github pages deploy workflow since we use netlify",
+      "- refactor: update onboarding tour slides to reflect current app features (Pulse, Tournaments, Hub, Legacy)",
+      "- feat: add Android beta testing slide to onboarding modal for web users",
+      "- style: switch Android banner to violet/purple + amber/gold color scheme to stand out",
+      "- feat: redesign Android testing banner with sparkle animations, shimmer border, progress bar",
+      "- style: fix Android banner alignment with VenueTrafficWidget",
+      "- fix: restore accidentally deleted section closing tags in Home.tsx",
+      "- style: move Android testing banner to bottom of hero section and make it wider",
+      "- feat: expand description on Android App testing banner",
+      "- fix: change google group link to /about to bypass permissions error",
+      "- feat: add Android App testing banner to home page",
+      "- fix: update netlify publish directory to dist",
+      "- Add Data Deletion page for Google Play compliance"
+    ]
+  },
+  {
     "versionCode": 204,
     "versionName": "1.25",
     "date": "2026-07-25T22:42:49.505Z",

@@ -106,7 +106,7 @@ export function formatPlayerData(data: any) {
     nationality: data.nationality,
     homeState: data.home_state,
     height: data.height,
-    yearsPlaying: data.years_playing,
+    startedPlayingYear: data.started_playing_year,
     coach: data.coach,
     bio: data.bio,
     currentRanking: data.current_ranking,

@@ -1,6 +1,6 @@
 {
-  "versionCode": 204,
-  "versionName": "1.25",
+  "versionCode": 252,
+  "versionName": "1.31",
   "downloadUrl": "https://play.google.com/store/apps/details?id=com.iiscshuttlers.app",
-  "changelog": "Fix push notifications and match umpiring layout"
+  "changelog": "- Saved my upgraded code\n- Merge remote-tracking branch 'origin/feature/admin-profile-updates'\n- Saved my upgraded code\n- Refactored Admin Players Table and Profile Setup Tabs\n- chore: remove github pages deploy workflow since we use netlify\n- refactor: update onboarding tour slides to reflect current app features (Pulse, Tournaments, Hub, Legacy)\n- feat: add Android beta testing slide to onboarding modal for web users\n- style: switch Android banner to violet/purple + amber/gold color scheme to stand out\n- feat: redesign Android testing banner with sparkle animations, shimmer border, progress bar\n- style: fix Android banner alignment with VenueTrafficWidget\n- fix: restore accidentally deleted section closing tags in Home.tsx\n- style: move Android testing banner to bottom of hero section and make it wider\n- feat: expand description on Android App testing banner\n- fix: change google group link to /about to bypass permissions error\n- feat: add Android App testing banner to home page\n- fix: update netlify publish directory to dist\n- Add Data Deletion page for Google Play compliance"
 }

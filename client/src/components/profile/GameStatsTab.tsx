@@ -10,8 +10,8 @@ interface GameStatsTabProps {
   setDominantHand: (val: string) => void;
   favoriteShot: string;
   setFavoriteShot: (val: string) => void;
-  yearsPlaying: string;
-  setYearsPlaying: (val: string) => void;
+  startedPlayingYear: string;
+  setStartedPlayingYear: (val: string) => void;
   coach: string;
   setCoach: (val: string) => void;
   favoriteIdol: string;
@@ -29,8 +29,8 @@ export function GameStatsTab({
   setDominantHand,
   favoriteShot,
   setFavoriteShot,
-  yearsPlaying,
-  setYearsPlaying,
+  startedPlayingYear,
+  setStartedPlayingYear,
   coach,
   setCoach,
   favoriteIdol,
@@ -110,15 +110,18 @@ export function GameStatsTab({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-semibold text-muted-foreground dark:text-slate-300 mb-2">
-            Years Playing Badminton
+            Playing since (Year)
           </label>
-          <input
-            type="number"
-            value={yearsPlaying}
-            onChange={(e) => setYearsPlaying(e.target.value)}
+          <select
+            value={startedPlayingYear}
+            onChange={(e) => setStartedPlayingYear(e.target.value)}
             className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none"
-            placeholder="e.g. 5"
-          />
+          >
+            <option value="" disabled>Select Year</option>
+            {Array.from({ length: 40 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+              <option key={year} value={year}>{year}</option>
+            ))}
+          </select>
         </div>
 
         <div>

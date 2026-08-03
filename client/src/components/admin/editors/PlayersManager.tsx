@@ -20,6 +20,7 @@ export function PlayersManager() {
   const [filter, setFilter] = useState<
     "profile" | "no-profile" | "pending" | "approved"
   >("profile");
+  const [genderFilter, setGenderFilter] = useState<"all" | "male" | "female">("all");
   const [actionId, setActionId] = useState<string | null>(null);
   const { recordAction } = useAdminHistory();
   const { isMainAdmin, updateRole } = useAuth();
@@ -30,7 +31,7 @@ export function PlayersManager() {
       const playersRes = await supabase
         .from("players")
         .select(
-          "id, full_name, email, department, is_approved, created_at, stats, iisc_email, contact_number, sr_number, role, is_retired",
+          "id, full_name, email, department, is_approved, created_at, stats, iisc_email, contact_number, sr_number, role, is_retired, gender",
         )
         .order("created_at", { ascending: false });
 
@@ -348,7 +349,8 @@ export function PlayersManager() {
         const matchesFilter =
           filter === "profile" ||
           (filter === "approved" ? p.is_approved : !p.is_approved);
-        return matchesSearch && matchesFilter;
+        const matchesGender = genderFilter === "all" || (p.gender && p.gender.toLowerCase() === genderFilter);
+        return matchesSearch && matchesFilter && matchesGender;
       }
     });
 
@@ -385,7 +387,7 @@ export function PlayersManager() {
       if (valA > valB) return sortDirection === "asc" ? 1 : -1;
       return 0;
     });
-  }, [displayList, playersWithRanks, filter, search, sortField, sortDirection]);
+  }, [displayList, playersWithRanks, filter, genderFilter, search, sortField, sortDirection]);
 
   const handleSort = (field: any) => {
     if (sortField === field) {
@@ -460,6 +462,15 @@ export function PlayersManager() {
           />
         </div>
         <div className="flex gap-2 flex-wrap items-center">
+          <select
+            value={genderFilter}
+            onChange={(e) => setGenderFilter(e.target.value as any)}
+            className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-muted-foreground dark:text-slate-300 font-bold text-xs focus:ring-2 focus:ring-primary outline-none transition mr-2"
+          >
+            <option value="all">All Genders</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
           <button 
              onClick={approveAllPending}
              disabled={pending === 0}

@@ -5,14 +5,14 @@ export function useProfileBadmintonState() {
   const [playingStyle, setPlayingStyle] = useState("");
   const [dominantHand, setDominantHand] = useState("Right-handed");
   const [favoriteShot, setFavoriteShot] = useState("");
-  const [yearsPlaying, setYearsPlaying] = useState("");
+  const [startedPlayingYear, setStartedPlayingYear] = useState("");
   const [coach, setCoach] = useState("");
   const [favoriteIdol, setFavoriteIdol] = useState("");
   const [favoriteFormat, setFavoriteFormat] = useState("");
 
   return {
     playingLevel, setPlayingLevel, playingStyle, setPlayingStyle, dominantHand, setDominantHand,
-    favoriteShot, setFavoriteShot, yearsPlaying, setYearsPlaying, coach, setCoach,
+    favoriteShot, setFavoriteShot, startedPlayingYear, setStartedPlayingYear, coach, setCoach,
     favoriteIdol, setFavoriteIdol, favoriteFormat, setFavoriteFormat,
   };
 }

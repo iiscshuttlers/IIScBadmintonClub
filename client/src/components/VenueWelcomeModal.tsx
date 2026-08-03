@@ -108,14 +108,14 @@ export function VenueWelcomeModal() {
 
             <div className="flex flex-col w-full gap-3">
               <Button
-                onClick={() => { setIsOpen(false); setLocation("/hub"); }}
+                onClick={() => { setIsOpen(false); setLocation("/pulse#feed-matches"); }}
                 className="w-full rounded-xl py-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md font-bold text-sm"
               >
                 <Search className="w-4 h-4 mr-2" />
                 View Live Matches
               </Button>
               <Button
-                onClick={() => { setIsOpen(false); setLocation("/pulse"); }}
+                onClick={() => { setIsOpen(false); setLocation("/pulse#announcements"); }}
                 variant="outline"
                 className="w-full rounded-xl py-6 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold text-sm"
               >

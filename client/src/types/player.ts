@@ -29,7 +29,7 @@ export interface PlayerRow {
   nationality: string | null;
   home_state: string | null;
   height: string | null;
-  years_playing: number | null;
+  started_playing_year: number | null;
   coach: string | null;
   bio: string | null;
   apparel: string | null;
@@ -149,7 +149,7 @@ export interface PlayerProfileType {
   nationality?: string;
   homeState?: string;
   height?: string;
-  yearsPlaying?: number;
+  startedPlayingYear?: number;
   coach?: string;
   bio?: string;
   currentRanking?: number;

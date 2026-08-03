@@ -228,8 +228,25 @@ export function H2HSection() {
                   </option>
                 ))}
               </select>
-              <div className="text-sm font-black text-muted-foreground">
-                ELO: <span className="text-primary">{p1?.elo_rating}</span>
+              <div className="flex gap-1.5 flex-wrap justify-center text-[10px] font-black mt-2 max-w-[160px] mx-auto">
+                <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-md border border-amber-200 dark:border-amber-800/50">
+                  OVR: #{players.findIndex(p => p.id === p1?.id) + 1 || "?"}
+                </span>
+                {p1?.singles_elo && (
+                  <span className="px-2 py-1 bg-primary/10 text-primary rounded-md border border-primary/20">
+                    S: #{[...players].sort((a, b) => (b.singles_elo || 0) - (a.singles_elo || 0)).findIndex(p => p.id === p1?.id) + 1 || "?"}
+                  </span>
+                )}
+                {p1?.doubles_elo && (
+                  <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-md border border-blue-200 dark:border-blue-800/50">
+                    D: #{[...players].sort((a, b) => (b.doubles_elo || 0) - (a.doubles_elo || 0)).findIndex(p => p.id === p1?.id) + 1 || "?"}
+                  </span>
+                )}
+                {p1?.mixed_elo && (
+                  <span className="px-2 py-1 bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-700 dark:text-fuchsia-400 rounded-md border border-fuchsia-200 dark:border-fuchsia-800/50">
+                    XD: #{[...players].sort((a, b) => (b.mixed_elo || 0) - (a.mixed_elo || 0)).findIndex(p => p.id === p1?.id) + 1 || "?"}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -329,8 +346,25 @@ export function H2HSection() {
                   </option>
                 ))}
               </select>
-              <div className="text-sm font-black text-muted-foreground">
-                ELO: <span className="text-primary">{p2?.elo_rating}</span>
+              <div className="flex gap-1.5 flex-wrap justify-center text-[10px] font-black mt-2 max-w-[160px] mx-auto">
+                <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-md border border-amber-200 dark:border-amber-800/50">
+                  OVR: #{players.findIndex(p => p.id === p2?.id) + 1 || "?"}
+                </span>
+                {p2?.singles_elo && (
+                  <span className="px-2 py-1 bg-primary/10 text-primary rounded-md border border-primary/20">
+                    S: #{[...players].sort((a, b) => (b.singles_elo || 0) - (a.singles_elo || 0)).findIndex(p => p.id === p2?.id) + 1 || "?"}
+                  </span>
+                )}
+                {p2?.doubles_elo && (
+                  <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-md border border-blue-200 dark:border-blue-800/50">
+                    D: #{[...players].sort((a, b) => (b.doubles_elo || 0) - (a.doubles_elo || 0)).findIndex(p => p.id === p2?.id) + 1 || "?"}
+                  </span>
+                )}
+                {p2?.mixed_elo && (
+                  <span className="px-2 py-1 bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-700 dark:text-fuchsia-400 rounded-md border border-fuchsia-200 dark:border-fuchsia-800/50">
+                    XD: #{[...players].sort((a, b) => (b.mixed_elo || 0) - (a.mixed_elo || 0)).findIndex(p => p.id === p2?.id) + 1 || "?"}
+                  </span>
+                )}
               </div>
             </div>
           </div>
