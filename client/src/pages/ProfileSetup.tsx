@@ -89,6 +89,28 @@ export default function ProfileSetup() {
 
           {/* Sleek Tab Navigation */}
           {tabs.length > 1 && (
+<<<<<<< HEAD
+            <div className="-mx-4 sm:mx-0 px-4 sm:px-0 flex flex-wrap border-b border-slate-200 dark:border-slate-800 mb-6 sm:mb-8 gap-2 pb-2">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = setup.activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setup.setActiveTab(tab.id as any)}
+                  className={`flex-auto md:flex-initial flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 font-semibold text-sm rounded-xl transition-all whitespace-nowrap outline-none
+                    ${isActive
+                      ? "bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary border-b-2 border-primary"
+                      : "text-muted-foreground hover:text-slate-800 dark:text-muted-foreground dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900/50"
+                    }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+=======
             <div className="-mx-4 sm:mx-0 px-4 sm:px-0 mb-6 sm:mb-8 space-y-6">
               <div className="space-y-3 pb-4 border-b border-slate-200 dark:border-slate-800">
                 <h3 className="text-[11px] font-black tracking-widest uppercase text-muted-foreground ml-1">Essential Information</h3>
@@ -142,6 +164,7 @@ export default function ProfileSetup() {
                 </div>
               </div>
             </div>
+>>>>>>> origin/feature/admin-profile-updates
           )}
 
           <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 p-5 sm:p-6">
@@ -167,9 +190,12 @@ export default function ProfileSetup() {
                   <StatusTab
                     isGuest={setup.isGuest} setIsGuest={setup.setIsGuest}
                     isRetired={setup.isRetired} setIsRetired={setup.setIsRetired}
+<<<<<<< HEAD
                     instagram={setup.instagram} setInstagram={setup.setInstagram}
                     handleAvatarUpload={setup.handleAvatarUpload}
+=======
                     department={setup.department} setDepartment={setup.setDepartment}
+>>>>>>> origin/feature/admin-profile-updates
                   />
                 )}
 
@@ -246,10 +272,18 @@ export default function ProfileSetup() {
                 ) : (
                   <Button
                     type="button"
+<<<<<<< HEAD
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      await setup.saveNow(true);
+                      setup.setActiveTab(nextTabId as any);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+=======
                     disabled={setup.loading}
                     onClick={(e) => {
                       e.preventDefault();
                       setup.handleSubmit(undefined, nextTabId as string);
+>>>>>>> origin/feature/admin-profile-updates
                     }}
                     className="w-full min-h-[52px] bg-primary hover:bg-primary text-primary-foreground font-bold px-5 py-3.5 rounded-xl shadow-lg shadow-primary/25 transition-all text-base sm:text-lg flex items-center justify-center gap-2 disabled:opacity-70"
                   >

@@ -310,6 +310,10 @@ export default function Legacy() {
 
   const requestTag = async (photoPath: string) => {
     if (!session?.user) return;
+<<<<<<< HEAD
+    if (!profile) {
+      toast.error("Your player profile could not be found.");
+=======
     const currentUserPlayer = tagPlayers.find((p) => p.id === profile?.id);
     if (!currentUserPlayer) {
       toast.error("Your email is registered, but you must complete your basic profile before requesting a tag.", {
@@ -318,8 +322,10 @@ export default function Legacy() {
           onClick: () => setLocation("/profile/setup"),
         },
       });
+>>>>>>> origin/feature/admin-profile-updates
       return;
     }
+    const currentUserPlayer = { id: profile.id, full_name: profile.full_name };
 
     const currentPending = pendingTags[photoPath] || [];
     if (currentPending.some((t) => t.id === currentUserPlayer.id)) return;

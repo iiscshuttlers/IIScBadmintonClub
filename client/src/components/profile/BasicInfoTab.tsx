@@ -23,12 +23,15 @@ interface BasicInfoTabProps {
   setDepartment: (val: string) => void;
   customDepartment: string;
   setCustomDepartment: (val: string) => void;
+<<<<<<< HEAD
   isRetired: boolean;
   setIsRetired: (val: boolean) => void;
   instagram: string;
   setInstagram: (val: string) => void;
   handleAvatarUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+=======
   isGuest: boolean;
+>>>>>>> origin/feature/admin-profile-updates
 }
 
 export function BasicInfoTab({
@@ -51,12 +54,15 @@ export function BasicInfoTab({
   setDepartment,
   customDepartment,
   setCustomDepartment,
+<<<<<<< HEAD
   isRetired,
   setIsRetired,
   instagram,
   setInstagram,
   handleAvatarUpload,
+=======
   isGuest,
+>>>>>>> origin/feature/admin-profile-updates
 }: BasicInfoTabProps) {
   return (
     <motion.div
@@ -225,8 +231,17 @@ export function BasicInfoTab({
             value={joinedYear}
             onChange={(e) => setJoinedYear(e.target.value)}
             className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
-            placeholder="e.g. 2023"
-          />
+<<<<<<< HEAD
+          >
+            <option value="" disabled>
+              Select year
+            </option>
+            {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 8 + i).map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -266,10 +281,10 @@ export function BasicInfoTab({
               }
             }}
             className="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary bg-white dark:bg-slate-900"
+=======
+            placeholder="e.g. 2023"
+>>>>>>> origin/feature/admin-profile-updates
           />
-          <label htmlFor="isGuest" className="text-sm font-medium text-slate-700 dark:text-slate-300">
-            I am a guest player
-          </label>
         </div>
       </div>
 

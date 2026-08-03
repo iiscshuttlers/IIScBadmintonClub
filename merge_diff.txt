@@ -1,0 +1,1893 @@
+﻿diff --git a/all_changes_today.patch b/all_changes_today.patch
+new file mode 100644
+index 0000000..b8535d3
+Binary files /dev/null and b/all_changes_today.patch differ
+diff --git a/client/src/App.tsx b/client/src/App.tsx
+index cc6d7f2..17bfaee 100644
+--- a/client/src/App.tsx
++++ b/client/src/App.tsx
+@@ -287,6 +287,28 @@ function GlobalAuthHooks() {
+   return null;
+ }
+ 
++function GlobalAuthGuard() {
++  const { session, profile, isInitializing } = useAuth();
++  const [location, setLocation] = useLocation();
++
++  useEffect(() => {
++    if (isInitializing) return;
++    
++    // If a user is signed in but has no profile, force them to the profile setup page
++    if (session && !profile) {
++      if (
++        !location.startsWith("/profile/setup") && 
++        !location.startsWith("/join") &&
++        !location.startsWith("/404")
++      ) {
++        setLocation("/profile/setup");
++      }
++    }
++  }, [session, profile, isInitializing, location, setLocation]);
++
++  return null;
++}
++
+ function AppContent() {
+   const { updateInfo, isDialogOpen, dismissUpdate } = useAppUpdate();
+   const [isLogMatchOpen, setIsLogMatchOpen] = useState(false);
+@@ -424,6 +446,7 @@ function AppContent() {
+                 defaultOpponentId={defaultOpponentId}
+               />
+             )}
++            <GlobalAuthGuard />
+             <GlobalAuthHooks />
+             <OnboardingTour />
+             <BetaFeedbackModal isOpen={isBetaFeedbackOpen} onClose={() => setIsBetaFeedbackOpen(false)} />
+diff --git a/client/src/components/about/FacilitiesSection.tsx b/client/src/components/about/FacilitiesSection.tsx
+index a82d794..a424e48 100644
+--- a/client/src/components/about/FacilitiesSection.tsx
++++ b/client/src/components/about/FacilitiesSection.tsx
+@@ -346,7 +346,7 @@ export function FacilitiesSection() {
+ 
+                     <div className="bg-primary/10 dark:bg-primary/20 border border-primary/40 dark:border-primary/50 rounded-2xl p-5 mb-5">
+                       <h3 className="font-black text-primary dark:text-primary text-sm uppercase tracking-wider mb-2">
+-                        IISc Members
++                        <span className="normal-case">IISc</span> Members
+                       </h3>
+                       <p className="text-muted-foreground dark:text-muted-foreground text-sm leading-relaxed">
+                         Students, faculty, staff, and eligible members can
+diff --git a/client/src/components/admin/AppArchitectureMap.tsx b/client/src/components/admin/AppArchitectureMap.tsx
+index 1683592..229596d 100644
+--- a/client/src/components/admin/AppArchitectureMap.tsx
++++ b/client/src/components/admin/AppArchitectureMap.tsx
+@@ -302,7 +302,7 @@ export function AppArchitectureMap() {
+               ]}
+             />
+           </h2>
+-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">IISc Badminton Ecosystem</p>
++          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest"><span className="normal-case">IISc</span> Badminton Ecosystem</p>
+         </div>
+       </div>
+       
+diff --git a/client/src/components/admin/FeatureMapDashboard.tsx b/client/src/components/admin/FeatureMapDashboard.tsx
+index 2ea2061..894b184 100644
+--- a/client/src/components/admin/FeatureMapDashboard.tsx
++++ b/client/src/components/admin/FeatureMapDashboard.tsx
+@@ -9,7 +9,7 @@ export function FeatureMapDashboard() {
+         {/* Header Section */}
+         <div>
+           <div className="text-[0.72rem] font-bold tracking-[0.14em] uppercase text-[#4BB988] mb-2">
+-            IISc Shuttlers Club App ΓÇö Codebase Survey
++            <span className="normal-case">IISc</span> Shuttlers Club App ΓÇö Codebase Survey
+           </div>
+           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 flex items-center gap-2">
+             Every feature, mapped
+diff --git a/client/src/components/admin/editors/PlayersManager.tsx b/client/src/components/admin/editors/PlayersManager.tsx
+index f721d34..a1989fc 100644
+--- a/client/src/components/admin/editors/PlayersManager.tsx
++++ b/client/src/components/admin/editors/PlayersManager.tsx
+@@ -1,6 +1,6 @@
+ import React, { useState, useEffect, useCallback, useMemo } from "react";
+ import {
+-  Trash2, Plus, Loader2, UserCheck, UserX, Activity, Search, RefreshCw, Download, AlertTriangle, Play, Pencil, Clock, CheckCircle2, Ban, Shield, History, FileDown, ArrowRight, ExternalLink, Sunset
++  Trash2, Plus, Loader2, UserCheck, UserX, Activity, Search, RefreshCw, Download, AlertTriangle, Play, Pencil, Clock, CheckCircle2, Ban, Shield, History, FileDown, ArrowRight, ExternalLink, Sunset, ArrowUp, ArrowDown
+ } from "lucide-react";
+ import { toast } from "sonner";
+ import { supabase } from "@/lib/supabase";
+@@ -27,25 +27,36 @@ export function PlayersManager() {
+   const load = useCallback(async () => {
+     setLoading(true);
+     try {
+-      const [playersRes, funcRes] = await Promise.all([
+-        supabase
+-          .from("players")
+-          .select(
+-            "id, full_name, email, department, is_approved, created_at, stats, iisc_email, contact_number, sr_number, role, is_retired",
+-          )
+-          .order("created_at", { ascending: false }),
+-        supabase.functions.invoke("admin-users", { method: "GET" }),
+-      ]);
+-
+-      if (!playersRes.error && playersRes.data)
++      const playersRes = await supabase
++        .from("players")
++        .select(
++          "id, full_name, email, department, is_approved, created_at, stats, iisc_email, contact_number, sr_number, role, is_retired",
++        )
++        .order("created_at", { ascending: false });
++
++      if (!playersRes.error && playersRes.data) {
+         setPlayers(playersRes.data as Player[]);
+-      if (!funcRes.error && funcRes.data?.users)
+-        setAuthUsers(funcRes.data.users as AuthUser[]);
++      }
++
++      // Fetch auth users without blocking UI
++      const fetchAuthUsers = async () => {
++        try {
++          const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 8000));
++          const funcRes = await Promise.race([
++            supabase.functions.invoke("admin-users", { method: "GET" }),
++            timeout
++          ]) as any;
++          if (!funcRes.error && funcRes.data?.users) {
++            setAuthUsers(funcRes.data.users as AuthUser[]);
++          }
++        } catch (err) {
++          console.warn("Auth users fetch failed or timed out:", err);
++        }
++      };
++      fetchAuthUsers();
+     } catch (err) {
+-      console.error("Failed to load accounts:", err);
+-      toast.error(
+-        "Failed to load full account list. Is the admin-users edge function deployed?",
+-      );
++      console.error("Failed to load players list:", err);
++      toast.error("Failed to load players list.");
+     } finally {
+       setLoading(false);
+     }
+@@ -267,9 +278,12 @@ export function PlayersManager() {
+   };
+ 
+   const noProfileUsers = authUsers.filter(
+-    (u) => !players.some((p) => p.id === u.id),
++    (u) => !players.some((p) => p.id === u.id || (u.email && (p.email === u.email || p.iisc_email === u.email))),
+   );
+ 
++  const [sortField, setSortField] = useState<"name" | "created_at" | "elo" | "singles" | "doubles" | "mixed">("elo");
++  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
++
+   // Determine which list to show based on filter
+   let displayList: any[] = [];
+   if (filter === "no-profile") {
+@@ -278,24 +292,114 @@ export function PlayersManager() {
+     displayList = players;
+   }
+ 
+-  const filtered = displayList.filter((item) => {
+-    const s = search.toLowerCase();
+-    if (filter === "no-profile") {
+-      const u = item as AuthUser;
+-      return !s || u.email?.toLowerCase().includes(s);
++  const playersWithRanks = useMemo(() => {
++    const active = players.filter(p => !p.is_retired);
++    const sortBy = (getVal: (p: Player) => number) => 
++      [...active].sort((a, b) => getVal(b) - getVal(a));
++
++    const getElo = (p: Player) => p.stats?.elo ?? p.stats?.eloRating ?? 0;
++    const getS = (p: Player) => p.stats?.singles ?? 0;
++    const getD = (p: Player) => p.stats?.doubles ?? 0;
++    const getM = (p: Player) => p.stats?.mixed ?? 0;
++
++    const rankedOverall = sortBy(getElo);
++    const rankedS = sortBy(getS);
++    const rankedD = sortBy(getD);
++    const rankedM = sortBy(getM);
++
++    return players.map(p => {
++      if (p.is_retired) return { ...p, ranks: { overall: "-", singles: "-", doubles: "-", mixed: "-" } };
++      
++      const overallRank = rankedOverall.findIndex(x => x.id === p.id) + 1;
++      const sRank = rankedS.findIndex(x => x.id === p.id) + 1;
++      const dRank = rankedD.findIndex(x => x.id === p.id) + 1;
++      const mRank = rankedM.findIndex(x => x.id === p.id) + 1;
++
++      return {
++        ...p,
++        ranks: {
++          overall: getElo(p) > 0 ? `#${overallRank}` : "-",
++          singles: getS(p) > 0 ? `#${sRank}` : "-",
++          doubles: getD(p) > 0 ? `#${dRank}` : "-",
++          mixed: getM(p) > 0 ? `#${mRank}` : "-",
++        }
++      };
++    });
++  }, [players]);
++
++  const sortedAndFiltered = useMemo(() => {
++    let list = displayList.map(item => {
++      if (filter !== "no-profile") {
++        return playersWithRanks.find(p => p.id === item.id) || item;
++      }
++      return item;
++    }).filter((item) => {
++      const s = search.toLowerCase();
++      if (filter === "no-profile") {
++        const u = item as AuthUser;
++        return !s || u.email?.toLowerCase().includes(s);
++      } else {
++        const p = item as Player;
++        const matchesSearch =
++          !s ||
++          p.full_name?.toLowerCase().includes(s) ||
++          p.email?.toLowerCase().includes(s) ||
++          p.department?.toLowerCase().includes(s);
++        const matchesFilter =
++          filter === "profile" ||
++          (filter === "approved" ? p.is_approved : !p.is_approved);
++        return matchesSearch && matchesFilter;
++      }
++    });
++
++    if (filter === "no-profile") return list;
++
++    return list.sort((a, b) => {
++      const pa = a as Player & { ranks: any };
++      const pb = b as Player & { ranks: any };
++      
++      let valA: any = 0;
++      let valB: any = 0;
++
++      if (sortField === "name") {
++        valA = pa.full_name?.toLowerCase() || "";
++        valB = pb.full_name?.toLowerCase() || "";
++      } else if (sortField === "created_at") {
++        valA = new Date(pa.created_at).getTime();
++        valB = new Date(pb.created_at).getTime();
++      } else if (sortField === "elo") {
++        valA = pa.stats?.elo ?? pa.stats?.eloRating ?? 0;
++        valB = pb.stats?.elo ?? pb.stats?.eloRating ?? 0;
++      } else if (sortField === "singles") {
++        valA = pa.stats?.singles ?? 0;
++        valB = pb.stats?.singles ?? 0;
++      } else if (sortField === "doubles") {
++        valA = pa.stats?.doubles ?? 0;
++        valB = pb.stats?.doubles ?? 0;
++      } else if (sortField === "mixed") {
++        valA = pa.stats?.mixed ?? 0;
++        valB = pb.stats?.mixed ?? 0;
++      }
++
++      if (valA < valB) return sortDirection === "asc" ? -1 : 1;
++      if (valA > valB) return sortDirection === "asc" ? 1 : -1;
++      return 0;
++    });
++  }, [displayList, playersWithRanks, filter, search, sortField, sortDirection]);
++
++  const handleSort = (field: any) => {
++    if (sortField === field) {
++      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+     } else {
+-      const p = item as Player;
+-      const matchesSearch =
+-        !s ||
+-        p.full_name?.toLowerCase().includes(s) ||
+-        p.email?.toLowerCase().includes(s) ||
+-        p.department?.toLowerCase().includes(s);
+-      const matchesFilter =
+-        filter === "profile" ||
+-        (filter === "approved" ? p.is_approved : !p.is_approved);
+-      return matchesSearch && matchesFilter;
++      setSortField(field);
++      setSortDirection("desc");
+     }
+-  });
++  };
++
++  const SortIcon = ({ field }: { field: string }) => {
++    if (sortField !== field) return <span className="text-muted-foreground/30 opacity-0 group-hover:opacity-100 ml-1">Γåò</span>;
++    return sortDirection === "asc" ? <ArrowUp className="inline w-3 h-3 ml-1 text-primary" /> : <ArrowDown className="inline w-3 h-3 ml-1 text-primary" />;
++  };
+ 
+   const pending = players.filter((p) => !p.is_approved).length;
+ 
+@@ -395,172 +499,252 @@ export function PlayersManager() {
+       </div>
+ 
+       {/* Player list */}
+-      <div className="space-y-2">
+-        {filtered.length === 0 && (
++      <div className="space-y-2 overflow-x-auto pb-8">
++        {sortedAndFiltered.length === 0 && (
+           <div className="text-center py-10 text-muted-foreground dark:text-muted-foreground text-sm font-medium">
+             No players found.
+           </div>
+         )}
+-        {filtered.map((item) => {
+-          if (filter === "no-profile") {
+-            const u = item as AuthUser;
+-            const busy = actionId === u.id;
+-            return (
+-              <div
+-                key={u.id}
+-                className={`${cardCls} flex flex-col sm:flex-row gap-3 items-start sm:items-center`}
+-              >
+-                <div className="flex-1 min-w-0">
+-                  <div className="font-bold text-foreground dark:text-foreground">
+-                    {u.email}
+-                  </div>
+-                  <div className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5">
+-                    Account Created:{" "}
+-                    {new Date(u.created_at).toLocaleDateString()}
++        
++        {sortedAndFiltered.length > 0 && filter === "no-profile" && (
++          <div className="space-y-2">
++            {sortedAndFiltered.map((item) => {
++              const u = item as AuthUser;
++              const busy = actionId === u.id;
++              return (
++                <div key={u.id} className={`${cardCls} flex flex-col sm:flex-row gap-3 items-start sm:items-center`}>
++                  <div className="flex-1 min-w-0">
++                    <div className="font-bold text-foreground dark:text-foreground">{u.email}</div>
++                    <div className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5">
++                      Account Created: {new Date(u.created_at).toLocaleDateString()}
++                    </div>
+                   </div>
+-                </div>
+-                <div className="flex gap-2 shrink-0">
+-                  <button
+-                    onClick={() => removeAccount(u.id, u.email)}
+-                    disabled={busy}
+-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-rose-500 bg-rose-50 hover:bg-rose-100 dark:hover:bg-rose-950/20 text-xs font-bold transition disabled:opacity-50"
+-                  >
+-                    {busy ? (
+-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+-                    ) : (
+-                      <Trash2 className="w-3.5 h-3.5" />
++                  <div className="flex gap-2 shrink-0">
++                    <button onClick={() => removeAccount(u.id, u.email)} disabled={busy} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-rose-500 bg-rose-50 hover:bg-rose-100 dark:hover:bg-rose-950/20 text-xs font-bold transition disabled:opacity-50">
++                      {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
++                      Delete Account
++                    </button>
++                    {!u.email_confirmed_at && (
++                      <>
++                        <button onClick={() => resendVerifyEmail(u.id, u.email)} disabled={busy} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sky-600 bg-sky-50 hover:bg-sky-100 dark:bg-sky-900/30 dark:hover:bg-sky-900/50 text-xs font-bold transition disabled:opacity-50">
++                          Resend Email
++                        </button>
++                        <button onClick={() => forceVerify(u.id, u.email)} disabled={busy} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-primary bg-primary/10 hover:bg-primary/15 dark:bg-primary/30 dark:hover:bg-primary/80/50 text-xs font-bold transition disabled:opacity-50">
++                          Force Verify
++                        </button>
++                      </>
+                     )}
+-                    Delete Account
+-                  </button>
+-                  {!u.email_confirmed_at && (
+-                    <>
+-                      <button
+-                        onClick={() => resendVerifyEmail(u.id, u.email)}
+-                        disabled={busy}
+-                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sky-600 bg-sky-50 hover:bg-sky-100 dark:bg-sky-900/30 dark:hover:bg-sky-900/50 text-xs font-bold transition disabled:opacity-50"
+-                      >
+-                        Resend Email
+-                      </button>
+-                      <button
+-                        onClick={() => forceVerify(u.id, u.email)}
+-                        disabled={busy}
+-                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-primary bg-primary/10 hover:bg-primary/15 dark:bg-primary/30 dark:hover:bg-primary/80/50 text-xs font-bold transition disabled:opacity-50"
+-                      >
+-                        Force Verify
+-                      </button>
+-                    </>
+-                  )}
++                  </div>
+                 </div>
+-              </div>
+-            );
+-          }
++              );
++            })}
++          </div>
++        )}
+ 
+-          // Normal profile row
+-          const p = item as Player;
+-          const elo = p.stats?.elo ?? p.stats?.eloRating ?? null;
+-          const busy = actionId === p.id;
+-          return (
+-            <div
+-              key={p.id}
+-              className={`${cardCls} flex flex-col sm:flex-row gap-3 items-start sm:items-center`}
+-            >
+-              <div className="flex-1 min-w-0">
+-                <div className="flex items-center gap-2 flex-wrap">
+-                  <span className="font-bold text-foreground dark:text-foreground">
+-                    {p.full_name}
+-                  </span>
+-                  <span
+-                    className={`text-xs px-2 py-0.5 rounded-full font-bold ${p.is_approved ? "bg-primary/15 text-primary dark:bg-primary/30 dark:text-primary" : "bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400"}`}
+-                  >
+-                    {p.is_approved ? "Approved" : "Pending"}
+-                  </span>
+-                  {p.is_retired && (
+-                    <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400">
+-                      Retired
+-                    </span>
+-                  )}
+-                  {elo && (
+-                    <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400 font-bold">
+-                      ELO {elo}
+-                    </span>
+-                  )}
+-                </div>
+-                <div className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5 space-x-2">
+-                  {p.email && <span>{p.email}</span>}
+-                  {p.department && <span>┬╖ {p.department}</span>}
+-                  {p.sr_number && <span>┬╖ SR# {p.sr_number}</span>}
+-                  {p.contact_number && <span>┬╖ {p.contact_number}</span>}
+-                </div>
+-              </div>
+-              <div className="flex gap-2 shrink-0 flex-wrap sm:flex-nowrap">
+-                {isMainAdmin && (
+-                  <select
+-                    value={p.role || "player"}
+-                    onChange={(e) => handleRoleChange(p.id, p.full_name, e.target.value)}
+-                    disabled={busy}
+-                    className="px-2 py-2 rounded-xl text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-300 outline-none focus:ring-2 focus:ring-primary transition disabled:opacity-50"
+-                  >
+-                    <option value="player">Regular</option>
+-                    <option value="umpire">Umpire</option>
+-                    <option value="admin">Admin</option>
+-                    <option value="master_admin">Master Admin</option>
+-                  </select>
+-                )}
+-                {!p.is_approved ? (
+-                  <button
+-                    onClick={() => approve(p.id)}
+-                    disabled={busy}
+-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary hover:bg-primary text-primary-foreground text-xs font-bold transition disabled:opacity-50"
+-                  >
+-                    {busy ? (
+-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+-                    ) : (
+-                      <UserCheck className="w-3.5 h-3.5" />
+-                    )}
+-                    Approve
+-                  </button>
+-                ) : (
+-                  <button
+-                    onClick={() => revoke(p.id)}
+-                    disabled={busy}
+-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-950/20 text-muted-foreground dark:text-slate-300 hover:text-amber-700 text-xs font-bold transition disabled:opacity-50"
+-                  >
+-                    {busy ? (
+-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+-                    ) : (
+-                      <UserX className="w-3.5 h-3.5" />
+-                    )}
+-                    Revoke
+-                  </button>
+-                )}
+-                <button
+-                  onClick={() => retirePlayer(p.id, p.full_name, !!p.is_retired)}
+-                  disabled={busy}
+-                  title={p.is_retired ? "Unretire player" : "Retire player"}
+-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition disabled:opacity-50 ${p.is_retired ? "bg-amber-100 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 hover:bg-amber-200" : "bg-slate-100 dark:bg-slate-800 text-muted-foreground hover:bg-slate-200 dark:hover:bg-slate-700"}`}
+-                >
+-                  <Sunset className="w-3.5 h-3.5" />
+-                  {p.is_retired ? "Unretire" : "Retire"}
+-                </button>
+-                <button
+-                  onClick={() => removeProfile(p.id, p.full_name)}
+-                  disabled={busy}
+-                  title="Delete Profile Only"
+-                  className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition disabled:opacity-50"
+-                >
+-                  <Trash2 className="w-4 h-4" />
+-                </button>
+-                <button
+-                  onClick={() => removeAccount(p.id, p.email || p.full_name)}
+-                  disabled={busy}
+-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-rose-500 bg-rose-50 hover:bg-rose-100 dark:hover:bg-rose-950/20 text-xs font-bold transition disabled:opacity-50"
+-                >
+-                  Delete Account
+-                </button>
+-              </div>
+-            </div>
+-          );
+-        })}
++        {/* Desktop Table View */}
++        {sortedAndFiltered.length > 0 && filter !== "no-profile" && (
++          <div className="hidden lg:block overflow-x-auto pb-8">
++            <table className="w-full text-left border-collapse min-w-[1000px]">
++              <thead>
++                <tr className="border-b border-slate-200 dark:border-slate-800 text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">
++                  <th className="p-3 font-bold cursor-pointer hover:text-foreground group select-none whitespace-nowrap" onClick={() => handleSort("name")}>Player <SortIcon field="name" /></th>
++                  <th className="p-3 font-bold cursor-pointer hover:text-foreground group select-none whitespace-nowrap" onClick={() => handleSort("created_at")}>Status <SortIcon field="created_at" /></th>
++                  <th className="p-3 font-bold cursor-pointer hover:text-foreground group select-none whitespace-nowrap" onClick={() => handleSort("elo")}>Overall (Rank) <SortIcon field="elo" /></th>
++                  <th className="p-3 font-bold cursor-pointer hover:text-foreground group select-none whitespace-nowrap" onClick={() => handleSort("singles")}>Singles (Rank) <SortIcon field="singles" /></th>
++                  <th className="p-3 font-bold cursor-pointer hover:text-foreground group select-none whitespace-nowrap" onClick={() => handleSort("doubles")}>Doubles (Rank) <SortIcon field="doubles" /></th>
++                  <th className="p-3 font-bold cursor-pointer hover:text-foreground group select-none whitespace-nowrap" onClick={() => handleSort("mixed")}>Mixed (Rank) <SortIcon field="mixed" /></th>
++                  <th className="p-3 font-bold text-right sticky right-0 bg-white/90 dark:bg-[#0B1120]/90 backdrop-blur shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.1)] z-10 border-l border-slate-100 dark:border-slate-800">Actions</th>
++                </tr>
++              </thead>
++              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
++                {sortedAndFiltered.map((item) => {
++                  const p = item as Player & { ranks: any };
++                  const busy = actionId === p.id;
++                  
++                  return (
++                    <tr key={p.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition group">
++                      <td className="p-3">
++                        <div className="font-bold text-sm text-foreground dark:text-slate-200 whitespace-nowrap">{p.full_name}</div>
++                        <div className="text-[10px] sm:text-xs text-muted-foreground space-x-1 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]" title={p.email || ""}>
++                          {p.email && <span>{p.email}</span>}
++                          {p.department && <span>┬╖ {p.department}</span>}
++                        </div>
++                      </td>
++                      <td className="p-3">
++                        <div className="flex gap-1.5 flex-wrap">
++                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold whitespace-nowrap ${p.is_approved ? "bg-primary/15 text-primary dark:bg-primary/30 dark:text-primary" : "bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400"}`}>
++                            {p.is_approved ? "Approved" : "Pending"}
++                          </span>
++                          {p.is_retired && (
++                            <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400 whitespace-nowrap">
++                              Retired
++                            </span>
++                          )}
++                          {isMainAdmin && (
++                            <select
++                              value={p.role || "player"}
++                              onChange={(e) => handleRoleChange(p.id, p.full_name, e.target.value)}
++                              disabled={busy}
++                              className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-muted-foreground outline-none focus:ring-1 focus:ring-primary transition disabled:opacity-50"
++                            >
++                              <option value="player">Reg</option>
++                              <option value="umpire">Ump</option>
++                              <option value="admin">Adm</option>
++                              <option value="master_admin">M-Adm</option>
++                            </select>
++                          )}
++                        </div>
++                      </td>
++                      <td className="p-3">
++                        <div className="flex items-baseline gap-1.5">
++                          <span className="font-bold text-sm text-foreground dark:text-slate-200">{p.stats?.elo ?? p.stats?.eloRating ?? "-"}</span>
++                          {p.ranks?.overall !== "-" && <span className="text-[10px] text-primary font-black tracking-tighter">{p.ranks?.overall}</span>}
++                        </div>
++                      </td>
++                      <td className="p-3">
++                        <div className="flex items-baseline gap-1.5">
++                          <span className="font-bold text-sm text-foreground dark:text-slate-200">{p.stats?.singles ?? "-"}</span>
++                          {p.ranks?.singles !== "-" && <span className="text-[10px] text-primary font-black tracking-tighter">{p.ranks?.singles}</span>}
++                        </div>
++                      </td>
++                      <td className="p-3">
++                        <div className="flex items-baseline gap-1.5">
++                          <span className="font-bold text-sm text-foreground dark:text-slate-200">{p.stats?.doubles ?? "-"}</span>
++                          {p.ranks?.doubles !== "-" && <span className="text-[10px] text-primary font-black tracking-tighter">{p.ranks?.doubles}</span>}
++                        </div>
++                      </td>
++                      <td className="p-3">
++                        <div className="flex items-baseline gap-1.5">
++                          <span className="font-bold text-sm text-foreground dark:text-slate-200">{p.stats?.mixed ?? "-"}</span>
++                          {p.ranks?.mixed !== "-" && <span className="text-[10px] text-primary font-black tracking-tighter">{p.ranks?.mixed}</span>}
++                        </div>
++                      </td>
++                      <td className="p-3 text-right sticky right-0 bg-white dark:bg-[#0B1120] group-hover:bg-slate-50/50 dark:group-hover:bg-slate-800/20 transition backdrop-blur shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.1)] border-l border-slate-100 dark:border-slate-800/50 z-10">
++                        <div className="flex gap-1.5 shrink-0 justify-end flex-nowrap">
++                          {!p.is_approved ? (
++                            <button onClick={() => approve(p.id)} disabled={busy} title="Approve" className="p-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition disabled:opacity-50 shadow-sm">
++                              {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserCheck className="w-3.5 h-3.5" />}
++                            </button>
++                          ) : (
++                            <button onClick={() => revoke(p.id)} disabled={busy} title="Revoke Approval" className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-950/20 text-muted-foreground hover:text-amber-700 text-xs font-bold transition disabled:opacity-50">
++                              {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserX className="w-3.5 h-3.5" />}
++                            </button>
++                          )}
++                          <button onClick={() => retirePlayer(p.id, p.full_name, !!p.is_retired)} disabled={busy} title={p.is_retired ? "Unretire player" : "Retire player"} className={`p-2 rounded-xl text-xs font-bold transition disabled:opacity-50 ${p.is_retired ? "bg-amber-100 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 hover:bg-amber-200" : "bg-slate-100 dark:bg-slate-800 text-muted-foreground hover:bg-slate-200 dark:hover:bg-slate-700"}`}>
++                            <Sunset className="w-3.5 h-3.5" />
++                          </button>
++                          <button onClick={() => removeProfile(p.id, p.full_name)} disabled={busy} title="Delete Profile Only" className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition disabled:opacity-50">
++                            <Trash2 className="w-4 h-4" />
++                          </button>
++                        </div>
++                      </td>
++                    </tr>
++                  );
++                })}
++              </tbody>
++            </table>
++          </div>
++        )}
++
++        {/* Mobile Cards View */}
++        {sortedAndFiltered.length > 0 && filter !== "no-profile" && (
++          <div className="lg:hidden space-y-3 pb-8">
++            {sortedAndFiltered.map((item) => {
++               const p = item as Player & { ranks: any };
++               const busy = actionId === p.id;
++               
++               return (
++                 <div key={p.id} className={`${cardCls} flex flex-col gap-3 p-4`}>
++                    <div className="flex justify-between items-start gap-2">
++                       <div className="flex-1 min-w-0">
++                         <div className="font-bold text-foreground dark:text-foreground truncate text-base">{p.full_name}</div>
++                         <div className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5 truncate">
++                           {p.email} {p.department ? `┬╖ ${p.department}` : ""}
++                         </div>
++                       </div>
++                       <div className="flex gap-1.5 shrink-0 flex-wrap justify-end">
++                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold whitespace-nowrap ${p.is_approved ? "bg-primary/15 text-primary dark:bg-primary/30 dark:text-primary" : "bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400"}`}>
++                            {p.is_approved ? "Approved" : "Pending"}
++                          </span>
++                          {p.is_retired && (
++                            <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400 whitespace-nowrap">
++                              Retired
++                            </span>
++                          )}
++                       </div>
++                    </div>
++                    
++                    {/* Stats Grid */}
++                    <div className="grid grid-cols-4 gap-2 py-3 border-y border-slate-100 dark:border-slate-800/50">
++                       <div className="flex flex-col items-center justify-center text-center">
++                          <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider">Overall (Rank)</span>
++                          <div className="flex items-baseline gap-1 mt-0.5">
++                            <span className="font-bold text-sm text-foreground">{p.stats?.elo ?? p.stats?.eloRating ?? "-"}</span>
++                            {p.ranks?.overall !== "-" && <span className="text-[9px] text-primary font-black">{p.ranks?.overall}</span>}
++                          </div>
++                       </div>
++                       <div className="flex flex-col items-center justify-center text-center border-l border-slate-100 dark:border-slate-800/50">
++                          <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider">Singles (Rank)</span>
++                          <div className="flex items-baseline gap-1 mt-0.5">
++                            <span className="font-bold text-sm text-foreground">{p.stats?.singles ?? "-"}</span>
++                            {p.ranks?.singles !== "-" && <span className="text-[9px] text-primary font-black">{p.ranks?.singles}</span>}
++                          </div>
++                       </div>
++                       <div className="flex flex-col items-center justify-center text-center border-l border-slate-100 dark:border-slate-800/50">
++                          <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider">Doubles (Rank)</span>
++                          <div className="flex items-baseline gap-1 mt-0.5">
++                            <span className="font-bold text-sm text-foreground">{p.stats?.doubles ?? "-"}</span>
++                            {p.ranks?.doubles !== "-" && <span className="text-[9px] text-primary font-black">{p.ranks?.doubles}</span>}
++                          </div>
++                       </div>
++                       <div className="flex flex-col items-center justify-center text-center border-l border-slate-100 dark:border-slate-800/50">
++                          <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider">Mixed (Rank)</span>
++                          <div className="flex items-baseline gap-1 mt-0.5">
++                            <span className="font-bold text-sm text-foreground">{p.stats?.mixed ?? "-"}</span>
++                            {p.ranks?.mixed !== "-" && <span className="text-[9px] text-primary font-black">{p.ranks?.mixed}</span>}
++                          </div>
++                       </div>
++                    </div>
++
++                    {/* Actions Row */}
++                    <div className="flex gap-2 justify-between items-center">
++                       {isMainAdmin ? (
++                          <select
++                            value={p.role || "player"}
++                            onChange={(e) => handleRoleChange(p.id, p.full_name, e.target.value)}
++                            disabled={busy}
++                            className="px-2 py-1.5 rounded-xl text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-muted-foreground outline-none focus:ring-1 focus:ring-primary transition disabled:opacity-50"
++                          >
++                            <option value="player">Regular</option>
++                            <option value="umpire">Umpire</option>
++                            <option value="admin">Admin</option>
++                            <option value="master_admin">Master</option>
++                          </select>
++                       ) : <div />}
++                       
++                       <div className="flex gap-2 shrink-0 justify-end flex-nowrap">
++                          {!p.is_approved ? (
++                            <button onClick={() => approve(p.id)} disabled={busy} title="Approve" className="p-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition disabled:opacity-50 shadow-sm">
++                              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserCheck className="w-4 h-4" />}
++                            </button>
++                          ) : (
++                            <button onClick={() => revoke(p.id)} disabled={busy} title="Revoke Approval" className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-amber-50 text-muted-foreground hover:text-amber-700 text-xs font-bold transition disabled:opacity-50">
++                              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserX className="w-4 h-4" />}
++                            </button>
++                          )}
++                          <button onClick={() => retirePlayer(p.id, p.full_name, !!p.is_retired)} disabled={busy} title={p.is_retired ? "Unretire player" : "Retire player"} className={`p-2.5 rounded-xl text-xs font-bold transition disabled:opacity-50 ${p.is_retired ? "bg-amber-100 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400" : "bg-slate-100 dark:bg-slate-800 text-muted-foreground"}`}>
++                            <Sunset className="w-4 h-4" />
++                          </button>
++                          <button onClick={() => removeProfile(p.id, p.full_name)} disabled={busy} title="Delete Profile Only" className="p-2.5 rounded-xl text-rose-500 bg-rose-50 dark:bg-rose-950/20 hover:bg-rose-100 transition disabled:opacity-50">
++                            <Trash2 className="w-4 h-4" />
++                          </button>
++                       </div>
++                    </div>
++                 </div>
++               )
++            })}
++          </div>
++        )}
+       </div>
+     </div>
+   );
+diff --git a/client/src/components/feed/MatchCard.tsx b/client/src/components/feed/MatchCard.tsx
+index 5d762bf..94f92ab 100644
+--- a/client/src/components/feed/MatchCard.tsx
++++ b/client/src/components/feed/MatchCard.tsx
+@@ -49,7 +49,7 @@ export function MatchCard({
+   const [currentVideoUrl, setCurrentVideoUrl] = useState(match.video_url || null);
+   const [isEditVideoOpen, setIsEditVideoOpen] = useState(false);
+   const [isScorecardOpen, setIsScorecardOpen] = useState(false);
+-  
++
+   const [aiSummary, setAiSummary] = useState<string | null>(null);
+   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+ 
+@@ -57,7 +57,7 @@ export function MatchCard({
+     e.preventDefault();
+     e.stopPropagation();
+     if (aiSummary || isGeneratingSummary) return;
+-    
++
+     setIsGeneratingSummary(true);
+     try {
+       const summary = await fetchMatchSummary(match);
+@@ -71,7 +71,7 @@ export function MatchCard({
+ 
+   let displayScore = match.score || match.match_score || "";
+   let highlightUrl = currentVideoUrl;
+-  
++
+   // Legacy support where video URL was appended to score
+   if (displayScore.includes(" | ")) {
+     const parts = displayScore.split(" | ");
+@@ -225,11 +225,10 @@ export function MatchCard({
+       animate={{ opacity: 1, y: 0 }}
+       transition={{ delay: index * 0.05 }}
+       id={`match-card-${match.id}`}
+-      className={`bg-white dark:bg-slate-900 rounded-3xl p-2 shadow-sm relative overflow-hidden group transition-all duration-200 hover:-translate-y-0.5 ${
+-        isMatchOfTheDay
++      className={`bg-white dark:bg-slate-900 rounded-3xl p-2 shadow-sm relative overflow-hidden group transition-all duration-200 hover:-translate-y-0.5 ${isMatchOfTheDay
+           ? "border-2 border-amber-400 shadow-amber-500/20 shadow-xl hover:shadow-amber-400/30"
+           : "border border-slate-100 dark:border-slate-800 hover:shadow-lg dark:hover:shadow-slate-700/40"
+-      }`}
++        }`}
+       drag="x"
+       dragConstraints={{ left: 0, right: 0 }}
+       dragElastic={0.2}
+@@ -310,7 +309,7 @@ export function MatchCard({
+                   {setsWonP1}
+                 </span>
+               </div>
+-              
++
+               <div className="flex flex-col items-center justify-center">
+                 <span className="text-slate-300 dark:text-muted-foreground text-4xl sm:text-5xl font-black tracking-tighter leading-none mx-2">ΓÇô</span>
+               </div>
+@@ -366,17 +365,17 @@ export function MatchCard({
+           <span className="block text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mt-0.5">defeated</span>
+           <span className="block font-semibold text-slate-500 dark:text-slate-400 line-through decoration-slate-400/50 mb-0.5">{joinNames(loserMembers)}</span>
+           <span className="block mt-0.5">
+-            <span style={{color: 'var(--color-primary)'}} className="font-black">{winnerSetCount}</span>
++            <span style={{ color: 'var(--color-primary)' }} className="font-black">{winnerSetCount}</span>
+             <span className="text-slate-400 dark:text-slate-500 mx-1">ΓÇô</span>
+-            <span style={{color: '#ef4444'}} className="font-black dark:text-rose-400">{loserSetCount}</span>
++            <span style={{ color: '#ef4444' }} className="font-black dark:text-rose-400">{loserSetCount}</span>
+           </span>
+           {displayScore && (
+             <span className="block tabular-nums text-slate-600 dark:text-slate-400">
+               ({parsedSets.map((s, i) => (
+                 <span key={i}>
+-                  <span style={{color: team1Win ? 'var(--color-primary)' : '#ef4444'}} className="font-semibold">{s.p1}</span>
++                  <span style={{ color: team1Win ? 'var(--color-primary)' : '#ef4444' }} className="font-semibold">{s.p1}</span>
+                   <span className="text-slate-400 dark:text-slate-500 mx-0.5">-</span>
+-                  <span style={{color: team2Win ? 'var(--color-primary)' : '#ef4444'}} className="font-semibold">{s.p2}</span>
++                  <span style={{ color: team2Win ? 'var(--color-primary)' : '#ef4444' }} className="font-semibold">{s.p2}</span>
+                   {i < parsedSets.length - 1 && <span className="text-slate-400 dark:text-slate-500">, </span>}
+                 </span>
+               ))})
+@@ -410,9 +409,9 @@ export function MatchCard({
+           <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-400 animate-pulse">Gemini is analyzing the match...</span>
+         </div>
+       )}
+-      
++
+       {aiSummary && !isGeneratingSummary && (
+-        <motion.div 
++        <motion.div
+           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+           className="mt-1.5 p-2.5 rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-950 text-foreground shadow-lg border border-indigo-500/30 relative overflow-hidden"
+         >
+@@ -431,77 +430,75 @@ export function MatchCard({
+ 
+       {/* Reaction Kudos & Edit */}
+       {!hideActions && (
+-      <div className="mt-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800/50 flex flex-col gap-0.5 relative z-10">
+-        {/* Actions Row */}
+-        <div className="flex justify-between items-center px-1">
+-          <button
+-            onPointerDown={(e) => e.stopPropagation()}
+-            onClick={handleGenerateSummary}
+-            disabled={isGeneratingSummary || !!aiSummary}
+-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all active:scale-95 ${
+-              aiSummary 
+-                ? "text-indigo-500 bg-indigo-50 dark:bg-indigo-500/20 opacity-70" 
+-                : "text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
+-            }`}
+-          >
+-            {isGeneratingSummary ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+-            AI Recap
+-          </button>
+-          
+-          <button
+-            onPointerDown={(e) => e.stopPropagation()}
+-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsScorecardOpen(true); }}
+-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
+-          >
+-            <BarChart2 className="w-3.5 h-3.5" /> Scorecard
+-          </button>
+-        </div>
++        <div className="mt-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800/50 flex flex-col gap-0.5 relative z-10">
++          {/* Actions Row */}
++          <div className="flex justify-between items-center px-1">
++            <button
++              onPointerDown={(e) => e.stopPropagation()}
++              onClick={handleGenerateSummary}
++              disabled={isGeneratingSummary || !!aiSummary}
++              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all active:scale-95 ${aiSummary
++                  ? "text-indigo-500 bg-indigo-50 dark:bg-indigo-500/20 opacity-70"
++                  : "text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
++                }`}
++            >
++              {isGeneratingSummary ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
++              AI Recap
++            </button>
+ 
+-        {/* Like / Share */}
+-        <div className="flex justify-between items-center px-1">
+-          <button
+-            onPointerDown={(e) => e.stopPropagation()}
+-            onClick={(e) => {
+-              e.preventDefault();
+-              e.stopPropagation();
+-              if (onKudos) onKudos();
+-            }}
+-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all active:scale-95 ${
+-              isKudosed
+-                ? "text-rose-500 bg-rose-50 dark:bg-rose-500/20"
+-                : "text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
+-            }`}
+-          >
+-            <Heart className="w-4 h-4" fill={isKudosed ? "currentColor" : "none"} stroke="currentColor" />
+-            Like <span className="kudos-count font-medium ml-1">{kudosCount}</span>
+-          </button>
+-
+-          <button
+-            onPointerDown={(e) => e.stopPropagation()}
+-            onClick={(e) => {
+-              e.preventDefault();
+-              e.stopPropagation();
+-              if (onShare) onShare();
+-            }}
+-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
+-          >
+-            <Share2 className="w-4 h-4" /> Share
+-          </button>
+-        </div>
++            <button
++              onPointerDown={(e) => e.stopPropagation()}
++              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsScorecardOpen(true); }}
++              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
++            >
++              <BarChart2 className="w-3.5 h-3.5" /> Scorecard
++            </button>
++          </div>
++
++          {/* Like / Share */}
++          <div className="flex justify-between items-center px-1">
++            <button
++              onPointerDown={(e) => e.stopPropagation()}
++              onClick={(e) => {
++                e.preventDefault();
++                e.stopPropagation();
++                if (onKudos) onKudos();
++              }}
++              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all active:scale-95 ${isKudosed
++                  ? "text-rose-500 bg-rose-50 dark:bg-rose-500/20"
++                  : "text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
++                }`}
++            >
++              <Heart className={`w-4 h-4 ${isKudosed ? "scale-110" : ""}`} fill={isKudosed ? "currentColor" : "none"} stroke="currentColor" />
++              <span className="kudos-count font-medium ml-0.5">{kudosCount} {kudosCount === 1 ? 'like' : 'likes'}</span>
++            </button>
+ 
+-        {/* Add Video ΓÇö last, centered, only for players involved in this match */}
+-        {isPlayerInMatch && (
+-          <div className="flex justify-center">
+             <button
+-              onClick={() => setIsEditVideoOpen(true)}
++              onPointerDown={(e) => e.stopPropagation()}
++              onClick={(e) => {
++                e.preventDefault();
++                e.stopPropagation();
++                if (onShare) onShare();
++              }}
+               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
+             >
+-              <Edit2 className="w-3.5 h-3.5" />
+-              {highlightUrl ? "Edit Video" : "Add Video"}
++              <Share2 className="w-4 h-4" /> Share
+             </button>
+           </div>
+-        )}
+-      </div>
++
++          {/* Add Video ΓÇö last, centered, only for players involved in this match */}
++          {isPlayerInMatch && (
++            <div className="flex justify-center">
++              <button
++                onClick={() => setIsEditVideoOpen(true)}
++                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
++              >
++                <Edit2 className="w-3.5 h-3.5" />
++                {highlightUrl ? "Edit Video" : "Add Video"}
++              </button>
++            </div>
++          )}
++        </div>
+       )}
+     </motion.div>
+   );
+diff --git a/client/src/components/feed/MyMatchesTab.tsx b/client/src/components/feed/MyMatchesTab.tsx
+index 352f8e0..a239c03 100644
+--- a/client/src/components/feed/MyMatchesTab.tsx
++++ b/client/src/components/feed/MyMatchesTab.tsx
+@@ -269,6 +269,17 @@ export function MyMatchesTab() {
+             const iAlreadyAccepted = Array.isArray(match.confirmed_by) && match.confirmed_by.includes(profile.id);
+             const needsMyAction = isPending && iAmParticipant && !iAmSubmitter && !iAlreadyAccepted;
+ 
++            const isLikedLocally = kudosState[match.id] ?? !!localStorage.getItem(`liked_${match.id}`);
++            const baseCount = Array.isArray(match.kudos_users) ? match.kudos_users.length : (match.kudos_count || 0);
++            const isIncludedInBackend = Array.isArray(match.kudos_users) && profile?.id && match.kudos_users.includes(profile.id);
++            let finalKudosCount = baseCount;
++            
++            if (isLikedLocally && !isIncludedInBackend) {
++              finalKudosCount += 1;
++            } else if (!isLikedLocally && isIncludedInBackend) {
++              finalKudosCount -= 1;
++            }
++
+             return (
+               <MatchCard
+                 key={match.id}
+@@ -277,14 +288,8 @@ export function MyMatchesTab() {
+                 isLiveNow={false}
+                 isMatchOfTheDay={false}
+                 upsetDiff={0}
+-                isKudosed={isKudosed(match)}
+-                kudosCount={
+-                  Array.isArray(match.kudos_users)
+-                    ? match.kudos_users.length +
+-                      (kudosState[match.id] === true && !match.kudos_users.includes(profile?.id) ? 1 : 0) +
+-                      (kudosState[match.id] === false && match.kudos_users.includes(profile?.id) ? -1 : 0)
+-                    : (match.kudos_count || 0) + (kudosState[match.id] === true ? 1 : 0)
+-                }
++                isKudosed={isLikedLocally || isIncludedInBackend}
++                kudosCount={finalKudosCount}
+                 onKudos={() => handleKudos(match)}
+                 onShare={() => shareMatch(match)}
+                 index={0}
+diff --git a/client/src/components/player-profile/WrappedCard.tsx b/client/src/components/player-profile/WrappedCard.tsx
+index fc44c35..bdbedd9 100644
+--- a/client/src/components/player-profile/WrappedCard.tsx
++++ b/client/src/components/player-profile/WrappedCard.tsx
+@@ -144,7 +144,7 @@ export function WrappedCard({ playerName, avatarUrl, elo, matches, playerId, yea
+           )}
+ 
+           <div className="mt-4 text-center">
+-            <p className="text-[10px] text-foreground/30 font-bold uppercase tracking-wider">IISc Badminton Club</p>
++            <p className="text-[10px] text-foreground/30 font-bold uppercase tracking-wider"><span className="normal-case">IISc</span> Badminton Club</p>
+           </div>
+         </div>
+       </div>
+diff --git a/client/src/components/profile/BasicInfoTab.tsx b/client/src/components/profile/BasicInfoTab.tsx
+index c61e220..5849cb0 100644
+--- a/client/src/components/profile/BasicInfoTab.tsx
++++ b/client/src/components/profile/BasicInfoTab.tsx
+@@ -6,6 +6,7 @@ import { PREDEFINED_DEPARTMENTS } from "@/data/departments";
+ interface BasicInfoTabProps {
+   avatarUrl: string;
+   setAvatarUrl: (val: string) => void;
++  handleAvatarUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+   fullName: string;
+   setFullName: (val: string) => void;
+   nickname: string;
+@@ -18,8 +19,6 @@ interface BasicInfoTabProps {
+   setGender: (val: string) => void;
+   joinedYear: string;
+   setJoinedYear: (val: string) => void;
+-  isGuest: boolean;
+-  setIsGuest: (val: boolean) => void;
+   department: string;
+   setDepartment: (val: string) => void;
+   customDepartment: string;
+@@ -29,11 +28,13 @@ interface BasicInfoTabProps {
+   instagram: string;
+   setInstagram: (val: string) => void;
+   handleAvatarUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
++  isGuest: boolean;
+ }
+ 
+ export function BasicInfoTab({
+   avatarUrl,
+   setAvatarUrl,
++  handleAvatarUpload,
+   fullName,
+   setFullName,
+   nickname,
+@@ -46,8 +47,6 @@ export function BasicInfoTab({
+   setGender,
+   joinedYear,
+   setJoinedYear,
+-  isGuest,
+-  setIsGuest,
+   department,
+   setDepartment,
+   customDepartment,
+@@ -57,6 +56,7 @@ export function BasicInfoTab({
+   instagram,
+   setInstagram,
+   handleAvatarUpload,
++  isGuest,
+ }: BasicInfoTabProps) {
+   return (
+     <motion.div
+@@ -169,16 +169,18 @@ export function BasicInfoTab({
+             type="email"
+             value={iiscEmail}
+             onChange={(e) => setIiscEmail(e.target.value)}
++            pattern="^[a-zA-Z0-9._%+\-]+@(alum\.)?iisc\.ac\.in$"
++            title="Email must end with @iisc.ac.in or @alum.iisc.ac.in"
+             className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
+             placeholder="e.g. tanu@iisc.ac.in"
+           />
+         </div>
++
+         <div>
+           <label className="block text-sm font-semibold text-muted-foreground dark:text-slate-300 mb-2">
+-            Contact Number *
++            Contact Number
+           </label>
+           <input
+-            required
+             type="tel"
+             pattern="[0-9]{10}"
+             title="Please enter exactly 10 digits"
+@@ -215,21 +217,16 @@ export function BasicInfoTab({
+           <label className="block text-sm font-semibold text-muted-foreground dark:text-slate-300 mb-2">
+             Joined Year (Class of) *
+           </label>
+-          <select
++          <input
+             required
++            type="number"
++            min="1900"
++            max={new Date().getFullYear() + 5}
+             value={joinedYear}
+             onChange={(e) => setJoinedYear(e.target.value)}
+             className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
+-          >
+-            <option value="" disabled>
+-              Select year
+-            </option>
+-            {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 8 + i).map((year) => (
+-              <option key={year} value={year}>
+-                {year}
+-              </option>
+-            ))}
+-          </select>
++            placeholder="e.g. 2023"
++          />
+         </div>
+       </div>
+ 
+@@ -270,23 +267,8 @@ export function BasicInfoTab({
+             }}
+             className="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary bg-white dark:bg-slate-900"
+           />
+-          <label htmlFor="isGuest" className="text-sm font-semibold text-muted-foreground dark:text-slate-300 cursor-pointer">
+-            I am a Guest / Project Assistant / Intern
+-            <p className="text-xs text-muted-foreground font-normal mt-0.5">Select this if you are not an active IISc degree student.</p>
+-          </label>
+-        </div>
+-
+-        <div className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-rose-200 dark:border-rose-900/50">
+-          <input
+-            type="checkbox"
+-            id="isRetired"
+-            checked={isRetired}
+-            onChange={(e) => setIsRetired(e.target.checked)}
+-            className="w-5 h-5 rounded border-rose-300 text-rose-500 focus:ring-rose-500 bg-white dark:bg-slate-900"
+-          />
+-          <label htmlFor="isRetired" className="text-sm font-semibold text-rose-700 dark:text-rose-400 cursor-pointer">
+-            Mark Profile as Retired
+-            <p className="text-xs text-rose-500/70 font-normal mt-0.5">Retired players are hidden from rankings and cannot be challenged.</p>
++          <label htmlFor="isGuest" className="text-sm font-medium text-slate-700 dark:text-slate-300">
++            I am a guest player
+           </label>
+         </div>
+       </div>
+diff --git a/client/src/components/profile/StatusTab.tsx b/client/src/components/profile/StatusTab.tsx
+new file mode 100644
+index 0000000..9240498
+--- /dev/null
++++ b/client/src/components/profile/StatusTab.tsx
+@@ -0,0 +1,76 @@
++import React from "react";
++import { ShieldAlert } from "lucide-react";
++import { motion } from "framer-motion";
++
++interface StatusTabProps {
++  isGuest: boolean;
++  setIsGuest: (val: boolean) => void;
++  isRetired: boolean;
++  setIsRetired: (val: boolean) => void;
++  department: string;
++  setDepartment: (val: string) => void;
++}
++
++export function StatusTab({
++  isGuest,
++  setIsGuest,
++  isRetired,
++  setIsRetired,
++  department,
++  setDepartment,
++}: StatusTabProps) {
++  return (
++    <motion.div
++      key="status"
++      initial={{ opacity: 0, x: -10 }}
++      animate={{ opacity: 1, x: 0 }}
++      exit={{ opacity: 0, x: 10 }}
++      transition={{ duration: 0.2 }}
++      className="space-y-6"
++    >
++      <div className="flex items-center gap-2 mb-2">
++        <ShieldAlert className="w-5 h-5 text-primary" />
++        <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
++          Account Status & Visibility
++        </h3>
++      </div>
++
++      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
++        <div className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700">
++          <input
++            type="checkbox"
++            id="isGuest"
++            checked={isGuest}
++            onChange={(e) => {
++              setIsGuest(e.target.checked);
++              if (e.target.checked) {
++                setDepartment("Guest");
++              } else if (department === "Guest") {
++                setDepartment("");
++              }
++            }}
++            className="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary bg-white dark:bg-slate-900"
++          />
++          <label htmlFor="isGuest" className="text-sm font-semibold text-muted-foreground dark:text-slate-300 cursor-pointer">
++            I am a Guest / Project Assistant / Intern
++            <p className="text-xs text-muted-foreground font-normal mt-0.5">Select this if you are not an active IISc degree student.</p>
++          </label>
++        </div>
++
++        <div className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-rose-200 dark:border-rose-900/50">
++          <input
++            type="checkbox"
++            id="isRetired"
++            checked={isRetired}
++            onChange={(e) => setIsRetired(e.target.checked)}
++            className="w-5 h-5 rounded border-rose-300 text-rose-500 focus:ring-rose-500 bg-white dark:bg-slate-900"
++          />
++          <label htmlFor="isRetired" className="text-sm font-semibold text-rose-700 dark:text-rose-400 cursor-pointer">
++            Mark Profile as Retired
++            <p className="text-xs text-rose-500/70 font-normal mt-0.5">Retired players are hidden from rankings and cannot be challenged.</p>
++          </label>
++        </div>
++      </div>
++    </motion.div>
++  );
++}
+diff --git a/client/src/components/pulse/FeedTab.tsx b/client/src/components/pulse/FeedTab.tsx
+index 63dd7f0..45b09c0 100644
+--- a/client/src/components/pulse/FeedTab.tsx
++++ b/client/src/components/pulse/FeedTab.tsx
+@@ -386,6 +386,18 @@ export default function FeedTab() {
+                   };
+ 
+                   const handleShare = (match: any) => shareMatch(match);
++                  
++                  const isLikedLocally = kudosState[match.id] ?? !!localStorage.getItem(`liked_${match.id}`);
++                  const baseCount = Array.isArray(match.kudos_users) ? match.kudos_users.length : (match.id.charCodeAt(0) % 5);
++                  const isIncludedInBackend = Array.isArray(match.kudos_users) && match.kudos_users.includes(session?.user?.id);
++                  let finalKudosCount = baseCount;
++                  
++                  if (isLikedLocally && !isIncludedInBackend) {
++                    finalKudosCount += 1;
++                  } else if (!isLikedLocally && isIncludedInBackend) {
++                    finalKudosCount -= 1;
++                  }
++
+                   return (
+                     <MatchCard
+                       key={match.id}
+@@ -394,14 +406,8 @@ export default function FeedTab() {
+                       isLiveNow={isLiveNow}
+                       isMatchOfTheDay={isMatchOfTheDay}
+                       upsetDiff={upsetDiff}
+-                      isKudosed={isKudosed(match)}
+-                      kudosCount={
+-                        Array.isArray(match.kudos_users)
+-                          ? match.kudos_users.length +
+-                          (kudosState[match.id] === true && !match.kudos_users.includes(session?.user?.id) ? 1 : 0) +
+-                          (kudosState[match.id] === false && match.kudos_users.includes(session?.user?.id) ? -1 : 0)
+-                          : (match.id.charCodeAt(0) % 5) + (kudosState[match.id] === true ? 1 : 0)
+-                      }
++                      isKudosed={isLikedLocally || isIncludedInBackend}
++                      kudosCount={finalKudosCount}
+                       onKudos={() => handleKudos(match)}
+                       onShare={() => handleShare(match)}
+                       index={i}
+diff --git a/client/src/data/departments.ts b/client/src/data/departments.ts
+index 802bc55..651841b 100644
+--- a/client/src/data/departments.ts
++++ b/client/src/data/departments.ts
+@@ -1,4 +1,5 @@
+ export const PREDEFINED_DEPARTMENTS = [
++  "Administration",
+   "Aerospace Engineering",
+   "Bioengineering",
+   "Biophysics",
+@@ -32,5 +33,4 @@ export const PREDEFINED_DEPARTMENTS = [
+   "Neuroscience",
+   "Physics",
+   "Solid State and Structural Chemistry Unit",
+-  "Other",
+ ];
+diff --git a/client/src/hooks/profile/useProfileBasicState.ts b/client/src/hooks/profile/useProfileBasicState.ts
+index 7cb755f..e41e4be 100644
+--- a/client/src/hooks/profile/useProfileBasicState.ts
++++ b/client/src/hooks/profile/useProfileBasicState.ts
+@@ -1,22 +1,37 @@
+-import { useState } from "react";
++import { useState, useEffect } from "react";
++
++function useStickyState<T>(defaultValue: T, key: string): [T, (value: T) => void] {
++  const [value, setValue] = useState<T>(() => {
++    try {
++      const stickyValue = window.localStorage.getItem(key);
++      return stickyValue !== null ? JSON.parse(stickyValue) : defaultValue;
++    } catch {
++      return defaultValue;
++    }
++  });
++  useEffect(() => {
++    window.localStorage.setItem(key, JSON.stringify(value));
++  }, [key, value]);
++  return [value, setValue];
++}
+ 
+ export function useProfileBasicState() {
+-  const [fullName, setFullName] = useState("");
+-  const [nickname, setNickname] = useState("");
+-  const [status, setStatus] = useState("looking");
+-  const [iiscEmail, setIiscEmail] = useState("");
+-  const [contactNumber, setContactNumber] = useState("");
+-  const [department, setDepartment] = useState("");
+-  const [customDepartment, setCustomDepartment] = useState("");
+-  const [joinedYear, setJoinedYear] = useState("");
+-  const [nationality, setNationality] = useState("");
+-  const [homeState, setHomeState] = useState("");
+-  const [height, setHeight] = useState("");
+-  const [instagram, setInstagram] = useState("");
+-  const [avatarUrl, setAvatarUrl] = useState("");
+-  const [gender, setGender] = useState("");
+-  const [isGuest, setIsGuest] = useState(false);
+-  const [isRetired, setIsRetired] = useState(false);
++  const [fullName, setFullName] = useStickyState("", "profile_draft_fullName");
++  const [nickname, setNickname] = useStickyState("", "profile_draft_nickname");
++  const [status, setStatus] = useStickyState("looking", "profile_draft_status");
++  const [iiscEmail, setIiscEmail] = useStickyState("", "profile_draft_iiscEmail");
++  const [contactNumber, setContactNumber] = useStickyState("", "profile_draft_contactNumber");
++  const [department, setDepartment] = useStickyState("", "profile_draft_department");
++  const [customDepartment, setCustomDepartment] = useStickyState("", "profile_draft_customDepartment");
++  const [joinedYear, setJoinedYear] = useStickyState("", "profile_draft_joinedYear");
++  const [nationality, setNationality] = useStickyState("", "profile_draft_nationality");
++  const [homeState, setHomeState] = useStickyState("", "profile_draft_homeState");
++  const [height, setHeight] = useStickyState("", "profile_draft_height");
++  const [instagram, setInstagram] = useStickyState("", "profile_draft_instagram");
++  const [avatarUrl, setAvatarUrl] = useStickyState("", "profile_draft_avatarUrl");
++  const [gender, setGender] = useStickyState("", "profile_draft_gender");
++  const [isGuest, setIsGuest] = useStickyState(false, "profile_draft_isGuest");
++  const [isRetired, setIsRetired] = useStickyState(false, "profile_draft_isRetired");
+ 
+   return {
+     fullName, setFullName, nickname, setNickname, status, setStatus, iiscEmail, setIiscEmail,
+diff --git a/client/src/hooks/useProfileSetup.tsx b/client/src/hooks/useProfileSetup.tsx
+index 45338f4..261bc4c 100644
+--- a/client/src/hooks/useProfileSetup.tsx
++++ b/client/src/hooks/useProfileSetup.tsx
+@@ -26,10 +26,10 @@ export function useProfileSetup() {
+   const profileLoadedRef = useRef<string | null>(null);
+   const queryClient = useQueryClient();
+ 
+-  const [activeTab, setActiveTab] = useState<"basic" | "badminton" | "equipment" | "highlights" | "media">(() => {
++  const [activeTab, setActiveTab] = useState<"basic" | "status" | "badminton" | "equipment" | "highlights" | "media">(() => {
+     const hash = safeGetHash();
+-    if (["basic", "badminton", "equipment", "highlights", "media"].includes(hash)) {
+-      return hash as "basic" | "badminton" | "equipment" | "highlights" | "media";
++    if (["basic", "status", "badminton", "equipment", "highlights", "media"].includes(hash)) {
++      return hash as "basic" | "status" | "badminton" | "equipment" | "highlights" | "media";
+     }
+     return "basic";
+   });
+@@ -118,6 +118,8 @@ export function useProfileSetup() {
+     let query = supabase.from("players").select("*");
+     if (paramId && isAdmin && !isSelfEdit) {
+       query = query.eq("id", paramId);
++    } else if (authProfile?.id) {
++      query = query.eq("id", authProfile.id);
+     } else {
+       query = query.eq("id", session.user.id);
+     }
+@@ -257,6 +259,7 @@ export function useProfileSetup() {
+     const validShoes = shoesList.filter((s) => s.name.trim() !== "");
+     const validImages = mediaImages.filter((img) => img.url.trim() !== "");
+     const validVideos = mediaVideos.filter((vid) => vid.url.trim() !== "");
++
+     const finalPrimaryRacketIdx = primaryRacketIndex < validRackets.length ? primaryRacketIndex : 0;
+     const finalPrimaryShoeIdx = primaryShoeIndex < validShoes.length ? primaryShoeIndex : 0;
+     const packedStats = {
+@@ -320,8 +323,15 @@ export function useProfileSetup() {
+   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+   const isFirstRenderRef = useRef(true);
+ 
+-  const saveNow = useCallback(async (silent = false) => {
++  const saveNow = useCallback(async (silent = false, nextTab?: string) => {
+     if (!session) return;
++    if (iiscEmail && !silent) {
++      const e = iiscEmail.toLowerCase();
++      if (!e.endsWith("@iisc.ac.in") && !e.endsWith("@alum.iisc.ac.in")) {
++        toast.error("Invalid IISc Email", { description: "Email must end with @iisc.ac.in or @alum.iisc.ac.in" });
++        return false;
++      }
++    }
+     if (!silent) setLoading(true);
+     const payload = buildPayload();
+     const timeoutMs = 30000;
+@@ -334,11 +344,25 @@ export function useProfileSetup() {
+       queryClient.invalidateQueries({ queryKey: ["playerProfile", targetUserId || session.user.id] });
+       queryClient.invalidateQueries({ queryKey: ["playerRank", targetUserId || session.user.id] });
+       queryClient.invalidateQueries({ queryKey: ["allPlayers"] });
++      
++      // Clear all sticky drafts after successful save
++      Object.keys(window.localStorage).forEach((key) => {
++        if (key.startsWith("profile_draft_")) {
++          window.localStorage.removeItem(key);
++        }
++      });
++
+       if (!silent) {
+-        // redirect after explicit save
+-        if (isEditing) setLocation(`/player/${playerSlug}`);
+-        else setLocation(`/player/${session.user.id}`);
++        if (nextTab) {
++          toast.success("Progress saved!");
++          setActiveTab(nextTab as any);
++          window.scrollTo({ top: 0, behavior: "smooth" });
++        } else {
++          if (isEditing) setLocation(`/player/${playerSlug}`);
++          else setLocation(`/player/${session.user.id}`);
++        }
+       }
++      return true;
+     } catch (err: any) {
+       if (!silent) {
+         if (err.code === "23505") toast.error("Duplicate profile", { description: "A profile with this email or name already exists!" });
+@@ -372,9 +396,9 @@ export function useProfileSetup() {
+     mediaImages, mediaVideos,
+   ]);
+ 
+-  const handleSubmit = async (e: React.FormEvent) => {
+-    e.preventDefault();
+-    await saveNow(false);
++  const handleSubmit = async (e?: React.FormEvent, nextTab?: string) => {
++    if (e) e.preventDefault();
++    await saveNow(false, nextTab);
+   };
+ 
+   return {
+diff --git a/client/src/pages/BroadcastOverlay.tsx b/client/src/pages/BroadcastOverlay.tsx
+index 5858d21..b04d097 100644
+--- a/client/src/pages/BroadcastOverlay.tsx
++++ b/client/src/pages/BroadcastOverlay.tsx
+@@ -92,7 +92,7 @@ export default function BroadcastOverlay() {
+         
+         {/* Tournament / Event Bug */}
+         <div className="bg-slate-900 text-white flex flex-col items-center justify-center px-6 py-2 border-r border-slate-700">
+-          <div className="text-xl font-black tracking-tighter text-blue-500">IISC</div>
++          <div className="text-xl font-black tracking-tighter text-blue-500">IISc</div>
+           <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Badminton</div>
+         </div>
+ 
+diff --git a/client/src/pages/Legacy.tsx b/client/src/pages/Legacy.tsx
+index 731e939..a7dd129 100644
+--- a/client/src/pages/Legacy.tsx
++++ b/client/src/pages/Legacy.tsx
+@@ -108,19 +108,50 @@ export default function Legacy() {
+   );
+   const [selectedCategory, setSelectedCategory] = useState("all");
+   const [likedPhotos, setLikedPhotos] = useState<Set<string>>(new Set());
++  const [galleryLikes, setGalleryLikes] = useState<Record<string, string[]>>({});
+   const [subscribedTags, setSubscribedTags] = useState<Set<string>>(() => {
+     try { return new Set(JSON.parse(localStorage.getItem("gallery_subscriptions") || "[]")); }
+     catch { return new Set(); }
+   });
+ 
+-  const handleLike = (e: React.MouseEvent, path: string) => {
++  const handleLike = async (e: React.MouseEvent, path: string) => {
+     e.stopPropagation();
++    if (!session?.user) {
++      toast.error("You must be signed in to like photos.");
++      return;
++    }
++    const userId = session.user.id;
++    const isLikedLocally = likedPhotos.has(path) || (galleryLikes[path] || []).includes(userId);
++
++    // Optimistic UI update
+     setLikedPhotos(prev => {
+       const next = new Set(prev);
+-      if (next.has(path)) next.delete(path);
++      if (isLikedLocally) next.delete(path);
+       else next.add(path);
+       return next;
+     });
++
++    setGalleryLikes(prev => {
++      const current = prev[path] || [];
++      return {
++        ...prev,
++        [path]: isLikedLocally ? current.filter(id => id !== userId) : [...current, userId]
++      };
++    });
++
++    try {
++      const { data } = await supabase.from("site_data").select("value").eq("key", "gallery_likes").maybeSingle();
++      const currentDb = (data?.value as Record<string, string[]>) || {};
++      const pathLikes = currentDb[path] || [];
++      const newPathLikes = isLikedLocally 
++        ? pathLikes.filter(id => id !== userId)
++        : Array.from(new Set([...pathLikes, userId]));
++      
++      const updatedDb = { ...currentDb, [path]: newPathLikes };
++      await supabase.from("site_data").upsert({ key: "gallery_likes", value: updatedDb }, { onConflict: "key" });
++    } catch (err) {
++      console.error("Failed to sync like", err);
++    }
+   };
+ 
+   const handleSubscribe = (e: React.MouseEvent, tag: string) => {
+@@ -247,6 +278,9 @@ export default function Legacy() {
+     fetchSiteData<Record<string, TagEntry[]>>("gallery_pending_tags", null)
+       .then((data) => { if (data) setPendingTags(data); })
+       .catch(() => {});
++    fetchSiteData<Record<string, string[]>>("gallery_likes", null)
++      .then((data) => { if (data) setGalleryLikes(data); })
++      .catch(() => {});
+   }, []);
+ 
+   // Fetch player list lazily when lightbox first opens
+@@ -276,11 +310,16 @@ export default function Legacy() {
+ 
+   const requestTag = async (photoPath: string) => {
+     if (!session?.user) return;
+-    if (!profile) {
+-      toast.error("Your player profile could not be found.");
++    const currentUserPlayer = tagPlayers.find((p) => p.id === profile?.id);
++    if (!currentUserPlayer) {
++      toast.error("Your email is registered, but you must complete your basic profile before requesting a tag.", {
++        action: {
++          label: "Complete Profile",
++          onClick: () => setLocation("/profile/setup"),
++        },
++      });
+       return;
+     }
+-    const currentUserPlayer = { id: profile.id, full_name: profile.full_name };
+ 
+     const currentPending = pendingTags[photoPath] || [];
+     if (currentPending.some((t) => t.id === currentUserPlayer.id)) return;
+@@ -953,21 +992,33 @@ export default function Legacy() {
+                       <p className="text-foreground text-base md:text-xl font-bold tracking-wide drop-shadow-lg leading-tight text-center">
+                         {item?.title}
+                       </p>
+-                      <motion.button
+-                        onClick={(e) => handleLike(e, item?.path || "")}
+-                        whileTap={{ scale: 0.8 }}
+-                        animate={likedPhotos.has(item?.path || "") ? { scale: [1, 1.4, 1] } : {}}
+-                        transition={{ duration: 0.3 }}
+-                        className="p-2 -mr-2"
+-                      >
+-                        <Heart 
+-                          className={`w-6 h-6 md:w-7 md:h-7 drop-shadow-lg transition-colors ${
+-                            likedPhotos.has(item?.path || "") 
+-                              ? "fill-rose-500 text-rose-500" 
+-                              : "text-foreground hover:text-rose-400"
+-                          }`} 
+-                        />
+-                      </motion.button>
++                      {(() => {
++                        const path = item?.path || "";
++                        const count = galleryLikes[path]?.length || 0;
++                        const isLiked = likedPhotos.has(path) || (galleryLikes[path] || []).includes(session?.user?.id || "");
++                        return (
++                          <div className="flex items-center gap-1.5 p-2 -mr-2">
++                            <motion.button
++                              onClick={(e) => handleLike(e, path)}
++                              whileTap={{ scale: 0.8 }}
++                              animate={isLiked ? { scale: [1, 1.4, 1] } : {}}
++                              transition={{ duration: 0.3 }}
++                              className="flex items-center"
++                            >
++                              <Heart 
++                                className={`w-6 h-6 md:w-7 md:h-7 drop-shadow-lg transition-colors ${
++                                  isLiked 
++                                    ? "fill-rose-500 text-rose-500" 
++                                    : "text-foreground hover:text-rose-400"
++                                }`} 
++                              />
++                            </motion.button>
++                            <span className="text-foreground font-bold text-sm drop-shadow-lg min-w-[3rem] text-left">
++                              {count} {count === 1 ? 'like' : 'likes'}
++                            </span>
++                          </div>
++                        );
++                      })()}
+                     </div>
+                     {item?.subfolder && (
+                       <p className="text-primary/70 font-medium text-xs uppercase tracking-widest drop-shadow-md">
+diff --git a/client/src/pages/ProfileSetup.tsx b/client/src/pages/ProfileSetup.tsx
+index 4df1b6e..06fdfc6 100644
+--- a/client/src/pages/ProfileSetup.tsx
++++ b/client/src/pages/ProfileSetup.tsx
+@@ -2,7 +2,7 @@ import { useLocation } from "wouter";
+ import { motion, AnimatePresence } from "framer-motion";
+ import {
+   UserCircle, Trophy, Save, Sparkles, Activity, Swords,
+-  Video, LogOut, ArrowLeft, ArrowRight
++  Video, LogOut, ArrowLeft, ArrowRight, Settings
+ } from "lucide-react";
+ import { Button } from "@/components/ui/button";
+ import { BasicInfoTab } from "@/components/profile/BasicInfoTab";
+@@ -10,6 +10,7 @@ import { GameStatsTab } from "@/components/profile/GameStatsTab";
+ import { EquipmentTab } from "@/components/profile/EquipmentTab";
+ import { HighlightsTab } from "@/components/profile/HighlightsTab";
+ import { MediaTab } from "@/components/profile/MediaTab";
++import { StatusTab } from "@/components/profile/StatusTab";
+ import { useProfileSetup } from "@/hooks/useProfileSetup";
+ 
+ export default function ProfileSetup() {
+@@ -28,6 +29,7 @@ export default function ProfileSetup() {
+ 
+   const allTabs = [
+     { id: "basic", label: "Basic Info", icon: UserCircle },
++    { id: "status", label: "Account Status", icon: Settings },
+     { id: "badminton", label: "Game Stats", icon: Activity },
+     { id: "equipment", label: "Equipment", icon: Swords },
+     { id: "highlights", label: "Highlights", icon: Trophy },
+@@ -45,6 +47,14 @@ export default function ProfileSetup() {
+   return (
+     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-8 sm:py-12 px-4 sm:px-6 lg:px-6">
+       <div className="max-w-3xl mx-auto">
++        {!setup.isEditing && (
++          <div className="mb-6 bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-500 p-4 rounded-r-xl shadow-sm">
++            <h3 className="text-amber-800 dark:text-amber-300 font-bold text-sm sm:text-base">Account Created!</h3>
++            <p className="text-amber-700 dark:text-amber-400/80 text-sm mt-1">
++              Your email is registered, but you must complete your basic profile details before entering the club.
++            </p>
++          </div>
++        )}
+         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+           <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 mb-6 sm:mb-8">
+             <div className="text-center sm:text-left min-w-0">
+@@ -79,26 +89,59 @@ export default function ProfileSetup() {
+ 
+           {/* Sleek Tab Navigation */}
+           {tabs.length > 1 && (
+-            <div className="-mx-4 sm:mx-0 px-4 sm:px-0 flex flex-wrap border-b border-slate-200 dark:border-slate-800 mb-6 sm:mb-8 gap-2 pb-2">
+-            {tabs.map((tab) => {
+-              const Icon = tab.icon;
+-              const isActive = setup.activeTab === tab.id;
+-              return (
+-                <button
+-                  key={tab.id}
+-                  onClick={() => setup.setActiveTab(tab.id as any)}
+-                  className={`flex-auto md:flex-initial flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 font-semibold text-sm rounded-xl transition-all whitespace-nowrap outline-none
+-                    ${isActive
+-                      ? "bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary border-b-2 border-primary"
+-                      : "text-muted-foreground hover:text-slate-800 dark:text-muted-foreground dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900/50"
+-                    }`}
+-                >
+-                  <Icon className="w-4 h-4 shrink-0" />
+-                  <span className="truncate">{tab.label}</span>
+-                </button>
+-              );
+-            })}
+-          </div>
++            <div className="-mx-4 sm:mx-0 px-4 sm:px-0 mb-6 sm:mb-8 space-y-6">
++              <div className="space-y-3 pb-4 border-b border-slate-200 dark:border-slate-800">
++                <h3 className="text-[11px] font-black tracking-widest uppercase text-muted-foreground ml-1">Essential Information</h3>
++                <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
++                  {tabs.filter(t => t.id === "basic").map((tab, index, arr) => {
++                    const Icon = tab.icon;
++                    const isActive = setup.activeTab === tab.id;
++                    const isLastOdd = index === arr.length - 1 && arr.length % 2 !== 0;
++                    return (
++                      <button
++                        key={tab.id}
++                        onClick={() => setup.setActiveTab(tab.id as any)}
++                        className={`flex items-center justify-center sm:justify-start gap-2 px-3 sm:px-4 py-2.5 font-semibold text-sm rounded-xl transition-all outline-none border shadow-sm
++                          ${isLastOdd ? "col-span-2" : "col-span-1"}
++                          ${isActive
++                            ? "bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary border-primary ring-1 ring-primary"
++                            : "bg-white dark:bg-slate-800/80 text-muted-foreground border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
++                          }`}
++                      >
++                        <Icon className="w-4 h-4 shrink-0" />
++                        <span className="truncate">{tab.label}</span>
++                      </button>
++                    );
++                  })}
++                </div>
++              </div>
++
++              <div className="space-y-3 pb-2 border-b border-slate-200 dark:border-slate-800">
++                <h3 className="text-[11px] font-black tracking-widest uppercase text-muted-foreground ml-1">Detailed Profile</h3>
++                <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
++                  {tabs.filter(t => t.id !== "basic").map((tab, index, arr) => {
++                    const Icon = tab.icon;
++                    const isActive = setup.activeTab === tab.id;
++                    const isLastOdd = index === arr.length - 1 && arr.length % 2 !== 0;
++                    return (
++                      <button
++                        key={tab.id}
++                        onClick={() => setup.setActiveTab(tab.id as any)}
++                        className={`flex items-center justify-center sm:justify-start gap-2 px-3 sm:px-4 py-2.5 font-semibold text-sm rounded-xl transition-all outline-none border shadow-sm
++                          ${isLastOdd ? "col-span-2" : "col-span-1"}
++                          ${isActive
++                            ? "bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary border-primary ring-1 ring-primary"
++                            : "bg-white dark:bg-slate-800/80 text-muted-foreground border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
++                          }`}
++                      >
++                        <Icon className="w-4 h-4 shrink-0" />
++                        <span className="truncate">{tab.label}</span>
++                      </button>
++                    );
++                  })}
++                </div>
++              </div>
++            </div>
+           )}
+ 
+           <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 p-5 sm:p-6">
+@@ -107,18 +150,26 @@ export default function ProfileSetup() {
+                 {setup.activeTab === "basic" && (
+                   <BasicInfoTab
+                     avatarUrl={setup.avatarUrl} setAvatarUrl={setup.setAvatarUrl}
++                    handleAvatarUpload={setup.handleAvatarUpload}
+                     fullName={setup.fullName} setFullName={setup.setFullName}
+                     nickname={setup.nickname} setNickname={setup.setNickname}
+                     iiscEmail={setup.iiscEmail} setIiscEmail={setup.setIiscEmail}
+                     contactNumber={setup.contactNumber} setContactNumber={setup.setContactNumber}
+                     gender={setup.gender} setGender={setup.setGender}
+                     joinedYear={setup.joinedYear} setJoinedYear={setup.setJoinedYear}
+-                    isGuest={setup.isGuest} setIsGuest={setup.setIsGuest}
+                     department={setup.department} setDepartment={setup.setDepartment}
+                     customDepartment={setup.customDepartment} setCustomDepartment={setup.setCustomDepartment}
++                    isGuest={setup.isGuest}
++                  />
++                )}
++
++                {setup.activeTab === "status" && (
++                  <StatusTab
++                    isGuest={setup.isGuest} setIsGuest={setup.setIsGuest}
+                     isRetired={setup.isRetired} setIsRetired={setup.setIsRetired}
+                     instagram={setup.instagram} setInstagram={setup.setInstagram}
+                     handleAvatarUpload={setup.handleAvatarUpload}
++                    department={setup.department} setDepartment={setup.setDepartment}
+                   />
+                 )}
+ 
+@@ -195,27 +246,35 @@ export default function ProfileSetup() {
+                 ) : (
+                   <Button
+                     type="button"
+-                    onClick={async (e) => {
++                    disabled={setup.loading}
++                    onClick={(e) => {
+                       e.preventDefault();
+-                      await setup.saveNow(true);
+-                      setup.setActiveTab(nextTabId as any);
+-                      window.scrollTo({ top: 0, behavior: "smooth" });
++                      setup.handleSubmit(undefined, nextTabId as string);
+                     }}
+-                    className="w-full min-h-[52px] bg-primary hover:bg-primary text-primary-foreground font-bold px-5 py-3.5 rounded-xl shadow-lg shadow-primary/25 transition-all text-base sm:text-lg flex items-center justify-center gap-2"
++                    className="w-full min-h-[52px] bg-primary hover:bg-primary text-primary-foreground font-bold px-5 py-3.5 rounded-xl shadow-lg shadow-primary/25 transition-all text-base sm:text-lg flex items-center justify-center gap-2 disabled:opacity-70"
+                   >
+-                    Save & Next: {nextTabObj?.label} <ArrowRight className="w-5 h-5" />
++                    {setup.loading ? (
++                      <>
++                        <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
++                        Saving...
++                      </>
++                    ) : (
++                      <>
++                        Save & Next: {nextTabObj?.label} <ArrowRight className="w-5 h-5" />
++                      </>
++                    )}
+                   </Button>
+                 )}
+ 
+                 {setup.isEditing && (
+-                  <button
+-                    type="button"
+-                    onClick={(e) => setup.handleSubmit(e as any)}
+-                    disabled={setup.loading}
+-                    className="min-h-[52px] px-6 py-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-muted-foreground dark:text-slate-200 font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed text-xs sm:text-sm"
+-                  >
+-                    Complete profile later, Launch for now
+-                  </button>
++                    <button
++                      type="button"
++                      onClick={(e) => setup.handleSubmit(e as any)}
++                      disabled={setup.loading}
++                      className="min-h-[52px] px-6 py-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-muted-foreground dark:text-slate-200 font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed text-xs sm:text-sm"
++                    >
++                      Save & Return to Profile
++                    </button>
+                 )}
+               </div>
+             </form>
+diff --git a/update_kudos.cjs b/update_kudos.cjs
+new file mode 100644
+index 0000000..7af2e9d
+--- /dev/null
++++ b/update_kudos.cjs
+@@ -0,0 +1,63 @@
++const { Client } = require('pg');
++
++const client = new Client({
++  connectionString: 'postgres://postgres.hzyxikdngfuzjlsgqqas:sb_publishable_dWERfMPzKYO5Cxyj35vsUg_xnjwzdNx@aws-0-ap-south-1.pooler.supabase.com:6543/postgres'
++});
++
++async function run() {
++  await client.connect();
++  
++  const sql = `
++CREATE OR REPLACE FUNCTION toggle_match_kudos(p_match_id UUID)
++RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
++DECLARE
++  v_player_id UUID    := auth.uid();
++  v_is_liked  BOOLEAN;
++BEGIN
++  IF v_player_id IS NULL THEN RAISE EXCEPTION 'Not authenticated or no player profile'; END IF;
++
++  -- Check if match is in matches table
++  IF EXISTS (SELECT 1 FROM matches WHERE id = p_match_id) THEN
++    SELECT v_player_id::text = ANY(COALESCE(kudos_users, ARRAY[]::TEXT[])) INTO v_is_liked FROM matches WHERE id = p_match_id;
++    IF v_is_liked THEN
++      UPDATE matches SET
++        kudos_users = array_remove(COALESCE(kudos_users, ARRAY[]::TEXT[]), v_player_id::text),
++        kudos_count = GREATEST(0, COALESCE(kudos_count, 0) - 1)
++      WHERE id = p_match_id;
++    ELSE
++      UPDATE matches SET
++        kudos_users = array_append(COALESCE(kudos_users, ARRAY[]::TEXT[]), v_player_id::text),
++        kudos_count = COALESCE(kudos_count, 0) + 1
++      WHERE id = p_match_id;
++    END IF;
++  
++  -- Else check tournament_matches table
++  ELSIF EXISTS (SELECT 1 FROM tournament_matches WHERE id = p_match_id) THEN
++    SELECT v_player_id::text = ANY(COALESCE(kudos_users, ARRAY[]::TEXT[])) INTO v_is_liked FROM tournament_matches WHERE id = p_match_id;
++    IF v_is_liked THEN
++      UPDATE tournament_matches SET
++        kudos_users = array_remove(COALESCE(kudos_users, ARRAY[]::TEXT[]), v_player_id::text),
++        kudos_count = GREATEST(0, COALESCE(kudos_count, 0) - 1)
++      WHERE id = p_match_id;
++    ELSE
++      UPDATE tournament_matches SET
++        kudos_users = array_append(COALESCE(kudos_users, ARRAY[]::TEXT[]), v_player_id::text),
++        kudos_count = COALESCE(kudos_count, 0) + 1
++      WHERE id = p_match_id;
++    END IF;
++  END IF;
++END;
++$$;
++  `;
++  
++  try {
++    await client.query(sql);
++    console.log("Updated toggle_match_kudos successfully!");
++  } catch (err) {
++    console.error("Error:", err);
++  } finally {
++    await client.end();
++  }
++}
++
++run();
+diff --git a/update_kudos.js b/update_kudos.js
+new file mode 100644
+index 0000000..7af2e9d
+--- /dev/null
++++ b/update_kudos.js
+@@ -0,0 +1,63 @@
++const { Client } = require('pg');
++
++const client = new Client({
++  connectionString: 'postgres://postgres.hzyxikdngfuzjlsgqqas:sb_publishable_dWERfMPzKYO5Cxyj35vsUg_xnjwzdNx@aws-0-ap-south-1.pooler.supabase.com:6543/postgres'
++});
++
++async function run() {
++  await client.connect();
++  
++  const sql = `
++CREATE OR REPLACE FUNCTION toggle_match_kudos(p_match_id UUID)
++RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
++DECLARE
++  v_player_id UUID    := auth.uid();
++  v_is_liked  BOOLEAN;
++BEGIN
++  IF v_player_id IS NULL THEN RAISE EXCEPTION 'Not authenticated or no player profile'; END IF;
++
++  -- Check if match is in matches table
++  IF EXISTS (SELECT 1 FROM matches WHERE id = p_match_id) THEN
++    SELECT v_player_id::text = ANY(COALESCE(kudos_users, ARRAY[]::TEXT[])) INTO v_is_liked FROM matches WHERE id = p_match_id;
++    IF v_is_liked THEN
++      UPDATE matches SET
++        kudos_users = array_remove(COALESCE(kudos_users, ARRAY[]::TEXT[]), v_player_id::text),
++        kudos_count = GREATEST(0, COALESCE(kudos_count, 0) - 1)
++      WHERE id = p_match_id;
++    ELSE
++      UPDATE matches SET
++        kudos_users = array_append(COALESCE(kudos_users, ARRAY[]::TEXT[]), v_player_id::text),
++        kudos_count = COALESCE(kudos_count, 0) + 1
++      WHERE id = p_match_id;
++    END IF;
++  
++  -- Else check tournament_matches table
++  ELSIF EXISTS (SELECT 1 FROM tournament_matches WHERE id = p_match_id) THEN
++    SELECT v_player_id::text = ANY(COALESCE(kudos_users, ARRAY[]::TEXT[])) INTO v_is_liked FROM tournament_matches WHERE id = p_match_id;
++    IF v_is_liked THEN
++      UPDATE tournament_matches SET
++        kudos_users = array_remove(COALESCE(kudos_users, ARRAY[]::TEXT[]), v_player_id::text),
++        kudos_count = GREATEST(0, COALESCE(kudos_count, 0) - 1)
++      WHERE id = p_match_id;
++    ELSE
++      UPDATE tournament_matches SET
++        kudos_users = array_append(COALESCE(kudos_users, ARRAY[]::TEXT[]), v_player_id::text),
++        kudos_count = COALESCE(kudos_count, 0) + 1
++      WHERE id = p_match_id;
++    END IF;
++  END IF;
++END;
++$$;
++  `;
++  
++  try {
++    await client.query(sql);
++    console.log("Updated toggle_match_kudos successfully!");
++  } catch (err) {
++    console.error("Error:", err);
++  } finally {
++    await client.end();
++  }
++}
++
++run();
