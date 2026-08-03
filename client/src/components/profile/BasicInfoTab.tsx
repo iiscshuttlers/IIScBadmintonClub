@@ -6,6 +6,7 @@ import { PREDEFINED_DEPARTMENTS } from "@/data/departments";
 interface BasicInfoTabProps {
   avatarUrl: string;
   setAvatarUrl: (val: string) => void;
+  handleAvatarUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   fullName: string;
   setFullName: (val: string) => void;
   nickname: string;
@@ -18,8 +19,6 @@ interface BasicInfoTabProps {
   setGender: (val: string) => void;
   joinedYear: string;
   setJoinedYear: (val: string) => void;
-  isGuest: boolean;
-  setIsGuest: (val: boolean) => void;
   department: string;
   setDepartment: (val: string) => void;
   customDepartment: string;
@@ -29,11 +28,13 @@ interface BasicInfoTabProps {
   instagram: string;
   setInstagram: (val: string) => void;
   handleAvatarUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  isGuest: boolean;
 }
 
 export function BasicInfoTab({
   avatarUrl,
   setAvatarUrl,
+  handleAvatarUpload,
   fullName,
   setFullName,
   nickname,
@@ -46,8 +47,6 @@ export function BasicInfoTab({
   setGender,
   joinedYear,
   setJoinedYear,
-  isGuest,
-  setIsGuest,
   department,
   setDepartment,
   customDepartment,
@@ -57,6 +56,7 @@ export function BasicInfoTab({
   instagram,
   setInstagram,
   handleAvatarUpload,
+  isGuest,
 }: BasicInfoTabProps) {
   return (
     <motion.div
@@ -169,16 +169,18 @@ export function BasicInfoTab({
             type="email"
             value={iiscEmail}
             onChange={(e) => setIiscEmail(e.target.value)}
+            pattern="^[a-zA-Z0-9._%+\-]+@(alum\.)?iisc\.ac\.in$"
+            title="Email must end with @iisc.ac.in or @alum.iisc.ac.in"
             className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
             placeholder="e.g. tanu@iisc.ac.in"
           />
         </div>
+
         <div>
           <label className="block text-sm font-semibold text-muted-foreground dark:text-slate-300 mb-2">
-            Contact Number *
+            Contact Number
           </label>
           <input
-            required
             type="tel"
             pattern="[0-9]{10}"
             title="Please enter exactly 10 digits"
@@ -215,21 +217,16 @@ export function BasicInfoTab({
           <label className="block text-sm font-semibold text-muted-foreground dark:text-slate-300 mb-2">
             Joined Year (Class of) *
           </label>
-          <select
+          <input
             required
+            type="number"
+            min="1900"
+            max={new Date().getFullYear() + 5}
             value={joinedYear}
             onChange={(e) => setJoinedYear(e.target.value)}
             className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
-          >
-            <option value="" disabled>
-              Select year
-            </option>
-            {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 8 + i).map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
+            placeholder="e.g. 2023"
+          />
         </div>
       </div>
 
@@ -270,23 +267,8 @@ export function BasicInfoTab({
             }}
             className="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary bg-white dark:bg-slate-900"
           />
-          <label htmlFor="isGuest" className="text-sm font-semibold text-muted-foreground dark:text-slate-300 cursor-pointer">
-            I am a Guest / Project Assistant / Intern
-            <p className="text-xs text-muted-foreground font-normal mt-0.5">Select this if you are not an active IISc degree student.</p>
-          </label>
-        </div>
-
-        <div className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-rose-200 dark:border-rose-900/50">
-          <input
-            type="checkbox"
-            id="isRetired"
-            checked={isRetired}
-            onChange={(e) => setIsRetired(e.target.checked)}
-            className="w-5 h-5 rounded border-rose-300 text-rose-500 focus:ring-rose-500 bg-white dark:bg-slate-900"
-          />
-          <label htmlFor="isRetired" className="text-sm font-semibold text-rose-700 dark:text-rose-400 cursor-pointer">
-            Mark Profile as Retired
-            <p className="text-xs text-rose-500/70 font-normal mt-0.5">Retired players are hidden from rankings and cannot be challenged.</p>
+          <label htmlFor="isGuest" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            I am a guest player
           </label>
         </div>
       </div>

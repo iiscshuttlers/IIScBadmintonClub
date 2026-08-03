@@ -386,6 +386,18 @@ export default function FeedTab() {
                   };
 
                   const handleShare = (match: any) => shareMatch(match);
+                  
+                  const isLikedLocally = kudosState[match.id] ?? !!localStorage.getItem(`liked_${match.id}`);
+                  const baseCount = Array.isArray(match.kudos_users) ? match.kudos_users.length : (match.id.charCodeAt(0) % 5);
+                  const isIncludedInBackend = Array.isArray(match.kudos_users) && match.kudos_users.includes(session?.user?.id);
+                  let finalKudosCount = baseCount;
+                  
+                  if (isLikedLocally && !isIncludedInBackend) {
+                    finalKudosCount += 1;
+                  } else if (!isLikedLocally && isIncludedInBackend) {
+                    finalKudosCount -= 1;
+                  }
+
                   return (
                     <MatchCard
                       key={match.id}
@@ -394,14 +406,8 @@ export default function FeedTab() {
                       isLiveNow={isLiveNow}
                       isMatchOfTheDay={isMatchOfTheDay}
                       upsetDiff={upsetDiff}
-                      isKudosed={isKudosed(match)}
-                      kudosCount={
-                        Array.isArray(match.kudos_users)
-                          ? match.kudos_users.length +
-                          (kudosState[match.id] === true && !match.kudos_users.includes(session?.user?.id) ? 1 : 0) +
-                          (kudosState[match.id] === false && match.kudos_users.includes(session?.user?.id) ? -1 : 0)
-                          : (match.id.charCodeAt(0) % 5) + (kudosState[match.id] === true ? 1 : 0)
-                      }
+                      isKudosed={isLikedLocally || isIncludedInBackend}
+                      kudosCount={finalKudosCount}
                       onKudos={() => handleKudos(match)}
                       onShare={() => handleShare(match)}
                       index={i}

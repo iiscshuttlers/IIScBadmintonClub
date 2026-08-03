@@ -9,7 +9,7 @@ export function FeatureMapDashboard() {
         {/* Header Section */}
         <div>
           <div className="text-[0.72rem] font-bold tracking-[0.14em] uppercase text-[#4BB988] mb-2">
-            IISc Shuttlers Club App — Codebase Survey
+            <span className="normal-case">IISc</span> Shuttlers Club App — Codebase Survey
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 flex items-center gap-2">
             Every feature, mapped

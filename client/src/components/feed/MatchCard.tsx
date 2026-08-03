@@ -49,7 +49,7 @@ export function MatchCard({
   const [currentVideoUrl, setCurrentVideoUrl] = useState(match.video_url || null);
   const [isEditVideoOpen, setIsEditVideoOpen] = useState(false);
   const [isScorecardOpen, setIsScorecardOpen] = useState(false);
-  
+
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
@@ -57,7 +57,7 @@ export function MatchCard({
     e.preventDefault();
     e.stopPropagation();
     if (aiSummary || isGeneratingSummary) return;
-    
+
     setIsGeneratingSummary(true);
     try {
       const summary = await fetchMatchSummary(match);
@@ -71,7 +71,7 @@ export function MatchCard({
 
   let displayScore = match.score || match.match_score || "";
   let highlightUrl = currentVideoUrl;
-  
+
   // Legacy support where video URL was appended to score
   if (displayScore.includes(" | ")) {
     const parts = displayScore.split(" | ");
@@ -225,11 +225,10 @@ export function MatchCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
       id={`match-card-${match.id}`}
-      className={`bg-white dark:bg-slate-900 rounded-3xl p-2 shadow-sm relative overflow-hidden group transition-all duration-200 hover:-translate-y-0.5 ${
-        isMatchOfTheDay
+      className={`bg-white dark:bg-slate-900 rounded-3xl p-2 shadow-sm relative overflow-hidden group transition-all duration-200 hover:-translate-y-0.5 ${isMatchOfTheDay
           ? "border-2 border-amber-400 shadow-amber-500/20 shadow-xl hover:shadow-amber-400/30"
           : "border border-slate-100 dark:border-slate-800 hover:shadow-lg dark:hover:shadow-slate-700/40"
-      }`}
+        }`}
       drag="x"
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.2}
@@ -310,7 +309,7 @@ export function MatchCard({
                   {setsWonP1}
                 </span>
               </div>
-              
+
               <div className="flex flex-col items-center justify-center">
                 <span className="text-slate-300 dark:text-muted-foreground text-4xl sm:text-5xl font-black tracking-tighter leading-none mx-2">–</span>
               </div>
@@ -366,17 +365,17 @@ export function MatchCard({
           <span className="block text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mt-0.5">defeated</span>
           <span className="block font-semibold text-slate-500 dark:text-slate-400 line-through decoration-slate-400/50 mb-0.5">{joinNames(loserMembers)}</span>
           <span className="block mt-0.5">
-            <span style={{color: 'var(--color-primary)'}} className="font-black">{winnerSetCount}</span>
+            <span style={{ color: 'var(--color-primary)' }} className="font-black">{winnerSetCount}</span>
             <span className="text-slate-400 dark:text-slate-500 mx-1">–</span>
-            <span style={{color: '#ef4444'}} className="font-black dark:text-rose-400">{loserSetCount}</span>
+            <span style={{ color: '#ef4444' }} className="font-black dark:text-rose-400">{loserSetCount}</span>
           </span>
           {displayScore && (
             <span className="block tabular-nums text-slate-600 dark:text-slate-400">
               ({parsedSets.map((s, i) => (
                 <span key={i}>
-                  <span style={{color: team1Win ? 'var(--color-primary)' : '#ef4444'}} className="font-semibold">{s.p1}</span>
+                  <span style={{ color: team1Win ? 'var(--color-primary)' : '#ef4444' }} className="font-semibold">{s.p1}</span>
                   <span className="text-slate-400 dark:text-slate-500 mx-0.5">-</span>
-                  <span style={{color: team2Win ? 'var(--color-primary)' : '#ef4444'}} className="font-semibold">{s.p2}</span>
+                  <span style={{ color: team2Win ? 'var(--color-primary)' : '#ef4444' }} className="font-semibold">{s.p2}</span>
                   {i < parsedSets.length - 1 && <span className="text-slate-400 dark:text-slate-500">, </span>}
                 </span>
               ))})
@@ -410,9 +409,9 @@ export function MatchCard({
           <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-400 animate-pulse">Gemini is analyzing the match...</span>
         </div>
       )}
-      
+
       {aiSummary && !isGeneratingSummary && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
           className="mt-1.5 p-2.5 rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-950 text-foreground shadow-lg border border-indigo-500/30 relative overflow-hidden"
         >
@@ -431,77 +430,75 @@ export function MatchCard({
 
       {/* Reaction Kudos & Edit */}
       {!hideActions && (
-      <div className="mt-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800/50 flex flex-col gap-0.5 relative z-10">
-        {/* Actions Row */}
-        <div className="flex justify-between items-center px-1">
-          <button
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={handleGenerateSummary}
-            disabled={isGeneratingSummary || !!aiSummary}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all active:scale-95 ${
-              aiSummary 
-                ? "text-indigo-500 bg-indigo-50 dark:bg-indigo-500/20 opacity-70" 
-                : "text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
-            }`}
-          >
-            {isGeneratingSummary ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-            AI Recap
-          </button>
-          
-          <button
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsScorecardOpen(true); }}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
-          >
-            <BarChart2 className="w-3.5 h-3.5" /> Scorecard
-          </button>
-        </div>
-
-        {/* Like / Share */}
-        <div className="flex justify-between items-center px-1">
-          <button
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (onKudos) onKudos();
-            }}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all active:scale-95 ${
-              isKudosed
-                ? "text-rose-500 bg-rose-50 dark:bg-rose-500/20"
-                : "text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
-            }`}
-          >
-            <Heart className="w-4 h-4" fill={isKudosed ? "currentColor" : "none"} stroke="currentColor" />
-            Like <span className="kudos-count font-medium ml-1">{kudosCount}</span>
-          </button>
-
-          <button
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (onShare) onShare();
-            }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
-          >
-            <Share2 className="w-4 h-4" /> Share
-          </button>
-        </div>
-
-        {/* Add Video — last, centered, only for players involved in this match */}
-        {isPlayerInMatch && (
-          <div className="flex justify-center">
+        <div className="mt-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800/50 flex flex-col gap-0.5 relative z-10">
+          {/* Actions Row */}
+          <div className="flex justify-between items-center px-1">
             <button
-              onClick={() => setIsEditVideoOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={handleGenerateSummary}
+              disabled={isGeneratingSummary || !!aiSummary}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all active:scale-95 ${aiSummary
+                  ? "text-indigo-500 bg-indigo-50 dark:bg-indigo-500/20 opacity-70"
+                  : "text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
+                }`}
             >
-              <Edit2 className="w-3.5 h-3.5" />
-              {highlightUrl ? "Edit Video" : "Add Video"}
+              {isGeneratingSummary ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+              AI Recap
+            </button>
+
+            <button
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsScorecardOpen(true); }}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
+            >
+              <BarChart2 className="w-3.5 h-3.5" /> Scorecard
             </button>
           </div>
-        )}
-      </div>
+
+          {/* Like / Share */}
+          <div className="flex justify-between items-center px-1">
+            <button
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (onKudos) onKudos();
+              }}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all active:scale-95 ${isKudosed
+                  ? "text-rose-500 bg-rose-50 dark:bg-rose-500/20"
+                  : "text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
+                }`}
+            >
+              <Heart className={`w-4 h-4 ${isKudosed ? "scale-110" : ""}`} fill={isKudosed ? "currentColor" : "none"} stroke="currentColor" />
+              <span className="kudos-count font-medium ml-0.5">{kudosCount} {kudosCount === 1 ? 'like' : 'likes'}</span>
+            </button>
+
+            <button
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (onShare) onShare();
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
+            >
+              <Share2 className="w-4 h-4" /> Share
+            </button>
+          </div>
+
+          {/* Add Video — last, centered, only for players involved in this match */}
+          {isPlayerInMatch && (
+            <div className="flex justify-center">
+              <button
+                onClick={() => setIsEditVideoOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
+              >
+                <Edit2 className="w-3.5 h-3.5" />
+                {highlightUrl ? "Edit Video" : "Add Video"}
+              </button>
+            </div>
+          )}
+        </div>
       )}
     </motion.div>
   );

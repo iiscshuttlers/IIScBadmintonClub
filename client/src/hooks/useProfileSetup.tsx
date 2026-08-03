@@ -26,10 +26,10 @@ export function useProfileSetup() {
   const profileLoadedRef = useRef<string | null>(null);
   const queryClient = useQueryClient();
 
-  const [activeTab, setActiveTab] = useState<"basic" | "badminton" | "equipment" | "highlights" | "media">(() => {
+  const [activeTab, setActiveTab] = useState<"basic" | "status" | "badminton" | "equipment" | "highlights" | "media">(() => {
     const hash = safeGetHash();
-    if (["basic", "badminton", "equipment", "highlights", "media"].includes(hash)) {
-      return hash as "basic" | "badminton" | "equipment" | "highlights" | "media";
+    if (["basic", "status", "badminton", "equipment", "highlights", "media"].includes(hash)) {
+      return hash as "basic" | "status" | "badminton" | "equipment" | "highlights" | "media";
     }
     return "basic";
   });
@@ -118,6 +118,8 @@ export function useProfileSetup() {
     let query = supabase.from("players").select("*");
     if (paramId && isAdmin && !isSelfEdit) {
       query = query.eq("id", paramId);
+    } else if (authProfile?.id) {
+      query = query.eq("id", authProfile.id);
     } else {
       query = query.eq("id", session.user.id);
     }
@@ -257,6 +259,7 @@ export function useProfileSetup() {
     const validShoes = shoesList.filter((s) => s.name.trim() !== "");
     const validImages = mediaImages.filter((img) => img.url.trim() !== "");
     const validVideos = mediaVideos.filter((vid) => vid.url.trim() !== "");
+
     const finalPrimaryRacketIdx = primaryRacketIndex < validRackets.length ? primaryRacketIndex : 0;
     const finalPrimaryShoeIdx = primaryShoeIndex < validShoes.length ? primaryShoeIndex : 0;
     const packedStats = {
@@ -320,8 +323,15 @@ export function useProfileSetup() {
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFirstRenderRef = useRef(true);
 
-  const saveNow = useCallback(async (silent = false) => {
+  const saveNow = useCallback(async (silent = false, nextTab?: string) => {
     if (!session) return;
+    if (iiscEmail && !silent) {
+      const e = iiscEmail.toLowerCase();
+      if (!e.endsWith("@iisc.ac.in") && !e.endsWith("@alum.iisc.ac.in")) {
+        toast.error("Invalid IISc Email", { description: "Email must end with @iisc.ac.in or @alum.iisc.ac.in" });
+        return false;
+      }
+    }
     if (!silent) setLoading(true);
     const payload = buildPayload();
     const timeoutMs = 30000;
@@ -334,11 +344,25 @@ export function useProfileSetup() {
       queryClient.invalidateQueries({ queryKey: ["playerProfile", targetUserId || session.user.id] });
       queryClient.invalidateQueries({ queryKey: ["playerRank", targetUserId || session.user.id] });
       queryClient.invalidateQueries({ queryKey: ["allPlayers"] });
+      
+      // Clear all sticky drafts after successful save
+      Object.keys(window.localStorage).forEach((key) => {
+        if (key.startsWith("profile_draft_")) {
+          window.localStorage.removeItem(key);
+        }
+      });
+
       if (!silent) {
-        // redirect after explicit save
-        if (isEditing) setLocation(`/player/${playerSlug}`);
-        else setLocation(`/player/${session.user.id}`);
+        if (nextTab) {
+          toast.success("Progress saved!");
+          setActiveTab(nextTab as any);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        } else {
+          if (isEditing) setLocation(`/player/${playerSlug}`);
+          else setLocation(`/player/${session.user.id}`);
+        }
       }
+      return true;
     } catch (err: any) {
       if (!silent) {
         if (err.code === "23505") toast.error("Duplicate profile", { description: "A profile with this email or name already exists!" });
@@ -372,9 +396,9 @@ export function useProfileSetup() {
     mediaImages, mediaVideos,
   ]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await saveNow(false);
+  const handleSubmit = async (e?: React.FormEvent, nextTab?: string) => {
+    if (e) e.preventDefault();
+    await saveNow(false, nextTab);
   };
 
   return {

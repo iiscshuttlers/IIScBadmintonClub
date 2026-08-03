@@ -269,6 +269,17 @@ export function MyMatchesTab() {
             const iAlreadyAccepted = Array.isArray(match.confirmed_by) && match.confirmed_by.includes(profile.id);
             const needsMyAction = isPending && iAmParticipant && !iAmSubmitter && !iAlreadyAccepted;
 
+            const isLikedLocally = kudosState[match.id] ?? !!localStorage.getItem(`liked_${match.id}`);
+            const baseCount = Array.isArray(match.kudos_users) ? match.kudos_users.length : (match.kudos_count || 0);
+            const isIncludedInBackend = Array.isArray(match.kudos_users) && profile?.id && match.kudos_users.includes(profile.id);
+            let finalKudosCount = baseCount;
+            
+            if (isLikedLocally && !isIncludedInBackend) {
+              finalKudosCount += 1;
+            } else if (!isLikedLocally && isIncludedInBackend) {
+              finalKudosCount -= 1;
+            }
+
             return (
               <MatchCard
                 key={match.id}
@@ -277,14 +288,8 @@ export function MyMatchesTab() {
                 isLiveNow={false}
                 isMatchOfTheDay={false}
                 upsetDiff={0}
-                isKudosed={isKudosed(match)}
-                kudosCount={
-                  Array.isArray(match.kudos_users)
-                    ? match.kudos_users.length +
-                      (kudosState[match.id] === true && !match.kudos_users.includes(profile?.id) ? 1 : 0) +
-                      (kudosState[match.id] === false && match.kudos_users.includes(profile?.id) ? -1 : 0)
-                    : (match.kudos_count || 0) + (kudosState[match.id] === true ? 1 : 0)
-                }
+                isKudosed={isLikedLocally || isIncludedInBackend}
+                kudosCount={finalKudosCount}
                 onKudos={() => handleKudos(match)}
                 onShare={() => shareMatch(match)}
                 index={0}
