@@ -19,7 +19,7 @@ interface BetaFeedbackModalProps {
 export function BetaFeedbackModal({ isOpen, onClose }: BetaFeedbackModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md max-w-[90vw] rounded-2xl bg-slate-900 border-slate-800 text-foreground">
+      <DialogContent className="sm:max-w-md max-w-[90vw] max-h-[85vh] overflow-y-auto rounded-2xl bg-slate-900 border-slate-800 text-foreground">
         <DialogHeader>
           <DialogTitle className="text-xl flex items-center gap-2">
             <MessageSquare className="w-5 h-5 text-amber-400" />

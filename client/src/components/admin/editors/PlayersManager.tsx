@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { Link } from "wouter";
 import {
   Trash2, Plus, Loader2, UserCheck, UserX, Activity, Search, RefreshCw, Download, AlertTriangle, Play, Pencil, Clock, CheckCircle2, Ban, Shield, History, FileDown, ArrowRight, ExternalLink, Sunset, ArrowUp, ArrowDown
 } from "lucide-react";
@@ -450,62 +451,95 @@ export function PlayersManager() {
         ))}
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, email, department..."
-            className={`${inputCls} pl-10`}
-          />
+      {/* Filters and Actions */}
+      <div className="flex flex-col gap-4">
+        {/* Row 1: Search and Actions */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by name, email, department..."
+              className={`${inputCls} pl-10`}
+            />
+          </div>
+          <div className="flex gap-2 shrink-0 flex-wrap sm:flex-nowrap">
+            <button 
+               onClick={approveAllPending}
+               disabled={pending === 0}
+               className="flex-1 sm:flex-none justify-center px-3 py-2.5 rounded-xl border border-primary/40 dark:border-primary/80 bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary font-bold text-xs hover:bg-primary/15 disabled:opacity-50 transition flex items-center"
+            >
+               <UserCheck className="w-3.5 h-3.5 mr-1.5" />
+               Approve All ({pending})
+            </button>
+            <button 
+               onClick={exportCsv}
+               className="flex-1 sm:flex-none justify-center px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-muted-foreground dark:text-slate-300 font-bold text-xs hover:bg-slate-50 disabled:opacity-50 transition"
+            >
+               Download CSV
+            </button>
+            <button
+              onClick={load}
+              className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+            >
+              <RefreshCw className="w-4 h-4 text-muted-foreground" />
+            </button>
+          </div>
         </div>
-        <div className="flex gap-2 flex-wrap items-center">
-          <select
-            value={genderFilter}
-            onChange={(e) => setGenderFilter(e.target.value as any)}
-            className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-muted-foreground dark:text-slate-300 font-bold text-xs focus:ring-2 focus:ring-primary outline-none transition mr-2"
-          >
-            <option value="all">All Genders</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-          </select>
-          <button 
-             onClick={approveAllPending}
-             disabled={pending === 0}
-             className="px-3 py-2.5 rounded-xl border border-primary/40 dark:border-primary/80 bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary font-bold text-xs hover:bg-primary/15 disabled:opacity-50 transition mr-2"
-          >
-             <UserCheck className="w-3.5 h-3.5 inline mr-1" />
-             Approve All ({pending})
-          </button>
-          <button 
-             onClick={exportCsv}
-             className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-muted-foreground dark:text-slate-300 font-bold text-xs hover:bg-slate-50 disabled:opacity-50 transition mr-2"
-          >
-             Download CSV
-          </button>
-          {(["profile", "no-profile", "pending", "approved"] as const).map(
-            (f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`px-3 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${filter === f ? "bg-primary text-primary-foreground" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-300 hover:border-primary/50"}`}
-              >
-                {f === "profile"
-                  ? "Profile Created"
-                  : f === "no-profile"
-                    ? "No Profile (Acc Only)"
-                    : f.charAt(0).toUpperCase() + f.slice(1)}
-              </button>
-            ),
-          )}
-          <button
-            onClick={load}
-            className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
-          >
-            <RefreshCw className="w-4 h-4 text-muted-foreground" />
-          </button>
+
+        {/* Row 2: Tabs and Dropdowns */}
+        <div className="flex flex-col xl:flex-row justify-between gap-3 items-start xl:items-center w-full min-w-0 overflow-hidden">
+          {/* View Tabs */}
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5 w-full xl:w-auto shrink-0">
+            {(["profile", "pending", "approved", "no-profile"] as const).map(
+              (f) => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={`flex items-center justify-center text-center px-2 py-2 rounded-xl text-xs font-bold transition sm:whitespace-nowrap sm:shrink-0 ${filter === f ? "bg-primary text-primary-foreground shadow-sm" : "bg-slate-100 dark:bg-slate-800/50 text-muted-foreground dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800"}`}
+                >
+                  {f === "profile"
+                    ? "Profile Created"
+                    : f === "no-profile"
+                      ? "No Profile (Acc Only)"
+                      : f.charAt(0).toUpperCase() + f.slice(1)}
+                </button>
+              ),
+            )}
+          </div>
+
+          {/* Dropdowns */}
+          <div className="flex flex-col sm:flex-row gap-2 w-full xl:w-auto shrink-0 min-w-0">
+            <select
+              value={genderFilter}
+              onChange={(e) => setGenderFilter(e.target.value as any)}
+              className="flex-1 sm:flex-none min-w-0 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-muted-foreground dark:text-slate-300 font-bold text-xs focus:ring-2 focus:ring-primary outline-none transition"
+            >
+              <option value="all">All Genders</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+            <select
+              value={`${sortField}-${sortDirection}`}
+              onChange={(e) => {
+                const [field, dir] = e.target.value.split("-");
+                setSortField(field);
+                setSortDirection(dir as "asc" | "desc");
+              }}
+              className="flex-1 sm:flex-none min-w-0 lg:hidden px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-muted-foreground dark:text-slate-300 font-bold text-xs focus:ring-2 focus:ring-primary outline-none transition"
+            >
+              <option value="name-asc">Sort: Name (A-Z)</option>
+              <option value="name-desc">Sort: Name (Z-A)</option>
+              <option value="created_at-desc">Sort: Status (Newest)</option>
+              <option value="created_at-asc">Sort: Status (Oldest)</option>
+              <option value="elo-desc">Sort: Overall Rank (High to Low)</option>
+              <option value="elo-asc">Sort: Overall Rank (Low to High)</option>
+              <option value="singles-desc">Sort: Singles Rank (High to Low)</option>
+              <option value="doubles-desc">Sort: Doubles Rank (High to Low)</option>
+              <option value="mixed-desc">Sort: Mixed Rank (High to Low)</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -575,7 +609,7 @@ export function PlayersManager() {
                   return (
                     <tr key={p.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition group">
                       <td className="p-3">
-                        <div className="font-bold text-sm text-foreground dark:text-slate-200 whitespace-nowrap">{p.full_name}</div>
+                        <Link href={`/player/${p.id}`} className="block font-bold text-sm text-foreground dark:text-slate-200 whitespace-nowrap hover:text-primary transition cursor-pointer">{p.full_name}</Link>
                         <div className="text-[10px] sm:text-xs text-muted-foreground space-x-1 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]" title={p.email || ""}>
                           {p.email && <span>{p.email}</span>}
                           {p.department && <span>· {p.department}</span>}
@@ -668,9 +702,14 @@ export function PlayersManager() {
                  <div key={p.id} className={`${cardCls} flex flex-col gap-3 p-4`}>
                     <div className="flex justify-between items-start gap-2">
                        <div className="flex-1 min-w-0">
-                         <div className="font-bold text-foreground dark:text-foreground truncate text-base">{p.full_name}</div>
-                         <div className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5 truncate">
-                           {p.email} {p.department ? `· ${p.department}` : ""}
+                         <Link href={`/player/${p.id}`} className="block font-black text-transparent bg-clip-text bg-gradient-to-br from-slate-900 to-slate-500 dark:from-white dark:to-slate-400 truncate text-lg tracking-tight pb-0.5 hover:opacity-80 transition cursor-pointer">{p.full_name}</Link>
+                         <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 text-xs mt-0.5 min-w-0">
+                           <span className="truncate text-blue-600 dark:text-blue-400 font-medium">{p.email}</span>
+                           {p.department && (
+                             <div className="flex items-center min-w-0">
+                               <span className="truncate font-bold text-[9px] uppercase tracking-wider text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-500/20 px-2 py-0.5 rounded-full">{p.department}</span>
+                             </div>
+                           )}
                          </div>
                        </div>
                        <div className="flex gap-1.5 shrink-0 flex-wrap justify-end">
@@ -686,70 +725,72 @@ export function PlayersManager() {
                     </div>
                     
                     {/* Stats Grid */}
-                    <div className="grid grid-cols-4 gap-2 py-3 border-y border-slate-100 dark:border-slate-800/50">
+                    <div className="grid grid-cols-4 gap-1 py-3 border-y border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl px-1">
                        <div className="flex flex-col items-center justify-center text-center">
-                          <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider">Overall (Rank)</span>
+                          <span className="text-[9px] text-amber-600 dark:text-amber-500 uppercase font-extrabold tracking-wider">Overall</span>
                           <div className="flex items-baseline gap-1 mt-0.5">
-                            <span className="font-bold text-sm text-foreground">{p.stats?.elo ?? p.stats?.eloRating ?? "-"}</span>
-                            {p.ranks?.overall !== "-" && <span className="text-[9px] text-primary font-black">{p.ranks?.overall}</span>}
+                            <span className="font-black text-sm text-foreground">{p.stats?.elo ?? p.stats?.eloRating ?? "-"}</span>
+                            {p.ranks?.overall !== "-" && <span className="text-[10px] text-amber-500 font-black tracking-tighter">#{p.ranks?.overall}</span>}
                           </div>
                        </div>
-                       <div className="flex flex-col items-center justify-center text-center border-l border-slate-100 dark:border-slate-800/50">
-                          <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider">Singles (Rank)</span>
+                       <div className="flex flex-col items-center justify-center text-center border-l border-slate-200/50 dark:border-slate-700/50">
+                          <span className="text-[9px] text-sky-600 dark:text-sky-500 uppercase font-extrabold tracking-wider">Singles</span>
                           <div className="flex items-baseline gap-1 mt-0.5">
-                            <span className="font-bold text-sm text-foreground">{p.stats?.singles ?? "-"}</span>
-                            {p.ranks?.singles !== "-" && <span className="text-[9px] text-primary font-black">{p.ranks?.singles}</span>}
+                            <span className="font-black text-sm text-foreground">{p.stats?.singles ?? "-"}</span>
+                            {p.ranks?.singles !== "-" && <span className="text-[10px] text-sky-500 font-black tracking-tighter">#{p.ranks?.singles}</span>}
                           </div>
                        </div>
-                       <div className="flex flex-col items-center justify-center text-center border-l border-slate-100 dark:border-slate-800/50">
-                          <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider">Doubles (Rank)</span>
+                       <div className="flex flex-col items-center justify-center text-center border-l border-slate-200/50 dark:border-slate-700/50">
+                          <span className="text-[9px] text-indigo-600 dark:text-indigo-400 uppercase font-extrabold tracking-wider">Doubles</span>
                           <div className="flex items-baseline gap-1 mt-0.5">
-                            <span className="font-bold text-sm text-foreground">{p.stats?.doubles ?? "-"}</span>
-                            {p.ranks?.doubles !== "-" && <span className="text-[9px] text-primary font-black">{p.ranks?.doubles}</span>}
+                            <span className="font-black text-sm text-foreground">{p.stats?.doubles ?? "-"}</span>
+                            {p.ranks?.doubles !== "-" && <span className="text-[10px] text-indigo-400 font-black tracking-tighter">#{p.ranks?.doubles}</span>}
                           </div>
                        </div>
-                       <div className="flex flex-col items-center justify-center text-center border-l border-slate-100 dark:border-slate-800/50">
-                          <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider">Mixed (Rank)</span>
+                       <div className="flex flex-col items-center justify-center text-center border-l border-slate-200/50 dark:border-slate-700/50">
+                          <span className="text-[9px] text-fuchsia-600 dark:text-fuchsia-400 uppercase font-extrabold tracking-wider">Mixed</span>
                           <div className="flex items-baseline gap-1 mt-0.5">
-                            <span className="font-bold text-sm text-foreground">{p.stats?.mixed ?? "-"}</span>
-                            {p.ranks?.mixed !== "-" && <span className="text-[9px] text-primary font-black">{p.ranks?.mixed}</span>}
+                            <span className="font-black text-sm text-foreground">{p.stats?.mixed ?? "-"}</span>
+                            {p.ranks?.mixed !== "-" && <span className="text-[10px] text-fuchsia-400 font-black tracking-tighter">#{p.ranks?.mixed}</span>}
                           </div>
                        </div>
                     </div>
 
                     {/* Actions Row */}
-                    <div className="flex gap-2 justify-between items-center">
-                       {isMainAdmin ? (
+                    <div className="grid grid-cols-2 gap-2 mt-1">
+                       {isMainAdmin && (
                           <select
                             value={p.role || "player"}
                             onChange={(e) => handleRoleChange(p.id, p.full_name, e.target.value)}
                             disabled={busy}
-                            className="px-2 py-1.5 rounded-xl text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-muted-foreground outline-none focus:ring-1 focus:ring-primary transition disabled:opacity-50"
+                            className="w-full px-2 py-2 rounded-xl text-xs font-bold bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/50 text-indigo-700 dark:text-indigo-400 outline-none focus:ring-1 focus:ring-indigo-500 transition disabled:opacity-50 h-full"
                           >
                             <option value="player">Regular</option>
                             <option value="umpire">Umpire</option>
                             <option value="admin">Admin</option>
                             <option value="master_admin">Master</option>
                           </select>
-                       ) : <div />}
+                       )}
                        
-                       <div className="flex gap-2 shrink-0 justify-end flex-nowrap">
-                          {!p.is_approved ? (
-                            <button onClick={() => approve(p.id)} disabled={busy} title="Approve" className="p-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition disabled:opacity-50 shadow-sm">
-                              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserCheck className="w-4 h-4" />}
-                            </button>
-                          ) : (
-                            <button onClick={() => revoke(p.id)} disabled={busy} title="Revoke Approval" className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-amber-50 text-muted-foreground hover:text-amber-700 text-xs font-bold transition disabled:opacity-50">
-                              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserX className="w-4 h-4" />}
-                            </button>
-                          )}
-                          <button onClick={() => retirePlayer(p.id, p.full_name, !!p.is_retired)} disabled={busy} title={p.is_retired ? "Unretire player" : "Retire player"} className={`p-2.5 rounded-xl text-xs font-bold transition disabled:opacity-50 ${p.is_retired ? "bg-amber-100 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400" : "bg-slate-100 dark:bg-slate-800 text-muted-foreground"}`}>
-                            <Sunset className="w-4 h-4" />
+                        {!p.is_approved ? (
+                          <button onClick={() => approve(p.id)} disabled={busy} title="Approve" className="flex justify-center items-center gap-1.5 p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 hover:bg-emerald-200 text-emerald-700 dark:text-emerald-400 text-xs font-bold transition disabled:opacity-50 shadow-sm w-full">
+                            {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserCheck className="w-3.5 h-3.5" />}
+                            <span>Approve</span>
                           </button>
-                          <button onClick={() => removeProfile(p.id, p.full_name)} disabled={busy} title="Delete Profile Only" className="p-2.5 rounded-xl text-rose-500 bg-rose-50 dark:bg-rose-950/20 hover:bg-rose-100 transition disabled:opacity-50">
-                            <Trash2 className="w-4 h-4" />
+                        ) : (
+                          <button onClick={() => revoke(p.id)} disabled={busy} title="Revoke Approval" className="flex justify-center items-center gap-1.5 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-600 dark:text-amber-400 text-xs font-bold transition disabled:opacity-50 w-full">
+                            {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserX className="w-3.5 h-3.5" />}
+                            <span>Revoke</span>
                           </button>
-                       </div>
+                        )}
+                        <button onClick={() => retirePlayer(p.id, p.full_name, !!p.is_retired)} disabled={busy} title={p.is_retired ? "Unretire player" : "Retire player"} className={`flex justify-center items-center gap-1.5 p-2.5 rounded-xl text-xs font-bold transition disabled:opacity-50 w-full ${p.is_retired ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100" : "bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 text-orange-600 dark:text-orange-400"}`}>
+                          <Sunset className="w-3.5 h-3.5" />
+                          <span>{p.is_retired ? "Unretire" : "Retire"}</span>
+                        </button>
+                        <button onClick={() => removeProfile(p.id, p.full_name)} disabled={busy} title="Delete Profile Only" className="flex justify-center items-center gap-1.5 p-2.5 rounded-xl bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-400 transition disabled:opacity-50 w-full">
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Delete</span>
+                        </button>
                     </div>
                  </div>
                )

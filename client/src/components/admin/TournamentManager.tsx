@@ -13,6 +13,7 @@ import {
   CalendarDays, MapPin, Link, Unlink, Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw
 } from "lucide-react";
 import { InfoModal } from "@/components/InfoModal";
+import { PlayerSelect } from "@/components/umpire/PlayerSelect";
 
 // ── CSV helpers ────────────────────────────────────────────────────────────────
 
@@ -144,20 +145,23 @@ function StatusChip({ status }: { status: string }) {
 }
 
 function MatchStatusChip({ match }: { match: { status: string, scheduled_at?: string | null, court_number?: string | null } }) {
-  if (match.status === "walkover") return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/40 text-blue-600">W/O</span>;
-  if (match.status === "completed") return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-primary/15 dark:bg-primary/40 text-primary">COMPLETED</span>;
-  if (match.status === "in_progress") return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-600">IN PROGRESS</span>;
-  
-  if (match.scheduled_at) {
-    return (
-      <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600">
-        Scheduled at {new Date(match.scheduled_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
-        {match.court_number ? ` (Court ${match.court_number})` : ""}
-      </span>
-    );
-  }
+  if (match.status === "walkover") return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/40 text-blue-600 whitespace-nowrap">W/O</span>;
+  if (match.status === "completed") return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-primary/15 dark:bg-primary/40 text-primary whitespace-nowrap">COMPLETED</span>;
+  if (match.status === "in_progress") return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-600 whitespace-nowrap">LIVE</span>;
+  if (match.scheduled_at) return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 whitespace-nowrap">SCHEDULED</span>;
+  return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-muted-foreground whitespace-nowrap">PENDING</span>;
+}
 
-  return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-muted-foreground">Not scheduled yet</span>;
+const COURT_COLORS: Record<string, string> = {
+  C1: "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300",
+  C2: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300",
+  C3: "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300",
+  C4: "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300",
+  C5: "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300",
+  C6: "bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300",
+};
+function getCourtColorClass(court: string) {
+  return COURT_COLORS[court.toUpperCase()] ?? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300";
 }
 
 // ── TournamentManager ──────────────────────────────────────────────────────────
@@ -1140,6 +1144,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
     setsData: { t1: string; t2: string }[];
   } | null>(null);
   const [editSchedule, setEditSchedule] = useState<{ matchId: string; court: string; at: string } | null>(null);
+  const [assignUmpire, setAssignUmpire] = useState<{ matchId: string; umpireId: string } | null>(null);
   const [showBulkSchedule, setShowBulkSchedule] = useState(false);
   const [bulkText, setBulkText] = useState("");
   const [bulkPreview, setBulkPreview] = useState<{ matchCode: string; court: string; at: string; found: boolean }[]>([]);
@@ -1276,6 +1281,22 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
     await load();
     setEditSchedule(null);
     toast.success("Schedule saved");
+  };
+
+  const saveUmpire = async () => {
+    if (!assignUmpire) return;
+    setActingOn(assignUmpire.matchId);
+    const { error } = await supabase.from("tournament_matches").update({
+      umpired_by: assignUmpire.umpireId || null
+    }).eq("id", assignUmpire.matchId);
+    setActingOn(null);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Umpire updated");
+      await load();
+      setAssignUmpire(null);
+    }
   };
 
   const downloadScheduleTemplate = () => {
@@ -1565,165 +1586,218 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                 const canEdit = (!m.locked || isMasterAdmin) && !isByeMatch;
 
                 return (
-                  <div key={m.id} className={`${cardCls} !p-4`}>
-                    <div className="flex items-start gap-3 flex-wrap">
-                      <div className="flex-1 min-w-0">
-                        {/* Match header */}
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-[10px] font-black text-muted-foreground uppercase">{m.match_code}</span>
-                          <MatchStatusChip match={m} />
-                          {m.locked && <Lock className="w-3 h-3 text-amber-500" aria-label="Locked — master_admin only" />}
-                          {m.court_number && (
-                            <span className="text-[10px] text-blue-500 font-bold">Court {m.court_number}</span>
-                          )}
-                          {m.scheduled_at && (
-                            <span className="text-[10px] text-muted-foreground">{new Date(m.scheduled_at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })}</span>
-                          )}
-                        </div>
-
-                        {/* Teams */}
-                        <div className={`text-sm font-bold ${m.winner_side === 1 ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-slate-200"}`}>
-                          {m.team1_label ?? "TBD"}
-                        </div>
-                        <div className="text-[10px] text-muted-foreground my-0.5">vs</div>
-                        <div className={`text-sm font-bold ${m.winner_side === 2 ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-slate-200"}`}>
-                          {m.team2_label ?? "TBD"}
-                        </div>
-
-                        {/* Score */}
-                        {m.status === "completed" && (
-                          <div className="mt-2">
-                            <MatchScoreDisplay
-                              sets_history={m.sets_history}
-                              team1_label={m.team1_label ?? "Team 1"}
-                              team2_label={m.team2_label ?? "Team 2"}
-                              winner_side={m.winner_side}
-                              status={m.status}
-                            />
-                          </div>
-                        )}
-                      </div>
+                  <div key={m.id} className={`${cardCls} !p-0 overflow-hidden`}>
+                    {/* ── Card Header Bar ── */}
+                    <div className="flex items-center gap-2 flex-wrap px-4 py-2.5 bg-slate-50/50 dark:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800">
+                      <span className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider bg-slate-200/60 dark:bg-slate-700/60 px-2 py-0.5 rounded-md">{m.match_code}</span>
+                      <MatchStatusChip match={m} />
+                      {m.locked && <Lock className="w-3.5 h-3.5 text-amber-500" aria-label="Locked" />}
+                      {m.scored_by && m.status === 'completed' && (
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 flex items-center gap-1 ml-auto">
+                          <Trophy className="w-3 h-3" /> {allPlayers?.find((p) => p.id === m.scored_by)?.full_name || "Umpire"}
+                        </span>
+                      )}
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
-                      {m.status === "scheduled" && canEdit && (
-                        <button onClick={() => setStatus(m.id, "in_progress")} disabled={busy}
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-lg bg-amber-100 dark:bg-amber-950/40 text-amber-700 hover:bg-amber-200 transition">
-                          <Play className="w-3.5 h-3.5" /> Start Match
-                        </button>
+                    {/* ── Card Body ── */}
+                    <div className="px-4 py-3">
+                      {/* Court + Schedule row */}
+                      {(m.court_number || m.scheduled_at) && (
+                        <div className="flex items-center gap-2 flex-wrap mb-2.5">
+                          {m.court_number && (
+                            <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${getCourtColorClass(m.court_number)}`}>
+                              Court {m.court_number}
+                            </span>
+                          )}
+                          {m.scheduled_at && (
+                            <span className="text-[10px] text-muted-foreground dark:text-slate-400 flex items-center gap-1">
+                              <CalendarDays className="w-3 h-3" />
+                              {new Date(m.scheduled_at).toLocaleString("en-IN", { weekday: "short", day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                          )}
+                        </div>
                       )}
-                      {m.status !== "completed" && canEdit && (
-                        <>
+
+                      {/* Teams */}
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className={`text-sm font-bold truncate ${m.winner_side === 1 ? "text-primary" : "text-foreground dark:text-slate-200"}`}>
+                            {m.team1_label ?? "TBD"}
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-black text-muted-foreground uppercase shrink-0">vs</span>
+                        <div className="flex-1 min-w-0 text-right">
+                          <div className={`text-sm font-bold truncate ${m.winner_side === 2 ? "text-primary" : "text-foreground dark:text-slate-200"}`}>
+                            {m.team2_label ?? "TBD"}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Score */}
+                      {m.status === "completed" && (
+                        <div className="mt-2">
+                          <MatchScoreDisplay
+                            sets_history={m.sets_history}
+                            team1_label={m.team1_label ?? "Team 1"}
+                            team2_label={m.team2_label ?? "Team 2"}
+                            winner_side={m.winner_side}
+                            status={m.status}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* ── Action Buttons ── */}
+                    <div className="px-4 pb-3 pt-1 space-y-2">
+                      {/* Primary actions row */}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {m.status === "scheduled" && canEdit && (
+                          <button onClick={() => setStatus(m.id, "in_progress")} disabled={busy}
+                            className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/40 transition">
+                            <Play className="w-3 h-3" /> Start
+                          </button>
+                        )}
+                        {m.status !== "completed" && canEdit && (
+                          <>
+                            <button onClick={() => {
+                              const bo = m.best_of_sets ?? 3;
+                              const gp = m.golden_point ?? 30;
+                              const ptw = m.points_to_win ?? 21;
+                              setEditScore({ matchId: m.id, side: 1, sets: "", bestOfSets: bo, goldenPoint: gp, pointsToWin: ptw, setsData: Array.from({ length: bo }, () => ({ t1: "", t2: "" })) });
+                            }}
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg bg-primary/15 dark:bg-primary/40 text-primary hover:bg-primary/25 dark:hover:bg-primary/50 transition">
+                              <Trophy className="w-3 h-3" /> Score
+                            </button>
+                            <button onClick={() => submitWalkover(m.id, 1)} disabled={busy}
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                              <SkipForward className="w-3 h-3" /> W/O T1
+                            </button>
+                            <button onClick={() => submitWalkover(m.id, 2)} disabled={busy}
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                              <SkipForward className="w-3 h-3" /> W/O T2
+                            </button>
+                          </>
+                        )}
+                        {m.status === "completed" && isMasterAdmin && (
                           <button onClick={() => {
                             const bo = m.best_of_sets ?? 3;
                             const gp = m.golden_point ?? 30;
                             const ptw = m.points_to_win ?? 21;
-                            setEditScore({ matchId: m.id, side: 1, sets: "", bestOfSets: bo, goldenPoint: gp, pointsToWin: ptw, setsData: Array.from({ length: bo }, () => ({ t1: "", t2: "" })) });
+                            const hist = m.sets_history ?? [];
+                            const setsData = Array.from({ length: bo }, (_, i) => {
+                              const parts = (hist[i] ?? "").split("-");
+                              let t1Str = parts[0] ?? "";
+                              let t2Str = parts[1] ?? "";
+                              if (parseInt(t1Str, 10) > gp) t1Str = gp.toString();
+                              if (parseInt(t2Str, 10) > gp) t2Str = gp.toString();
+                              return { t1: t1Str, t2: t2Str };
+                            });
+                            setEditScore({ matchId: m.id, side: m.winner_side ?? 1, sets: hist.join(", "), bestOfSets: bo, goldenPoint: gp, pointsToWin: ptw, setsData });
                           }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-lg bg-primary/15 dark:bg-primary/40 text-primary hover:bg-primary/20 transition">
-                            <Trophy className="w-3.5 h-3.5" /> Enter Score
+                            className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition">
+                            <Unlock className="w-3 h-3" /> Edit
                           </button>
-                          <button onClick={() => submitWalkover(m.id, 1)} disabled={busy}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-lg border border-slate-200 dark:border-slate-700 text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 transition">
-                            <SkipForward className="w-3.5 h-3.5" /> W/O T1
+                        )}
+
+                        {/* Spacer to push secondary actions right */}
+                        <div className="flex-1" />
+
+                        {!isByeMatch && m.status === "scheduled" && (
+                          <button onClick={async () => {
+                            try {
+                              const { error } = await supabase.functions.invoke("match-notifier", { body: { match_id: m.id, type: "manual" } });
+                              if (error) throw error;
+                              toast.success("Reminder sent!");
+                            } catch (e: any) { toast.error(e.message ?? "Failed to send reminder"); }
+                          }}
+                            className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                            <AlertCircle className="w-3 h-3" /> Remind
                           </button>
-                          <button onClick={() => submitWalkover(m.id, 2)} disabled={busy}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-lg border border-slate-200 dark:border-slate-700 text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 transition">
-                            <SkipForward className="w-3.5 h-3.5" /> W/O T2
+                        )}
+                        {!isByeMatch && (
+                          <button onClick={() => {
+                            let localAt = "";
+                            if (m.scheduled_at) {
+                              const d = new Date(m.scheduled_at);
+                              const pad = (n: number) => n.toString().padStart(2, '0');
+                              localAt = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                            }
+                            setEditSchedule({ matchId: m.id, court: m.court_number ?? "", at: localAt });
+                          }}
+                            className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                            <CalendarDays className="w-3 h-3" /> Schedule
                           </button>
-                        </>
-                      )}
-                      {m.status === "completed" && isMasterAdmin && (
-                        <button onClick={() => {
-                          const bo = m.best_of_sets ?? 3;
-                          const gp = m.golden_point ?? 30;
-                          const ptw = m.points_to_win ?? 21;
-                          const hist = m.sets_history ?? [];
-                          const setsData = Array.from({ length: bo }, (_, i) => {
-                            const parts = (hist[i] ?? "").split("-");
-                            let t1Str = parts[0] ?? "";
-                            let t2Str = parts[1] ?? "";
-                            if (parseInt(t1Str, 10) > gp) t1Str = gp.toString();
-                            if (parseInt(t2Str, 10) > gp) t2Str = gp.toString();
-                            return { t1: t1Str, t2: t2Str };
-                          });
-                          setEditScore({ matchId: m.id, side: m.winner_side ?? 1, sets: hist.join(", "), bestOfSets: bo, goldenPoint: gp, pointsToWin: ptw, setsData });
-                        }}
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-lg border border-amber-300 dark:border-amber-700 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20 transition">
-                          <Unlock className="w-3.5 h-3.5" /> Edit
-                        </button>
-                      )}
-                      {!isByeMatch && (
-                        <button onClick={() => setEditSchedule({ matchId: m.id, court: m.court_number ?? "", at: m.scheduled_at ?? "" })}
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-lg border border-slate-200 dark:border-slate-700 text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 transition ml-auto">
-                          <CalendarDays className="w-3.5 h-3.5" /> Schedule
-                        </button>
-                      )}
-                      {m.status !== "scheduled" && isMasterAdmin && !isByeMatch && (
-                        <button onClick={async () => {
-                          if (!confirm("Are you sure you want to reset this match to Scheduled? This will wipe the current score and status.")) return;
-                          setActingOn(m.id);
-                          const prev = { status: m.status, score: m.score, sets_history: m.sets_history, winner_side: m.winner_side };
-                          const { error } = await supabase.from("tournament_matches").update({ status: "scheduled", score: null, sets_history: [], winner_side: null }).eq("id", m.id);
-                          setActingOn(null);
-                          if (error) { toast.error(error.message); return; }
-                          toast.success("Match reset to Scheduled", {
-                            action: {
-                              label: "Undo",
-                              onClick: async () => {
-                                await supabase.from("tournament_matches").update(prev).eq("id", m.id);
-                                const res = await supabase.from("tournament_matches").select("*").eq("tournament_id", tournament.id).order("round").order("match_number");
-                                if (!res.error) setMatches((res.data as TournamentMatch[]) ?? []);
-                              }
-                            },
-                            duration: 5000
-                          });
-                          const res = await supabase.from("tournament_matches").select("*").eq("tournament_id", tournament.id).order("round").order("match_number");
-                          if (!res.error) setMatches((res.data as TournamentMatch[]) ?? []);
-                        }}
-                          disabled={busy}
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-lg bg-red-100 dark:bg-red-950/40 text-red-600 hover:bg-red-200 transition ml-auto">
-                          <RotateCcw className="w-3.5 h-3.5" /> Reset Match
-                        </button>
-                      )}
+                        )}
+                      </div>
+
+                      {/* Admin-only row */}
                       {isMasterAdmin && !isByeMatch && (
-                        <div className={`${m.status === "scheduled" ? "ml-auto" : ""} flex items-center gap-2`}>
-                          <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Force Status:</label>
-                          <select
-                            value={m.status}
-                            onChange={async (e) => {
-                              const newStatus = e.target.value;
-                              if (newStatus === m.status) return;
-                              if (!confirm(`Are you sure you want to force change this match's status to ${newStatus.toUpperCase()} without wiping scores?`)) return;
+                        <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-dashed border-slate-200/60 dark:border-slate-700/40">
+                          {(isMasterAdmin || session?.user?.id === m.umpired_by) && m.status !== "completed" && (
+                            <button onClick={() => setAssignUmpire({ matchId: m.id, umpireId: m.umpired_by ?? "" })}
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                              <Users className="w-3 h-3" /> Umpire
+                            </button>
+                          )}
+
+                          {m.status !== "scheduled" && (
+                            <button onClick={async () => {
+                              if (!confirm("Reset this match to Scheduled? This wipes score and status.")) return;
                               setActingOn(m.id);
-                              
-                              const prev = { status: m.status };
-                              const { error } = await supabase.from("tournament_matches").update({ status: newStatus }).eq("id", m.id);
+                              const prev = { status: m.status, score: m.score, sets_history: m.sets_history, winner_side: m.winner_side };
+                              const { error } = await supabase.from("tournament_matches").update({ status: "scheduled", score: null, sets_history: [], winner_side: null }).eq("id", m.id);
                               setActingOn(null);
                               if (error) { toast.error(error.message); return; }
-                              toast.success("Match status updated", {
-                                action: {
-                                  label: "Undo",
-                                  onClick: async () => {
-                                    await supabase.from("tournament_matches").update(prev).eq("id", m.id);
-                                    const res = await supabase.from("tournament_matches").select("*").eq("tournament_id", tournament.id).order("round").order("match_number");
-                                    if (!res.error) setMatches((res.data as TournamentMatch[]) ?? []);
-                                  }
-                                },
+                              toast.success("Match reset to Scheduled", {
+                                action: { label: "Undo", onClick: async () => {
+                                  await supabase.from("tournament_matches").update(prev).eq("id", m.id);
+                                  const res = await supabase.from("tournament_matches").select("*").eq("tournament_id", tournament.id).order("round").order("match_number");
+                                  if (!res.error) setMatches((res.data as TournamentMatch[]) ?? []);
+                                }},
                                 duration: 5000
                               });
                               const res = await supabase.from("tournament_matches").select("*").eq("tournament_id", tournament.id).order("round").order("match_number");
                               if (!res.error) setMatches((res.data as TournamentMatch[]) ?? []);
                             }}
-                            disabled={busy}
-                            className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-black uppercase text-muted-foreground dark:text-slate-300 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-primary outline-none transition cursor-pointer"
-                          >
-                            <option value="scheduled">Scheduled</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="completed">Completed</option>
-                            <option value="walkover">Walkover</option>
-                          </select>
+                              disabled={busy}
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg bg-red-50 dark:bg-red-950/30 text-red-500 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition">
+                              <RotateCcw className="w-3 h-3" /> Reset
+                            </button>
+                          )}
+                          <div className="flex-1" />
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60">Status</span>
+                            <select
+                              value={m.status}
+                              onChange={async (e) => {
+                                const newStatus = e.target.value;
+                                if (newStatus === m.status) return;
+                                if (!confirm(`Force change to ${newStatus.toUpperCase()}?`)) return;
+                                setActingOn(m.id);
+                                const prev = { status: m.status };
+                                const { error } = await supabase.from("tournament_matches").update({ status: newStatus }).eq("id", m.id);
+                                setActingOn(null);
+                                if (error) { toast.error(error.message); return; }
+                                toast.success("Status updated", {
+                                  action: { label: "Undo", onClick: async () => {
+                                    await supabase.from("tournament_matches").update(prev).eq("id", m.id);
+                                    const res = await supabase.from("tournament_matches").select("*").eq("tournament_id", tournament.id).order("round").order("match_number");
+                                    if (!res.error) setMatches((res.data as TournamentMatch[]) ?? []);
+                                  }},
+                                  duration: 5000
+                                });
+                                const res = await supabase.from("tournament_matches").select("*").eq("tournament_id", tournament.id).order("round").order("match_number");
+                                if (!res.error) setMatches((res.data as TournamentMatch[]) ?? []);
+                              }}
+                              disabled={busy}
+                              className="bg-transparent border border-slate-200 dark:border-slate-700 text-[11px] font-bold uppercase text-muted-foreground rounded-lg px-2 py-1 outline-none transition cursor-pointer"
+                            >
+                              <option value="scheduled">Scheduled</option>
+                              <option value="in_progress">In Progress</option>
+                              <option value="completed">Completed</option>
+                              <option value="walkover">Walkover</option>
+                            </select>
+                          </div>
                         </div>
                       )}
                       {isByeMatch && m.status !== "completed" && isMasterAdmin && (
@@ -1738,14 +1812,14 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                           if (!res.error) setMatches((res.data as TournamentMatch[]) ?? []);
                         }}
                           disabled={busy}
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-lg bg-primary/15 dark:bg-primary/40 text-primary hover:bg-primary/20 transition ml-auto">
-                          <RotateCcw className="w-3.5 h-3.5" /> Restore BYE
+                          className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg bg-primary/15 dark:bg-primary/40 text-primary hover:bg-primary/25 transition">
+                          <RotateCcw className="w-3 h-3" /> Restore BYE
                         </button>
                       )}
                     </div>
 
                     {/* Inline score entry */}
-                    {isEditing && (() => {
+                    {isEditing && (function() {
                       const sd = editScore!.setsData;
                       const setsStr = sd.filter(s => s.t1 !== "" && s.t2 !== "").map(s => `${s.t1}-${s.t2}`).join(", ");
                       const autoWinner = autoWinnerFromSets(setsStr, editScore!.bestOfSets);
@@ -1774,7 +1848,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                           <div className="grid grid-cols-[3rem_1fr_1.5rem_1fr] gap-x-2 items-center">
                             <div />
                             <div className="text-center text-[10px] font-black uppercase tracking-wider text-muted-foreground dark:text-muted-foreground px-1">
-                              {(() => {
+                              {(function() {
                                 const l = m.team1_label ?? "Team 1";
                                 if (!l.includes("&")) return <div className="break-words whitespace-normal leading-[1.1]">{l}</div>;
                                 const parts = l.split("&");
@@ -1789,7 +1863,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                             </div>
                             <div />
                             <div className="text-center text-[10px] font-black uppercase tracking-wider text-muted-foreground dark:text-muted-foreground px-1">
-                              {(() => {
+                              {(function() {
                                 const l = m.team2_label ?? "Team 2";
                                 if (!l.includes("&")) return <div className="break-words whitespace-normal leading-[1.1]">{l}</div>;
                                 const parts = l.split("&");
@@ -1875,7 +1949,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                         <div className="flex gap-2">
                           <div>
                             <label className={labelCls}><MapPin className="w-3 h-3 inline mr-1" />Court</label>
-                            {(() => {
+                            {(function() {
                               const PRESETS = ["C1","C2","C3"];
                               const isPreset = PRESETS.includes(editSchedule!.court);
                               const isEmpty = editSchedule!.court === "";
@@ -1918,6 +1992,27 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                         <div className="flex gap-2">
                           <button onClick={saveSchedule} className="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-foreground text-xs font-black transition">Save</button>
                           <button onClick={() => setEditSchedule(null)} className="text-xs text-muted-foreground hover:text-muted-foreground transition">Cancel</button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Inline Umpire Assign */}
+                    {assignUmpire?.matchId === m.id && (
+                      <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                        <div>
+                          <label className={labelCls}><Users className="w-3 h-3 inline mr-1" />Assign Umpire</label>
+                          <div className="mt-1">
+                            <PlayerSelect
+                              value={assignUmpire.umpireId}
+                              onChange={(v) => setAssignUmpire(p => p ? { ...p, umpireId: v } : null)}
+                              players={allPlayers ?? []}
+                              placeholder="Select an umpire..."
+                            />
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={saveUmpire} className="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-foreground text-xs font-black transition">Save</button>
+                          <button onClick={() => setAssignUmpire(null)} className="text-xs text-muted-foreground hover:text-muted-foreground transition">Cancel</button>
                         </div>
                       </div>
                     )}

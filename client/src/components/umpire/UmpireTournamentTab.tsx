@@ -2,9 +2,11 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Loader2, Swords, MapPin, Clock, Settings2, ChevronRight,
-  ChevronLeft, Trophy, Users, Play,
+  ChevronLeft, Trophy, Users, Play, CalendarDays,
 } from "lucide-react";
 import { toast } from "sonner";
+import { getCourtColor, cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface TournamentMatchForUmpire {
   id: string;
@@ -51,6 +53,7 @@ const CAT_COLORS: Record<string, { bg: string; active: string; dot: string }> = 
 const DEFAULT_COLORS = { bg: "bg-slate-700 border-slate-600 text-slate-300", active: "bg-slate-600 text-foreground border-slate-600", dot: "bg-slate-400" };
 
 export function UmpireTournamentTab({ onStartMatch }: Props) {
+  const { isAdmin } = useAuth();
   const [allMatches, setAllMatches] = useState<TournamentMatchForUmpire[]>([]);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState<"format" | "match" | "confirm">("format");
@@ -122,9 +125,73 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
 
   // ── Step 1: Format selection ─────────────────────────────────────────────────
   if (step === "format") {
+    const upcomingScheduled = allMatches
+      .filter((m) => m.status === "scheduled" && m.scheduled_at)
+      .sort((a, b) => new Date(a.scheduled_at!).getTime() - new Date(b.scheduled_at!).getTime());
+
     return (
       <div className="space-y-4">
-        <div className="flex items-center gap-2">
+        {upcomingScheduled.length > 0 && (
+          <div className="mb-6 space-y-3">
+            <div className="flex items-center gap-2">
+              <CalendarDays className="w-5 h-5 text-blue-400" />
+              <h3 className="text-sm font-black text-foreground">Upcoming Scheduled Matches</h3>
+            </div>
+            <div className="space-y-2">
+              {upcomingScheduled.map((m) => {
+                const t1 = m.team1_label;
+                const t2 = m.team2_label;
+                const isBye = t1 === "BYE" || t2 === "BYE" || t1?.includes(" BYE ") || t2?.includes(" BYE ");
+                const noPlayers = (!t1 || !t2 || isBye) && !isAdmin;
+
+                return (
+                  <button
+                    key={m.id}
+                    disabled={noPlayers}
+                    onClick={() => { setSelectedMatch(m); setStep("confirm"); }}
+                    className={`w-full p-4 rounded-2xl border text-left transition-all group ${
+                      noPlayers
+                        ? "bg-slate-800/50 border-slate-800 opacity-50 cursor-not-allowed"
+                        : "bg-slate-800 border-slate-700 hover:border-primary"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">{m.category} • {m.match_code}</span>
+                      {m.court_number && (
+                        <span className={cn("flex items-center gap-1 text-[10px] font-bold", getCourtColor(m.court_number))}>
+                          <MapPin className="w-2.5 h-2.5" /> Court {m.court_number}
+                        </span>
+                      )}
+                      {m.scheduled_at && (
+                        <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                          <Clock className="w-2.5 h-2.5" />
+                          {new Date(m.scheduled_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-foreground font-bold text-sm flex-1 truncate">
+                        {m.team1_label ?? "TBD"}
+                      </span>
+                      <span className="text-[10px] font-black text-rose-400 shrink-0">VS</span>
+                      <span className="text-foreground font-bold text-sm flex-1 truncate text-right">
+                        {m.team2_label ?? "TBD"}
+                      </span>
+                      {!noPlayers && (
+                        <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0 ml-1" />
+                      )}
+                    </div>
+                    {noPlayers && (
+                      <p className="text-[10px] text-muted-foreground mt-1">Waiting for previous round results</p>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center gap-2 mt-4">
           <Trophy className="w-5 h-5 text-amber-400" />
           <h3 className="text-sm font-black text-foreground">Select Format</h3>
         </div>
@@ -208,7 +275,7 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
                           <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">{m.match_code}</span>
                           {isLive && <span className="text-[10px] font-black text-amber-400 animate-pulse">● IN PROGRESS</span>}
                           {m.court_number && (
-                            <span className="flex items-center gap-1 text-[10px] text-blue-400 font-bold">
+                            <span className={cn("flex items-center gap-1 text-[10px] font-bold", getCourtColor(m.court_number))}>
                               <MapPin className="w-2.5 h-2.5" /> Court {m.court_number}
                             </span>
                           )}
@@ -254,7 +321,7 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
       <div className="space-y-4">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => { setStep("match"); setSelectedMatch(null); }}
+            onClick={() => { setStep(selectedCategory ? "match" : "format"); setSelectedMatch(null); }}
             className="p-2 rounded-xl bg-slate-800 border border-slate-700 hover:border-slate-500 transition text-muted-foreground hover:text-foreground"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -348,10 +415,8 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
                   .from("umpire_assignments")
                   .select("*")
                   .eq("user_id", userId);
-
-                const hasAdmin = (await supabase.from("players").select("role").eq("id", userId).single()).data?.role === 'admin';
                 
-                if (hasAdmin) {
+                if (isAdmin) {
                   onStartMatch(selectedMatch);
                   return;
                 }

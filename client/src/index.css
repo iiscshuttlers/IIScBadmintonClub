@@ -698,3 +698,19 @@
   54% { opacity: 0; transform: scale(1.8) rotate(90deg); }
   100% { opacity: 0; }
 }
+
+/* Custom Scrollbar for Notice Board */
+.visible-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.visible-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.visible-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.4);
+  border-radius: 10px;
+}
+.visible-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.6);
+}

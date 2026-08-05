@@ -37,11 +37,7 @@ export async function fetchSiteData<T>(
       }
 
       // Key doesn't exist in DB yet — fall through to static file
-      if (!error) {
-        console.info(
-          `[site_data] Key "${key}" not found in DB, using static fallback`,
-        );
-      }
+      // (Intentionally silent fallback)
     } catch (err: any) {
       clearTimeout(timeoutId);
       // Don't log abort errors as warnings — they're expected on timeout

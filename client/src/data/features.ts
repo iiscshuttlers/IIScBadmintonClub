@@ -535,7 +535,7 @@ export const FEATURES: Feature[] = [
   {
     id: "geofencing",
     name: "Gymkhana Geofencing (Auto Check-in)",
-    description: "Uses Google Play Services GeofencingClient to create a 50-meter virtual radius around the IISc Gymkhana (13.0186°N, 77.5647°E). When a user enters the geofence, a background BroadcastReceiver fires a gentle welcome notification: 'Welcome to Gymkhana! Tap to see today\\'s matches.' Requires ACCESS_FINE_LOCATION and ACCESS_BACKGROUND_LOCATION.",
+    description: "Uses Google Play Services GeofencingClient to create a 50-meter virtual radius around the IISc Gymkhana (13.0187°N, 77.5646°E). When a user enters the geofence, a background BroadcastReceiver fires a gentle welcome notification: 'Welcome to Gymkhana! Tap to see today\\'s matches.' Requires ACCESS_FINE_LOCATION and ACCESS_BACKGROUND_LOCATION.",
     category: "Native Android",
     status: "active",
     icon: "Target",

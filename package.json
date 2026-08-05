@@ -55,6 +55,7 @@
     "firebase": "^12.12.1",
     "firebase-admin": "^13.9.0",
     "framer-motion": "^12.23.22",
+    "html-to-image": "^1.11.13",
     "html2canvas": "^1.4.1",
     "html5-qrcode": "^2.3.8",
     "jspdf": "^4.2.1",

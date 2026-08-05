@@ -167,8 +167,8 @@ public class GeofencePlugin extends Plugin {
     @SuppressLint("MissingPermission")
     private void addGeofence(PluginCall call) {
         // IISc Gymkhana coordinates
-        double lat = call.getDouble("lat", 13.018642901278326);
-        double lng = call.getDouble("lng", 77.56470563726191);
+        double lat = call.getDouble("lat", 13.018672431031957);
+        double lng = call.getDouble("lng", 77.56458736863928);
         float radius = call.getFloat("radius", 50.0f); // 50 meters
 
         Geofence geofence = new Geofence.Builder()

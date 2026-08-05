@@ -35,21 +35,26 @@ export function playOnUnlock(fn: () => void) {
 // creates + resumes the AudioContext so it's ready when notifications arrive.
 export function initSounds() {
   const unlock = () => {
-    _gestureReceived = true;
     createCtx();
     if (_ctx?.state === "suspended") {
-      _ctx.resume().catch(() => {});
+      _ctx.resume().then(() => {
+        _gestureReceived = true;
+        _pendingOnUnlock.splice(0).forEach((fn) => {
+          try { fn(); } catch (_) {}
+        });
+      }).catch(() => {});
+    } else if (_ctx?.state === "running") {
+      _gestureReceived = true;
+      _pendingOnUnlock.splice(0).forEach((fn) => {
+        try { fn(); } catch (_) {}
+      });
     }
-    // Drain any sounds queued before first gesture
-    _pendingOnUnlock.splice(0).forEach((fn) => {
-      try { fn(); } catch (_) {}
-    });
-    ["pointerdown", "touchstart", "click", "keydown"].forEach((e) =>
+    ["click", "keydown", "touchend"].forEach((e) =>
       document.removeEventListener(e, unlock)
     );
   };
-  ["pointerdown", "touchstart", "click", "keydown"].forEach((e) =>
-    document.addEventListener(e, unlock)
+  ["click", "keydown", "touchend"].forEach((e) =>
+    document.addEventListener(e, unlock, { once: true })
   );
 }
 

@@ -159,13 +159,13 @@ export default function StatusBanner() {
           if (diff >= 0 && diff <= 7) {
             msgs.push({
               text: `🎉 Upcoming: ${e.title}`,
-              colorClass: "text-foreground",
+              colorClass: "text-primary-foreground",
             });
           }
           if (e.registrationDeadline === today) {
             msgs.push({
               text: `⚡ Last day to register — ${e.title}`,
-              colorClass: "text-foreground",
+              colorClass: "text-primary-foreground font-black",
             });
           }
         });
@@ -212,7 +212,7 @@ export default function StatusBanner() {
       )}
 
       {location === "/" && !isClosed && messages.length > 0 && (
-    <div className="relative bg-gradient-to-r from-primary to-primary text-foreground py-2.5 overflow-hidden flex items-center z-20 shadow-md">
+    <div className="relative bg-primary text-primary-foreground py-2.5 overflow-hidden flex items-center z-20 shadow-md">
       <Link href="/pulse" className="flex-1 overflow-hidden min-w-0 pr-10">
         <div className="marquee-anim flex gap-6 font-semibold tracking-wide text-sm md:text-base whitespace-nowrap hover:opacity-90 transition-opacity cursor-pointer">
           {Array(2)
@@ -231,7 +231,7 @@ export default function StatusBanner() {
                       className="flex items-center gap-6"
                     >
                       <span className={msg.colorClass}>{msg.text}</span>
-                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-white/40 flex-shrink-0" />
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary-foreground/40 flex-shrink-0" />
                     </span>
                   ))}
               </span>
@@ -240,10 +240,10 @@ export default function StatusBanner() {
       </Link>
       <button
         onClick={() => setIsClosed(true)}
-        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-black/10 rounded-full transition-colors z-30"
+        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors z-30"
         aria-label="Close banner"
       >
-        <X className="w-5 h-5 text-foreground/90" />
+        <X className="w-5 h-5 text-primary-foreground/90" />
       </button>
     </div>
   )}

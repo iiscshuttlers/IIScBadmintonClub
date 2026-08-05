@@ -75,18 +75,18 @@ export function LivePlayersSection({ tournamentId, categories }: { tournamentId:
   return (
     <div className="space-y-6">
       {/* Category Tabs */}
-      <div className="flex overflow-x-auto no-scrollbar gap-2 pb-2">
+      <div className="flex flex-wrap gap-2 pb-3">
         {activeCategories.map((cat) => (
           <button
             key={cat}
             onClick={() => setActiveCat(cat)}
-            className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
+            className={`px-4 py-2 rounded-full text-sm font-black whitespace-nowrap transition-all duration-300 ${
               activeCat === cat
-                ? "bg-slate-800 dark:bg-slate-200 text-white dark:text-foreground shadow-md"
-                : "bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-muted-foreground hover:bg-slate-200 dark:hover:bg-slate-700"
+                ? "bg-primary text-primary-foreground shadow-md ring-1 ring-primary/50 scale-[1.02]"
+                : "bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-foreground ring-1 ring-inset ring-slate-200 dark:ring-slate-700/50"
             }`}
           >
-            {cat} <span className="opacity-60 font-normal ml-1">({participants[cat].length})</span>
+            {cat} <span className={`text-[11px] ml-1 font-bold ${activeCat === cat ? "opacity-90" : "opacity-60"}`}>({participants[cat].length})</span>
           </button>
         ))}
       </div>

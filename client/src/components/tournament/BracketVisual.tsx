@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Trophy, ZoomIn, ZoomOut, X, ChevronRight, Clock, CheckCircle2, Play } from "lucide-react";
+import { getCourtColor, cn } from "@/lib/utils";
 
 export interface BracketMatch {
   id: string;
@@ -20,6 +21,9 @@ interface BracketVisualProps {
   matches: BracketMatch[];
   rounds: number[];
   enablePathHighlight?: boolean;
+  onExportExcel?: () => void;
+  tournamentName?: string;
+  category?: string;
 }
 
 const MATCH_W = 180;
@@ -93,6 +97,7 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
   const statusLabel = (m: BracketMatch) => {
     if (m.status === "completed") return "Done";
     if (m.status === "in_progress") return "Live";
+    if (m.team1_label === "BYE" || m.team2_label === "BYE") return "Advance";
     return "Soon";
   };
 
@@ -339,7 +344,7 @@ export function BracketVisual(props: BracketVisualProps) {
   );
 }
 
-function BracketVisualInner({ matches, rounds, enablePathHighlight = false }: BracketVisualProps) {
+function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onExportExcel, tournamentName = "Tournament", category = "All" }: BracketVisualProps) {
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
   const [scale, setScale] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -367,6 +372,11 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false }: Br
   const r1Count = matches.filter((m) => m.round === rounds[0]).length;
   const SLOT_H = Math.max(MATCH_H + 20, 90);
   const totalH = r1Count * SLOT_H;
+
+  const getExportFilename = () => {
+    const safeName = tournamentName.replace(/[^a-zA-Z0-9]/g, '_');
+    return `${safeName}_Bracket_${category}_Visual`;
+  };
   const totalW = rounds.length * COL_W;
 
   type Pos = { match: BracketMatch; y: number; cy: number };
@@ -441,6 +451,42 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false }: Br
             : enablePathHighlight ? "Tap a player to see roadmap" : "Bracket"
           }
         </span>
+        <div className="flex items-center gap-1 shrink-0 ml-auto mr-4">
+          {onExportExcel && (
+            <button
+              onClick={onExportExcel}
+              className="px-2 py-1 flex items-center gap-1 text-[10px] font-bold uppercase rounded-md text-slate-300 hover:text-white hover:bg-green-500/20 active:bg-green-500/30 transition-colors"
+            >
+              Excel
+            </button>
+          )}
+          <button
+            onClick={() => {
+              const el = document.getElementById("bracket-visual-export-container");
+              if (el) {
+                import("@/utils/exportUtils").then(({ exportElementToPDF }) => {
+                  exportElementToPDF(el, getExportFilename(), "#0d1117", { transform: 'scale(1)' });
+                });
+              }
+            }}
+            className="px-2 py-1 flex items-center gap-1 text-[10px] font-bold uppercase rounded-md text-slate-300 hover:text-white hover:bg-red-500/20 active:bg-red-500/30 transition-colors"
+          >
+            PDF
+          </button>
+          <button
+            onClick={() => {
+              const el = document.getElementById("bracket-visual-export-container");
+              if (el) {
+                import("@/utils/exportUtils").then(({ exportElementToImage }) => {
+                  exportElementToImage(el, getExportFilename(), "#0d1117", { transform: 'scale(1)' });
+                });
+              }
+            }}
+            className="px-2 py-1 flex items-center gap-1 text-[10px] font-bold uppercase rounded-md text-slate-300 hover:text-white hover:bg-blue-500/20 active:bg-blue-500/30 transition-colors"
+          >
+            Image
+          </button>
+        </div>
         {/* Zoom controls */}
         <div className="flex items-center gap-1 shrink-0">
           <button
@@ -479,6 +525,8 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false }: Br
         }}
       >
         <div
+          id="bracket-visual-export-container"
+          className="bracket-export-bg"
           style={{
             transformOrigin: "top left",
             transform: `scale(${scale})`,
@@ -487,6 +535,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false }: Br
             minWidth: scaledW,
             minHeight: scaledH,
             position: "relative",
+            backgroundColor: "#0d1117"
           }}
         >
           {/* Round labels */}
@@ -538,8 +587,13 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false }: Br
                     {/* Match header */}
                     <div className="px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-muted-foreground border-b border-slate-700/50 flex justify-between items-center">
                       <span>{m.match_code}</span>
-                      <span className="flex items-center gap-1">
-                        {m.court_number && <span className="text-blue-400">C{m.court_number}</span>}
+                      <span className="flex items-center gap-1.5 whitespace-nowrap">
+                        {m.scheduled_at && (
+                          <span className="text-slate-400 font-bold">
+                            {new Date(m.scheduled_at).toLocaleString("en-GB", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        )}
+                        {m.court_number && <span className={getCourtColor(m.court_number)}>C{m.court_number}</span>}
                         {isLive && <span className="animate-pulse w-1.5 h-1.5 rounded-full bg-red-500" />}
                       </span>
                     </div>

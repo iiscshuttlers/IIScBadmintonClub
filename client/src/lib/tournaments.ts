@@ -39,7 +39,7 @@ export async function getTournaments() {
       description: t.description,
       startDate: t.start_date,
       endDate: t.end_date,
-      status: t.status,
+      status: computeTournamentStatus(t),
       venue: t.venue,
       categories: t.categories,
       created_at: t.created_at,
@@ -58,6 +58,25 @@ export async function getTournaments() {
 
 /** Registration form states an admin can pick. */
 export type FormStatus = "open" | "closing_soon" | "closed" | "disabled";
+
+/** Automatically compute the logical status of a tournament based on today's date */
+export function computeTournamentStatus(t: { status: string, start_date?: string | null, end_date?: string | null }): string {
+  if (t.status === "draft" || t.status === "archived") return t.status;
+  
+  if (t.start_date) {
+    const now = new Date();
+    // Use local timezone to get today's date string YYYY-MM-DD
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const start = t.start_date;
+    const end = t.end_date || t.start_date;
+    
+    if (todayStr < start) return "upcoming";
+    if (todayStr >= start && todayStr <= end) return "active";
+    if (todayStr > end) return "completed";
+  }
+  
+  return t.status;
+}
 
 /**
  * Generic, admin-editable config for the single "featured / upcoming tournament"

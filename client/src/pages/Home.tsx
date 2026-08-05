@@ -26,7 +26,7 @@ import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { InfoModal } from "@/components/InfoModal";
 import type { ConvenerData } from "@/components/admin/ConvenerEditor";
 import { VenueTrafficWidget } from "@/components/home/VenueTrafficWidget";
-
+import { NoticeBoard } from "@/components/home/NoticeBoard";
 // ── Animation variants ────────────────────────────────────────────────────────
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 28 },
@@ -378,6 +378,10 @@ export default function Home() {
         {/* ── QUICK PATHS ──────────────────────────────────────────────── */}
         <section aria-label="Quick Links" className="py-12 bg-slate-50 dark:bg-slate-900/60">
           <div className="container mx-auto px-4">
+            
+            <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}>
+              <NoticeBoard />
+            </motion.div>
             <motion.div
               className="text-center mb-12"
               variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}

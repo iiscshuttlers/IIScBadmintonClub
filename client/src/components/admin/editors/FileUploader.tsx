@@ -22,7 +22,7 @@ export function FileUploader({
     if (!file) return;
     setUploading(true);
     try {
-      const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
+      const fileName = `site_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
       const { error } = await supabase.storage
         .from("tournament_notices")
         .upload(fileName, file);

@@ -324,7 +324,7 @@ export function AnnouncementsSection() {
             )}
 
             {/* Filter */}
-            <section className="py-6 border-b bg-white dark:bg-slate-950 sticky top-16 z-10 shadow-sm">
+            <section className="py-6 border-b bg-white dark:bg-slate-950 sticky top-16 z-30 shadow-sm">
               <div className="container mx-auto px-4 max-w-md">
                 <div className="flex flex-col gap-3">
                   {categories.filter(c => c.id === 'all').map((cat) => (

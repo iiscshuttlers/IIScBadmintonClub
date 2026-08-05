@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Activity, MapPin } from "lucide-react";
+import { Activity, MapPin, Loader2 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
@@ -39,12 +39,30 @@ export function VenueTrafficWidget() {
   const [hourlyPattern, setHourlyPattern] = useState<HourlyPoint[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
-  const { profile } = useAuth();
+  const [isCheckedIn, setIsCheckedIn] = useState(false);
+  const { profile, user } = useAuth();
 
   useEffect(() => {
     let cancelled = false;
 
     let intervalId: ReturnType<typeof setInterval> | null = null;
+
+    const checkUserStatus = async () => {
+      if (!profile) return;
+      const { data } = await supabase
+        .from("venue_presence_events")
+        .select("event_type, created_at")
+        .eq("player_id", profile.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (!cancelled && data) {
+        const eventTime = new Date(data.created_at).getTime();
+        const threeHoursAgo = Date.now() - 3 * 60 * 60 * 1000;
+        setIsCheckedIn(data.event_type === "enter" && eventTime > threeHoursAgo);
+      }
+    };
 
     const loadActiveCount = async () => {
       const { data, error } = await supabase.rpc("get_venue_active_count");
@@ -69,17 +87,26 @@ export function VenueTrafficWidget() {
 
     loadActiveCount();
     loadHourlyPattern();
+    checkUserStatus();
 
-    intervalId = setInterval(loadActiveCount, POLL_INTERVAL_MS);
+    intervalId = setInterval(() => {
+      loadActiveCount();
+      checkUserStatus();
+    }, POLL_INTERVAL_MS);
+    
     return () => {
       cancelled = true;
       if (intervalId) clearInterval(intervalId);
     };
-  }, []);
+  }, [profile?.id]);
 
   const handleManualCheckIn = async () => {
     if (!profile) {
       toast.error("You must be logged in to check in");
+      return;
+    }
+    if (isCheckedIn) {
+      toast.error("You are already checked in at the Gymkhana!");
       return;
     }
     setIsCheckingIn(true);
@@ -90,13 +117,14 @@ export function VenueTrafficWidget() {
       });
       if (error) throw error;
       toast.success("Successfully checked in to Gymkhana!");
-      
+      setIsCheckedIn(true);
+
       // Optimistically update the count or trigger a refetch
       const { data: newCount } = await supabase.rpc("get_venue_active_count");
       if (typeof newCount === "number") setActiveCount(newCount);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to check in manually");
+    } catch (err: any) {
+      console.error("Manual check-in error:", err);
+      toast.error(err?.message || "Failed to check in manually");
     } finally {
       setIsCheckingIn(false);
     }
@@ -135,15 +163,25 @@ export function VenueTrafficWidget() {
                 <span className="text-sm text-slate-400 font-medium">{activeCount === 1 ? "player" : "players"}</span>
               </div>
             </div>
-            
+
             <Button
               onClick={handleManualCheckIn}
-              disabled={isCheckingIn}
-              variant="outline"
+              disabled={isCheckingIn || isCheckedIn}
+              variant={isCheckedIn ? "ghost" : "outline"}
               size="sm"
-              className="mt-1 w-full sm:w-auto text-xs font-bold bg-slate-800/50 hover:bg-slate-800 border-slate-700/50 h-8"
+              className={`mt-1 w-full sm:w-auto text-xs font-bold h-8 ${
+                isCheckedIn 
+                  ? "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/10 opacity-100 cursor-default pointer-events-none" 
+                  : "bg-slate-800/50 hover:bg-slate-800 border-slate-700/50"
+              }`}
             >
-              I'm Here
+              {isCheckingIn ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : isCheckedIn ? (
+                "✓ Checked In"
+              ) : (
+                "I'm Here"
+              )}
             </Button>
           </div>
 
@@ -180,13 +218,13 @@ export function VenueTrafficWidget() {
                     />
                     <YAxis hide />
                     <Tooltip content={<CustomTooltip />} cursor={{ stroke: "rgba(148, 163, 184, 0.2)", strokeWidth: 1, strokeDasharray: "4 4" }} />
-                    <Area 
-                      type="monotone" 
-                      dataKey="avg_checkins" 
-                      stroke="hsl(var(--primary))" 
+                    <Area
+                      type="monotone"
+                      dataKey="avg_checkins"
+                      stroke="hsl(var(--primary))"
                       strokeWidth={2.5}
-                      fillOpacity={1} 
-                      fill="url(#trafficGradient)" 
+                      fillOpacity={1}
+                      fill="url(#trafficGradient)"
                       animationDuration={1500}
                     />
                   </AreaChart>

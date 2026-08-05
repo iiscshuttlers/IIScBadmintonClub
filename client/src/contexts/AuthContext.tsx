@@ -103,13 +103,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (sessionLoading) return;
 
     if (session?.user?.id) {
-      setProfileLoading(true);
+      if (!profile || profile.id !== session?.user?.id) {
+        setProfileLoading(true);
+      }
       fetchProfile(session.user.id, session.user.email);
     } else {
       setProfile(null);
       setProfileLoading(false);
     }
-  }, [session, sessionLoading]);
+  }, [session?.user?.id, sessionLoading]);
 
   const signOut = async () => {
     await supabase.auth.signOut();

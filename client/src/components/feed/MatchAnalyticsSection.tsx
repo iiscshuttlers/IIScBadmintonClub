@@ -97,7 +97,7 @@ export function AICoachInsightsSection({ matchId }: MatchAnalyticsSectionProps) 
         <button 
           onClick={generateInsights}
           disabled={loadingInsights}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-foreground text-xs font-bold transition hover:bg-primary/90 disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-primary-foreground text-xs font-black transition hover:bg-primary/90 disabled:opacity-50 shadow-sm"
         >
           {loadingInsights ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Brain className="w-4 h-4" />}
           {loadingInsights ? "Analyzing match..." : "Generate Insights"}

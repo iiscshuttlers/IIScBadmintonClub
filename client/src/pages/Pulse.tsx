@@ -268,7 +268,7 @@ export default function Pulse() {
   }, []);
 
   const live = events.filter((e) => e.status === "active");
-  const upcoming = events.filter((e) => e.status === "draft");
+  const upcoming = events.filter((e) => e.status === "upcoming");
   const completed: any[] = [
     ...ARCHIVED_TOURNAMENTS,
     ...events.filter(

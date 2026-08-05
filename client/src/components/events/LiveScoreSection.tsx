@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import { Trophy, Activity, Tv2, Trash2, Save, ShieldCheck, X, MonitorPlay, Bell, Loader2, Plus, Volume2, VolumeX, Smartphone, Zap } from "lucide-react";
+import { Trophy, Activity, Tv2, Trash2, Save, ShieldCheck, X, MonitorPlay, Bell, Loader2, Plus, Volume2, VolumeX, Smartphone, Zap, CalendarDays, MapPin, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { MatchService } from "@/services/matchService";
+import { getCourtColor, cn } from "@/lib/utils";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { Capacitor } from "@capacitor/core";
@@ -356,6 +357,37 @@ export function LiveScoreSection() {
   const { session, profile, isAdmin, isUmpire } = useAuth();
   const [, navigate] = useLocation();
   const [liveMatches, setLiveMatches] = useState<Record<string, BwfMatchState>>({});
+  const [todayMatches, setTodayMatches] = useState<any[]>([]);
+  const [todayMatchesLoading, setTodayMatchesLoading] = useState(true);
+
+  useEffect(() => {
+    const loadTodayMatches = async () => {
+      try {
+        const today = new Date();
+        const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+        const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999).toISOString();
+        
+        const { data } = await supabase
+          .from("tournament_matches")
+          .select("*, tournaments(name, id)")
+          .not("scheduled_at", "is", null)
+          .gte("scheduled_at", startOfDay)
+          .lte("scheduled_at", endOfDay)
+          .in("status", ["scheduled", "in_progress"]);
+          
+        if (data) {
+          data.sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
+          setTodayMatches(data);
+        }
+      } catch (e) {
+        console.error("Failed to load today matches", e);
+      } finally {
+        setTodayMatchesLoading(false);
+      }
+    };
+    loadTodayMatches();
+  }, []);
+
   const [voiceEnabled, setVoiceEnabled] = useState(() => localStorage.getItem("live_voice") === "true");
   const [flashEnabled, setFlashEnabled] = useState(() => localStorage.getItem("live_flash") !== "false");
   const [vibrateEnabled, setVibrateEnabled] = useState(() => localStorage.getItem("live_vibrate") !== "false");
@@ -759,6 +791,58 @@ export function LiveScoreSection() {
           ))}
         </div>
       )}
+
+      {/* TODAY'S SCHEDULED MATCHES */}
+      <div className="mt-8 bg-slate-900 rounded-[2rem] p-6 shadow-xl border border-slate-800">
+        <h2 className="text-xl font-black text-foreground flex items-center gap-2 mb-6">
+          <CalendarDays className="w-6 h-6 text-blue-400" /> Today's Schedule
+        </h2>
+        
+        {todayMatchesLoading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : todayMatches.length === 0 ? (
+          <div className="text-center py-8 bg-slate-800/30 rounded-2xl border border-slate-700/50">
+            <p className="text-sm text-muted-foreground">No matches scheduled for today.</p>
+          </div>
+        ) : (
+          <div className="grid sm:grid-cols-2 gap-4">
+            {todayMatches.map(m => (
+              <div key={m.id} className="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 flex flex-col gap-3 transition-colors hover:border-slate-500">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground bg-slate-900 px-2 py-0.5 rounded-full">{m.category}</span>
+                    <span className="text-[10px] font-bold text-slate-400">{m.match_code}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {m.status === "in_progress" && <span className="text-[10px] font-black text-amber-400 animate-pulse">● LIVE</span>}
+                    {m.court_number && (
+                      <div className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700/50 shadow-inner font-black tracking-widest", getCourtColor(m.court_number))}>
+                        <MapPin className="w-3.5 h-3.5 opacity-70" /> 
+                        <span className="text-xs uppercase">Court {m.court_number}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm text-foreground truncate">{m.team1_label || "TBD"}</p>
+                  </div>
+                  <div className="text-[10px] font-black text-rose-400 shrink-0">VS</div>
+                  <div className="flex-1 min-w-0 text-right">
+                    <p className="font-bold text-sm text-foreground truncate">{m.team2_label || "TBD"}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 text-[11px] text-slate-300 font-bold bg-slate-900/50 self-start px-2.5 py-1.5 rounded-lg border border-slate-800">
+                  <Clock className="w-3.5 h-3.5 text-muted-foreground" /> 
+                  {new Date(m.scheduled_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {takeoverTarget && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">

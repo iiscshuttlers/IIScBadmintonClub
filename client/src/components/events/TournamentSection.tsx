@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
+import { useLocation } from "wouter";
 import { motion } from "framer-motion";
+import { getCourtColor, cn } from "@/lib/utils";
 import {
   Calendar,
   MapPin,
@@ -35,6 +37,7 @@ import {
   fetchTournamentConfig,
   tournamentDatesDisplay,
   DEFAULT_TOURNAMENT_CONFIG,
+  computeTournamentStatus,
   type TournamentConfig,
 } from "@/lib/tournaments";
 import { safeReplaceState } from "@/lib/navUtils";
@@ -63,6 +66,7 @@ interface SupabaseTournament {
   eligibility: string | null;
   form_url: string | null;
   form_status: string;
+  require_app_registration?: boolean;
   archived_at: string | null;
   slug?: string;
 }
@@ -91,12 +95,15 @@ export interface TournamentSectionProps {
 }
 
 export function TournamentSection({ liveEvents, upcomingEvents, completedEvents, renderCard }: TournamentSectionProps) {
+  const [, setLocation] = useLocation();
   const { session, isUmpire } = useAuth();
   const [isAdmin, setIsAdmin] = useState(isAdminEmail(session?.user?.email));
   const [config, setConfig] = useState<TournamentConfig>(DEFAULT_TOURNAMENT_CONFIG);
   
   const searchParams = new URLSearchParams(window.location.search);
-  const [viewStatus, setViewStatus] = useState<string>(searchParams.get("t") || "active");
+  const rawT = searchParams.get("t");
+  const initialTab = rawT === "draft" ? "upcoming" : (rawT || "active");
+  const [viewStatus, setViewStatus] = useState<string>(initialTab);
   const [activeTid, setActiveTid] = useState<string | null>(searchParams.get("tid"));
   const [allTournaments, setAllTournaments] = useState<SupabaseTournament[]>([]);
   const [files, setFiles] = useState<any[]>([]);
@@ -153,12 +160,23 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
       .order("created_at", { ascending: false })
       .then(({ data }) => {
         if (!data?.length) return;
-        const validTournaments = isAdmin ? data : data.filter((t) => t.status !== "draft");
+        const computedData = data.map(t => ({ ...t, status: computeTournamentStatus(t) }));
+        const validTournaments = isAdmin ? computedData : computedData.filter((t) => t.status !== "draft");
         setAllTournaments(validTournaments as SupabaseTournament[]);
       });
   }, [isAdmin]);
 
-  const relevantEvents = viewStatus === "active" ? liveEvents : viewStatus === "draft" ? upcomingEvents : null;
+  // Auto-correct the viewStatus tab if the URL targeted a specific tournament that has since changed status
+  useEffect(() => {
+    if (activeTid && allTournaments.length > 0) {
+      const target = allTournaments.find(t => t.slug === activeTid || t.id === activeTid);
+      if (target && target.status && target.status !== "draft" && target.status !== viewStatus) {
+        setViewStatus(target.status);
+      }
+    }
+  }, [activeTid, allTournaments, viewStatus]);
+
+  const relevantEvents = viewStatus === "active" ? liveEvents : viewStatus === "upcoming" ? upcomingEvents : null;
   
   const liveTournament = viewStatus === "completed"
     ? null
@@ -197,7 +215,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
         console.error("Bucket might not exist yet:", error.message);
         setFiles([]);
       } else {
-        setFiles(data?.filter((f) => !f.name.startsWith(".")) || []);
+        setFiles(data?.filter((f) => !f.name.startsWith(".") && !f.name.startsWith("site_")) || []);
       }
     } catch (err) {
       console.error(err);
@@ -256,19 +274,43 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
         return "Dates TBD";
       })()
     : tournamentDatesDisplay(config);
-  const displayCategories = liveTournament?.categories?.join(" · ") ?? config.categories;
+  const categoriesList = liveTournament?.categories || (typeof config.categories === 'string' ? config.categories.split(/[,·]/).map(s => s.trim()).filter(Boolean) : []);
+  const displayCategories = categoriesList.length > 0 ? (
+    <div className="flex flex-wrap justify-center gap-1.5 mt-2">
+      {categoriesList.map((item, idx) => (
+        <span key={idx} className="bg-slate-100 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600/50 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center justify-center text-center leading-tight shadow-sm max-w-full break-words">
+          {item}
+        </span>
+      ))}
+    </div>
+  ) : config.categories;
+
+  let formattedEligibility: React.ReactNode = displayEligibility;
+  if (typeof displayEligibility === 'string' && displayEligibility.includes(',')) {
+    formattedEligibility = (
+      <div className="flex flex-wrap justify-center gap-1.5 mt-2">
+        {displayEligibility.split(',').map((item, idx) => (
+          <span key={idx} className="bg-slate-100 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600/50 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center justify-center text-center leading-tight shadow-sm max-w-full break-words">
+            {item.trim()}
+          </span>
+        ))}
+      </div>
+    );
+  }
 
   const infoCards = [
-    { icon: Calendar, label: "Dates", value: displayDates, color: "bg-primary" },
-    { icon: MapPin, label: "Venue", value: displayVenue, color: "bg-blue-600" },
-    { icon: Users, label: "Categories", value: displayCategories, color: "bg-purple-600" },
-    { icon: UserCheck, label: "Eligibility", value: displayEligibility, color: "bg-orange-500" },
+    { icon: Calendar, label: "Dates", value: displayDates, color: "bg-blue-500/10 text-blue-600 dark:bg-blue-400/10 dark:text-blue-400 ring-1 ring-inset ring-blue-500/20" },
+    { icon: MapPin, label: "Venue", value: displayVenue, color: "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-400 ring-1 ring-inset ring-emerald-500/20" },
+    { icon: Users, label: "Categories", value: displayCategories, color: "bg-purple-500/10 text-purple-600 dark:bg-purple-400/10 dark:text-purple-400 ring-1 ring-inset ring-purple-500/20" },
+    { icon: UserCheck, label: "Eligibility", value: formattedEligibility, color: "bg-amber-500/10 text-amber-600 dark:bg-amber-400/10 dark:text-amber-400 ring-1 ring-inset ring-amber-500/20" },
   ];
 
   // Registration CTA
   const status = displayFormStatus as string;
   const hasForm = !!displayFormUrl && status !== "disabled";
   const formClosed = status === "closed";
+  const isAuthRequired = !!liveTournament?.require_app_registration && !session;
+  
   const badge =
     status === "open"
       ? { cls: "bg-primary/20 border-primary/30 text-primary/70", text: "Registrations Open" }
@@ -282,11 +324,13 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
         ? "Registrations closing soon"
         : "Registrations are now closed";
   const ctaLabel =
-    status === "open"
-      ? "Register Now"
-      : status === "closing_soon"
-        ? "Register Now (Closing Soon)"
-        : "Registration Form (Closed)";
+    isAuthRequired
+      ? "Log in to Register"
+      : status === "open"
+        ? "Register Now"
+        : status === "closing_soon"
+          ? "Register Now (Closing Soon)"
+          : "Registration Form (Closed)";
 
   return (
     <section className="font-sans pb-16 pt-8">
@@ -295,7 +339,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
         <div className="flex justify-center mb-8">
           <div className="flex items-center gap-2 p-1 bg-slate-100 dark:bg-slate-800/50 rounded-2xl w-full max-w-md mx-auto">
             {[
-              { id: "draft", label: "upcoming" },
+              { id: "upcoming", label: "upcoming" },
               { id: "active", label: "live" },
               { id: "completed", label: "completed" }
             ].map((st) => (
@@ -343,7 +387,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
             <div className="flex items-center gap-3 mb-8">
               <div className="w-2 h-8 bg-gradient-to-b from-amber-500 to-orange-600 rounded-full" />
               <h2 className="text-3xl font-black text-blue-900 dark:text-foreground">
-                {viewStatus === "active" ? "Live: " : viewStatus === "draft" ? "Upcoming: " : "Completed: "}
+                {viewStatus === "active" ? "Live: " : viewStatus === "upcoming" ? "Upcoming: " : "Completed: "}
                 {displayName}
               </h2>
             </div>
@@ -363,17 +407,17 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
               className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col items-center text-center gap-3 hover:shadow-md transition-shadow"
             >
               <div
-                className={`w-11 h-11 rounded-xl ${color} flex items-center justify-center shadow-md`}
+                className={`w-11 h-11 rounded-2xl ${color} flex items-center justify-center shadow-sm`}
               >
-                <Icon className="w-5 h-5 text-foreground" />
+                <Icon className="w-5 h-5" />
               </div>
               <div>
                 <p className="text-xs font-black text-gray-400 dark:text-muted-foreground uppercase tracking-wider">
                   {label}
                 </p>
-                <p className="text-sm font-bold text-blue-900 dark:text-foreground mt-0.5">
+                <div className="text-sm font-bold text-blue-900 dark:text-foreground mt-0.5 leading-snug">
                   {value}
-                </p>
+                </div>
               </div>
             </motion.div>
           ))}
@@ -402,18 +446,27 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
                     {displayDescription}
                   </p>
                 )}
-                <a
-                  href={displayFormUrl ?? "#"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`inline-flex items-center gap-2 px-6 py-4 rounded-xl font-black transition shadow-xl ${
-                    formClosed
-                      ? "bg-slate-600 text-foreground opacity-70 cursor-not-allowed pointer-events-none"
-                      : "bg-primary hover:bg-primary text-primary-foreground"
-                  }`}
-                >
-                  {ctaLabel} <ArrowRight className="w-5 h-5" />
-                </a>
+                {isAuthRequired ? (
+                  <button
+                    onClick={() => setLocation("/auth")}
+                    className="inline-flex items-center gap-2 px-6 py-4 rounded-xl font-black transition shadow-xl bg-primary hover:bg-primary text-primary-foreground"
+                  >
+                    {ctaLabel} <ArrowRight className="w-5 h-5" />
+                  </button>
+                ) : (
+                  <a
+                    href={displayFormUrl ?? "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`inline-flex items-center gap-2 px-6 py-4 rounded-xl font-black transition shadow-xl ${
+                      formClosed
+                        ? "bg-slate-600 text-foreground opacity-70 cursor-not-allowed pointer-events-none"
+                        : "bg-primary hover:bg-primary text-primary-foreground"
+                    }`}
+                  >
+                    {ctaLabel} <ArrowRight className="w-5 h-5" />
+                  </a>
+                )}
               </div>
             </div>
           </motion.div>
@@ -517,51 +570,58 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {files.map((file, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-700 hover:border-primary/40 dark:hover:border-primary transition-colors"
-                      >
-                        <div className="flex items-center gap-3 overflow-hidden min-w-0">
-                          <div className="w-10 h-10 rounded-xl bg-primary/15 dark:bg-primary/30 flex items-center justify-center text-primary dark:text-primary flex-shrink-0">
-                            <FileText className="w-5 h-5" />
-                          </div>
-                          <div className="truncate min-w-0">
-                            <p className="font-semibold text-slate-800 dark:text-slate-200 truncate text-sm">
-                              {file.name.replace(/^\d+_/, "")}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {(file.metadata?.size / 1024).toFixed(1)} KB ·{" "}
-                              {new Date(file.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1.5 flex-shrink-0 ml-3">
+                    {files.map((file, idx) => {
+                      const fileUrl = supabase.storage
+                        .from(NOTICES_BUCKET)
+                        .getPublicUrl(file.name).data.publicUrl;
+
+                      return (
+                        <div
+                          key={idx}
+                          className="group relative flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-700 hover:border-primary/40 dark:hover:border-primary transition-colors hover:shadow-sm"
+                        >
                           <a
-                            href={
-                              supabase.storage
-                                .from(NOTICES_BUCKET)
-                                .getPublicUrl(file.name).data.publicUrl
-                            }
+                            href={fileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-2 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/90/30 rounded-xl transition-colors"
+                            className="absolute inset-0 z-0 rounded-2xl"
                             title="Download / View"
-                          >
-                            <Download className="w-4 h-4" />
-                          </a>
-                          {isAdmin && (
-                            <button
-                              onClick={() => handleDeleteFile(file.name)}
-                              className="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-colors"
-                              title="Delete"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          )}
+                          />
+                          <div className="flex items-center gap-3 overflow-hidden min-w-0 relative z-0 pointer-events-none">
+                            <div className="w-10 h-10 rounded-xl bg-primary/15 dark:bg-primary/30 flex items-center justify-center text-primary dark:text-primary flex-shrink-0 group-hover:scale-110 transition-transform">
+                              <FileText className="w-5 h-5" />
+                            </div>
+                            <div className="truncate min-w-0">
+                              <p className="font-semibold text-slate-800 dark:text-slate-200 truncate text-sm group-hover:text-primary transition-colors">
+                                {file.name.replace(/^\d+_/, "")}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {(file.metadata?.size / 1024).toFixed(1)} KB ·{" "}
+                                {new Date(file.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 flex-shrink-0 ml-3">
+                            <div className="p-2 text-primary dark:text-primary group-hover:bg-primary/10 dark:group-hover:bg-primary/90/30 rounded-xl transition-colors relative z-0 pointer-events-none">
+                              <Download className="w-4 h-4" />
+                            </div>
+                            {isAdmin && (
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleDeleteFile(file.name);
+                                }}
+                                className="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-colors relative z-10"
+                                title="Delete"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -617,7 +677,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
           </div>
         )}
 
-        {viewStatus === "draft" && upcomingEvents && (
+        {viewStatus === "upcoming" && upcomingEvents && (
           <div>
             {upcomingEvents.filter(e => e.id !== liveTournament?.id).length > 0 ? (
               <div className="grid md:grid-cols-2 gap-6">
@@ -765,7 +825,7 @@ function SupabaseScheduleView({ tournamentId }: { tournamentId: string | null })
                     <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg border ${catCls}`}>{m.category}</span>
                     <span className="text-[10px] text-muted-foreground font-bold">{m.round_name} · {m.match_code}</span>
                     {m.court_number && (
-                      <span className="flex items-center gap-1 text-[10px] font-bold text-blue-500">
+                      <span className={cn("flex items-center gap-1 text-[10px] font-bold", getCourtColor(m.court_number))}>
                         <MapPin className="w-3 h-3" /> Court {m.court_number}
                       </span>
                     )}
@@ -912,7 +972,7 @@ export function TournamentArchiveBrackets({ tournamentId }: { tournamentId: stri
                                 {m.status === "scheduled" && m.scheduled_at && (
                                   <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600">
                                     Scheduled at {new Date(m.scheduled_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
-                                    {m.court_number ? ` (Court ${m.court_number})` : ""}
+                                    {m.court_number ? <span className={cn("ml-1 font-black", getCourtColor(m.court_number))}>(Court {m.court_number})</span> : ""}
                                   </span>
                                 )}
                                 {m.status === "in_progress" && (

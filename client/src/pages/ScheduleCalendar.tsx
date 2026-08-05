@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchSiteData } from "@/lib/siteData";
 import { fetchTournamentConfig, getTournaments } from "@/lib/tournaments";
+import { supabase } from "@/lib/supabase";
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import {
   Tooltip,
@@ -140,17 +141,13 @@ export default function ScheduleCalendar() {
   useEffect(() => {
     async function loadEvents() {
       try {
-        const [eventsData, holidaysData, dbTournaments, tourneySnap, tourneyCfg] = await Promise.all([
+        const [eventsData, holidaysData, dbTournaments, matchSnap, tourneyCfg] = await Promise.all([
           fetchSiteData<CalendarEvent[]>("events", "events.json").catch(() => []),
           fetchSiteData<Holiday[]>("holidays", "holidays.json").catch(() => []),
           getTournaments().catch(() => []),
-          Promise.resolve(null), // Tournament schedule now comes from Supabase tournament_matches
+          supabase.from("tournament_matches").select("*, tournaments(name, id)").not("scheduled_at", "is", null),
           fetchTournamentConfig().catch(() => null),
         ]);
-
-        if (tourneySnap && tourneySnap.exists && tourneySnap.exists()) {
-          setTournamentData(tourneySnap.data());
-        }
 
         const merged: CalendarEvent[] = [...(eventsData || [])];
         if (holidaysData) {
@@ -166,43 +163,36 @@ export default function ScheduleCalendar() {
         
         if (dbTournaments && dbTournaments.length > 0) {
           dbTournaments.forEach((t: any) => {
-            if (t.startDate) {
+            if (t.startDate && t.status !== "draft") {
               merged.push({
                 date: t.startDate,
                 endDate: t.endDate || t.startDate,
                 title: t.name,
                 type: "event",
                 location: t.venue || "Gymkhana",
-                link: "/pulse#tournament",
+                link: `/pulse?t=${t.status}&tid=${t.slug || t.id}#tournament`,
               });
             }
           });
         }
 
-        // Surface the featured tournament's key dates on the calendar.
-        if (tourneyCfg && tourneyCfg.enabled) {
-          if (tourneyCfg.startDate) {
+        if (matchSnap && matchSnap.data) {
+          matchSnap.data.forEach((m: any) => {
+            if (!m.scheduled_at) return;
+            const localDate = new Date(m.scheduled_at);
+            const matchDate = `${localDate.getFullYear()}-${String(localDate.getMonth() + 1).padStart(2, "0")}-${String(localDate.getDate()).padStart(2, "0")}`;
+            const timeStr = localDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+            const title = `${m.category} • ${m.match_code} (${m.team1_label || 'TBD'} vs ${m.team2_label || 'TBD'})`;
+            
             merged.push({
-              date: tourneyCfg.startDate,
-              endDate: tourneyCfg.endDate || tourneyCfg.startDate,
-              title: tourneyCfg.name,
+              date: matchDate,
+              title: title,
+              time: timeStr,
               type: "event",
-              location: tourneyCfg.venue,
-              link: "/pulse#tournament",
+              location: m.court_number ? `Court ${m.court_number}` : "Gymkhana",
+              link: m.tournaments?.id ? `/pulse?t=live&tid=${m.tournaments.id}#tournament` : undefined,
             });
-          }
-          if (
-            tourneyCfg.formCloseDate &&
-            (tourneyCfg.formStatus === "open" || tourneyCfg.formStatus === "closing_soon")
-          ) {
-            merged.push({
-              date: tourneyCfg.formCloseDate,
-              title: `${tourneyCfg.name} — Registration closes`,
-              type: "event",
-              link: "/pulse#tournament",
-              registrationDeadline: tourneyCfg.formCloseDate,
-            });
-          }
+          });
         }
 
         setEvents(merged);
@@ -615,12 +605,12 @@ export default function ScheduleCalendar() {
                           )}
 
                           {event.link && (
-                            <Link href={event.link}>
+                            <a href={event.link}>
                               <button className="flex items-center gap-2 text-sm font-bold text-primary dark:text-primary hover:text-primary transition group-hover:underline">
                                 View Event Details{" "}
                                 <ArrowRight className="w-4 h-4" />
                               </button>
-                            </Link>
+                            </a>
                           )}
                           {event.url && (
                             <a

@@ -176,7 +176,7 @@ export default function FindLost() {
 
   const openNewPost = () => {
     setEditingId(null);
-    setForm({ type: "lost", title: "", description: "", location: "", contact: "", images: [] });
+    setForm({ type: "lost", title: "", description: "", location: "", contact: "", remarks: "", images: [] });
     setShowForm(true);
   };
 
@@ -188,6 +188,7 @@ export default function FindLost() {
       description: post.description || "",
       location: post.location || "",
       contact: post.contact || "",
+      remarks: post.remarks || "",
       images: postImages(post)
     });
     setShowForm(true);
@@ -433,12 +434,18 @@ export default function FindLost() {
               </div>
 
               {/* Type toggle */}
-              <div className="flex gap-2 mb-4">
+              <div className="flex bg-slate-100 dark:bg-slate-950 p-1.5 rounded-2xl mb-6 shadow-inner ring-1 ring-inset ring-slate-200 dark:ring-slate-800/60">
                 {(["lost", "found"] as PostType[]).map((t) => (
                   <button
                     key={t}
                     onClick={() => setForm((f) => ({ ...f, type: t }))}
-                    className={`flex-1 py-2 rounded-xl text-sm font-black uppercase tracking-wider transition ${form.type === t ? (t === "lost" ? "bg-rose-600 text-primary-foreground" : "bg-primary text-primary-foreground") : "bg-slate-100 dark:bg-slate-800 text-muted-foreground"}`}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 ${
+                      form.type === t 
+                        ? (t === "lost" 
+                            ? "bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 ring-1 ring-rose-500/20 dark:ring-rose-400/30 shadow-[0_0_15px_rgba(244,63,94,0.1)]" 
+                            : "bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400 ring-1 ring-teal-500/20 dark:ring-teal-400/30 shadow-[0_0_15px_rgba(20,184,166,0.1)]")
+                        : "text-muted-foreground hover:text-foreground hover:bg-slate-200/50 dark:hover:bg-slate-900/50"
+                    }`}
                   >
                     {t === "lost" ? "I Lost Something" : "I Found Something"}
                   </button>
