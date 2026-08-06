@@ -1,5 +1,13 @@
 [
   {
+    "versionCode": 255,
+    "versionName": "1.34",
+    "date": "2026-08-06T07:50:49.824Z",
+    "changes": [
+      "- chore: commit pending UI improvements and fixes"
+    ]
+  },
+  {
     "versionCode": 254,
     "versionName": "1.33",
     "date": "2026-08-05T23:28:51.731Z",
