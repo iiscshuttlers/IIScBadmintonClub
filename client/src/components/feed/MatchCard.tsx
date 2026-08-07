@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { Trophy, Swords, Sparkles, TrendingUp, Heart, Share2, Video, Edit2, BarChart2, Trash2, Loader2, Bot } from "lucide-react";
+import { Trophy, Swords, Sparkles, TrendingUp, Heart, Share2, Video, Edit2, BarChart2, Trash2, Loader2, Bot, Bell } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserMatchAlerts } from "@/hooks/useUserMatchAlerts";
 import { EditVideoModal } from "./EditVideoModal";
 import { MatchScorecardModal } from "./MatchScorecardModal";
 import { fetchMatchSummary } from "@/lib/aiPredictor";
+import { NotificationModal } from "../events/NotificationModal";
 
 const isApp = Capacitor.isNativePlatform();
 
@@ -45,10 +47,12 @@ export function MatchCard({
   const p2 = match.player2;
   const isP1Winner = match.winner_id === p1?.id || match.winner_id === match.partner1?.id;
   const { isAdmin } = useAuth();
+  const matchAlerts = useUserMatchAlerts(currentUser?.id);
 
   const [currentVideoUrl, setCurrentVideoUrl] = useState(match.video_url || null);
   const [isEditVideoOpen, setIsEditVideoOpen] = useState(false);
   const [isScorecardOpen, setIsScorecardOpen] = useState(false);
+  const [isNotifyOpen, setIsNotifyOpen] = useState(false);
 
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
@@ -277,16 +281,26 @@ export function MatchCard({
           <Swords className="w-3.5 h-3.5" />
           {match.is_friendly === false ? "Tournament" : "Friendly"}
         </span>
+        {(match.match_code || match.match_number) && (
+          <span className="text-xs font-black text-amber-500 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+            {match.match_code || `Match #${match.match_number}`}
+          </span>
+        )}
         {match.category && (
           <span className="text-xs font-black text-muted-foreground dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
             {getDisplayCategory()}
+          </span>
+        )}
+        {match.round_name && (
+          <span className="text-[11px] font-semibold text-muted-foreground dark:text-slate-400">
+            • {match.round_name}
           </span>
         )}
       </div>
 
       {/* Date */}
       <div className="text-[11px] text-muted-foreground dark:text-muted-foreground font-bold uppercase tracking-widest text-center mb-1">
-        {new Date(match.created_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
+        {new Date(match.created_at).toLocaleString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}
       </div>
 
       {/* Scoreboard */}
@@ -399,6 +413,30 @@ export function MatchCard({
         currentUser={currentUser}
       />
 
+      <NotificationModal
+        isOpen={isNotifyOpen}
+        onClose={() => setIsNotifyOpen(false)}
+        matchTime={match.scheduled_at}
+        onSave={async (mins) => {
+          if (!currentUser) {
+            toast.error("Please login to set alerts");
+            return;
+          }
+          try {
+            const { error } = await supabase.from("user_match_notifications").upsert({
+              user_id: currentUser.id,
+              match_id: match.id,
+              notify_before_mins: mins
+            }, { onConflict: "user_id,match_id" });
+            if (error) throw error;
+          } catch (e) {
+            toast.error("Failed to set alert");
+          }
+        }}
+        title={`Alert: ${match.team1_label || actualP1?.full_name || "TBD"} vs ${match.team2_label || actualP2?.full_name || "TBD"}`}
+        defaultMins={15}
+      />
+
       {/* Children (e.g., Accept/Reject buttons) */}
       {children && <div className="mt-4">{children}</div>}
 
@@ -422,7 +460,7 @@ export function MatchCard({
             <Bot className="w-4 h-4" />
             <span className="text-[10px] font-black uppercase tracking-widest">AI Recap</span>
           </div>
-          <p className="text-sm font-medium leading-relaxed relative z-10 text-slate-100">
+          <p className="text-sm font-medium leading-relaxed relative z-10 text-slate-100 whitespace-pre-wrap break-words">
             "{aiSummary}"
           </p>
         </motion.div>
@@ -446,13 +484,49 @@ export function MatchCard({
               AI Recap
             </button>
 
-            <button
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsScorecardOpen(true); }}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
-            >
-              <BarChart2 className="w-3.5 h-3.5" /> Scorecard
-            </button>
+            <div className="flex gap-1">
+              {(!hasWinner || match.status === "scheduled" || match.status === "pending") && (
+                (() => {
+                  const alert = matchAlerts.find(a => a.match_id === match.id);
+                  if (alert && match.scheduled_at) {
+                    const notifyDate = new Date(match.scheduled_at);
+                    if (!isNaN(notifyDate.getTime())) {
+                      notifyDate.setMinutes(notifyDate.getMinutes() - alert.notify_before_mins);
+                      const timeStr = notifyDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+                      return (
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold text-accent bg-accent/10 border border-accent/20">
+                          <Bell className="w-3.5 h-3.5 fill-current" />
+                          <span>Notified at {timeStr}</span>
+                          <button
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsNotifyOpen(true); }}
+                            className="ml-0.5 underline hover:text-accent-foreground"
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      );
+                    }
+                  }
+                  return (
+                    <button
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsNotifyOpen(true); }}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
+                    >
+                      <Bell className="w-3.5 h-3.5" /> Notify
+                    </button>
+                  );
+                })()
+              )}
+              <button
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsScorecardOpen(true); }}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
+              >
+                <BarChart2 className="w-3.5 h-3.5" /> Scorecard
+              </button>
+            </div>
           </div>
 
           {/* Like / Share */}

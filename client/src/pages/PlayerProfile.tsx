@@ -16,7 +16,10 @@ import {
   Swords,
   Footprints,
   Flag,
+  Bell,
 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { NotificationModal } from "@/components/events/NotificationModal";
 
 import { usePlayerStats } from "@/hooks/usePlayerStats";
 import { useTournamentMatchHistory } from "@/hooks/useTournamentMatchHistory";
@@ -399,6 +402,26 @@ export default function PlayerProfile() {
 
   const currentUser = authSession?.user;
 
+  const [subModalOpen, setSubModalOpen] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [subMins, setSubMins] = useState(15);
+
+  useEffect(() => {
+    if (!currentUser?.id || !player?.id) return;
+    supabase
+      .from("user_player_subscriptions")
+      .select("notify_before_mins")
+      .eq("user_id", currentUser.id)
+      .eq("player_id", player.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setIsSubscribed(true);
+          setSubMins(data.notify_before_mins);
+        }
+      });
+  }, [currentUser?.id, player?.id]);
+
   if (loading || !player) return <LoadingScreen />;
 
   return (
@@ -421,15 +444,52 @@ export default function PlayerProfile() {
           </button>
 
           <div className="flex items-center gap-2 md:gap-3">
-            {/* Report — shown to others only */}
+            {/* Subscribe & Report — shown to others only */}
             {currentUser && currentUser.id !== player.userId && (
-              <button
-                onClick={handleReport}
-                title="Report User"
-                className="w-10 h-10 md:w-12 md:h-12 bg-white/90 hover:bg-rose-50 hover:text-rose-600 text-slate-700 dark:bg-black/40 dark:hover:bg-rose-500/80 dark:text-white backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-slate-200 dark:border-white/10"
-              >
-                <Flag className="w-4 h-4 md:w-5 md:h-5" />
-              </button>
+              <>
+                <button
+                  onClick={() => setSubModalOpen(true)}
+                  title={isSubscribed ? `Subscribed (${subMins}m before match)` : "Get notified for player matches"}
+                  className={`h-10 md:h-12 px-3 md:px-4 rounded-full flex items-center gap-1.5 font-bold text-xs md:text-sm shadow-sm transition-all border ${
+                    isSubscribed
+                      ? "bg-amber-500/10 text-amber-500 border-amber-500/30 hover:bg-amber-500/20"
+                      : "bg-white/90 hover:bg-white text-slate-700 dark:bg-black/40 dark:hover:bg-black/60 dark:text-white border-slate-200 dark:border-white/10"
+                  }`}
+                >
+                  <Bell className="w-4 h-4" fill={isSubscribed ? "currentColor" : "none"} />
+                  <span>{isSubscribed ? "Notified" : "Notify Me"}</span>
+                </button>
+
+                <NotificationModal
+                  isOpen={subModalOpen}
+                  onClose={() => setSubModalOpen(false)}
+                  title={`Notify for ${player.fullName}'s Matches`}
+                  defaultMins={subMins}
+                  onSave={async (mins) => {
+                    const { error } = await supabase.from("user_player_subscriptions").upsert({
+                      user_id: currentUser.id,
+                      player_id: player.id,
+                      notify_before_mins: mins
+                    }, { onConflict: "user_id, player_id" });
+
+                    if (error) {
+                      toast.error("Failed to update subscription");
+                      return;
+                    }
+                    setIsSubscribed(true);
+                    setSubMins(mins);
+                    toast.success(`Subscribed to ${player.fullName}!`);
+                  }}
+                />
+
+                <button
+                  onClick={handleReport}
+                  title="Report User"
+                  className="w-10 h-10 md:w-12 md:h-12 bg-white/90 hover:bg-rose-50 hover:text-rose-600 text-slate-700 dark:bg-black/40 dark:hover:bg-rose-500/80 dark:text-white backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-slate-200 dark:border-white/10"
+                >
+                  <Flag className="w-4 h-4 md:w-5 md:h-5" />
+                </button>
+              </>
             )}
 
             {/* Share, Wrapped, Export — own profile only */}

@@ -71,10 +71,12 @@ export interface SensorAnalytics {
   directionChanges: number;
 }
 
-function categoryGroup(category: string): PersonalMatch["group"] {
-  if (category === "MS" || category === "WS") return "Singles";
-  if (category === "MD" || category === "WD") return "Doubles";
-  return "Mixed Doubles";
+function categoryGroup(category?: string): PersonalMatch["group"] {
+  const cat = (category || "").toUpperCase();
+  if (cat === "MS" || cat === "WS" || cat.includes("SINGLES")) return "Singles";
+  if (cat === "MD" || cat === "WD" || (cat.includes("DOUBLES") && !cat.includes("MIXED"))) return "Doubles";
+  if (cat === "XD" || cat.includes("MIXED")) return "Mixed Doubles";
+  return "Singles";
 }
 
 export function usePlayerPersonal(playerId: string | undefined) {

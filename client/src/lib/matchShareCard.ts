@@ -135,6 +135,7 @@ export interface MatchShareData {
   matchType?: string; // "Friendly" or "Tournament"
   matchDate?: Date;
   category?: string;
+  tournamentName?: string;
 }
 
 const GOLD = "#f59e0b";
@@ -242,11 +243,13 @@ export async function renderMatchShareCard(
   ctx.fillText("M A T C H   R E S U L T", W / 2, 124);
   ctx.letterSpacing = "0px";
 
-  // Meta line (category • type • date)
+  // Meta line (category • type • tournament • date & time)
   const metaParts: string[] = [];
   if (category) metaParts.push(category);
   if (matchType) metaParts.push(matchType === "Friendly" ? "🏸 Friendly" : "🏆 Tournament");
-  if (matchDate) metaParts.push(matchDate.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }));
+  if (data.tournamentName) metaParts.push(data.tournamentName);
+  if (matchDate) metaParts.push(matchDate.toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" }));
+  
   if (metaParts.length) {
     ctx.fillStyle = "#475569";
     ctx.font = "bold 24px sans-serif";
@@ -508,11 +511,10 @@ export async function renderMatchShareCard(
   botLineGrad.addColorStop(1, "rgba(245,158,11,0)");
   ctx.fillStyle = botLineGrad;
   ctx.fillRect(0, H - 90, W, 2);
-  ctx.fillStyle = "#475569";
-  ctx.font = "bold 26px sans-serif";
+  ctx.fillStyle = "#64748b";
+  ctx.font = "bold 22px sans-serif";
   ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("iiscshuttlers.github.io/iiscshuttlers", W / 2, H - 44);
+  ctx.fillText("Tap link to view full match details & stats", W / 2, H - 40);
 
   return canvas;
 }

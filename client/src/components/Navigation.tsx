@@ -30,6 +30,7 @@ import {
   LayoutDashboard,
   BookOpen,
   MessageSquare,
+  Bell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -397,6 +398,10 @@ export default function Navigation() {
                               <User className="mr-2 h-4 w-4" />
                               <span>My Personal Space</span>
                             </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setLocation("/profile/subscriptions")} className="cursor-pointer font-bold text-amber-500">
+                              <Bell className="mr-2 h-4 w-4" />
+                              <span>My Subscriptions</span>
+                            </DropdownMenuItem>
                           </>
                         )}
                         <DropdownMenuItem onClick={() => setLocation("/personal/me")} className="cursor-pointer">
@@ -514,6 +519,15 @@ export default function Navigation() {
                       }}
                     >
                       <User className="h-4 w-4 text-primary" /> My Personal Space
+                    </button>
+                    <button
+                      className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer"
+                      onClick={() => {
+                        setIsOpen(false);
+                        setLocation("/profile/subscriptions");
+                      }}
+                    >
+                      <Bell className="h-4 w-4 text-amber-500" /> My Subscriptions
                     </button>
                     <button
                       className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer"

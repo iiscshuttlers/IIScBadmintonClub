@@ -16,10 +16,10 @@ serve(async (req) => {
     if (!matchId) throw new Error("matchId is required");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY");
     
     if (!supabaseUrl || !supabaseKey) {
-      throw new Error("Missing Supabase environment variables");
+      throw new Error("Missing Supabase environment variables (SUPABASE_URL or keys)");
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -31,7 +31,7 @@ serve(async (req) => {
       { data: sensor },
       { data: rallies }
     ] = await Promise.all([
-      supabase.from("matches").select("*, player1:players!player1_id(name), player2:players!player2_id(name)").eq("id", matchId).single(),
+      supabase.from("matches").select("*, player1:players!player1_id(full_name), player2:players!player2_id(full_name)").eq("id", matchId).single(),
       supabase.from("match_health_data").select("*").eq("match_id", matchId).limit(1).maybeSingle(),
       supabase.from("match_sensor_analytics").select("*").eq("match_id", matchId).limit(1).maybeSingle(),
       supabase.from("match_rally_stats").select("*").eq("match_id", matchId)
@@ -49,7 +49,7 @@ serve(async (req) => {
     }
 
     const prompt = `You are an elite badminton coach analyzing a match.
-Match Info: ${match?.player1?.name?.name || "Player 1"} vs ${match?.player2?.name?.name || "Player 2"} (Score: ${match?.match_score})
+Match Info: ${match?.player1?.full_name || "Player 1"} vs ${match?.player2?.full_name || "Player 2"} (Score: ${match?.match_score})
 Watch Health Data: ${JSON.stringify(health)}
 Sensor Data: ${JSON.stringify(sensor)}
 Rallies: ${rallies?.length} total rallies.

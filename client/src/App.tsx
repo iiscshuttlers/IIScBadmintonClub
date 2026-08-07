@@ -66,6 +66,7 @@ const PlayerProfile = lazy(() => import("./pages/PlayerProfile"));
 const PlayerPersonalPage = lazy(() => import("./pages/PlayerPersonalPage"));
 const Join = lazy(() => import("./pages/Join"));
 const ProfileSetup = lazy(() => import("./pages/ProfileSetup"));
+const SubscriptionsPage = lazy(() => import("./pages/SubscriptionsPage"));
 const MyMatchesPage = lazy(() => import("./pages/MyMatchesPage"));
 const TournamentStandingsPage = lazy(() => import("./pages/TournamentStandingsPage"));
 
@@ -155,6 +156,7 @@ function AppRoutes() {
           <Route path="/admin"><ProtectedRoute><SiteAdmin /></ProtectedRoute></Route>
           <Route path="/tournament-admin"><ProtectedRoute><TournamentAdmin /></ProtectedRoute></Route>
           <Route path="/profile/setup"><ProtectedRoute><ProfileSetup /></ProtectedRoute></Route>
+          <Route path="/profile/subscriptions"><ProtectedRoute><SubscriptionsPage /></ProtectedRoute></Route>
           
           <Route path="/my-matches"><ProtectedRoute><MyMatchesPage /></ProtectedRoute></Route>
           <Route path="/standings" component={TournamentStandingsPage} />

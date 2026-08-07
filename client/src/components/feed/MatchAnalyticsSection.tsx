@@ -79,8 +79,46 @@ export function AICoachInsightsSection({ matchId }: MatchAnalyticsSectionProps) 
       if (error) throw error;
       setInsights(data.insights);
     } catch (e) {
-      console.error(e);
-      setInsights("*AI Insights could not be generated at this time. Please try again later.*");
+      console.error("Edge function failed, falling back to client-side generation...", e);
+      try {
+        const { data: match } = await supabase.from("matches").select("*, player1:players!player1_id(full_name), player2:players!player2_id(full_name)").eq("id", matchId).single();
+        const { data: health } = await supabase.from("match_health_data").select("*").eq("match_id", matchId).limit(1).maybeSingle();
+        const { data: rallies } = await supabase.from("match_rally_stats").select("*").eq("match_id", matchId);
+        const { data: sensor } = await supabase.from("match_sensor_analytics").select("*").eq("match_id", matchId).limit(1).maybeSingle();
+        
+        const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+        if (!apiKey) throw new Error("No Gemini key");
+
+        const prompt = `You are an elite badminton coach analyzing a match.
+Match Info: ${match?.player1?.full_name || "Player 1"} vs ${match?.player2?.full_name || "Player 2"} (Score: ${match?.match_score})
+Watch Health Data: ${JSON.stringify(health || {})}
+Sensor Data: ${JSON.stringify(sensor || {})}
+Rallies: ${rallies?.length || 0} total rallies.
+
+Give a concise, 2-3 paragraph coaching summary focusing on how their physical exertion (heart rate/stamina) correlated with their performance. Use Markdown.`;
+
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { temperature: 0.7, maxOutputTokens: 1000 },
+            }),
+          }
+        );
+
+        if (!response.ok) throw new Error("Gemini API failed");
+        const json = await response.json();
+        const fallbackInsights = json.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!fallbackInsights) throw new Error("No content generated");
+        
+        setInsights(fallbackInsights);
+      } catch (fallbackError) {
+        console.error(fallbackError);
+        setInsights("*AI Insights could not be generated at this time. Please try again later.*");
+      }
     } finally {
       setLoadingInsights(false);
     }

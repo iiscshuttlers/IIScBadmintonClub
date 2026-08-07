@@ -38,7 +38,8 @@ import {
   ChevronDown,
   RefreshCw,
   HelpCircle,
-  Route
+  Route,
+  Bell
 } from "lucide-react";
 import {
   LineChart,
@@ -75,6 +76,7 @@ import { PathTracingEntry } from "@/components/pathTracing/PathTracingEntry";
 import type { MatchSource } from "@/services/pathTracingService";
 import { useAuth } from "@/contexts/AuthContext";
 import { MatchCard as FeedMatchCard } from "@/components/feed/MatchCard";
+import { shareMatch } from "@/lib/shareMatch";
 import { MatchAnalyticsSection } from "@/components/feed/MatchAnalyticsSection";
 import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
@@ -365,8 +367,8 @@ function HomeSection({ player, matches, fullMatches, currentUser }: { player: an
     const friendlyMatches = allMatchesArr.filter((m) => m.is_friendly !== false);
     const tournamentMatches = allMatchesArr.filter((m) => m.is_friendly === false);
 
-    const total = tournamentMatches.length;
-    const wins = tournamentMatches.filter(isWinner).length;
+    const total = allMatchesArr.length;
+    const wins = allMatchesArr.filter(isWinner).length;
     const winRate = total ? Math.round((wins / total) * 100) : 0;
 
     const getForm = (arr: any[]) => {
@@ -374,10 +376,10 @@ function HomeSection({ player, matches, fullMatches, currentUser }: { player: an
       return recent.length > 0 ? recent.join(" ") : "No matches";
     };
 
-    const streak = getForm(tournamentMatches);
+    const streak = getForm(allMatchesArr);
 
     const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0];
-    const thisWeekMatches = tournamentMatches.filter((m) => ((m as any).date || m.created_at || "") >= weekAgo);
+    const thisWeekMatches = allMatchesArr.filter((m) => ((m as any).date || m.created_at || "") >= weekAgo);
     const thisWeek = thisWeekMatches.length;
     const thisWeekWins = thisWeekMatches.filter(isWinner).length;
     const thisWeekWinRate = thisWeek > 0 ? Math.round((thisWeekWins / thisWeek) * 100) : null;
@@ -385,13 +387,26 @@ function HomeSection({ player, matches, fullMatches, currentUser }: { player: an
     const friendlyWins = friendlyMatches.filter(isWinner).length;
     const tournamentWins = tournamentMatches.filter(isWinner).length;
 
-    const friendlySingles = friendlyMatches.filter((m) => m.category?.toLowerCase().includes("singles"));
-    const friendlyDoubles = friendlyMatches.filter((m) => m.category?.toLowerCase().includes("doubles") && !m.category?.toLowerCase().includes("mixed"));
-    const friendlyMixed = friendlyMatches.filter((m) => m.category?.toLowerCase().includes("mixed"));
+    const isSingles = (c?: string) => {
+      const cat = (c || "").toLowerCase();
+      return cat.includes("singles") || cat === "ms" || cat === "ws";
+    };
+    const isDoubles = (c?: string) => {
+      const cat = (c || "").toLowerCase();
+      return (cat.includes("doubles") && !cat.includes("mixed")) || cat === "md" || cat === "wd";
+    };
+    const isMixed = (c?: string) => {
+      const cat = (c || "").toLowerCase();
+      return cat.includes("mixed") || cat === "xd";
+    };
+
+    const friendlySingles = friendlyMatches.filter((m) => isSingles(m.category));
+    const friendlyDoubles = friendlyMatches.filter((m) => isDoubles(m.category));
+    const friendlyMixed = friendlyMatches.filter((m) => isMixed(m.category));
     
-    const tournamentSingles = tournamentMatches.filter((m) => m.category?.toLowerCase().includes("singles"));
-    const tournamentDoubles = tournamentMatches.filter((m) => m.category?.toLowerCase().includes("doubles") && !m.category?.toLowerCase().includes("mixed"));
-    const tournamentMixed = tournamentMatches.filter((m) => m.category?.toLowerCase().includes("mixed"));
+    const tournamentSingles = allMatchesArr.filter((m) => isSingles(m.category));
+    const tournamentDoubles = allMatchesArr.filter((m) => isDoubles(m.category));
+    const tournamentMixed = allMatchesArr.filter((m) => isMixed(m.category));
 
     return {
       wins,
@@ -406,7 +421,7 @@ function HomeSection({ player, matches, fullMatches, currentUser }: { player: an
       doublesElo: Math.round(player?.doubles_elo ?? 1200),
       mixedElo: Math.round(player?.mixed_elo ?? 1200),
       tournamentElo: Math.round(player?.tournament_elo ?? 1200),
-      straightSets: tournamentMatches.filter(isStraightSetWin).length,
+      straightSets: allMatchesArr.filter(isStraightSetWin).length,
       friendly: { total: friendlyMatches.length, wins: friendlyWins, form: getForm(friendlyMatches) },
       tournament: { total: tournamentMatches.length, wins: tournamentWins, form: getForm(tournamentMatches), straightSets: tournamentMatches.filter(isStraightSetWin).length },
       friendlySingles: { total: friendlySingles.length, wins: friendlySingles.filter(isWinner).length, form: getForm(friendlySingles) },
@@ -614,7 +629,7 @@ function HomeSection({ player, matches, fullMatches, currentUser }: { player: an
 
           <div className="space-y-4">
             {recentMatches.map((m) => (
-              <FeedMatchCard key={m.id} match={m} currentUser={currentUser} isKudosed={false} kudosCount={0} />
+              <PersonalMatchCardItem key={m.id} match={m} currentUser={currentUser} />
             ))}
           </div>
         </motion.div>
@@ -630,23 +645,86 @@ function HomeSection({ player, matches, fullMatches, currentUser }: { player: an
   );
 }
 
+function PersonalMatchCardItem({ match, currentUser }: { match: any; currentUser: any }) {
+  const [liked, setLiked] = useState<boolean | null>(null);
+
+  const isLikedLocally = liked !== null ? liked : !!localStorage.getItem(`liked_${match.id}`);
+  const baseCount = Array.isArray(match.kudos_users) ? match.kudos_users.length : (match.kudos_count || 0);
+  const isIncludedInBackend = Array.isArray(match.kudos_users) && currentUser?.id && match.kudos_users.includes(currentUser.id);
+
+  let finalKudosCount = baseCount;
+  if (isLikedLocally && !isIncludedInBackend) {
+    finalKudosCount += 1;
+  } else if (!isLikedLocally && isIncludedInBackend) {
+    finalKudosCount = Math.max(0, finalKudosCount - 1);
+  }
+
+  const isKudosed = isLikedLocally || isIncludedInBackend;
+
+  const handleKudos = async () => {
+    const storageKey = `liked_${match.id}`;
+    const isCurrentlyLiked = isKudosed;
+
+    if (!isCurrentlyLiked) {
+      localStorage.setItem(storageKey, "1");
+      setLiked(true);
+      toast.success("Match liked! ❤️");
+    } else {
+      localStorage.removeItem(storageKey);
+      setLiked(false);
+      toast.success("Like removed");
+    }
+
+    if (currentUser?.id) {
+      supabase
+        .rpc("toggle_match_kudos", { p_match_id: match.id })
+        .then(({ error }) => {
+          if (error) console.warn("Failed to sync kudos live:", error);
+        });
+    }
+  };
+
+  return (
+    <FeedMatchCard
+      match={match}
+      currentUser={currentUser}
+      isKudosed={isKudosed}
+      kudosCount={finalKudosCount}
+      onKudos={handleKudos}
+      onShare={() => shareMatch(match)}
+    />
+  );
+}
+
 function MatchesSection({ matches, fullMatches, formatTab, setFormatTab, currentUser }: { matches: PersonalMatch[]; fullMatches: any[]; formatTab: FormatTab; setFormatTab: (tab: FormatTab) => void; currentUser: any }) {
-  const filtered = fullMatches.filter((m) => {
-    let group = "Mixed Doubles";
-    if (m.category === "MS" || m.category === "WS") group = "Singles";
-    if (m.category === "MD" || m.category === "WD") group = "Doubles";
-    return group === formatTab;
-  });
+  const getGroup = (c?: string) => {
+    const cat = (c || "").toUpperCase();
+    if (cat === "MS" || cat === "WS" || cat.includes("SINGLES")) return "Singles";
+    if (cat === "MD" || cat === "WD" || (cat.includes("DOUBLES") && !cat.includes("MIXED"))) return "Doubles";
+    if (cat === "XD" || cat.includes("MIXED")) return "Mixed Doubles";
+    return "Singles";
+  };
+
+  const isWinner = (m: any) => {
+    if (typeof m.won === "boolean") return m.won;
+    const pId = currentUser?.id;
+    if (!pId) return false;
+    const isTeam1 = m.player1_id === pId || m.team1_partner_id === pId || m.player1?.id === pId;
+    const isTeam1Winner = m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id || m.winner_id === m.player1?.id;
+    return isTeam1 ? isTeam1Winner : !isTeam1Winner;
+  };
+
+  const filtered = fullMatches.filter((m) => getGroup(m.category) === formatTab);
 
   const stats = useMemo(() => {
-    const singles = matches.filter((m) => m.group === "Singles");
-    const doubles = matches.filter((m) => m.group === "Doubles");
-    const mixedDoubles = matches.filter((m) => m.group === "Mixed Doubles");
+    const singles = fullMatches.filter((m) => getGroup(m.category) === "Singles");
+    const doubles = fullMatches.filter((m) => getGroup(m.category) === "Doubles");
+    const mixedDoubles = fullMatches.filter((m) => getGroup(m.category) === "Mixed Doubles");
 
-    const calcWinRate = (arr: PersonalMatch[]) => {
-      const wins = arr.filter((m) => m.won === true).length;
-      const total = arr.filter((m) => m.won !== null).length;
-      return total > 0 ? ((wins / total) * 100).toFixed(0) : 0;
+    const calcWinRate = (arr: any[]) => {
+      if (arr.length === 0) return 0;
+      const wins = arr.filter(isWinner).length;
+      return ((wins / arr.length) * 100).toFixed(0);
     };
 
     return {
@@ -654,7 +732,7 @@ function MatchesSection({ matches, fullMatches, formatTab, setFormatTab, current
       "Doubles": { count: doubles.length, winRate: calcWinRate(doubles), icon: Users, color: "green", label: "Doubles" },
       "Mixed Doubles": { count: mixedDoubles.length, winRate: calcWinRate(mixedDoubles), icon: Trophy, color: "amber", label: "Mixed" },
     };
-  }, [matches]);
+  }, [fullMatches, currentUser]);
 
   return (
     <div className="space-y-4">
@@ -689,7 +767,7 @@ function MatchesSection({ matches, fullMatches, formatTab, setFormatTab, current
 
       <div className="space-y-3">
         {filtered.length > 0 ? (
-          filtered.map((m) => <FeedMatchCard key={m.id} match={m} currentUser={currentUser} isKudosed={false} kudosCount={0} />)
+          filtered.map((m) => <PersonalMatchCardItem key={m.id} match={m} currentUser={currentUser} />)
         ) : (
           <div className="p-8 text-center text-sm text-muted-foreground italic bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-700/50">
             No {formatTab.toLowerCase()} tournament matches yet
@@ -2145,6 +2223,12 @@ function MeSection({ player }: { player: any }) {
       label: "Edit Profile",
       description: "Update your name, avatar, and bio",
       href: "/profile/setup",
+    },
+    {
+      icon: Bell,
+      label: "My Subscriptions",
+      description: "Manage match and player alerts",
+      href: "/profile/subscriptions",
     },
     {
       icon: Lock,

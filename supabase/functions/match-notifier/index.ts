@@ -207,6 +207,115 @@ async function dispatchNotifications(supabase: any, match: any, tournament: any)
   await supabase.from("tournament_matches").update({ reminder_sent: true }).eq("id", match.id);
 }
 
+async function dispatchFanNotifications(supabase: any, tournamentIds: string[], fcmAccessToken: string | null, projectId: string | null) {
+  if (!fcmAccessToken || !projectId) return;
+
+  const now = new Date();
+  const in24Hours = new Date(now.getTime() + 24 * 60 * 60000);
+
+  const { data: futureMatches } = await supabase
+    .from("tournament_matches")
+    .select("id, match_code, category, scheduled_at, team1_label, team2_label, player1_id, player2_id, player3_id, player4_id")
+    .in("tournament_id", tournamentIds)
+    .gte("scheduled_at", now.toISOString())
+    .lte("scheduled_at", in24Hours.toISOString());
+
+  if (!futureMatches || futureMatches.length === 0) return;
+
+  const matchIds = futureMatches.map((m: any) => m.id);
+  const playerIds = new Set<string>();
+  futureMatches.forEach((m: any) => {
+    if (m.player1_id) playerIds.add(m.player1_id);
+    if (m.player2_id) playerIds.add(m.player2_id);
+    if (m.player3_id) playerIds.add(m.player3_id);
+    if (m.player4_id) playerIds.add(m.player4_id);
+  });
+
+  const { data: matchSubs } = await supabase.from("user_match_notifications").select("*").in("match_id", matchIds);
+  const { data: playerSubs } = await supabase.from("user_player_subscriptions").select("*").in("player_id", Array.from(playerIds));
+  const { data: sentNotifs } = await supabase.from("sent_fan_notifications").select("*").in("match_id", matchIds);
+
+  const sentSet = new Set(sentNotifs?.map((s: any) => `${s.user_id}_${s.match_id}`) || []);
+  const notificationsToSend: { user_id: string, match_id: string, match: any, minsBefore: number }[] = [];
+
+  for (const match of futureMatches) {
+    if (!match.scheduled_at) continue;
+    const matchTime = new Date(match.scheduled_at).getTime();
+    const minsUntilMatch = Math.floor((matchTime - now.getTime()) / 60000);
+
+    const usersToNotify = new Map<string, number>();
+
+    const mSubs = matchSubs?.filter((s: any) => s.match_id === match.id) || [];
+    for (const sub of mSubs) {
+      if (minsUntilMatch <= sub.notify_before_mins && minsUntilMatch >= 0) {
+        usersToNotify.set(sub.user_id, sub.notify_before_mins);
+      }
+    }
+
+    const mPlayerIds = [match.player1_id, match.player2_id, match.player3_id, match.player4_id].filter(Boolean);
+    const pSubs = playerSubs?.filter((s: any) => mPlayerIds.includes(s.player_id)) || [];
+    for (const sub of pSubs) {
+      if (minsUntilMatch <= sub.notify_before_mins && minsUntilMatch >= 0) {
+        if (!usersToNotify.has(sub.user_id) || usersToNotify.get(sub.user_id)! < sub.notify_before_mins) {
+          usersToNotify.set(sub.user_id, sub.notify_before_mins);
+        }
+      }
+    }
+
+    for (const [userId, minsBefore] of usersToNotify.entries()) {
+      if (!sentSet.has(`${userId}_${match.id}`)) {
+        notificationsToSend.push({ user_id: userId, match_id: match.id, match, minsBefore });
+        sentSet.add(`${userId}_${match.id}`);
+      }
+    }
+  }
+
+  if (notificationsToSend.length === 0) return;
+
+  const userIdsToNotify = Array.from(new Set(notificationsToSend.map(n => n.user_id)));
+  const { data: pushTokens } = await supabase.from("user_push_tokens").select("user_id, token").in("user_id", userIdsToNotify);
+  
+  const tokensMap = new Map();
+  if (pushTokens) {
+    for (const t of pushTokens) {
+      if (!tokensMap.has(t.user_id)) tokensMap.set(t.user_id, []);
+      tokensMap.get(t.user_id).push(t.token);
+    }
+  }
+
+  const sentRecords: any[] = [];
+
+  for (const notif of notificationsToSend) {
+    const tokens = tokensMap.get(notif.user_id);
+    if (!tokens || tokens.length === 0) continue;
+
+    const m = notif.match;
+    const title = `🏸 Match starting in ${notif.minsBefore} min${notif.minsBefore === 1 ? '' : 's'}`;
+    const body = `${m.team1_label || 'TBD'} vs ${m.team2_label || 'TBD'} (${m.category})`;
+
+    for (const token of tokens) {
+      const fcmPayload = {
+        message: {
+          token,
+          notification: { title, body },
+          android: { priority: "high" },
+          data: { matchId: m.id, type: "fan_reminder", action: "view_match" }
+        }
+      };
+      await fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${fcmAccessToken}` },
+        body: JSON.stringify(fcmPayload),
+      }).catch(e => console.error("Fan push failed:", e));
+    }
+    sentRecords.push({ user_id: notif.user_id, match_id: notif.match_id });
+  }
+
+  if (sentRecords.length > 0) {
+    await supabase.from("sent_fan_notifications").insert(sentRecords).catch((e:any) => console.error("Failed to insert sent fan notifs", e));
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -228,7 +337,6 @@ serve(async (req) => {
     const { type, match_id } = rawBody;
 
     if (type === "manual" && match_id) {
-      // Manual admin trigger
       const { data: match } = await supabase.from("tournament_matches").select("*, tournaments(*)").eq("id", match_id).single();
       if (!match) return new Response(JSON.stringify({ error: "Match not found" }), { headers: corsHeaders, status: 404 });
       
@@ -237,7 +345,6 @@ serve(async (req) => {
       return new Response(JSON.stringify({ message: "Reminder sent manually!" }), { headers: corsHeaders, status: 200 });
       
     } else {
-      // Cron execution (find matches in next 30 mins)
       const { data: tournaments } = await supabase.from("tournaments").select("id, name").eq("auto_reminders_enabled", true);
       if (!tournaments || tournaments.length === 0) {
         return new Response(JSON.stringify({ message: "No active auto-reminder tournaments" }), { headers: corsHeaders });
@@ -245,7 +352,6 @@ serve(async (req) => {
 
       const tournamentIds = tournaments.map((t: any) => t.id);
       
-      // Calculate 30 mins from now
       const now = new Date();
       const in30Mins = new Date(now.getTime() + 30 * 60000);
 
@@ -257,15 +363,17 @@ serve(async (req) => {
         .lte("scheduled_at", in30Mins.toISOString())
         .eq("reminder_sent", false);
 
-      if (!matches || matches.length === 0) {
-        return new Response(JSON.stringify({ message: "No upcoming matches to remind" }), { headers: corsHeaders });
+      if (matches && matches.length > 0) {
+        for (const match of matches) {
+          await dispatchNotifications(supabase, match, match.tournaments);
+        }
       }
+      
+      const fcmAccessToken = await getFirebaseAccessToken().catch(e => null);
+      const projectId = Deno.env.get("FIREBASE_SERVICE_ACCOUNT") ? JSON.parse(Deno.env.get("FIREBASE_SERVICE_ACCOUNT")!).project_id : null;
+      await dispatchFanNotifications(supabase, tournamentIds, fcmAccessToken, projectId);
 
-      for (const match of matches) {
-        await dispatchNotifications(supabase, match, match.tournaments);
-      }
-
-      return new Response(JSON.stringify({ message: `Sent reminders for ${matches.length} matches` }), { headers: corsHeaders });
+      return new Response(JSON.stringify({ message: `Sent reminders for ${matches ? matches.length : 0} matches` }), { headers: corsHeaders });
     }
 
   } catch (err: any) {

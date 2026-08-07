@@ -39,12 +39,21 @@ export function VenueWelcomeModal() {
           return;
         }
 
-        // Check if the event is from the last 2 hours (user approved 2-hour expiry)
+        // Check if the event is from the last 15 minutes
+        // (2 hours is too long for a welcome modal, it triggers on PCs at home)
         const eventTime = new Date(data.created_at).getTime();
         const now = Date.now();
-        const twoHoursMs = 2 * 60 * 60 * 1000;
+        const fifteenMinsMs = 15 * 60 * 1000;
 
-        if (now - eventTime > twoHoursMs) {
+        if (now - eventTime > fifteenMinsMs) {
+          setLoading(false);
+          return;
+        }
+
+        // Only show this mobile-centric welcome on actual mobile/tablet devices.
+        // If they are on a desktop (like an admin at a desk, or someone at home), skip it.
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (!isMobile) {
           setLoading(false);
           return;
         }

@@ -13,7 +13,7 @@ export function useFeedMatches(ownProfile: any) {
     async (silent = false) => {
       if (!silent) setLoading(true);
       try {
-        const data = await fetchFeedMatches(limitCount);
+        const data = await fetchFeedMatches(limitCount, categoryFilter, timeFilter, tournamentFilter);
         if (data) {
           setMatches(data);
         }
@@ -23,7 +23,7 @@ export function useFeedMatches(ownProfile: any) {
         if (!silent) setLoading(false);
       }
     },
-    [limitCount],
+    [limitCount, categoryFilter, timeFilter, tournamentFilter],
   );
 
   useEffect(() => {
@@ -49,43 +49,8 @@ export function useFeedMatches(ownProfile: any) {
   }, [ownProfile?.buddies]);
 
   const displayMatches = useMemo(() => {
-    let filtered = matches;
-
-    // 1. Category Filter
-    if (categoryFilter !== "all") {
-      filtered = filtered.filter((m: any) => {
-        const cat = (m.category || "").toLowerCase();
-        if (categoryFilter === "singles") return cat.includes("singles");
-        if (categoryFilter === "doubles") return cat.includes("doubles") && !cat.includes("mixed");
-        if (categoryFilter === "mixed") return cat.includes("mixed");
-        return true;
-      });
-    }
-
-    // 2. Time Filter
-    if (timeFilter !== "all") {
-      const now = new Date();
-      filtered = filtered.filter((m: any) => {
-        const matchDate = new Date(m.created_at);
-        if (timeFilter === "today") {
-          return matchDate.toDateString() === now.toDateString();
-        }
-        if (timeFilter === "week") {
-          const weekAgo = new Date();
-          weekAgo.setDate(now.getDate() - 7);
-          return matchDate >= weekAgo;
-        }
-        return true;
-      });
-    }
-
-    // 3. Tournament Filter
-    if (tournamentFilter !== "all") {
-      filtered = filtered.filter((m: any) => m.tournament_id === tournamentFilter);
-    }
-
-    return filtered;
-  }, [matches, categoryFilter, timeFilter, tournamentFilter]);
+    return matches;
+  }, [matches]);
 
   const courtUtil = useMemo(() => {
     const hours = new Array(24).fill(0);
