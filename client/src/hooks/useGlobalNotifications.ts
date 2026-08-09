@@ -5,6 +5,7 @@ import { LocalNotifications } from "@capacitor/local-notifications";
 import { Capacitor } from "@capacitor/core";
 import { useAuth } from "@/contexts/AuthContext";
 import { playWhistleSound, playVictorySound, playServeSound } from "@/lib/sounds";
+import { toast } from "sonner";
 
 export function useGlobalNotifications() {
   const lastAnnouncementRef = useRef<string | null>(null);
@@ -24,7 +25,7 @@ export function useGlobalNotifications() {
     channel.on(
       "postgres_changes",
       {
-        event: "UPDATE",
+        event: "*",
         schema: "public",
         table: "site_data",
       },
@@ -183,6 +184,7 @@ export function useGlobalNotifications() {
               if (data.time !== lastAdminPushRef.current) {
                 lastAdminPushRef.current = data.time;
                 playWhistleSound();
+                toast.info("🏆 Match Notification", { description: data.message });
                 
                 if (Capacitor.isNativePlatform()) {
                   LocalNotifications.schedule({

@@ -181,20 +181,38 @@ function MatchBroadcastCard({
       
       <div className="flex items-center justify-between mb-8">
         <div>
-          <div className="flex items-center gap-2 text-primary font-black uppercase tracking-widest text-sm mb-1">
-            <Activity className="w-5 h-5 animate-pulse" /> Live Broadcast
+          <div className={`flex items-center gap-2 font-black uppercase tracking-widest text-sm mb-1 ${match.status === "finished" ? "text-slate-400" : "text-primary"}`}>
+            {match.status === "finished" ? (
+              <Trophy className="w-5 h-5" />
+            ) : (
+              <Activity className="w-5 h-5 animate-pulse" />
+            )}
+            {match.status === "finished" ? "Match Concluded" : "Live Broadcast"}
           </div>
           <div className="text-muted-foreground text-xs font-bold">
             {match.isFriendly ? "Friendly" : `Tournament • ${match.matchNumber}`} • {match.inferredCategory || match.category} • Best of {match.bestOfSets} ({match.pointsToWin} pts) • Umpire: {match.umpireName}
           </div>
         </div>
-        {Capacitor.isNativePlatform() && (
-          <button 
-             onClick={() => togglePinScore(match.id)} 
-             className={`shrink-0 px-3 py-2 font-bold text-xs rounded-xl flex items-center gap-1.5 border transition ${isScorePinned ? "bg-violet-600 border-violet-500 text-white" : "bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700"}`}>
-             <Tv2 className="w-4 h-4" /> <span className="hidden sm:inline">{isScorePinned ? "Unpin Score" : "Pin Score"}</span>
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {match.status !== "finished" && (
+            <button
+              onClick={() => { window.location.href = `/tv/${match.id}`; }}
+              className="shrink-0 px-3 py-2 font-bold text-xs rounded-xl flex items-center gap-1.5 bg-red-600 hover:bg-red-500 text-white border border-red-500 transition shadow-lg animate-pulse"
+              title="Watch Live TV Scoreboard"
+            >
+              <Tv2 className="w-4 h-4" />
+              <span className="font-black">Live TV</span>
+            </button>
+          )}
+
+          {Capacitor.isNativePlatform() && (
+            <button 
+               onClick={() => togglePinScore(match.id)} 
+               className={`shrink-0 px-3 py-2 font-bold text-xs rounded-xl flex items-center gap-1.5 border transition ${isScorePinned ? "bg-violet-600 border-violet-500 text-white" : "bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700"}`}>
+               <Tv2 className="w-4 h-4" /> <span className="hidden sm:inline">{isScorePinned ? "Unpin Score" : "Pin Score"}</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {match.status === "finished" ? (
@@ -272,7 +290,7 @@ function MatchBroadcastCard({
       )}
 
       {/* ── Admin/Umpire controls ── */}
-      {(isAdmin || isUmpire) && match.status !== "finished" && (
+      {(isAdmin || isUmpire) && (
         <div className="mt-8 pt-5 border-t border-slate-800">
           <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-amber-400 mb-3">
             <ShieldCheck className="w-3.5 h-3.5" /> {isAdmin ? "Admin" : "Umpire"} Controls
@@ -365,6 +383,32 @@ export function LiveScoreSection() {
   const [todayMatches, setTodayMatches] = useState<any[]>([]);
   const [todayMatchesLoading, setTodayMatchesLoading] = useState(true);
   const [picks, setPicks] = useState<Record<string, 1 | 2>>({});
+  const [revealedMatchIds, setRevealedMatchIds] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    supabase
+      .from("site_data")
+      .select("value")
+      .eq("key", "poll_revealed_matches")
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.value) setRevealedMatchIds(data.value as Record<string, boolean>);
+      });
+
+    const sub = supabase
+      .channel("poll_revealed_matches_livescore")
+      .on("postgres_changes", { event: "*", schema: "public", table: "site_data", filter: "key=eq.poll_revealed_matches" },
+        (payload) => { if ((payload.new as any)?.value) setRevealedMatchIds((payload.new as any).value); })
+      .subscribe();
+
+    return () => { supabase.removeChannel(sub); };
+  }, []);
+
+  const toggleRevealMatchPoll = async (matchId: string) => {
+    const nextState = { ...revealedMatchIds, [matchId]: !revealedMatchIds[matchId] };
+    setRevealedMatchIds(nextState);
+    await supabase.from("site_data").upsert({ key: "poll_revealed_matches", value: nextState }, { onConflict: "key" });
+  };
 
   useEffect(() => {
     if (!profile?.id || todayMatches.length === 0) return;
@@ -734,8 +778,16 @@ export function LiveScoreSection() {
         is_friendly:      m.isFriendly,
       });
       if (error) throw error;
-      if (submitId && !m.isFriendly) await supabase.rpc("confirm_friendly_match", { match_uuid: submitId });
-
+      if (!m.isFriendly && m.id) {
+        await supabase.rpc("submit_tournament_match", {
+          p_match_id: m.id,
+          p_winner_side: winner,
+          p_score: sets.join(", "),
+          p_sets: sets,
+          p_umpire_id: null,
+        }).catch(err => console.warn("submit_tournament_match error:", err));
+      }
+      if (submitId && m.isFriendly) await supabase.rpc("confirm_friendly_match", { match_uuid: submitId, confirmer_id: "umpire_bypass" });
       const notifMsg = `🏆 ${m.isFriendly ? "Friendly" : "Tournament"} Match: ${m.t1.p1Name}${m.t1.p2Name ? ` & ${m.t1.p2Name}` : ""} vs ${m.t2.p1Name}${m.t2.p2Name ? ` & ${m.t2.p2Name}` : ""} — ${sets.join(", ")}`;
       await supabase.from("site_data").upsert({ key: "match_alert", value: { message: notifMsg, time: Date.now() } });
 
@@ -947,6 +999,9 @@ export function LiveScoreSection() {
                     myPick={picks[m.id]}
                     profileId={profile?.id}
                     onPick={(team) => handlePick(m.id, team)}
+                    isResultsRevealed={!!revealedMatchIds[m.id]}
+                    isAdmin={isAdmin}
+                    onToggleRevealResults={() => toggleRevealMatchPoll(m.id)}
                   />
                 )}
               </div>

@@ -4,7 +4,7 @@
 -- Replace the URL with your production project URL in production.
 SELECT cron.schedule(
   'invoke-match-notifier',
-  '*/15 * * * *', -- Every 15 minutes
+  '*/5 * * * *', -- Every 5 minutes for precise court timing
   $$
     select net.http_post(
         url:='https://YOUR_PROJECT_ID.supabase.co/functions/v1/match-notifier',
@@ -13,3 +13,4 @@ SELECT cron.schedule(
     ) as request_id;
   $$
 );
+

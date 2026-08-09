@@ -145,6 +145,17 @@ export default function TvScoreboard() {
           )}
         </div>
         <div className="flex items-center gap-6">
+          {matchState.t1.score >= (matchState.pointsToWin || 21) - 1 && matchState.t2.score >= (matchState.pointsToWin || 21) - 1 && matchState.t1.score === matchState.t2.score && (
+            <div className="px-4 py-2 bg-amber-500/20 border border-amber-500/50 text-amber-400 text-2xl font-black rounded-2xl tracking-widest animate-bounce">
+              ⚡ DEUCE
+            </div>
+          )}
+          {((matchState.t1.score >= (matchState.pointsToWin || 21) - 1 && matchState.t1.score > matchState.t2.score) ||
+            (matchState.t2.score >= (matchState.pointsToWin || 21) - 1 && matchState.t2.score > matchState.t1.score)) && (
+            <div className="px-4 py-2 bg-rose-500/20 border border-rose-500/50 text-rose-400 text-2xl font-black rounded-2xl tracking-widest animate-pulse">
+              🔥 {matchState.t1.games === Math.floor(matchState.bestOfSets / 2) || matchState.t2.games === Math.floor(matchState.bestOfSets / 2) ? "MATCH POINT" : "GAME POINT"}
+            </div>
+          )}
           <div className="text-2xl font-bold text-slate-400 tracking-widest uppercase">
             {matchState.inferredCategory || matchState.category}
           </div>

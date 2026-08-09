@@ -141,8 +141,8 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
               {upcomingScheduled.map((m) => {
                 const t1 = m.team1_label;
                 const t2 = m.team2_label;
-                const isBye = t1 === "BYE" || t2 === "BYE" || t1?.includes(" BYE ") || t2?.includes(" BYE ");
-                const noPlayers = (!t1 || !t2 || isBye) && !isAdmin;
+                const isBye = t1 === "BYE" || t2 === "BYE" || t1?.includes(" BYE ") || t2?.includes(" BYE ") || t1?.toUpperCase().includes("BYE") || t2?.toUpperCase().includes("BYE");
+                const noPlayers = !t1 || !t2 || isBye;
 
                 return (
                   <button

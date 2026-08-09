@@ -10,7 +10,7 @@ import { BracketVisual } from "@/components/tournament/BracketVisual";
 import {
   Loader2, Save, Trophy, Users, Swords, Archive, Plus, X, Search,
   ChevronDown, ChevronUp, Lock, Unlock, Play, SkipForward, Settings2,
-  CalendarDays, MapPin, Link, Unlink, Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw
+  CalendarDays, MapPin, Link, Unlink, Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw, Check, Bell, Camera
 } from "lucide-react";
 import { InfoModal } from "@/components/InfoModal";
 import { PlayerSelect } from "@/components/umpire/PlayerSelect";
@@ -67,6 +67,7 @@ interface Tournament {
   form_url: string | null;
   form_status: string;
   form_close_date: string | null;
+  auto_reminders_enabled?: boolean;
   archived_at: string | null;
   created_at: string;
 }
@@ -501,6 +502,27 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
           </div>
         </div>
 
+        <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <label className="font-bold text-slate-800 dark:text-slate-200 text-sm flex items-center gap-1.5">
+              <Bell className="w-4 h-4 text-amber-500" /> Auto Match & Umpire Reminders
+            </label>
+            <p className="text-xs text-muted-foreground">
+              Sends push & email notifications to players and umpires 30 mins before scheduled matches.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => upd("auto_reminders_enabled", !form.auto_reminders_enabled)}
+            className={`px-4 py-2 rounded-xl text-xs font-black border transition-all ${
+              form.auto_reminders_enabled !== false
+                ? "bg-emerald-600 text-white border-emerald-500 shadow-xs"
+                : "bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700"
+            }`}
+          >
+            {form.auto_reminders_enabled !== false ? "✓ Enabled" : "Disabled"}
+          </button>
+        </div>
       </div>
 
       <div className="flex justify-between items-center">
@@ -1149,6 +1171,8 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
   const [bulkText, setBulkText] = useState("");
   const [bulkPreview, setBulkPreview] = useState<{ matchCode: string; court: string; at: string; found: boolean }[]>([]);
   const [bulkSaving, setBulkSaving] = useState(false);
+  const [remindSendingId, setRemindSendingId] = useState<string | null>(null);
+  const [remindSentMap, setRemindSentMap] = useState<Record<string, boolean>>({});
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -1277,6 +1301,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
     await supabase.from("tournament_matches").update({
       court_number: editSchedule.court || null,
       scheduled_at: editSchedule.at || null,
+      reminder_sent: false,
     }).eq("id", editSchedule.matchId);
     await load();
     setEditSchedule(null);
@@ -1703,30 +1728,63 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                         <div className="flex-1" />
 
                         {!isByeMatch && m.status === "scheduled" && (
-                          <button onClick={async () => {
-                            try {
-                              const { error } = await supabase.functions.invoke("match-notifier", { body: { match_id: m.id, type: "manual" } });
-                              if (error) throw error;
-                              toast.success("Reminder sent!");
-                            } catch (e: any) { toast.error(e.message ?? "Failed to send reminder"); }
-                          }}
-                            className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 transition">
-                            <AlertCircle className="w-3 h-3" /> Remind
+                          <button
+                            disabled={remindSendingId === m.id}
+                            onClick={async () => {
+                              setRemindSendingId(m.id);
+                              try {
+                                const { error } = await supabase.functions.invoke("match-notifier", { body: { match_id: m.id, type: "manual" } });
+                                if (error) throw error;
+                                toast.success("Reminder sent!");
+                                setRemindSentMap((prev) => ({ ...prev, [m.id]: true }));
+                                setTimeout(() => {
+                                  setRemindSentMap((prev) => ({ ...prev, [m.id]: false }));
+                                }, 3000);
+                              } catch (e: any) {
+                                toast.error(e.message ?? "Failed to send reminder");
+                              } finally {
+                                setRemindSendingId(null);
+                              }
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-xs"
+                          >
+                            {remindSendingId === m.id ? (
+                              <>
+                                <Loader2 className="w-3 h-3 animate-spin text-amber-500" />
+                                <span>Sending...</span>
+                              </>
+                            ) : remindSentMap[m.id] ? (
+                              <>
+                                <Check className="w-3 h-3 text-emerald-500" />
+                                <span className="text-emerald-600 dark:text-emerald-400 font-black">Sent!</span>
+                              </>
+                            ) : (
+                              <>
+                                <AlertCircle className="w-3 h-3 text-amber-500" />
+                                <span>Remind</span>
+                              </>
+                            )}
                           </button>
                         )}
                         {!isByeMatch && (
-                          <button onClick={() => {
-                            let localAt = "";
-                            if (m.scheduled_at) {
-                              const d = new Date(m.scheduled_at);
-                              const pad = (n: number) => n.toString().padStart(2, '0');
-                              localAt = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-                            }
-                            setEditSchedule({ matchId: m.id, court: m.court_number ?? "", at: localAt });
-                          }}
-                            className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 transition">
-                            <CalendarDays className="w-3 h-3" /> Schedule
-                          </button>
+                          <>
+                            <button onClick={() => {
+                              let localAt = "";
+                              if (m.scheduled_at) {
+                                const d = new Date(m.scheduled_at);
+                                const pad = (n: number) => n.toString().padStart(2, '0');
+                                localAt = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                              }
+                              setEditSchedule({ matchId: m.id, court: m.court_number ?? "", at: localAt });
+                            }}
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                              <CalendarDays className="w-3 h-3" /> Schedule
+                            </button>
+                            <button onClick={() => { window.location.href = `/tv/camera/${m.id}`; }}
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition">
+                              <Camera className="w-3 h-3" /> Camera
+                            </button>
+                          </>
                         )}
                       </div>
 

@@ -186,6 +186,44 @@ export function H2HSection() {
   }, [p1, p2]);
   const p2WinProb = 100 - p1WinProb;
 
+  const h2hPointStats = useMemo(() => {
+    let p1Points = 0;
+    let p2Points = 0;
+    let maxP1Streak = 0, currentP1Streak = 0;
+    let maxP2Streak = 0, currentP2Streak = 0;
+
+    for (const m of [...h2hMatches].reverse()) {
+      const isP1Winner = m.winner_id === p1Id || (m.winner_id && m.team1_partner_id === p1Id && m.winner_id === m.player1_id);
+      if (isP1Winner) {
+        currentP1Streak++;
+        maxP1Streak = Math.max(maxP1Streak, currentP1Streak);
+        currentP2Streak = 0;
+      } else {
+        currentP2Streak++;
+        maxP2Streak = Math.max(maxP2Streak, currentP2Streak);
+        currentP1Streak = 0;
+      }
+
+      const scorePart = m.score ? m.score.split(" | ")[0] : "";
+      const sets = scorePart.split(",").map((s: string) => s.trim());
+      for (const s of sets) {
+        const pts = s.split("-").map((p: string) => parseInt(p, 10));
+        if (pts.length === 2 && !isNaN(pts[0]) && !isNaN(pts[1])) {
+          const isT1 = m.player1_id === p1Id || m.team1_partner_id === p1Id;
+          if (isT1) {
+            p1Points += pts[0];
+            p2Points += pts[1];
+          } else {
+            p1Points += pts[1];
+            p2Points += pts[0];
+          }
+        }
+      }
+    }
+
+    return { p1Points, p2Points, maxP1Streak, maxP2Streak };
+  }, [h2hMatches, p1Id]);
+
   if (loading)
     return (
       <div className="flex justify-center py-12">
@@ -289,6 +327,31 @@ export function H2HSection() {
                 </div>
               )}
 
+              {/* Points Scored & Streaks Breakdown */}
+              {(h2hPointStats.p1Points > 0 || h2hPointStats.p2Points > 0) && (
+                <div className="w-full mb-4 p-3 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-700/40 space-y-2">
+                  <div className="flex justify-between text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                    <span>Total Points</span>
+                    <span className="text-slate-700 dark:text-slate-300 font-bold">{h2hPointStats.p1Points} - {h2hPointStats.p2Points}</span>
+                  </div>
+                  <div className="h-2 rounded-full overflow-hidden flex bg-slate-200 dark:bg-slate-700">
+                    <div
+                      className="h-full bg-emerald-500 transition-all duration-700"
+                      style={{ width: `${(h2hPointStats.p1Points / (h2hPointStats.p1Points + h2hPointStats.p2Points || 1)) * 100}%` }}
+                    />
+                    <div
+                      className="h-full bg-purple-500 transition-all duration-700"
+                      style={{ width: `${(h2hPointStats.p2Points / (h2hPointStats.p1Points + h2hPointStats.p2Points || 1)) * 100}%` }}
+                    />
+                  </div>
+                  {(h2hPointStats.maxP1Streak > 1 || h2hPointStats.maxP2Streak > 1) && (
+                    <div className="flex justify-between text-[10px] font-bold text-muted-foreground pt-1 border-t border-slate-200/50 dark:border-slate-700/50">
+                      <span className="text-emerald-600 dark:text-emerald-400">Streak: {h2hPointStats.maxP1Streak} win{h2hPointStats.maxP1Streak !== 1 ? "s" : ""}</span>
+                      <span className="text-purple-600 dark:text-purple-400">Streak: {h2hPointStats.maxP2Streak} win{h2hPointStats.maxP2Streak !== 1 ? "s" : ""}</span>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Rivalry Milestone */}
               {rivalryMilestone && (

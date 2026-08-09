@@ -35,6 +35,8 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
 
     fetchNotifications();
 
+    window.addEventListener("notifications_changed", fetchNotifications);
+
     // Subscribe to new notifications
     const channel = supabase
       .channel(`notifications_channel_${currentUser.id}_${Math.random().toString(36).slice(2)}`)
@@ -62,6 +64,7 @@ export function NotificationsMenu({ currentUser }: { currentUser: any }) {
       .subscribe();
 
     return () => {
+      window.removeEventListener("notifications_changed", fetchNotifications);
       supabase.removeChannel(channel);
     };
   }, [currentUser]);

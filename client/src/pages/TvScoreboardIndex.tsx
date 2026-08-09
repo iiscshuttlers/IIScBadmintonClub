@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { useLiveSiteData } from "@/hooks/useMatches";
-import { Tv2, Activity, ShieldCheck, MonitorPlay, ArrowLeft } from "lucide-react";
+import { Tv2, Activity, ShieldCheck, MonitorPlay, ArrowLeft, Camera } from "lucide-react";
 import type { BwfMatchState } from "@/types/umpire";
 
 export default function TvScoreboardIndex() {
@@ -26,8 +26,15 @@ export default function TvScoreboardIndex() {
             TV Scoreboard
           </h1>
           <p className="text-xl text-slate-400 font-medium max-w-lg mx-auto">
-            Select an active match to project a massive, full-screen digital scoreboard onto this display.
+            Select an active match to project a digital scoreboard or stream live with phone camera overlay.
           </p>
+          <div className="pt-2 flex justify-center gap-3">
+            <Link href="/tv/camera">
+              <button className="px-5 py-3 bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white font-black rounded-2xl shadow-lg flex items-center gap-2 text-sm transition active:scale-95 cursor-pointer">
+                <Camera className="w-5 h-5" /> Phone Camera Broadcast
+              </button>
+            </Link>
+          </div>
         </div>
 
         {isLoading ? (

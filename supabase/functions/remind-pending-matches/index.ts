@@ -117,7 +117,8 @@ serve(async () => {
         .eq("user_id", confirmerId);
 
       if (tokens && tokens.length > 0) {
-        for (const { token } of tokens) {
+        const uniqueTokens = Array.from(new Set(tokens.map((t: any) => t.token)));
+        for (const token of uniqueTokens) {
           await sendFcmNotification(
             token as string,
             notifTitle,

@@ -23,8 +23,18 @@ export function PlayersManager() {
   >("profile");
   const [genderFilter, setGenderFilter] = useState<"all" | "male" | "female">("all");
   const [actionId, setActionId] = useState<string | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{
+    title: string;
+    message: string;
+    confirmLabel: string;
+    confirmStyle: 'danger' | 'warning' | 'default';
+    onConfirm: () => void;
+  } | null>(null);
   const { recordAction } = useAdminHistory();
   const { isMainAdmin, updateRole } = useAuth();
+
+  const showConfirm = (action: typeof confirmAction) => setConfirmAction(action);
+  const dismissConfirm = () => setConfirmAction(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -233,30 +243,39 @@ export function PlayersManager() {
     setActionId(null);
   };
 
-  const handleRoleChange = async (id: string, name: string, newRole: string) => {
-    if (!confirm(`Change role for "${name}" to ${newRole.toUpperCase()}?`)) return;
-    setActionId(id);
-    try {
-      await updateRole(id, newRole);
-      toast("Role updated successfully", { icon: "✅" });
-      setPlayers((p) => p.map((pl) => (pl.id === id ? { ...pl, role: newRole } : pl)));
-      await recordAction({
-        action_type: "update",
-        entity_type: "players",
-        entity_id: id,
-        before_state: { role: players.find(p => p.id === id)?.role },
-        after_state: { role: newRole },
-        label: `Updated role for ${name} to ${newRole}`,
-      });
-    } catch (err: any) {
-      toast.error(err.message || "Failed to update role");
-    } finally {
-      setActionId(null);
-    }
+  const handleRoleChange = (id: string, name: string, newRole: string) => {
+    const roleLabel: Record<string, string> = { user: 'Regular', umpire: 'Umpire', admin: 'Admin', master_admin: 'Master Admin' };
+    showConfirm({
+      title: 'Change Role',
+      message: `Change role for "${name}" to ${roleLabel[newRole] ?? newRole}?${
+        newRole === 'master_admin' ? '\n\n⚠️ Warning: Master Admin grants full system control.' : ''
+      }`,
+      confirmLabel: 'Yes, Change Role',
+      confirmStyle: newRole === 'master_admin' ? 'danger' : newRole === 'admin' ? 'warning' : 'default',
+      onConfirm: async () => {
+        setActionId(id);
+        try {
+          await updateRole(id, newRole);
+          toast('Role updated successfully', { icon: '✅' });
+          setPlayers((p) => p.map((pl) => (pl.id === id ? { ...pl, role: newRole } : pl)));
+          await recordAction({
+            action_type: 'update',
+            entity_type: 'players',
+            entity_id: id,
+            before_state: { role: players.find(p => p.id === id)?.role },
+            after_state: { role: newRole },
+            label: `Updated role for ${name} to ${newRole}`,
+          });
+        } catch (err: any) {
+          toast.error(err.message || 'Failed to update role');
+        } finally {
+          setActionId(null);
+        }
+      },
+    });
   };
 
-  const retirePlayer = async (id: string, name: string, currentlyRetired: boolean) => {
-    if (!currentlyRetired && !confirm(`Mark "${name}" as retired? They will be hidden from matchmaking and challenges will be disabled.`)) return;
+  const doRetirePlayer = async (id: string, name: string, currentlyRetired: boolean) => {
     setActionId(id);
     const { error } = await supabase
       .from("players")
@@ -277,6 +296,20 @@ export function PlayersManager() {
       });
     }
     setActionId(null);
+  };
+
+  const retirePlayer = (id: string, name: string, currentlyRetired: boolean) => {
+    if (!currentlyRetired) {
+      showConfirm({
+        title: 'Retire Player',
+        message: `Mark "${name}" as retired?\n\nThey will be hidden from matchmaking and all challenges will be disabled.`,
+        confirmLabel: 'Yes, Retire',
+        confirmStyle: 'danger',
+        onConfirm: () => doRetirePlayer(id, name, false),
+      });
+    } else {
+      doRetirePlayer(id, name, true);
+    }
   };
 
   const noProfileUsers = authUsers.filter(
@@ -415,6 +448,50 @@ export function PlayersManager() {
 
   return (
     <div className="space-y-4">
+      {/* ── In-app Confirmation Modal ── */}
+      {confirmAction && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4" onClick={dismissConfirm}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div
+            className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 w-full max-w-sm p-6 space-y-4"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mx-auto ${
+              confirmAction.confirmStyle === 'danger' ? 'bg-rose-100 dark:bg-rose-900/30' :
+              confirmAction.confirmStyle === 'warning' ? 'bg-amber-100 dark:bg-amber-900/30' :
+              'bg-primary/10'
+            }`}>
+              <AlertTriangle className={`w-6 h-6 ${
+                confirmAction.confirmStyle === 'danger' ? 'text-rose-500' :
+                confirmAction.confirmStyle === 'warning' ? 'text-amber-500' :
+                'text-primary'
+              }`} />
+            </div>
+            <div className="text-center space-y-1.5">
+              <h3 className="font-bold text-lg text-foreground dark:text-slate-100">{confirmAction.title}</h3>
+              <p className="text-sm text-muted-foreground dark:text-slate-400 whitespace-pre-line">{confirmAction.message}</p>
+            </div>
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={dismissConfirm}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-semibold text-muted-foreground dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { dismissConfirm(); confirmAction.onConfirm(); }}
+                className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition ${
+                  confirmAction.confirmStyle === 'danger' ? 'bg-rose-500 hover:bg-rose-600' :
+                  confirmAction.confirmStyle === 'warning' ? 'bg-amber-500 hover:bg-amber-600' :
+                  'bg-primary hover:bg-primary/90'
+                }`}
+              >
+                {confirmAction.confirmLabel}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Stats bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
         {[
@@ -627,16 +704,17 @@ export function PlayersManager() {
                           )}
                           {isMainAdmin && (
                             <select
-                              value={p.role || "player"}
+                              value={p.role || "user"}
                               onChange={(e) => handleRoleChange(p.id, p.full_name, e.target.value)}
                               disabled={busy}
                               className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-muted-foreground outline-none focus:ring-1 focus:ring-primary transition disabled:opacity-50"
                             >
-                              <option value="player">Reg</option>
+                              <option value="user">Reg</option>
                               <option value="umpire">Ump</option>
                               <option value="admin">Adm</option>
                               <option value="master_admin">M-Adm</option>
                             </select>
+
                           )}
                         </div>
                       </td>
@@ -760,12 +838,12 @@ export function PlayersManager() {
                     <div className="grid grid-cols-2 gap-2 mt-1">
                        {isMainAdmin && (
                           <select
-                            value={p.role || "player"}
+                            value={p.role || "user"}
                             onChange={(e) => handleRoleChange(p.id, p.full_name, e.target.value)}
                             disabled={busy}
                             className="w-full px-2 py-2 rounded-xl text-xs font-bold bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/50 text-indigo-700 dark:text-indigo-400 outline-none focus:ring-1 focus:ring-indigo-500 transition disabled:opacity-50 h-full"
                           >
-                            <option value="player">Regular</option>
+                            <option value="user">Regular</option>
                             <option value="umpire">Umpire</option>
                             <option value="admin">Admin</option>
                             <option value="master_admin">Master</option>

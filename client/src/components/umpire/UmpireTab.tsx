@@ -175,6 +175,8 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
   };
 
   const startMatch = (m: any) => {
+    try { localStorage.removeItem(SETUP_STORAGE_KEY); } catch {}
+    resetUmpireStore();
     setActiveMatches(prev => {
       setActiveMatchIndex(prev.length);
       return [...prev, m];
@@ -218,7 +220,11 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
           );
         })}
         <button
-          onClick={() => setActiveMatchIndex(-1)}
+          onClick={() => {
+            try { localStorage.removeItem(SETUP_STORAGE_KEY); } catch {}
+            resetUmpireStore();
+            setActiveMatchIndex(-1);
+          }}
           className={`whitespace-nowrap px-4 py-2 rounded-t-xl text-sm font-bold transition-all border-b-2 flex items-center gap-2 ${
             showNewMatch
               ? "bg-slate-800 border-primary text-primary"
@@ -403,6 +409,8 @@ function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditSt
       </div>
       <div className="space-y-3">
         {recent.filter(m => {
+          const isByeMatch = m.team1_label === "BYE" || m.team2_label === "BYE" || m.score === "BYE" || (m.team1_label || "").toUpperCase().includes("BYE") || (m.team2_label || "").toUpperCase().includes("BYE");
+          if (isByeMatch) return false;
           if (filterFormat === "ALL") return true;
           const p1g = m.player1?.gender?.toLowerCase();
           const p2g = m.player2?.gender?.toLowerCase();

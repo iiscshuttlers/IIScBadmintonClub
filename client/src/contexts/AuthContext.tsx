@@ -145,15 +145,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useGeofenceAuthSync(session);
 
   const updateRole = async (playerId: string, role: string) => {
-    const { error } = await supabase
-      .from("players")
-      .update({ role })
-      .eq("id", playerId);
+    const { error } = await supabase.rpc('set_player_role', { p_id: playerId, p_role: role });
     if (error) throw new Error(`Failed to update role: ${error.message}`);
     if (session?.user?.id === playerId) {
       await refreshProfile();
     }
   };
+
 
   return (
     <AuthContext.Provider
