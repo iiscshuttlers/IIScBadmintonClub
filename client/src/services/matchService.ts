@@ -57,15 +57,68 @@ export async function fetchPendingMatchesForPlayer(playerId: string): Promise<Ma
   return (data ?? []) as unknown as MatchWithPlayers[];
 }
 
-export async function fetchFeedMatches(limit = 100): Promise<MatchWithPlayers[]> {
+export async function fetchFeedMatches(
+  limit = 100,
+  categoryFilter = "all",
+  timeFilter = "all",
+  tournamentFilter = "all"
+): Promise<MatchWithPlayers[]> {
   const playerSelect = "id, full_name, avatar_url, gender, elo_rating, singles_elo, doubles_elo, mixed_elo";
-  const { data: tournamentData, error: tourneyError } = await supabase
+
+  let friendlyQuery = supabase
+    .from("matches")
+    .select(MATCH_SELECT_WITH_PLAYERS)
+    .in("status", ["confirmed"]);
+
+  let tourneyQuery = supabase
     .from("tournament_matches")
     .select(`*, tournaments!inner(status), player1:players!player1_id(${playerSelect}), player2:players!player2_id(${playerSelect}), partner1:players!player3_id(${playerSelect}), partner2:players!player4_id(${playerSelect})`)
     .eq("status", "completed")
-    .neq("tournaments.status", "deleted")
-    .order("created_at", { ascending: false })
-    .limit(limit);
+    .neq("tournaments.status", "deleted");
+
+  if (tournamentFilter !== "all") {
+    friendlyQuery = friendlyQuery.eq("id", "00000000-0000-0000-0000-000000000000"); // Don't fetch friendly matches for a specific tournament
+    tourneyQuery = tourneyQuery.eq("tournament_id", tournamentFilter);
+  }
+
+  if (categoryFilter !== "all") {
+    if (categoryFilter === "singles") {
+      // Singles matches typically don't have doubles in category, or are explicitly MS/WS
+      friendlyQuery = friendlyQuery.not("category", "ilike", "%Doubles%");
+      tourneyQuery = tourneyQuery.not("category", "ilike", "%Doubles%");
+    } else if (categoryFilter === "doubles") {
+      friendlyQuery = friendlyQuery.ilike("category", "%Doubles%").not("category", "ilike", "%Mixed%");
+      tourneyQuery = tourneyQuery.ilike("category", "%Doubles%").not("category", "ilike", "%Mixed%");
+    } else if (categoryFilter === "mixed") {
+      friendlyQuery = friendlyQuery.ilike("category", "%Mixed%");
+      tourneyQuery = tourneyQuery.ilike("category", "%Mixed%");
+    }
+  }
+
+  if (timeFilter !== "all") {
+    const now = new Date();
+    if (timeFilter === "today") {
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+      friendlyQuery = friendlyQuery.gte("created_at", today);
+      tourneyQuery = tourneyQuery.gte("created_at", today);
+    } else if (timeFilter === "week") {
+      const weekAgo = new Date();
+      weekAgo.setDate(now.getDate() - 7);
+      friendlyQuery = friendlyQuery.gte("created_at", weekAgo.toISOString());
+      tourneyQuery = tourneyQuery.gte("created_at", weekAgo.toISOString());
+    } else if (timeFilter === "month") {
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      friendlyQuery = friendlyQuery.gte("created_at", monthStart);
+      tourneyQuery = tourneyQuery.gte("created_at", monthStart);
+    }
+  }
+
+  const [{ data: friendlyData, error: friendlyError }, { data: tournamentData, error: tourneyError }] = await Promise.all([
+    friendlyQuery.order("created_at", { ascending: false }).limit(limit),
+    tourneyQuery.order("created_at", { ascending: false }).limit(limit)
+  ]);
+
+  if (friendlyError) throw friendlyError;
   if (tourneyError) throw tourneyError;
 
   const mappedTourney = (tournamentData ?? [])
@@ -81,7 +134,11 @@ export async function fetchFeedMatches(limit = 100): Promise<MatchWithPlayers[]>
       team2_partner_id: m.player4_id,
     }));
 
-  return mappedTourney as unknown as MatchWithPlayers[];
+  const allMatches = [...(friendlyData ?? []), ...mappedTourney].sort((a: any, b: any) => {
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
+
+  return allMatches.slice(0, limit) as unknown as MatchWithPlayers[];
 }
 
 export async function confirmMatch(matchId: string, confirmerId: string) {

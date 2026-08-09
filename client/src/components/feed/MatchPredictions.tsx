@@ -7,9 +7,7 @@ import type { BwfMatchState } from "@/types/umpire";
 type VoteTally = { t1: number; t2: number };
 type StatProb = { t1: number; t2: number } | null;
 
-async function fetchStatProb(m: BwfMatchState): Promise<StatProb> {
-  const t1Ids = [m.t1.p1Id, m.t1.p2Id].filter(Boolean) as string[];
-  const t2Ids = [m.t2.p1Id, m.t2.p2Id].filter(Boolean) as string[];
+async function fetchStatProb(t1Ids: string[], t2Ids: string[]): Promise<StatProb> {
   if (!t1Ids.length || !t2Ids.length) return null;
 
   const { data } = await supabase
@@ -108,16 +106,31 @@ function ProbBar({ t1Pct, t2Pct, t1Label, t2Label, label, tooltip }: {
           </div>
         )}
       </div>
-      <div className="flex justify-between mt-1">
-        <span className="text-[10px] text-primary dark:text-primary font-bold truncate max-w-[45%]">{t1Label}</span>
-        <span className="text-[10px] text-sky-600 dark:text-sky-400 font-bold truncate max-w-[45%] text-right">{t2Label}</span>
+      <div className="flex justify-between gap-2 mt-1">
+        <span className="text-[10px] text-primary dark:text-primary font-bold break-words flex-1">{t1Label}</span>
+        <span className="text-[10px] text-sky-600 dark:text-sky-400 font-bold break-words flex-1 text-right">{t2Label}</span>
       </div>
     </div>
   );
 }
 
-function MatchPredictionCard({ m, myPick, profileId, onPick }: {
-  m: BwfMatchState;
+export function MatchPredictionCard({
+  matchId,
+  t1Ids,
+  t2Ids,
+  t1Label,
+  t2Label,
+  hasStarted,
+  myPick,
+  profileId,
+  onPick
+}: {
+  matchId: string;
+  t1Ids: string[];
+  t2Ids: string[];
+  t1Label: string;
+  t2Label: string;
+  hasStarted: boolean;
   myPick: 1 | 2 | undefined;
   profileId: string | undefined;
   onPick: (team: 1 | 2) => void;
@@ -125,17 +138,10 @@ function MatchPredictionCard({ m, myPick, profileId, onPick }: {
   const [statProb, setStatProb] = useState<StatProb>(null);
   const [tally, setTally] = useState<VoteTally>({ t1: 0, t2: 0 });
 
-  const t1Label = m.t1.p2Name
-    ? `${m.t1.p1Name.split(" ")[0]} & ${m.t1.p2Name.split(" ")[0]}`
-    : m.t1.p1Name;
-  const t2Label = m.t2.p2Name
-    ? `${m.t2.p1Name.split(" ")[0]} & ${m.t2.p2Name.split(" ")[0]}`
-    : m.t2.p1Name;
-
   // Load stat probability once
   useEffect(() => {
-    fetchStatProb(m).then(setStatProb);
-  }, [m.id]);
+    fetchStatProb(t1Ids, t2Ids).then(setStatProb);
+  }, [matchId, t1Ids, t2Ids]);
 
   // Load vote tally + realtime (always, so after voting bars update live)
   useEffect(() => {
@@ -143,17 +149,17 @@ function MatchPredictionCard({ m, myPick, profileId, onPick }: {
       const { data } = await supabase
         .from("live_match_votes")
         .select("pick")
-        .eq("live_match_id", m.id);
+        .eq("live_match_id", matchId);
       if (!data) return;
       setTally({ t1: data.filter(r => r.pick === 1).length, t2: data.filter(r => r.pick === 2).length });
     };
     loadTally();
 
     const sub = supabase
-      .channel(`votes_${m.id}`)
+      .channel(`votes_${matchId}`)
       .on("postgres_changes", {
         event: "INSERT", schema: "public", table: "live_match_votes",
-        filter: `live_match_id=eq.${m.id}`,
+        filter: `live_match_id=eq.${matchId}`,
       }, (payload) => {
         if (profileId && (payload.new as any).user_id === profileId) return; // Handled optimistically
         setTally(prev => ({
@@ -163,7 +169,7 @@ function MatchPredictionCard({ m, myPick, profileId, onPick }: {
       })
       .on("postgres_changes", {
         event: "DELETE", schema: "public", table: "live_match_votes",
-        filter: `live_match_id=eq.${m.id}`,
+        filter: `live_match_id=eq.${matchId}`,
       }, (payload) => {
         if (profileId && (payload.old as any).user_id === profileId) return; // Handled optimistically
         setTally(prev => ({
@@ -174,26 +180,27 @@ function MatchPredictionCard({ m, myPick, profileId, onPick }: {
       .subscribe();
 
     return () => { supabase.removeChannel(sub); };
-  }, [m.id]);
+  }, [matchId, profileId]);
 
   const totalVotes = tally.t1 + tally.t2;
   const voteT1Pct = totalVotes === 0 ? 50 : Math.round((tally.t1 / totalVotes) * 100);
   const voteT2Pct = totalVotes === 0 ? 50 : 100 - voteT1Pct;
 
   return (
-    <div className="px-5 py-4">
-      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3">
-        {m.isFriendly ? "Friendly" : `Tournament · ${m.matchNumber}`} · {m.inferredCategory || m.category}
-      </p>
-
-      {myPick ? (
+    <div className="pt-2 border-t border-slate-700/50 mt-2">
+      {myPick || hasStarted ? (
         <>
-          <div className="flex items-center gap-2 bg-violet-50 dark:bg-violet-950/20 rounded-xl px-3 py-2.5 mb-1">
-            <Check className="w-4 h-4 text-violet-500 shrink-0" />
-            <p className="text-sm text-violet-700 dark:text-violet-400 font-bold">
-              You picked <strong>{myPick === 1 ? t1Label : t2Label}</strong>
-            </p>
-          </div>
+          {myPick && (
+            <div className="flex items-start sm:items-center gap-2 bg-violet-50 dark:bg-violet-950/20 rounded-xl px-3 py-2.5 mb-1">
+              <Check className="w-4 h-4 text-violet-500 shrink-0 mt-0.5 sm:mt-0" />
+              <p className="text-sm text-violet-700 dark:text-violet-400 font-bold leading-snug">
+                You picked <strong>{myPick === 1 ? t1Label : t2Label}</strong>
+              </p>
+            </div>
+          )}
+          {!myPick && hasStarted && (
+            <p className="text-xs text-muted-foreground italic mb-2">Voting closed (Match has started)</p>
+          )}
 
           {statProb && (
             <ProbBar
@@ -216,25 +223,30 @@ function MatchPredictionCard({ m, myPick, profileId, onPick }: {
           />
         </>
       ) : (
-        <div className="flex gap-2">
-          <button
-            onClick={() => {
-              setTally(prev => ({ ...prev, t1: prev.t1 + 1 }));
-              onPick(1);
-            }}
-            className="flex-1 py-2.5 rounded-xl bg-primary/10 dark:bg-primary/20 hover:bg-primary/15 dark:hover:bg-primary/80/30 border border-primary/40 dark:border-primary/80 text-sm font-black text-primary dark:text-primary transition truncate"
-          >
-            {t1Label}
-          </button>
-          <button
-            onClick={() => {
-              setTally(prev => ({ ...prev, t2: prev.t2 + 1 }));
-              onPick(2);
-            }}
-            className="flex-1 py-2.5 rounded-xl bg-sky-50 dark:bg-sky-950/20 hover:bg-sky-100 dark:hover:bg-sky-900/30 border border-sky-200 dark:border-sky-800 text-sm font-black text-sky-700 dark:text-sky-400 transition truncate"
-          >
-            {t2Label}
-          </button>
+        <div className="flex flex-col">
+          <p className="text-[11px] text-center font-black text-slate-500 mb-2 flex items-center justify-center gap-1.5 uppercase tracking-wider">
+            <TrendingUp className="w-3.5 h-3.5 text-violet-500" /> Predict the winner!
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <button
+              onClick={() => {
+                setTally(prev => ({ ...prev, t1: prev.t1 + 1 }));
+                onPick(1);
+              }}
+              className="flex-1 p-2.5 rounded-xl bg-primary/10 dark:bg-primary/20 hover:bg-primary/15 dark:hover:bg-primary/80/30 border border-primary/40 dark:border-primary/80 text-sm font-black text-primary dark:text-primary transition break-words whitespace-normal"
+            >
+              {t1Label}
+            </button>
+            <button
+              onClick={() => {
+                setTally(prev => ({ ...prev, t2: prev.t2 + 1 }));
+                onPick(2);
+              }}
+              className="flex-1 p-2.5 rounded-xl bg-sky-50 dark:bg-sky-950/20 hover:bg-sky-100 dark:hover:bg-sky-900/30 border border-sky-200 dark:border-sky-800 text-sm font-black text-sky-700 dark:text-sky-400 transition break-words whitespace-normal"
+            >
+              {t2Label}
+            </button>
+          </div>
         </div>
       )}
     </div>

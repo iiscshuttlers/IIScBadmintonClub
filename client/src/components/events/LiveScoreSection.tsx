@@ -6,11 +6,13 @@ import { MatchService } from "@/services/matchService";
 import { getCourtColor, cn } from "@/lib/utils";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserMatchAlerts } from "@/hooks/useUserMatchAlerts";
 import { Capacitor } from "@capacitor/core";
 import { TextToSpeech } from "@capacitor-community/text-to-speech";
 import FloatingScore from "@/lib/floatingScore";
 import { playSmashSound } from "@/lib/sounds";
 import type { BwfMatchState } from "@/types/umpire";
+import { NotificationModal } from "./NotificationModal";
 
 function MatchBroadcastCard({
   match,
@@ -353,12 +355,45 @@ function MatchBroadcastCard({
   );
 }
 
+import { MatchPredictionCard } from "@/components/feed/MatchPredictions";
+
 export function LiveScoreSection() {
   const { session, profile, isAdmin, isUmpire } = useAuth();
+  const matchAlerts = useUserMatchAlerts(session?.user?.id);
   const [, navigate] = useLocation();
   const [liveMatches, setLiveMatches] = useState<Record<string, BwfMatchState>>({});
   const [todayMatches, setTodayMatches] = useState<any[]>([]);
   const [todayMatchesLoading, setTodayMatchesLoading] = useState(true);
+  const [picks, setPicks] = useState<Record<string, 1 | 2>>({});
+
+  useEffect(() => {
+    if (!profile?.id || todayMatches.length === 0) return;
+    const ids = todayMatches.map(m => m.id);
+    supabase
+      .from("live_match_votes")
+      .select("live_match_id, pick")
+      .eq("user_id", profile.id)
+      .in("live_match_id", ids)
+      .then(({ data }) => {
+        if (!data) return;
+        const map: Record<string, 1 | 2> = {};
+        for (const row of data) map[row.live_match_id] = row.pick as 1 | 2;
+        setPicks(map);
+      });
+  }, [profile?.id, todayMatches]);
+
+  const handlePick = async (matchId: string, team: 1 | 2) => {
+    if (!profile?.id || picks[matchId]) return;
+    setPicks(prev => ({ ...prev, [matchId]: team }));
+    const { error } = await supabase.from("live_match_votes").insert({
+      live_match_id: matchId,
+      user_id: profile.id,
+      pick: team,
+    });
+    if (error) {
+      setPicks(prev => { const next = { ...prev }; delete next[matchId]; return next; });
+    }
+  };
 
   useEffect(() => {
     const loadTodayMatches = async () => {
@@ -369,7 +404,7 @@ export function LiveScoreSection() {
         
         const { data } = await supabase
           .from("tournament_matches")
-          .select("*, tournaments(name, id)")
+          .select("*, tournaments(name, id), player1:players!player1_id(full_name), player2:players!player2_id(full_name), partner1:players!player3_id(full_name), partner2:players!player4_id(full_name)")
           .not("scheduled_at", "is", null)
           .gte("scheduled_at", startOfDay)
           .lte("scheduled_at", endOfDay)
@@ -400,6 +435,23 @@ export function LiveScoreSection() {
   const prevScoresRef = useRef<Record<string, { t1: number; t2: number }>>({});
   const killedMatchesRef = useRef<Set<string>>(new Set());
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  
+  const [notifMatchTarget, setNotifMatchTarget] = useState<string | null>(null);
+
+  const handleSaveNotif = async (mins: number) => {
+    if (!session?.user?.id || !notifMatchTarget) return;
+    try {
+      const { error } = await supabase.from("user_match_notifications").upsert({
+        user_id: session.user.id,
+        match_id: notifMatchTarget,
+        notify_before_mins: mins
+      }, { onConflict: "user_id, match_id" });
+      
+      if (error) throw error;
+    } catch (e: any) {
+      toast.error("Failed to set alert: " + e.message);
+    }
+  };
 
   // ── Admin: jump into the umpire panel to control a running broadcast ──
   const handleForceTakeover = (matchId: string) => {
@@ -810,34 +862,93 @@ export function LiveScoreSection() {
           <div className="grid sm:grid-cols-2 gap-4">
             {todayMatches.map(m => (
               <div key={m.id} className="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 flex flex-col gap-3 transition-colors hover:border-slate-500">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground bg-slate-900 px-2 py-0.5 rounded-full">{m.category}</span>
-                    <span className="text-[10px] font-bold text-slate-400">{m.match_code}</span>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground bg-slate-900 px-2 py-0.5 rounded-full shrink-0">{m.category}</span>
+                    {(m.match_code || m.match_number) && (
+                      <span className="text-[10px] font-black text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 shrink-0">
+                        {m.match_code || `Match #${m.match_number}`}
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
-                    {m.status === "in_progress" && <span className="text-[10px] font-black text-amber-400 animate-pulse">● LIVE</span>}
+                    {m.status === "in_progress" && <span className="text-[10px] font-black text-amber-400 animate-pulse shrink-0">● LIVE</span>}
                     {m.court_number && (
-                      <div className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700/50 shadow-inner font-black tracking-widest", getCourtColor(m.court_number))}>
-                        <MapPin className="w-3.5 h-3.5 opacity-70" /> 
-                        <span className="text-xs uppercase">Court {m.court_number}</span>
+                      <div className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700/50 shadow-inner font-black tracking-widest shrink-0", getCourtColor(m.court_number))}>
+                        <MapPin className="w-3.5 h-3.5 opacity-70 shrink-0" /> 
+                        <span className="text-xs uppercase whitespace-nowrap">Court {m.court_number}</span>
                       </div>
                     )}
                   </div>
                 </div>
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm text-foreground truncate">{m.team1_label || "TBD"}</p>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 my-1">
+                  <div className="flex-1 text-center sm:text-left">
+                    <p className="font-bold text-[15px] sm:text-sm text-foreground break-words">
+                      {[m.player1?.full_name, m.partner1?.full_name].filter(Boolean).join(" & ") || m.team1_label || "TBD"}
+                    </p>
                   </div>
-                  <div className="text-[10px] font-black text-rose-400 shrink-0">VS</div>
-                  <div className="flex-1 min-w-0 text-right">
-                    <p className="font-bold text-sm text-foreground truncate">{m.team2_label || "TBD"}</p>
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="h-[1px] bg-slate-700/50 flex-1 sm:hidden"></div>
+                    <span className="text-[10px] font-black text-rose-400 shrink-0">VS</span>
+                    <div className="h-[1px] bg-slate-700/50 flex-1 sm:hidden"></div>
+                  </div>
+                  <div className="flex-1 text-center sm:text-right">
+                    <p className="font-bold text-[15px] sm:text-sm text-foreground break-words">
+                      {[m.player2?.full_name, m.partner2?.full_name].filter(Boolean).join(" & ") || m.team2_label || "TBD"}
+                    </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5 text-[11px] text-slate-300 font-bold bg-slate-900/50 self-start px-2.5 py-1.5 rounded-lg border border-slate-800">
-                  <Clock className="w-3.5 h-3.5 text-muted-foreground" /> 
-                  {new Date(m.scheduled_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                <div className="flex items-center justify-between gap-2 mt-2">
+                  <div className="flex items-center gap-1.5 text-[11px] text-slate-300 font-bold bg-slate-900/50 self-start px-2.5 py-1.5 rounded-lg border border-slate-800">
+                    <Clock className="w-3.5 h-3.5 text-muted-foreground" /> 
+                    {new Date(m.scheduled_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                  </div>
+                  {session?.user && (
+                    (() => {
+                      const alert = matchAlerts.find(a => a.match_id === m.id);
+                      if (alert) {
+                        const notifyDate = new Date(m.scheduled_at);
+                        notifyDate.setMinutes(notifyDate.getMinutes() - alert.notify_before_mins);
+                        const timeStr = notifyDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+                        return (
+                          <div className="flex items-center gap-1.5 text-[11px] px-2.5 py-1.5 rounded-lg border border-accent/30 bg-accent/10 text-accent font-medium">
+                            <Bell className="w-3.5 h-3.5" fill="currentColor" />
+                            <span>Notified at {timeStr}</span>
+                            <button 
+                              onClick={() => setNotifMatchTarget(m.id)}
+                              className="ml-1 font-bold underline hover:text-accent-foreground"
+                            >
+                              Edit
+                            </button>
+                          </div>
+                        );
+                      }
+                      return (
+                        <button 
+                          onClick={() => setNotifMatchTarget(m.id)}
+                          className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg border transition-colors border-slate-700 bg-slate-800/50 hover:bg-slate-700 text-slate-300"
+                        >
+                          <Bell className="w-3.5 h-3.5" />
+                          Notify me
+                        </button>
+                      );
+                    })()
+                  )}
                 </div>
+
+                {m.player1_id && m.player2_id && (
+                  <MatchPredictionCard
+                    matchId={m.id}
+                    t1Ids={[m.player1_id, m.player3_id].filter(Boolean)}
+                    t2Ids={[m.player2_id, m.player4_id].filter(Boolean)}
+                    t1Label={[m.player1?.full_name, m.partner1?.full_name].filter(Boolean).join(" & ") || m.team1_label || "TBD"}
+                    t2Label={[m.player2?.full_name, m.partner2?.full_name].filter(Boolean).join(" & ") || m.team2_label || "TBD"}
+                    hasStarted={m.status !== "scheduled" && m.status !== "pending"}
+                    myPick={picks[m.id]}
+                    profileId={profile?.id}
+                    onPick={(team) => handlePick(m.id, team)}
+                  />
+                )}
               </div>
             ))}
           </div>
@@ -895,6 +1006,15 @@ export function LiveScoreSection() {
           </div>
         </div>
       )}
+
+      <NotificationModal 
+        isOpen={!!notifMatchTarget}
+        onClose={() => setNotifMatchTarget(null)}
+        onSave={handleSaveNotif}
+        title="Match Reminder"
+        defaultMins={15}
+        matchTime={notifMatchTarget ? [...Object.values(liveMatches), ...todayMatches].find((m: any) => m.id === notifMatchTarget)?.scheduled_at : null}
+      />
     </div>
   );
 }

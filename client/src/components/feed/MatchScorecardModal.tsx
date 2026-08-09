@@ -75,7 +75,7 @@ export function MatchScorecardModal({ match, isOpen, onClose, currentUser }: Mat
   return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
+        <div className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center p-4 pb-24 sm:p-4" onClick={onClose}>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -87,7 +87,7 @@ export function MatchScorecardModal({ match, isOpen, onClose, currentUser }: Mat
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 80 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden max-h-[90vh] overflow-y-auto"
+            className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -116,15 +116,36 @@ export function MatchScorecardModal({ match, isOpen, onClose, currentUser }: Mat
               {/* Players */}
               <div className="flex items-center justify-between gap-3">
                 {/* Team 1 */}
-                <div className={`flex-1 flex flex-col items-center text-center p-3 rounded-2xl transition-all ${isP1Winner ? "bg-primary/10 dark:bg-primary/20 ring-2 ring-primary" : "bg-slate-50 dark:bg-slate-800/50"}`}>
-                  {p1?.avatar_url ? (
-                    <img src={p1.avatar_url} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow mb-2" />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-700 mb-2" />
+                <div className={`flex-1 flex flex-col items-start justify-center gap-3 p-3 rounded-2xl transition-all ${isP1Winner ? "bg-primary/10 dark:bg-primary/20 ring-2 ring-primary" : "bg-slate-50 dark:bg-slate-800/50"}`}>
+                  <div className="flex items-center gap-2.5">
+                    {p1?.avatar_url ? (
+                      <img src={p1.avatar_url} className="w-10 h-10 rounded-full object-cover border-2 border-white shadow shrink-0" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-black text-slate-400 border-2 border-white shadow shrink-0">
+                        {p1?.full_name?.substring(0, 2).toUpperCase() || "??"}
+                      </div>
+                    )}
+                    <span className="font-black text-sm text-slate-800 dark:text-foreground leading-tight text-left">{p1?.full_name}</span>
+                  </div>
+
+                  {partner1 && (
+                    <div className="flex items-center gap-2.5">
+                      {partner1.avatar_url ? (
+                        <img src={partner1.avatar_url} className="w-10 h-10 rounded-full object-cover border-2 border-white shadow shrink-0" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-black text-slate-400 border-2 border-white shadow shrink-0">
+                          {partner1.full_name?.substring(0, 2).toUpperCase() || "??"}
+                        </div>
+                      )}
+                      <span className="font-black text-sm text-slate-800 dark:text-foreground leading-tight text-left">{partner1.full_name}</span>
+                    </div>
                   )}
-                  <span className="font-black text-sm text-slate-800 dark:text-foreground line-clamp-1">{p1?.full_name}</span>
-                  {partner1 && <span className="text-[10px] text-muted-foreground mt-0.5">& {partner1.full_name}</span>}
-                  {isP1Winner && <span className="mt-1.5 text-[10px] font-black uppercase tracking-wider text-primary flex items-center gap-1"><Trophy className="w-3 h-3" /> Winner</span>}
+
+                  {isP1Winner && (
+                    <div className="w-full flex justify-center mt-1">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-primary flex items-center gap-1"><Trophy className="w-3 h-3" /> Winner</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Score */}
@@ -136,15 +157,36 @@ export function MatchScorecardModal({ match, isOpen, onClose, currentUser }: Mat
                 </div>
 
                 {/* Team 2 */}
-                <div className={`flex-1 flex flex-col items-center text-center p-3 rounded-2xl transition-all ${!isP1Winner ? "bg-blue-50 dark:bg-blue-900/20 ring-2 ring-blue-400" : "bg-slate-50 dark:bg-slate-800/50"}`}>
-                  {p2?.avatar_url ? (
-                    <img src={p2.avatar_url} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow mb-2" />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-700 mb-2" />
+                <div className={`flex-1 flex flex-col items-start justify-center gap-3 p-3 rounded-2xl transition-all ${!isP1Winner ? "bg-blue-50 dark:bg-blue-900/20 ring-2 ring-blue-400" : "bg-slate-50 dark:bg-slate-800/50"}`}>
+                  <div className="flex items-center gap-2.5">
+                    {p2?.avatar_url ? (
+                      <img src={p2.avatar_url} className="w-10 h-10 rounded-full object-cover border-2 border-white shadow shrink-0" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-black text-slate-400 border-2 border-white shadow shrink-0">
+                        {p2?.full_name?.substring(0, 2).toUpperCase() || "??"}
+                      </div>
+                    )}
+                    <span className="font-black text-sm text-slate-800 dark:text-foreground leading-tight text-left">{p2?.full_name}</span>
+                  </div>
+
+                  {partner2 && (
+                    <div className="flex items-center gap-2.5">
+                      {partner2.avatar_url ? (
+                        <img src={partner2.avatar_url} className="w-10 h-10 rounded-full object-cover border-2 border-white shadow shrink-0" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-black text-slate-400 border-2 border-white shadow shrink-0">
+                          {partner2.full_name?.substring(0, 2).toUpperCase() || "??"}
+                        </div>
+                      )}
+                      <span className="font-black text-sm text-slate-800 dark:text-foreground leading-tight text-left">{partner2.full_name}</span>
+                    </div>
                   )}
-                  <span className="font-black text-sm text-slate-800 dark:text-foreground line-clamp-1">{p2?.full_name}</span>
-                  {partner2 && <span className="text-[10px] text-muted-foreground mt-0.5">& {partner2.full_name}</span>}
-                  {!isP1Winner && <span className="mt-1.5 text-[10px] font-black uppercase tracking-wider text-blue-600 flex items-center gap-1"><Trophy className="w-3 h-3" /> Winner</span>}
+
+                  {!isP1Winner && (
+                    <div className="w-full flex justify-center mt-1">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 flex items-center gap-1"><Trophy className="w-3 h-3" /> Winner</span>
+                    </div>
+                  )}
                 </div>
               </div>
 

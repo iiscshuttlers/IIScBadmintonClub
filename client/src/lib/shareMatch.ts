@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { getBaseShareUrl } from "@/lib/utils";
 import { renderMatchShareCard } from "@/lib/matchShareCard";
 
+import { supabase } from "@/lib/supabase";
+
 /**
  * Shared match-sharing flow used by the feed, My Matches, and profile history.
  * Renders the match share card (doubles-aware) and shares it natively, via the
@@ -55,21 +57,40 @@ export async function shareMatch(match: any) {
     ? { w: sets.filter((s) => s.w > s.l).length, l: sets.filter((s) => s.l > s.w).length }
     : undefined;
 
-  const shareUrl = `${getBaseShareUrl()}/feed?match=${match.id}`;
+  const webUrl = `${getBaseShareUrl()}/feed?match=${match.id}`;
+  const isAndroid = /android/i.test(navigator.userAgent);
+  
+  // Use Android Intent to force opening in app if installed, otherwise fallback to web
+  const shareUrl = isAndroid 
+    ? `intent://iiscbadmintonclub.github.io/iiscshuttlers/feed?match=${match.id}#Intent;scheme=https;package=shuttlers.iisc.com;S.browser_fallback_url=${encodeURIComponent(webUrl)};end`
+    : webUrl;
+
   const text = `🏸 Match Result: ${winnerName} def. ${loserName} (${displayScore})! Check it out on IISc Badminton Club.`;
 
   const fallbackShare = () => {
     if (Capacitor.isNativePlatform()) {
-      Share.share({ title: "IISc Badminton Club Match", text, url: shareUrl, dialogTitle: "Share Match Result" });
+      Share.share({ title: "IISc Badminton Club Match", text, url: webUrl, dialogTitle: "Share Match Result" });
     } else if (navigator.share) {
       navigator.share({ title: "IISc Badminton Club Match", text, url: shareUrl });
     } else {
-      navigator.clipboard.writeText(`${text}\n${shareUrl}`);
+      navigator.clipboard.writeText(`${text}\n${webUrl}`);
       toast.success("Match result copied to clipboard!");
     }
   };
 
   try {
+    let tournamentName = match.tournaments?.name || match.tournament?.name || "";
+    if (match.is_friendly === false && match.tournament_id && !tournamentName) {
+      try {
+        const { data } = await supabase.from("tournaments").select("name").eq("id", match.tournament_id).single();
+        if (data) tournamentName = data.name;
+      } catch (e) {
+        // Ignore fetch errors
+      }
+    }
+
+    const matchDateObj = new Date(match.scheduled_time || match.end_time || match.submitted_at || match.created_at);
+
     const canvas = await renderMatchShareCard({
       winners,
       losers,
@@ -79,8 +100,9 @@ export async function shareMatch(match: any) {
       winnerEloChange: isTeam1Winner ? match.elo_change_p1 : match.elo_change_p2,
       loserEloChange: isTeam1Winner ? match.elo_change_p2 : match.elo_change_p1,
       matchType: match.is_friendly !== false ? "Friendly" : "Tournament",
-      matchDate: new Date(match.created_at),
+      matchDate: matchDateObj,
       category: match.category,
+      tournamentName: tournamentName,
     });
 
     if (!canvas) {
