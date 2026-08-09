@@ -16,9 +16,8 @@ export function PwaUpdatePrompt() {
     },
   });
 
-  // Only show in installed PWA mode, and hide on native Capacitor (which has its own update prompt)
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
-  if (!isStandalone || Capacitor.isNativePlatform()) return null;
+  // Hide on native Capacitor (which has its own update prompt via app stores)
+  if (Capacitor.isNativePlatform()) return null;
 
   return (
     <AnimatePresence>
