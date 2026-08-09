@@ -93,10 +93,16 @@ export function useJoinAuth() {
         setLocation("/");
       }
     } catch (err: any) {
-      const msg: string = err?.message ?? "An unexpected error occurred.";
-      if (msg === "Email not confirmed") setErrorMsg("Email not confirmed");
-      else if (msg.toLowerCase().includes("invalid")) setErrorMsg("Incorrect email or password.");
-      else setErrorMsg(msg);
+      const msg = typeof err?.message === "string" && err.message !== "{}" ? err.message : "";
+      if (err?.status === 504 || err?.name === "AuthRetryableFetchError" || msg.includes("timed out")) {
+        setErrorMsg("Server timed out. Please check your connection and try again.");
+      } else if (msg === "Email not confirmed") {
+        setErrorMsg("Email not confirmed");
+      } else if (msg.toLowerCase().includes("invalid")) {
+        setErrorMsg("Incorrect email or password.");
+      } else {
+        setErrorMsg(msg || "An unexpected error occurred during sign in.");
+      }
       setLoading(false);
     }
   };
@@ -110,7 +116,8 @@ export function useJoinAuth() {
       if (error) throw error;
       setInfoMsg("A new verification link has been sent to your email!");
     } catch (err: any) {
-      setErrorMsg(err.message);
+      const msg = typeof err?.message === "string" && err.message !== "{}" ? err.message : "";
+      setErrorMsg(msg || "Failed to resend verification link. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -127,30 +134,38 @@ export function useJoinAuth() {
     try {
       const { data: emailExists, error: rpcError } = await supabase.rpc("check_email_exists", { lookup_email: email });
       if (rpcError) {
-        setErrorMsg("Failed to verify email. Please try again.");
-        setLoading(false);
-        return;
-      }
-      
-      if (emailExists) {
+        console.warn("RPC check_email_exists warning:", rpcError);
+      } else if (emailExists) {
         setErrorMsg("You already have an account! Please go to Sign In (if you haven't verified yet, log in to resend the link).");
         setLoading(false);
         return;
       }
 
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: "https://iiscshuttlers.github.io/iiscshuttlers/join" },
-      });
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Request timed out. Please check your connection and try again.")), 15000)
+      );
+
+      const redirectUrl = typeof window !== "undefined"
+        ? window.location.origin + (window.location.pathname.startsWith("/IIScBadmintonClub") ? "/IIScBadmintonClub/join" : "/join")
+        : "https://iiscshuttlers.github.io/iiscshuttlers/join";
+
+      const { data, error } = (await Promise.race([
+        supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: redirectUrl },
+        }),
+        timeout,
+      ])) as Awaited<ReturnType<typeof supabase.auth.signUp>>;
 
       if (data?.user && data.user.identities && data.user.identities.length === 0) {
         setErrorMsg("This email is already registered. Please Sign In, or use 'Forgot password? OTP' if you forgot your password.");
+        setLoading(false);
         return;
       }
 
       if (error) throw error;
-      if (!data.session) {
+      if (!data?.session) {
         setInfoMsg("Verification link sent! Check Junk/Spam for IISc emails. If it never arrives, please try signing up with a personal Gmail account.");
         setMode("signin");
         setLoading(false);
@@ -158,10 +173,13 @@ export function useJoinAuth() {
         setLocation("/");
       }
     } catch (err: any) {
-      if (err.message.includes("already registered") || err.message.includes("already exists")) {
+      const msg = typeof err?.message === "string" && err.message !== "{}" ? err.message : "";
+      if (err?.status === 504 || err?.name === "AuthRetryableFetchError" || msg.includes("timed out")) {
+        setErrorMsg("Server verification request timed out. The email service may be busy — please wait a moment and try signing in or requesting an OTP.");
+      } else if (msg.includes("already registered") || msg.includes("already exists")) {
         setErrorMsg("This email is already registered. Please Sign In, or use 'Forgot password? OTP' if you forgot your password.");
       } else {
-        setErrorMsg(err.message);
+        setErrorMsg(msg || "An unexpected error occurred during account creation.");
       }
       setLoading(false);
     }
@@ -171,16 +189,19 @@ export function useJoinAuth() {
     e.preventDefault();
     setLoading(true);
     setErrorMsg("");
+    const redirectUrl = typeof window !== "undefined"
+      ? window.location.origin + (window.location.pathname.startsWith("/IIScBadmintonClub") ? "/IIScBadmintonClub/join" : "/join")
+      : "https://iiscshuttlers.github.io/iiscshuttlers/join";
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: { shouldCreateUser: false, emailRedirectTo: "https://iiscshuttlers.github.io/iiscshuttlers/join" },
+        options: { shouldCreateUser: false, emailRedirectTo: redirectUrl },
       });
       if (error) throw error;
       setMode("otp-verify");
       setInfoMsg("Login code sent! Check Junk/Spam for IISc emails. If it never arrives, please try a personal Gmail account.");
     } catch (err: any) {
-      const msg: string = err?.message ?? "";
+      const msg: string = typeof err?.message === "string" && err.message !== "{}" ? err.message : "";
       setErrorMsg(msg.includes("not found") ? "No account found with this email. Please sign up first." : msg || "An error occurred. Please try again.");
     } finally {
       setLoading(false);

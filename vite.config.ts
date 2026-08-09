@@ -68,6 +68,11 @@ function vitePluginManusDebugCollector(): Plugin {
       };
     },
     configureServer(server: ViteDevServer) {
+      server.middlewares.use("/__manus__/debug-collector.js", (_req, res) => {
+        res.writeHead(200, { "Content-Type": "application/javascript" });
+        res.end("// manus debug collector stub");
+      });
+
       server.middlewares.use("/__manus__/logs", (req, res, next) => {
         if (req.method !== "POST") return next();
 

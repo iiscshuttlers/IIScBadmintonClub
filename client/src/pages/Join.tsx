@@ -68,7 +68,7 @@ export default function Join() {
 
           {/* Info / Error messages */}
           {auth.infoMsg && <div className="mb-4 px-4 py-3 rounded-xl bg-primary/10 dark:bg-primary/20 border border-primary/40 dark:border-primary/80 text-primary dark:text-primary text-sm font-medium">{auth.infoMsg}</div>}
-          {auth.errorMsg && <div className="mb-4 px-4 py-3 rounded-xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400 text-sm font-medium">{auth.errorMsg}</div>}
+          {auth.errorMsg && <div className="mb-4 px-4 py-3 rounded-xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400 text-sm font-medium">{typeof auth.errorMsg === "string" ? auth.errorMsg : String(auth.errorMsg)}</div>}
 
           <AnimatePresence mode="wait">
             {auth.mode === "welcome" && <WelcomeView auth={auth} />}
