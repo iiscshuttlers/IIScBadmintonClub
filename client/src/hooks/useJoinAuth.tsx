@@ -66,7 +66,7 @@ export function useJoinAuth() {
       if (hashParams.get("type") === "signup" || hashParams.get("type") === "magiclink") {
         toast.success("Account verified successfully! Please complete your profile.", { duration: 5000 });
       }
-      setLocation("/");
+      setLocation("/profile/setup");
     }
   }, [isInitializing, session, profile, setLocation]);
 
