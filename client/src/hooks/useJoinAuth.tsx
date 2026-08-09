@@ -147,7 +147,7 @@ export function useJoinAuth() {
 
       const redirectUrl = typeof window !== "undefined"
         ? window.location.origin + (window.location.pathname.startsWith("/IIScBadmintonClub") ? "/IIScBadmintonClub/join" : "/join")
-        : "https://iiscshuttlers.github.io/iiscshuttlers/join";
+        : "https://iiscshuttlers.github.io/IIScBadmintonClub/join";
 
       const { data, error } = (await Promise.race([
         supabase.auth.signUp({
@@ -191,7 +191,7 @@ export function useJoinAuth() {
     setErrorMsg("");
     const redirectUrl = typeof window !== "undefined"
       ? window.location.origin + (window.location.pathname.startsWith("/IIScBadmintonClub") ? "/IIScBadmintonClub/join" : "/join")
-      : "https://iiscshuttlers.github.io/iiscshuttlers/join";
+      : "https://iiscshuttlers.github.io/IIScBadmintonClub/join";
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
