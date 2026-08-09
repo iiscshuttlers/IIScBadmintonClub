@@ -309,23 +309,34 @@ export default function Navigation() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56 mt-2">
                           {myPlayerId ? (
-                            <DropdownMenuItem onClick={() => setLocation(`/player/${myPlayerId}/personal`)} className="cursor-pointer font-bold text-primary">
-                              <User className="mr-2 h-4 w-4" />
-                              <span>My Personal Space</span>
-                            </DropdownMenuItem>
+                            <>
+                              <DropdownMenuItem onClick={() => setLocation(`/player/${myPlayerId}`)} className="cursor-pointer font-bold text-amber-600 dark:text-amber-500">
+                                <UserCircle className="mr-2 h-4 w-4" />
+                                <span>My Public Profile</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setLocation("/profile/setup")} className="cursor-pointer font-semibold text-emerald-600 dark:text-emerald-400">
+                                <User className="mr-2 h-4 w-4" />
+                                <span>Edit Player Profile</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setLocation(`/player/${myPlayerId}/personal`)} className="cursor-pointer font-bold text-primary">
+                                <User className="mr-2 h-4 w-4" />
+                                <span>My Personal Space</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setLocation("/my-matches")} className="cursor-pointer">
+                                <Trophy className="mr-2 h-4 w-4 text-amber-500" />
+                                <span>My Matches</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setLocation("/profile/subscriptions")} className="cursor-pointer font-bold text-amber-500">
+                                <Bell className="mr-2 h-4 w-4" />
+                                <span>My Subscriptions</span>
+                              </DropdownMenuItem>
+                            </>
                           ) : (
-                            <DropdownMenuItem onClick={() => {
-                              toast.info("Please set up your profile to access your Personal Space.");
-                              setLocation("/personal/me");
-                            }} className="cursor-pointer font-bold text-muted-foreground">
-                              <User className="mr-2 h-4 w-4" />
-                              <span>My Personal Space</span>
+                            <DropdownMenuItem onClick={() => setLocation("/profile/setup")} className="cursor-pointer font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/20">
+                              <UserPlus className="mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                              <span>Create / Set Up Profile</span>
                             </DropdownMenuItem>
                           )}
-                          <DropdownMenuItem onClick={() => setLocation("/my-matches")} className="cursor-pointer">
-                            <Trophy className="mr-2 h-4 w-4 text-amber-500" />
-                            <span>My Matches</span>
-                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => setLocation("/personal/me")} className="cursor-pointer">
                             <Settings className="mr-2 h-4 w-4" />
                             <span>Account Settings</span>
@@ -388,11 +399,15 @@ export default function Navigation() {
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-56 mt-2">
-                        {myPlayerId && (
+                        {myPlayerId ? (
                           <>
                             <DropdownMenuItem onClick={() => setLocation(`/player/${myPlayerId}`)} className="cursor-pointer font-bold text-amber-600 dark:text-amber-500">
                               <UserCircle className="mr-2 h-4 w-4" />
                               <span>My Public Profile</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setLocation("/profile/setup")} className="cursor-pointer font-semibold text-emerald-600 dark:text-emerald-400">
+                              <User className="mr-2 h-4 w-4" />
+                              <span>Edit Player Profile</span>
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => setLocation(`/player/${myPlayerId}/personal`)} className="cursor-pointer font-bold text-primary">
                               <User className="mr-2 h-4 w-4" />
@@ -403,6 +418,11 @@ export default function Navigation() {
                               <span>My Subscriptions</span>
                             </DropdownMenuItem>
                           </>
+                        ) : (
+                          <DropdownMenuItem onClick={() => setLocation("/profile/setup")} className="cursor-pointer font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/20">
+                            <UserPlus className="mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                            <span>Create / Set Up Profile</span>
+                          </DropdownMenuItem>
                         )}
                         <DropdownMenuItem onClick={() => setLocation("/personal/me")} className="cursor-pointer">
                           <Settings className="mr-2 h-4 w-4" />
@@ -492,20 +512,38 @@ export default function Navigation() {
                   <div className="space-y-0.5">
 
 
-                    <button
-                      className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer"
-                      onClick={() => {
-                        setIsOpen(false);
-                        if (myPlayerId) {
-                          setLocation(`/player/${myPlayerId}`);
-                        } else {
-                          toast.info("Please set up your profile to view your public profile.");
-                          setLocation("/personal/me");
-                        }
-                      }}
-                    >
-                      <UserCircle className="h-4 w-4 text-amber-500" /> My Public Profile
-                    </button>
+                    {myPlayerId ? (
+                      <>
+                        <button
+                          className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer"
+                          onClick={() => {
+                            setIsOpen(false);
+                            setLocation(`/player/${myPlayerId}`);
+                          }}
+                        >
+                          <UserCircle className="h-4 w-4 text-amber-500" /> My Public Profile
+                        </button>
+                        <button
+                          className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-emerald-600 dark:text-emerald-400 font-semibold text-sm transition-colors cursor-pointer"
+                          onClick={() => {
+                            setIsOpen(false);
+                            setLocation("/profile/setup");
+                          }}
+                        >
+                          <User className="h-4 w-4" /> Edit Player Profile
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        className="w-full flex items-center gap-2 px-4 py-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 font-bold text-sm transition-colors cursor-pointer"
+                        onClick={() => {
+                          setIsOpen(false);
+                          setLocation("/profile/setup");
+                        }}
+                      >
+                        <UserPlus className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> Create / Set Up Profile
+                      </button>
+                    )}
                     <button
                       className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer"
                       onClick={() => {
