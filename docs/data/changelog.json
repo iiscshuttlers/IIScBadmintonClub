@@ -1,0 +1,1288 @@
+[
+  {
+    "versionCode": 257,
+    "versionName": "1.36",
+    "date": "2026-08-06T08:07:50.690Z",
+    "changes": [
+      "Version 1.36 released with bug fixes and performance improvements."
+    ]
+  },
+  {
+    "versionCode": 256,
+    "versionName": "1.35",
+    "date": "2026-08-06T07:59:31.191Z",
+    "changes": [
+      "Version 1.35 released with bug fixes and performance improvements."
+    ]
+  },
+  {
+    "versionCode": 255,
+    "versionName": "1.34",
+    "date": "2026-08-06T07:50:49.824Z",
+    "changes": [
+      "- chore: commit pending UI improvements and fixes"
+    ]
+  },
+  {
+    "versionCode": 254,
+    "versionName": "1.33",
+    "date": "2026-08-05T23:28:51.731Z",
+    "changes": [
+      "Version 1.33 released with bug fixes and performance improvements."
+    ]
+  },
+  {
+    "versionCode": 253,
+    "versionName": "1.32",
+    "date": "2026-08-05T17:08:30.087Z",
+    "changes": [
+      "- Update release.mjs",
+      "- updates",
+      "- Saved my upgraded code",
+      "- Merge remote-tracking branch 'origin/feature/admin-profile-updates'",
+      "- Saved my upgraded code",
+      "- Refactored Admin Players Table and Profile Setup Tabs",
+      "- chore: remove github pages deploy workflow since we use netlify",
+      "- refactor: update onboarding tour slides to reflect current app features (Pulse, Tournaments, Hub, Legacy)",
+      "- feat: add Android beta testing slide to onboarding modal for web users",
+      "- style: switch Android banner to violet/purple + amber/gold color scheme to stand out",
+      "- feat: redesign Android testing banner with sparkle animations, shimmer border, progress bar",
+      "- style: fix Android banner alignment with VenueTrafficWidget",
+      "- fix: restore accidentally deleted section closing tags in Home.tsx",
+      "- style: move Android testing banner to bottom of hero section and make it wider",
+      "- feat: expand description on Android App testing banner",
+      "- fix: change google group link to /about to bypass permissions error",
+      "- feat: add Android App testing banner to home page",
+      "- fix: update netlify publish directory to dist",
+      "- Add Data Deletion page for Google Play compliance"
+    ]
+  },
+  {
+    "versionCode": 252,
+    "versionName": "1.31",
+    "date": "2026-08-03T21:00:59.497Z",
+    "changes": [
+      "- Saved my upgraded code",
+      "- Merge remote-tracking branch 'origin/feature/admin-profile-updates'",
+      "- Saved my upgraded code",
+      "- Refactored Admin Players Table and Profile Setup Tabs",
+      "- chore: remove github pages deploy workflow since we use netlify",
+      "- refactor: update onboarding tour slides to reflect current app features (Pulse, Tournaments, Hub, Legacy)",
+      "- feat: add Android beta testing slide to onboarding modal for web users",
+      "- style: switch Android banner to violet/purple + amber/gold color scheme to stand out",
+      "- feat: redesign Android testing banner with sparkle animations, shimmer border, progress bar",
+      "- style: fix Android banner alignment with VenueTrafficWidget",
+      "- fix: restore accidentally deleted section closing tags in Home.tsx",
+      "- style: move Android testing banner to bottom of hero section and make it wider",
+      "- feat: expand description on Android App testing banner",
+      "- fix: change google group link to /about to bypass permissions error",
+      "- feat: add Android App testing banner to home page",
+      "- fix: update netlify publish directory to dist",
+      "- Add Data Deletion page for Google Play compliance"
+    ]
+  },
+  {
+    "versionCode": 204,
+    "versionName": "1.25",
+    "date": "2026-07-25T22:42:49.505Z",
+    "changes": [
+      "Fix push notifications and match umpiring layout"
+    ]
+  },
+  {
+    "versionCode": 203,
+    "versionName": "1.24",
+    "date": "2026-07-25T17:03:26.107Z",
+    "changes": [
+      "- Update from local"
+    ]
+  },
+  {
+    "versionCode": 200,
+    "versionName": "1.21",
+    "date": "2026-07-12T17:19:00.790Z",
+    "changes": [
+      "Version 1.21 released with bug fixes and performance improvements."
+    ]
+  },
+  {
+    "versionCode": 199,
+    "versionName": "1.20",
+    "date": "2026-07-12T17:10:55.906Z",
+    "changes": [
+      "Version 1.20 released with bug fixes and performance improvements."
+    ]
+  },
+  {
+    "versionCode": 198,
+    "versionName": "1.19",
+    "date": "2026-07-12T17:02:52.558Z",
+    "changes": [
+      "Version 1.19 released with bug fixes and performance improvements."
+    ]
+  },
+  {
+    "versionCode": 197,
+    "versionName": "1.18",
+    "date": "2026-07-12T16:45:23.427Z",
+    "changes": [
+      "Version 1.18 released with bug fixes and performance improvements."
+    ]
+  },
+  {
+    "versionCode": 196,
+    "versionName": "1.17",
+    "date": "2026-07-12T16:30:54.277Z",
+    "changes": [
+      "Version 1.17 released with bug fixes and performance improvements."
+    ]
+  },
+  {
+    "versionCode": 195,
+    "versionName": "1.16",
+    "date": "2026-07-12T06:15:35.100Z",
+    "changes": [
+      "Version 1.16 released with bug fixes and performance improvements."
+    ]
+  },
+  {
+    "versionCode": 194,
+    "versionName": "1.15",
+    "date": "2026-07-11T17:12:24.145Z",
+    "changes": [
+      "Version 1.15 released with bug fixes and performance improvements."
+    ]
+  },
+  {
+    "versionCode": 193,
+    "versionName": "1.14",
+    "date": "2026-07-11T15:12:27.431Z",
+    "changes": [
+      "Version 1.14 released with bug fixes and performance improvements."
+    ]
+  },
+  {
+    "versionCode": 192,
+    "versionName": "1.13",
+    "date": "2026-07-11T13:43:23.369Z",
+    "changes": [
+      "Version 1.13 released with bug fixes and performance improvements."
+    ]
+  },
+  {
+    "versionCode": 191,
+    "versionName": "1.12",
+    "date": "2026-07-11T05:56:28.993Z",
+    "changes": [
+      "Version 1.12 released with bug fixes and performance improvements."
+    ]
+  },
+  {
+    "versionCode": 190,
+    "versionName": "1.11",
+    "date": "2026-07-11T05:51:28.406Z",
+    "changes": [
+      "- feat: complete Phase 1 & 2 of Smartwatch and Mobile Analytics"
+    ]
+  },
+  {
+    "versionCode": 189,
+    "versionName": "1.10",
+    "date": "2026-07-10T08:20:35.991Z",
+    "changes": [
+      "Version 1.10 released with bug fixes and performance improvements."
+    ]
+  },
+  {
+    "versionCode": 188,
+    "versionName": "1.09",
+    "date": "2026-07-10T08:09:51.280Z",
+    "changes": [
+      "Version 1.09 released with bug fixes and performance improvements."
+    ]
+  },
+  {
+    "versionCode": 187,
+    "versionName": "1.08",
+    "date": "2026-07-10T06:14:58.578Z",
+    "changes": [
+      "Version 1.08 released with bug fixes and performance improvements."
+    ]
+  },
+  {
+    "versionCode": 186,
+    "versionName": "1.07",
+    "date": "2026-07-10T05:57:45.003Z",
+    "changes": [
+      "Version 1.07 released with bug fixes and performance improvements."
+    ]
+  },
+  {
+    "versionCode": 185,
+    "versionName": "1.06",
+    "date": "2026-07-10T05:47:43.443Z",
+    "changes": [
+      "Version 1.06 released with bug fixes and performance improvements."
+    ]
+  },
+  {
+    "versionCode": 184,
+    "versionName": "1.05",
+    "date": "2026-07-10T05:38:26.552Z",
+    "changes": [
+      "- chore: Temporarily remove foreground service and background location permissions for Play Console compliance"
+    ]
+  },
+  {
+    "versionCode": 183,
+    "versionName": "1.3",
+    "date": "2026-07-10T05:07:07.179Z",
+    "changes": [
+      "- feat: Add Picture-in-Picture to video player and handle Android permissions gracefully",
+      "- Fix TypeScript: add teamName and tournament to BwfMatchState type",
+      "- Add all native Android features to admin features tracker with detailed descriptions",
+      "- Implement deep linking for Umpire Quick Settings Tile",
+      "- Update geofence radius to 50 meters",
+      "- Implement Phase 3: Advanced Native Integrations",
+      "- Implement Phase 2: Native Background Service & Notification Actions",
+      "- Fix TV Scoreboard not updating (add polling fallback)",
+      "- Add TV Scoreboard Mode (Phase 1)",
+      "- Add Floating Score Widget (Draw over apps) natively using Capacitor Plugin",
+      "- Wrap AdminActivityLog table in overflow-x-auto to fix horizontal overflow on mobile screens",
+      "- Remove redundant/unused ELO settings from AdminSettings",
+      "- Fix guest claim modal not showing real players by correctly filtering is_guest",
+      "- Convert PollEditor Archive and Delete icons to a proper 1x2 button matrix",
+      "- Add Broadcast Push feature to PollEditor",
+      "- Fix infinite render loop in ContentEditorWrapper tab counting",
+      "- Add Team Tournament option and use new UmpireTab in Admin",
+      "- Fix active tab text color and URL history navigation",
+      "- fix: Capacitor-safe nav utils across all pages + remove window.confirm on native + delete App.tsx.bak"
+    ]
+  },
+  {
+    "versionCode": 182,
+    "versionName": "1.2",
+    "date": "2026-07-06T22:53:45.134Z",
+    "changes": [
+      "- feat: admin convener photo editor + dynamic home page + Capacitor nav safety",
+      "- fix: correct github pages base URL and add env flag",
+      "- fix: resolve packages field missing in pnpm-workspace",
+      "- chore: use manual pnpm install to fix action-setup bug",
+      "- chore: add Cloudinary keys to workflow",
+      "- Setup GitHub Actions deployment for Pages",
+      "- chore: remove sensitive files from tracking",
+      "- Bump version to 1.0.1 for next release",
+      "- Update android package names and format screenshots",
+      "- Remove GitHub Pages deployment workflow",
+      "- New WebPage",
+      "- Updates"
+    ]
+  },
+  {
+    "versionCode": 180,
+    "versionName": "1.180",
+    "date": "2026-07-02T20:02:24.784Z",
+    "changes": [
+      "Version 1.180 released with bug fixes and performance improvements."
+    ]
+  },
+  {
+    "versionCode": 179,
+    "versionName": "1.179",
+    "date": "2026-07-02T10:37:45.426Z",
+    "changes": [
+      "Version 1.179 released with bug fixes and performance improvements."
+    ]
+  },
+  {
+    "versionCode": 178,
+    "versionName": "1.178",
+    "date": "2026-07-02T10:31:55.131Z",
+    "changes": [
+      "- fix: resolve TypeScript strict errors"
+    ]
+  },
+  {
+    "versionCode": 177,
+    "versionName": "1.177",
+    "date": "2026-07-02T10:28:03.337Z",
+    "changes": [
+      "Version 1.177 released with bug fixes and performance improvements."
+    ]
+  },
+  {
+    "versionCode": 176,
+    "versionName": "1.176",
+    "date": "2026-07-02T10:23:42.157Z",
+    "changes": [
+      "- new app isolation"
+    ]
+  },
+  {
+    "versionCode": 175,
+    "versionName": "1.175",
+    "date": "2026-07-02T10:07:15.864Z",
+    "changes": [
+      "- fix: improve Feed header color combinations for better contrast and accessibility",
+      "- refactor: compact spacing across website and app for denser UI",
+      "- refactor: replace all hardcoded text colors with semantic foreground tokens",
+      "- refactor: replace all hardcoded emerald-* with semantic primary tokens"
+    ]
+  },
+  {
+    "versionCode": 174,
+    "versionName": "1.174",
+    "date": "2026-06-29T22:47:16.552Z",
+    "changes": [
+      "Version 1.174 released with bug fixes and performance improvements."
+    ]
+  },
+  {
+    "versionCode": 173,
+    "versionName": "1.173",
+    "date": "2026-06-29T05:32:44.048Z",
+    "changes": [
+      "Version 1.173 released with bug fixes and performance improvements."
+    ]
+  },
+  {
+    "versionCode": 172,
+    "versionName": "1.172",
+    "date": "2026-06-28T22:22:20.704Z",
+    "changes": [
+      "- fix: TypeScript type errors for tournaments"
+    ]
+  },
+  {
+    "versionCode": 171,
+    "versionName": "1.171",
+    "date": "2026-06-28T22:15:08.857Z",
+    "changes": [
+      "- updates"
+    ]
+  },
+  {
+    "versionCode": 170,
+    "versionName": "1.170",
+    "date": "2026-06-28T22:00:11.210Z",
+    "changes": [
+      "- updates"
+    ]
+  },
+  {
+    "versionCode": 169,
+    "versionName": "1.169",
+    "date": "2026-06-28T14:11:45.310Z",
+    "changes": [
+      "Version 1.169 released with bug fixes and performance improvements."
+    ]
+  },
+  {
+    "versionCode": 168,
+    "versionName": "1.168",
+    "date": "2026-06-28T13:56:42.367Z",
+    "changes": [
+      "- update"
+    ]
+  },
+  {
+    "versionCode": 167,
+    "versionName": "1.167",
+    "date": "2026-06-28T11:32:19.262Z",
+    "changes": [
+      "Version 1.167 released with bug fixes and performance improvements."
+    ]
+  },
+  {
+    "versionCode": 166,
+    "versionName": "1.166",
+    "date": "2026-06-28T11:18:53.440Z",
+    "changes": [
+      "Version 1.166 released with bug fixes and performance improvements."
+    ]
+  },
+  {
+    "versionCode": 165,
+    "versionName": "1.165",
+    "date": "2026-06-28T07:15:22.199Z",
+    "changes": [
+      "- Updated version",
+      "- chore: release v1.164 (build 164)"
+    ]
+  },
+  {
+    "versionCode": 164,
+    "versionName": "1.164",
+    "date": "2026-06-27T18:06:27.528Z",
+    "changes": [
+      "- chore: release v1.163 (build 163)",
+      "- chore: release v1.162 (build 162)",
+      "- Tournamnet",
+      "- chore: release v1.161 (build 161)"
+    ]
+  },
+  {
+    "versionCode": 163,
+    "versionName": "1.163",
+    "date": "2026-06-27T18:01:13.125Z",
+    "changes": [
+      "- chore: release v1.162 (build 162)",
+      "- Tournamnet",
+      "- chore: release v1.161 (build 161)"
+    ]
+  },
+  {
+    "versionCode": 162,
+    "versionName": "1.162",
+    "date": "2026-06-27T17:53:15.758Z",
+    "changes": [
+      "- Tournamnet",
+      "- chore: release v1.161 (build 161)"
+    ]
+  },
+  {
+    "versionCode": 161,
+    "versionName": "1.161",
+    "date": "2026-06-27T17:37:45.346Z",
+    "changes": [
+      "- chore: release v1.160 (build 160)",
+      "- Update Gallery.tsx",
+      "- up",
+      "- chore: release v1.159 (build 159)"
+    ]
+  },
+  {
+    "versionCode": 160,
+    "versionName": "1.160",
+    "date": "2026-06-27T17:30:47.810Z",
+    "changes": [
+      "- Update Gallery.tsx",
+      "- up",
+      "- chore: release v1.159 (build 159)"
+    ]
+  },
+  {
+    "versionCode": 159,
+    "versionName": "1.159",
+    "date": "2026-06-26T21:44:52.392Z",
+    "changes": [
+      "- chore: release v1.158 (build 158)",
+      "- updates",
+      "- chore: release v1.157 (build 157)"
+    ]
+  },
+  {
+    "versionCode": 158,
+    "versionName": "1.158",
+    "date": "2026-06-26T21:16:30.685Z",
+    "changes": [
+      "- updates",
+      "- chore: release v1.157 (build 157)"
+    ]
+  },
+  {
+    "versionCode": 157,
+    "versionName": "1.157",
+    "date": "2026-06-26T20:49:19.058Z",
+    "changes": [
+      "- chore: release v1.156 (build 156)"
+    ]
+  },
+  {
+    "versionCode": 156,
+    "versionName": "1.156",
+    "date": "2026-06-26T18:39:55.168Z",
+    "changes": [
+      "- jkl",
+      "- chore: release v1.155 (build 155)"
+    ]
+  },
+  {
+    "versionCode": 155,
+    "versionName": "1.155",
+    "date": "2026-06-26T09:45:30.002Z",
+    "changes": [
+      "- chore: release v1.154 (build 154)",
+      "- Architecture",
+      "- chore: release v1.153 (build 153)"
+    ]
+  },
+  {
+    "versionCode": 154,
+    "versionName": "1.154",
+    "date": "2026-06-26T09:37:22.496Z",
+    "changes": [
+      "- Architecture",
+      "- chore: release v1.153 (build 153)"
+    ]
+  },
+  {
+    "versionCode": 153,
+    "versionName": "1.153",
+    "date": "2026-06-24T21:52:05.944Z",
+    "changes": [
+      "- architecture changes",
+      "- chore: release v1.152 (build 152)"
+    ]
+  },
+  {
+    "versionCode": 152,
+    "versionName": "1.152",
+    "date": "2026-06-24T07:13:42.032Z",
+    "changes": [
+      "- chore: release v1.151 (build 151)",
+      "- Updates",
+      "- chore: release v1.150 (build 150)"
+    ]
+  },
+  {
+    "versionCode": 151,
+    "versionName": "1.151",
+    "date": "2026-06-23T07:52:59.120Z",
+    "changes": [
+      "- Updates",
+      "- chore: release v1.150 (build 150)"
+    ]
+  },
+  {
+    "versionCode": 150,
+    "versionName": "1.150",
+    "date": "2026-06-21T21:36:38.482Z",
+    "changes": [
+      "- chore: release v1.149 (build 149)",
+      "- chore: release v1.148 (build 148)",
+      "- chore: release v1.147 (build 147)",
+      "- chore: release v1.146 (build 146)",
+      "- chore: release v1.146 (build 146)",
+      "- chore: release v1.145 (build 145)",
+      "- chore: release v1.144 (build 144)",
+      "- updates",
+      "- chore: release v1.143 (build 143)"
+    ]
+  },
+  {
+    "versionCode": 149,
+    "versionName": "1.149",
+    "date": "2026-06-21T12:01:24.134Z",
+    "changes": [
+      "- chore: release v1.148 (build 148)",
+      "- chore: release v1.147 (build 147)",
+      "- chore: release v1.146 (build 146)",
+      "- chore: release v1.146 (build 146)",
+      "- chore: release v1.145 (build 145)",
+      "- chore: release v1.144 (build 144)",
+      "- updates",
+      "- chore: release v1.143 (build 143)"
+    ]
+  },
+  {
+    "versionCode": 148,
+    "versionName": "1.148",
+    "date": "2026-06-20T16:56:06.469Z",
+    "changes": [
+      "- chore: release v1.147 (build 147)",
+      "- chore: release v1.146 (build 146)",
+      "- chore: release v1.146 (build 146)",
+      "- chore: release v1.145 (build 145)",
+      "- chore: release v1.144 (build 144)",
+      "- updates",
+      "- chore: release v1.143 (build 143)"
+    ]
+  },
+  {
+    "versionCode": 147,
+    "versionName": "1.147",
+    "date": "2026-06-20T16:36:58.589Z",
+    "changes": [
+      "- chore: release v1.146 (build 146)",
+      "- chore: release v1.146 (build 146)",
+      "- chore: release v1.145 (build 145)",
+      "- chore: release v1.144 (build 144)",
+      "- updates",
+      "- chore: release v1.143 (build 143)"
+    ]
+  },
+  {
+    "versionCode": 146,
+    "versionName": "1.146",
+    "date": "2026-06-20T14:54:39.944Z",
+    "changes": [
+      "- chore: release v1.145 (build 145)",
+      "- chore: release v1.144 (build 144)",
+      "- updates",
+      "- chore: release v1.143 (build 143)"
+    ]
+  },
+  {
+    "versionCode": 145,
+    "versionName": "1.145",
+    "date": "2026-06-20T14:09:46.457Z",
+    "changes": [
+      "- chore: release v1.144 (build 144)",
+      "- updates",
+      "- chore: release v1.143 (build 143)"
+    ]
+  },
+  {
+    "versionCode": 144,
+    "versionName": "1.144",
+    "date": "2026-06-19T20:00:30.774Z",
+    "changes": [
+      "- updates",
+      "- chore: release v1.143 (build 143)"
+    ]
+  },
+  {
+    "versionCode": 143,
+    "versionName": "1.143",
+    "date": "2026-06-18T21:16:26.620Z",
+    "changes": [
+      "- chore: release v1.142 (build 142)",
+      "- Update firebase-messaging-sw.js",
+      "- chore: remove .env.local from tracking",
+      "- updates",
+      "- chore: release v1.141 (build 141)"
+    ]
+  },
+  {
+    "versionCode": 142,
+    "versionName": "1.142",
+    "date": "2026-06-18T21:05:46.215Z",
+    "changes": [
+      "- Update firebase-messaging-sw.js",
+      "- chore: remove .env.local from tracking",
+      "- updates",
+      "- chore: release v1.141 (build 141)"
+    ]
+  },
+  {
+    "versionCode": 141,
+    "versionName": "1.141",
+    "date": "2026-06-18T14:25:38.347Z",
+    "changes": [
+      "- chore: release v1.140 (build 140)",
+      "- chore: release v1.139 (build 139)",
+      "- chore: release v1.138 (build 138)",
+      "- chore: release v1.137 (build 137)",
+      "- chore: release v1.136 (build 136)",
+      "- fix: move hooks before early returns in SiteAdmin",
+      "- fix: prevent infinite useEffect loop in SiteAdmin",
+      "- fix: only schedule foreground notifications on native platforms",
+      "- fix: use players.id instead of players.user_id in notification trigger",
+      "- fix: cast TEXT parameters to UUID in submit_friendly_match RPC",
+      "- fix: show notifications when app is open but minimized",
+      "- fix: create notification channels in Android native code",
+      "- chore: release v1.135 (build 135)",
+      "- chore: remove misleading VitePWA comment",
+      "- fix: add missing Android notification channel IDs to FCM payloads",
+      "- chore: release v1.134 (build 134)"
+    ]
+  },
+  {
+    "versionCode": 140,
+    "versionName": "1.140",
+    "date": "2026-06-18T00:35:24.622Z",
+    "changes": [
+      "- chore: release v1.139 (build 139)",
+      "- chore: release v1.138 (build 138)",
+      "- chore: release v1.137 (build 137)",
+      "- chore: release v1.136 (build 136)",
+      "- fix: move hooks before early returns in SiteAdmin",
+      "- fix: prevent infinite useEffect loop in SiteAdmin",
+      "- fix: only schedule foreground notifications on native platforms",
+      "- fix: use players.id instead of players.user_id in notification trigger",
+      "- fix: cast TEXT parameters to UUID in submit_friendly_match RPC",
+      "- fix: show notifications when app is open but minimized",
+      "- fix: create notification channels in Android native code",
+      "- chore: release v1.135 (build 135)",
+      "- chore: remove misleading VitePWA comment",
+      "- fix: add missing Android notification channel IDs to FCM payloads",
+      "- chore: release v1.134 (build 134)"
+    ]
+  },
+  {
+    "versionCode": 139,
+    "versionName": "1.139",
+    "date": "2026-06-17T22:41:39.828Z",
+    "changes": [
+      "- chore: release v1.138 (build 138)",
+      "- chore: release v1.137 (build 137)",
+      "- chore: release v1.136 (build 136)",
+      "- fix: move hooks before early returns in SiteAdmin",
+      "- fix: prevent infinite useEffect loop in SiteAdmin",
+      "- fix: only schedule foreground notifications on native platforms",
+      "- fix: use players.id instead of players.user_id in notification trigger",
+      "- fix: cast TEXT parameters to UUID in submit_friendly_match RPC",
+      "- fix: show notifications when app is open but minimized",
+      "- fix: create notification channels in Android native code",
+      "- chore: release v1.135 (build 135)",
+      "- chore: remove misleading VitePWA comment",
+      "- fix: add missing Android notification channel IDs to FCM payloads",
+      "- chore: release v1.134 (build 134)"
+    ]
+  },
+  {
+    "versionCode": 138,
+    "versionName": "1.138",
+    "date": "2026-06-17T22:31:50.348Z",
+    "changes": [
+      "- chore: release v1.137 (build 137)",
+      "- chore: release v1.136 (build 136)",
+      "- fix: move hooks before early returns in SiteAdmin",
+      "- fix: prevent infinite useEffect loop in SiteAdmin",
+      "- fix: only schedule foreground notifications on native platforms",
+      "- fix: use players.id instead of players.user_id in notification trigger",
+      "- fix: cast TEXT parameters to UUID in submit_friendly_match RPC",
+      "- fix: show notifications when app is open but minimized",
+      "- fix: create notification channels in Android native code",
+      "- chore: release v1.135 (build 135)",
+      "- chore: remove misleading VitePWA comment",
+      "- fix: add missing Android notification channel IDs to FCM payloads",
+      "- chore: release v1.134 (build 134)"
+    ]
+  },
+  {
+    "versionCode": 137,
+    "versionName": "1.137",
+    "date": "2026-06-17T21:58:29.098Z",
+    "changes": [
+      "- chore: release v1.136 (build 136)",
+      "- fix: move hooks before early returns in SiteAdmin",
+      "- fix: prevent infinite useEffect loop in SiteAdmin",
+      "- fix: only schedule foreground notifications on native platforms",
+      "- fix: use players.id instead of players.user_id in notification trigger",
+      "- fix: cast TEXT parameters to UUID in submit_friendly_match RPC",
+      "- fix: show notifications when app is open but minimized",
+      "- fix: create notification channels in Android native code",
+      "- chore: release v1.135 (build 135)",
+      "- chore: remove misleading VitePWA comment",
+      "- fix: add missing Android notification channel IDs to FCM payloads",
+      "- chore: release v1.134 (build 134)"
+    ]
+  },
+  {
+    "versionCode": 136,
+    "versionName": "1.136",
+    "date": "2026-06-17T21:22:10.857Z",
+    "changes": [
+      "- fix: show notifications when app is open but minimized",
+      "- fix: create notification channels in Android native code",
+      "- chore: release v1.135 (build 135)",
+      "- chore: remove misleading VitePWA comment",
+      "- fix: add missing Android notification channel IDs to FCM payloads",
+      "- chore: release v1.134 (build 134)"
+    ]
+  },
+  {
+    "versionCode": 135,
+    "versionName": "1.135",
+    "date": "2026-06-17T21:05:19.934Z",
+    "changes": [
+      "- chore: remove misleading VitePWA comment",
+      "- fix: add missing Android notification channel IDs to FCM payloads",
+      "- chore: release v1.134 (build 134)",
+      "- fix: consolidate role management to single source of truth",
+      "- Update check-roles.js",
+      "- ok",
+      "- chore: release v1.133 (build 133)"
+    ]
+  },
+  {
+    "versionCode": 134,
+    "versionName": "1.134",
+    "date": "2026-06-17T20:25:30.378Z",
+    "changes": [
+      "- fix: consolidate role management to single source of truth",
+      "- Update check-roles.js",
+      "- ok",
+      "- chore: release v1.133 (build 133)"
+    ]
+  },
+  {
+    "versionCode": 133,
+    "versionName": "1.133",
+    "date": "2026-06-17T19:47:34.412Z",
+    "changes": [
+      "- chore: release v1.132 (build 132)",
+      "- chore: release v1.131 (build 131)",
+      "- chore: release v1.130 (build 130)",
+      "- chore: release v1.129 (build 129)"
+    ]
+  },
+  {
+    "versionCode": 132,
+    "versionName": "1.132",
+    "date": "2026-06-17T19:45:10.453Z",
+    "changes": [
+      "- chore: release v1.131 (build 131)",
+      "- chore: release v1.130 (build 130)",
+      "- chore: release v1.129 (build 129)"
+    ]
+  },
+  {
+    "versionCode": 131,
+    "versionName": "1.131",
+    "date": "2026-06-17T19:14:56.703Z",
+    "changes": [
+      "- chore: release v1.130 (build 130)",
+      "- chore: release v1.129 (build 129)"
+    ]
+  },
+  {
+    "versionCode": 130,
+    "versionName": "1.130",
+    "date": "2026-06-17T18:10:32.374Z",
+    "changes": [
+      "- chore: release v1.129 (build 129)"
+    ]
+  },
+  {
+    "versionCode": 129,
+    "versionName": "1.129",
+    "date": "2026-06-17T14:50:32.882Z",
+    "changes": [
+      "- chore: release v1.128 (build 128)",
+      "- chore: release v1.127 (build 127)"
+    ]
+  },
+  {
+    "versionCode": 128,
+    "versionName": "1.128",
+    "date": "2026-06-17T14:36:30.224Z",
+    "changes": [
+      "- chore: release v1.127 (build 127)"
+    ]
+  },
+  {
+    "versionCode": 127,
+    "versionName": "1.127",
+    "date": "2026-06-17T14:12:37.715Z",
+    "changes": [
+      "- chore: release v1.126 (build 126)",
+      "- Updates",
+      "- chore: release v1.125 (build 125)"
+    ]
+  },
+  {
+    "versionCode": 126,
+    "versionName": "1.126",
+    "date": "2026-06-17T13:55:55.585Z",
+    "changes": [
+      "- Updates",
+      "- chore: release v1.125 (build 125)"
+    ]
+  },
+  {
+    "versionCode": 125,
+    "versionName": "1.125",
+    "date": "2026-06-17T13:37:21.015Z",
+    "changes": [
+      "- chore: release v1.124 (build 124)",
+      "- Updates",
+      "- chore: release v1.123 (build 123)",
+      "- fix: fix flyers visibility on all pages and add comprehensive admin documentation",
+      "- fix: resolve 6 critical issues - challenges, notifications, and cross-gender validation",
+      "- fix: improve QR/NFC handling, deep links, and menu visibility"
+    ]
+  },
+  {
+    "versionCode": 124,
+    "versionName": "1.124",
+    "date": "2026-06-17T13:32:57.941Z",
+    "changes": [
+      "- Updates",
+      "- chore: release v1.123 (build 123)",
+      "- fix: fix flyers visibility on all pages and add comprehensive admin documentation",
+      "- fix: resolve 6 critical issues - challenges, notifications, and cross-gender validation",
+      "- fix: improve QR/NFC handling, deep links, and menu visibility"
+    ]
+  },
+  {
+    "versionCode": 123,
+    "versionName": "1.123",
+    "date": "2026-06-17T12:49:21.530Z",
+    "changes": [
+      "- fix: fix flyers visibility on all pages and add comprehensive admin documentation",
+      "- fix: resolve 6 critical issues - challenges, notifications, and cross-gender validation",
+      "- fix: improve QR/NFC handling, deep links, and menu visibility",
+      "- docs: add Play Store submission guide and project status report",
+      "- docs: add comprehensive documentation for users, admins, and API",
+      "- test: add comprehensive integration tests for core features",
+      "- chore: set up comprehensive testing infrastructure with vitest",
+      "- chore: update privacy policy, clean up configs, and remove deprecated offline queue",
+      "- chore: release v1.122 (build 122)",
+      "- docs: add final Play Store completion summary and status",
+      "- docs: add quick-start guide for Play Store submission",
+      "- docs: add Play Store completion summary and status report",
+      "- docs: comprehensive Play Store preparation and project cleanup guides",
+      "- refactor: reorganize admin panel with grouped tab navigation",
+      "- feat: add comprehensive features tracking to admin panel"
+    ]
+  },
+  {
+    "versionCode": 122,
+    "versionName": "1.122",
+    "date": "2026-06-17T11:46:27.252Z",
+    "changes": [
+      "- docs: add final Play Store completion summary and status",
+      "- docs: add quick-start guide for Play Store submission",
+      "- docs: add Play Store completion summary and status report",
+      "- docs: comprehensive Play Store preparation and project cleanup guides",
+      "- refactor: reorganize admin panel with grouped tab navigation",
+      "- feat: add comprehensive features tracking to admin panel",
+      "- fix: sync pnpm lockfile",
+      "- fix: replace dangerous .single() with safe array check",
+      "- fix: remove dead code, clean RPC payloads, fix notification clearing bug",
+      "- chore: release v1.121 (build 121)",
+      "- feat: allow mixed-category doubles for friendly matches, no ELO",
+      "- feat: allow cross-gender singles for friendly matches, no ELO calculation",
+      "- fix: resolve offline sync conflicts, route params type safety, and add hybrid match support",
+      "- fix: resolve 6 bugs in CSV export, app badges, tier badges, and admin panel",
+      "- Update ProfileSetup.tsx",
+      "- Fix",
+      "- chore: release v1.120 (build 120)"
+    ]
+  },
+  {
+    "versionCode": 121,
+    "versionName": "1.121",
+    "date": "2026-06-17T09:52:48.281Z",
+    "changes": [
+      "- Update ProfileSetup.tsx",
+      "- Fix",
+      "- chore: release v1.120 (build 120)"
+    ]
+  },
+  {
+    "versionCode": 120,
+    "versionName": "1.120",
+    "date": "2026-06-17T08:05:36.075Z",
+    "changes": [
+      "- fix: move Firebase config to env vars, find-lost bucket, auto-refresh\"",
+      "- fix: add missing date-fns dependency",
+      "- chore: release v1.119 (build 119)",
+      "- feat: hash-based tab navigation, doubles support, privacy/terms, admin push notifications, maintenance mode, PlayStore hardening"
+    ]
+  },
+  {
+    "versionCode": 119,
+    "versionName": "1.119",
+    "date": "2026-06-16T11:17:22.396Z",
+    "changes": [
+      "Hash-based tab navigation for all pages, doubles live scoring, privacy policy, terms of service, admin push notifications, maintenance mode, PlayStore readiness"
+    ]
+  },
+  {
+    "versionCode": 118,
+    "versionName": "1.118",
+    "date": "2026-06-15T08:44:30.618Z",
+    "changes": [
+      "- Add privacy policy, SW push & new UI features",
+      "- chore: release v1.117 (build 117)"
+    ]
+  },
+  {
+    "versionCode": 117,
+    "versionName": "1.117",
+    "date": "2026-06-14T23:09:03.573Z",
+    "changes": [
+      "- chore: release v1.116 (build 116)",
+      "- chore: release v1.115 (build 115)"
+    ]
+  },
+  {
+    "versionCode": 116,
+    "versionName": "1.116",
+    "date": "2026-06-14T22:58:48.834Z",
+    "changes": [
+      "- chore: release v1.115 (build 115)"
+    ]
+  },
+  {
+    "versionCode": 115,
+    "versionName": "1.115",
+    "date": "2026-06-14T14:54:42.267Z",
+    "changes": [
+      "- Add global search, onboarding, admin stats",
+      "- chore: release v1.114 (build 114)"
+    ]
+  },
+  {
+    "versionCode": 114,
+    "versionName": "1.114",
+    "date": "2026-06-14T13:35:05.375Z",
+    "changes": [
+      "- Apply sets multiplier to ELO and UI improvements",
+      "- chore: release v1.113 (build 113)"
+    ]
+  },
+  {
+    "versionCode": 113,
+    "versionName": "1.113",
+    "date": "2026-06-13T14:17:23.000Z",
+    "changes": [
+      "- chore: release v1.112 (build 112)",
+      "- Add QR scanner, feed match cards & sharing",
+      "- chore: release v1.111 (build 111)"
+    ]
+  },
+  {
+    "versionCode": 112,
+    "versionName": "1.112",
+    "date": "2026-06-13T13:55:15.204Z",
+    "changes": [
+      "- Add QR scanner, feed match cards & sharing",
+      "- chore: release v1.111 (build 111)"
+    ]
+  },
+  {
+    "versionCode": 111,
+    "versionName": "1.111",
+    "date": "2026-06-13T13:16:13.413Z",
+    "changes": [
+      "- chore: release v1.110 (build 110)"
+    ]
+  },
+  {
+    "versionCode": 110,
+    "versionName": "1.110",
+    "date": "2026-06-13T12:36:39.831Z",
+    "changes": [
+      "- chore: release v1.108 (build 109)",
+      "- fix(ui): remove dead analytics imports and routes",
+      "- feat(push): implement web push notifications via firebase cloud messaging",
+      "- fix(ui): remove win_streak from player query and calculate dynamically",
+      "- fix(leaderboard): implement strict tie-breaker logic for identical ELO ratings",
+      "- feat(ui): merge analytics into leaderboard",
+      "- feat(ui): embed Analytics directly into Feed as a tab",
+      "- fix(ui): resolve Layout import error in Analytics page",
+      "- feat(ui): add Global Analytics page for insights and trends",
+      "- chore: release v1.108 (build 109)"
+    ]
+  },
+  {
+    "versionCode": 109,
+    "versionName": "1.108",
+    "date": "2026-06-13T11:17:16.994Z",
+    "changes": [
+      "- fix(ui): stack multi-set scores vertically in Feed to prevent layout overlap",
+      "- feat(ui): add interactive match details to Activity Heatmap and update MATCH_SELECT",
+      "- fix(ui): prevent ELO chart container from unmounting when no history exists for a category",
+      "- fix(ui): wrap Feed tabs, add consistent bottom nav padding, disable inactivity logout",
+      "- feat(ui): add ELO format filter toggles to Player Profile progression chart",
+      "- fix(ui): separate ELO pills into new row and fix ELO chart reverse calculation",
+      "- feat(ui): sync About page tabs with URL hash",
+      "- feat(ui): sync Leaderboard InfoModal with new Elo descriptions",
+      "- feat(ui): update Elo glossary with accurate mathematical descriptions and formulas",
+      "- chore(db): update blended elo to scale by 1/3 instead of 1/2 for 3 formats",
+      "- feat(ui): sync Leaderboard nested tabs and Event tabs with URL",
+      "- feat(ui): sync active tabs with URL hash on PlayerProfile, SiteAdmin, and ProfileSetup",
+      "- feat(ui): sync players directory active tab with URL hash to preserve state across navigation",
+      "- fix(ui): use player.id instead of nickname for podium routing",
+      "- fix(ui): correct podium profile links from /players to /player",
+      "- feat(ui): make leaderboard podium clickable and display category win/loss records",
+      "- fix: prevent migration from overwriting calculated ELOs if run multiple times",
+      "- feat: implement category-specific win/loss records for accurate leaderboard display",
+      "- fix: ensure elo_calculation_logs table exists before recalculating",
+      "- chore: add script to completely recalculate all past elos",
+      "- fix: resolve win/loss record calculation bug and add ELO logging",
+      "- fix: improve error messages for invalid match formats with specific reasons",
+      "- fix: strict validation for 5 standard formats (MS, WS, MD, WD, XD) and drop sql defaults",
+      "- feat: implement separate singles, doubles, and mixed elo columns and categories",
+      "- refactor(leaderboard): replace ms/md tabs with men/women to reflect unified elo pool",
+      "- fix(client): fetch gender for players directory to fix leaderboard gender filters",
+      "- chore: release v1.107 (build 108)"
+    ]
+  },
+  {
+    "versionCode": 108,
+    "versionName": "1.107",
+    "date": "2026-06-13T09:45:36.239Z",
+    "changes": [
+      "- feat(client): remove 5-match minimum requirement for rankings",
+      "- fix(client): resolve ambiguous RPC for friendly matches",
+      "- chore: release v1.106 (build 107)"
+    ]
+  },
+  {
+    "versionCode": 107,
+    "versionName": "1.106",
+    "date": "2026-06-13T09:08:35.099Z",
+    "changes": [
+      "- chore: release v1.105 (build 106)"
+    ]
+  },
+  {
+    "versionCode": 106,
+    "versionName": "1.105",
+    "date": "2026-06-12T14:34:47.593Z",
+    "changes": [
+      "- chore: release v1.104 (build 105)"
+    ]
+  },
+  {
+    "versionCode": 105,
+    "versionName": "1.104",
+    "date": "2026-06-12T11:46:55.382Z",
+    "changes": [
+      "- chore: release v1.103 (build 104)",
+      "- chore: release v1.102 (build 103)"
+    ]
+  },
+  {
+    "versionCode": 104,
+    "versionName": "1.103",
+    "date": "2026-06-12T11:37:14.923Z",
+    "changes": [
+      "- chore: release v1.102 (build 103)"
+    ]
+  },
+  {
+    "versionCode": 103,
+    "versionName": "1.102",
+    "date": "2026-06-12T11:20:56.496Z",
+    "changes": [
+      "- chore: release v1.101 (build 102)"
+    ]
+  },
+  {
+    "versionCode": 102,
+    "versionName": "1.101",
+    "date": "2026-06-12T10:44:40.005Z",
+    "changes": [
+      "- Refactor buddy flows, update umpire UI & nav",
+      "- chore: release v1.100 (build 101)"
+    ]
+  },
+  {
+    "versionCode": 101,
+    "versionName": "1.100",
+    "date": "2026-06-12T07:19:00.350Z",
+    "changes": [
+      "- chore: release v1.99 (build 100)",
+      "- Add buddy-requests, per-player serve & UI tweaks",
+      "- chore: release v1.98 (build 99)"
+    ]
+  },
+  {
+    "versionCode": 100,
+    "versionName": "1.99",
+    "date": "2026-06-12T07:13:34.376Z",
+    "changes": [
+      "- Add buddy-requests, per-player serve & UI tweaks",
+      "- chore: release v1.98 (build 99)"
+    ]
+  },
+  {
+    "versionCode": 99,
+    "versionName": "1.98",
+    "date": "2026-06-11T21:25:41.354Z",
+    "changes": [
+      "- Add live broadcasts, events nav, and profile UI",
+      "- chore: release v1.97 (build 98)"
+    ]
+  },
+  {
+    "versionCode": 98,
+    "versionName": "1.97",
+    "date": "2026-06-11T20:27:58.473Z",
+    "changes": [
+      "- chore: release v1.96 (build 97)"
+    ]
+  },
+  {
+    "versionCode": 97,
+    "versionName": "1.96",
+    "date": "2026-06-11T17:39:34.533Z",
+    "changes": [
+      "- chore: release v1.95 (build 96)"
+    ]
+  },
+  {
+    "versionCode": 96,
+    "versionName": "1.95",
+    "date": "2026-06-11T17:34:33.173Z",
+    "changes": [
+      "- Release v1.93: UI overhaul & live brackets",
+      "- chore: release v1.94 (build 95)"
+    ]
+  },
+  {
+    "versionCode": 95,
+    "versionName": "1.94",
+    "date": "2026-06-11T15:01:51.199Z",
+    "changes": [
+      "- chore: release v1.93 (build 94)",
+      "- chore: release v1.92 (build 93)"
+    ]
+  },
+  {
+    "versionCode": 94,
+    "versionName": "1.93",
+    "date": "2026-06-11T14:48:01.424Z",
+    "changes": [
+      "- chore: release v1.92 (build 93)"
+    ]
+  },
+  {
+    "versionCode": 93,
+    "versionName": "1.92",
+    "date": "2026-06-11T12:30:00.000Z",
+    "changes": [
+      "- Unified Events Megahub with tiered navigation",
+      "- Nested Match Schedule, Live Broadcast, and Brackets in INVICTA 2026 hub",
+      "- Modernized Gallery with tournament-specific tags and Albums sorting",
+      "- Added Global + Log Match button on Desktop Navigation",
+      "- Removed orphaned routes for simplified architecture",
+      "- chore: release v1.92 (build 93)"
+    ]
+  },
+  {
+    "versionCode": 92,
+    "versionName": "1.91",
+    "date": "2026-06-11T12:15:12.579Z",
+    "changes": [
+      "- chore: release v1.90 (build 91)"
+    ]
+  },
+  {
+    "versionCode": 91,
+    "versionName": "1.90",
+    "date": "2026-06-11T09:09:42.093Z",
+    "changes": [
+      "- chore: release v1.89 (build 90)"
+    ]
+  },
+  {
+    "versionCode": 90,
+    "versionName": "1.89",
+    "date": "2026-06-11T08:03:01.738Z",
+    "changes": [
+      "- Add live scoring, gestures and notifications",
+      "- chore: release v1.88 (build 89)"
+    ]
+  },
+  {
+    "versionCode": 89,
+    "versionName": "1.88",
+    "date": "2026-06-11T07:19:25.361Z",
+    "changes": [
+      "- chore: release v1.87 (build 88)"
+    ]
+  },
+  {
+    "versionCode": 88,
+    "versionName": "1.87",
+    "date": "2026-06-11T12:00:00.000Z",
+    "changes": [
+      "- Added Pinch-to-Zoom & Pan gestures for mobile video analysis",
+      "- Added Precision Horizontal Scrubbing and A-B Loop",
+      "- Added Telestrator Draw Mode for tactics visualization",
+      "- Added Gesture Cheat Sheet Help Modal",
+      "- Built Dynamic BWF-style Scoreboard Overlay",
+      "- Built Scoring Mode for easy JSON score generation",
+      "- Added Automated Name Extraction for Live Scoreboard",
+      "- Refactored Features Page to masonry layout"
+    ]
+  }
+]

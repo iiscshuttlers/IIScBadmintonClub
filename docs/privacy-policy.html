@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — IISc Badminton Club</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      line-height: 1.7;
+      padding: 0 16px 60px;
+    }
+    header {
+      background: #059669;
+      color: white;
+      padding: 32px 24px;
+      text-align: center;
+      margin: 0 -16px 40px;
+    }
+    header h1 { font-size: 24px; font-weight: 900; margin-bottom: 4px; }
+    header p  { font-size: 14px; opacity: 0.85; }
+    .container { max-width: 760px; margin: 0 auto; }
+    h2 {
+      font-size: 17px;
+      font-weight: 800;
+      color: #059669;
+      margin: 32px 0 10px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid #d1fae5;
+    }
+    p  { margin-bottom: 12px; font-size: 15px; color: #334155; }
+    ul { margin: 8px 0 12px 20px; }
+    li { margin-bottom: 6px; font-size: 15px; color: #334155; }
+    a  { color: #059669; }
+    .badge {
+      display: inline-block;
+      background: #ecfdf5;
+      color: #065f46;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 99px;
+      margin-bottom: 8px;
+    }
+    .card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 8px;
+    }
+    footer {
+      margin-top: 48px;
+      text-align: center;
+      font-size: 13px;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div style="font-size:36px;margin-bottom:8px">🏸</div>
+  <h1>Privacy Policy</h1>
+  <p>IISc Badminton Club App</p>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <span class="badge">Last updated: June 2026</span>
+    <p>
+      IISc Badminton Club ("we", "our", or "the app") is the official badminton club app for the
+      Indian Institute of Science (IISc) campus community. This Privacy Policy explains what
+      information we collect, how we use it, and your rights regarding your data.
+    </p>
+    <p>By using the app, you agree to the practices described in this policy.</p>
+  </div>
+
+  <h2>1. Information We Collect</h2>
+  <p>We collect only what is necessary to run the app:</p>
+  <ul>
+    <li><strong>Account information:</strong> Your name, email address, and profile photo (if provided).</li>
+    <li><strong>Player profile:</strong> Gender, skill level, preferred racket, and other optional sports-related fields you choose to fill in.</li>
+    <li><strong>Match data:</strong> Scores, results, and ELO ratings from matches you log or participate in.</li>
+    <li><strong>Device push token:</strong> To send you match confirmations, challenge notifications, and club announcements. You can opt out at any time in Settings.</li>
+    <li><strong>Usage data:</strong> Anonymous usage and diagnostic information may be collected to improve app performance and reliability.</li>
+  </ul>
+
+  <h2>2. How We Use Your Information</h2>
+  <ul>
+    <li>Display your profile, match history, and ELO ranking on the leaderboard.</li>
+    <li>Send push notifications for match confirmations, challenges, and announcements (opt-out available).</li>
+    <li>Calculate and display ELO ratings and statistics.</li>
+    <li>Enable club features: Find & Lost board, buddy system, polls, and live scores.</li>
+    <li>Allow admins to manage club operations and review disputes.</li>
+  </ul>
+
+  <h2>3. Data Sharing</h2>
+  <p>We do <strong>not</strong> sell your personal data. We share data only with:</p>
+  <ul>
+    <li><strong>Supabase</strong> — our database and authentication provider (data stored in secure EU/US servers).</li>
+    <li><strong>Firebase / Google FCM</strong> — for delivering push notifications (device token only, no personal data).</li>
+    <li>No advertising networks. No third-party analytics beyond anonymous usage stats.</li>
+  </ul>
+
+  <h2>4. Data Retention</h2>
+  <ul>
+    <li>Your account data is retained as long as your account exists.</li>
+    <li>Match history is kept permanently as part of the club record.</li>
+    <li>If you delete your account, your profile and personal data are removed. Match records may be anonymised rather than deleted to preserve historical statistics.</li>
+  </ul>
+
+  <h2>5. Your Rights (GDPR / Data Subject Rights)</h2>
+  <p>You have the right to:</p>
+  <ul>
+    <li><strong>Access</strong> — request a copy of your personal data.</li>
+    <li><strong>Correction</strong> — update your profile at any time in the app.</li>
+    <li><strong>Deletion</strong> — delete your account via Settings → Delete Account. This removes your profile and personal data. ALternatively, Users may request account deletion by contacting the club administrator.</li>
+    <li><strong>Opt-out of notifications</strong> — toggle individual notification types in Settings.</li>
+    <li><strong>Data portability</strong> — contact us to request an export of your data.</li>
+  </ul>
+
+  <h2>6. Push Notifications</h2>
+  <p>
+    We use Firebase Cloud Messaging (FCM) to send push notifications. Your device token is
+    stored securely and used only to deliver notifications from IISc Badminton Club. You can
+    disable all or specific notification types in the app's Settings at any time.
+  </p>
+
+  <h2>7. Children's Privacy</h2>
+  <p>
+    This app is intended for members of the IISc campus community (students, faculty, staff).
+    We do not knowingly collect data from children under 13. If you believe a child has
+    provided us data, contact us and we will delete it promptly.
+  </p>
+
+  <h2>8. Security</h2>
+  <p>
+    All data is transmitted over HTTPS. Supabase enforces Row Level Security (RLS) so users
+    can only access their own data. Passwords are managed by Supabase Auth and never stored
+    in plain text.
+  </p>
+
+  <h2>9. Changes to This Policy</h2>
+  <p>
+    We may update this policy occasionally. Changes will be reflected by updating the
+    "Last updated" date above. Continued use of the app after changes constitutes acceptance.
+  </p>
+
+  <h2>10. Contact Us</h2>
+  <p>
+    For privacy questions, data requests, or to report a concern, contact the IISc Badminton Club
+    club administrator at:
+    <br /><br />
+    📧 <a href="mailto:iiscbadmintonclub@gmail.com">iiscbadmintonclub@gmail.com</a>
+    <br />
+    🌐 IISc Badminton Club App — Indian Institute of Science, Bengaluru, India
+  </p>
+
+  <footer>
+    © 2026 IISc Badminton Club · Indian Institute of Science<br />
+    This privacy policy applies to the IISc Badminton Club Android app and web app.
+  </footer>
+
+</div>
+</body>
+</html>

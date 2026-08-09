@@ -1,0 +1,49 @@
+{
+  "recent": [
+    {
+      "title": "INVICTA Open Tournament",
+      "date": "2026-05-19",
+      "startDate": "2026-06-01",
+      "endDate": "2026-06-30",
+      "category": "tournament",
+      "priority": "high",
+      "location": "IISc Badminton Hall",
+      "content": "Get ready for the badminton showdown! <strong>INVICTA Open Tournament</strong> is tentatively scheduled from <strong>1st June to 21st June</strong>.<br><br>Registrations are closed !! <a href='/invicta' style='color:#10b981;font-weight:bold;text-decoration:underline;'>Click here to register.</a> Open to all IISc members."
+    },
+    {
+      "title": "Farewell Badminton Match 🏸",
+      "date": "2026-05-05",
+      "category": "event",
+      "priority": "high",
+      "location": "IISc Badminton Hall",
+      "content": "The Farewell Badminton Tournament has concluded and the official results are now available.<br><br>🏆 MS: Jalaj (RBCCPS)<br>🏆 MD: Kaling Danggen (CES) & Raja Janmejay (AE)<br>🏆 WS: Radhika Dutt (CES)<br>🏆 XD: Radhika Dutt (CES) & Kaling Danggen (CES)<br><br><a href='/iiscshuttlers/events/farewell-match' style='display:inline-block;background:#1e3a8a;color:white;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:600;margin-top:8px;'>View Results</a>"
+    },
+    {
+      "title": "Court Booked for RBCCPS Intra-department Tournament",
+      "date": "2026-05-02",
+      "startDate": "2026-05-02",
+      "endDate": "2026-05-03",
+      "category": "facility",
+      "priority": "high",
+      "location": "Court C3",
+      "contact": "RBCCPS Coordinator",
+      "content": "Court C3 is reserved for the RBCCPS Intra-department Tournament.<br><br><strong>📅 Saturday, 2 May 2026</strong><br>⏰ 1:30 PM – 5:30 PM<br><br><strong>📅 Sunday, 3 May 2026</strong><br>⏰ 9:30 AM – 1:30 PM"
+    },
+    {
+      "title": "Spectrum 2026 Tournament",
+      "date": "2026-04-12",
+      "category": "tournament",
+      "priority": "high",
+      "location": "IISc Badminton Hall",
+      "content": "Spectrum 2026 has successfully concluded. Thanks to all participants and organizers for making it a great event!"
+    },
+    {
+      "title": "Court Maintenance Notice",
+      "date": "2026-04-03",
+      "category": "facility",
+      "priority": "medium",
+      "location": "All Courts",
+      "content": "All courts will remain closed from <strong>3 April 2026 (9 AM)</strong> to <strong>4 April 2026 (12 PM)</strong> for maintenance."
+    }
+  ]
+}

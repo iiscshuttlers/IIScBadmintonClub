@@ -1,0 +1,273 @@
+{
+  "formats": ["MS", "WS", "MD", "WD", "XD"],
+  "lastUpdated": "2026-05-03T14:15:18.515Z",
+  "config": {
+    "eventName": "Farewell Tournament 2026",
+    "venue": "IISc Gymkhana"
+  },
+  "players": {},
+  "matches": {
+    "MS": [
+      {
+        "Match_ID": "MS_1",
+        "Round": "Round 1",
+        "Status": "completed",
+        "Score_1": "",
+        "Winner": "Aneesh (UG)",
+        "Player_1": "Aneesh (UG)",
+        "Player_2": "Bye"
+      },
+      {
+        "Match_ID": "MS_2",
+        "Round": "Round 1",
+        "Status": "scheduled",
+        "Score_1": "",
+        "Winner": "",
+        "Player_1": "Vishvajeet verma (AI)",
+        "Player_2": "LAKHINANA HARSHAVARDHAN (ME)"
+      },
+      {
+        "Match_ID": "MS_3",
+        "Round": "Round 1",
+        "Status": "completed",
+        "Score_1": "",
+        "Winner": "Jalaj (RBCCPS)",
+        "Player_1": "Jalaj (RBCCPS)",
+        "Player_2": "Bye"
+      },
+      {
+        "Match_ID": "MS_4",
+        "Round": "Round 1",
+        "Status": "completed",
+        "Score_1": "",
+        "Winner": "Raja (AE)",
+        "Player_1": "Raja (AE)",
+        "Player_2": "Bye"
+      },
+      {
+        "Match_ID": "MS_5",
+        "Round": "Round 2",
+        "Status": "scheduled",
+        "Score_1": "",
+        "Winner": "",
+        "Player_1": "TBD",
+        "Player_2": "TBD"
+      },
+      {
+        "Match_ID": "MS_6",
+        "Round": "Round 2",
+        "Status": "scheduled",
+        "Score_1": "",
+        "Winner": "",
+        "Player_1": "TBD",
+        "Player_2": "TBD"
+      },
+      {
+        "Match_ID": "MS_7",
+        "Round": "Quarterfinals",
+        "Status": "scheduled",
+        "Score_1": "",
+        "Winner": "",
+        "Player_1": "TBD",
+        "Player_2": "TBD"
+      },
+      {
+        "Match_ID": "MS_8",
+        "Round": "Final",
+        "Status": "scheduled",
+        "Score_1": "",
+        "Winner": "",
+        "Player_1": "TBD",
+        "Player_2": "TBD"
+      }
+    ],
+    "WS": [
+      {
+        "Match_ID": "WS_1",
+        "Round": "Round 1",
+        "Status": "completed",
+        "Score_1": "",
+        "Winner": "Bye",
+        "Player_1": "Bye",
+        "Player_2": "Bye"
+      },
+      {
+        "Match_ID": "WS_2",
+        "Round": "Final",
+        "Status": "scheduled",
+        "Score_1": "",
+        "Winner": "",
+        "Player_1": "TBD",
+        "Player_2": "TBD"
+      }
+    ],
+    "MD": [
+      {
+        "Match_ID": "MD_1",
+        "Round": "Round 1",
+        "Status": "completed",
+        "Score_1": "",
+        "Winner": "Anshul/Bhupendra (UG/CE)",
+        "Players_1": "Anshul/Bhupendra (UG/CE)",
+        "Players_2": "Bye"
+      },
+      {
+        "Match_ID": "MD_2",
+        "Round": "Round 1",
+        "Status": "scheduled",
+        "Score_1": "",
+        "Winner": "",
+        "Players_1": "Vaishnav Raj T/Nikhil P V S (CE/CeNSE)",
+        "Players_2": "Vishvajeet verma/Paras Raina (AI/AI)"
+      },
+      {
+        "Match_ID": "MD_3",
+        "Round": "Round 1",
+        "Status": "completed",
+        "Score_1": "",
+        "Winner": "Kaling Danggen/LAKHINANA HARSHAVARDHAN (CES/ME)",
+        "Players_1": "Kaling Danggen/LAKHINANA HARSHAVARDHAN (CES/ME)",
+        "Players_2": "Bye"
+      },
+      {
+        "Match_ID": "MD_4",
+        "Round": "Round 1",
+        "Status": "completed",
+        "Score_1": "",
+        "Winner": "Jalaj Siroliya/Shubham Singh (RBCCPS/ECE)",
+        "Players_1": "Jalaj Siroliya/Shubham Singh (RBCCPS/ECE)",
+        "Players_2": "Bye"
+      },
+      {
+        "Match_ID": "MD_5",
+        "Round": "Round 2",
+        "Status": "scheduled",
+        "Score_1": "",
+        "Winner": "",
+        "Players_1": "TBD",
+        "Players_2": "TBD"
+      },
+      {
+        "Match_ID": "MD_6",
+        "Round": "Round 2",
+        "Status": "scheduled",
+        "Score_1": "",
+        "Winner": "",
+        "Players_1": "TBD",
+        "Players_2": "TBD"
+      },
+      {
+        "Match_ID": "MD_7",
+        "Round": "Quarterfinals",
+        "Status": "scheduled",
+        "Score_1": "",
+        "Winner": "",
+        "Players_1": "TBD",
+        "Players_2": "TBD"
+      },
+      {
+        "Match_ID": "MD_8",
+        "Round": "Final",
+        "Status": "scheduled",
+        "Score_1": "",
+        "Winner": "",
+        "Players_1": "TBD",
+        "Players_2": "TBD"
+      }
+    ],
+    "WD": [
+      {
+        "Match_ID": "WD_1",
+        "Round": "Round 1",
+        "Status": "scheduled",
+        "Score_1": "",
+        "Winner": "",
+        "Players_1": "Megha Patidar/Radhika Dutt (CSA/CES)",
+        "Players_2": "Tanisha Kumar/Archie Gaur (UG/CSA)"
+      },
+      {
+        "Match_ID": "WD_2",
+        "Round": "Final",
+        "Status": "scheduled",
+        "Score_1": "",
+        "Winner": "",
+        "Players_1": "TBD",
+        "Players_2": "TBD"
+      }
+    ],
+    "XD": [
+      {
+        "Match_ID": "XD_1",
+        "Round": "Round 1",
+        "Status": "completed",
+        "Score_1": "",
+        "Winner": "Kaling Danggen/Radhika Dutt (CES/CES)",
+        "Players_1": "Kaling Danggen/Radhika Dutt (CES/CES)",
+        "Players_2": "Bye"
+      },
+      {
+        "Match_ID": "XD_2",
+        "Round": "Round 1",
+        "Status": "completed",
+        "Score_1": "",
+        "Winner": "Bye",
+        "Players_1": "Bye",
+        "Players_2": "Bye"
+      },
+      {
+        "Match_ID": "XD_3",
+        "Round": "Round 1",
+        "Status": "completed",
+        "Score_1": "",
+        "Winner": "Tanisha Kumar/Aneesh (UG/UG)",
+        "Players_1": "Tanisha Kumar/Aneesh (UG/UG)",
+        "Players_2": "Bye"
+      },
+      {
+        "Match_ID": "XD_4",
+        "Round": "Round 1",
+        "Status": "completed",
+        "Score_1": "",
+        "Winner": "Megha Patidar/Paras Raina (CSA/AI)",
+        "Players_1": "Megha Patidar/Paras Raina (CSA/AI)",
+        "Players_2": "Bye"
+      },
+      {
+        "Match_ID": "XD_5",
+        "Round": "Round 2",
+        "Status": "scheduled",
+        "Score_1": "",
+        "Winner": "",
+        "Players_1": "TBD",
+        "Players_2": "TBD"
+      },
+      {
+        "Match_ID": "XD_6",
+        "Round": "Round 2",
+        "Status": "scheduled",
+        "Score_1": "",
+        "Winner": "",
+        "Players_1": "TBD",
+        "Players_2": "TBD"
+      },
+      {
+        "Match_ID": "XD_7",
+        "Round": "Quarterfinals",
+        "Status": "scheduled",
+        "Score_1": "",
+        "Winner": "",
+        "Players_1": "TBD",
+        "Players_2": "TBD"
+      },
+      {
+        "Match_ID": "XD_8",
+        "Round": "Final",
+        "Status": "scheduled",
+        "Score_1": "",
+        "Winner": "",
+        "Players_1": "TBD",
+        "Players_2": "TBD"
+      }
+    ]
+  }
+}
