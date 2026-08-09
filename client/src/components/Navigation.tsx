@@ -292,8 +292,14 @@ export default function Navigation() {
                           if (myPlayerId) {
                             setLocation(`/player/${myPlayerId}/personal`);
                           } else {
-                            toast.info("Please set up your profile to access your Personal Space.");
-                            setLocation("/personal/me");
+                            toast.info("Please set up your profile to access your Personal Space.", {
+                              action: {
+                                label: "Set Up Profile",
+                                onClick: () => setLocation("/profile/setup"),
+                              },
+                              duration: 6000,
+                            });
+                            setLocation("/profile/setup");
                           }
                         }}
                         className="hover:opacity-80 transition-opacity outline-none ring-2 ring-primary/50 rounded-full"
@@ -551,8 +557,14 @@ export default function Navigation() {
                         if (myPlayerId) {
                           setLocation(`/player/${myPlayerId}/personal`);
                         } else {
-                          toast.info("Please set up your profile to access your Personal Space.");
-                          setLocation("/personal/me");
+                          toast.info("Please set up your profile to access your Personal Space.", {
+                            action: {
+                              label: "Set Up Profile",
+                              onClick: () => setLocation("/profile/setup"),
+                            },
+                            duration: 6000,
+                          });
+                          setLocation("/profile/setup");
                         }
                       }}
                     >
