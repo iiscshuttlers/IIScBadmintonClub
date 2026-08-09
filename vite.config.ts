@@ -149,6 +149,7 @@ export default defineConfig(() => {
   const manifestIconPath = (name: string) => isGithubPages ? `/IIScBadmintonClub/${name}` : `/${name}`;
 
   return {
+    base: basePath,
     define: {
       __APP_VERSION__: JSON.stringify(pkg.version),
     },
