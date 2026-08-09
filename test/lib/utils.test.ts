@@ -89,7 +89,7 @@ describe('Utils', () => {
   describe('getBaseShareUrl', () => {
     it('returns correct base share URL', () => {
       const url = getBaseShareUrl();
-      expect(url).toBe('https://iiscshuttlers.github.io/iiscshuttlers');
+      expect(url).toBe('https://iiscshuttlers.github.io/IIScBadmintonClub');
     });
 
     it('returns a valid URL format', () => {

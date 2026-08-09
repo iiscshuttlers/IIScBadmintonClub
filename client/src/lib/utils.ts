@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function getBaseShareUrl() {
-  return "https://iiscshuttlers.github.io/iiscshuttlers";
+  return "https://iiscshuttlers.github.io/IIScBadmintonClub";
 }
 
 export function getCourtColor(court: string | null | undefined): string {

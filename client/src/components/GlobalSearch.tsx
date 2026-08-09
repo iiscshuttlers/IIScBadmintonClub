@@ -52,13 +52,16 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
     }
     setLoading(true);
     try {
-      if (q.includes("iiscbadmintonclub.github.io") || q.includes("localhost:3000") || q.includes("localhost:5173")) {
+      if (q.includes("iiscshuttlers.github.io") || q.includes("localhost:3000") || q.includes("localhost:5173")) {
         try {
           const parsed = new URL(q.startsWith("http") ? q : `https://${q}`);
-          // Extract everything after /iiscshuttlers if present, otherwise just use pathname
+          // Extract everything after /IIScBadmintonClub if present, otherwise just use pathname
           let pathAfterBase = parsed.pathname;
+          if (pathAfterBase.startsWith("/IIScBadmintonClub")) {
+            pathAfterBase = pathAfterBase.replace("/IIScBadmintonClub", "");
+          }
           if (pathAfterBase.startsWith("/iiscshuttlers")) {
-            pathAfterBase = pathAfterBase.replace(/^\/iiscshuttlers/, "");
+            pathAfterBase = pathAfterBase.replace("/iiscshuttlers", "");
           }
           if (!pathAfterBase) pathAfterBase = "/";
           

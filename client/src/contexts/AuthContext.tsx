@@ -44,7 +44,7 @@ const VIEW_AS_KEY = "iisc_view_as_role";
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { session, loading: sessionLoading } = useSupabaseSession();
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
-  const [profileLoading, setProfileLoading] = useState(true);
+  const [fetchedUserId, setFetchedUserId] = useState<string | null>(null);
   const [viewAsRole, setViewAsRoleState] = useState<ViewAsRole | null>(() => {
     try { return (localStorage.getItem(VIEW_AS_KEY) as ViewAsRole) || null; } catch { return null; }
   });
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (authError && (authError.status === 404 || authError.status === 400 || authError.message.toLowerCase().includes("user not found"))) {
         await supabase.auth.signOut();
         setProfile(null);
-        setProfileLoading(false);
+        setFetchedUserId(null);
         return;
       }
 
@@ -95,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.warn("Failed to fetch profile in AuthProvider", err);
       setProfile(null);
     } finally {
-      setProfileLoading(false);
+      setFetchedUserId(userId);
     }
   };
 
@@ -103,13 +103,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (sessionLoading) return;
 
     if (session?.user?.id) {
-      if (!profile || profile.id !== session?.user?.id) {
-        setProfileLoading(true);
-      }
       fetchProfile(session.user.id, session.user.email);
     } else {
       setProfile(null);
-      setProfileLoading(false);
+      setFetchedUserId(null);
     }
   }, [session?.user?.id, sessionLoading]);
 
@@ -128,7 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Global App Badge & Realtime Notifications for pending matches
   useMatchNotifications(profile?.id);
 
-  const isInitializing = sessionLoading || (!!session && profileLoading);
+  const isInitializing = sessionLoading || (!!session && fetchedUserId !== session?.user?.id);
 
   const playerRole = profile?.role ?? 'player';
   const isTrulyMainAdmin = playerRole === 'master_admin' || isMasterAdminEmail(session?.user?.email);

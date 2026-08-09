@@ -184,7 +184,7 @@ export async function renderWrappedShareCard(
   // ctx.fillStyle = "rgba(255,255,255,0.6)";
   // ctx.font = "bold 30px sans-serif";
   // ctx.textAlign = "center";
-  // ctx.fillText("iiscshuttlers.github.io/iiscshuttlers", W / 2, H - 60);
+  // ctx.fillText("iiscshuttlers.github.io/IIScBadmintonClub", W / 2, H - 60);
 
   return canvas;
 }

@@ -684,22 +684,7 @@ export function UmpireEngine({
             <button onClick={() => { window.location.href = `${import.meta.env.BASE_URL}tv/camera/${tournamentMatch?.id || match.id || ""}`; }} className="shrink-0 px-1 py-2 sm:px-3 sm:py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border border-rose-500/40 transition cursor-pointer">
               <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-400" /> Broadcast
             </button>
-            {Capacitor.isNativePlatform() && (
-              <>
-                <button onClick={async () => {
-                  try {
-                    await Pip.enterPipMode();
-                  } catch (e: any) {
-                    toast.info(e?.message || "Could not enter PiP mode");
-                  }
-                }} className="shrink-0 px-1 py-2 sm:px-3 sm:py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border border-slate-700 transition">
-                  <MonitorPlay className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" /> PiP
-                </button>
-                <button onClick={() => setIsMotionTracking(m => !m)} className={`shrink-0 px-1 py-2 sm:px-3 sm:py-2 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border transition ${isMotionTracking ? "bg-green-600 border-green-500 text-white" : "bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700"}`}>
-                  <ActivitySquare className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {isMotionTracking ? motionData?.intensity || "Tracking..." : "Track Motion"}
-                </button>
-              </>
-            )}
+
           </>
         )}
       </div>
@@ -1139,24 +1124,22 @@ export function UmpireEngine({
             </div>
           )}
 
-      {/* ── Takeover Request Banner (Non-blocking) ── */}
+      {/* ── Takeover Request Modal ── */}
       {match.takeoverRequest?.status === "pending" && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[95%] max-w-sm pointer-events-auto">
-          <div className="bg-slate-900 border border-primary/50 rounded-2xl p-4 shadow-2xl shadow-primary/20 space-y-3 animate-in slide-in-from-top-4 fade-in">
-            <div className="flex items-center gap-3">
-              <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-black text-foreground">Handover Request</h3>
-                <p className="text-xs text-slate-300 truncate">
-                  <span className="font-bold text-primary">{match.takeoverRequest.requesterName}</span> wants to take over.
-                </p>
-              </div>
+        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 pointer-events-auto">
+          <div className="bg-slate-900 border border-primary/50 rounded-[2rem] p-6 shadow-2xl shadow-primary/20 space-y-6 w-full max-w-sm animate-in zoom-in-95 fade-in duration-200">
+            <div className="text-center space-y-2">
+              <h3 className="text-xl font-black text-foreground">Handover Request</h3>
+              <p className="text-sm text-slate-300">
+                <span className="font-bold text-primary">{match.takeoverRequest.requesterName}</span> wants to take over umpiring this match.
+              </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <button
                 onClick={() => {
                   updateMatch({ takeoverRequest: { ...match.takeoverRequest!, status: "rejected" } });
                 }}
-                className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-foreground font-bold text-xs rounded-xl transition"
+                className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-foreground font-bold rounded-xl transition"
               >
                 Reject
               </button>
@@ -1165,7 +1148,7 @@ export function UmpireEngine({
                   updateMatch({ takeoverRequest: { ...match.takeoverRequest!, status: "approved" } });
                   toast.success("Handover approved. You can now close this match.");
                 }}
-                className="flex-1 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-xl transition shadow-lg"
+                className="flex-1 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl transition shadow-lg"
               >
                 Approve
               </button>

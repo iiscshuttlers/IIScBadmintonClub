@@ -185,7 +185,7 @@ export default function Navigation() {
 
   const handleInvite = async () => {
     const inviteText = "Join me on IISc Badminton Club! The ultimate platform for badminton tracking.";
-    const inviteUrl = "https://iiscshuttlers.github.io/iiscshuttlers/join";
+    const inviteUrl = "https://iiscshuttlers.github.io/IIScBadmintonClub/join";
     
     if (Capacitor.isNativePlatform()) {
       await Share.share({
@@ -318,7 +318,7 @@ export default function Navigation() {
                             <>
                               <DropdownMenuItem onClick={() => setLocation(`/player/${myPlayerId}`)} className="cursor-pointer font-bold text-amber-600 dark:text-amber-500">
                                 <UserCircle className="mr-2 h-4 w-4" />
-                                <span>My Public Profile</span>
+                                <span>Public Profile</span>
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => setLocation("/profile/setup")} className="cursor-pointer font-semibold text-emerald-600 dark:text-emerald-400">
                                 <User className="mr-2 h-4 w-4" />
@@ -326,7 +326,7 @@ export default function Navigation() {
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => setLocation(`/player/${myPlayerId}/personal`)} className="cursor-pointer font-bold text-primary">
                                 <User className="mr-2 h-4 w-4" />
-                                <span>My Personal Space</span>
+                                <span>Personal Space</span>
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => setLocation("/my-matches")} className="cursor-pointer">
                                 <Trophy className="mr-2 h-4 w-4 text-amber-500" />
@@ -334,7 +334,7 @@ export default function Navigation() {
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => setLocation("/profile/subscriptions")} className="cursor-pointer font-bold text-amber-500">
                                 <Bell className="mr-2 h-4 w-4" />
-                                <span>My Subscriptions</span>
+                                <span>Subscriptions</span>
                               </DropdownMenuItem>
                             </>
                           ) : (
@@ -409,7 +409,7 @@ export default function Navigation() {
                           <>
                             <DropdownMenuItem onClick={() => setLocation(`/player/${myPlayerId}`)} className="cursor-pointer font-bold text-amber-600 dark:text-amber-500">
                               <UserCircle className="mr-2 h-4 w-4" />
-                              <span>My Public Profile</span>
+                              <span>Public Profile</span>
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => setLocation("/profile/setup")} className="cursor-pointer font-semibold text-emerald-600 dark:text-emerald-400">
                               <User className="mr-2 h-4 w-4" />
@@ -417,11 +417,11 @@ export default function Navigation() {
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => setLocation(`/player/${myPlayerId}/personal`)} className="cursor-pointer font-bold text-primary">
                               <User className="mr-2 h-4 w-4" />
-                              <span>My Personal Space</span>
+                              <span>Personal Space</span>
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => setLocation("/profile/subscriptions")} className="cursor-pointer font-bold text-amber-500">
                               <Bell className="mr-2 h-4 w-4" />
-                              <span>My Subscriptions</span>
+                              <span>Subscriptions</span>
                             </DropdownMenuItem>
                           </>
                         ) : (
@@ -527,7 +527,7 @@ export default function Navigation() {
                             setLocation(`/player/${myPlayerId}`);
                           }}
                         >
-                          <UserCircle className="h-4 w-4 text-amber-500" /> My Public Profile
+                          <UserCircle className="h-4 w-4 text-amber-500" /> Public Profile
                         </button>
                         <button
                           className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-emerald-600 dark:text-emerald-400 font-semibold text-sm transition-colors cursor-pointer"
@@ -568,7 +568,7 @@ export default function Navigation() {
                         }
                       }}
                     >
-                      <User className="h-4 w-4 text-primary" /> My Personal Space
+                      <User className="h-4 w-4 text-primary" /> Personal Space
                     </button>
                     <button
                       className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer"
@@ -577,7 +577,7 @@ export default function Navigation() {
                         setLocation("/profile/subscriptions");
                       }}
                     >
-                      <Bell className="h-4 w-4 text-amber-500" /> My Subscriptions
+                      <Bell className="h-4 w-4 text-amber-500" /> Subscriptions
                     </button>
                     <button
                       className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer"
