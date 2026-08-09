@@ -43,6 +43,7 @@ function MatchBroadcastCard({
   isScorePinned: boolean;
   togglePinScore: (matchId: string) => void;
 }) {
+  const [, setLocation] = useLocation();
   const [showAdminForm, setShowAdminForm] = useState(false);
   const [adminWinner, setAdminWinner] = useState<1 | 2 | null>(null);
   const [adminSets, setAdminSets] = useState("");
@@ -196,7 +197,7 @@ function MatchBroadcastCard({
         <div className="flex items-center gap-2">
           {match.status !== "finished" && (
             <button
-              onClick={() => { window.location.href = `/tv/${match.id}`; }}
+              onClick={() => { setLocation(`/tv/${match.id}`); }}
               className="shrink-0 px-3 py-2 font-bold text-xs rounded-xl flex items-center gap-1.5 bg-red-600 hover:bg-red-500 text-white border border-red-500 transition shadow-lg animate-pulse"
               title="Watch Live TV Scoreboard"
             >

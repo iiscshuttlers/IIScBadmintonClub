@@ -1780,7 +1780,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                               className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 transition">
                               <CalendarDays className="w-3 h-3" /> Schedule
                             </button>
-                            <button onClick={() => { window.location.href = `/tv/camera/${m.id}`; }}
+                            <button onClick={() => { window.location.href = `${import.meta.env.BASE_URL}tv/camera/${m.id}`; }}
                               className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition">
                               <Camera className="w-3 h-3" /> Camera
                             </button>

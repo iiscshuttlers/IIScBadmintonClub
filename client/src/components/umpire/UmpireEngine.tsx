@@ -681,7 +681,7 @@ export function UmpireEngine({
             <button onClick={() => setIsEditSetupOpen(true)} className="shrink-0 px-1 py-2 sm:px-3 sm:py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border border-slate-700 transition">
               <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" /> Edit Setup
             </button>
-            <button onClick={() => { window.location.href = `/tv/camera/${tournamentMatch?.id || match.id || ""}`; }} className="shrink-0 px-1 py-2 sm:px-3 sm:py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border border-rose-500/40 transition cursor-pointer">
+            <button onClick={() => { window.location.href = `${import.meta.env.BASE_URL}tv/camera/${tournamentMatch?.id || match.id || ""}`; }} className="shrink-0 px-1 py-2 sm:px-3 sm:py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border border-rose-500/40 transition cursor-pointer">
               <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-400" /> Broadcast
             </button>
             {Capacitor.isNativePlatform() && (
