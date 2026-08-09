@@ -17,12 +17,12 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
       {/* Profile Banner */}
       <div className="absolute top-0 left-0 w-full h-[380px] md:h-[460px] overflow-hidden">
         <img
-          src="/profile_banner_light.png"
+          src={`${import.meta.env.BASE_URL}profile_banner_light.png`}
           alt="Profile Banner"
           className="w-full h-full object-cover dark:hidden"
         />
         <img
-          src="/profile_banner_dark.png"
+          src={`${import.meta.env.BASE_URL}profile_banner_dark.png`}
           alt="Profile Banner"
           className="w-full h-full object-cover hidden dark:block"
         />

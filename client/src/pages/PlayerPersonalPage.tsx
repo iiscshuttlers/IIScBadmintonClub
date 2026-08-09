@@ -2605,7 +2605,7 @@ export default function PlayerPersonalPage() {
           <Link href="/">
             <div className="flex items-center gap-3 group w-full cursor-pointer">
               <img
-                src="/iisc-logo.png"
+                src={`${import.meta.env.BASE_URL}iisc-logo.png`}
                 alt="IISc Logo"
                 className="h-9 w-auto object-contain flex-shrink-0 group-hover:scale-105 transition-transform"
               />
