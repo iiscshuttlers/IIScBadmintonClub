@@ -35,7 +35,12 @@
         const redirect = sessionStorage.getItem("redirect");
         if (redirect) {
           sessionStorage.removeItem("redirect");
-          window.history.replaceState(null, null, redirect);
+          const base = "/IIScBadmintonClub";
+          let target = redirect;
+          if (window.location.hostname.endsWith("github.io") && !target.startsWith(base)) {
+            target = base + (target.startsWith("/") ? target : "/" + target);
+          }
+          window.history.replaceState(null, null, target);
         }
       })();
 
