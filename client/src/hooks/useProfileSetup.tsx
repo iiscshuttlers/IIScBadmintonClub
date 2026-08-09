@@ -133,7 +133,7 @@ export function useProfileSetup() {
           setPlayerSlug(profile.id);
           setFullName(profile.full_name || "");
           setNickname(profile.nickname || "");
-          setStatus(profile.status || "looking");
+          setStatus((profile as any).status || "looking");
           setIiscEmail(profile.iisc_email || "");
           setContactNumber(profile.contact_number || "");
           if (profile.department && !PREDEFINED_DEPARTMENTS.includes(profile.department) && profile.department !== "OTHER - Other") {
@@ -153,19 +153,19 @@ export function useProfileSetup() {
           setFavoriteFormat(profile.favorite_format || "");
           setQuote(profile.quote || "");
           setAvatarUrl(profile.avatar_url || "");
-          setOriginalStats(profile.stats || {});
-          setCareerHighlights(profile.career_highlights || []);
+          setOriginalStats(profile.stats as any || {});
+          setCareerHighlights((profile.career_highlights as any) || []);
 
-          if (profile.stats?.media) {
-            const imgs = profile.stats.media.filter((m: any) => m.type === "image");
-            const vids = profile.stats.media.filter((m: any) => m.type === "video");
+          if ((profile.stats as any)?.media) {
+            const imgs = (profile.stats as any).media.filter((m: any) => m.type === "image");
+            const vids = (profile.stats as any).media.filter((m: any) => m.type === "video");
             setMediaImages(imgs.map((i: any) => ({ url: i.url || "", caption: i.caption || "" })));
             setMediaVideos(vids.map((v: any) => ({ url: v.url || "", caption: v.caption || "" })));
           }
 
-          if (profile.racket_details?.length > 0) {
-            setRackets(profile.racket_details.map((r: any) => ({ name: r.name || "", string: r.string || "", tension: (r.tension || "").replace(/[^0-9]/g, "") })));
-            const primIdx = profile.racket_details.findIndex((r: any) => r.primary === true || r.name === profile.current_racket);
+          if ((profile.racket_details as any)?.length > 0) {
+            setRackets((profile.racket_details as any).map((r: any) => ({ name: r.name || "", string: r.string || "", tension: (r.tension || "").replace(/[^0-9]/g, "") })));
+            const primIdx = (profile.racket_details as any).findIndex((r: any) => r.primary === true || r.name === profile.current_racket);
             setPrimaryRacketIndex(primIdx >= 0 ? primIdx : 0);
           } else if (profile.current_racket) {
             setRackets([{ name: profile.current_racket, string: "", tension: "" }]);

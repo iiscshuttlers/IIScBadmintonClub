@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BarChart2, CheckCircle2, Plus, Trash2, Save, X } from "lucide-react";

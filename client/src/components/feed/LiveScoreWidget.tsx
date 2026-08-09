@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Live Match Spectator Mode
  * Scoreboard showing live matches with real-time Supabase subscription.

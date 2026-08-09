@@ -87,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (!error && data) {
-        setProfile(data as PlayerProfile);
+        setProfile(data as unknown as PlayerRow);
       } else {
         setProfile(null);
       }

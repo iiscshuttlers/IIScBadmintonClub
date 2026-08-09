@@ -62,7 +62,7 @@ export default function DoublesPairProfile() {
         supabase.from("players").select("id,full_name,avatar_url,elo_rating").eq("id", p2).single(),
         supabase
           .from("matches")
-          .select("id,winner_id,player1_id,player2_id,team1_partner_id,team2_partner_id,match_score,status,created_at")
+          .select("id,winner_id,player1_id,player2_id,team1_partner_id,team2_partner_id,score,status,created_at")
           .eq("status", "confirmed")
           .or(
             `and(player1_id.eq."${p1}",team1_partner_id.eq."${p2}"),and(player1_id.eq."${p2}",team1_partner_id.eq."${p1}"),and(player2_id.eq."${p1}",team2_partner_id.eq."${p2}"),and(player2_id.eq."${p2}",team2_partner_id.eq."${p1}")`

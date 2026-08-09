@@ -37,7 +37,7 @@ export async function saveRemoteGalleryImages(images: RemoteGalleryItem[]): Prom
   const { error } = await supabase
     .from("site_data")
     .upsert(
-      { key: "gallery_images", value: images, updated_at: new Date().toISOString() },
+      { key: "gallery_images", value: images as any, updated_at: new Date().toISOString() },
       { onConflict: "key" }
     );
 

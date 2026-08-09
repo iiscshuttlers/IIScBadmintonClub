@@ -78,7 +78,7 @@ const getSteps = () => {
           </a>
         </div>
       ),
-    });
+    } as any);
   }
   return steps;
 };

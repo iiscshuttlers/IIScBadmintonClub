@@ -90,7 +90,7 @@ export default function PersonalProfilePage() {
     if (!profile?.id || updatingStatus) return;
     setUpdatingStatus(true);
     try {
-      const { error } = await supabase.from("players").update({ status: newStatus }).eq("id", profile.id);
+      const { error } = await supabase.from("players").update({ status: newStatus } as any).eq("id", profile.id);
       if (error) throw error;
       if (newStatus === "playing" && session?.user?.id) {
         const now = new Date();

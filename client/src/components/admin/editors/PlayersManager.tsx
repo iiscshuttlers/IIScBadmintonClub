@@ -168,68 +168,86 @@ export function PlayersManager() {
   };
 
   const removeProfile = async (id: string, name: string) => {
-    if (
-      !confirm(
-        `Delete profile for "${name}"? This deletes their player card but NOT their login account.`,
-      )
-    )
-      return;
-    setActionId(id);
-    const { data, error } = await supabase
-      .from("players")
-      .delete()
-      .eq("id", id)
-      .select();
-    if (error) {
-      toast("Delete failed: " + error.message, { icon: "❌" });
-    } else if (!data || data.length === 0) {
-      toast("Permission Denied", {
-        icon: "❌",
-        description: "Database RLS policy blocked the deletion.",
-      });
-    } else {
-      toast("Profile deleted.", { icon: "🗑️" });
-      setPlayers((p) => p.filter((pl) => pl.id !== id));
-    }
-    setActionId(null);
+    showConfirm({
+      title: 'Delete Profile',
+      message: `Delete profile for "${name}"? This deletes their player card but NOT their login account.`,
+      confirmLabel: 'Delete Profile',
+      confirmStyle: 'danger',
+      onConfirm: async () => {
+        setActionId(id);
+        const { data, error } = await supabase
+          .from("players")
+          .delete()
+          .eq("id", id)
+          .select();
+        if (error) {
+          if (error.code === "23503" || error.message.includes("foreign key constraint")) {
+            toast("Cannot Delete Player", {
+              icon: "❌",
+              description: "They have participated in matches or tournaments. Please retire them instead.",
+            });
+          } else {
+            toast("Delete failed: " + error.message, { icon: "❌" });
+          }
+        } else if (!data || data.length === 0) {
+          toast("Permission Denied", {
+            icon: "❌",
+            description: "Database RLS policy blocked the deletion.",
+          });
+        } else {
+          toast("Profile deleted.", { icon: "🗑️" });
+          setPlayers((p) => p.filter((pl) => pl.id !== id));
+        }
+        setActionId(null);
+      }
+    });
   };
 
   const removeAccount = async (id: string, email: string) => {
-    if (
-      !confirm(
-        `Permanently delete account "${email}"? This will wipe their login and their profile if it exists. Cannot be undone!`,
-      )
-    )
-      return;
-    setActionId(id);
-    const { error } = await supabase.functions.invoke("admin-users", {
-      method: "DELETE",
-      body: { userId: id },
+    showConfirm({
+      title: 'Delete Account',
+      message: `Permanently delete account "${email}"? This will wipe their login and their profile if it exists. Cannot be undone!`,
+      confirmLabel: 'Permanently Delete',
+      confirmStyle: 'danger',
+      onConfirm: async () => {
+        setActionId(id);
+        const { error } = await supabase.functions.invoke("admin-users", {
+          method: "DELETE",
+          body: { userId: id },
+        });
+        if (error) {
+          toast("Delete failed: " + error.message, { icon: "❌" });
+        } else {
+          toast("Account permanently deleted.", { icon: "🗑️" });
+          setAuthUsers((u) => u.filter((user) => user.id !== id));
+          setPlayers((p) => p.filter((pl) => pl.id !== id));
+        }
+        setActionId(null);
+      }
     });
-    if (error) {
-      toast("Delete failed: " + error.message, { icon: "❌" });
-    } else {
-      toast("Account permanently deleted.", { icon: "🗑️" });
-      setAuthUsers((u) => u.filter((user) => user.id !== id));
-      setPlayers((p) => p.filter((pl) => pl.id !== id));
-    }
-    setActionId(null);
   };
 
   const forceVerify = async (id: string, email: string) => {
-    if (!confirm(`Force verify email for "${email}"?`)) return;
-    setActionId(id);
-    const { error } = await supabase.functions.invoke("admin-users", {
-      method: "POST",
-      body: { action: "verify", userId: id },
+    showConfirm({
+      title: 'Force Verify Email',
+      message: `Force verify email for "${email}"?`,
+      confirmLabel: 'Verify Email',
+      confirmStyle: 'warning',
+      onConfirm: async () => {
+        setActionId(id);
+        const { error } = await supabase.functions.invoke("admin-users", {
+          method: "POST",
+          body: { action: "verify", userId: id },
+        });
+        if (error) {
+          toast("Verify failed: " + error.message, { icon: "❌" });
+        } else {
+          toast("Email verified successfully.", { icon: "✅" });
+          setAuthUsers((u) => u.map((user) => user.id === id ? { ...user, email_confirmed_at: new Date().toISOString() } : user));
+        }
+        setActionId(null);
+      }
     });
-    if (error) {
-      toast("Verify failed: " + error.message, { icon: "❌" });
-    } else {
-      toast("Email verified successfully.", { icon: "✅" });
-      setAuthUsers((u) => u.map((user) => user.id === id ? { ...user, email_confirmed_at: new Date().toISOString() } : user));
-    }
-    setActionId(null);
   };
 
   const resendVerifyEmail = async (id: string, email: string) => {
@@ -277,12 +295,15 @@ export function PlayersManager() {
 
   const doRetirePlayer = async (id: string, name: string, currentlyRetired: boolean) => {
     setActionId(id);
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("players")
       .update({ is_retired: !currentlyRetired })
-      .eq("id", id);
+      .eq("id", id)
+      .select();
     if (error) {
       toast.error("Failed to update retirement status: " + error.message);
+    } else if (!data || data.length === 0) {
+      toast.error("Permission Denied: Database RLS policy blocked the update.");
     } else {
       toast.success(currentlyRetired ? `${name} unretired.` : `${name} marked as retired.`, { icon: currentlyRetired ? "✅" : "🏅" });
       setPlayers((p) => p.map((pl) => (pl.id === id ? { ...pl, is_retired: !currentlyRetired } : pl)));

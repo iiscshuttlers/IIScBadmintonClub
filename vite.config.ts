@@ -197,8 +197,6 @@ export default defineConfig(() => {
       }),
     ],
 
-    base: basePath,
-
     resolve: {
       alias: {
         "@": path.resolve(import.meta.dirname, "client", "src"),

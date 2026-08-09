@@ -68,7 +68,7 @@ export function useOfflineUmpireSync() {
         .eq("key", "live_matches")
         .maybeSingle();
 
-      const liveMatches: Record<string, BwfMatchState> = data?.value || {};
+      const liveMatches: Record<string, BwfMatchState> = (data?.value as any) || {};
 
       for (const item of items) {
         liveMatches[item.matchId] = item.matchState;

@@ -588,9 +588,9 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                     <div className="px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-muted-foreground border-b border-slate-700/50 flex justify-between items-center">
                       <span>{m.match_code}</span>
                       <span className="flex items-center gap-1.5 whitespace-nowrap">
-                        {m.scheduled_at && (
+                        {(m as any).scheduled_at && (
                           <span className="text-slate-400 font-bold">
-                            {new Date(m.scheduled_at).toLocaleString("en-GB", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                            {new Date((m as any).scheduled_at).toLocaleString("en-GB", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                           </span>
                         )}
                         {m.court_number && <span className={getCourtColor(m.court_number)}>C{m.court_number}</span>}

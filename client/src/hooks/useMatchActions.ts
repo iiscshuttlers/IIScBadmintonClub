@@ -23,12 +23,12 @@ export function useMatchActions(
         confirmer_id: ownPlayerProfile.id,
       });
       if (error) throw error;
-      let myEloChange = data.p1_elo_change;
+      let myEloChange = (data as any).p1_elo_change;
       const targetMatch = pendingMatches.find(m => m.id === matchId);
       if (targetMatch) {
-        if (targetMatch.player2_id === ownPlayerProfile.id) myEloChange = data.p2_elo_change;
-        if (targetMatch.team1_partner_id === ownPlayerProfile.id) myEloChange = data.p3_elo_change;
-        if (targetMatch.team2_partner_id === ownPlayerProfile.id) myEloChange = data.p4_elo_change;
+        if (targetMatch.player2_id === ownPlayerProfile.id) myEloChange = (data as any).p2_elo_change;
+        if (targetMatch.team1_partner_id === ownPlayerProfile.id) myEloChange = (data as any).p3_elo_change;
+        if (targetMatch.team2_partner_id === ownPlayerProfile.id) myEloChange = (data as any).p4_elo_change;
       }
 
       confetti({

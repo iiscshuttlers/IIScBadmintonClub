@@ -47,6 +47,7 @@ interface Post {
   resolved: boolean;
   claimed_by_id?: string;
   claimed_by_name?: string;
+  claim_contact?: string;
   claimed_at?: string;
   claim_message?: string;
   remarks?: string;

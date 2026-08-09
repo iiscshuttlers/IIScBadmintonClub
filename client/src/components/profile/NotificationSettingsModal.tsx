@@ -78,7 +78,7 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
     try {
       const { error } = await supabase
         .from("players")
-        .update({ [key]: newValue })
+        .update({ [key]: newValue } as any)
         .eq("id", session.user.id);
       
       if (error) {

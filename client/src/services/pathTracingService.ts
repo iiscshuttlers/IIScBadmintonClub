@@ -59,7 +59,7 @@ export async function saveCalibration(input: {
         sync_anchor_wallclock: input.syncAnchor.wallClockIso,
         sync_video_time_ms: input.syncAnchor.videoTimeMs,
         created_by: input.userId || null,
-      },
+      } as any,
       { onConflict: "match_id,match_source" },
     )
     .select("id, homography_matrix")
@@ -78,7 +78,7 @@ export async function fetchCalibration(matchId: string, matchSource: MatchSource
     .maybeSingle();
 
   if (error) throw error;
-  return data as CalibrationRow | null;
+  return data as unknown as CalibrationRow | null;
 }
 
 export async function savePaths(input: {
@@ -118,7 +118,7 @@ export async function savePaths(input: {
 
   const { error } = await supabase
     .from("match_player_paths")
-    .upsert(rows, { onConflict: "match_id,match_source,rally_number,side" });
+    .upsert(rows as any, { onConflict: "match_id,match_source,rally_number,side" });
 
   if (error) throw error;
 }
@@ -132,5 +132,5 @@ export async function fetchPaths(matchId: string, matchSource: MatchSource): Pro
     .order("rally_number", { ascending: true });
 
   if (error) throw error;
-  return (data ?? []) as PathRow[];
+  return (data ?? []) as unknown as PathRow[];
 }

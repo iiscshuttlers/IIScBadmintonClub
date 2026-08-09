@@ -347,15 +347,19 @@ export function useUmpireState({
           const setsArr = [...(next.setsHistory || [])];
           if (currentScore !== "0-0") setsArr.push(currentScore);
 
-          await supabase
-            .from("tournament_matches")
-            .update({
-              score: currentScore,
-              sets_history: setsArr,
-              status: "in_progress"
-            })
-            .eq("id", matchId)
-            .catch((e) => console.warn("Failed to sync tournament match score", e));
+          try {
+            const { error } = await supabase
+              .from("tournament_matches")
+              .update({
+                score: currentScore,
+                sets_history: setsArr,
+                status: "in_progress"
+              })
+              .eq("id", matchId);
+            if (error) throw error;
+          } catch (e) {
+            console.warn("Failed to sync tournament match score", e);
+          }
         }
       }
     };

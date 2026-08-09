@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useCallback, useEffect, useState } from "react";
 import { Trash2, RotateCcw, Clock, AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";

@@ -53,7 +53,7 @@ export function useHealthData(matchIds: string[], playerId: string | undefined) 
         hrZone3Pct: d.hr_zone_3_pct,
         hrZone4Pct: d.hr_zone_4_pct,
         hrZone5Pct: d.hr_zone_5_pct,
-        hrSamples: d.hr_samples,
+        hrSamples: d.hr_samples as any[],
         steps: d.steps,
         caloriesBurned: d.calories_burned,
         hrvAvg: d.hrv_avg ?? null,

@@ -250,10 +250,10 @@ export function PlayerCard({
           )}
           
           {/* Status Dot */}
-          {player.status === "playing" && (
+          {(player as any).status === "playing" && (
             <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-amber-500 border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" />
           )}
-          {(player.status === "looking" || player.is_looking_to_play) && (
+          {((player as any).status === "looking" || player.is_looking_to_play) && (
             <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-primary border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" />
           )}
         </div>

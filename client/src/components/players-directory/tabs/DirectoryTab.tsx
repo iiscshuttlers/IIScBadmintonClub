@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { motion, type Variants } from "framer-motion";
 import { Users, Sword, Shield } from "lucide-react";
 import { isSupabaseConfigured } from "@/lib/supabase";

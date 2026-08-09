@@ -73,18 +73,18 @@ export function AdminHistoryProvider({
   useEffect(() => {
     if (!session || !isAdmin) return;
     (async () => {
-      const { data } = await supabase
-        .from("admin_history")
+      const { data, error } = await supabase
+        .from("admin_history" as any)
         .select("*")
         .eq("admin_id", session.user.id)
         .order("created_at", { ascending: false })
         .limit(50);
       if (data) {
         setUndoStack(
-          data.map((r) => ({
+          data.map((r: any) => ({
             id: r.id,
-            action_type: r.action_type,
-            entity_type: r.entity_type,
+            action_type: r.action_type as any,
+            entity_type: r.entity_type as any,
             entity_id: r.entity_id ?? undefined,
             before_state: r.before_state,
             after_state: r.after_state,
@@ -162,7 +162,7 @@ export function AdminHistoryProvider({
       if (rbErr) throw rbErr;
 
       const { error: delErr } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .delete()
         .eq("id", recordId);
       if (delErr) {
@@ -210,7 +210,7 @@ export function AdminHistoryProvider({
       if (direction === "undo") {
         // Restore record
         const { error } = await supabase
-          .from(action.entity_type)
+          .from(action.entity_type as any)
           .insert(action.before_state);
         if (error) throw error;
         // Remove from recycle bin
@@ -232,14 +232,14 @@ export function AdminHistoryProvider({
           expires_at: expires.toISOString(),
         });
         await supabase
-          .from(action.entity_type)
+          .from(action.entity_type as any)
           .delete()
           .eq("id", action.entity_id);
       }
     } else {
       // update / approve / revoke
       const { error } = await supabase
-        .from(action.entity_type)
+        .from(action.entity_type as any)
         .update(targetState)
         .eq("id", action.entity_id);
       if (error) throw error;

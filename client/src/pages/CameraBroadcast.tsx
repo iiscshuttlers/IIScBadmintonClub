@@ -42,10 +42,10 @@ export default function CameraBroadcast() {
   const params = useParams<{ matchId?: string }>();
   const matchId = params?.matchId;
   const [, setLocation] = useLocation();
-  const { player, isAdmin, isMasterAdmin, isUmpire, isInitializing } = useAuth();
+  const { profile, isAdmin, isMasterAdmin, isUmpire, isInitializing } = useAuth();
 
   // Role authorization check (Only Admins, Master Admins, and Umpires can stream)
-  const isAuthorized = isAdmin || isMasterAdmin || isUmpire || player?.role === "admin" || player?.role === "master_admin" || player?.role === "umpire";
+  const isAuthorized = isAdmin || isMasterAdmin || isUmpire || profile?.role === "admin" || profile?.role === "master_admin" || profile?.role === "umpire";
 
   // Camera & Video Streams
   const videoRef = useRef<HTMLVideoElement>(null);

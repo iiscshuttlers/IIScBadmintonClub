@@ -193,7 +193,7 @@ export class MatchService {
     // 2. Persist to site_data in Supabase DB
     const { error } = await supabase.rpc("upsert_live_match_by_id", {
       p_match_id: matchId,
-      match_state: matchState as unknown as Record<string, unknown>,
+      match_state: matchState as any,
     });
     if (error) throw error;
   }

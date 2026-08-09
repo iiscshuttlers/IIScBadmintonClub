@@ -124,6 +124,7 @@ export interface Partner {
 
 export interface PlayerProfileType {
   id: string;
+  created_at?: string;
   fullName: string;
   nickname?: string;
   avatar: string;
