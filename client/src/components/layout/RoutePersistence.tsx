@@ -24,6 +24,14 @@ export function RoutePersistence() {
 
   // Restore once, on cold start only.
   useEffect(() => {
+    if (typeof window !== "undefined" && window.location.hostname.endsWith("github.io")) {
+      const base = "/IIScBadmintonClub";
+      if (!window.location.pathname.startsWith(base)) {
+        const target = base + window.location.pathname + window.location.search + window.location.hash;
+        window.history.replaceState(null, "", target);
+      }
+    }
+
     if (restored.current) return;
     restored.current = true;
 

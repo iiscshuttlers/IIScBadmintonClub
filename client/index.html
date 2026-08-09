@@ -29,18 +29,24 @@
     <link rel="icon" type="image/png" href="/icon-192.png" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
 
-    <!-- ✅ SPA Redirect Restore (REQUIRED) -->
+    <!-- ✅ SPA Base Path Self-Correction & Redirect Restore -->
     <script>
       (function () {
+        const base = "/IIScBadmintonClub";
+        if (window.location.hostname.endsWith("github.io")) {
+          if (!window.location.pathname.startsWith(base)) {
+            const corrected = base + (window.location.pathname.startsWith("/") ? window.location.pathname : "/" + window.location.pathname) + window.location.search + window.location.hash;
+            window.history.replaceState(null, "", corrected);
+          }
+        }
         const redirect = sessionStorage.getItem("redirect");
         if (redirect) {
           sessionStorage.removeItem("redirect");
-          const base = "/IIScBadmintonClub";
           let target = redirect;
           if (window.location.hostname.endsWith("github.io") && !target.startsWith(base)) {
             target = base + (target.startsWith("/") ? target : "/" + target);
           }
-          window.history.replaceState(null, null, target);
+          window.history.replaceState(null, "", target);
         }
       })();
 
