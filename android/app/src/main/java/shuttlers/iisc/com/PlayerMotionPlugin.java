@@ -30,6 +30,8 @@ public class PlayerMotionPlugin extends Plugin implements SensorEventListener {
     // Store latest values
     private float lastGyroX = 0, lastGyroY = 0, lastGyroZ = 0;
     private float lastAccelX = 0, lastAccelY = 0, lastAccelZ = 0;
+    
+    private long lastNotifyTime = 0;
 
     @Override
     public void load() {
@@ -157,8 +159,14 @@ public class PlayerMotionPlugin extends Plugin implements SensorEventListener {
             }
         }
 
+        long now = System.currentTimeMillis();
+        if (!swingDetected && (now - lastNotifyTime < 100)) {
+            return;
+        }
+        lastNotifyTime = now;
+
         JSObject ret = new JSObject();
-        ret.put("timestampMs", System.currentTimeMillis());
+        ret.put("timestampMs", now);
         ret.put("x", lastAccelX);
         ret.put("y", lastAccelY);
         ret.put("z", lastAccelZ);

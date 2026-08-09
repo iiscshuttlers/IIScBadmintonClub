@@ -66,7 +66,11 @@ public class UmpireBackgroundService extends Service {
 
     public void updateScore(String score, String teams) {
         if (notificationManager != null) {
-            notificationManager.notify(NOTIFICATION_ID, buildNotification(score, teams));
+            try {
+                notificationManager.notify(NOTIFICATION_ID, buildNotification(score, teams));
+            } catch (Exception e) {
+                // Ignore gracefully rather than crashing the app
+            }
         }
     }
 
@@ -91,6 +95,10 @@ public class UmpireBackgroundService extends Service {
         ).setAuthenticationRequired(true).build();
 
         Intent launchIntent = getPackageManager().getLaunchIntentForPackage(getPackageName());
+        if (launchIntent == null) {
+            launchIntent = new Intent(this, MainActivity.class);
+            launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        }
         PendingIntent pLaunchIntent = PendingIntent.getActivity(this, 0, launchIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         return new NotificationCompat.Builder(this, CHANNEL_ID)
