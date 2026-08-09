@@ -421,6 +421,8 @@ function AppContent() {
             >
               <ScrollToTop />
               <RoutePersistence />
+              <GlobalAuthGuard />
+              <OnboardingTour />
               <ScrollProgress />
               <div data-overflow-root className={`flex flex-col min-h-screen overflow-x-clip ${/^\/player\/[^/]+\/personal/.test(location) && !location.startsWith("/tv") ? "lg:ml-64" : ""}`}>
                 {/* Skip-to-content for keyboard / screen-reader users */}
@@ -456,9 +458,6 @@ function AppContent() {
                 defaultOpponentId={defaultOpponentId}
               />
             )}
-            <GlobalAuthGuard />
-            <GlobalAuthHooks />
-            <OnboardingTour />
             <BetaFeedbackModal isOpen={isBetaFeedbackOpen} onClose={() => setIsBetaFeedbackOpen(false)} />
             {isDialogOpen && updateInfo && (
               <UpdateDialog info={updateInfo} onDismiss={dismissUpdate} />
