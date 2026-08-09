@@ -63,7 +63,11 @@ function createTransporter() {
 }
 
 async function dispatchNotifications(supabase: any, match: any, tournament: any) {
-  const playerIds = [match.player1_id, match.player2_id, match.player3_id, match.player4_id, match.umpired_by].filter(Boolean);
+  // Mark reminder_sent immediately to prevent concurrent duplicate invocations
+  await supabase.from("tournament_matches").update({ reminder_sent: true }).eq("id", match.id);
+
+  const rawPlayerIds = [match.player1_id, match.player2_id, match.player3_id, match.player4_id, match.umpired_by].filter(Boolean);
+  const playerIds = Array.from(new Set(rawPlayerIds));
   
   if (playerIds.length === 0) return;
 
@@ -82,11 +86,14 @@ async function dispatchNotifications(supabase: any, match: any, tournament: any)
     .select("user_id, token")
     .in("user_id", playerIds);
     
-  const tokensMap = new Map();
+  const tokensMap = new Map<string, string[]>();
   if (pushTokens) {
     for (const t of pushTokens) {
       if (!tokensMap.has(t.user_id)) tokensMap.set(t.user_id, []);
-      tokensMap.get(t.user_id).push(t.token);
+      const existing = tokensMap.get(t.user_id)!;
+      if (!existing.includes(t.token)) {
+        existing.push(t.token);
+      }
     }
   }
 
@@ -146,7 +153,7 @@ async function dispatchNotifications(supabase: any, match: any, tournament: any)
     } else {
       title = `🏸 Match ${match.match_code} Starting Soon: ${match.category}${roundStr}`;
       const partnerText = partnerLabel ? `You and ${partnerLabel}` : `You`;
-      const verb = partnerLabel ? `are` : `are`; // "You are" or "You and X are" -> both take "are"
+      const verb = partnerLabel ? `are` : `are`;
       
       body = opponentLabel && opponentLabel !== "TBD" && opponentLabel !== "BYE" 
         ? `${partnerText} ${verb} up against ${opponentLabel} ${dateTimeStr} on ${match.court_number ? 'Court ' + match.court_number : 'a TBA court'}.`
@@ -184,7 +191,7 @@ async function dispatchNotifications(supabase: any, match: any, tournament: any)
 
     // 2. Send Push
     if (fcmAccessToken && projectId && tokensMap.has(pId)) {
-      const userTokens = tokensMap.get(pId);
+      const userTokens = tokensMap.get(pId)!;
       for (const token of userTokens) {
         const fcmPayload = {
           message: {
@@ -202,9 +209,6 @@ async function dispatchNotifications(supabase: any, match: any, tournament: any)
       }
     }
   }
-
-  // Update reminder_sent
-  await supabase.from("tournament_matches").update({ reminder_sent: true }).eq("id", match.id);
 }
 
 async function dispatchFanNotifications(supabase: any, tournamentIds: string[], fcmAccessToken: string | null, projectId: string | null) {
@@ -345,7 +349,13 @@ serve(async (req) => {
       return new Response(JSON.stringify({ message: "Reminder sent manually!" }), { headers: corsHeaders, status: 200 });
       
     } else {
-      const { data: tournaments } = await supabase.from("tournaments").select("id, name").eq("auto_reminders_enabled", true);
+      const { data: tournaments } = await supabase
+        .from("tournaments")
+        .select("id, name")
+        .or("auto_reminders_enabled.eq.true,auto_reminders_enabled.is.null")
+        .neq("status", "draft")
+        .neq("status", "completed")
+        .neq("status", "deleted");
       if (!tournaments || tournaments.length === 0) {
         return new Response(JSON.stringify({ message: "No active auto-reminder tournaments" }), { headers: corsHeaders });
       }

@@ -50,7 +50,16 @@ export function TeaserOverlay({
           >
             {ctaText}
           </Button>
-          <div className="mt-4 text-xs font-semibold text-muted-foreground/60">
+          <button
+            onClick={() => {
+              sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
+              setLocation("/join");
+            }}
+            className="mt-3 text-sm font-bold text-primary hover:text-primary/80 underline underline-offset-4 transition"
+          >
+            Already have an account? Sign In
+          </button>
+          <div className="mt-2 text-xs font-semibold text-muted-foreground/60">
             Takes less than 30 seconds!
           </div>
         </div>

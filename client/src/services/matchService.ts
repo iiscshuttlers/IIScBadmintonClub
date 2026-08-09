@@ -174,11 +174,23 @@ export class MatchService {
   }
 
   static async confirmFriendlyMatch(matchUuid: string) {
-    const { error } = await supabase.rpc("confirm_friendly_match", { match_uuid: matchUuid });
+    const { error } = await supabase.rpc("confirm_friendly_match", { match_uuid: matchUuid, confirmer_id: "umpire_bypass" });
     if (error) throw error;
   }
 
   static async upsertLiveMatch(matchId: string, matchState: BwfMatchState) {
+    // 1. Instant sub-50ms WebSocket broadcast directly to camera & TV screens
+    try {
+      supabase.channel("court_live_scores").send({
+        type: "broadcast",
+        event: "score_update",
+        payload: matchState,
+      });
+    } catch (e) {
+      console.warn("Realtime broadcast send warning", e);
+    }
+
+    // 2. Persist to site_data in Supabase DB
     const { error } = await supabase.rpc("upsert_live_match_by_id", {
       p_match_id: matchId,
       match_state: matchState as unknown as Record<string, unknown>,

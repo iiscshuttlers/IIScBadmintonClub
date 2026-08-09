@@ -123,7 +123,10 @@ export function MatchPredictionCard({
   hasStarted,
   myPick,
   profileId,
-  onPick
+  onPick,
+  isResultsRevealed = false,
+  isAdmin = false,
+  onToggleRevealResults
 }: {
   matchId: string;
   t1Ids: string[];
@@ -134,6 +137,9 @@ export function MatchPredictionCard({
   myPick: 1 | 2 | undefined;
   profileId: string | undefined;
   onPick: (team: 1 | 2) => void;
+  isResultsRevealed?: boolean;
+  isAdmin?: boolean;
+  onToggleRevealResults?: () => void;
 }) {
   const [statProb, setStatProb] = useState<StatProb>(null);
   const [tally, setTally] = useState<VoteTally>({ t1: 0, t2: 0 });
@@ -186,6 +192,8 @@ export function MatchPredictionCard({
   const voteT1Pct = totalVotes === 0 ? 50 : Math.round((tally.t1 / totalVotes) * 100);
   const voteT2Pct = totalVotes === 0 ? 50 : 100 - voteT1Pct;
 
+  const shouldShowResults = hasStarted || isResultsRevealed;
+
   return (
     <div className="pt-2 border-t border-slate-700/50 mt-2">
       {myPick || hasStarted ? (
@@ -202,25 +210,35 @@ export function MatchPredictionCard({
             <p className="text-xs text-muted-foreground italic mb-2">Voting closed (Match has started)</p>
           )}
 
-          {statProb && (
-            <ProbBar
-              t1Pct={statProb.t1}
-              t2Pct={statProb.t2}
-              t1Label={t1Label}
-              t2Label={t2Label}
-              label="Based on history"
-              tooltip="Calculated from past match history between these players. If they haven't faced each other, it defaults to their overall win rates."
-            />
-          )}
 
-          <ProbBar
-            t1Pct={voteT1Pct}
-            t2Pct={voteT2Pct}
-            t1Label={`${t1Label} · ${tally.t1} vote${tally.t1 !== 1 ? "s" : ""}`}
-            t2Label={`${tally.t2} vote${tally.t2 !== 1 ? "s" : ""} · ${t2Label}`}
-            label="Community votes"
-            tooltip="Live predictions from people in the community watching this match."
-          />
+          {shouldShowResults ? (
+            <>
+              {statProb && (
+                <ProbBar
+                  t1Pct={statProb.t1}
+                  t2Pct={statProb.t2}
+                  t1Label={t1Label}
+                  t2Label={t2Label}
+                  label="Based on history"
+                  tooltip="Calculated from past match history between these players. If they haven't faced each other, it defaults to their overall win rates."
+                />
+              )}
+              <ProbBar
+                t1Pct={voteT1Pct}
+                t2Pct={voteT2Pct}
+                t1Label={`${t1Label} · ${tally.t1} vote${tally.t1 !== 1 ? "s" : ""}`}
+                t2Label={`${tally.t2} vote${tally.t2 !== 1 ? "s" : ""} · ${t2Label}`}
+                label="Community votes"
+                tooltip="Live predictions from people in the community watching this match."
+              />
+            </>
+          ) : (
+            <div className="mt-2 p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/50 text-[11px] text-muted-foreground flex items-center justify-between font-medium">
+              <span className="flex items-center gap-1.5">
+                🔒 Poll results will be revealed when match umpiring starts or when released by admin.
+              </span>
+            </div>
+          )}
         </>
       ) : (
         <div className="flex flex-col">
@@ -249,14 +267,29 @@ export function MatchPredictionCard({
           </div>
         </div>
       )}
+
+      {isAdmin && onToggleRevealResults && (
+        <div className="mt-2 text-right">
+          <button
+            onClick={onToggleRevealResults}
+            className="text-[10px] font-bold text-amber-500 hover:text-amber-400 inline-flex items-center gap-1 uppercase tracking-wider transition"
+          >
+            {isResultsRevealed ? "Hide Poll Results" : "Manual Admin Reveal Results"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
 
+import { PredictionLeaderboard } from "./PredictionLeaderboard";
+
 export function MatchPredictions() {
-  const { profile } = useAuth();
+  const { profile, isAdmin } = useAuth();
   const [liveMatches, setLiveMatches] = useState<BwfMatchState[]>([]);
   const [picks, setPicks] = useState<Record<string, 1 | 2>>({});
+  const [revealedMatchIds, setRevealedMatchIds] = useState<Record<string, boolean>>({});
+  const [activeTab, setActiveTab] = useState<"predictions" | "leaderboard">("predictions");
 
   useEffect(() => {
     const parse = (val: Record<string, BwfMatchState>) => {
@@ -284,8 +317,33 @@ export function MatchPredictions() {
       .on("postgres_changes", { event: "*", schema: "public", table: "site_data", filter: "key=eq.live_matches" },
         (payload) => { if ((payload.new as any)?.value) parse((payload.new as any).value); })
       .subscribe();
-    return () => { supabase.removeChannel(sub); };
+
+    supabase
+      .from("site_data")
+      .select("value")
+      .eq("key", "poll_revealed_matches")
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.value) setRevealedMatchIds(data.value as Record<string, boolean>);
+      });
+
+    const subRevealed = supabase
+      .channel("poll_revealed_matches_channel")
+      .on("postgres_changes", { event: "*", schema: "public", table: "site_data", filter: "key=eq.poll_revealed_matches" },
+        (payload) => { if ((payload.new as any)?.value) setRevealedMatchIds((payload.new as any).value); })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(sub);
+      supabase.removeChannel(subRevealed);
+    };
   }, []);
+
+  const toggleRevealMatchPoll = async (matchId: string) => {
+    const nextState = { ...revealedMatchIds, [matchId]: !revealedMatchIds[matchId] };
+    setRevealedMatchIds(nextState);
+    await supabase.from("site_data").upsert({ key: "poll_revealed_matches", value: nextState }, { onConflict: "key" });
+  };
 
   // Load picks from DB on mount
   useEffect(() => {
@@ -321,25 +379,62 @@ export function MatchPredictions() {
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden mb-6">
-      <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
-        <TrendingUp className="w-5 h-5 text-violet-500" />
-        <h3 className="font-black text-slate-800 dark:text-foreground">Who's going to win?</h3>
-        <span className="ml-auto text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse inline-block" /> Live
-        </span>
+      <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
+          <TrendingUp className="w-5 h-5 text-violet-500" />
+          <h3 className="font-black text-slate-800 dark:text-foreground">Who's going to win?</h3>
+        </div>
+        <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+          <button
+            onClick={() => setActiveTab("predictions")}
+            className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+              activeTab === "predictions"
+                ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Matches
+          </button>
+          <button
+            onClick={() => setActiveTab("leaderboard")}
+            className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+              activeTab === "leaderboard"
+                ? "bg-violet-600 text-white shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Leaderboard
+          </button>
+        </div>
       </div>
 
-      <div className="divide-y divide-slate-100 dark:divide-slate-800">
-        {liveMatches.map((m) => (
-          <MatchPredictionCard
-            key={m.id}
-            m={m}
-            myPick={picks[m.id]}
-            profileId={profile?.id}
-            onPick={(team) => pick(m.id, team)}
-          />
-        ))}
-      </div>
+      {activeTab === "leaderboard" ? (
+        <div className="p-4">
+          <PredictionLeaderboard />
+        </div>
+      ) : (
+        <div className="divide-y divide-slate-100 dark:divide-slate-800">
+          {liveMatches.map((m) => (
+            <MatchPredictionCard
+              key={m.id}
+              matchId={m.id}
+              t1Ids={[m.t1.p1Id, m.t1.p2Id].filter(Boolean) as string[]}
+              t2Ids={[m.t2.p1Id, m.t2.p2Id].filter(Boolean) as string[]}
+              t1Label={m.t1.p2Name ? `${m.t1.p1Name} & ${m.t1.p2Name}` : m.t1.p1Name}
+              t2Label={m.t2.p2Name ? `${m.t2.p1Name} & ${m.t2.p2Name}` : m.t2.p1Name}
+              hasStarted={m.status === "playing"}
+              myPick={picks[m.id]}
+              profileId={profile?.id}
+              onPick={(team) => pick(m.id, team)}
+              isResultsRevealed={!!revealedMatchIds[m.id]}
+              isAdmin={isAdmin}
+              onToggleRevealResults={() => toggleRevealMatchPoll(m.id)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
+
+

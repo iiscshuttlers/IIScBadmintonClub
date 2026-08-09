@@ -21,6 +21,7 @@ export interface Poll {
   is_archived?: boolean;
   start_date?: string;
   end_date?: string;
+  results_revealed?: boolean;
 }
 
 
@@ -32,12 +33,13 @@ export const isPollVisible = (poll: Poll) => {
   if (poll.end_date && now > new Date(poll.end_date).getTime()) return false;
   return true;
 };
-function PollCard({ poll, onVote, onArchive, onDelete, onNotify, currentUserId, isAdmin }: { poll: Poll; onVote: (pollId: string, optionId: string) => void; onArchive?: (pollId: string, archive: boolean) => void; onDelete?: (pollId: string) => void; onNotify?: (poll: Poll) => void; currentUserId?: string; isAdmin?: boolean }) {
+function PollCard({ poll, onVote, onArchive, onDelete, onNotify, onToggleReveal, currentUserId, isAdmin }: { poll: Poll; onVote: (pollId: string, optionId: string) => void; onArchive?: (pollId: string, archive: boolean) => void; onDelete?: (pollId: string) => void; onNotify?: (poll: Poll) => void; onToggleReveal?: (pollId: string, reveal: boolean) => void; currentUserId?: string; isAdmin?: boolean }) {
   const totalVotes = poll.options.reduce((sum, o) => sum + (o.votes?.length || 0), 0);
   const userVotedId = currentUserId
     ? poll.options.find(o => o.votes?.includes(currentUserId))?.id
     : null;
   const hasVoted = !!userVotedId || !!poll.is_archived;
+  const shouldShowResults = isAdmin || poll.results_revealed || poll.is_archived;
 
   return (
     <div className={`bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 relative ${poll.is_archived ? "opacity-75" : ""}`}>
@@ -51,6 +53,14 @@ function PollCard({ poll, onVote, onArchive, onDelete, onNotify, currentUserId, 
       </div>
       {isAdmin && (
         <div className="flex flex-wrap justify-end items-center gap-3 mb-4 mt-[-8px]">
+          {onToggleReveal && (
+            <button
+              onClick={() => onToggleReveal(poll.id, !poll.results_revealed)}
+              className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-emerald-500 transition-colors flex items-center gap-1"
+            >
+              {poll.results_revealed ? "Hide Results" : "Reveal Results"}
+            </button>
+          )}
           {onNotify && (
             <button
               onClick={() => onNotify(poll)}
@@ -101,7 +111,7 @@ function PollCard({ poll, onVote, onArchive, onDelete, onNotify, currentUserId, 
               }`}
             >
               {/* Progress bar background */}
-              {hasVoted && (
+              {hasVoted && shouldShowResults && (
                 <motion.div
                   className={`absolute inset-0 ${isMyVote ? "bg-violet-100 dark:bg-violet-900/30" : "bg-slate-50 dark:bg-slate-800/50"}`}
                   initial={{ scaleX: 0 }}
@@ -117,7 +127,7 @@ function PollCard({ poll, onVote, onArchive, onDelete, onNotify, currentUserId, 
                     {option.text}
                   </span>
                 </div>
-                {hasVoted && (
+                {hasVoted && shouldShowResults && (
                   <span className="text-xs font-black text-muted-foreground dark:text-muted-foreground ml-2 whitespace-nowrap">
                     {pct}%
                   </span>
@@ -127,6 +137,11 @@ function PollCard({ poll, onVote, onArchive, onDelete, onNotify, currentUserId, 
           );
         })}
       </div>
+      {hasVoted && !shouldShowResults && (
+        <p className="text-xs text-muted-foreground italic mt-3 text-center">
+          🔒 Vote recorded! Poll results will be revealed by admin.
+        </p>
+      )}
       <div className="mt-3 text-xs text-muted-foreground text-right">
         {totalVotes} {totalVotes === 1 ? "vote" : "votes"}
         {!currentUserId && " · Sign in to vote"}
@@ -293,6 +308,13 @@ export function PollsSection() {
     await supabase.from("site_data").upsert({ key: "polls", value: { polls: updated } }, { onConflict: "key" });
   };
 
+  const handleToggleReveal = async (pollId: string, reveal: boolean) => {
+    const updated = polls.map(p => p.id === pollId ? { ...p, results_revealed: reveal } : p);
+    setPolls(updated);
+    await supabase.from("site_data").upsert({ key: "polls", value: { polls: updated } }, { onConflict: "key" });
+    toast.success(reveal ? "Poll results revealed to users" : "Poll results hidden");
+  };
+
   const handleArchive = async (pollId: string, archive: boolean) => {
     const updated = polls.map(p => p.id === pollId ? { ...p, is_archived: archive } : p);
     setPolls(updated);
@@ -353,7 +375,7 @@ export function PollsSection() {
 
       {polls.filter(isPollVisible).map((poll) => (
         <motion.div key={poll.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <PollCard poll={poll} onVote={handleVote} onArchive={isAdmin ? handleArchive : undefined} onDelete={isAdmin ? handleDelete : undefined} onNotify={isAdmin ? handleNotify : undefined} currentUserId={profile?.id} isAdmin={isAdmin} />
+          <PollCard poll={poll} onVote={handleVote} onArchive={isAdmin ? handleArchive : undefined} onDelete={isAdmin ? handleDelete : undefined} onNotify={isAdmin ? handleNotify : undefined} onToggleReveal={isAdmin ? handleToggleReveal : undefined} currentUserId={profile?.id} isAdmin={isAdmin} />
         </motion.div>
       ))}
 
@@ -365,7 +387,7 @@ export function PollsSection() {
           </div>
           <div className="space-y-4">
             {polls.filter(p => p.is_archived).map(poll => (
-              <PollCard key={poll.id} poll={poll} onVote={handleVote} onArchive={isAdmin ? handleArchive : undefined} onDelete={isAdmin ? handleDelete : undefined} onNotify={isAdmin ? handleNotify : undefined} currentUserId={profile?.id} isAdmin={isAdmin} />
+              <PollCard key={poll.id} poll={poll} onVote={handleVote} onArchive={isAdmin ? handleArchive : undefined} onDelete={isAdmin ? handleDelete : undefined} onNotify={isAdmin ? handleNotify : undefined} onToggleReveal={isAdmin ? handleToggleReveal : undefined} currentUserId={profile?.id} isAdmin={isAdmin} />
             ))}
           </div>
         </div>

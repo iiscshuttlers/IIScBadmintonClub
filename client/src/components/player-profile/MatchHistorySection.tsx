@@ -53,9 +53,9 @@ export function MatchHistorySection({
   const [isMatchHistoryOpen, setIsMatchHistoryOpen] = useState(defaultOpen);
   const [matchHistoryFilter, setMatchHistoryFilter] = useState<
     "all" | "friendly" | "tournament"
-  >("all");
+  >("tournament");
 
-  const confirmedMatches = liveMatches.filter((m) => m.status === "confirmed");
+  const confirmedMatches = liveMatches.filter((m) => m.status === "confirmed" || m.status === "completed");
   const pendingMatchesList = liveMatches
     .filter((m) => m.status === "pending")
     .sort(
@@ -108,7 +108,7 @@ export function MatchHistorySection({
             </h2>
             <div className="mt-1 flex flex-wrap gap-2 text-[10px] sm:text-xs font-bold">
               <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400">
-                {confirmedMatches.length} confirmed
+                {confirmedMatches.length} matches
               </span>
               {pendingMatchesList.length > 0 && (
                 <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400">
@@ -177,31 +177,7 @@ export function MatchHistorySection({
                 </div>
               )}
 
-              {/* Filter Tabs */}
-              <div className="flex gap-2 ml-2 mb-4 overflow-x-auto pb-1">
-                {(["all", "friendly", "tournament"] as const).map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setMatchHistoryFilter(tab)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition border shrink-0
-                      ${
-                        matchHistoryFilter === tab
-                          ? tab === "tournament"
-                            ? "bg-amber-50 dark:bg-amber-900/30 border-amber-400 text-amber-700 dark:text-amber-400"
-                            : tab === "friendly"
-                              ? "bg-primary/10 dark:bg-primary/30 border-primary text-primary dark:text-primary"
-                              : "bg-blue-50 dark:bg-blue-900/30 border-blue-400 text-blue-700 dark:text-blue-400"
-                          : "border-slate-200 dark:border-slate-700 text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800"
-                      }`}
-                  >
-                    {tab === "all"
-                      ? `All (${confirmedMatches.length})`
-                      : tab === "friendly"
-                        ? `🏸 Friendly (${confirmedMatches.filter((m) => m.is_friendly !== false).length})`
-                        : `🏆 Tournament (${confirmedMatches.filter((m) => m.is_friendly === false).length})`}
-                  </button>
-                ))}
-              </div>
+              {/* Filter Tabs temporarily removed to show only tournament matches */}
 
               {/* Pending Matches Banner */}
               {pendingMatchesList.length > 0 && (
@@ -362,8 +338,7 @@ export function MatchHistorySection({
                 {/* Table Header */}
                 <div className="hidden sm:grid grid-cols-12 gap-2 px-5 py-3 bg-slate-50 dark:bg-slate-800 text-[10px] font-black uppercase tracking-widest text-muted-foreground dark:text-muted-foreground border-b border-slate-100 dark:border-slate-700/50">
                   <div className="col-span-1 text-center">Result</div>
-                  <div className="col-span-1">Type</div>
-                  <div className="col-span-1 text-center">Format</div>
+                  <div className="col-span-2">Match Details</div>
                   <div className="col-span-3">Opponent</div>
                   <div className="col-span-3">Score</div>
                   <div className="col-span-3 text-right">Date & Time</div>
@@ -432,51 +407,77 @@ export function MatchHistorySection({
                       return (
                         <div
                           key={idx}
-                          className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-2 p-4 sm:px-5 sm:py-4 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors items-center"
+                          className="flex flex-col sm:grid sm:grid-cols-12 gap-3 sm:gap-2 p-4 sm:px-5 sm:py-4 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors sm:items-center relative"
                         >
-                          {/* Result Badge */}
-                          <div className="col-span-1 flex sm:justify-center">
-                            <div
-                              className={`w-10 h-10 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center font-black text-sm shadow-md
-                            ${
-                              won
-                                ? "bg-gradient-to-br from-primary to-primary text-slate-900 shadow-primary/30"
-                                : "bg-gradient-to-br from-rose-400 to-rose-600 text-white shadow-rose-500/30"
-                            }`}
-                            >
-                              {won ? "W" : "L"}
+                          {/* Mobile Top Row & Desktop Col 1-3 */}
+                          <div className="flex items-start justify-between sm:contents">
+                            <div className="flex items-center gap-3 sm:contents">
+                              {/* Result Badge */}
+                              <div className="sm:col-span-1 flex sm:justify-center shrink-0">
+                                <div
+                                  className={`w-10 h-10 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center font-black text-sm shadow-sm
+                                ${
+                                  won
+                                    ? "bg-gradient-to-br from-emerald-400 to-emerald-500 text-white shadow-emerald-500/30"
+                                    : "bg-gradient-to-br from-rose-400 to-rose-500 text-white shadow-rose-500/30"
+                                }`}
+                                >
+                                  {won ? "W" : "L"}
+                                </div>
+                              </div>
+
+                              {/* Type & Format & Round */}
+                              <div className="sm:col-span-2 flex flex-col justify-center items-start gap-1.5 flex-1">
+                                <div className="flex items-center gap-2">
+                                  <span
+                                    className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md shadow-sm ${
+                                      isFriendly
+                                        ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-blue-500/20 border border-blue-400/20"
+                                        : "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-amber-500/20 border border-amber-400/20"
+                                    }`}
+                                  >
+                                    {isFriendly ? "FRD" : "TRN"}
+                                  </span>
+                                  <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase">
+                                    {formatLabel}
+                                  </span>
+                                </div>
+                                {m.round && m.round !== "Tournament" && m.round !== "Friendly" && (
+                                  <div className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
+                                    {typeof m.round === 'number' || !isNaN(Number(m.round)) ? `Round ${m.round}` : m.round}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Mobile Date */}
+                            <div className="sm:hidden flex flex-col items-end">
+                              <div className="text-[10px] font-bold text-muted-foreground dark:text-slate-400">
+                                {matchDate.toLocaleDateString("en-IN", {
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "2-digit",
+                                })}
+                              </div>
+                              <div className="text-[9px] font-medium text-slate-400">
+                                {matchDate.toLocaleTimeString("en-IN", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  hour12: true,
+                                })}
+                              </div>
                             </div>
                           </div>
 
-                          {/* Match Type */}
-                          <div className="col-span-1">
-                            <span
-                              className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${
-                                isFriendly
-                                  ? "bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary border border-primary/40 dark:border-primary/80/30"
-                                  : "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/30"
-                              }`}
-                            >
-                              {isFriendly ? "FRD" : "TRN"}
-                            </span>
-                          </div>
-
-                          {/* Format */}
-                          <div className="col-span-1 flex sm:justify-center">
-                            <span className="text-[10px] font-bold text-muted-foreground dark:text-muted-foreground uppercase">
-                              {formatLabel}
-                            </span>
-                          </div>
-
                           {/* Opponent */}
-                          <div className="col-span-3">
+                          <div className="sm:col-span-3 mt-1 sm:mt-0">
                             <div className="flex flex-col gap-1.5">
                               {partner && (
                                 <div className="flex items-center gap-2 mb-0.5 leading-none">
-                                  <span className="text-[10px] font-black text-blue-500 dark:text-blue-400 w-6 text-right">with</span>
+                                  <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase w-6 text-right">with</span>
                                   <button 
                                     onClick={(e) => { e.stopPropagation(); partner.id && setLocation(`/player/${partner.id}`); }} 
-                                    className={`text-xs font-bold transition-colors text-left truncate ${getGenderColor(partner.gender)}`}
+                                    className={`text-sm font-bold transition-colors text-left truncate ${getGenderColor(partner.gender)}`}
                                   >
                                     {partner.full_name}
                                   </button>
@@ -485,9 +486,9 @@ export function MatchHistorySection({
                               {opponents.map((opp, i) => (
                                 <div key={i} className="flex items-center gap-2 leading-none">
                                   {i === 0 ? (
-                                    <span className="text-[10px] font-black text-rose-500 dark:text-rose-400 uppercase w-6 text-right">vs</span>
+                                    <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase w-6 text-right">vs</span>
                                   ) : (
-                                    <span className="text-[10px] font-black text-rose-400/80 dark:text-rose-500/80 uppercase w-6 text-right">&</span>
+                                    <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase w-6 text-right">&</span>
                                   )}
                                   <button
                                     onClick={(e) => { e.stopPropagation(); opp?.id && setLocation(`/player/${opp.id}`); }}
@@ -498,22 +499,28 @@ export function MatchHistorySection({
                                 </div>
                               ))}
                             </div>
-                            {m.round && m.round !== "Tournament" && m.round !== "Friendly" && (
-                              <div className="text-[10px] text-muted-foreground font-medium mt-1">
-                                {m.round}
-                              </div>
-                            )}
                           </div>
 
-                          {/* Score */}
-                          <div className="col-span-3">
+                          {/* Score & Mobile Share */}
+                          <div className="sm:col-span-3 mt-1 sm:mt-0 flex items-center justify-between sm:block">
                             <div className="flex flex-col gap-1 items-start">
                               <BeautifulScoreDisplay score={m.match_score || m.score} />
                             </div>
+                            {/* Mobile Share */}
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                await shareMatch(m);
+                              }}
+                              className="sm:hidden p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/20 rounded-full transition-colors ml-auto -mr-2"
+                              title="Share Match Result"
+                            >
+                              <Share2 className="w-4 h-4" />
+                            </button>
                           </div>
 
-                          {/* Date & Time & Share */}
-                          <div className="col-span-3 flex items-center justify-end gap-3 text-right">
+                          {/* Desktop Date & Time & Share */}
+                          <div className="hidden sm:col-span-3 sm:flex items-center justify-end gap-3 text-right">
                             <div>
                               <div className="text-xs font-bold text-muted-foreground dark:text-slate-300">
                                 {matchDate.toLocaleDateString("en-IN", {

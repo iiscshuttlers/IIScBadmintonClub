@@ -72,7 +72,7 @@ export function isMatchParticipant(match: any, playerId?: string | null): boolea
 export function visibleMatchesForViewer(matches: any[], viewerPlayerId?: string | null): any[] {
   return matches.filter(
     (m) =>
-      m.status === "confirmed" ||
+      m.status === "confirmed" || m.status === "completed" ||
       (m.status === "pending" && isMatchParticipant(m, viewerPlayerId))
   );
 }

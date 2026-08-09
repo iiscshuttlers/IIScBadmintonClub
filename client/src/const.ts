@@ -15,3 +15,7 @@ export const getLoginUrl = () => {
 
   return url.toString();
 };
+
+export const DEFAULT_YOUTUBE_STREAM_KEY =
+  import.meta.env.VITE_YOUTUBE_STREAM_KEY || "iisc-shuttlers-live-stream-key";
+

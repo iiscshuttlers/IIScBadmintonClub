@@ -88,6 +88,8 @@ import { VenueWelcomeModal } from "@/components/VenueWelcomeModal";
 
 const TvScoreboardIndex = lazy(() => import("@/pages/TvScoreboardIndex"));
 const TvScoreboard = lazy(() => import("./pages/TvScoreboard"));
+const ObsOverlayScoreboard = lazy(() => import("./pages/ObsOverlayScoreboard"));
+const CameraBroadcast = lazy(() => import("./pages/CameraBroadcast"));
 
 function PersonalModeRoute({ children }: { children: React.ReactNode }) {
   const { session, isInitializing } = useAuth();
@@ -113,6 +115,12 @@ function AppRoutes() {
           <Route path="/pulse" component={Pulse} />
           
           <Route path="/tv" component={TvScoreboardIndex} />
+          <Route path="/tv/overlay/:matchId?" component={ObsOverlayScoreboard} />
+          <Route path="/tv/camera/:matchId?">
+            <ProtectedRoute>
+              <CameraBroadcast />
+            </ProtectedRoute>
+          </Route>
           <Route path="/tv/:matchId" component={TvScoreboard} />
 
           <Route path="/hub" component={Hub} />

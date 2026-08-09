@@ -162,6 +162,16 @@ export function PollEditor({
                     {poll.is_active ? "Active" : "Inactive (Completed)"}
                   </button>
                   <button
+                    onClick={() => updatePoll(i, { results_revealed: !poll.results_revealed })}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                      poll.results_revealed
+                        ? "bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-800"
+                        : "bg-amber-50 text-amber-600 border border-amber-200 dark:bg-amber-900/30 dark:border-amber-800"
+                    }`}
+                  >
+                    {poll.results_revealed ? "Results Public" : "Results Hidden"}
+                  </button>
+                  <button
                     onClick={() => sendPushNotification(poll)}
                     disabled={sendingPush === poll.id}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors bg-indigo-50 text-indigo-600 border border-indigo-200 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:border-indigo-800 dark:hover:bg-indigo-900/50 disabled:opacity-50"

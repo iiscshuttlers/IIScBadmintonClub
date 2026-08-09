@@ -261,6 +261,12 @@ export function showWebNotification(
 ) {
   if (Capacitor.isNativePlatform()) return;
   if (!("Notification" in window)) return;
+  if (Notification.permission === "default") {
+    Notification.requestPermission().then((permission) => {
+      if (permission === "granted") showWebNotification(title, body, onClick);
+    });
+    return;
+  }
   if (Notification.permission !== "granted") return;
 
   try {

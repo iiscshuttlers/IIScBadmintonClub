@@ -6,7 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import {
   Trophy, Activity, Plus, Minus, X, Settings, Save, Timer, Play,
-  AlertTriangle, BookOpen, ArrowLeftRight, Flag, ChevronDown, ChevronUp, Repeat, Tv2, MonitorPlay, ActivitySquare
+  AlertTriangle, BookOpen, ArrowLeftRight, Flag, ChevronDown, ChevronUp, Repeat, Tv2, MonitorPlay, ActivitySquare, Camera, Edit2
 } from "lucide-react";
 import { toast } from "sonner";
 import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
@@ -28,6 +28,7 @@ type CardTarget = "t1p1" | "t1p2" | "t2p1" | "t2p2";
 import { CourtVisual } from "./CourtVisual";
 import { ChangeEndsModal, DisciplineCardModal, RetireModal, DirectScoreModal, ConfirmActionModal } from "./MatchModals";
 import { useUmpireState } from "@/hooks/useUmpireState";
+import { useOfflineUmpireSync } from "@/hooks/useOfflineUmpireSync";
 
 // ── Player Select ─────────────────────────────────────────────────────────────
 
@@ -301,21 +302,16 @@ export function UmpireEngine({
     onMatchSaved: saveMotionStats,
   });
 
+  const offlineSync = useOfflineUmpireSync();
+
   const queryClient = useQueryClient();
   const { mutate: addPointMutate, isPending: isSyncing } = useMutation({
     mutationFn: async ({ team, matchId }: { team: 1 | 2, matchId: string }) => {
-      if (!tournamentMatch && !match.isTournamentMatch) {
-        // Friendly matches are only synced to the DB when finished.
-        // During live play, they only update via site_data (handled synchronously).
+      if (offlineSync.isOffline && umpireState.match) {
+        offlineSync.queueMatchStateUpdate(umpireState.match);
         return;
       }
-      
-      const { error } = await supabase.rpc('increment_match_score', {
-        match_id: matchId,
-        p1_increment: team === 1 ? 1 : 0,
-        p2_increment: team === 2 ? 1 : 0
-      });
-      if (error) throw error;
+      // Score updates are automatically persisted via updateMatch in useUmpireState
     },
     onMutate: async ({ team }) => {
       await queryClient.cancelQueries({ queryKey: ["matches"] });
@@ -324,8 +320,10 @@ export function UmpireEngine({
       return { previousMatch };
     },
     onError: (err, variables, context) => {
-      toast.error("Network error: Failed to sync point. Score rolled back.");
-      queryClient.setQueryData(["matches"], context?.previousMatch);
+      toast.error("Failed to update score — please try again");
+      if (context?.previousMatch) {
+        queryClient.setQueryData(["matches"], context.previousMatch);
+      }
     },
   });
 
@@ -338,7 +336,7 @@ export function UmpireEngine({
     setPendingBreakAfterEnds, setShowCardPanel, setCardTarget, setShowRetireModal,
     setIsEditSetupOpen, setShowToolsMenu, setIsDirectScoreOpen, setShowFullTimer,
     setDirectSetsText, setDirectWinner, setBreakSecondsLeft, setBreakLabel,
-    updateMatch, startMatch, startTournamentMatch, handleEditSet, addPoint, deductPoint, forceEndSet,
+    updateMatch, startMatch, startTournamentMatch, handleEditSet, reopenSet, addPoint, deductPoint, forceEndSet,
     confirmChangeEnds, callLet, callServiceFault, issueCard, retireTeam, saveMatchToProfile,
     handleClose, getName, getGender, deduceCategory, startBreak, endBreak,
     selectedPlayerIds, buddyCheckPassed, isDoubles, serverName, receiverName,
@@ -659,6 +657,14 @@ export function UmpireEngine({
 
       {/* ── Header ── */}
       <div className="grid grid-cols-3 sm:flex sm:flex-wrap items-center gap-2 mb-4">
+        <button onClick={handleClose} className="shrink-0 px-3 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 border border-rose-500/30 transition cursor-pointer">
+          <X className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-400" /> Exit Panel
+        </button>
+        {offlineSync.isOffline && (
+          <span className="shrink-0 px-3 py-2 bg-amber-500/20 border border-amber-500/50 text-amber-400 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 animate-pulse">
+            ⚡ Offline Mode ({offlineSync.queuedCount} saved)
+          </span>
+        )}
         {match.status === "playing" && (
           <>
             <button onClick={() => updateMatch({ endsSwapped: !match.endsSwapped })} className="shrink-0 px-1 py-2 sm:px-3 sm:py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border border-slate-700 transition">
@@ -674,6 +680,9 @@ export function UmpireEngine({
             </button>
             <button onClick={() => setIsEditSetupOpen(true)} className="shrink-0 px-1 py-2 sm:px-3 sm:py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border border-slate-700 transition">
               <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" /> Edit Setup
+            </button>
+            <button onClick={() => { window.location.href = `/tv/camera/${tournamentMatch?.id || match.id || ""}`; }} className="shrink-0 px-1 py-2 sm:px-3 sm:py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1 sm:gap-1.5 border border-rose-500/40 transition cursor-pointer">
+              <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-400" /> Broadcast
             </button>
             {Capacitor.isNativePlatform() && (
               <>
@@ -710,10 +719,15 @@ export function UmpireEngine({
             } Won
           </p>
           <p className="text-primary font-bold mb-8 text-2xl">{match.setsHistory.join(", ")}{match.retiredTeam ? ` (T${match.retiredTeam} Retired)` : ""}</p>
-          <button onClick={saveMatchToProfile} className="px-6 py-4 bg-linear-to-r from-amber-500 to-orange-500 text-foreground rounded-2xl font-black uppercase tracking-wider shadow-xl flex items-center gap-2 mx-auto">
-            <Save className="w-5 h-5" /> Save to Profile & Notify
-          </button>
-          <button onClick={() => updateMatch({ status: "playing", winner: undefined, retiredTeam: undefined })} className="mt-6 text-sm font-bold text-muted-foreground hover:text-muted-foreground underline">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-lg mx-auto">
+            <button onClick={saveMatchToProfile} className="w-full px-6 py-4 bg-linear-to-r from-amber-500 to-orange-500 text-foreground rounded-2xl font-black uppercase tracking-wider shadow-xl flex items-center justify-center gap-2 cursor-pointer">
+              <Save className="w-5 h-5" /> Save to Profile & Notify
+            </button>
+            <button onClick={handleClose} className="w-full px-6 py-4 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-2xl font-bold uppercase tracking-wider border border-slate-700 flex items-center justify-center gap-2 transition cursor-pointer">
+              <X className="w-5 h-5 text-rose-400" /> Close / Remove Panel
+            </button>
+          </div>
+          <button onClick={() => updateMatch({ status: "playing", winner: undefined, retiredTeam: undefined })} className="mt-6 text-sm font-bold text-muted-foreground hover:text-muted-foreground underline block mx-auto cursor-pointer">
             Wait, add a set / resume match
           </button>
         </div>
@@ -936,6 +950,7 @@ export function UmpireEngine({
                       </div>
                     </th>
                     <th className="px-4 py-3 border-b border-slate-700 font-black text-center text-amber-400">Winner</th>
+                    <th className="px-4 py-3 border-b border-slate-700 font-black text-center"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-700/50 text-slate-300">
@@ -981,6 +996,11 @@ export function UmpireEngine({
                           />
                         </td>
                         <td className="px-4 py-3 font-semibold text-xs text-muted-foreground text-center">{winnerStr}</td>
+                        <td className="px-4 py-3 text-center">
+                          <button onClick={() => reopenSet(i)} className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition-colors border border-slate-700 shadow-xs group relative" title="Reopen Set in Score Panel">
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
                       </tr>
                     );
                   })}
@@ -996,6 +1016,7 @@ export function UmpireEngine({
                             ? match.t2.p1Name + (match.t2.p2Name ? ` & ${match.t2.p2Name}` : "")
                             : "-"}
                       </td>
+                      <td></td>
                     </tr>
                   )}
                 </tbody>

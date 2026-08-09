@@ -144,11 +144,17 @@ export function useUmpireState({
         const catMap: Record<string, string> = {
           MS: "Singles", WS: "Singles", MD: "Doubles", WD: "Doubles", XD: "Doubles",
         };
+        const isT1Bye = (tournamentMatch.team1_label || "").toUpperCase().includes("BYE");
+        const isT2Bye = (tournamentMatch.team2_label || "").toUpperCase().includes("BYE");
+        const isByeMatch = isT1Bye || isT2Bye;
+        const byeWinner: 1 | 2 = isT1Bye ? 2 : 1;
+
         return {
           id: tournamentMatch.id || crypto.randomUUID(),
           umpireId: userId,
           umpireName: userName,
           isFriendly: false,
+          isTournamentMatch: true,
           matchNumber: tournamentMatch.match_code,
           category: catMap[tournamentMatch.category] ?? "Singles",
           pointsToWin: tournamentMatch.points_to_win,
@@ -160,7 +166,7 @@ export function useUmpireState({
             p2Id: tournamentMatch.player3_id ?? undefined,
             p2Name: "",
             score: 0,
-            games: 0,
+            games: isByeMatch && byeWinner === 1 ? 2 : 0,
           },
           t2: {
             p1Id: tournamentMatch.player2_id ?? "",
@@ -168,7 +174,7 @@ export function useUmpireState({
             p2Id: tournamentMatch.player4_id ?? undefined,
             p2Name: "",
             score: 0,
-            games: 0,
+            games: isByeMatch && byeWinner === 2 ? 2 : 0,
           },
           serverTeam: 1,
           serverPlayerIndex: 0,
@@ -178,8 +184,9 @@ export function useUmpireState({
           t2LastServedBy: 1,
           endsSwapped: false,
           pointLog: [],
-          status: "setup",
-          setsHistory: [],
+          status: isByeMatch ? "finished" : "setup",
+          winner: isByeMatch ? byeWinner : undefined,
+          setsHistory: isByeMatch ? ["BYE"] : [],
         };
       }
 
@@ -332,8 +339,25 @@ export function useUmpireState({
       next.inferredCategory = getInferredCategory(next.category, next.t1, next.t2);
       setMatch(next);
       await MatchService.upsertLiveMatch(next.id, next).catch(err => { toast.error("Broadcast sync failed — check your connection"); });
-      const error = false;
       
+      if (tournamentMatch || next.isTournamentMatch) {
+        const matchId = tournamentMatch?.id || next.id || next.dbId;
+        if (matchId) {
+          const currentScore = `${next.t1.score}-${next.t2.score}`;
+          const setsArr = [...(next.setsHistory || [])];
+          if (currentScore !== "0-0") setsArr.push(currentScore);
+
+          await supabase
+            .from("tournament_matches")
+            .update({
+              score: currentScore,
+              sets_history: setsArr,
+              status: "in_progress"
+            })
+            .eq("id", matchId)
+            .catch((e) => console.warn("Failed to sync tournament match score", e));
+        }
+      }
     };
   
 
@@ -437,6 +461,35 @@ export function useUmpireState({
         retiredTeam: undefined
       });
       toast.success(`Set ${index + 1} deleted!`);
+    };
+
+    const reopenSet = (index: number) => {
+      if (index < 0 || index >= match.setsHistory.length) return;
+      if (!confirm(`Are you sure you want to reopen Set ${index + 1}? All sets after this will be deleted.`)) return;
+      
+      const history = [...match.setsHistory];
+      const setToReopen = history[index];
+      const [s1, s2] = setToReopen.split("-").map(Number);
+      
+      const newHistory = history.slice(0, index);
+      
+      let newT1Games = 0;
+      let newT2Games = 0;
+      newHistory.forEach(setStr => {
+        const [gs1, gs2] = setStr.split("-").map(Number);
+        if (gs1 > gs2) newT1Games++;
+        else if (gs2 > gs1) newT2Games++;
+      });
+
+      updateMatch({
+        status: "playing",
+        winner: undefined,
+        retiredTeam: undefined,
+        setsHistory: newHistory,
+        t1: { ...match.t1, score: s1, games: newT1Games },
+        t2: { ...match.t2, score: s2, games: newT2Games },
+      });
+      toast.success(`Set ${index + 1} reopened!`);
     };
 
     const forceEndSet = () => {
@@ -582,8 +635,8 @@ export function useUmpireState({
       const matchEndTs = match.pointLog.length > 0 ? match.pointLog[match.pointLog.length - 1].ts : Date.now();
 
       // Tournament match path — submit to tournament_matches, no ELO impact
-      if (tournamentMatch || match.isTournamentMatch) {
-        const matchId = tournamentMatch?.id || match.dbId;
+      if (tournamentMatch || match.isTournamentMatch || (!match.isFriendly && match.id)) {
+        const matchId = tournamentMatch?.id || match.dbId || match.id;
         if (!matchId) return toast.error("Match ID missing");
 
         const winnerSide: 1 | 2 = match.winner === 1 ? 1 : 2;
@@ -605,10 +658,36 @@ export function useUmpireState({
           }).then(({ error: timesError }) => {
             if (timesError) console.error("Failed to persist match start/end times", timesError);
           });
-          await supabase.from("site_data").upsert({
-            key: "match_alert",
-            value: { message: `🏆 Tournament: ${match.t1.p1Name}${match.t1.p2Name ? ` & ${match.t1.p2Name}` : ""} vs ${match.t2.p1Name}${match.t2.p2Name ? ` & ${match.t2.p2Name}` : ""} — ${scoreStr}`, time: Date.now() },
-          });
+          const notifMsg = `🏆 Tournament: ${match.t1.p1Name}${match.t1.p2Name ? ` & ${match.t1.p2Name}` : ""} vs ${match.t2.p1Name}${match.t2.p2Name ? ` & ${match.t2.p2Name}` : ""} — ${scoreStr}`;
+          try {
+            await supabase.from("site_data").upsert({
+              key: "match_alert",
+              value: { message: notifMsg, time: Date.now() },
+            });
+            await supabase.rpc("push_match_alert", { p_message: notifMsg });
+            await supabase.functions.invoke("push-live-score", {
+              body: { message: notifMsg, match_id: matchId },
+            });
+            const authUser = (await supabase.auth.getUser()).data.user;
+            const isUuid = (s?: string) => typeof s === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+            const pIds = Array.from(new Set([match.t1.p1Id, match.t1.p2Id, match.t2.p1Id, match.t2.p2Id, userId, authUser?.id].filter(isUuid)));
+            if (pIds.length > 0) {
+              const rows = pIds.map(pid => ({
+                user_id: pid,
+                title: "🏆 Tournament Match Result",
+                message: notifMsg,
+                type: "match_result",
+                link: "/pulse",
+                is_read: false,
+              }));
+              const { error: notifErr } = await supabase.from("notifications").insert(rows);
+              if (notifErr) console.error("Failed to insert notification rows:", notifErr);
+              window.dispatchEvent(new Event("notifications_changed"));
+            }
+          } catch (e) {
+            console.error("Notification push error:", e);
+          }
+
           onMatchSaved?.(matchId, "tournament");
           toast.success("Tournament match result saved!");
           handleClose();
@@ -683,7 +762,31 @@ export function useUmpireState({
         }
   
         const notifMsg = `🏆 ${match.isFriendly ? "Friendly" : "Tournament"} Match: ${match.t1.p1Name}${match.t1.p2Name ? ` & ${match.t1.p2Name}` : ""} vs ${match.t2.p1Name}${match.t2.p2Name ? ` & ${match.t2.p2Name}` : ""} — ${match.setsHistory.join(", ")}`;
-        await supabase.from("site_data").upsert({ key: "match_alert", value: { message: notifMsg, time: Date.now() } });
+        try {
+          await supabase.from("site_data").upsert({ key: "match_alert", value: { message: notifMsg, time: Date.now() } });
+          await supabase.rpc("push_match_alert", { p_message: notifMsg });
+          await supabase.functions.invoke("push-live-score", {
+            body: { message: notifMsg, match_id: newMatchId || match.id },
+          });
+          const authUser = (await supabase.auth.getUser()).data.user;
+          const isUuid = (s?: string) => typeof s === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+          const pIds = Array.from(new Set([match.t1.p1Id, match.t1.p2Id, match.t2.p1Id, match.t2.p2Id, userId, authUser?.id].filter(isUuid)));
+          if (pIds.length > 0) {
+            const rows = pIds.map(pid => ({
+              user_id: pid,
+              title: match.isFriendly ? "🏸 Friendly Match Result" : "🏆 Tournament Match Result",
+              message: notifMsg,
+              type: "match_result",
+              link: "/pulse",
+              is_read: false,
+            }));
+            const { error: notifErr } = await supabase.from("notifications").insert(rows);
+            if (notifErr) console.error("Failed to insert notification rows:", notifErr);
+            window.dispatchEvent(new Event("notifications_changed"));
+          }
+        } catch (e) {
+          console.error("Notification push error:", e);
+        }
         if (newMatchId) onMatchSaved?.(newMatchId, "friendly");
         const hasGuests = [match.t1.p1Id, match.t1.p2Id, match.t2.p1Id, match.t2.p2Id]
           .some(id => id && !realIds.has(id));
@@ -693,7 +796,16 @@ export function useUmpireState({
         toast.error("Failed to save: " + err.message);
       }
     };
-  
+
+    const prevStatusRef = useRef(match.status);
+    useEffect(() => {
+      // Only auto-save if transitioning from live "playing" state to "finished"
+      if (prevStatusRef.current === "playing" && match.status === "finished") {
+        saveMatchToProfile();
+      }
+      prevStatusRef.current = match.status;
+    }, [match.status]);
+
     const handleClose = async () => {
       try {
         await MatchService.removeLiveMatch(userId);
@@ -769,6 +881,7 @@ export function useUmpireState({
     startMatch,
     startTournamentMatch,
     handleEditSet,
+    reopenSet,
     addPoint,
     deductPoint,
     forceEndSet,
