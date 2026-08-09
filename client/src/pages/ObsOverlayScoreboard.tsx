@@ -29,6 +29,22 @@ export default function ObsOverlayScoreboard() {
 
     fetchLiveMatch();
 
+    // Channel 1: Sub-50ms Direct WebSocket Broadcast (Instant score sync)
+    const instantChannel = supabase.channel("obs_instant_scores");
+    instantChannel
+      .on("broadcast", { event: "score_update" }, (e) => {
+        if (e.payload) {
+          const bwf = e.payload as BwfMatchState;
+          if (matchId && (bwf.id === matchId || (bwf as any).dbId === matchId)) {
+            setMatchState(bwf);
+          } else if (!matchId && (bwf.status === "playing" || bwf.status === "setup")) {
+            setMatchState(bwf);
+          }
+        }
+      })
+      .subscribe();
+
+    // Channel 2: Postgres Changes fallback (site_data updates)
     const sub = supabase
       .channel("obs_overlay_live")
       .on(
@@ -48,7 +64,10 @@ export default function ObsOverlayScoreboard() {
       )
       .subscribe();
 
-    return () => { supabase.removeChannel(sub); };
+    return () => {
+      supabase.removeChannel(instantChannel);
+      supabase.removeChannel(sub);
+    };
   }, [matchId]);
 
   if (!matchState) {

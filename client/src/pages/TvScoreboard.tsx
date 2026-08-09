@@ -40,7 +40,17 @@ export default function TvScoreboard() {
       setMatchState(queryData);
     }
     
-    // Subscribe
+    // Channel 1: Sub-50ms Direct WebSocket Broadcast (Instant score sync)
+    const instantChannel = supabase.channel(`tv_instant_${matchId}`);
+    instantChannel
+      .on("broadcast", { event: "score_update" }, (e) => {
+        if (e.payload && (e.payload.id === matchId || e.payload.dbId === matchId)) {
+          setMatchState(e.payload as BwfMatchState);
+        }
+      })
+      .subscribe();
+
+    // Channel 2: Postgres Changes fallback (site_data updates)
     const sub = supabase
       .channel(`tv_scoreboard_${matchId}`)
       .on(
@@ -64,6 +74,7 @@ export default function TvScoreboard() {
       .subscribe();
 
     return () => {
+      supabase.removeChannel(instantChannel);
       supabase.removeChannel(sub);
     };
   }, [matchId, queryData]);
