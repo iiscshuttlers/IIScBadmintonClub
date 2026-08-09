@@ -780,71 +780,80 @@ export default function CameraBroadcast() {
         </div>
       )}
 
-      {/* ── BWF Style Live Scoreboard Overlay Bug ────────────────────────────── */}
+      {/* ── Premium BWF Live Scoreboard Overlay ──────────────────────────── */}
       <div className="absolute bottom-6 left-4 right-4 sm:left-8 sm:right-auto z-20 pointer-events-none">
         <div
           style={{ backgroundColor: cardBgColor }}
-          className="backdrop-blur-md border border-slate-700/60 rounded-2xl shadow-2xl overflow-hidden max-w-md w-full animate-in fade-in duration-300"
+          className="backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.8)] overflow-hidden max-w-md w-full animate-in fade-in slide-in-from-bottom-4 duration-500"
         >
+          {/* Accent top gradient */}
+          <div className="h-0.5 bg-gradient-to-r from-emerald-500 via-cyan-500 to-indigo-500" />
           
-          {/* Header Bar: Tournament Name & Special Alerts */}
-          <div className="bg-gradient-to-r from-slate-950/90 via-slate-900/90 to-slate-950/90 px-4 py-2 border-b border-slate-800 flex items-center justify-between text-xs">
+          {/* Header Bar */}
+          <div className="px-4 py-2 border-b border-slate-800/50 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="bg-blue-600 text-white px-2 py-0.5 rounded-md font-black tracking-wider text-[10px] uppercase">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_6px_rgba(239,68,68,0.7)]" />
+              <span className="bg-blue-600/90 text-white px-2 py-0.5 rounded-md font-black tracking-wider text-[9px] uppercase">
                 {liveMatch?.category || "LIVE"}
               </span>
-              <span className="text-slate-300 font-bold truncate max-w-[160px]">
+              <span className="text-slate-400 font-bold truncate max-w-[140px] text-[11px]">
                 {liveMatch?.round_name || "Court Match"}
               </span>
             </div>
 
-            {/* Special Badges: DEUCE / MATCH POINT */}
+            {/* Special Badges */}
             <div className="flex items-center gap-1">
               {liveMatch?.live_score?.is_deuce && (
-                <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-black text-[10px] flex items-center gap-1 animate-pulse">
-                  <Zap className="w-3 h-3 fill-amber-400" /> DEUCE
+                <span className="bg-amber-500/15 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded-md font-black text-[8px] tracking-wider animate-pulse">
+                  ⚡ DEUCE
                 </span>
               )}
               {liveMatch?.live_score?.is_match_point && (
-                <span className="bg-rose-600/30 text-rose-400 border border-rose-500/40 px-2 py-0.5 rounded-full font-black text-[10px] flex items-center gap-1 animate-bounce">
-                  <Flame className="w-3 h-3 text-rose-400 fill-rose-400" /> MATCH POINT
+                <span className="bg-rose-600/20 text-rose-400 border border-rose-500/30 px-1.5 py-0.5 rounded-md font-black text-[8px] tracking-wider animate-bounce">
+                  🔥 MATCH PT
                 </span>
               )}
               {liveMatch?.live_score?.is_game_point && !liveMatch?.live_score?.is_match_point && (
-                <span className="bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 px-2 py-0.5 rounded-full font-black text-[10px] flex items-center gap-1">
-                  <Trophy className="w-3 h-3 text-indigo-300" /> GAME POINT
+                <span className="bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 px-1.5 py-0.5 rounded-md font-black text-[8px] tracking-wider">
+                  GAME PT
                 </span>
               )}
             </div>
           </div>
 
           {/* Teams & Scores */}
-          <div className="p-3 space-y-2">
+          <div className="p-2.5 space-y-1.5">
             {/* Team 1 Row */}
-            <div className="flex items-center justify-between bg-slate-800/70 rounded-xl px-3.5 py-2.5 border border-slate-700/40">
+            <div className="flex items-center justify-between rounded-xl px-3 py-2 transition-all duration-300"
+              style={{
+                backgroundColor: liveMatch?.live_score?.server === 1 ? "rgba(16,185,129,0.08)" : "rgba(30,41,59,0.5)",
+                borderWidth: "1px",
+                borderColor: liveMatch?.live_score?.server === 1 ? "rgba(16,185,129,0.2)" : "rgba(51,65,85,0.3)",
+              }}
+            >
               <div className="flex items-center gap-2.5 truncate pr-2">
                 <div
+                  className={`w-2 h-2 rounded-full shrink-0 transition-all duration-300 ${liveMatch?.live_score?.server === 1 ? "animate-pulse" : ""}`}
                   style={{
-                    backgroundColor: liveMatch?.live_score?.server === 1 ? serverDotColor : undefined,
-                    boxShadow: liveMatch?.live_score?.server === 1 ? `0 0 10px ${serverDotColor}` : undefined
+                    backgroundColor: liveMatch?.live_score?.server === 1 ? serverDotColor : "rgb(51,65,85)",
+                    boxShadow: liveMatch?.live_score?.server === 1 ? `0 0 10px ${serverDotColor}` : "none"
                   }}
-                  className={`w-2.5 h-2.5 rounded-full shrink-0 ${liveMatch?.live_score?.server === 1 ? "animate-pulse" : "bg-slate-700"}`}
                 />
-                <span className="text-white font-black text-sm sm:text-base tracking-tight truncate">
+                <span className="text-white font-black text-sm tracking-tight truncate">
                   {liveMatch?.team1_label || "Team 1"}
                 </span>
               </div>
-              <div className="flex items-center gap-3 shrink-0">
-                <span className="text-slate-400 text-xs font-bold">
-                  {liveMatch?.live_score?.t1_sets || 0} set
+              <div className="flex items-center gap-2.5 shrink-0">
+                <span className="text-slate-500 text-[10px] font-bold tabular-nums">
+                  {liveMatch?.live_score?.t1_sets || 0}
                 </span>
                 <span
+                  className="text-2xl font-black tabular-nums min-w-[2ch] text-center rounded-lg px-2 py-0.5 transition-all duration-200"
                   style={{
                     color: scoreTextColor,
-                    borderColor: `${scoreTextColor}80`,
-                    filter: `drop-shadow(0 0 8px ${scoreTextColor})`
+                    backgroundColor: "rgba(2,6,23,0.7)",
+                    textShadow: `0 0 16px ${scoreTextColor}60`,
                   }}
-                  className="bg-slate-950/90 text-2xl font-black px-3 py-0.5 rounded-lg border font-mono min-w-[2.2ch] text-center"
                 >
                   {liveMatch?.live_score?.t1_points ?? 0}
                 </span>
@@ -852,30 +861,36 @@ export default function CameraBroadcast() {
             </div>
 
             {/* Team 2 Row */}
-            <div className="flex items-center justify-between bg-slate-800/70 rounded-xl px-3.5 py-2.5 border border-slate-700/40">
+            <div className="flex items-center justify-between rounded-xl px-3 py-2 transition-all duration-300"
+              style={{
+                backgroundColor: liveMatch?.live_score?.server === 2 ? "rgba(99,102,241,0.08)" : "rgba(30,41,59,0.5)",
+                borderWidth: "1px",
+                borderColor: liveMatch?.live_score?.server === 2 ? "rgba(99,102,241,0.2)" : "rgba(51,65,85,0.3)",
+              }}
+            >
               <div className="flex items-center gap-2.5 truncate pr-2">
                 <div
+                  className={`w-2 h-2 rounded-full shrink-0 transition-all duration-300 ${liveMatch?.live_score?.server === 2 ? "animate-pulse" : ""}`}
                   style={{
-                    backgroundColor: liveMatch?.live_score?.server === 2 ? serverDotColor : undefined,
-                    boxShadow: liveMatch?.live_score?.server === 2 ? `0 0 10px ${serverDotColor}` : undefined
+                    backgroundColor: liveMatch?.live_score?.server === 2 ? serverDotColor : "rgb(51,65,85)",
+                    boxShadow: liveMatch?.live_score?.server === 2 ? `0 0 10px ${serverDotColor}` : "none"
                   }}
-                  className={`w-2.5 h-2.5 rounded-full shrink-0 ${liveMatch?.live_score?.server === 2 ? "animate-pulse" : "bg-slate-700"}`}
                 />
-                <span className="text-white font-black text-sm sm:text-base tracking-tight truncate">
+                <span className="text-white font-black text-sm tracking-tight truncate">
                   {liveMatch?.team2_label || "Team 2"}
                 </span>
               </div>
-              <div className="flex items-center gap-3 shrink-0">
-                <span className="text-slate-400 text-xs font-bold">
-                  {liveMatch?.live_score?.t2_sets || 0} set
+              <div className="flex items-center gap-2.5 shrink-0">
+                <span className="text-slate-500 text-[10px] font-bold tabular-nums">
+                  {liveMatch?.live_score?.t2_sets || 0}
                 </span>
                 <span
+                  className="text-2xl font-black tabular-nums min-w-[2ch] text-center rounded-lg px-2 py-0.5 transition-all duration-200"
                   style={{
                     color: scoreTextColor,
-                    borderColor: `${scoreTextColor}80`,
-                    filter: `drop-shadow(0 0 8px ${scoreTextColor})`
+                    backgroundColor: "rgba(2,6,23,0.7)",
+                    textShadow: `0 0 16px ${scoreTextColor}60`,
                   }}
-                  className="bg-slate-950/90 text-2xl font-black px-3 py-0.5 rounded-lg border font-mono min-w-[2.2ch] text-center"
                 >
                   {liveMatch?.live_score?.t2_points ?? 0}
                 </span>
@@ -883,11 +898,11 @@ export default function CameraBroadcast() {
             </div>
           </div>
 
-          {/* Footer Bar: Sets history */}
+          {/* Sets history footer */}
           {liveMatch?.sets_history && liveMatch.sets_history.length > 0 && (
-            <div className="bg-slate-950 px-4 py-1.5 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400 font-bold">
-              <span>Sets History</span>
-              <span className="text-slate-200 font-mono">{liveMatch.sets_history.join(" | ")}</span>
+            <div className="px-4 py-1.5 border-t border-slate-800/40 flex items-center justify-between text-[10px] text-slate-500 font-bold">
+              <span className="uppercase tracking-wider">Sets</span>
+              <span className="text-slate-300 font-mono">{liveMatch.sets_history.join(" · ")}</span>
             </div>
           )}
         </div>
