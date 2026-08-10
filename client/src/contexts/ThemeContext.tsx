@@ -24,16 +24,11 @@ interface ThemeProviderProps {
 
 export function ThemeProvider({
   children,
-  defaultTheme = "light",
+  defaultTheme = "dark",
   switchable = false,
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (switchable) {
-      const stored = localStorage.getItem("theme");
-      return (stored as Theme) || defaultTheme;
-    }
-    return defaultTheme;
-  });
+  // Enforce dark theme
+  const [theme, setTheme] = useState<Theme>("dark");
 
   const [accent, setAccentState] = useState<Accent>(() => {
     if (switchable) {
@@ -78,7 +73,7 @@ export function ThemeProvider({
 
   const toggleTheme = switchable
     ? async () => {
-        setTheme((prev) => (prev === "light" ? "dark" : "light"));
+        // Enforced dark theme, do nothing for theme change
         if (Capacitor.isNativePlatform()) {
           try {
             await Haptics.impact({ style: ImpactStyle.Light });
