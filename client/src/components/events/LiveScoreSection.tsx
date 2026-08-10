@@ -181,8 +181,8 @@ function MatchBroadcastCard({
     <div className="bg-slate-900 border border-slate-800 rounded-[2rem] p-6 sm:p-10 text-foreground max-w-4xl mx-auto shadow-2xl relative overflow-hidden">
       <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-primary to-sky-500" />
       
-      <div className="flex items-center justify-between mb-8">
-        <div>
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+        <div className="flex-1 min-w-0">
           <div className={`flex items-center gap-2 font-black uppercase tracking-widest text-sm mb-1 ${match.status === "finished" ? "text-slate-400" : "text-primary"}`}>
             {match.status === "finished" ? (
               <Trophy className="w-5 h-5" />
