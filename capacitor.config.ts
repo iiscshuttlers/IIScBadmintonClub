@@ -12,7 +12,6 @@ const config: CapacitorConfig = {
     allowMixedContent: false,
     captureInput: true,
     webContentsDebuggingEnabled: false,
-    useLegacyWebView: false,
   },
   plugins: {
     SplashScreen: {

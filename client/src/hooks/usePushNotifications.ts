@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { PushNotifications, type Channel } from "@capacitor/push-notifications";
-import { LocalNotifications } from "@capacitor/local-notifications";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/lib/supabase";
 import { getFirebaseMessaging } from "@/lib/firebase";
@@ -71,10 +70,11 @@ export function usePushNotifications(userId: string | undefined) {
           "pushNotificationReceived",
           async (notification) => {
             console.log("Push received: " + JSON.stringify(notification));
-            // Show notification even when app is in foreground (native only)
-            const title = notification.notification?.title || "New notification";
-            const body = notification.notification?.body || "";
-            const channelId = (notification.notification as any)?.channelId || "notify_whistle";
+            // Capacitor automatically shows the foreground alert based on presentationOptions in capacitor.config.ts.
+            // We just need to play the appropriate custom sound if needed.
+            
+            // Get channelId either from data or the root
+            const channelId = notification.data?.channelId || (notification as any).channelId || "notify_whistle";
 
             // Play the corresponding foreground sound
             if (channelId === "notify_smash") playSmashSound();
@@ -82,23 +82,6 @@ export function usePushNotifications(userId: string | undefined) {
             else if (channelId === "notify_serve") playServeSound();
             else if (channelId === "notify_victory") playVictorySound();
             else playWhistleSound();
-
-            if (Capacitor.getPlatform() === 'android' || Capacitor.getPlatform() === 'ios') {
-              try {
-                await LocalNotifications.schedule({
-                  notifications: [
-                    {
-                      title,
-                      body,
-                      id: Math.floor(Math.random() * 100000),
-                      ...(Capacitor.getPlatform() === 'android' && { channelId }),
-                    },
-                  ],
-                });
-              } catch (e) {
-                console.warn("Failed to show foreground notification:", e);
-              }
-            }
           },
         );
 

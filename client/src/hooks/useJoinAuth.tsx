@@ -145,9 +145,9 @@ export function useJoinAuth() {
         setTimeout(() => reject(new Error("Request timed out. Please check your connection and try again.")), 15000)
       );
 
-      const redirectUrl = typeof window !== "undefined"
-        ? window.location.origin + (window.location.pathname.startsWith("/IIScBadmintonClub") ? "/IIScBadmintonClub/join" : "/join")
-        : "https://iiscshuttlers.github.io/IIScBadmintonClub/join";
+      // ALWAYS explicitly set the HTTPS Universal Link.
+      // This guarantees the link works on PC (opening the web app) AND on Android (opening the native app via App Links)
+      const redirectUrl = "https://iiscbadmintonclub.github.io/iiscshuttlers/login-callback";
 
       const { data, error } = (await Promise.race([
         supabase.auth.signUp({

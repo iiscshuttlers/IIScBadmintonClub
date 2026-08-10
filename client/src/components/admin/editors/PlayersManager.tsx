@@ -12,6 +12,7 @@ import {
 } from "./shared";
 import { optimizeImage } from '@/lib/imageUtils';
 import { useAuth } from '@/contexts/AuthContext';
+import { cn } from "@/lib/utils";
 
 export function PlayersManager() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -501,10 +502,10 @@ export function PlayersManager() {
               </button>
               <button
                 onClick={() => { dismissConfirm(); confirmAction.onConfirm(); }}
-                className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition ${
-                  confirmAction.confirmStyle === 'danger' ? 'bg-rose-500 hover:bg-rose-600' :
-                  confirmAction.confirmStyle === 'warning' ? 'bg-amber-500 hover:bg-amber-600' :
-                  'bg-primary hover:bg-primary/90'
+                className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-bold transition ${
+                  confirmAction.confirmStyle === 'danger' ? 'bg-rose-500 hover:bg-rose-600 text-white' :
+                  confirmAction.confirmStyle === 'warning' ? 'bg-amber-500 hover:bg-amber-600 text-white' :
+                  'bg-primary hover:bg-primary/90 text-primary-foreground'
                 }`}
               >
                 {confirmAction.confirmLabel}
@@ -622,7 +623,7 @@ export function PlayersManager() {
               value={`${sortField}-${sortDirection}`}
               onChange={(e) => {
                 const [field, dir] = e.target.value.split("-");
-                setSortField(field);
+                setSortField(field as any);
                 setSortDirection(dir as "asc" | "desc");
               }}
               className="flex-1 sm:flex-none min-w-0 lg:hidden px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-muted-foreground dark:text-slate-300 font-bold text-xs focus:ring-2 focus:ring-primary outline-none transition"
@@ -724,18 +725,28 @@ export function PlayersManager() {
                             </span>
                           )}
                           {isMainAdmin && (
-                            <select
-                              value={p.role || "user"}
-                              onChange={(e) => handleRoleChange(p.id, p.full_name, e.target.value)}
-                              disabled={busy}
-                              className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-muted-foreground outline-none focus:ring-1 focus:ring-primary transition disabled:opacity-50"
-                            >
-                              <option value="user">Reg</option>
-                              <option value="umpire">Ump</option>
-                              <option value="admin">Adm</option>
-                              <option value="master_admin">M-Adm</option>
-                            </select>
-
+                            <div className="relative inline-block ml-1">
+                              <select
+                                value={p.role || "user"}
+                                onChange={(e) => handleRoleChange(p.id, p.full_name, e.target.value)}
+                                disabled={busy}
+                                className={cn(
+                                  "appearance-none px-2 pr-5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider outline-none focus:ring-2 focus:ring-primary/50 transition-all disabled:opacity-50 cursor-pointer shadow-sm border",
+                                  p.role === "master_admin" ? "bg-rose-500/10 text-rose-500 border-rose-500/20 hover:bg-rose-500/20" :
+                                  p.role === "admin" ? "bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20" :
+                                  p.role === "umpire" ? "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20" :
+                                  "bg-slate-100 dark:bg-slate-800 text-muted-foreground border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700"
+                                )}
+                              >
+                                <option value="user" className="bg-slate-900 text-slate-200">Reg</option>
+                                <option value="umpire" className="bg-slate-900 text-slate-200">Ump</option>
+                                <option value="admin" className="bg-slate-900 text-slate-200">Adm</option>
+                                <option value="master_admin" className="bg-slate-900 text-slate-200">M-Adm</option>
+                              </select>
+                              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1.5 opacity-50">
+                                <svg className="w-2.5 h-2.5 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
+                              </div>
+                            </div>
                           )}
                         </div>
                       </td>

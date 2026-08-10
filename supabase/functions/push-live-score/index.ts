@@ -3,7 +3,7 @@ import { SignJWT, importPKCS8 } from "https://esm.sh/jose@5.2.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, cache-control, pragma, expires",
 };
 
 async function getFirebaseAccessToken(): Promise<string> {
@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { message, match_id } = await req.json() as { message: string; match_id?: string };
+    const { message, match_id, title } = await req.json() as { message: string; match_id?: string; title?: string };
     if (!message) {
       return new Response(JSON.stringify({ error: "message required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
         const payload = {
           message: {
             token: t.token,
-            notification: { title: "🏸 Live Match Score", body: message },
+            notification: { title: title || "🏸 Live Match Score", body: message },
             data: { type: "live_score", action: "view_live_score", match_id: match_id ?? "" },
             android: {
               priority: "high",

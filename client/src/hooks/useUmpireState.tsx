@@ -765,12 +765,13 @@ export function useUmpireState({
           }
         }
   
-        const notifMsg = `🏆 ${match.isFriendly ? "Friendly" : "Tournament"} Match: ${match.t1.p1Name}${match.t1.p2Name ? ` & ${match.t1.p2Name}` : ""} vs ${match.t2.p1Name}${match.t2.p2Name ? ` & ${match.t2.p2Name}` : ""} — ${match.setsHistory.join(", ")}`;
+        const notifTitle = match.isFriendly ? "🏸 Friendly Match Result" : "🏆 Tournament Match Result";
+        const notifMsg = `${match.t1.p1Name}${match.t1.p2Name ? ` & ${match.t1.p2Name}` : ""} vs ${match.t2.p1Name}${match.t2.p2Name ? ` & ${match.t2.p2Name}` : ""} — ${match.setsHistory.join(", ")}`;
         try {
-          await supabase.from("site_data").upsert({ key: "match_alert", value: { message: notifMsg, time: Date.now() } });
+          await supabase.from("site_data").upsert({ key: "match_alert", value: { title: notifTitle, message: notifMsg, time: Date.now() } });
           await supabase.rpc("push_match_alert", { p_message: notifMsg });
           await supabase.functions.invoke("push-live-score", {
-            body: { message: notifMsg, match_id: newMatchId || match.id },
+            body: { message: notifMsg, title: notifTitle, match_id: newMatchId || match.id },
           });
           const authUser = (await supabase.auth.getUser()).data.user;
           const isUuid = (s?: string) => typeof s === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);

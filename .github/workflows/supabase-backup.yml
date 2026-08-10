@@ -1,0 +1,59 @@
+name: Daily Supabase Backup
+
+on:
+  schedule:
+    # Runs at 00:00 UTC every day
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    # Allows manual triggering from the GitHub Actions tab
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      
+      - name: Create Backup Directory
+        run: |
+          mkdir -p supabase_backup
+          mkdir -p supabase_backup/storage
+      
+      - name: Backup Database (Schema & Data)
+        run: supabase db dump --db-url ${{ secrets.SUPABASE_DB_URL }} -f supabase_backup/database.sql
+        
+      # Note: For storage backup in CI without linking, we need project ref. 
+      # Using --linked requires supabase login. 
+      # If they want storage backed up in CI, they need SUPABASE_ACCESS_TOKEN and SUPABASE_PROJECT_ID secrets to link,
+      # but db dump with db-url is simpler. We'll include db backup here, and if they configure tokens, they can uncomment the storage part.
+      - name: Backup Storage Buckets
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+        run: |
+          if [ -n "$SUPABASE_ACCESS_TOKEN" ] && [ -n "$SUPABASE_PROJECT_ID" ]; then
+            echo "Linking project..."
+            supabase link --project-ref $SUPABASE_PROJECT_ID --password ${{ secrets.SUPABASE_DB_PASSWORD }} || true
+            echo "Downloading storage buckets..."
+            supabase storage cp -r ss:/// supabase_backup/storage/ --linked --experimental
+          else
+            echo "Skipping storage backup (SUPABASE_ACCESS_TOKEN and SUPABASE_PROJECT_ID not set)."
+          fi
+          
+      - name: Archive Backup
+        run: |
+          cd supabase_backup
+          zip -r ../backup-$(date +'%Y-%m-%d').zip .
+          
+      - name: Upload Backup Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-backup-${{ github.run_id }}
+          path: backup-*.zip
+          retention-days: 30

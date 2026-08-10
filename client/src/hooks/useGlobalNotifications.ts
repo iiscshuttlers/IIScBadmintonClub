@@ -184,12 +184,20 @@ export function useGlobalNotifications() {
               if (data.time !== lastAdminPushRef.current) {
                 lastAdminPushRef.current = data.time;
                 playWhistleSound();
-                toast.info("🏆 Match Notification", { description: data.message });
+                const matchTitle = data.title || "🏆 Live Match Update";
+                toast.success(matchTitle, { 
+                  description: data.message,
+                  action: {
+                    label: "View",
+                    onClick: () => window.location.href = `${import.meta.env.BASE_URL || "/"}pulse`
+                  },
+                  className: "bg-background border-primary text-foreground shadow-lg dark:bg-slate-800 dark:border-sky-500 dark:text-sky-50",
+                });
                 
                 if (Capacitor.isNativePlatform()) {
                   LocalNotifications.schedule({
                     notifications: [{
-                      title: "Live Match Score",
+                      title: matchTitle,
                       body: data.message,
                       id: Math.floor(Math.random() * 1000000),
                       schedule: { at: new Date(Date.now() + 100) },
@@ -197,8 +205,8 @@ export function useGlobalNotifications() {
                     }]
                   }).catch(console.warn);
                 } else {
-                  showWebNotification("Live Match Score", data.message, () => {
-                    window.location.href = `${import.meta.env.BASE_URL || "/"}feed`;
+                  showWebNotification(matchTitle, data.message, () => {
+                    window.location.href = `${import.meta.env.BASE_URL || "/"}pulse`;
                   });
                 }
               }

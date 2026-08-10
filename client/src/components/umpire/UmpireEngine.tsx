@@ -12,7 +12,6 @@ import { toast } from "sonner";
 import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
 import { Capacitor } from "@capacitor/core";
 import { App as CapacitorApp } from "@capacitor/app";
-import { UmpireBackground } from "@/lib/umpireBackground";
 import { Pip } from "@/lib/pip";
 import { PlayerMotion, type MotionData } from "@/lib/playerMotion";
 import { WidgetManager } from "@/lib/widgetManager";
@@ -400,35 +399,13 @@ export function UmpireEngine({
     lastPointLogLenRef.current = log.length;
   }, [match?.pointLog, isMotionTracking]);
 
-  // ── Native Background Service & Lock Screen (Phase 2) ──
+  // Sync Home Screen Widget with live score
   useEffect(() => {
     if (!Capacitor.isNativePlatform() || match?.status !== "playing") return;
-    
-    // Auto-start the background keep-alive service
-    UmpireBackground.startService().catch(console.error);
-    
-    // Listen for Lock Screen / Notification +1 Point Actions
-    const listenerPromise = UmpireBackground.addListener("umpireAction", (info) => {
-      if (info.team === 1 || info.team === 2) {
-        addPoint(info.team);
-      }
-    });
-    
-    return () => {
-      UmpireBackground.stopService().catch(console.error);
-      listenerPromise.then(l => l.remove()).catch(console.error);
-    };
-  }, [match?.status, match?.id, addPoint]);
-
-  // Sync background notification score and Widget
-  useEffect(() => {
-    if (!Capacitor.isNativePlatform() || match?.status !== "playing") return;
-    const scoreStr = `${match.t1.score} - ${match.t2.score}`;
     const t1Label = match.t1.teamName || match.t1.p1Name;
     const t2Label = match.t2.teamName || match.t2.p1Name;
-    UmpireBackground.updateScore({ score: scoreStr, teams: `${t1Label} vs ${t2Label}` }).catch(console.error);
     
-    // Also push to Home Screen Widget
+    // Push to Home Screen Widget
     WidgetManager.updateWidget({
       title: match.tournament || "IISc Badminton",
       team1: t1Label,
@@ -1012,8 +989,14 @@ export function UmpireEngine({
           {/* ── Point-by-Point Log ── */}
           {showLog && (
             <div className="mt-4 bg-slate-800/60 border border-slate-700 rounded-2xl overflow-hidden max-h-64 overflow-y-auto">
-              <div className="px-4 py-2.5 border-b border-slate-700 flex items-center justify-between">
-                <span className="text-xs font-black text-muted-foreground uppercase tracking-wider">Match Log</span>
+              <div className="px-4 py-2.5 border-b border-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                <div className="flex flex-col">
+                  <span className="text-xs font-black text-muted-foreground uppercase tracking-wider">Match Log</span>
+                  <div className="flex items-center gap-3 mt-1 text-[10px]">
+                    <span className="text-primary font-bold">T1: {match.t1.p1Name}{match.t1.p2Name && ` / ${match.t1.p2Name}`}</span>
+                    <span className="text-sky-400 font-bold">T2: {match.t2.p1Name}{match.t2.p2Name && ` / ${match.t2.p2Name}`}</span>
+                  </div>
+                </div>
                 <span className="text-xs text-muted-foreground">{match.pointLog.length} events</span>
               </div>
               {match.pointLog.length === 0 ? (
@@ -1064,17 +1047,26 @@ export function UmpireEngine({
                 onClick={async () => {
                   const t1Name = match.t1.p2Name ? `${match.t1.p1Name} & ${match.t1.p2Name}` : match.t1.p1Name;
                   const t2Name = match.t2.p2Name ? `${match.t2.p1Name} & ${match.t2.p2Name}` : match.t2.p1Name;
-                  const fullScore = `${t1Name} [${match.t1.score} - ${match.t2.score}] ${t2Name}`;
-                  const scoreMessage = `🏸 Live Score: ${fullScore}`;
+                  
+                  // Construct sets info (e.g. 21-19, 15-21 or "Game 1" if empty)
+                  const setsHistory = match.setsHistory.length > 0 ? match.setsHistory.join(", ") : "Set 1";
+                  const matchTitle = match.category ? `🏸 ${match.category} Live Score` : "🏸 Live Match Score";
+                  
+                  // E.g. "Raja vs Aditya | Sets: 21-19 | Game: 10-10"
+                  const scoreMessage = `${t1Name} vs ${t2Name} | Sets: ${setsHistory} | Game: ${match.t1.score}-${match.t2.score}`;
 
                   // Realtime in-app banner for users currently on the site
+                  await supabase.from("site_data").upsert({ 
+                    key: "match_alert", 
+                    value: { title: matchTitle, message: scoreMessage, time: Date.now() } 
+                  });
                   const { error } = await supabase.rpc("push_match_alert", {
-                    p_message: scoreMessage,
+                    p_message: scoreMessage, // fallback for older clients if needed
                   });
 
                   // Actual FCM push so it also reaches devices with the app closed/backgrounded
                   const { data: pushResp, error: pushErr } = await supabase.functions.invoke("push-live-score", {
-                    body: { message: scoreMessage, match_id: match.id },
+                    body: { message: scoreMessage, title: matchTitle, match_id: match.id },
                   });
 
                   if (error && pushErr) {

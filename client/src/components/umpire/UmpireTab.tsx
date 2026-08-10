@@ -4,7 +4,8 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { UmpireEngine } from "./UmpireEngine";
 import { BwfMatchState, MatchEditState } from "@/types/umpire";
-import { Play, Tv2, AlertTriangle, Swords, Lock, CalendarX } from "lucide-react";
+import { Play, Tv2, AlertTriangle, Swords, Lock, CalendarX, ChevronDown, ChevronUp, Clock } from "lucide-react";
+import { format } from "date-fns";
 import { useUmpireStore } from "@/store/umpireStore";
 import { fetchSiteData } from "@/lib/siteData";
 import { BeautifulScoreDisplay } from "@/components/feed/BeautifulScoreDisplay";
@@ -14,9 +15,9 @@ const SETUP_STORAGE_KEY = "umpire_setup_matches_v1";
 
 export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean }) {
   const { session, isUmpire, profile } = useAuth();
-  // Only master_admin and umpire roles can run tournament matches
+  // Only master_admin, admin, and umpire roles can run tournament matches
   const hasElevatedRole = isUmpire && (
-    profile?.role === 'master_admin' || profile?.role === 'umpire'
+    profile?.role === 'master_admin' || profile?.role === 'admin' || profile?.role === 'umpire'
   );
   const [hasActiveTournament, setHasActiveTournament] = useState(false);
   // canRunTournament = elevated role + active tournament exists
@@ -332,6 +333,7 @@ type RecentMatch = {
 function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditState) => void, isTournament: boolean }) {
   const { profile, isAdmin } = useAuth();
   const [recent, setRecent] = useState<RecentMatch[]>([]);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const [filterFormat, setFilterFormat] = useState<string>("ALL");
 
@@ -350,8 +352,7 @@ function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditSt
         if (isAdmin) {
           query = query.limit(50);
         } else {
-          const fifteenMinsAgo = new Date(Date.now() - 900000).toISOString();
-          query = query.eq("scored_by", profile.id).gte("scored_at", fifteenMinsAgo).limit(10);
+          query = query.eq("scored_by", profile.id).limit(30);
         }
         const res = await query;
         if (res.error) {
@@ -368,8 +369,7 @@ function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditSt
         if (isAdmin) {
           query = query.limit(50);
         } else {
-          const fifteenMinsAgo = new Date(Date.now() - 900000).toISOString();
-          query = query.eq("submitted_by", profile.id).gte("created_at", fifteenMinsAgo).limit(10);
+          query = query.eq("submitted_by", profile.id).limit(30);
         }
         const res = await query;
         if (res.error) {
@@ -391,24 +391,36 @@ function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditSt
 
   return (
     <div className="bg-slate-900 rounded-[2rem] p-6 shadow-xl border border-slate-800">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-        <h3 className="text-xl font-black text-foreground">Recent Submissions (Editable for 15m)</h3>
-        <div className="flex bg-slate-800 p-1 rounded-xl w-fit overflow-x-auto hide-scrollbar">
-          {["ALL", "MS", "WS", "MD", "WD", "XD"].map(f => (
-            <button
-              key={f}
-              onClick={() => setFilterFormat(f)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-black whitespace-nowrap transition-all ${
-                filterFormat === f ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-primary-foreground"
-              }`}
-            >
-              {f}
-            </button>
-          ))}
+      <div 
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 cursor-pointer select-none"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <div className="flex items-center gap-2">
+          <h3 className="text-xl font-black text-foreground">Recent Submissions</h3>
+          <div className="p-1 rounded-full hover:bg-slate-800 transition text-slate-400">
+            {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+          </div>
         </div>
+        {isExpanded && (
+          <div className="flex bg-slate-800 p-1 rounded-xl w-fit overflow-x-auto hide-scrollbar" onClick={(e) => e.stopPropagation()}>
+            {["ALL", "MS", "WS", "MD", "WD", "XD"].map(f => (
+              <button
+                key={f}
+                onClick={() => setFilterFormat(f)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-black whitespace-nowrap transition-all ${
+                  filterFormat === f ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-primary-foreground"
+                }`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
-      <div className="space-y-3">
-        {recent.filter(m => {
+      
+      {isExpanded && (
+        <div className="space-y-3 mt-4">
+          {recent.filter(m => {
           const isByeMatch = m.team1_label === "BYE" || m.team2_label === "BYE" || m.score === "BYE" || (m.team1_label || "").toUpperCase().includes("BYE") || (m.team2_label || "").toUpperCase().includes("BYE");
           if (isByeMatch) return false;
           if (filterFormat === "ALL") return true;
@@ -476,17 +488,35 @@ function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditSt
                   )}
                   <BeautifulScoreDisplay score={m.score} />
                 </div>
+                <div className="flex items-center gap-1.5 mt-2 text-xs text-slate-500 font-medium">
+                  <Clock className="w-3.5 h-3.5" />
+                  {format(new Date(m.created_at || new Date()), "MMM d, h:mm a")}
+                </div>
               </div>
-              <button 
-                onClick={() => onEdit({ ...m, is_edit_mode: true } as MatchEditState)}
-                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-foreground text-xs font-bold rounded-lg transition-colors shrink-0"
-              >
-                Edit Score
-              </button>
+              {(() => {
+                const isEditable = Date.now() - new Date(m.created_at || new Date()).getTime() <= 10 * 60 * 1000;
+                return isEditable ? (
+                  <button 
+                    onClick={() => onEdit({ ...m, is_edit_mode: true } as MatchEditState)}
+                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-foreground text-xs font-bold rounded-lg transition-colors shrink-0"
+                  >
+                    Edit Score
+                  </button>
+                ) : (
+                  <button 
+                    disabled
+                    className="px-4 py-2 bg-slate-800 border border-slate-700 text-slate-500 cursor-not-allowed text-xs font-bold rounded-lg shrink-0"
+                    title="Editing is locked after 10 minutes"
+                  >
+                    Locked
+                  </button>
+                );
+              })()}
             </div>
           );
         })}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

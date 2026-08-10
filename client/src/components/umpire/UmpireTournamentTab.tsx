@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Loader2, Swords, MapPin, Clock, Settings2, ChevronRight,
-  ChevronLeft, Trophy, Users, Play, CalendarDays,
+  ChevronLeft, ChevronDown, Trophy, Users, Play, CalendarDays,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getCourtColor, cn } from "@/lib/utils";
@@ -59,6 +59,12 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
   const [step, setStep] = useState<"format" | "match" | "confirm">("format");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedMatch, setSelectedMatch] = useState<TournamentMatchForUmpire | null>(null);
+
+  // Filters for upcoming scheduled matches
+  const [upcomingSearch, setUpcomingSearch] = useState("");
+  const [upcomingFormat, setUpcomingFormat] = useState("ALL");
+  const [upcomingDate, setUpcomingDate] = useState("ALL");
+  const [collapsedRounds, setCollapsedRounds] = useState<Record<string, boolean>>({});
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -125,69 +131,146 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
 
   // ── Step 1: Format selection ─────────────────────────────────────────────────
   if (step === "format") {
-    const upcomingScheduled = allMatches
+    let upcomingScheduled = allMatches
       .filter((m) => m.status === "scheduled" && m.scheduled_at)
+      .filter((m) => {
+        const t1 = m.team1_label;
+        const t2 = m.team2_label;
+        const isBye = t1 === "BYE" || t2 === "BYE" || t1?.includes(" BYE ") || t2?.includes(" BYE ") || t1?.toUpperCase().includes("BYE") || t2?.toUpperCase().includes("BYE");
+        return !isBye;
+      })
       .sort((a, b) => new Date(a.scheduled_at!).getTime() - new Date(b.scheduled_at!).getTime());
+
+    const availableDates = [...new Set(upcomingScheduled.map(m => new Date(m.scheduled_at!).toLocaleDateString()))];
+
+    if (upcomingSearch.trim()) {
+      const lowerQ = upcomingSearch.toLowerCase();
+      upcomingScheduled = upcomingScheduled.filter(m => 
+        (m.team1_label?.toLowerCase() || "").includes(lowerQ) || 
+        (m.team2_label?.toLowerCase() || "").includes(lowerQ) || 
+        (m.match_code?.toLowerCase() || "").includes(lowerQ) ||
+        (m.court_number?.toLowerCase() || "").includes(lowerQ)
+      );
+    }
+    if (upcomingFormat !== "ALL") {
+      upcomingScheduled = upcomingScheduled.filter(m => m.category === upcomingFormat);
+    }
+    if (upcomingDate !== "ALL") {
+      upcomingScheduled = upcomingScheduled.filter(m => new Date(m.scheduled_at!).toLocaleDateString() === upcomingDate);
+    }
 
     return (
       <div className="space-y-4">
-        {upcomingScheduled.length > 0 && (
+        {allMatches.some((m) => m.status === "scheduled" && m.scheduled_at) && (
           <div className="mb-6 space-y-3">
-            <div className="flex items-center gap-2">
-              <CalendarDays className="w-5 h-5 text-blue-400" />
-              <h3 className="text-sm font-black text-foreground">Upcoming Scheduled Matches</h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <CalendarDays className="w-5 h-5 text-blue-400" />
+                <h3 className="text-sm font-black text-foreground">Upcoming Scheduled Matches</h3>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <input 
+                  type="text" 
+                  placeholder="Search player, match #..."
+                  value={upcomingSearch}
+                  onChange={e => setUpcomingSearch(e.target.value)}
+                  className="bg-slate-800 border border-slate-700 text-sm text-foreground rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary w-[160px]"
+                />
+                <select 
+                  value={upcomingFormat}
+                  onChange={e => setUpcomingFormat(e.target.value)}
+                  className="bg-slate-800 border border-slate-700 text-sm text-foreground rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary cursor-pointer"
+                >
+                  <option value="ALL">All Formats</option>
+                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+                {availableDates.length > 0 && (
+                  <select 
+                    value={upcomingDate}
+                    onChange={e => setUpcomingDate(e.target.value)}
+                    className="bg-slate-800 border border-slate-700 text-sm text-foreground rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary cursor-pointer"
+                  >
+                    <option value="ALL">All Dates</option>
+                    {availableDates.map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                )}
+              </div>
             </div>
-            <div className="space-y-2">
-              {upcomingScheduled.map((m) => {
-                const t1 = m.team1_label;
-                const t2 = m.team2_label;
-                const isBye = t1 === "BYE" || t2 === "BYE" || t1?.includes(" BYE ") || t2?.includes(" BYE ") || t1?.toUpperCase().includes("BYE") || t2?.toUpperCase().includes("BYE");
-                const noPlayers = !t1 || !t2 || isBye;
+            
+            {upcomingScheduled.length === 0 ? (
+              <div className="p-4 rounded-2xl border border-slate-700 bg-slate-800/50 text-center text-muted-foreground text-sm">
+                No scheduled matches match your filters.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {upcomingScheduled.map((m) => {
+                  const noPlayers = !m.team1_label || !m.team2_label;
 
-                return (
+                  return (
                   <button
                     key={m.id}
                     disabled={noPlayers}
                     onClick={() => { setSelectedMatch(m); setStep("confirm"); }}
-                    className={`w-full p-4 rounded-2xl border text-left transition-all group ${
+                    className={cn(
+                      "relative w-full p-4 sm:p-5 rounded-2xl border text-left transition-all duration-300 group overflow-hidden shadow-sm",
                       noPlayers
-                        ? "bg-slate-800/50 border-slate-800 opacity-50 cursor-not-allowed"
-                        : "bg-slate-800 border-slate-700 hover:border-primary"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">{m.category} • {m.match_code}</span>
-                      {m.court_number && (
-                        <span className={cn("flex items-center gap-1 text-[10px] font-bold", getCourtColor(m.court_number))}>
-                          <MapPin className="w-2.5 h-2.5" /> Court {m.court_number}
-                        </span>
-                      )}
-                      {m.scheduled_at && (
-                        <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                          <Clock className="w-2.5 h-2.5" />
-                          {new Date(m.scheduled_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-foreground font-bold text-sm flex-1 truncate">
-                        {m.team1_label ?? "TBD"}
-                      </span>
-                      <span className="text-[10px] font-black text-rose-400 shrink-0">VS</span>
-                      <span className="text-foreground font-bold text-sm flex-1 truncate text-right">
-                        {m.team2_label ?? "TBD"}
-                      </span>
-                      {!noPlayers && (
-                        <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0 ml-1" />
-                      )}
-                    </div>
-                    {noPlayers && (
-                      <p className="text-[10px] text-muted-foreground mt-1">Waiting for previous round results</p>
+                        ? "bg-slate-800/40 border-slate-800/50 opacity-60 cursor-not-allowed"
+                        : "bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 hover:border-primary/50 hover:shadow-primary/20 hover:shadow-lg hover:-translate-y-1"
                     )}
+                  >
+                    {!noPlayers && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                    )}
+                    
+                    <div className="relative flex flex-col gap-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider bg-slate-950/50 px-2 py-1 rounded-md border border-slate-800">
+                          {m.category} • {m.match_code}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          {m.court_number && (
+                            <span className={cn("flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md bg-slate-950/50 border border-slate-800", getCourtColor(m.court_number))}>
+                              <MapPin className="w-3 h-3" /> C{m.court_number}
+                            </span>
+                          )}
+                          {m.scheduled_at && (
+                            <span className="flex items-center gap-1 text-[10px] font-medium text-slate-300 px-2 py-1 rounded-md bg-slate-950/50 border border-slate-800">
+                              <Clock className="w-3 h-3 text-primary" />
+                              {new Date(m.scheduled_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 sm:gap-4 mt-1">
+                        <div className="flex-1 min-w-0">
+                          <span className="text-slate-100 font-bold text-sm sm:text-base block truncate group-hover:text-primary transition-colors">
+                            {m.team1_label ?? "TBD"}
+                          </span>
+                        </div>
+                        <div className="shrink-0 flex flex-col items-center justify-center px-2 sm:px-3">
+                          <div className="bg-slate-950/80 border border-slate-700/80 text-[10px] font-black text-rose-400 px-2 sm:px-3 py-1 rounded-full shadow-inner ring-1 ring-white/5">
+                            VS
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0 text-right">
+                          <span className="text-slate-100 font-bold text-sm sm:text-base block truncate group-hover:text-primary transition-colors">
+                            {m.team2_label ?? "TBD"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {noPlayers && (
+                        <p className="text-[11px] text-muted-foreground text-center mt-2 italic border-t border-slate-800/50 pt-2">
+                          Waiting for previous round results
+                        </p>
+                      )}
+                    </div>
                   </button>
                 );
               })}
             </div>
+            )}
           </div>
         )}
 
@@ -250,61 +333,118 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
         <div className="space-y-4">
           {rounds.map((roundName) => {
             const roundMatches = matchesForCategory.filter((m) => m.round_name === roundName);
+            // Default to true (collapsed) if not explicitly set in state
+            const isCollapsed = collapsedRounds[roundName] ?? true;
             return (
               <div key={roundName}>
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">{roundName}</p>
-                <div className="space-y-2">
-                  {roundMatches.map((m) => {
-                    const isLive = m.status === "in_progress";
-                    const noPlayers = !m.team1_label || !m.team2_label || m.team1_label === "TBD" || m.team2_label === "TBD";
+                <button 
+                  onClick={() => setCollapsedRounds(prev => ({ ...prev, [roundName]: !(prev[roundName] ?? true) }))}
+                  className={cn(
+                    "flex items-center justify-between w-full text-left mb-3 px-4 py-2.5 rounded-xl transition-all duration-300 group shadow-sm",
+                    !isCollapsed ? "bg-slate-800/80 border border-slate-700 hover:border-slate-600" : "bg-slate-800/40 border border-transparent hover:bg-slate-800/60"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "flex items-center justify-center w-6 h-6 rounded-md transition-colors",
+                      !isCollapsed ? "bg-primary/20 text-primary" : "bg-slate-700 text-slate-400 group-hover:text-slate-300 group-hover:bg-slate-600"
+                    )}>
+                      {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </div>
+                    <p className={cn(
+                      "text-xs font-black uppercase tracking-widest transition-colors",
+                      !isCollapsed ? "text-slate-200" : "text-slate-400 group-hover:text-slate-300"
+                    )}>{roundName}</p>
+                  </div>
+                  {!isCollapsed && <span className="text-[10px] font-bold text-slate-400 bg-slate-900 border border-slate-700 px-2 py-0.5 rounded-full">{roundMatches.length}</span>}
+                </button>
+                
+                {!isCollapsed && (
+                  <div className="space-y-2">
+                    {roundMatches.map((m) => {
+                      const isLive = m.status === "in_progress";
+                      const noPlayers = !m.team1_label || !m.team2_label || m.team1_label === "TBD" || m.team2_label === "TBD";
 
-                    return (
-                      <button
-                        key={m.id}
-                        disabled={noPlayers}
-                        onClick={() => { setSelectedMatch(m); setStep("confirm"); }}
-                        className={`w-full p-4 rounded-2xl border text-left transition-all group ${
-                          isLive
-                            ? "bg-amber-950/20 border-amber-700 hover:border-amber-500"
-                            : noPlayers
-                              ? "bg-slate-800/50 border-slate-800 opacity-50 cursor-not-allowed"
-                              : "bg-slate-800 border-slate-700 hover:border-primary"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">{m.match_code}</span>
-                          {isLive && <span className="text-[10px] font-black text-amber-400 animate-pulse">● IN PROGRESS</span>}
-                          {m.court_number && (
-                            <span className={cn("flex items-center gap-1 text-[10px] font-bold", getCourtColor(m.court_number))}>
-                              <MapPin className="w-2.5 h-2.5" /> Court {m.court_number}
-                            </span>
+                      return (
+                        <button
+                          key={m.id}
+                          disabled={noPlayers}
+                          onClick={() => { setSelectedMatch(m); setStep("confirm"); }}
+                          className={cn(
+                            "relative w-full p-4 sm:p-5 rounded-2xl border text-left transition-all duration-300 group overflow-hidden shadow-sm",
+                            isLive
+                              ? "bg-gradient-to-br from-amber-950/40 to-slate-900 border-amber-500/50 hover:border-amber-400 hover:shadow-amber-500/20 hover:-translate-y-1"
+                              : noPlayers
+                                ? "bg-slate-800/40 border-slate-800/50 opacity-60 cursor-not-allowed"
+                                : "bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 hover:border-primary/50 hover:shadow-primary/20 hover:shadow-lg hover:-translate-y-1"
                           )}
-                          {m.scheduled_at && (
-                            <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                              <Clock className="w-2.5 h-2.5" />
-                              {new Date(m.scheduled_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
-                            </span>
+                        >
+                          {!noPlayers && !isLive && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                           )}
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-foreground font-bold text-sm flex-1 truncate">
-                            {m.team1_label ?? "TBD"}
-                          </span>
-                          <span className="text-[10px] font-black text-rose-400 shrink-0">VS</span>
-                          <span className="text-foreground font-bold text-sm flex-1 truncate text-right">
-                            {m.team2_label ?? "TBD"}
-                          </span>
-                          {!noPlayers && (
-                            <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0 ml-1" />
+                          {isLive && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-amber-500/10 to-amber-500/0 opacity-50 group-hover:opacity-100 transition-opacity duration-500 animate-pulse pointer-events-none" />
                           )}
-                        </div>
-                        {noPlayers && (
-                          <p className="text-[10px] text-muted-foreground mt-1">Waiting for previous round results</p>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
+
+                          <div className="relative flex flex-col gap-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider bg-slate-950/50 px-2 py-1 rounded-md border border-slate-800">
+                                  {m.match_code}
+                                </span>
+                                {isLive && (
+                                  <span className="text-[10px] font-black text-amber-400 flex items-center gap-1.5 bg-amber-950/50 px-2 py-1 rounded-md border border-amber-900/50">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></div>LIVE
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {m.court_number && (
+                                  <span className={cn("flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md bg-slate-950/50 border border-slate-800", getCourtColor(m.court_number))}>
+                                    <MapPin className="w-3 h-3" /> C{m.court_number}
+                                  </span>
+                                )}
+                                {m.scheduled_at && (
+                                  <span className="flex items-center gap-1 text-[10px] font-medium text-slate-300 px-2 py-1 rounded-md bg-slate-950/50 border border-slate-800">
+                                    <Clock className="w-3 h-3 text-primary" />
+                                    {new Date(m.scheduled_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-2 sm:gap-4 mt-1">
+                              <div className="flex-1 min-w-0">
+                                <span className="text-slate-100 font-bold text-sm sm:text-base block truncate group-hover:text-primary transition-colors">
+                                  {m.team1_label ?? "TBD"}
+                                </span>
+                              </div>
+                              <div className="shrink-0 flex flex-col items-center justify-center px-2 sm:px-3">
+                                <div className={cn(
+                                  "border text-[10px] font-black px-2 sm:px-3 py-1 rounded-full shadow-inner ring-1 ring-white/5",
+                                  isLive ? "bg-amber-950/80 border-amber-700/80 text-amber-500" : "bg-slate-950/80 border-slate-700/80 text-rose-400"
+                                )}>
+                                  VS
+                                </div>
+                              </div>
+                              <div className="flex-1 min-w-0 text-right">
+                                <span className="text-slate-100 font-bold text-sm sm:text-base block truncate group-hover:text-primary transition-colors">
+                                  {m.team2_label ?? "TBD"}
+                                </span>
+                              </div>
+                            </div>
+
+                            {noPlayers && (
+                              <p className="text-[11px] text-muted-foreground text-center mt-2 italic border-t border-slate-800/50 pt-2">
+                                Waiting for previous round results
+                              </p>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           })}

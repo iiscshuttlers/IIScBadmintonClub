@@ -7,7 +7,7 @@ interface LogEntry {
   id: number;
   admin_email: string;
   action: string;
-  details?: string;
+  details?: any;
   created_at: string;
 }
 
@@ -25,8 +25,8 @@ export function AdminActivityLog() {
       .order("created_at", { ascending: false })
       .range(pageNum * PAGE_SIZE, (pageNum + 1) * PAGE_SIZE - 1);
     if (!error && data) {
-      if (pageNum === 0) setLogs(data);
-      else setLogs((prev) => [...prev, ...data]);
+      if (pageNum === 0) setLogs(data as any);
+      else setLogs((prev) => [...prev, ...(data as any)]);
     } else if (error) {
       // Table may not exist yet
       if (error.code === "42P01") {

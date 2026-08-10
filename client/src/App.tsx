@@ -160,6 +160,11 @@ function AppRoutes() {
           <Route path="/privacy" component={PrivacyPolicy} />
           <Route path="/terms" component={TermsOfService} />
           <Route path="/glossary" component={Glossary} />
+          <Route path="/login-callback" component={() => {
+            const [, setLoc] = useLocation();
+            useEffect(() => { setLoc("/"); }, [setLoc]);
+            return null;
+          }} />
 
           <Route path="/admin"><ProtectedRoute><SiteAdmin /></ProtectedRoute></Route>
           <Route path="/tournament-admin"><ProtectedRoute><TournamentAdmin /></ProtectedRoute></Route>
@@ -365,17 +370,40 @@ function AppContent() {
             
             // Preserve the full path including query params and hash, strictly sanitized
             const safePath = path.replace(/[^a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,;=%]/g, "");
-            setLocation("/" + safePath);
+            
+            // If the redirect was specifically to our login-callback, 
+            // redirect to the home page instead since the router doesn't have a /login-callback route
+            if (safePath.startsWith("login-callback")) {
+              setLocation("/");
+            } else {
+              setLocation("/" + safePath);
+            }
             return;
           }
           // Handle https URLs
           if (url.includes("iiscbadmintonclub.github.io")) {
+            // CRITICAL: Feed auth tokens to Supabase before routing
+            if (url.includes('#access_token=') || url.includes('?code=')) {
+              if (url.includes('#')) {
+                const hashPart = url.substring(url.indexOf('#'));
+                if (/^[a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,;=%]+$/.test(hashPart)) {
+                  window.location.hash = hashPart;
+                  supabase.auth.getSession();
+                }
+              }
+            }
+
             const parsed = new URL(url);
             // Extract everything after /iiscshuttlers, preserving query + hash
-            const pathAfterBase = parsed.pathname.replace(/^\/iiscshuttlers/, "") || "/";
+            const pathAfterBase = parsed.pathname.replace(/^\/iiscshuttlers\/?/, "") || "/";
             const fullPath = pathAfterBase + parsed.search + parsed.hash;
             const safeFullPath = fullPath.replace(/[^a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,;=%]/g, "");
-            setLocation(safeFullPath);
+            
+            if (safeFullPath.startsWith("login-callback") || safeFullPath.startsWith("/login-callback")) {
+              setLocation("/");
+            } else {
+              setLocation(safeFullPath.startsWith("/") ? safeFullPath : "/" + safeFullPath);
+            }
           }
         } catch {
           // Fallback for malformed URLs
