@@ -244,11 +244,30 @@ export function useJoinAuth() {
     }
   };
 
+  const handleMicrosoftSignIn = async () => {
+    setLoading(true);
+    setErrorMsg("");
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "azure",
+        options: {
+          scopes: "email",
+          redirectTo: "https://iiscshuttlers.github.io/IIScBadmintonClub/login-callback",
+        },
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      const msg = typeof err?.message === "string" && err.message !== "{}" ? err.message : "";
+      setErrorMsg(msg || "Failed to initialize Microsoft Sign In.");
+      setLoading(false);
+    }
+  };
+
   return {
     mode, setMode, loading, email, setEmail, password, setPassword,
     confirm, setConfirm, showPwd, setShowPwd, otp, setOtp,
     infoMsg, setInfoMsg, errorMsg, setErrorMsg, agreedToTerms, setAgreedToTerms,
     inactivityLogout, setInactivityLogout, reset,
-    handleSignIn, handleSignUp, handleResendLink, handleSendOtp, handleVerifyOtp, handleGoogleSignIn
+    handleSignIn, handleSignUp, handleResendLink, handleSendOtp, handleVerifyOtp, handleGoogleSignIn, handleMicrosoftSignIn
   };
 }
