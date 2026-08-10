@@ -112,7 +112,12 @@ export function useJoinAuth() {
     setErrorMsg("");
     setInfoMsg("");
     try {
-      const { error } = await supabase.auth.resend({ type: "signup", email });
+      const redirectUrl = "https://iiscbadmintonclub.github.io/iiscshuttlers/login-callback";
+      const { error } = await supabase.auth.resend({ 
+        type: "signup", 
+        email,
+        options: { emailRedirectTo: redirectUrl }
+      });
       if (error) throw error;
       setInfoMsg("A new verification link has been sent to your email!");
     } catch (err: any) {
@@ -189,9 +194,7 @@ export function useJoinAuth() {
     e.preventDefault();
     setLoading(true);
     setErrorMsg("");
-    const redirectUrl = typeof window !== "undefined"
-      ? window.location.origin + (window.location.pathname.startsWith("/IIScBadmintonClub") ? "/IIScBadmintonClub/join" : "/join")
-      : "https://iiscshuttlers.github.io/IIScBadmintonClub/join";
+    const redirectUrl = "https://iiscbadmintonclub.github.io/iiscshuttlers/login-callback";
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
@@ -223,11 +226,29 @@ export function useJoinAuth() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    setErrorMsg("");
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: "https://iiscbadmintonclub.github.io/iiscshuttlers/login-callback",
+        },
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      const msg = typeof err?.message === "string" && err.message !== "{}" ? err.message : "";
+      setErrorMsg(msg || "Failed to initialize Google Sign In.");
+      setLoading(false);
+    }
+  };
+
   return {
     mode, setMode, loading, email, setEmail, password, setPassword,
     confirm, setConfirm, showPwd, setShowPwd, otp, setOtp,
     infoMsg, setInfoMsg, errorMsg, setErrorMsg, agreedToTerms, setAgreedToTerms,
     inactivityLogout, setInactivityLogout, reset,
-    handleSignIn, handleSignUp, handleResendLink, handleSendOtp, handleVerifyOtp
+    handleSignIn, handleSignUp, handleResendLink, handleSendOtp, handleVerifyOtp, handleGoogleSignIn
   };
 }
