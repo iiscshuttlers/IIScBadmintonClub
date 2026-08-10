@@ -128,16 +128,23 @@ export function PlayersManager() {
   const approveAllPending = async () => {
     const pendingPlayers = players.filter((p) => !p.is_approved);
     if (pendingPlayers.length === 0) return;
-    if (!confirm(`Approve all ${pendingPlayers.length} pending players?`)) return;
     
-    const ids = pendingPlayers.map(p => p.id);
-    const { error } = await supabase.rpc("admin_approve_players", { p_ids: ids });
-    if (error) {
-      toast.error("Bulk approve failed: " + error.message);
-    } else {
-      toast.success(`Approved ${pendingPlayers.length} players!`);
-      setPlayers(p => p.map(pl => ids.includes(pl.id) ? { ...pl, is_approved: true } : pl));
-    }
+    showConfirm({
+      title: 'Approve All Pending',
+      message: `Approve all ${pendingPlayers.length} pending players?`,
+      confirmLabel: 'Approve All',
+      confirmStyle: 'default',
+      onConfirm: async () => {
+        const ids = pendingPlayers.map(p => p.id);
+        const { error } = await supabase.rpc("admin_approve_players", { p_ids: ids });
+        if (error) {
+          toast.error("Bulk approve failed: " + error.message);
+        } else {
+          toast.success(`Approved ${pendingPlayers.length} players!`);
+          setPlayers(p => p.map(pl => ids.includes(pl.id) ? { ...pl, is_approved: true } : pl));
+        }
+      }
+    });
   };
 
   const exportCsv = () => {

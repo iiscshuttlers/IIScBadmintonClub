@@ -8,6 +8,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { AppUpdateProvider } from "./hooks/useAppUpdate";
 import { AppModeProvider } from "./contexts/AppModeContext";
 import { RealtimeProvider } from "./providers/RealtimeProvider";
+import { ConfirmProvider } from "./contexts/ConfirmContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,9 +32,11 @@ export function AppProviders({ children }: { children: ReactNode }) {
         <AuthProvider>
           <AppUpdateProvider>
             <AppModeProvider>
-              <RealtimeProvider>
-                {children}
-              </RealtimeProvider>
+              <ConfirmProvider>
+                <RealtimeProvider>
+                  {children}
+                </RealtimeProvider>
+              </ConfirmProvider>
             </AppModeProvider>
           </AppUpdateProvider>
         </AuthProvider>
