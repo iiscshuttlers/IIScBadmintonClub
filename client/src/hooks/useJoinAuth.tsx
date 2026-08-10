@@ -112,7 +112,7 @@ export function useJoinAuth() {
     setErrorMsg("");
     setInfoMsg("");
     try {
-      const redirectUrl = "https://iiscbadmintonclub.github.io/iiscshuttlers/login-callback";
+      const redirectUrl = "https://iiscshuttlers.github.io/IIScBadmintonClub/login-callback";
       const { error } = await supabase.auth.resend({ 
         type: "signup", 
         email,
@@ -152,7 +152,7 @@ export function useJoinAuth() {
 
       // ALWAYS explicitly set the HTTPS Universal Link.
       // This guarantees the link works on PC (opening the web app) AND on Android (opening the native app via App Links)
-      const redirectUrl = "https://iiscbadmintonclub.github.io/iiscshuttlers/login-callback";
+      const redirectUrl = "https://iiscshuttlers.github.io/IIScBadmintonClub/login-callback";
 
       const { data, error } = (await Promise.race([
         supabase.auth.signUp({
@@ -194,7 +194,7 @@ export function useJoinAuth() {
     e.preventDefault();
     setLoading(true);
     setErrorMsg("");
-    const redirectUrl = "https://iiscbadmintonclub.github.io/iiscshuttlers/login-callback";
+    const redirectUrl = "https://iiscshuttlers.github.io/IIScBadmintonClub/login-callback";
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
@@ -233,7 +233,7 @@ export function useJoinAuth() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: "https://iiscbadmintonclub.github.io/iiscshuttlers/login-callback",
+          redirectTo: "https://iiscshuttlers.github.io/IIScBadmintonClub/login-callback",
         },
       });
       if (error) throw error;
