@@ -11,6 +11,8 @@
     "preview": "vite preview --host",
     "check": "tsc --noEmit",
     "format": "prettier --write .",
+    "bump": "node scripts/bump-version.js",
+    "release": "npm run bump && npm run build && npx cap sync && cd android && .\\gradlew.bat assembleRelease bundleRelease",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
