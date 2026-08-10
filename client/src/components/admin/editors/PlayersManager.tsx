@@ -31,7 +31,7 @@ export function PlayersManager() {
     confirmStyle: 'danger' | 'warning' | 'default';
     onConfirm: () => void;
   } | null>(null);
-  const { recordAction } = useAdminHistory();
+  const { recordAction, softDelete } = useAdminHistory();
   const { isMainAdmin, updateRole } = useAuth();
 
   const showConfirm = (action: typeof confirmAction) => setConfirmAction(action);
@@ -177,19 +177,24 @@ export function PlayersManager() {
 
   const removeProfile = async (id: string, name: string) => {
     showConfirm({
-      title: 'Delete Profile',
+      title: 'Move to Recycle Bin',
       message: `Delete profile for "${name}"? This deletes their player card but NOT their login account.`,
-      confirmLabel: 'Delete Profile',
+      confirmLabel: 'Move to Recycle Bin',
       confirmStyle: 'danger',
       onConfirm: async () => {
         setActionId(id);
-        const { data, error } = await supabase
-          .from("players")
-          .delete()
-          .eq("id", id)
-          .select();
-        if (error) {
-          if (error.code === "23503" || error.message.includes("foreign key constraint")) {
+        const { data, error: fetchErr } = await supabase.from("players").select("*").eq("id", id).single();
+        if (fetchErr || !data) {
+          toast.error("Could not fetch player data");
+          setActionId(null);
+          return;
+        }
+        try {
+          await softDelete("players", id, data, `Player Profile: ${name}`);
+          toast("Profile moved to recycle bin.", { icon: "🗑️" });
+          setPlayers((p) => p.filter((pl) => pl.id !== id));
+        } catch (error: any) {
+          if (error.code === "23503" || error.message?.includes("foreign key constraint")) {
             toast("Cannot Delete Player", {
               icon: "❌",
               description: "They have participated in matches or tournaments. Please retire them instead.",
@@ -197,14 +202,6 @@ export function PlayersManager() {
           } else {
             toast("Delete failed: " + error.message, { icon: "❌" });
           }
-        } else if (!data || data.length === 0) {
-          toast("Permission Denied", {
-            icon: "❌",
-            description: "Database RLS policy blocked the deletion.",
-          });
-        } else {
-          toast("Profile deleted.", { icon: "🗑️" });
-          setPlayers((p) => p.filter((pl) => pl.id !== id));
         }
         setActionId(null);
       }
@@ -347,6 +344,77 @@ export function PlayersManager() {
 
   const [sortField, setSortField] = useState<"name" | "created_at" | "elo" | "singles" | "doubles" | "mixed">("elo");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+
+  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
+  const toggleSelect = (id: string) => {
+    setSelectedPlayers(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+  
+  const bulkApprove = async (approved: boolean) => {
+    if (!window.confirm(`Bulk ${approved ? 'approve' : 'revoke'} ${selectedPlayers.length} players?`)) return;
+    setLoading(true);
+    const { error } = await supabase.rpc("admin_approve_players", { p_ids: selectedPlayers, p_approved: approved });
+    if (error) { toast.error(error.message); } else {
+      toast.success("Success");
+      for (const id of selectedPlayers) {
+        await recordAction({
+          action_type: approved ? "approve" : "revoke",
+          entity_type: "players",
+          entity_id: id,
+          before_state: { is_approved: !approved },
+          after_state: { is_approved: approved },
+          label: `Bulk ${approved ? 'Approved' : 'Revoked'} player: ${players.find(p => p.id === id)?.full_name ?? id}`,
+        });
+      }
+    }
+    await load();
+    setSelectedPlayers([]);
+    setLoading(false);
+  };
+
+  const bulkRetire = async (retired: boolean) => {
+    if (!window.confirm(`Bulk ${retired ? 'retire' : 'restore'} ${selectedPlayers.length} players?`)) return;
+    setLoading(true);
+    const { error } = await supabase.from("players").update({ is_retired: retired }).in("id", selectedPlayers);
+    if (error) { toast.error(error.message); } else {
+      toast.success("Success");
+      for (const id of selectedPlayers) {
+        await recordAction({
+          action_type: "update",
+          entity_type: "players",
+          entity_id: id,
+          before_state: { is_retired: !retired },
+          after_state: { is_retired: retired },
+          label: `Bulk ${retired ? 'Retired' : 'Restored'} player: ${players.find(p => p.id === id)?.full_name ?? id}`,
+        });
+      }
+    }
+    await load();
+    setSelectedPlayers([]);
+    setLoading(false);
+  };
+
+  const bulkDelete = async () => {
+    if (!window.confirm(`Delete ${selectedPlayers.length} players? (Accounts with matches will be skipped)`)) return;
+    setLoading(true);
+    let success = 0, failed = 0;
+    for (const id of selectedPlayers) {
+       const player = players.find(p => p.id === id);
+       if (!player) continue;
+       const { data, error: fetchErr } = await supabase.from("players").select("*").eq("id", id).single();
+       if (fetchErr || !data) { failed++; continue; }
+       try {
+         await softDelete("players", id, data, `Player Profile: ${player.full_name}`);
+         success++;
+       } catch (err: any) {
+         failed++;
+       }
+    }
+    toast.success(`Deleted ${success}, Skipped ${failed}`);
+    await load();
+    setSelectedPlayers([]);
+    setLoading(false);
+  };
 
   // Determine which list to show based on filter
   let displayList: any[] = [];
@@ -651,6 +719,28 @@ export function PlayersManager() {
 
       {/* Player list */}
       <div className="space-y-2 overflow-x-auto pb-8">
+        {selectedPlayers.length > 0 && filter !== "no-profile" && (
+          <div className="flex flex-wrap items-center gap-3 p-3 bg-primary/10 rounded-xl mb-4">
+            <span className="text-sm font-bold text-primary flex-1 min-w-[120px]">
+              {selectedPlayers.length} selected
+            </span>
+            <button onClick={() => bulkApprove(true)} className="px-3 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 rounded-lg transition flex items-center gap-1">
+              <UserCheck className="w-3 h-3" /> Approve
+            </button>
+            <button onClick={() => bulkApprove(false)} className="px-3 py-1.5 text-xs font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 rounded-lg transition flex items-center gap-1">
+              <UserX className="w-3 h-3" /> Revoke
+            </button>
+            <button onClick={() => bulkRetire(true)} className="px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-200 hover:bg-slate-300 rounded-lg transition flex items-center gap-1">
+              <Sunset className="w-3 h-3" /> Retire
+            </button>
+            <button onClick={() => bulkDelete()} className="px-3 py-1.5 text-xs font-bold text-rose-700 bg-rose-100 hover:bg-rose-200 rounded-lg transition flex items-center gap-1">
+              <Trash2 className="w-3 h-3" /> Delete
+            </button>
+            <button onClick={() => setSelectedPlayers([])} className="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-200 hover:bg-slate-300 rounded-lg transition flex items-center gap-1">
+              Clear
+            </button>
+          </div>
+        )}
         {sortedAndFiltered.length === 0 && (
           <div className="text-center py-10 text-muted-foreground dark:text-muted-foreground text-sm font-medium">
             No players found.
@@ -698,6 +788,17 @@ export function PlayersManager() {
             <table className="w-full text-left border-collapse min-w-[1000px]">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-800 text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">
+                  <th className="p-3 w-10">
+                    <input 
+                      type="checkbox" 
+                      checked={sortedAndFiltered.length > 0 && selectedPlayers.length === sortedAndFiltered.length}
+                      onChange={() => {
+                        if (selectedPlayers.length === sortedAndFiltered.length) setSelectedPlayers([]);
+                        else setSelectedPlayers(sortedAndFiltered.map(p => (p as Player).id));
+                      }}
+                      className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
+                    />
+                  </th>
                   <th className="p-3 font-bold cursor-pointer hover:text-foreground group select-none whitespace-nowrap" onClick={() => handleSort("name")}>Player <SortIcon field="name" /></th>
                   <th className="p-3 font-bold cursor-pointer hover:text-foreground group select-none whitespace-nowrap" onClick={() => handleSort("created_at")}>Status <SortIcon field="created_at" /></th>
                   <th className="p-3 font-bold cursor-pointer hover:text-foreground group select-none whitespace-nowrap" onClick={() => handleSort("elo")}>Overall (Rank) <SortIcon field="elo" /></th>
@@ -714,6 +815,14 @@ export function PlayersManager() {
                   
                   return (
                     <tr key={p.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition group">
+                      <td className="p-3">
+                        <input 
+                          type="checkbox" 
+                          checked={selectedPlayers.includes(p.id)} 
+                          onChange={() => toggleSelect(p.id)} 
+                          className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
+                        />
+                      </td>
                       <td className="p-3">
                         <Link href={`/player/${p.id}`} className="block font-bold text-sm text-foreground dark:text-slate-200 whitespace-nowrap hover:text-primary transition cursor-pointer">{p.full_name}</Link>
                         <div className="text-[10px] sm:text-xs text-muted-foreground space-x-1 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]" title={p.email || ""}>
@@ -816,8 +925,16 @@ export function PlayersManager() {
                const busy = actionId === p.id;
                
                return (
-                 <div key={p.id} className={`${cardCls} flex flex-col gap-3 p-4`}>
-                    <div className="flex justify-between items-start gap-2">
+                 <div key={p.id} className={`${cardCls} flex flex-col gap-3 p-4 relative`}>
+                    <div className="absolute top-4 right-4">
+                       <input 
+                          type="checkbox" 
+                          checked={selectedPlayers.includes(p.id)} 
+                          onChange={() => toggleSelect(p.id)} 
+                          className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
+                        />
+                    </div>
+                    <div className="flex justify-between items-start gap-2 pr-8">
                        <div className="flex-1 min-w-0">
                          <Link href={`/player/${p.id}`} className="block font-black text-transparent bg-clip-text bg-gradient-to-br from-slate-900 to-slate-500 dark:from-white dark:to-slate-400 truncate text-lg tracking-tight pb-0.5 hover:opacity-80 transition cursor-pointer">{p.full_name}</Link>
                          <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 text-xs mt-0.5 min-w-0">

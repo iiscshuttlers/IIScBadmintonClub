@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Player } from "@/types/player";
 import { useAuth } from "@/contexts/AuthContext";
+import { useConfirm } from "@/contexts/ConfirmContext";
 
 const ROLE_OPTIONS = [
   { value: "user", label: "Standard User" },
@@ -19,6 +20,7 @@ export function RoleManagerPanel() {
   const [search, setSearch] = useState("");
   const [actionId, setActionId] = useState<string | null>(null);
   const { profile } = useAuth();
+  const { confirm } = useConfirm();
 
   useEffect(() => {
     loadPlayers();
@@ -43,10 +45,20 @@ export function RoleManagerPanel() {
 
   const updateRole = async (id: string, newRole: string) => {
     if (newRole === "master_admin") {
-      if (!window.confirm("WARNING: Promoting a user to Master Admin grants them full system control. Continue?")) return;
+      if (!(await confirm({
+        title: 'Promote to Master Admin',
+        description: 'WARNING: Promoting a user to Master Admin grants them full system control. Continue?',
+        confirmVariant: 'danger',
+        confirmLabel: 'Promote'
+      }))) return;
     }
     if (newRole === "user") {
-      if (!window.confirm("Are you sure you want to demote this user? They will lose all elevated privileges.")) return;
+      if (!(await confirm({
+        title: 'Demote User',
+        description: 'Are you sure you want to demote this user? They will lose all elevated privileges.',
+        confirmVariant: 'danger',
+        confirmLabel: 'Demote'
+      }))) return;
     }
 
     setActionId(id);

@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
-  Trash2, Plus, Loader2, UserCheck, UserX, Activity, Search, RefreshCw, Download, AlertTriangle, Play, Pencil, Clock, CheckCircle2, Ban, Shield, History, FileDown, ArrowRight, ExternalLink
+  Trash2, Plus, Loader2, UserCheck, UserX, Activity, Search, RefreshCw, Download, AlertTriangle, Play, Pencil, Clock, CheckCircle2, Ban, Shield, History, FileDown, ArrowRight, ExternalLink, FileUp, Filter
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAdminHistory } from "@/contexts/AdminHistoryContext";
+import { useConfirm } from "@/contexts/ConfirmContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { MatchCard } from "../../feed/MatchCard";
 import { Capacitor } from "@capacitor/core";
@@ -22,14 +23,15 @@ export function MatchesManager() {
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState<string | null>(null);
   const { softDelete, recordAction, reloadTrigger } = useAdminHistory();
+  const { confirm } = useConfirm();
   
   // Tournament Dropdown state
   const [tournaments, setTournaments] = useState<any[]>([]);
   const [selectedTournamentId, setSelectedTournamentId] = useState<string>("");
 
   useEffect(() => {
-    // Load tournaments
-    supabase.from("tournaments").select("id, name, status, categories").neq("status", "deleted").order("created_at", { ascending: false }).then(({data}) => {
+    // Load tournaments (including deleted ones so admins can clean up dummy matches)
+    supabase.from("tournaments").select("id, name, status, categories").order("created_at", { ascending: false }).then(({data}) => {
       if (data && data.length > 0) {
         setTournaments(data);
         setSelectedTournamentId(data[0].id);
@@ -145,7 +147,12 @@ export function MatchesManager() {
   const deleteFriendlyMatch = async (id: string) => {
     const match = matches.find((m) => m.id === id);
     const isRejected = match?.status === "rejected";
-    if (!confirm(isRejected ? "Permanently delete this rejected match? This cannot be undone." : "Move this match to the recycle bin?")) return;
+    if (!(await confirm({
+      title: isRejected ? 'Permanent Delete' : 'Move to Recycle Bin',
+      description: isRejected ? "Permanently delete this rejected match? This cannot be undone." : "Move this match to the recycle bin?",
+      confirmVariant: 'danger',
+      confirmLabel: isRejected ? 'Permanently Delete' : 'Move to Recycle Bin'
+    }))) return;
     setActionId(id);
     try {
       if (isRejected) {
@@ -172,7 +179,12 @@ export function MatchesManager() {
   };
 
   const undoTournamentMatch = async (id: string) => {
-    if (!confirm("Are you sure you want to undo this tournament match? This will clear the score, reset the bracket slot, and recalculate tournament ELO for all players.")) return;
+    if (!(await confirm({
+      title: 'Undo Tournament Match',
+      description: "Are you sure you want to undo this tournament match? This will clear the score, reset the bracket slot, and recalculate tournament ELO for all players.",
+      confirmVariant: 'danger',
+      confirmLabel: 'Undo Match'
+    }))) return;
     setActionId(id);
     try {
       const { error } = await supabase.from("tournament_matches").update({
@@ -197,7 +209,12 @@ export function MatchesManager() {
   };
 
   const recalculateElo = async () => {
-    if (!confirm("WARNING: This will wipe all friendly ELOs and recalculate them from scratch. It might take up to a minute. Proceed?")) return;
+    if (!(await confirm({
+      title: 'Recalculate Friendly ELO',
+      description: "WARNING: This will wipe all friendly ELOs and recalculate them from scratch. It might take up to a minute. Proceed?",
+      confirmVariant: 'danger',
+      confirmLabel: 'Recalculate'
+    }))) return;
     setActionId("recalc");
     const start = Date.now();
     const { error } = await supabase.rpc("recalculate_all_elo");
@@ -214,7 +231,12 @@ export function MatchesManager() {
   };
 
   const revokeMatch = async (id: string) => {
-    if (!confirm("Are you sure you want to revoke this match? It will be marked as 'rejected'.")) return;
+    if (!(await confirm({
+      title: 'Revoke Match',
+      description: "Are you sure you want to revoke this match? It will be marked as 'rejected'.",
+      confirmVariant: 'danger',
+      confirmLabel: 'Revoke'
+    }))) return;
     setActionId(id);
     const match = matches.find((m) => m.id === id);
     const prevStatus = match?.status ?? "confirmed";
@@ -324,9 +346,9 @@ export function MatchesManager() {
           <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Select Tournament</label>
           <select value={selectedTournamentId} onChange={e => setSelectedTournamentId(e.target.value)} className="w-full p-2.5 text-sm font-bold border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-foreground outline-none focus:ring-2 focus:ring-primary">
             {tournaments.map(t => (
-               <option key={t.id} value={t.id}>{t.name} {t.status === 'completed' ? '(Completed)' : ''}</option>
+               <option key={t.id} value={t.id}>{t.name} {t.status === 'completed' ? '(Completed)' : t.status === 'deleted' ? '(Deleted/Trashed)' : ''}</option>
             ))}
-            {tournaments.length === 0 && <option value="" disabled>No active tournaments found</option>}
+            {tournaments.length === 0 && <option value="" disabled>No tournaments found</option>}
           </select>
         </div>
       )}

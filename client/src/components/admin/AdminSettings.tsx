@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Save, Loader2, Settings, Zap, WrenchIcon, Bell, AlertTriangle, Power, Smartphone } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useConfirm } from "@/contexts/ConfirmContext";
 import { InfoModal } from "@/components/InfoModal";
 
 const cardCls = "bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm";
@@ -32,6 +33,7 @@ const DEFAULTS: ClubSettings = {
 
 export function AdminSettings() {
   const { session } = useAuth();
+  const { confirm } = useConfirm();
   const [settings, setSettings] = useState<ClubSettings>(DEFAULTS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -46,7 +48,12 @@ export function AdminSettings() {
 
   const [savingUpdate, setSavingUpdate] = useState(false);
   const forceUpdatePrompt = async () => {
-    if (!window.confirm("Are you sure you want to send a push notification to ALL users and force the update popup?")) return;
+    if (!(await confirm({
+      title: 'Force App Update',
+      description: 'Are you sure you want to send a push notification to ALL users and force the update popup?',
+      confirmVariant: 'danger',
+      confirmLabel: 'Force Update'
+    }))) return;
     setSavingUpdate(true);
     try {
       // Import fetchSiteData dynamically to avoid circular dependencies if any, or just fetch directly

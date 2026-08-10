@@ -3,6 +3,7 @@ import { Plus, Trash2, CheckCircle2, Ban, Archive, ArchiveRestore, Bell, Loader2
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { useConfirm } from "@/contexts/ConfirmContext";
 import { inputCls, labelCls, cardCls } from "./shared";
 import { Poll } from "../../feed/PollsSection";
 
@@ -14,6 +15,7 @@ export function PollEditor({
   onChange: (d: Poll[]) => void;
 }) {
   const { session } = useAuth();
+  const { confirm } = useConfirm();
   const [sendingPush, setSendingPush] = useState<string | null>(null);
 
   const sendPushNotification = async (poll: Poll) => {
@@ -21,7 +23,11 @@ export function PollEditor({
       toast.error("Please enter a valid poll question before sending a notification.");
       return;
     }
-    if (!confirm("Send a push notification to all users about this poll?")) return;
+    if (!(await confirm({
+      title: 'Send Push Notification',
+      description: 'Send a push notification to all users about this poll?',
+      confirmLabel: 'Send Notification'
+    }))) return;
     setSendingPush(poll.id);
     try {
       const payload = {

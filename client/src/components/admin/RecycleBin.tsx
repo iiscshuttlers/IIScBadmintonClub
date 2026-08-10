@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminHistory } from "@/contexts/AdminHistoryContext";
+import { useConfirm } from "@/contexts/ConfirmContext";
 
 interface RecycleBinItem {
   id: string;
@@ -48,6 +49,7 @@ function tableIcon(tableName: string): string {
 export function RecycleBin() {
   const { isMainAdmin } = useAuth();
   const { recordAction, refreshRecycleBin, reloadTrigger } = useAdminHistory();
+  const { confirm } = useConfirm();
 
   const [items, setItems] = useState<RecycleBinItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -98,12 +100,12 @@ export function RecycleBin() {
   };
 
   const permanentDelete = async (item: RecycleBinItem) => {
-    if (
-      !confirm(
-        `Permanently delete "${humanLabel(item)}"? This cannot be undone.`,
-      )
-    )
-      return;
+    if (!(await confirm({
+      title: 'Permanent Delete',
+      description: `Permanently delete "${humanLabel(item)}"? This cannot be undone.`,
+      confirmVariant: 'danger',
+      confirmLabel: 'Permanently Delete'
+    }))) return;
     setActionId(item.id);
     const { error } = await supabase
       .from("recycle_bin")

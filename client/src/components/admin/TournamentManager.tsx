@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminHistory } from "@/contexts/AdminHistoryContext";
+import { useConfirm } from "@/contexts/ConfirmContext";
 import { usePlayers } from "@/hooks/usePlayers";
 import { generateSingleElimBracket } from "@/lib/bracketGenerator";
 import { MatchScoreDisplay } from "@/components/tournament/MatchScoreDisplay";
@@ -200,12 +201,12 @@ export function TournamentManager() {
       .select("*")
       .order("created_at", { ascending: false });
     
-    // Filter out deleted tournaments from the dropdown
-    const activeTournaments = (data as Tournament[] ?? []).filter(t => t.status !== "deleted");
-    setTournaments(activeTournaments);
+    // Show all tournaments including deleted ones so admins can restore/trash them properly
+    const allTournaments = data as Tournament[] ?? [];
+    setTournaments(allTournaments);
     
-    if (activeTournaments.length && (!selected || selected.status === "deleted")) {
-      setSelected(activeTournaments[0]);
+    if (allTournaments.length && !selected) {
+      setSelected(allTournaments[0]);
     }
     setLoading(false);
   }, [selected]);
@@ -336,6 +337,7 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
   const [transitioning, setTransitioning] = useState(false);
   const { session } = useAuth();
   const { recordAction } = useAdminHistory();
+  const { confirm } = useConfirm();
 
   useEffect(() => { setForm({ ...tournament }); }, [tournament.id]);
 
@@ -367,6 +369,14 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
     setTransitioning(true);
     const { data, error } = await supabase.from("tournaments").update({ status: newStatus }).eq("id", tournament.id).select().single();
     if (error) { toast.error(error.message); setTransitioning(false); return; }
+    await recordAction({
+      action_type: "update",
+      entity_type: "tournaments",
+      entity_id: tournament.id,
+      before_state: tournament,
+      after_state: data,
+      label: `Changed tournament "${tournament.name}" status to ${newStatus}`,
+    });
     toast.success(`Status → ${newStatus}`);
     onSaved(data as Tournament);
     setTransitioning(false);
@@ -374,16 +384,22 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
 
   const deleteDraft = async () => {
     if (form.status !== "draft") return;
-    if (!confirm("Are you sure you want to completely delete this draft tournament? This cannot be undone.")) return;
+    if (!confirm("Are you sure you want to send this draft tournament to the trash?")) return;
     setSaving(true);
-    const { error } = await supabase.from("tournaments").delete().eq("id", tournament.id);
-    if (error) { toast.error("Failed to delete: " + error.message); setSaving(false); return; }
+    const afterState = { ...tournament, status: "deleted" };
+    const { error } = await supabase.from("tournaments").update({ status: "deleted" }).eq("id", tournament.id);
+    if (error) { toast.error("Failed to trash: " + error.message); setSaving(false); return; }
     
-    await supabase.from("admin_logs").insert({
-      admin_email: session?.user?.email ?? "admin",
-      action: `Deleted draft tournament "${form.name}"`,
+    await recordAction({
+      action_type: "update",
+      entity_type: "tournaments",
+      entity_id: tournament.id,
+      before_state: tournament,
+      after_state: afterState,
+      label: `Sent draft tournament "${form.name}" to Trash`,
     });
-    toast.success("Tournament deleted");
+    
+    toast.success("Tournament sent to Trash");
     if (onDelete) onDelete();
     setSaving(false);
   };
@@ -605,6 +621,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
   const [bulkImporting, setBulkImporting] = useState(false);
   const [linkingId, setLinkingId] = useState<string | null>(null);
   const [linkSearch, setLinkSearch] = useState("");
+  const [selectedParts, setSelectedParts] = useState<string[]>([]);
   const isDoubles = (cat: string) => ["MD", "WD", "XD"].includes(cat);
 
   const load = useCallback(async () => {
@@ -712,6 +729,28 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
       supabase.from("tournament_participants").update({ seed: p.seed ?? i + 1 }).eq("id", p.id)
     ));
     toast.success(`Seeds saved for ${cat}`);
+  };
+
+  const bulkRemove = async () => {
+    if (!window.confirm(`Delete ${selectedParts.length} participants?`)) return;
+    setLoading(true);
+    await supabase.from("tournament_participants").delete().in("id", selectedParts);
+    await load();
+    setSelectedParts([]);
+    setLoading(false);
+  };
+
+  const bulkUnlink = async () => {
+    if (!window.confirm(`Unlink ${selectedParts.length} participants?`)) return;
+    setLoading(true);
+    await supabase.from("tournament_participants").update({ player_id: null }).in("id", selectedParts);
+    await load();
+    setSelectedParts([]);
+    setLoading(false);
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedParts(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
   // Parse bulk pasted text — each non-empty line is one entry.
@@ -880,12 +919,44 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
 
             {openCat === cat && (
               <div className="mt-4 space-y-3">
+                <div className="flex items-center justify-between px-1 mb-2">
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedParts(prev => 
+                        parts.every(p => prev.includes(p.id)) 
+                          ? prev.filter(id => !parts.some(p => p.id === id)) 
+                          : Array.from(new Set([...prev, ...parts.map(p => p.id)]))
+                      );
+                    }}
+                    className="text-xs font-bold text-primary hover:underline px-2 py-1 bg-primary/10 rounded-md"
+                  >
+                    {parts.length > 0 && parts.every(p => selectedParts.includes(p.id)) ? "Deselect All" : "Select All"}
+                  </button>
+                </div>
+                {selectedParts.length > 0 && parts.some(p => selectedParts.includes(p.id)) && (
+                  <div className="flex items-center gap-3 p-3 bg-primary/10 rounded-xl mb-4">
+                    <span className="text-sm font-bold text-primary flex-1">
+                      {selectedParts.filter(id => parts.some(p => p.id === id)).length} selected in {cat}
+                    </span>
+                    <button onClick={bulkUnlink} className="px-3 py-1.5 text-xs font-bold text-amber-600 bg-amber-100 hover:bg-amber-200 rounded-lg transition flex items-center gap-1">
+                      <Unlink className="w-3 h-3" /> Unlink
+                    </button>
+                    <button onClick={bulkRemove} className="px-3 py-1.5 text-xs font-bold text-rose-600 bg-rose-100 hover:bg-rose-200 rounded-lg transition flex items-center gap-1">
+                      <X className="w-3 h-3" /> Delete
+                    </button>
+                    <button onClick={() => setSelectedParts(prev => prev.filter(id => !parts.some(p => p.id === id)))} className="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-200 hover:bg-slate-300 rounded-lg transition flex items-center gap-1">
+                      Clear
+                    </button>
+                  </div>
+                )}
                 {parts.map((p, i) => {
                   const player = allPlayers?.find((pl) => pl.id === p.player_id);
                   const partner = allPlayers?.find((pl) => pl.id === p.partner_id);
                   return (
                     <div key={p.id} className="flex flex-col gap-1 py-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
                       <div className="flex items-center gap-3">
+                        <input type="checkbox" checked={selectedParts.includes(p.id)} onChange={() => toggleSelect(p.id)} className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary" />
                         <input type="number" min={1}
                           value={p.seed ?? i + 1}
                           onChange={(e) => updateSeed(p.id, parseInt(e.target.value))}

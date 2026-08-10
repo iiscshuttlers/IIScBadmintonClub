@@ -55,3 +55,18 @@ Write-Host "`nBackup Process Complete!" -ForegroundColor Green
 $RetentionDays = 90
 Write-Host "Checking for backups older than $RetentionDays days..." -ForegroundColor DarkGray
 Get-ChildItem -Path $OutDir -Filter "*.zip" | Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-$RetentionDays) } | Remove-Item -Force
+
+# Copy backup to OneDrive
+$OneDriveBackupDir = "D:\OneDrive - Indian Institute of Science\GitHub\IIScBadmintonClub\backups"
+if (-not (Test-Path -Path $OneDriveBackupDir)) {
+    New-Item -ItemType Directory -Path $OneDriveBackupDir -Force | Out-Null
+}
+
+Write-Host "`nCopying backup to OneDrive..." -ForegroundColor Yellow
+Copy-Item -Path $ZipFile -Destination $OneDriveBackupDir -Force
+Write-Host "Copied backup to $OneDriveBackupDir" -ForegroundColor Green
+
+# Clean up old backups in OneDrive as well
+Write-Host "Cleaning up old backups in OneDrive..." -ForegroundColor DarkGray
+Get-ChildItem -Path $OneDriveBackupDir -Filter "*.zip" | Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-$RetentionDays) } | Remove-Item -Force
+

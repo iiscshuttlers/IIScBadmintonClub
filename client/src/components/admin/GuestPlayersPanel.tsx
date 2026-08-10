@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminHistory } from "@/contexts/AdminHistoryContext";
+import { useConfirm } from "@/contexts/ConfirmContext";
 import { InfoModal } from "@/components/InfoModal";
 
 interface GuestRow {
@@ -38,6 +39,7 @@ interface PendingGuestMatch {
 
 export function GuestPlayersPanel() {
   const { session } = useAuth();
+  const { confirm } = useConfirm();
   const { recordAction } = useAdminHistory();
   const [guests, setGuests] = useState<GuestRow[]>([]);
   const [pending, setPending] = useState<PendingGuestMatch[]>([]);
@@ -124,7 +126,11 @@ export function GuestPlayersPanel() {
   };
 
   const deleteGuest = async (g: GuestRow) => {
-    if (!confirm(`Delete guest "${g.full_name}"? This cannot be undone.`)) return;
+    if (!(await confirm({
+      title: 'Delete Guest',
+      description: `Delete guest "${g.full_name}"? This cannot be undone.`,
+      confirmVariant: 'danger'
+    }))) return;
     setBusyId(g.id);
     try {
       const { error } = await supabase.rpc("delete_guest_player", { p_guest_id: g.id });
@@ -161,7 +167,11 @@ export function GuestPlayersPanel() {
   };
 
   const rejectMatch = async (m: PendingGuestMatch) => {
-    if (!confirm("Reject and delete this pending match?")) return;
+    if (!(await confirm({
+      title: 'Reject Match',
+      description: 'Reject and delete this pending match?',
+      confirmVariant: 'danger'
+    }))) return;
     setBusyId(m.id);
     try {
       const { error } = await supabase.from("matches").delete().eq("id", m.id);
@@ -194,7 +204,12 @@ export function GuestPlayersPanel() {
   const executeClaim = async () => {
     if (!claimGuest || !selectedReal) return;
     const matchCount = claimGuest.total_friendly_matches ?? 0;
-    if (!confirm(`Link all ${matchCount} match(es) from "${claimGuest.full_name}" to "${selectedReal.full_name}"? This cannot be undone.`)) return;
+    if (!(await confirm({
+      title: 'Link Matches',
+      description: `Link all ${matchCount} match(es) from "${claimGuest.full_name}" to "${selectedReal.full_name}"? This cannot be undone.`,
+      confirmVariant: 'danger',
+      confirmLabel: 'Link Matches'
+    }))) return;
     setClaiming(true);
     try {
       const { error } = await supabase.rpc("claim_guest_player", {

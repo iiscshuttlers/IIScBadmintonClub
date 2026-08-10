@@ -203,7 +203,17 @@ try {
   spawn("cmd.exe", ["/c", `copy "${APK_SRC}" "${oneDriveApkPath}"`], { detached: true, stdio: "ignore" }).unref();
   spawn("cmd.exe", ["/c", `copy "${AAB_SRC}" "${oneDriveAabPath}"`], { detached: true, stdio: "ignore" }).unref();
 
-  ok("APK and AAB copying initiated in background");
+  // Also copy to local releases directory
+  const localReleasesDir = resolve(root, "releases");
+  const localApkDir = resolve(localReleasesDir, "apk");
+  const localAabDir = resolve(localReleasesDir, "aab");
+  if (!existsSync(localApkDir)) execSync(`mkdir "${localApkDir}"`);
+  if (!existsSync(localAabDir)) execSync(`mkdir "${localAabDir}"`);
+  
+  execSync(`copy "${APK_SRC}" "${resolve(localApkDir, finalApkName)}"`);
+  execSync(`copy "${AAB_SRC}" "${resolve(localAabDir, finalAabName)}"`);
+
+  ok("APK and AAB copying initiated in background (and copied locally)");
 } catch {
   console.warn("⚠ OneDrive copy initiation failed (non-fatal) — continuing");
 }
