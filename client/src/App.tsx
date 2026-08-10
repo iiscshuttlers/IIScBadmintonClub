@@ -14,6 +14,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { GuestGate } from "@/components/GuestGate";
 import { UmpireEngine } from "@/components/umpire/UmpireEngine";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
@@ -112,7 +113,11 @@ function AppRoutes() {
       <Suspense fallback={<PageSkeleton />}>
         <Switch>
           <Route path="/" component={Home} />
-          <Route path="/pulse" component={Pulse} />
+          <Route path="/pulse">
+            <GuestGate feature="Pulse">
+              <Pulse />
+            </GuestGate>
+          </Route>
           
           <Route path="/tv" component={TvScoreboardIndex} />
           <Route path="/tv/overlay/:matchId?" component={ObsOverlayScoreboard} />
@@ -123,16 +128,22 @@ function AppRoutes() {
           </Route>
           <Route path="/tv/:matchId" component={TvScoreboard} />
 
-          <Route path="/hub" component={Hub} />
+          <Route path="/hub">
+            <GuestGate feature="Hub">
+              <Hub />
+            </GuestGate>
+          </Route>
           <Route path="/legacy" component={Legacy} />
           <Route path="/hall-of-fame" component={() => { window.location.href=`${import.meta.env.BASE_URL}legacy#champions`; return null; }} />
           <Route path="/gallery" component={() => { window.location.href=`${import.meta.env.BASE_URL}legacy#albums`; return null; }} />
           <Route path="/events/:slug" component={TournamentDetail} />
           <Route path="/join" component={Join} />
           <Route path="/player/:id">
-            <ErrorBoundary fallback={<PageErrorFallback />}>
-              <PlayerProfile />
-            </ErrorBoundary>
+            <GuestGate feature="Player Profile">
+              <ErrorBoundary fallback={<PageErrorFallback />}>
+                <PlayerProfile />
+              </ErrorBoundary>
+            </GuestGate>
           </Route>
           <Route path="/player/:id/personal/*?">
             <Suspense fallback={<PageSkeleton />}>
@@ -142,14 +153,18 @@ function AppRoutes() {
             </Suspense>
           </Route>
           <Route path="/compare/:p1/:p2">
-            <ErrorBoundary fallback={<PageErrorFallback />}>
-              <ComparePlayers />
-            </ErrorBoundary>
+            <GuestGate feature="Compare Players">
+              <ErrorBoundary fallback={<PageErrorFallback />}>
+                <ComparePlayers />
+              </ErrorBoundary>
+            </GuestGate>
           </Route>
           <Route path="/doubles/:p1/:p2">
-            <ErrorBoundary fallback={<PageErrorFallback />}>
-              <DoublesPairProfile />
-            </ErrorBoundary>
+            <GuestGate feature="Doubles Pair">
+              <ErrorBoundary fallback={<PageErrorFallback />}>
+                <DoublesPairProfile />
+              </ErrorBoundary>
+            </GuestGate>
           </Route>
           {/* Keep legacy exchange/marketplace for redirects if needed */}
           <Route path="/marketplace" component={() => { window.location.href=`${import.meta.env.BASE_URL}hub?tab=exchange`; return null; }} />
