@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { getCourtColor, cn } from "@/lib/utils";
@@ -196,20 +196,21 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
       if (mountedRef.current) setLoadingFiles(false);
     }, 10_000);
 
-    fetchNotices().finally(() => clearTimeout(failsafe));
+    fetchNotices(liveTournament?.id).finally(() => clearTimeout(failsafe));
     return () => {
       mountedRef.current = false;
       clearTimeout(failsafe);
     };
-  }, []);
+  }, [liveTournament?.id]);
 
-  const fetchNotices = async () => {
+  const fetchNotices = useCallback(async (tid?: string) => {
     if (!mountedRef.current) return;
     setLoadingFiles(true);
     try {
+      const folder = tid || "legacy";
       const { data, error } = await supabase.storage
         .from(NOTICES_BUCKET)
-        .list("");
+        .list(folder);
       if (!mountedRef.current) return;
       if (error) {
         console.error("Bucket might not exist yet:", error.message);
@@ -223,7 +224,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
     } finally {
       if (mountedRef.current) setLoadingFiles(false);
     }
-  };
+  }, []);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -231,12 +232,13 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
     setUploading(true);
     setUploadError(null);
     try {
-      const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+      const folder = liveTournament?.id || "legacy";
+      const fileName = `${folder}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
       const { error } = await supabase.storage
         .from(NOTICES_BUCKET)
         .upload(fileName, file, { upsert: true });
       if (error) throw error;
-      await fetchNotices();
+      await fetchNotices(liveTournament?.id);
     } catch (err: any) {
       setUploadError("Upload failed: " + (err.message ?? "Unknown error"));
     } finally {
@@ -248,11 +250,12 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
   const handleDeleteFile = async (fileName: string) => {
     if (!confirm("Are you sure you want to delete this notice?")) return;
     try {
+      const folder = liveTournament?.id || "legacy";
       const { error } = await supabase.storage
         .from(NOTICES_BUCKET)
-        .remove([fileName]);
+        .remove([`${folder}/${fileName}`]);
       if (error) throw error;
-      await fetchNotices();
+      await fetchNotices(liveTournament?.id);
     } catch (err: any) {
       setUploadError("Delete failed: " + (err.message ?? "Unknown error"));
     }
@@ -571,9 +574,10 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
                 ) : (
                   <div className="space-y-3">
                     {files.map((file, idx) => {
+                      const folder = liveTournament?.id || "legacy";
                       const fileUrl = supabase.storage
                         .from(NOTICES_BUCKET)
-                        .getPublicUrl(file.name).data.publicUrl;
+                        .getPublicUrl(`${folder}/${file.name}`).data.publicUrl;
 
                       return (
                         <div

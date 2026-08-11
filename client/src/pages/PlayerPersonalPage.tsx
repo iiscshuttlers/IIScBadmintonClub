@@ -68,6 +68,7 @@ import { usePlayerPersonal, type PersonalMatch, type MotionMatch } from "@/hooks
 import { useHealthData } from "@/hooks/useHealthData";
 import { useSleepData } from "@/hooks/useSleepData";
 import { useTrainingLoad } from "@/hooks/useTrainingLoad";
+import { useConfirm } from "@/contexts/ConfirmContext";
 import { useClubBenchmarks } from "@/hooks/useClubBenchmarks";
 import { usePlayerMatches } from "@/hooks/usePlayerMatches";
 import { SelfMotionTracker } from "@/components/player/SelfMotionTracker";
@@ -780,6 +781,7 @@ function MatchesSection({ matches, fullMatches, formatTab, setFormatTab, current
 
 function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorAnalytics, playerId, isCurrentUser, currentSubTab }: { matches: PersonalMatch[]; motionSummary: any; motionMatches: MotionMatch[]; workRate: number; sensorAnalytics: any[]; playerId?: string; isCurrentUser?: boolean; currentSubTab: "Match Stats" | "Phone" | "Watch Data" | "Rallies" }) {
   const [, setLocation] = useLocation();
+  const { confirm } = useConfirm();
   const allMatchIds = useMemo(() => {
     const ids = new Set(matches.map(m => m.id));
     motionMatches.forEach(m => ids.add(m.matchId));
@@ -798,7 +800,8 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
   const [selectedRallyMatchId, setSelectedRallyMatchId] = useState<string>("");
 
   const handleDeleteSession = async (matchId: string, matchSource: string) => {
-    if (!confirm("Are you sure you want to delete all motion and sensor data for this session?")) return;
+    const ok = await confirm({ title: "Delete Session Data", description: "Are you sure you want to delete all motion and sensor data for this session?", confirmLabel: "Delete", confirmVariant: "danger" });
+    if (!ok) return;
     try {
       const { error } = await supabase.rpc("delete_player_match_session", {
         p_match_id: matchId,
@@ -814,9 +817,8 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
 
   const handleDeleteHealthData = async () => {
     if (!playerId) return;
-    if (!window.confirm("Delete all your synced heart rate, activity, and sleep data? This can't be undone.")) {
-      return;
-    }
+    const ok = await confirm({ title: "Delete Health Data", description: "Delete all your synced heart rate, activity, and sleep data? This can't be undone.", confirmLabel: "Delete", confirmVariant: "danger" });
+    if (!ok) return;
     try {
       const [healthRes, sleepRes] = await Promise.all([
         supabase.from("match_health_data").delete().eq("player_id", playerId),

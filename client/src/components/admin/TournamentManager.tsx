@@ -223,7 +223,7 @@ export function TournamentManager() {
     setCreating(true);
     const { data, error } = await supabase
       .from("tournaments")
-      .insert({ name: "New Tournament", created_by: session?.user?.id })
+      .insert({ name: "New Tournament", created_by: session?.user?.id, year: new Date().getFullYear() })
       .select()
       .single();
     if (error) { toast.error(error.message); setCreating(false); return; }
@@ -259,7 +259,9 @@ export function TournamentManager() {
               className="text-sm font-black text-slate-800 dark:text-foreground bg-transparent border-none outline-none cursor-pointer"
             >
               {tournaments.map((t) => (
-                <option key={t.id} value={t.id}>{t.name} [{t.status}]</option>
+                <option key={t.id} value={t.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                  {t.name} [{t.status}]
+                </option>
               ))}
             </select>
             {selected && <StatusChip status={selected.status} />}
@@ -365,7 +367,8 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
   };
 
   const transition = async (newStatus: string) => {
-    if (!confirm(`Move tournament to "${newStatus}" status?`)) return;
+    const ok = await confirm({ title: "Confirm Status Change", description: `Move tournament to "${newStatus}" status?`, confirmLabel: "Move", confirmVariant: "primary" });
+    if (!ok) return;
     setTransitioning(true);
     const { data, error } = await supabase.from("tournaments").update({ status: newStatus }).eq("id", tournament.id).select().single();
     if (error) { toast.error(error.message); setTransitioning(false); return; }
@@ -574,7 +577,8 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
           <button
             onClick={async () => {
               const confirmMsg = "Move this tournament to the Trash? You will be able to undo this action using the admin panel's Undo feature.";
-              if (!window.confirm(confirmMsg)) return;
+              const ok = await confirm({ title: "Trash Tournament", description: confirmMsg, confirmLabel: "Trash Tournament", confirmVariant: "danger" });
+              if (!ok) return;
               
               const afterState = { ...tournament, status: "deleted" };
               const { error } = await supabase.from("tournaments").update({ status: "deleted" }).eq("id", tournament.id);
@@ -623,6 +627,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
   const [linkSearch, setLinkSearch] = useState("");
   const [selectedParts, setSelectedParts] = useState<string[]>([]);
   const isDoubles = (cat: string) => ["MD", "WD", "XD"].includes(cat);
+  const { confirm } = useConfirm();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -732,7 +737,8 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
   };
 
   const bulkRemove = async () => {
-    if (!window.confirm(`Delete ${selectedParts.length} participants?`)) return;
+    const ok = await confirm({ title: "Delete Participants", description: `Delete ${selectedParts.length} participants?`, confirmLabel: "Delete", confirmVariant: "danger" });
+    if (!ok) return;
     setLoading(true);
     await supabase.from("tournament_participants").delete().in("id", selectedParts);
     await load();
@@ -741,7 +747,8 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
   };
 
   const bulkUnlink = async () => {
-    if (!window.confirm(`Unlink ${selectedParts.length} participants?`)) return;
+    const ok = await confirm({ title: "Unlink Participants", description: `Unlink ${selectedParts.length} participants?`, confirmLabel: "Unlink", confirmVariant: "danger" });
+    if (!ok) return;
     setLoading(true);
     await supabase.from("tournament_participants").update({ player_id: null }).in("id", selectedParts);
     await load();

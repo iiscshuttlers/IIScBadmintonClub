@@ -14,6 +14,7 @@ import FloatingScore from "@/lib/floatingScore";
 import { playSmashSound } from "@/lib/sounds";
 import type { BwfMatchState } from "@/types/umpire";
 import { NotificationModal } from "./NotificationModal";
+import { useConfirm } from "@/contexts/ConfirmContext";
 
 function MatchBroadcastCard({
   match,
@@ -45,6 +46,7 @@ function MatchBroadcastCard({
   togglePinScore: (matchId: string) => void;
 }) {
   const [, setLocation] = useLocation();
+  const { confirm } = useConfirm();
   const [showAdminForm, setShowAdminForm] = useState(false);
   const [adminWinner, setAdminWinner] = useState<1 | 2 | null>(null);
   const [adminSets, setAdminSets] = useState("");
@@ -321,8 +323,10 @@ function MatchBroadcastCard({
                     // On Capacitor, window.confirm freezes — use direct action with toast undo pattern
                     onKill(match.id);
                     toast.success("Broadcast killed.", { description: "Result not saved." });
-                  } else if (window.confirm("Kill this broadcast? It will be removed without saving a result.")) {
-                    onKill(match.id);
+                  } else {
+                    confirm({ title: "Kill Broadcast", description: "Kill this broadcast? It will be removed without saving a result.", confirmLabel: "Kill Broadcast", confirmVariant: "danger" }).then(ok => {
+                      if (ok) onKill(match.id);
+                    });
                   }
                 }}
                 className="flex items-center gap-1.5 px-4 py-2.5 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 font-bold text-xs rounded-xl transition"

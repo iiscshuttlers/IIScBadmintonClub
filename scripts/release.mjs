@@ -32,7 +32,7 @@ const AAB_SRC = resolve(
   root,
   "android/app/build/outputs/bundle/release/app-release.aab",
 );
-const ONEDRIVE_DIR = "D:\\OneDrive - Indian Institute of Science\\Temp_apk";
+const ONEDRIVE_DIR = "D:\\OneDrive - Indian Institute of Science\\WebsiteApps\\Apps\\IIScBadmintonClub";
 const REPO = "iiscshuttlers/iiscshuttlers";
 
 const run = (cmd, opts = {}) => execSync(cmd, { stdio: "inherit", ...opts });
@@ -197,8 +197,13 @@ run("gradlew assembleRelease bundleRelease", {
 /* ── 6. Copy artifacts to OneDrive ──────────────────────────────── */
 log("Copying APK and AAB to OneDrive in the background…");
 try {
-  const oneDriveApkPath = resolve(ONEDRIVE_DIR, finalApkName);
-  const oneDriveAabPath = resolve(ONEDRIVE_DIR, finalAabName);
+  const oneDriveApkDir = resolve(ONEDRIVE_DIR, "apk");
+  const oneDriveAabDir = resolve(ONEDRIVE_DIR, "aab");
+  if (!existsSync(oneDriveApkDir)) execSync(`mkdir "${oneDriveApkDir}"`);
+  if (!existsSync(oneDriveAabDir)) execSync(`mkdir "${oneDriveAabDir}"`);
+
+  const oneDriveApkPath = resolve(oneDriveApkDir, finalApkName);
+  const oneDriveAabPath = resolve(oneDriveAabDir, finalAabName);
   
   spawn("cmd.exe", ["/c", `copy "${APK_SRC}" "${oneDriveApkPath}"`], { detached: true, stdio: "ignore" }).unref();
   spawn("cmd.exe", ["/c", `copy "${AAB_SRC}" "${oneDriveAabPath}"`], { detached: true, stdio: "ignore" }).unref();

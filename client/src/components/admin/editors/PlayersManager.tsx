@@ -13,8 +13,10 @@ import {
 import { optimizeImage } from '@/lib/imageUtils';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from "@/lib/utils";
+import { useConfirm } from "@/contexts/ConfirmContext";
 
 export function PlayersManager() {
+  const { confirm } = useConfirm();
   const [players, setPlayers] = useState<Player[]>([]);
   const [authUsers, setAuthUsers] = useState<AuthUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -351,7 +353,8 @@ export function PlayersManager() {
   };
   
   const bulkApprove = async (approved: boolean) => {
-    if (!window.confirm(`Bulk ${approved ? 'approve' : 'revoke'} ${selectedPlayers.length} players?`)) return;
+    const ok = await confirm({ title: "Confirm", description: `Bulk ${approved ? 'approve' : 'revoke'} ${selectedPlayers.length} players?`, confirmLabel: "Confirm", confirmVariant: approved ? "primary" : "danger" });
+    if (!ok) return;
     setLoading(true);
     const { error } = await supabase.rpc("admin_approve_players", { p_ids: selectedPlayers, p_approved: approved });
     if (error) { toast.error(error.message); } else {
@@ -373,7 +376,8 @@ export function PlayersManager() {
   };
 
   const bulkRetire = async (retired: boolean) => {
-    if (!window.confirm(`Bulk ${retired ? 'retire' : 'restore'} ${selectedPlayers.length} players?`)) return;
+    const ok = await confirm({ title: "Confirm", description: `Bulk ${retired ? 'retire' : 'restore'} ${selectedPlayers.length} players?`, confirmLabel: "Confirm", confirmVariant: "danger" });
+    if (!ok) return;
     setLoading(true);
     const { error } = await supabase.from("players").update({ is_retired: retired }).in("id", selectedPlayers);
     if (error) { toast.error(error.message); } else {
@@ -395,7 +399,8 @@ export function PlayersManager() {
   };
 
   const bulkDelete = async () => {
-    if (!window.confirm(`Delete ${selectedPlayers.length} players? (Accounts with matches will be skipped)`)) return;
+    const ok = await confirm({ title: "Delete Players", description: `Delete ${selectedPlayers.length} players? (Accounts with matches will be skipped)`, confirmLabel: "Delete", confirmVariant: "danger" });
+    if (!ok) return;
     setLoading(true);
     let success = 0, failed = 0;
     for (const id of selectedPlayers) {
