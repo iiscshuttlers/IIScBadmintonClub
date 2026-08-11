@@ -1,6 +1,6 @@
 {
-  "versionCode": 302,
-  "versionName": "3.02",
+  "versionCode": 303,
+  "versionName": "3.03",
   "downloadUrl": "https://play.google.com/store/apps/details?id=com.iiscshuttlers.app",
-  "changelog": "Fixed Magic Link auth logic, improved spinner contrast, and updated Supabase email templates."
+  "changelog": "Switch PWA to autoUpdate to remove annoying popup loops forever."
 }
