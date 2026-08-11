@@ -1,5 +1,13 @@
 [
   {
+    "versionCode": 302,
+    "versionName": "3.02",
+    "date": "2026-08-11T12:45:24.721Z",
+    "changes": [
+      "Fixed Magic Link auth logic, improved spinner contrast, and updated Supabase email templates."
+    ]
+  },
+  {
     "versionCode": 301,
     "versionName": "3.01",
     "date": "2026-08-10T20:34:43.528Z",
