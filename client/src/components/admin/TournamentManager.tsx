@@ -131,6 +131,14 @@ const labelCls = "block text-xs font-bold text-muted-foreground dark:text-muted-
 const CATEGORIES = ["MS", "WS", "MD", "WD", "XD"];
 const STATUS_FLOW = ["draft", "active", "completed"] as const;
 
+const toLocalDatetimeStr = (isoStr: string | null) => {
+  if (!isoStr) return "";
+  const d = new Date(isoStr);
+  if (isNaN(d.getTime())) return "";
+  const tzOffset = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - tzOffset).toISOString().slice(0, 16);
+};
+
 // ── Status chip ────────────────────────────────────────────────────────────────
 
 function StatusChip({ status }: { status: string }) {
@@ -355,6 +363,12 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
     
     setSaving(true);
     const { id, created_at, archived_at, ...rest } = form;
+    
+    // Sanitize empty strings to null for date columns
+    if (rest.start_date === "") rest.start_date = null;
+    if (rest.end_date === "") rest.end_date = null;
+    if (rest.form_close_date === "") rest.form_close_date = null;
+
     const { data, error } = await supabase.from("tournaments").update(rest).eq("id", id).select().single();
     if (error) { toast.error(error.message); setSaving(false); return; }
     await supabase.from("admin_logs").insert({
@@ -518,7 +532,16 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
           </div>
           <div>
             <label className={labelCls}>Form Closes On</label>
-            <input type="date" value={form.form_close_date ?? ""} onChange={(e) => upd("form_close_date", e.target.value)} className={inputCls} />
+            <input 
+              type="datetime-local" 
+              value={toLocalDatetimeStr(form.form_close_date)} 
+              onChange={(e) => {
+                const val = e.target.value;
+                if (!val) upd("form_close_date", "");
+                else upd("form_close_date", new Date(val).toISOString());
+              }} 
+              className={inputCls} 
+            />
           </div>
         </div>
 

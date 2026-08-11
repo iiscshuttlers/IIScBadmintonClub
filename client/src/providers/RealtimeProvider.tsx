@@ -69,6 +69,13 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
         () => jitteredInvalidate(["site_data"])
       )
 
+      // Tournament Table Updates
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tournaments" },
+        () => jitteredInvalidate(["tournaments"])
+      )
+
       .subscribe((status) => {
         if (import.meta.env.DEV && status === "SUBSCRIBED") {
           console.log("🟢 Connected to System Realtime");

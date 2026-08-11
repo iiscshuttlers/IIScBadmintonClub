@@ -194,7 +194,7 @@ export function useJoinAuth() {
     e.preventDefault();
     setLoading(true);
     setErrorMsg("");
-    const redirectUrl = "https://iiscshuttlers.github.io/IIScBadmintonClub/login-callback";
+    const redirectUrl = `${window.location.origin}${import.meta.env.BASE_URL}login-callback`;
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,

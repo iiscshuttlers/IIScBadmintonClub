@@ -177,8 +177,22 @@ function AppRoutes() {
           <Route path="/glossary" component={Glossary} />
           <Route path="/login-callback" component={() => {
             const [, setLoc] = useLocation();
-            useEffect(() => { setLoc("/"); }, [setLoc]);
-            return null;
+            const { session, isInitializing } = useAuth();
+            useEffect(() => { 
+              if (!isInitializing) {
+                // If we have a session, go home. If not, go to join.
+                setLoc(session ? "/" : "/join"); 
+              }
+            }, [setLoc, session, isInitializing]);
+            
+            return (
+              <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+                  <p className="text-sm font-medium animate-pulse">Verifying login...</p>
+                </div>
+              </div>
+            );
           }} />
 
           <Route path="/admin"><ProtectedRoute><SiteAdmin /></ProtectedRoute></Route>

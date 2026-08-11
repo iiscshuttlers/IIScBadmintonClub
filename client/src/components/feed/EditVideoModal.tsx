@@ -92,7 +92,7 @@ export function EditVideoModal({ isOpen, onClose, matchId, initialUrl, onSuccess
               disabled={saving}
               className="px-6 py-2.5 rounded-xl text-sm font-bold text-primary-foreground bg-primary hover:bg-primary transition-colors flex items-center gap-2 disabled:opacity-50"
             >
-              {saving && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+              {saving && <span className="w-4 h-4 border-2 border-black/20 border-t-black/80 rounded-full animate-spin" />}
               Save Link
             </button>
           </div>

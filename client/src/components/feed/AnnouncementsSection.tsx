@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Bell, Pin, CalendarDays } from "lucide-react";
+import { Calendar, Bell, Pin, CalendarDays, Trophy, ExternalLink, Clock, AlertCircle, CheckCircle2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSiteData } from "@/lib/siteData";
 import { SocialCTA } from "@/components/SocialCTA";
+import { supabase } from "@/lib/supabase";
 import DOMPurify from "dompurify";
 import { safeReplaceState, safeGetSearchParams, isCapacitor } from "@/lib/navUtils";
 
@@ -44,6 +45,19 @@ type Announcement = {
   url?: string;
 };
 
+type LiveTournament = {
+  id: string;
+  name: string;
+  status: string;
+  form_status: string;
+  form_url: string | null;
+  form_close_date: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  venue: string | null;
+  eligibility: string | null;
+};
+
 export function AnnouncementsSection() {
   const [pinnedAnnouncements, setPinnedAnnouncements] = useState<
     Announcement[]
@@ -51,6 +65,7 @@ export function AnnouncementsSection() {
   const [recentAnnouncements, setRecentAnnouncements] = useState<
     Announcement[]
   >([]);
+  const [liveTournament, setLiveTournament] = useState<LiveTournament | null>(null);
   const [selectedCategory, setSelectedCategory] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get("cat") || "all";
@@ -90,6 +105,43 @@ export function AnnouncementsSection() {
         new Date(b.date ?? 0).getTime() - new Date(a.date ?? 0).getTime(),
     );
   }
+
+  const loadLiveTournament = useCallback(() => {
+    supabase
+      .from("tournaments")
+      .select("id, name, status, form_status, form_url, form_close_date, start_date, end_date, venue, eligibility")
+      .neq("status", "deleted")
+      .neq("status", "draft")
+      .neq("status", "archived")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .then(({ data }) => {
+        if (data?.length) {
+          const t = data[0] as LiveTournament;
+          // Override form_status if deadline has passed
+          if (t.form_close_date) {
+            const closeTime = new Date(t.form_close_date).getTime();
+            if (!isNaN(closeTime) && Date.now() >= closeTime) {
+              t.form_status = "closed";
+            }
+          }
+          setLiveTournament(t);
+        } else {
+          setLiveTournament(null);
+        }
+      });
+  }, []);
+
+  useEffect(() => {
+    loadLiveTournament();
+    const channel = supabase
+      .channel("announcements_tournament_watch")
+      .on("postgres_changes", { event: "*", schema: "public", table: "tournaments" }, () => {
+        loadLiveTournament();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [loadLiveTournament]);
 
   const { data: queryData, isLoading: isQueryLoading } = useQuery({
     queryKey: ["announcements"],
@@ -199,6 +251,96 @@ export function AnnouncementsSection() {
   return (
     <div className="dark:bg-slate-950" id="announcements">
       <div className="container mx-auto px-4 max-w-6xl">
+
+        {/* Live Tournament Notice — dynamically from Supabase */}
+        {liveTournament && (
+          <div className="pt-8">
+            <div className={`rounded-2xl border p-5 ${
+              liveTournament.form_status === "open"
+                ? "bg-primary/5 dark:bg-primary/10 border-primary/30"
+                : liveTournament.form_status === "closing_soon"
+                ? "bg-amber-500/5 dark:bg-amber-500/10 border-amber-500/30"
+                : "bg-slate-100 dark:bg-slate-800/60 border-slate-300 dark:border-slate-700"
+            }`}>
+              <div className="flex flex-wrap items-start gap-4">
+                <div className={`p-2.5 rounded-xl flex-shrink-0 ${
+                  liveTournament.form_status === "open"
+                    ? "bg-primary/15"
+                    : liveTournament.form_status === "closing_soon"
+                    ? "bg-amber-500/15"
+                    : "bg-slate-200 dark:bg-slate-700"
+                }`}>
+                  <Trophy className={`w-5 h-5 ${
+                    liveTournament.form_status === "open"
+                      ? "text-primary"
+                      : liveTournament.form_status === "closing_soon"
+                      ? "text-amber-500"
+                      : "text-slate-500"
+                  }`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <span className="font-black text-sm text-foreground">{liveTournament.name}</span>
+                    <Badge className={`text-[10px] font-bold border-0 ${
+                      liveTournament.form_status === "open"
+                        ? "bg-primary/15 text-primary"
+                        : liveTournament.form_status === "closing_soon"
+                        ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                        : "bg-slate-200 dark:bg-slate-700 text-muted-foreground"
+                    }`}>
+                      {liveTournament.form_status === "open" ? "🟢 Registrations Open"
+                        : liveTournament.form_status === "closing_soon" ? "🟡 Closing Soon"
+                        : liveTournament.form_status === "disabled" ? "⚪ Form Disabled"
+                        : "🔴 Registrations Closed"}
+                    </Badge>
+                    {liveTournament.status === "active" && (
+                      <Badge className="text-[10px] font-bold border-0 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">🏸 Active</Badge>
+                    )}
+                    {liveTournament.status === "upcoming" && (
+                      <Badge className="text-[10px] font-bold border-0 bg-blue-500/15 text-blue-700 dark:text-blue-400">📅 Upcoming</Badge>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground mt-1">
+                    {liveTournament.start_date && (
+                      <span className="flex items-center gap-1">
+                        <CalendarDays className="w-3 h-3" />
+                        {liveTournament.start_date}{liveTournament.end_date && liveTournament.end_date !== liveTournament.start_date ? ` – ${liveTournament.end_date}` : ""}
+                      </span>
+                    )}
+                    {liveTournament.venue && (
+                      <span>📍 {liveTournament.venue}</span>
+                    )}
+                    {liveTournament.form_close_date && liveTournament.form_status !== "closed" && (
+                      <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium">
+                        <Clock className="w-3 h-3" />
+                        Closes {new Date(liveTournament.form_close_date).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {liveTournament.form_url && liveTournament.form_status !== "closed" && liveTournament.form_status !== "disabled" && (
+                  <a
+                    href={liveTournament.form_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-black transition-all flex-shrink-0 ${
+                      liveTournament.form_status === "open"
+                        ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                        : "bg-amber-500 text-white hover:bg-amber-600"
+                    }`}
+                  >
+                    Register Now <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                )}
+                {(liveTournament.form_status === "closed" || liveTournament.form_status === "disabled") && (
+                  <span className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold bg-slate-200 dark:bg-slate-700 text-muted-foreground flex-shrink-0 cursor-not-allowed">
+                    <CheckCircle2 className="w-4 h-4" /> Form {liveTournament.form_status === "disabled" ? "Disabled" : "Closed"}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Loading */}
         {loading && (

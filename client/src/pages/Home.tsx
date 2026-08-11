@@ -59,7 +59,7 @@ export default function Home() {
   const [convenerData, setConvenerData] = useState<ConvenerData | null>(null);
 
   useEffect(() => {
-    fetchSiteData("site_config", "site_config.json")
+    fetchSiteData("club_settings", "settings.json")
       .then((data) => {
         if (data) setConfig(data);
       })

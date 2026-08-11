@@ -177,7 +177,7 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
             className={`w-full mt-4 text-primary-foreground font-black py-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 ${listingType === 'sell' ? 'bg-primary hover:bg-primary shadow-primary/25' : 'bg-indigo-500 hover:bg-indigo-600 shadow-indigo-500/25'}`}
           >
             {isSubmitting ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <div className="w-5 h-5 border-2 border-black/20 border-t-black/80 rounded-full animate-spin" />
             ) : (
               <>
                 <CheckCircle className="w-5 h-5" /> {listingType === 'sell' ? 'Post Listing' : 'Post Request'}

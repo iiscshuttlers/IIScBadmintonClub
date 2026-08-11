@@ -231,7 +231,7 @@ export default function ProfileSetup() {
                   >
                     {setup.loading ? (
                       <>
-                        <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                        <div className="w-5 h-5 rounded-full border-2 border-black/20 border-t-black/80 animate-spin" />
                         Saving...
                       </>
                     ) : (
@@ -253,7 +253,7 @@ export default function ProfileSetup() {
                   >
                     {setup.loading ? (
                       <>
-                        <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                        <div className="w-5 h-5 rounded-full border-2 border-black/20 border-t-black/80 animate-spin" />
                         Saving...
                       </>
                     ) : (

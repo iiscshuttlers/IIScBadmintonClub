@@ -149,10 +149,8 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
     });
   }, []);
 
-  useEffect(() => {
-    // Load site_data fallback config
+  const loadTournaments = useCallback(() => {
     fetchTournamentConfig().then(setConfig);
-    // Load active Supabase tournament (open type preferred for public display)
     supabase
       .from("tournaments")
       .select("*")
@@ -166,6 +164,25 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
       });
   }, [isAdmin]);
 
+  useEffect(() => {
+    loadTournaments();
+
+    // Listen to real-time database changes for tournaments table
+    const channel = supabase
+      .channel("realtime_tournaments_section")
+      .on("postgres_changes", { event: "*", schema: "public", table: "tournaments" }, () => {
+        loadTournaments();
+      })
+      .subscribe();
+
+    window.addEventListener("focus", loadTournaments);
+
+    return () => {
+      supabase.removeChannel(channel);
+      window.removeEventListener("focus", loadTournaments);
+    };
+  }, [loadTournaments]);
+
   // Auto-correct the viewStatus tab if the URL targeted a specific tournament that has since changed status
   useEffect(() => {
     if (activeTid && allTournaments.length > 0) {
@@ -177,16 +194,24 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
   }, [activeTid, allTournaments, viewStatus]);
 
   const relevantEvents = viewStatus === "active" ? liveEvents : viewStatus === "upcoming" ? upcomingEvents : null;
-  
-  const liveTournament = viewStatus === "completed"
-    ? null
-    : ((activeTid ? relevantEvents?.find(t => t.slug === activeTid || t.id === activeTid) : null)
-      ?? relevantEvents?.find((t) => t.tournament_type === "open")
-      ?? relevantEvents?.[0]
-      ?? (activeTid ? allTournaments.find(t => t.slug === activeTid || t.id === activeTid) : null)
-      ?? allTournaments.find((t) => t.status === viewStatus && t.tournament_type === "open")
-      ?? allTournaments.find((t) => t.status === viewStatus)
-      ?? null);
+
+  // Determine which tournament to display (use props for ordering, but always resolve
+  // to the realtime allTournaments copy so form_status is never stale)
+  const candidateId: string | null =
+    viewStatus === "completed"
+      ? null
+      : ((activeTid ? relevantEvents?.find(t => t.slug === activeTid || t.id === activeTid) : null)
+        ?? relevantEvents?.find((t) => t.tournament_type === "open")
+        ?? relevantEvents?.[0]
+        ?? (activeTid ? allTournaments.find(t => t.slug === activeTid || t.id === activeTid) : null)
+        ?? allTournaments.find((t) => t.status === viewStatus && t.tournament_type === "open")
+        ?? allTournaments.find((t) => t.status === viewStatus)
+        ?? null)?.id ?? null;
+
+  // Always read the actual data from the realtime allTournaments state
+  const liveTournament = candidateId
+    ? (allTournaments.find(t => t.id === candidateId) ?? null)
+    : null;
 
   // Tournament bracket data now comes from Supabase tournament_matches (see LiveBracketsSection)
 
@@ -267,7 +292,16 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
   const displayEligibility = liveTournament?.eligibility ?? config.eligibility;
   const displayDescription = liveTournament?.description ?? config.description;
   const displayFormUrl = liveTournament?.form_url ?? config.formUrl;
-  const displayFormStatus = liveTournament?.form_status ?? config.formStatus;
+  
+  // Calculate effective form status using both explicit form_status and form_close_date deadline
+  let displayFormStatus = liveTournament?.form_status ?? config.formStatus;
+  if (liveTournament?.form_close_date) {
+    const closeTime = new Date(liveTournament.form_close_date).getTime();
+    const now = Date.now();
+    if (!isNaN(closeTime) && now >= closeTime) {
+      displayFormStatus = "closed";
+    }
+  }
   const displayDates = liveTournament
     ? (() => {
         const fmt = (d: string) => new Date(d + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });

@@ -467,7 +467,7 @@ function AiPredictionCard({ player1, player2, p1Wins, p2Wins, matches }: { playe
         <div className="bg-indigo-950/50 backdrop-blur border border-indigo-800/50 rounded-2xl p-4 text-sm leading-relaxed text-indigo-100 italic shadow-inner">
           "{prediction.punditCommentary}"
           
-          {hasGeminiKey && (
+          {false && hasGeminiKey && (
             <div className="mt-4 pt-4 border-t border-indigo-800/50 flex justify-center">
               <button
                 onClick={handleGenerateDeepAnalysis}

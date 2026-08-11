@@ -79,7 +79,7 @@ export function SignInView({ auth }: { auth: JoinAuthContext }) {
         </div>
       </div>
       <Button type="submit" disabled={auth.loading} className="w-full py-6 bg-primary hover:bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 transition-all text-base flex items-center justify-center gap-2">
-        {auth.loading ? <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : <><LogIn className="w-5 h-5" /> Sign In</>}
+        {auth.loading ? <div className="w-5 h-5 rounded-full border-2 border-black/20 border-t-black/80 animate-spin" /> : <><LogIn className="w-5 h-5" /> Sign In</>}
       </Button>
 
       <div className="relative my-4">
@@ -173,7 +173,7 @@ export function SignUpView({ auth }: { auth: JoinAuthContext }) {
         </span>
       </label>
       <Button type="submit" disabled={auth.loading || !auth.agreedToTerms} className="w-full py-6 bg-primary hover:bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 transition-all text-base flex items-center justify-center gap-2 disabled:opacity-50">
-        {auth.loading ? <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : <><UserPlus className="w-5 h-5" /> Create Account</>}
+        {auth.loading ? <div className="w-5 h-5 rounded-full border-2 border-black/20 border-t-black/80 animate-spin" /> : <><UserPlus className="w-5 h-5" /> Create Account</>}
       </Button>
 
       <div className="relative my-4">
@@ -215,7 +215,7 @@ export function OtpEmailView({ auth }: { auth: JoinAuthContext }) {
         </div>
       </div>
       <Button type="submit" disabled={auth.loading} className="w-full py-6 bg-primary hover:bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 transition-all text-base flex items-center justify-center gap-2">
-        {auth.loading ? <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : <>Send Login Code <ArrowRight className="w-5 h-5" /></>}
+        {auth.loading ? <div className="w-5 h-5 rounded-full border-2 border-black/20 border-t-black/80 animate-spin" /> : <>Send Login Code <ArrowRight className="w-5 h-5" /></>}
       </Button>
       <div className="text-center">
         <button type="button" onClick={() => { auth.setMode("signin"); auth.reset(); }} className="text-xs text-muted-foreground dark:text-muted-foreground hover:text-primary dark:hover:text-primary transition font-semibold">← Back to Sign In</button>
@@ -236,7 +236,7 @@ export function OtpVerifyView({ auth }: { auth: JoinAuthContext }) {
         <input required type="text" maxLength={8} value={auth.otp} onChange={e => auth.setOtp(e.target.value)} placeholder="Enter code" autoComplete="one-time-code" className={`${inputClass} pl-10 text-center tracking-[0.4em] text-xl font-bold`} />
       </div>
       <Button type="submit" disabled={auth.loading} className="w-full py-6 bg-primary hover:bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 transition-all text-base flex items-center justify-center gap-2">
-        {auth.loading ? <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : "Verify & Log In"}
+        {auth.loading ? <div className="w-5 h-5 rounded-full border-2 border-black/20 border-t-black/80 animate-spin" /> : "Verify & Log In"}
       </Button>
       <div className="text-center">
         <button type="button" onClick={() => { auth.setMode("otp-email"); auth.reset(); }} className="text-xs text-muted-foreground dark:text-muted-foreground hover:text-primary dark:hover:text-primary transition font-semibold">← Change email / resend code</button>

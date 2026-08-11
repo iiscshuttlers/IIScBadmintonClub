@@ -96,7 +96,6 @@ export function NoticeBoard() {
         const { data: matches } = await supabase
           .from("tournament_matches")
           .select("*, tournaments(name)")
-          .neq("status", "deleted")
           .order("updated_at", { ascending: false })
           .limit(15);
 
