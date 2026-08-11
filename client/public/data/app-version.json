@@ -1,6 +1,6 @@
 {
-  "versionCode": 303,
-  "versionName": "3.03",
+  "versionCode": 304,
+  "versionName": "3.04",
   "downloadUrl": "https://play.google.com/store/apps/details?id=com.iiscshuttlers.app",
-  "changelog": "Switch PWA to autoUpdate to remove annoying popup loops forever."
+  "changelog": "Completely remove PwaUpdatePrompt from App.tsx so it can never render again."
 }
