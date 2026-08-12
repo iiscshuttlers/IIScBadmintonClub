@@ -39,19 +39,31 @@ export function useNativeBackButton() {
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
-    const listener = CapApp.addListener("backButton", ({ canGoBack }) => {
+    const listener = CapApp.addListener("backButton", (event) => {
       const path = window.location.pathname;
-      const isHome =
+      const isRootTab =
         path === "/" ||
         path === "" ||
+        path === "/pulse" ||
+        path === "/legacy" ||
+        path === "/hub" ||
         path === "/iiscshuttlers" ||
         path === "/iiscshuttlers/";
 
-      if (!isHome && canGoBack) {
+      // If we are not on a root tab, go back.
+      if (!isRootTab) {
         window.history.back();
         return;
       }
 
+      // If we are on a root tab but not Home, maybe go to Home instead of exiting?
+      // (Optional pattern, but standard Android is often to go to Home)
+      if (path !== "/" && path !== "" && path !== "/iiscshuttlers" && path !== "/iiscshuttlers/") {
+         window.location.href = "/";
+         return;
+      }
+
+      // If we are on the Home tab, handle double-tap to exit
       if (backPressedRef.current) {
         CapApp.exitApp();
         return;

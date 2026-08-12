@@ -480,6 +480,20 @@ export default function PlayerProfile() {
                     setSubMins(mins);
                     toast.success(`Subscribed to ${player.fullName}!`);
                   }}
+                  isSubscribed={isSubscribed}
+                  onRemove={async () => {
+                    const { error } = await supabase.from("user_player_subscriptions")
+                      .delete()
+                      .eq("user_id", currentUser.id)
+                      .eq("player_id", player.id);
+
+                    if (error) {
+                      toast.error("Failed to remove subscription");
+                      return;
+                    }
+                    setIsSubscribed(false);
+                    toast.success(`Unsubscribed from ${player.fullName}'s matches.`);
+                  }}
                 />
 
                 <button

@@ -15,6 +15,8 @@ interface NotificationModalProps {
   defaultMins?: number;
   matchId?: string;
   matchTime?: string | null;
+  isSubscribed?: boolean;
+  onRemove?: () => Promise<void> | void;
 }
 
 export function NotificationModal({ 
@@ -24,7 +26,9 @@ export function NotificationModal({
   title = "Set Match Alert",
   defaultMins = 15,
   matchId,
-  matchTime 
+  matchTime,
+  isSubscribed,
+  onRemove
 }: NotificationModalProps) {
   const { session } = useAuth();
   const [hours, setHours] = useState("");
@@ -93,6 +97,32 @@ export function NotificationModal({
     }
   };
 
+  const handleRemove = async () => {
+    if (!session?.user?.id && !onRemove) return;
+    setLoading(true);
+    try {
+      if (onRemove) {
+        await onRemove();
+      } else if (matchId && session?.user?.id) {
+        const { error } = await supabase.from("user_match_notifications")
+          .delete()
+          .eq("match_id", matchId)
+          .eq("user_id", session.user.id);
+        
+        if (error) throw error;
+      }
+      
+      toast.success("Alert removed successfully.");
+      window.dispatchEvent(new Event("match_alerts_changed"));
+      onClose();
+    } catch (e) {
+      toast.error("Failed to remove alert.");
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md bg-slate-900 border border-slate-800 text-white">
@@ -150,11 +180,20 @@ export function NotificationModal({
             </span>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
-            <Button type="button" variant="ghost" onClick={onClose} className="hover:bg-slate-800">Cancel</Button>
-            <Button type="submit" disabled={loading} className="bg-accent text-accent-foreground font-bold px-6">
-              {loading ? "Saving..." : "Set Alert"}
-            </Button>
+          <div className="flex justify-between items-center pt-4 border-t border-slate-800">
+            {isSubscribed ? (
+              <Button type="button" variant="destructive" onClick={handleRemove} disabled={loading} className="bg-red-500/20 text-red-500 hover:bg-red-500/30 border-none font-bold">
+                Remove Alert
+              </Button>
+            ) : (
+              <div></div>
+            )}
+            <div className="flex gap-3">
+              <Button type="button" variant="ghost" onClick={onClose} className="hover:bg-slate-800">Cancel</Button>
+              <Button type="submit" disabled={loading} className="bg-accent text-accent-foreground font-bold px-6">
+                {loading ? "Saving..." : "Set Alert"}
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>

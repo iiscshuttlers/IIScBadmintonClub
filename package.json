@@ -1,7 +1,7 @@
 {
   "name": "iiscshuttlers",
   "private": true,
-  "version": "3.05.0",
+  "version": "3.06.0",
   "type": "module",
   "license": "MIT",
   "scripts": {
@@ -12,7 +12,8 @@
     "check": "tsc --noEmit",
     "format": "prettier --write .",
     "bump": "node scripts/bump-version.js",
-    "release": "npm run bump && npm run build && npx cap sync && cd android && .\\gradlew.bat assembleRelease bundleRelease",
+    "release": "powershell -ExecutionPolicy Bypass -File scripts/release.ps1",
+    "release:old": "npm run bump && npm run build && npx cap sync && cd android && .\\gradlew.bat assembleRelease bundleRelease",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",

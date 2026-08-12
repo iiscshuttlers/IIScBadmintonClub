@@ -138,7 +138,7 @@ export function PlayersManager() {
       confirmStyle: 'default',
       onConfirm: async () => {
         const ids = pendingPlayers.map(p => p.id);
-        const { error } = await supabase.rpc("admin_approve_players", { p_ids: ids });
+        const { error } = await supabase.rpc("admin_approve_players", { p_ids: ids, p_approved: true });
         if (error) {
           toast.error("Bulk approve failed: " + error.message);
         } else {

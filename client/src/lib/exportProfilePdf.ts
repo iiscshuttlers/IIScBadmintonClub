@@ -72,6 +72,10 @@ function roundRect(
   ctx.closePath();
 }
 
+import { Capacitor } from "@capacitor/core";
+import { Filesystem, Directory } from "@capacitor/filesystem";
+import { Share } from "@capacitor/share";
+
 export async function exportProfilePdf(data: ProfilePdfData) {
   const toastId = toast.loading("Generating profile card...");
   try {
@@ -385,9 +389,31 @@ export async function exportProfilePdf(data: ProfilePdfData) {
     pdf.addImage(imgData, "JPEG", 0, 0, pdfPageW, pdfPageH);
 
     const safeName = playerName.replace(/[^a-z0-9]/gi, "_").toLowerCase();
-    pdf.save(`${safeName}_profile.pdf`);
+    const fileName = `${safeName}_profile.pdf`;
 
-    toast.success("Profile card downloaded!", { id: toastId });
+    if (Capacitor.isNativePlatform()) {
+      // Get base64 representation of the PDF
+      const pdfBase64 = pdf.output("datauristring").split(",")[1];
+      
+      // Save it temporarily in Cache to share
+      const savedFile = await Filesystem.writeFile({
+        path: fileName,
+        data: pdfBase64,
+        directory: Directory.Cache
+      });
+      
+      toast.success("Profile ready! Opening share menu...", { id: toastId });
+      
+      await Share.share({
+        title: "Player Profile",
+        text: `Check out ${playerName}'s IISc Badminton Club Profile!`,
+        url: savedFile.uri,
+        dialogTitle: "Save or Share Profile PDF"
+      });
+    } else {
+      pdf.save(fileName);
+      toast.success("Profile card downloaded!", { id: toastId });
+    }
   } catch (error) {
     console.error("PDF Export Error:", error);
     toast.error("Failed to generate PDF. Please try again.", { id: toastId });

@@ -490,7 +490,7 @@ export function ProfileOverviewTab({
                 iconColor: "text-primary",
               },
             ] as const
-          ).map((attr) => (
+          ).filter(attr => Boolean(attr.value)).map((attr) => (
             <div
               key={attr.label}
               className={`flex-1 min-w-[140px] relative overflow-hidden bg-white/5 rounded-2xl p-5 sm:p-6 border border-slate-200 dark:border-white/8 hover:border-slate-300 dark:hover:border-white/14 hover:bg-slate-50 dark:hover:bg-white/12 dark:bg-white/8 hover:-translate-y-0.5 transition-all duration-300 group ${
@@ -508,7 +508,7 @@ export function ProfileOverviewTab({
               <div className="text-[10px] font-bold text-muted-foreground dark:text-foreground/35 mb-1.5 uppercase tracking-wider">
                 {attr.label}
               </div>
-              <div className="text-sm sm:text-base font-black text-slate-800 dark:text-foreground/90 leading-snug">
+              <div className="text-sm sm:text-base font-black text-slate-800 dark:text-foreground/90 leading-snug break-words hyphens-auto">
                 {attr.value}
               </div>
             </div>
