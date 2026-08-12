@@ -5,6 +5,7 @@ import { Link } from "wouter";
 import { BeautifulScoreDisplay } from "@/components/feed/BeautifulScoreDisplay";
 import { RivalriesDashboard } from "./RivalriesDashboard";
 import { useAuth } from "@/contexts/AuthContext";
+import { calculateRanksMap } from "@/lib/rankingUtils";
 
 export function H2HSection() {
   const { session } = useAuth();
@@ -15,6 +16,8 @@ export function H2HSection() {
   const [tournamentMatches, setTournamentMatches] = useState<any[]>([]);
   const [matchTab, setMatchTab] = useState<"club" | "tournament">("club");
   const [loading, setLoading] = useState(true);
+
+  const rankMap = useMemo(() => calculateRanksMap(players), [players]);
 
   useEffect(() => {
     supabase
@@ -268,21 +271,21 @@ export function H2HSection() {
               </select>
               <div className="flex gap-1.5 flex-wrap justify-center text-[10px] font-black mt-2 max-w-[160px] mx-auto">
                 <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-md border border-amber-200 dark:border-amber-800/50">
-                  OVR: #{players.findIndex(p => p.id === p1?.id) + 1 || "?"}
+                  OVR: {rankMap[p1?.id || ""]?.overall ? `#${rankMap[p1?.id || ""].overall}` : "?"}
                 </span>
                 {p1?.singles_elo && (
                   <span className="px-2 py-1 bg-primary/10 text-primary rounded-md border border-primary/20">
-                    S: #{[...players].sort((a, b) => (b.singles_elo || 0) - (a.singles_elo || 0)).findIndex(p => p.id === p1?.id) + 1 || "?"}
+                    S: {rankMap[p1?.id || ""]?.singles ? `#${rankMap[p1?.id || ""].singles}` : "?"}
                   </span>
                 )}
                 {p1?.doubles_elo && (
                   <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-md border border-blue-200 dark:border-blue-800/50">
-                    D: #{[...players].sort((a, b) => (b.doubles_elo || 0) - (a.doubles_elo || 0)).findIndex(p => p.id === p1?.id) + 1 || "?"}
+                    D: {rankMap[p1?.id || ""]?.doubles ? `#${rankMap[p1?.id || ""].doubles}` : "?"}
                   </span>
                 )}
                 {p1?.mixed_elo && (
                   <span className="px-2 py-1 bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-700 dark:text-fuchsia-400 rounded-md border border-fuchsia-200 dark:border-fuchsia-800/50">
-                    XD: #{[...players].sort((a, b) => (b.mixed_elo || 0) - (a.mixed_elo || 0)).findIndex(p => p.id === p1?.id) + 1 || "?"}
+                    XD: {rankMap[p1?.id || ""]?.mixed ? `#${rankMap[p1?.id || ""].mixed}` : "?"}
                   </span>
                 )}
               </div>
@@ -411,21 +414,21 @@ export function H2HSection() {
               </select>
               <div className="flex gap-1.5 flex-wrap justify-center text-[10px] font-black mt-2 max-w-[160px] mx-auto">
                 <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-md border border-amber-200 dark:border-amber-800/50">
-                  OVR: #{players.findIndex(p => p.id === p2?.id) + 1 || "?"}
+                  OVR: {rankMap[p2?.id || ""]?.overall ? `#${rankMap[p2?.id || ""].overall}` : "?"}
                 </span>
                 {p2?.singles_elo && (
                   <span className="px-2 py-1 bg-primary/10 text-primary rounded-md border border-primary/20">
-                    S: #{[...players].sort((a, b) => (b.singles_elo || 0) - (a.singles_elo || 0)).findIndex(p => p.id === p2?.id) + 1 || "?"}
+                    S: {rankMap[p2?.id || ""]?.singles ? `#${rankMap[p2?.id || ""].singles}` : "?"}
                   </span>
                 )}
                 {p2?.doubles_elo && (
                   <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-md border border-blue-200 dark:border-blue-800/50">
-                    D: #{[...players].sort((a, b) => (b.doubles_elo || 0) - (a.doubles_elo || 0)).findIndex(p => p.id === p2?.id) + 1 || "?"}
+                    D: {rankMap[p2?.id || ""]?.doubles ? `#${rankMap[p2?.id || ""].doubles}` : "?"}
                   </span>
                 )}
                 {p2?.mixed_elo && (
                   <span className="px-2 py-1 bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-700 dark:text-fuchsia-400 rounded-md border border-fuchsia-200 dark:border-fuchsia-800/50">
-                    XD: #{[...players].sort((a, b) => (b.mixed_elo || 0) - (a.mixed_elo || 0)).findIndex(p => p.id === p2?.id) + 1 || "?"}
+                    XD: {rankMap[p2?.id || ""]?.mixed ? `#${rankMap[p2?.id || ""].mixed}` : "?"}
                   </span>
                 )}
               </div>

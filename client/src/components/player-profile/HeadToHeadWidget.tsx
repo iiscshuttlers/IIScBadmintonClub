@@ -1,12 +1,7 @@
 import { useMemo } from "react";
-import {
-  Swords,
-  Trophy,
-  TrendingUp,
-  TrendingDown,
-  Sparkles,
-} from "lucide-react";
-import { motion } from "framer-motion";
+import { Trophy, TrendingUp, TrendingDown, Target, Minus, Award, Swords, ChevronRight, Zap, Flame, Crown, Hand, Play, Sparkles } from "lucide-react";
+import { Link } from "wouter";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface HeadToHeadProps {
   currentUserId: string;
@@ -230,12 +225,12 @@ export function HeadToHeadWidget({
 
       {/* Button to go to dedicated comparison page */}
       <div className="relative z-10 mt-4">
-        <a 
+        <Link 
           href={`/compare/${currentUserId}/${targetUserId}`}
           className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors shadow-sm"
         >
           <Swords className="w-4 h-4" /> Compare Full Stats
-        </a>
+        </Link>
       </div>
     </motion.div>
   );

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import { DirectoryTab } from "./tabs/DirectoryTab";
 import { fetchPlayerList } from "@/services/playerService";
+import { calculateRanksMap } from "@/lib/rankingUtils";
 import { useAuth } from "@/contexts/AuthContext";
 import type { PlayerRow } from "@/types";
 
@@ -45,27 +46,7 @@ export function DirectoryWrapper() {
 
   // Compute Ranks globally (before filters)
   const rankMap = useMemo(() => {
-    const ranks: Record<string, any> = {};
-    players.forEach(p => ranks[p.id] = { overall: 0, singles: 0, doubles: 0, mixed: 0 });
-
-    const rankFormat = (key: 'overall' | 'singles' | 'doubles' | 'mixed', eloKey: 'elo_rating' | 'singles_elo' | 'doubles_elo' | 'mixed_elo') => {
-      const sorted = [...players].sort((a, b) => (b[eloKey] || 0) - (a[eloKey] || 0));
-      let prevElo: number | null = null;
-      let rank = 1;
-      sorted.forEach((p, i) => {
-        const elo = p[eloKey] || 0;
-        if (prevElo !== null && elo < prevElo) rank = i + 1;
-        if (ranks[p.id]) ranks[p.id][key] = rank;
-        prevElo = elo;
-      });
-    };
-
-    rankFormat('overall', 'elo_rating');
-    rankFormat('singles', 'singles_elo');
-    rankFormat('doubles', 'doubles_elo');
-    rankFormat('mixed', 'mixed_elo');
-
-    return ranks;
+    return calculateRanksMap(players);
   }, [players]);
 
   const filteredPlayers = useMemo(() => {

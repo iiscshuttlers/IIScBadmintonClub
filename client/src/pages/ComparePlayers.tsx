@@ -11,6 +11,7 @@ import type { PlayerRow } from "@/types/player";
 import type { MatchWithPlayers } from "@/types/match";
 import { ChevronLeft, Swords, Trophy, TrendingUp, Flame, Calendar, MapPin, User, Activity, Ruler, ChevronDown, Sparkles, Loader2 } from "lucide-react";
 import { getEloTier } from "@/lib/tiers";
+import { calculateRanksMap } from "@/lib/rankingUtils";
 import { generateMatchPrediction, fetchGeminiPunditAnalysis } from "@/lib/aiPredictor";
 import { toast } from "sonner";
 import {
@@ -153,8 +154,9 @@ export default function ComparePlayers() {
   const fmtColor1 = "text-primary dark:text-primary";
   const fmtColor2 = "text-blue-600 dark:text-blue-400";
 
-  const p1Rank = [...allPlayers].sort((a, b) => (b.elo_rating || 0) - (a.elo_rating || 0)).findIndex(p => p.id === player1.id) + 1 || "?";
-  const p2Rank = [...allPlayers].sort((a, b) => (b.elo_rating || 0) - (a.elo_rating || 0)).findIndex(p => p.id === player2.id) + 1 || "?";
+  const rankMap = calculateRanksMap(allPlayers);
+  const p1Rank = rankMap[player1.id]?.overall || "?";
+  const p2Rank = rankMap[player2.id]?.overall || "?";
 
   return (
     <div className="pb-24 pt-6 max-w-4xl mx-auto px-4">
