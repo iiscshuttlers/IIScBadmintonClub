@@ -29,16 +29,20 @@ export function TournamentStandingsTab({ matches, players }: TournamentStandings
 
     const isMatchInCategory = (match: any, cat: string) => {
       if (cat === "OVERALL") return true;
-      // Extract category logic
       if (!match.category) return false;
       const matchCat = match.category.toUpperCase();
-      if (cat === "MS") return matchCat.includes("SINGLES") && !matchCat.includes("WOMEN"); // rough approximation, better to use exact match if db stores "MS"
+      
+      // Exact code match
+      if (matchCat === cat) return true;
+      
+      // Descriptive string match fallback
+      if (cat === "MS") return matchCat.includes("SINGLES") && !matchCat.includes("WOMEN");
       if (cat === "WS") return matchCat.includes("WOMEN") && matchCat.includes("SINGLES");
       if (cat === "MD") return matchCat.includes("DOUBLES") && !matchCat.includes("WOMEN") && !matchCat.includes("MIXED");
       if (cat === "WD") return matchCat.includes("WOMEN") && matchCat.includes("DOUBLES");
       if (cat === "XD") return matchCat.includes("MIXED");
       
-      return matchCat === cat;
+      return false;
     };
 
     matches.forEach(m => {

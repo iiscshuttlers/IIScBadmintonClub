@@ -61,7 +61,7 @@ export function AppUpdateProvider({ children }: { children: ReactNode }) {
             changelog: latest.changelog,
             downloadUrl:
               latest.downloadUrl ??
-              "https://play.google.com/store/apps/details?id=com.iiscshuttlers.app",
+              "https://play.google.com/store/apps/details?id=shuttlers.iisc.com",
           });
 
           // Auto-show the prompt only once per app launch.

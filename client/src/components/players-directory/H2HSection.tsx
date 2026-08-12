@@ -269,23 +269,25 @@ export function H2HSection() {
                   </option>
                 ))}
               </select>
-              <div className="flex gap-1.5 flex-wrap justify-center text-[10px] font-black mt-2 max-w-[160px] mx-auto">
-                <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-md border border-amber-200 dark:border-amber-800/50">
-                  OVR: {rankMap[p1?.id || ""]?.overall ? `#${rankMap[p1?.id || ""].overall}` : "?"}
-                </span>
-                {p1?.singles_elo && (
+              <div className="flex gap-1.5 flex-wrap justify-center text-[10px] font-black mt-2 max-w-[160px] mx-auto min-h-[24px]">
+                {!!rankMap[p1?.id || ""]?.overall && (
+                  <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-md border border-amber-200 dark:border-amber-800/50">
+                    OVR: #{rankMap[p1?.id || ""].overall}
+                  </span>
+                )}
+                {!!rankMap[p1?.id || ""]?.singles && (
                   <span className="px-2 py-1 bg-primary/10 text-primary rounded-md border border-primary/20">
-                    S: {rankMap[p1?.id || ""]?.singles ? `#${rankMap[p1?.id || ""].singles}` : "?"}
+                    S: #{rankMap[p1?.id || ""].singles}
                   </span>
                 )}
-                {p1?.doubles_elo && (
+                {!!rankMap[p1?.id || ""]?.doubles && (
                   <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-md border border-blue-200 dark:border-blue-800/50">
-                    D: {rankMap[p1?.id || ""]?.doubles ? `#${rankMap[p1?.id || ""].doubles}` : "?"}
+                    D: #{rankMap[p1?.id || ""].doubles}
                   </span>
                 )}
-                {p1?.mixed_elo && (
+                {!!rankMap[p1?.id || ""]?.mixed && (
                   <span className="px-2 py-1 bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-700 dark:text-fuchsia-400 rounded-md border border-fuchsia-200 dark:border-fuchsia-800/50">
-                    XD: {rankMap[p1?.id || ""]?.mixed ? `#${rankMap[p1?.id || ""].mixed}` : "?"}
+                    XD: #{rankMap[p1?.id || ""].mixed}
                   </span>
                 )}
               </div>
@@ -412,23 +414,25 @@ export function H2HSection() {
                   </option>
                 ))}
               </select>
-              <div className="flex gap-1.5 flex-wrap justify-center text-[10px] font-black mt-2 max-w-[160px] mx-auto">
-                <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-md border border-amber-200 dark:border-amber-800/50">
-                  OVR: {rankMap[p2?.id || ""]?.overall ? `#${rankMap[p2?.id || ""].overall}` : "?"}
-                </span>
-                {p2?.singles_elo && (
+              <div className="flex gap-1.5 flex-wrap justify-center text-[10px] font-black mt-2 max-w-[160px] mx-auto min-h-[24px]">
+                {!!rankMap[p2?.id || ""]?.overall && (
+                  <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-md border border-amber-200 dark:border-amber-800/50">
+                    OVR: #{rankMap[p2?.id || ""].overall}
+                  </span>
+                )}
+                {!!rankMap[p2?.id || ""]?.singles && (
                   <span className="px-2 py-1 bg-primary/10 text-primary rounded-md border border-primary/20">
-                    S: {rankMap[p2?.id || ""]?.singles ? `#${rankMap[p2?.id || ""].singles}` : "?"}
+                    S: #{rankMap[p2?.id || ""].singles}
                   </span>
                 )}
-                {p2?.doubles_elo && (
+                {!!rankMap[p2?.id || ""]?.doubles && (
                   <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-md border border-blue-200 dark:border-blue-800/50">
-                    D: {rankMap[p2?.id || ""]?.doubles ? `#${rankMap[p2?.id || ""].doubles}` : "?"}
+                    D: #{rankMap[p2?.id || ""].doubles}
                   </span>
                 )}
-                {p2?.mixed_elo && (
+                {!!rankMap[p2?.id || ""]?.mixed && (
                   <span className="px-2 py-1 bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-700 dark:text-fuchsia-400 rounded-md border border-fuchsia-200 dark:border-fuchsia-800/50">
-                    XD: {rankMap[p2?.id || ""]?.mixed ? `#${rankMap[p2?.id || ""].mixed}` : "?"}
+                    XD: #{rankMap[p2?.id || ""].mixed}
                   </span>
                 )}
               </div>

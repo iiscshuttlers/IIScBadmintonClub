@@ -2,8 +2,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { Save, Loader2, Settings, Zap, WrenchIcon, Bell, AlertTriangle, Power, Smartphone, Download } from "lucide-react";
+import { Save, Loader2, Settings, Zap, WrenchIcon, Bell, AlertTriangle, Power, Smartphone, Download, ExternalLink } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLocation } from "wouter";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { InfoModal } from "@/components/InfoModal";
 
@@ -35,6 +36,7 @@ const DEFAULTS: ClubSettings = {
 
 export function AdminSettings() {
   const { session } = useAuth();
+  const [, setLocation] = useLocation();
   const { confirm } = useConfirm();
   const [settings, setSettings] = useState<ClubSettings>(DEFAULTS);
   const [loading, setLoading] = useState(true);
@@ -285,12 +287,20 @@ export function AdminSettings() {
               <p className="font-bold text-slate-800 dark:text-foreground text-sm">Show Tournament Standings</p>
               <p className="text-xs text-muted-foreground mt-0.5">Allow players to see the /standings page. (Admins can always see it)</p>
             </div>
-            <button
-              onClick={() => update("showTournamentStandings", !settings.showTournamentStandings)}
-              className={`relative w-12 h-6 rounded-full transition-colors ${settings.showTournamentStandings ? "bg-amber-500" : "bg-slate-300 dark:bg-slate-600"}`}
-            >
-              <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${settings.showTournamentStandings ? "left-6" : "left-0.5"}`} />
-            </button>
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => setLocation("/standings")}
+                className="text-xs font-bold text-indigo-500 hover:text-indigo-600 transition flex items-center gap-1"
+              >
+                View <ExternalLink className="w-3 h-3" />
+              </button>
+              <button
+                onClick={() => update("showTournamentStandings", !settings.showTournamentStandings)}
+                className={`relative w-12 h-6 rounded-full transition-colors ${settings.showTournamentStandings ? "bg-amber-500" : "bg-slate-300 dark:bg-slate-600"}`}
+              >
+                <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${settings.showTournamentStandings ? "left-6" : "left-0.5"}`} />
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">

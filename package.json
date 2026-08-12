@@ -1,7 +1,7 @@
 {
   "name": "iiscshuttlers",
   "private": true,
-  "version": "3.07.0",
+  "version": "3.08.0",
   "type": "module",
   "license": "MIT",
   "scripts": {

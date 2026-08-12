@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { usePageMeta } from "@/hooks/usePageMeta";
-import { usePlayers, useAllMatches } from "@/hooks/usePlayers";
+import { usePlayers, useAllTournamentMatches } from "@/hooks/usePlayers";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchSiteData } from "@/lib/siteData";
 import { TournamentStandingsTab } from "@/components/events/TournamentStandingsTab";
@@ -15,7 +15,7 @@ export default function TournamentStandingsPage() {
 
   const { isAdmin } = useAuth();
   const { data: players = [], isLoading: playersLoading } = usePlayers();
-  const { data: allMatches = [], isLoading: matchesLoading } = useAllMatches();
+  const { data: tournamentMatches = [], isLoading: matchesLoading } = useAllTournamentMatches();
   
   const [showStandings, setShowStandings] = useState<boolean | null>(null);
 
@@ -50,9 +50,6 @@ export default function TournamentStandingsPage() {
       </div>
     );
   }
-
-  // Filter to tournament only
-  const tournamentMatches = allMatches.filter((m: any) => m.is_friendly === false);
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-5xl">

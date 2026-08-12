@@ -155,8 +155,14 @@ export default function ComparePlayers() {
   const fmtColor2 = "text-blue-600 dark:text-blue-400";
 
   const rankMap = calculateRanksMap(allPlayers);
-  const p1Rank = rankMap[player1.id]?.overall || "?";
-  const p2Rank = rankMap[player2.id]?.overall || "?";
+  const p1RankNum = rankMap[player1.id]?.overall || 0;
+  const p2RankNum = rankMap[player2.id]?.overall || 0;
+  const p1Rank = p1RankNum > 0 ? `#${p1RankNum}` : "UR";
+  const p2Rank = p2RankNum > 0 ? `#${p2RankNum}` : "UR";
+  
+  const formatRank = (r: number) => r > 0 ? `#${r}` : "UR";
+  const p1RanksAll = rankMap[player1.id] || { overall: 0, singles: 0, doubles: 0, mixed: 0 };
+  const p2RanksAll = rankMap[player2.id] || { overall: 0, singles: 0, doubles: 0, mixed: 0 };
 
   return (
     <div className="pb-24 pt-6 max-w-4xl mx-auto px-4">
@@ -234,7 +240,7 @@ export default function ComparePlayers() {
           </div>
           
           <div className={`mt-2 px-3 py-1 rounded-lg backdrop-blur-md border border-white/25 text-xs font-black uppercase shadow-sm flex items-center gap-1.5 ${getEloTier(player1.elo_rating).bg} ${getEloTier(player1.elo_rating).text}`}>
-             <Trophy className="w-3 h-3" /> {getEloTier(player1.elo_rating).name} • OVR: #{p1Rank}
+             <Trophy className="w-3 h-3" /> {getEloTier(player1.elo_rating).name} • OVR: {p1Rank}
           </div>
         </div>
 
@@ -264,7 +270,7 @@ export default function ComparePlayers() {
           </div>
           
           <div className={`mt-2 px-3 py-1 rounded-lg backdrop-blur-md border border-white/25 text-xs font-black uppercase shadow-sm flex items-center gap-1.5 ${getEloTier(player2.elo_rating).bg} ${getEloTier(player2.elo_rating).text}`}>
-             <Trophy className="w-3 h-3" /> {getEloTier(player2.elo_rating).name} • OVR: #{p2Rank}
+             <Trophy className="w-3 h-3" /> {getEloTier(player2.elo_rating).name} • OVR: {p2Rank}
           </div>
         </div>
       </div>
@@ -360,27 +366,31 @@ export default function ComparePlayers() {
       )}
 
 
-        {/* Form Trends */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xl border border-slate-100 dark:border-slate-800 mb-8">
-          <h3 className="text-sm font-black text-slate-800 dark:text-foreground mb-4 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-muted-foreground" /> ELO Trajectory (H2H)
+        {/* Rankings */}
+        <Card className="p-6 bg-white dark:bg-slate-900 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 mb-8 overflow-hidden">
+          <h3 className="text-sm font-black text-slate-800 dark:text-foreground mb-6 text-center uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-4">
+            Leaderboard Rankings
           </h3>
-          <div className="h-48 w-full -ml-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={eloHistory}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} vertical={false} />
-                <XAxis dataKey="matchDate" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
-                <YAxis domain={["dataMin - 10", "dataMax + 10"]} tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: "#0f172a", border: "none", borderRadius: "12px", color: "#fff", fontSize: "12px", fontWeight: "bold" }}
-                  itemStyle={{ fontSize: "12px", fontWeight: "bold" }}
-                />
-                <Line type="monotone" dataKey="p1Elo" name={player1.full_name} stroke="#10b981" strokeWidth={3} dot={{ r: 3, fill: "#10b981", strokeWidth: 0 }} activeDot={{ r: 6 }} />
-                <Line type="monotone" dataKey="p2Elo" name={player2.full_name} stroke="#3b82f6" strokeWidth={3} dot={{ r: 3, fill: "#3b82f6", strokeWidth: 0 }} activeDot={{ r: 6 }} />
-              </LineChart>
-            </ResponsiveContainer>
+          <div className="space-y-4">
+            {[
+              { label: "Overall", icon: Trophy, p1Val: formatRank(p1RanksAll.overall), p2Val: formatRank(p2RanksAll.overall), color: "text-amber-500 dark:text-amber-400", chip: "bg-amber-100 dark:bg-amber-500/15" },
+              { label: "Singles", icon: User, p1Val: formatRank(p1RanksAll.singles), p2Val: formatRank(p2RanksAll.singles), color: "text-blue-500 dark:text-blue-400", chip: "bg-blue-100 dark:bg-blue-500/15" },
+              { label: "Doubles", icon: User, p1Val: formatRank(p1RanksAll.doubles), p2Val: formatRank(p2RanksAll.doubles), color: "text-emerald-500 dark:text-emerald-400", chip: "bg-emerald-100 dark:bg-emerald-500/15" },
+              { label: "Mixed", icon: User, p1Val: formatRank(p1RanksAll.mixed), p2Val: formatRank(p2RanksAll.mixed), color: "text-purple-500 dark:text-purple-400", chip: "bg-purple-100 dark:bg-purple-500/15" }
+            ].map((stat, idx) => (
+              <div key={idx} className="flex items-center justify-between py-2 border-b border-slate-50 dark:border-slate-800/50 last:border-0">
+                <div className="flex-1 text-right text-lg font-black text-primary dark:text-primary pr-4">{stat.p1Val}</div>
+                <div className="w-24 shrink-0 flex flex-col items-center justify-center">
+                   <span className={`flex items-center justify-center w-8 h-8 rounded-full mb-1 ${stat.chip}`}>
+                     <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                   </span>
+                   <span className={`text-[10px] font-black uppercase tracking-wider text-center ${stat.color}`}>{stat.label}</span>
+                </div>
+                <div className="flex-1 text-left text-lg font-black text-blue-600 dark:text-blue-400 pl-4">{stat.p2Val}</div>
+              </div>
+            ))}
           </div>
-        </div>
+        </Card>
 
         {/* Matches List */}
         {matches.length > 0 && (
