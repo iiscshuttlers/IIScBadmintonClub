@@ -46,6 +46,9 @@ export interface PlayerRow {
   tournament_doubles_elo: number | null;
   tournament_mixed_elo: number | null;
   win_loss_record: string | null;
+  singles_record?: string | null;
+  doubles_record?: string | null;
+  mixed_record?: string | null;
   recent_form: string | null;
   is_looking_to_play: boolean | null;
   is_retired: boolean | null;

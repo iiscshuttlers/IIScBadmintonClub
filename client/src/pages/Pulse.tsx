@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import FeedTab from "@/components/pulse/FeedTab";
+import { DirectoryWrapper } from "@/components/players-directory/DirectoryWrapper";
 import { Activity } from "lucide-react";
 import { motion, type Variants } from "framer-motion";
 import { useEffect, useState, useRef, useCallback } from "react";
@@ -7,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Calendar,
   Trophy,
+  Users,
   Radio,
   Medal,
   ArrowRight,
@@ -179,9 +181,10 @@ function UpcomingCountdown({ event }: { event: any }) {
   );
 }
 
+import { supabase } from "@/lib/supabase";
+
 export default function Pulse() {
-  const { user } = useAuth();
-  const isAdmin = user?.role === "master_admin" || user?.role === "admin";
+  const { isAdmin } = useAuth();
 
   usePageMeta({
     title: "Pulse",
@@ -198,13 +201,14 @@ export default function Pulse() {
     if (isCapacitorEnv) return "feed";
     try {
       const hash = window.location.hash.replace("#", "");
+      if (hash === "directory") return "directory";
       if (FEED_TABS.includes(hash) || hash === "feed") return "feed";
       if (EVENTS_TABS.includes(hash)) return "events";
     } catch { /* ignore */ }
     return "feed";
   };
 
-  const [pulseTab, setPulseTabState] = useState<"feed" | "events">(getPulseTab);
+  const [pulseTab, setPulseTabState] = useState<"feed" | "events" | "directory">(getPulseTab);
 
   useEffect(() => {
     if (isCapacitorEnv) return;
@@ -216,7 +220,7 @@ export default function Pulse() {
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
 
-  const setPulseTab = (tab: "feed" | "events") => {
+  const setPulseTab = (tab: "feed" | "events" | "directory") => {
     setPulseTabState(tab);
     if (isCapacitorEnv) return;
     try {
@@ -225,11 +229,13 @@ export default function Pulse() {
         if (!EVENTS_TABS.includes(currentHash) || currentHash === "events") {
           window.location.hash = "calendar";
         }
-      } else {
+      } else if (tab === "feed") {
         const currentHash = window.location.hash.replace("#", "");
         if (!FEED_TABS.includes(currentHash)) {
           window.location.hash = "feed-matches";
         }
+      } else if (tab === "directory") {
+        window.location.hash = "directory";
       }
     } catch { /* ignore */ }
   };
@@ -265,6 +271,15 @@ export default function Pulse() {
 
   useEffect(() => {
     fetchTournamentConfig().then(setTournamentCfg).catch(() => {});
+  }, []);
+
+  const [clubSettings, setClubSettings] = useState<any>({});
+  useEffect(() => {
+    const fetchSettings = async () => {
+      const { data } = await supabase.from("site_data").select("value").eq("key", "club_settings").maybeSingle();
+      if (data?.value) setClubSettings(data.value);
+    };
+    fetchSettings();
   }, []);
 
   const live = events.filter((e) => e.status === "active");
@@ -450,30 +465,40 @@ export default function Pulse() {
             Live feed, ongoing tournaments, and club announcements.
           </p>
 
-          <div className="mt-4 w-full flex justify-center mb-6">
-            <div className="flex bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 gap-1.5">
-              <button
-                onClick={() => setPulseTab("feed")}
-                className={`flex items-center justify-center gap-2 px-6 py-2 rounded-xl text-sm font-black transition-all ${
-                  pulseTab === "feed"
-                    ? "bg-white text-blue-900 shadow-md scale-100"
-                    : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
-                }`}
-              >
-                <Activity className="w-4 h-4" /> Live Feed
-              </button>
-              <button
-                onClick={() => setPulseTab("events")}
-                className={`flex items-center justify-center gap-2 px-6 py-2 rounded-xl text-sm font-black transition-all ${
-                  pulseTab === "events"
-                    ? "bg-white text-blue-900 shadow-md scale-100"
-                    : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
-                }`}
-              >
-                <Trophy className="w-4 h-4" /> Events
-              </button>
+            <div className="mt-4 w-full flex justify-center mb-6">
+              <div className="flex bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 gap-1.5 flex-wrap justify-center">
+                <button
+                  onClick={() => setPulseTab("feed")}
+                  className={`flex items-center justify-center gap-2 px-6 py-2 rounded-xl text-sm font-black transition-all ${
+                    pulseTab === "feed"
+                      ? "bg-white text-blue-900 shadow-md scale-100"
+                      : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
+                  }`}
+                >
+                  <Activity className="w-4 h-4" /> Live Feed
+                </button>
+                <button
+                  onClick={() => setPulseTab("events")}
+                  className={`flex items-center justify-center gap-2 px-6 py-2 rounded-xl text-sm font-black transition-all ${
+                    pulseTab === "events"
+                      ? "bg-white text-blue-900 shadow-md scale-100"
+                      : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
+                  }`}
+                >
+                  <Trophy className="w-4 h-4" /> Events
+                </button>
+                <button
+                  onClick={() => setPulseTab("directory")}
+                  className={`flex items-center justify-center gap-2 px-6 py-2 rounded-xl text-sm font-black transition-all ${
+                    pulseTab === "directory"
+                      ? "bg-white text-blue-900 shadow-md scale-100"
+                      : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
+                  }`}
+                >
+                  <Users className="w-4 h-4" /> Directory
+                </button>
+              </div>
             </div>
-          </div>
           
           {pulseTab === "events" && (
             <div className="mt-4 w-full flex justify-center">
@@ -519,6 +544,20 @@ export default function Pulse() {
 
       {pulseTab === "feed" ? (
         <FeedTab />
+      ) : pulseTab === "directory" ? (
+        clubSettings?.showPlayerDirectory || isAdmin ? (
+          <DirectoryWrapper />
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+            <div className="w-24 h-24 bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
+              <Users className="w-12 h-12 text-slate-400 dark:text-slate-500" />
+            </div>
+            <h2 className="text-3xl font-black text-slate-800 dark:text-foreground mb-4">Feature Disabled</h2>
+            <p className="text-lg text-muted-foreground max-w-md">
+              The player directory is currently hidden by the club administrators.
+            </p>
+          </div>
+        )
       ) : (
         <>
           {effectiveTab === "tournament" && tournamentCfg.enabled && (

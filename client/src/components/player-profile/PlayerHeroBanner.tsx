@@ -1,5 +1,7 @@
-import { Trophy } from "lucide-react";
+import { Trophy, ZoomIn } from "lucide-react";
 import type { PlayerProfileType } from "@/types";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
 interface PlayerHeroBannerProps {
   player: PlayerProfileType;
@@ -35,13 +37,34 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
         <div className="flex flex-col md:flex-row gap-6 items-end relative pointer-events-auto">
           {/* Avatar */}
           <div className="relative mt-8 md:mt-12 shrink-0 z-20">
-            <div className="w-40 h-40 md:w-64 md:h-64 rounded-2xl border-4 border-slate-200/70 dark:border-white/35 overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.55)] bg-slate-200 dark:bg-slate-800">
+            <div className="w-40 h-40 md:w-64 md:h-64 rounded-2xl border-4 border-slate-200/70 dark:border-white/35 overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.55)] bg-slate-200 dark:bg-slate-800 group relative">
               {player.avatar ? (
-                <img
-                  src={player.avatar}
-                  alt={player.fullName}
-                  className="w-full h-full object-cover"
-                />
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <div className="w-full h-full cursor-pointer">
+                      <img
+                        src={player.avatar}
+                        alt={player.fullName}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                        <ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md" />
+                      </div>
+                    </div>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl p-1 sm:p-2 bg-transparent border-none shadow-none flex justify-center items-center [&>button]:text-white [&>button]:bg-black/50 [&>button]:hover:bg-black/70 [&>button]:rounded-full [&>button]:p-2 [&>button]:top-2 [&>button]:right-2 sm:[&>button]:top-4 sm:[&>button]:right-4 z-[100]" showCloseButton={true}>
+                    <DialogTitle className="sr-only">{player.fullName}'s Profile Picture</DialogTitle>
+                    <TransformWrapper initialScale={1} minScale={0.5} maxScale={4} centerOnInit>
+                      <TransformComponent wrapperStyle={{ width: "100%", height: "80vh" }} contentStyle={{ width: "100%", height: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
+                        <img
+                          src={player.avatar}
+                          alt={player.fullName}
+                          className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl cursor-grab active:cursor-grabbing"
+                        />
+                      </TransformComponent>
+                    </TransformWrapper>
+                  </DialogContent>
+                </Dialog>
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-6xl font-black text-muted-foreground">
                   {player.fullName.charAt(0)}
@@ -50,7 +73,7 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
             </div>
             {/* Rank badge */}
             {eloRank && (
-              <div className="absolute -bottom-4 -right-4 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-black text-xl shadow-lg border-2 border-white dark:border-slate-950 flex items-center gap-2">
+              <div className="absolute -bottom-4 -right-4 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-black text-xl shadow-lg border-2 border-white dark:border-slate-950 flex items-center gap-2 z-30">
                 <Trophy className="w-5 h-5" /> #{eloRank}
               </div>
             )}

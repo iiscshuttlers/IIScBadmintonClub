@@ -82,6 +82,7 @@ interface PlayerCardProps {
   currentUserName?: string;
   currentUserId?: string;
   isPersonalView?: boolean;
+  allRanks?: { overall?: number; singles?: number; doubles?: number; mixed?: number };
 }
 
 export function PlayerCard({
@@ -100,6 +101,7 @@ export function PlayerCard({
   currentUserName,
   currentUserId,
   isPersonalView = false,
+  allRanks,
 }: PlayerCardProps) {
   const [, setLocation] = useLocation();
   // Calibration Phase
@@ -272,9 +274,27 @@ export function PlayerCard({
             </div>
           )}
           <div className="mt-3 flex items-center justify-center gap-2 flex-wrap">
-            <span className="text-[10px] font-bold text-muted-foreground bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md">
-              ELO {player.elo_rating ?? "—"}
-            </span>
+            {/* Admin ELO badge removed, now in Admin Stats block below */}
+            {allRanks?.overall ? (
+              <span className="text-[10px] font-bold text-violet-700 dark:text-violet-400 bg-violet-100 dark:bg-violet-900/30 px-2 py-1 rounded-md whitespace-nowrap" title={`Overall Rank: #${allRanks.overall}`}>
+                #{allRanks.overall} Ovr
+              </span>
+            ) : null}
+            {allRanks?.singles ? (
+              <span className="text-[10px] font-bold text-sky-700 dark:text-sky-400 bg-sky-100 dark:bg-sky-900/30 px-2 py-1 rounded-md whitespace-nowrap" title={`Singles Rank: #${allRanks.singles}`}>
+                #{allRanks.singles} Sing
+              </span>
+            ) : null}
+            {allRanks?.doubles ? (
+              <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-1 rounded-md whitespace-nowrap" title={`Doubles Rank: #${allRanks.doubles}`}>
+                #{allRanks.doubles} Doub
+              </span>
+            ) : null}
+            {allRanks?.mixed ? (
+              <span className="text-[10px] font-bold text-pink-700 dark:text-pink-400 bg-pink-100 dark:bg-pink-900/30 px-2 py-1 rounded-md whitespace-nowrap" title={`Mixed Rank: #${allRanks.mixed}`}>
+                #{allRanks.mixed} Mix
+              </span>
+            ) : null}
             {winPct !== null && (
               <span className="text-[10px] font-bold text-primary dark:text-primary bg-primary/15 dark:bg-primary/30 px-2.5 py-1 rounded-md">
                 {winPct}% WIN
@@ -292,13 +312,47 @@ export function PlayerCard({
             )}
           </div>
         </div>
+
+        {/* Admin Detailed Stats */}
+        {isAdmin && (
+          <div className="w-full mt-2 mb-4 px-2">
+            <div className="text-[9px] uppercase font-bold text-muted-foreground mb-1.5 tracking-wider text-left pl-1 border-b border-slate-100 dark:border-slate-800 pb-1">
+              Admin Stats (ELO & W-L)
+            </div>
+            <div className="grid grid-cols-4 gap-1.5 text-[9px] text-center font-medium">
+              <div className="bg-slate-50 dark:bg-slate-800 rounded p-1.5 flex flex-col justify-between">
+                <div className="text-[8px] text-muted-foreground uppercase mb-1 font-bold">Overall</div>
+                <div className="font-black text-[11px] mb-1">{player.elo_rating ?? "—"}</div>
+                <div>{formatWinLossRecord(player.win_loss_record)}</div>
+                <div className="font-bold text-primary mt-0.5">{parseWinPct(player.win_loss_record) ?? 0}%</div>
+              </div>
+              <div className="bg-sky-50 dark:bg-sky-950/30 rounded p-1.5 text-sky-700 dark:text-sky-400 flex flex-col justify-between">
+                <div className="text-[8px] uppercase mb-1 font-bold">Singles</div>
+                <div className="font-black text-[11px] mb-1">{player.singles_elo ?? "—"}</div>
+                <div>{formatWinLossRecord(player.singles_record)}</div>
+                <div className="font-bold mt-0.5">{parseWinPct(player.singles_record) ?? 0}%</div>
+              </div>
+              <div className="bg-emerald-50 dark:bg-emerald-950/30 rounded p-1.5 text-emerald-700 dark:text-emerald-400 flex flex-col justify-between">
+                <div className="text-[8px] uppercase mb-1 font-bold">Doubles</div>
+                <div className="font-black text-[11px] mb-1">{player.doubles_elo ?? "—"}</div>
+                <div>{formatWinLossRecord(player.doubles_record)}</div>
+                <div className="font-bold mt-0.5">{parseWinPct(player.doubles_record) ?? 0}%</div>
+              </div>
+              <div className="bg-pink-50 dark:bg-pink-950/30 rounded p-1.5 text-pink-700 dark:text-pink-400 flex flex-col justify-between">
+                <div className="text-[8px] uppercase mb-1 font-bold">Mixed</div>
+                <div className="font-black text-[11px] mb-1">{player.mixed_elo ?? "—"}</div>
+                <div>{formatWinLossRecord(player.mixed_record)}</div>
+                <div className="font-bold mt-0.5">{parseWinPct(player.mixed_record) ?? 0}%</div>
+              </div>
+            </div>
+          </div>
+        )}
         
-        {/* ACTION BUTTONS: Only shown in Personal Circle View */}
-        {isPersonalView && (
-          <div className="mt-auto w-full border-t border-slate-100 dark:border-slate-800 pt-3 space-y-2">
+        {/* ACTION BUTTONS */}
+        <div className="mt-auto w-full border-t border-slate-100 dark:border-slate-800 pt-3 space-y-2">
 
           {/* Row 1: Social actions (buddy + follow) — full-width pills */}
-          {!isOwn && (onBuddyAction || onToggleFollow) && (
+          {isPersonalView && !isOwn && (onBuddyAction || onToggleFollow) && (
             <div className="flex gap-2">
               {onBuddyAction && (
                 <button
@@ -365,7 +419,7 @@ export function PlayerCard({
 
           {/* Row 2: Utility icon buttons with labels */}
           <div className="flex items-center justify-center gap-6 pt-1">
-            {!isOwn && (
+            {isPersonalView && !isOwn && (
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); handlePing(); }}
                 className={`flex flex-col items-center justify-center gap-1 transition-colors ${
@@ -391,34 +445,8 @@ export function PlayerCard({
               <span className="text-[9px] font-black uppercase tracking-wider">Share</span>
             </button>
 
-            {isAdmin && !isOwn && (
-              <>
-                <button
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit?.(player.id); }}
-                  className="flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-blue-500 transition-colors"
-                  title="Edit Player"
-                >
-                  <div className="p-2 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/30">
-                    <Pencil className="w-3.5 h-3.5" />
-                  </div>
-                  <span className="text-[9px] font-black uppercase tracking-wider">Edit</span>
-                </button>
-                <button
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete?.(player.id); }}
-                  className="flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-rose-500 transition-colors"
-                  title="Delete Player"
-                >
-                  <div className="p-2 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-900/30">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </div>
-                  <span className="text-[9px] font-black uppercase tracking-wider">Delete</span>
-                </button>
-              </>
-            )}
           </div>
-
         </div>
-        )}
         
         {/* 'You' badge */}
         {isOwn && (

@@ -161,12 +161,7 @@ export default defineConfig(() => {
       vitePluginStorageProxy(),
 
       VitePWA({
-        registerType: "prompt",
-        workbox: {
-          globPatterns: ["**/*.{js,css,html,ico,png,svg,json,webp,woff2}"],
-          globIgnores: ["**/profile_banner*.png"],
-          maximumFileSizeToCacheInBytes: 5000000,
-        },
+        selfDestroying: true,
         manifest: {
           name: "IISc Shuttlers",
           short_name: "Shuttlers",

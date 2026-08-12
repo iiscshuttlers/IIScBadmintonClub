@@ -110,10 +110,33 @@ const TAB_GROUPS: TabGroup[] = [
   {
     title: "📊 Dashboard",
     description: "Platform statistics and overview",
-    tabs: [{ id: "overview", label: "Statistics", icon: Activity }],
+    tabs: [
+      { id: "overview", label: "Statistics", icon: Activity },
+      { id: "elo_audit", label: "ELO Audit", icon: BarChart2 },
+      { id: "feedback", label: "User Feedback", icon: MessageSquare },
+    ],
   },
   {
-    title: "📝 Content",
+    title: "👥 Player Management",
+    description: "Manage players, roles, and guests",
+    tabs: [
+      { id: "players", label: "Players", icon: Users },
+      { id: "role_manager", label: "Role Manager", icon: ShieldAlert },
+      { id: "guests", label: "Guests", icon: Ghost },
+    ],
+  },
+  {
+    title: "🏆 Tournaments & Matches",
+    description: "Manage competitive play and live scoring",
+    tabs: [
+      { id: "tournament", label: "Tournament", icon: Trophy },
+      { id: "matches", label: "Matches", icon: Trophy },
+      { id: "umpire", label: "Umpire Mode", icon: Activity },
+      { id: "disputes", label: "Disputes", icon: AlertTriangle },
+    ],
+  },
+  {
+    title: "📝 Content & Media",
     description: "Manage club content, announcements, and events",
     tabs: [
       { id: "config", label: "Landing Pages", icon: Paintbrush },
@@ -125,49 +148,28 @@ const TAB_GROUPS: TabGroup[] = [
     ],
   },
   {
-    title: "🏆 Tournament & Matches",
-    description: "Manage competitive play and live scoring",
+    title: "⚙️ Settings & Admin",
+    description: "System configuration, operations, and settings",
     tabs: [
-      { id: "tournament", label: "Tournament", icon: Trophy },
-      { id: "matches", label: "Matches", icon: Trophy },
-      { id: "umpire", label: "Umpire Mode", icon: Activity },
-      { id: "disputes", label: "Disputes", icon: AlertTriangle },
+      { id: "settings", label: "Settings", icon: Settings },
+      { id: "tooltips", label: "Tooltip Registry", icon: Megaphone },
+      { id: "activity_log", label: "Activity Log", icon: ClipboardList },
+      { id: "undo_history", label: "Undo History", icon: Undo2 },
+      { id: "recycle_bin", label: "Recycle Bin", icon: Trash2 },
     ],
   },
   {
-    title: "👥 Players",
-    description: "Manage players, guests, and ELO analytics",
-    tabs: [
-      { id: "players", label: "Players", icon: Users },
-      { id: "role_manager", label: "Role Manager", icon: ShieldAlert },
-      { id: "guests", label: "Guests", icon: Ghost },
-      { id: "elo_audit", label: "ELO Audit", icon: BarChart2 },
-    ],
-  },
-  {
-    title: "✨ Features",
-    description: "View platform features and system information",
+    title: "🛠️ Developer Hub",
+    description: "System architecture and codebase features",
     tabs: [
       { id: "architecture", label: "App Architecture", icon: LayoutGrid },
+      { id: "neural_graph", label: "Architecture Graph", icon: BrainCircuit },
       { id: "feature_registry", label: "Codebase Survey", icon: FileCode2 },
       { id: "database_schema", label: "Database Schema", icon: Database },
-      { id: "neural_graph", label: "Architecture Graph", icon: BrainCircuit },
       { id: "all_features", label: "All Features", icon: Sparkles },
       { id: "features", label: "Live Features", icon: Zap },
       { id: "features_guide", label: "Features Guide", icon: BookOpen },
-      { id: "tooltips", label: "Tooltip Registry", icon: Megaphone },
-    ],
-  },
-  {
-    title: "⚙️ System",
-    description: "System configuration, logs, and settings",
-    tabs: [
-      { id: "settings", label: "Settings", icon: Settings },
-      { id: "feedback", label: "User Feedback", icon: MessageSquare },
-      { id: "activity_log", label: "Activity Log", icon: ClipboardList },
       { id: "changelog", label: "System Logs", icon: FileCode2 },
-      { id: "undo_history", label: "Undo History", icon: Undo2 },
-      { id: "recycle_bin", label: "Recycle Bin", icon: Trash2 },
     ],
   },
 ];

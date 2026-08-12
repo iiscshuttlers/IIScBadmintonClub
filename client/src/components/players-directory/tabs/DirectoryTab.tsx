@@ -36,7 +36,7 @@ interface DirectoryTabProps {
   // Filter props
   searchQuery: string;
   setSearchQuery: (q: string) => void;
-  sortBy: "elo" | "winpct" | "name" | "department" | "level";
+  sortBy: "elo" | "singles" | "doubles" | "mixed" | "winpct" | "name" | "department" | "level";
   setSortBy: (s: any) => void;
   showFilters: boolean;
   setShowFilters: (s: boolean) => void;
@@ -53,6 +53,7 @@ interface DirectoryTabProps {
   followingIds: Set<string>;
   handleToggleFollow: (id: string) => void;
   isPersonalView?: boolean;
+  rankMap?: Record<string, { overall: number; singles: number; doubles: number; mixed: number }>;
 }
 
 export function DirectoryTab({
@@ -88,6 +89,7 @@ export function DirectoryTab({
   followingIds,
   handleToggleFollow,
   isPersonalView = false,
+  rankMap = {},
 }: DirectoryTabProps) {
   const [viewMode, setViewMode] = useState<"individuals" | "teams">("individuals");
 
@@ -190,6 +192,7 @@ export function DirectoryTab({
                   currentUserName={ownProfile?.full_name}
                   currentUserId={ownProfile?.id}
                   isPersonalView={isPersonalView}
+                  allRanks={rankMap[player.id]}
                 />
               </div>
             ))}
@@ -286,6 +289,7 @@ export function DirectoryTab({
                   currentUserName={ownProfile?.full_name}
                   currentUserId={ownProfile?.id}
                   isPersonalView={isPersonalView}
+                  allRanks={rankMap[player.id]}
                 />
               </motion.div>
             ))}

@@ -524,7 +524,6 @@ function AppContent() {
               <BackToTop />
             </Router>
             <Toaster />
-            <PwaUpdatePrompt />
             <MatchAlert />
             {profile && (
               <LogMatchModal

@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { Save, Loader2, Settings, Zap, WrenchIcon, Bell, AlertTriangle, Power, Smartphone } from "lucide-react";
+import { Save, Loader2, Settings, Zap, WrenchIcon, Bell, AlertTriangle, Power, Smartphone, Download } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { InfoModal } from "@/components/InfoModal";
@@ -19,6 +19,7 @@ interface ClubSettings {
   confirmationNudgeHours: number;
   maxMatchesPerDay: number;
   showTournamentStandings: boolean;
+  showPlayerDirectory: boolean;
 }
 
 const DEFAULTS: ClubSettings = {
@@ -29,6 +30,7 @@ const DEFAULTS: ClubSettings = {
   confirmationNudgeHours: 12,
   maxMatchesPerDay: 10,
   showTournamentStandings: false,
+  showPlayerDirectory: false,
 };
 
 export function AdminSettings() {
@@ -83,6 +85,118 @@ export function AdminSettings() {
     } finally {
       setSavingUpdate(false);
     }
+  };
+
+  const [exporting, setExporting] = useState<string | null>(null);
+
+  const exportData = async (tableName: string, label: string) => {
+    try {
+      const formatSelect = document.getElementById(`fmt-${tableName}`) as HTMLSelectElement;
+      const format = formatSelect ? formatSelect.value : "csv";
+
+      setExporting(tableName);
+      toast.loading(`Fetching ${label.toLowerCase()}...`, { id: "export-data" });
+      const { data, error } = await supabase.from(tableName).select("*");
+      if (error) throw error;
+      if (!data || data.length === 0) throw new Error(`No ${label.toLowerCase()} found`);
+
+      const timestamp = new Date().toISOString().split("T")[0];
+      const filename = `iisbc_${tableName}_backup_${timestamp}`;
+
+      if (format === 'json') {
+        const jsonString = JSON.stringify(data, null, 2);
+        const blob = new Blob([jsonString], { type: "application/json" });
+        triggerDownload(blob, `${filename}.json`);
+      } else if (format === 'csv') {
+        const headers = Object.keys(data[0]);
+        const csvLines = [headers.join(",")];
+        for (const row of data) {
+          const line = headers.map(header => {
+            let val = row[header];
+            if (val === null || val === undefined) val = "";
+            else if (typeof val === "object") val = JSON.stringify(val);
+            else val = String(val);
+            val = val.replace(/"/g, '""');
+            if (val.includes(",") || val.includes('"') || val.includes("\n")) {
+              val = `"${val}"`;
+            }
+            return val;
+          });
+          csvLines.push(line.join(","));
+        }
+        const blob = new Blob([csvLines.join("\n")], { type: "text/csv;charset=utf-8;" });
+        triggerDownload(blob, `${filename}.csv`);
+      } else if (format === 'xlsx') {
+        // dynamic import xlsx
+        const XLSX = await import("xlsx");
+        const sheetData = data.map(row => {
+          const newRow: any = {};
+          for (const key in row) {
+            newRow[key] = typeof row[key] === 'object' && row[key] !== null ? JSON.stringify(row[key]) : row[key];
+          }
+          return newRow;
+        });
+        const worksheet = XLSX.utils.json_to_sheet(sheetData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, label);
+        XLSX.writeFile(workbook, `${filename}.xlsx`);
+      } else if (format === 'pdf') {
+        // Native PDF print via popup
+        const headers = Object.keys(data[0]);
+        let html = `<html><head><title>${label} Backup - ${timestamp}</title><style>
+          body { font-family: sans-serif; margin: 20px; font-size: 10px; }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { border: 1px solid #ddd; padding: 4px; text-align: left; }
+          th { background-color: #f2f2f2; }
+          @media print { @page { size: landscape; } }
+        </style></head><body>`;
+        html += `<h2>${label} Backup - ${timestamp}</h2>`;
+        html += `<table><thead><tr>`;
+        headers.forEach(h => html += `<th>${h}</th>`);
+        html += `</tr></thead><tbody>`;
+        data.forEach(row => {
+          html += `<tr>`;
+          headers.forEach(h => {
+             let val = row[h];
+             if (val === null || val === undefined) val = "";
+             else if (typeof val === "object") val = JSON.stringify(val);
+             else val = String(val);
+             html += `<td>${val.substring(0, 150)}</td>`;
+          });
+          html += `</tr>`;
+        });
+        html += `</tbody></table></body></html>`;
+
+        const printWin = window.open('', '', 'width=800,height=600');
+        if (printWin) {
+          printWin.document.open();
+          printWin.document.write(html);
+          printWin.document.close();
+          setTimeout(() => {
+            printWin.print();
+            printWin.close();
+          }, 250);
+        } else {
+           throw new Error("Popup blocked! Please allow popups for PDF printing.");
+        }
+      }
+
+      await supabase.from("admin_logs").insert({ admin_email: session?.user?.email || "admin", action: `Exported ${tableName} to ${format.toUpperCase()}`, created_at: new Date().toISOString() });
+      toast.success(`${label} exported as ${format.toUpperCase()}!`, { id: "export-data" });
+    } catch (err: any) {
+      toast.error(err.message || `Failed to export ${label.toLowerCase()}`, { id: "export-data" });
+    } finally {
+      setExporting(null);
+    }
+  };
+
+  const triggerDownload = (blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   useEffect(() => { load(); }, [load]);
@@ -165,17 +279,32 @@ export function AdminSettings() {
           <Zap className="w-5 h-5 text-amber-500" />
           <h3 className="font-black text-slate-800 dark:text-foreground">Feature Toggles</h3>
         </div>
-        <div className="flex items-center justify-between mb-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
-          <div>
-            <p className="font-bold text-slate-800 dark:text-foreground text-sm">Show Tournament Standings</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Allow players to see the /standings page. (Admins can always see it)</p>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+            <div>
+              <p className="font-bold text-slate-800 dark:text-foreground text-sm">Show Tournament Standings</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Allow players to see the /standings page. (Admins can always see it)</p>
+            </div>
+            <button
+              onClick={() => update("showTournamentStandings", !settings.showTournamentStandings)}
+              className={`relative w-12 h-6 rounded-full transition-colors ${settings.showTournamentStandings ? "bg-amber-500" : "bg-slate-300 dark:bg-slate-600"}`}
+            >
+              <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${settings.showTournamentStandings ? "left-6" : "left-0.5"}`} />
+            </button>
           </div>
-          <button
-            onClick={() => update("showTournamentStandings", !settings.showTournamentStandings)}
-            className={`relative w-12 h-6 rounded-full transition-colors ${settings.showTournamentStandings ? "bg-amber-500" : "bg-slate-300 dark:bg-slate-600"}`}
-          >
-            <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${settings.showTournamentStandings ? "left-6" : "left-0.5"}`} />
-          </button>
+
+          <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+            <div>
+              <p className="font-bold text-slate-800 dark:text-foreground text-sm">Show Player Directory</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Show the searchable player directory in Pulse to all users. (Admins can always see it)</p>
+            </div>
+            <button
+              onClick={() => update("showPlayerDirectory", !settings.showPlayerDirectory)}
+              className={`relative w-12 h-6 rounded-full transition-colors ${settings.showPlayerDirectory ? "bg-amber-500" : "bg-slate-300 dark:bg-slate-600"}`}
+            >
+              <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${settings.showPlayerDirectory ? "left-6" : "left-0.5"}`} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -259,6 +388,117 @@ export function AdminSettings() {
             {savingUpdate ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bell className="w-4 h-4" />}
             {savingUpdate ? "Sending..." : "Send Now"}
           </button>
+        </div>
+      </div>
+
+      {/* Data Export */}
+      <div className={cardCls}>
+        <div className="flex items-center gap-2 mb-4">
+          <Download className="w-5 h-5 text-emerald-500" />
+          <h3 className="font-black text-slate-800 dark:text-foreground">Data Export</h3>
+          <InfoModal
+            title="DATA EXPORT"
+            items={[
+              { badge: "BACKUP", title: "Instant Download", desc: "Instantly download files containing all records directly to your computer. Supports CSV, Excel, JSON, and PDF." }
+            ]}
+          />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Players */}
+          <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+            <div>
+              <p className="font-bold text-slate-800 dark:text-foreground text-sm">Players</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5 max-w-sm">Names, ELOs, roles, etc.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <select id="fmt-players" className="text-xs p-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 outline-none">
+                 <option value="csv">CSV</option>
+                 <option value="xlsx">Excel</option>
+                 <option value="json">JSON</option>
+                 <option value="pdf">PDF</option>
+              </select>
+              <button
+                onClick={() => exportData("players", "Players")}
+                disabled={exporting !== null}
+                className="shrink-0 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition disabled:opacity-50 flex items-center gap-2 shadow-sm"
+              >
+                {exporting === "players" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                Export
+              </button>
+            </div>
+          </div>
+
+          {/* Matches */}
+          <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+            <div>
+              <p className="font-bold text-slate-800 dark:text-foreground text-sm">Matches</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5 max-w-sm">Scores, timestamps, umpires.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <select id="fmt-tournament_matches" className="text-xs p-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 outline-none">
+                 <option value="csv">CSV</option>
+                 <option value="xlsx">Excel</option>
+                 <option value="json">JSON</option>
+                 <option value="pdf">PDF</option>
+              </select>
+              <button
+                onClick={() => exportData("tournament_matches", "Matches")}
+                disabled={exporting !== null}
+                className="shrink-0 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition disabled:opacity-50 flex items-center gap-2 shadow-sm"
+              >
+                {exporting === "tournament_matches" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                Export
+              </button>
+            </div>
+          </div>
+
+          {/* Tournaments */}
+          <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+            <div>
+              <p className="font-bold text-slate-800 dark:text-foreground text-sm">Tournaments</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5 max-w-sm">All tournament listings.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <select id="fmt-tournaments" className="text-xs p-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 outline-none">
+                 <option value="csv">CSV</option>
+                 <option value="xlsx">Excel</option>
+                 <option value="json">JSON</option>
+                 <option value="pdf">PDF</option>
+              </select>
+              <button
+                onClick={() => exportData("tournaments", "Tournaments")}
+                disabled={exporting !== null}
+                className="shrink-0 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition disabled:opacity-50 flex items-center gap-2 shadow-sm"
+              >
+                {exporting === "tournaments" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                Export
+              </button>
+            </div>
+          </div>
+
+          {/* Teams */}
+          <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+            <div>
+              <p className="font-bold text-slate-800 dark:text-foreground text-sm">Doubles Teams</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5 max-w-sm">Registered teams & stats.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <select id="fmt-doubles_teams" className="text-xs p-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 outline-none">
+                 <option value="csv">CSV</option>
+                 <option value="xlsx">Excel</option>
+                 <option value="json">JSON</option>
+                 <option value="pdf">PDF</option>
+              </select>
+              <button
+                onClick={() => exportData("doubles_teams", "Teams")}
+                disabled={exporting !== null}
+                className="shrink-0 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition disabled:opacity-50 flex items-center gap-2 shadow-sm"
+              >
+                {exporting === "doubles_teams" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                Export
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

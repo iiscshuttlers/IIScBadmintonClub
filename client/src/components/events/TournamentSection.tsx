@@ -295,8 +295,8 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
   
   // Calculate effective form status using both explicit form_status and form_close_date deadline
   let displayFormStatus = liveTournament?.form_status ?? config.formStatus;
-  if (liveTournament?.form_close_date) {
-    const closeTime = new Date(liveTournament.form_close_date).getTime();
+  if ((liveTournament as any)?.form_close_date) {
+    const closeTime = new Date((liveTournament as any).form_close_date).getTime();
     const now = Date.now();
     if (!isNaN(closeTime) && now >= closeTime) {
       displayFormStatus = "closed";
