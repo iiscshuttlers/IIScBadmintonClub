@@ -366,21 +366,8 @@ export function useProfileSetup() {
       }
     } catch (err: any) {
       if (!silent) {
-        if (err.code === "23505") {
-          // Attempt auto-claim profile in case they logged in with the matching verified email
-          const { error: claimErr, data: claimed } = await supabase.rpc("auto_claim_duplicate_profile" as any);
-          
-          if (!claimErr && claimed) {
-            toast.success("Profile successfully claimed! Please click Save again to apply these updates.");
-          } else {
-            toast.error("Duplicate profile", { 
-              description: "This IISc Email belongs to an existing profile. Please log out and Sign In using that exact email, OR contact a club admin to manually link it." 
-            });
-          }
-        } else { 
-          console.error("Error saving profile:", err); 
-          toast.error("Failed to save", { description: err.message }); 
-        }
+        console.error("Error saving profile:", err); 
+        toast.error("Failed to save", { description: err.message || "An error occurred." }); 
       }
     } finally {
       if (!silent) setLoading(false);
