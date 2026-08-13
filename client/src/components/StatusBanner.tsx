@@ -122,12 +122,12 @@ export default function StatusBanner() {
         if (todayHoliday) {
           msgs.push({
             text: `🔴 Courts closed today — ${todayHoliday.name}`,
-            colorClass: "text-red-300 font-bold drop-shadow-md",
+            colorClass: "text-primary-foreground font-bold drop-shadow-sm",
           });
         } else if (tomorrowHoliday) {
           msgs.push({
             text: `⚠️ Courts closed tomorrow — ${tomorrowHoliday.name}`,
-            colorClass: "text-amber-300 font-bold drop-shadow-md",
+            colorClass: "text-primary-foreground font-bold drop-shadow-sm",
           });
         }
 
@@ -144,7 +144,7 @@ export default function StatusBanner() {
               });
               msgs.push({
                 text: `📅 Courts closed on ${readable} — ${h.name}`,
-                colorClass: "text-foreground",
+                colorClass: "text-primary-foreground font-bold drop-shadow-sm",
               });
             }
           }

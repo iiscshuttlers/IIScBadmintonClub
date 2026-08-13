@@ -12,10 +12,12 @@ import { BracketVisual } from "@/components/tournament/BracketVisual";
 import {
   Loader2, Save, Trophy, Users, Swords, Archive, Plus, X, Search,
   ChevronDown, ChevronUp, Lock, Unlock, Play, SkipForward, Settings2,
-  CalendarDays, MapPin, Link, Unlink, Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw, Check, Bell, Camera
+  CalendarDays, MapPin, Link, Unlink, Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw, Check, Bell, Camera, Pencil
 } from "lucide-react";
 import { InfoModal } from "@/components/InfoModal";
 import { PlayerSelect } from "@/components/umpire/PlayerSelect";
+import { getDepartmentAcronym } from "@/data/departments";
+import { exportToImage } from "@/utils/exportUtils";
 
 // ── CSV helpers ────────────────────────────────────────────────────────────────
 
@@ -639,7 +641,29 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState<Record<string, string>>({});
   const [partnerSearch, setPartnerSearch] = useState<Record<string, string>>({});
-  const [openCat, setOpenCat] = useState<string>(tournament.categories[0] ?? "");
+  const getHashCat = () => {
+    const parts = window.location.hash.replace("#", "").split("/");
+    return parts[2] || tournament.categories[0] || "";
+  };
+  const [activeCat, setActiveCat] = useState<string>(getHashCat());
+
+  useEffect(() => {
+    const handleHash = () => {
+      const parts = window.location.hash.replace("#", "").split("/");
+      if (parts[1] === "participants") {
+         setActiveCat(parts[2] || tournament.categories[0] || "");
+      }
+    };
+    window.addEventListener("hashchange", handleHash);
+    handleHash();
+    return () => window.removeEventListener("hashchange", handleHash);
+  }, [tournament.categories]);
+
+  const setTabCat = (cat: string) => {
+    setActiveCat(cat);
+    const parts = window.location.hash.replace("#", "").split("/");
+    window.location.hash = `${parts[0] || ""}/participants/${cat}`;
+  };
   const [adding, setAdding] = useState<string | null>(null);
   const [externalName, setExternalName] = useState("");
   const [thirdPlacePerCat, setThirdPlacePerCat] = useState<Record<string, boolean>>({});
@@ -648,9 +672,99 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
   const [bulkImporting, setBulkImporting] = useState(false);
   const [linkingId, setLinkingId] = useState<string | null>(null);
   const [linkSearch, setLinkSearch] = useState("");
+  const [linkSearch2, setLinkSearch2] = useState("");
   const [selectedParts, setSelectedParts] = useState<string[]>([]);
+  const [filterStatus, setFilterStatus] = useState<Record<string, "all" | "registered" | "external">>({});
+  const [adminPlayers, setAdminPlayers] = useState<any[]>([]);
+  const [editingName, setEditingName] = useState<{ id: string, name1: string, name2: string } | null>(null);
+  const [duplicateReport, setDuplicateReport] = useState<{ cat: string, groups: { name: string, details: string }[][] } | null>(null);
   const isDoubles = (cat: string) => ["MD", "WD", "XD"].includes(cat);
   const { confirm } = useConfirm();
+
+  const downloadCategoryCSV = (cat: string) => {
+    const parts = participants[cat] ?? [];
+    const statusFilt = filterStatus[cat] || "all";
+    const doubles = isDoubles(cat);
+    
+    const filtered = parts.filter(p => {
+      if (statusFilt === "registered") return p.player_id !== null;
+      if (statusFilt === "external") return p.player_id === null;
+      return true;
+    });
+
+    const header = doubles 
+      ? ["Seed", "Player 1", "Player 1 Status", "Player 2", "Player 2 Status"] 
+      : ["Seed", "Player Name", "Status"];
+
+    const rows = filtered.map(p => {
+      const player = allPlayers?.find(pl => pl.id === p.player_id);
+      const partner = allPlayers?.find(pl => pl.id === p.partner_id);
+      
+      if (doubles) {
+        const p1Name = player?.full_name ?? p.display_name?.split(' &')[0]?.trim() ?? "Unknown";
+        const p2Name = partner?.full_name ?? p.display_name?.split(' &')[1]?.trim() ?? "";
+        return [
+          (p.seed ?? "").toString(),
+          p1Name,
+          p.player_id ? "Registered" : "External",
+          p2Name,
+          p.partner_id ? "Registered" : (p2Name ? "External" : "")
+        ];
+      } else {
+        return [
+          (p.seed ?? "").toString(),
+          p.display_name ?? player?.full_name ?? "Unknown",
+          p.player_id ? "Registered" : "External"
+        ];
+      }
+    });
+
+    downloadCSV(`${tournament.name.replace(/\s+/g, '_')}_${cat}_participants.csv`, [header, ...rows]);
+  };
+
+  const downloadCategoryJPG = async (cat: string) => {
+    const parts = participants[cat] ?? [];
+    const statusFilt = filterStatus[cat] || "all";
+    const doubles = isDoubles(cat);
+    
+    const filtered = parts.filter(p => {
+      if (statusFilt === "registered") return p.player_id !== null;
+      if (statusFilt === "external") return p.player_id === null;
+      return true;
+    });
+
+    const header = doubles 
+      ? ["Seed", "Player 1", "Player 1 Status", "Player 2", "Player 2 Status"] 
+      : ["Seed", "Player Name", "Status"];
+
+    const rows = filtered.map(p => {
+      const player = allPlayers?.find(pl => pl.id === p.player_id);
+      const partner = allPlayers?.find(pl => pl.id === p.partner_id);
+      
+      if (doubles) {
+        const p1Name = player?.full_name ?? p.display_name?.split(' &')[0]?.trim() ?? "Unknown";
+        const p2Name = partner?.full_name ?? p.display_name?.split(' &')[1]?.trim() ?? "";
+        return [
+          (p.seed ?? "").toString(),
+          p1Name,
+          p.player_id ? "Registered" : "External",
+          p2Name,
+          p.partner_id ? "Registered" : (p2Name ? "External" : "")
+        ];
+      } else {
+        return [
+          (p.seed ?? "").toString(),
+          p.display_name ?? player?.full_name ?? "Unknown",
+          p.player_id ? "Registered" : "External"
+        ];
+      }
+    });
+
+    const sheetName = `${tournament.name} - ${cat} Participants`;
+    const filename = `${tournament.name.replace(/\s+/g, '_')}_${cat}_participants`;
+    
+    await exportToImage([{ name: sheetName, data: [header, ...rows] }], filename);
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -659,6 +773,11 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
       .select("*")
       .eq("tournament_id", tournament.id)
       .order("seed", { ascending: true });
+
+    // Also fetch admin players with emails for better CSV matching
+    const { data: playersData } = await supabase.from("players").select("id, full_name, email, iisc_email").is("deleted_at", null);
+    if (playersData) setAdminPlayers(playersData);
+
     const grouped: Record<string, Participant[]> = {};
     for (const cat of tournament.categories) grouped[cat] = [];
     for (const p of (data ?? []) as Participant[]) {
@@ -740,15 +859,72 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
     setParticipants((prev) => {
       const updated = { ...prev };
       for (const cat of Object.keys(updated)) {
-        updated[cat] = updated[cat].map((p) =>
-          p.id === participantId ? { ...p, player_id: playerId, display_name: newDisplayName } : p
-        );
+        updated[cat] = updated[cat].map((pt) => pt.id === participantId ? { ...pt, player_id: playerId, display_name: newDisplayName } : pt);
       }
       return updated;
     });
     setLinkingId(null);
     setLinkSearch("");
     toast.success(`Linked to ${playerName}. Hint: Go to Bracket tab and click "Sync Names" to update bracket!`);
+  };
+
+  const linkParticipantToPartner = async (participantId: string, partnerId: string | null, partnerName: string) => {
+    const p = participants[Object.keys(participants).find(cat => participants[cat].some(p => p.id === participantId)) || ""]?.find(p => p.id === participantId);
+    let newDisplayName = partnerName;
+    if (p) {
+      const player1 = allPlayers?.find((pl) => pl.id === p.player_id);
+      if (player1) newDisplayName = `${player1.full_name} & ${partnerName}`;
+      else if (p.display_name && p.display_name.includes('&')) {
+        const parts = p.display_name.split('&');
+        newDisplayName = `${parts[0].trim()} & ${partnerName}`;
+      } else if (p.display_name) {
+        newDisplayName = `${p.display_name.trim()} & ${partnerName}`;
+      }
+    }
+
+    const { error } = await supabase.from("tournament_participants")
+      .update({ partner_id: partnerId, display_name: newDisplayName })
+      .eq("id", participantId);
+    if (error) { toast.error(error.message); return; }
+    
+    setParticipants((prev) => {
+      const updated = { ...prev };
+      for (const cat of Object.keys(updated)) {
+        updated[cat] = updated[cat].map((pt) => pt.id === participantId ? { ...pt, partner_id: partnerId, display_name: newDisplayName } : pt);
+      }
+      return updated;
+    });
+    setLinkingId(null);
+    setLinkSearch2("");
+  };
+
+  const saveEditedName = async () => {
+    if (!editingName) return;
+    const p = participants[Object.keys(participants).find(cat => participants[cat].some(p => p.id === editingName.id)) || ""]?.find(p => p.id === editingName.id);
+    if (!p) return;
+    
+    const doubles = ["MD", "WD", "XD"].includes(p.category);
+    const newDisplayName = doubles 
+      ? `${editingName.name1.trim()} & ${editingName.name2.trim()}`
+      : editingName.name1.trim();
+      
+    const { error } = await supabase.from("tournament_participants")
+      .update({ display_name: newDisplayName })
+      .eq("id", editingName.id);
+      
+    if (error) { toast.error(error.message); return; }
+    
+    setParticipants((prev) => {
+      const updated = { ...prev };
+      for (const cat of Object.keys(updated)) {
+        updated[cat] = updated[cat].map((pt) =>
+          pt.id === editingName.id ? { ...pt, display_name: newDisplayName } : pt
+        );
+      }
+      return updated;
+    });
+    setEditingName(null);
+    toast.success("Name updated. Sync bracket if generated!");
   };
 
   const saveSeeds = async (cat: string) => {
@@ -784,21 +960,68 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
   };
 
   // Parse bulk pasted text — each non-empty line is one entry.
-  // Singles: "Name"  |  Doubles: "Name1\tName2" or "Name1 & Name2"
   const parseBulkLines = (text: string, cat: string) => {
     const doubles = isDoubles(cat);
     return text.split("\n").map((line) => line.trim()).filter(Boolean).map((line) => {
+      const matchPlayer = (name: string, personal: string, iisc: string) => {
+        if (!name && !personal && !iisc) return null;
+        return adminPlayers.find(p => {
+          if (name && p.full_name && p.full_name.toLowerCase() === name.toLowerCase()) return true;
+          if (personal && p.email && p.email.toLowerCase() === personal.toLowerCase()) return true;
+          if (iisc && p.iisc_email && p.iisc_email.toLowerCase() === iisc.toLowerCase()) return true;
+          
+          if (personal && p.iisc_email && p.iisc_email.toLowerCase() === personal.toLowerCase()) return true;
+          if (iisc && p.email && p.email.toLowerCase() === iisc.toLowerCase()) return true;
+          return false;
+        }) ?? null;
+      };
+
       if (doubles) {
         // tab-separated (Excel copy) or " & " separated
-        const parts = line.includes("\t") ? line.split("\t") : line.split(/\s*&\s*/);
-        const name1 = parts[0]?.trim() ?? "";
-        const name2 = parts[1]?.trim() ?? "";
-        const match1 = (allPlayers ?? []).find((p) => p.full_name.toLowerCase() === name1.toLowerCase()) ?? null;
-        const match2 = name2 ? ((allPlayers ?? []).find((p) => p.full_name.toLowerCase() === name2.toLowerCase()) ?? null) : null;
+        const rawParts = line.includes("\t") ? line.split("\t").map(s => s.trim()) : line.split(/\s*&\s*/).map(s => s.trim());
+        const validParts = rawParts.filter(Boolean);
+        
+        let name1 = "", name2 = "", email1 = "", email2 = "";
+        
+        if (validParts.length >= 6) {
+           name1 = validParts[0]; email1 = validParts[1] || validParts[2];
+           name2 = validParts[3]; email2 = validParts[4] || validParts[5];
+        } else {
+           let state = 1; 
+           for (const p of validParts) {
+             const isEmail = p.includes("@");
+             if (state === 1) {
+                if (!name1 && !isEmail) { name1 = p; }
+                else if (isEmail) {
+                   if (!email1) email1 = p;
+                } else {
+                   state = 2;
+                   name2 = p;
+                }
+             } else if (state === 2) {
+                if (isEmail) {
+                   if (!email2) email2 = p;
+                } else {
+                   if (!name2) name2 = p;
+                   else name2 += " " + p;
+                }
+             }
+           }
+        }
+
+        const match1 = matchPlayer(name1, email1, email1) || ((allPlayers ?? []).find(p => name1 && p.full_name.toLowerCase() === name1.toLowerCase()) ?? null);
+        const match2 = name2 ? (matchPlayer(name2, email2, email2) || ((allPlayers ?? []).find(p => name2 && p.full_name.toLowerCase() === name2.toLowerCase()) ?? null)) : null;
         return { raw: line, name1, name2, match1, match2 };
       } else {
-        const match = (allPlayers ?? []).find((p) => p.full_name.toLowerCase() === line.toLowerCase()) ?? null;
-        return { raw: line, name1: line, name2: "", match1: match, match2: null };
+        const parts = line.split("\t").map(s => s.trim()).filter(Boolean);
+        let name = "", email = "";
+        for (const p of parts) {
+          if (p.includes("@")) { if (!email) email = p; }
+          else { if (!name) name = p; }
+        }
+        
+        const match = matchPlayer(name, email, email) || ((allPlayers ?? []).find(p => name && p.full_name.toLowerCase() === name.toLowerCase()) ?? null);
+        return { raw: line, name1: name, name2: "", match1: match, match2: null };
       }
     });
   };
@@ -832,10 +1055,12 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
 
   const downloadParticipantTemplate = (cat: string) => {
     const doubles = isDoubles(cat);
-    const header = doubles ? ["Player1", "Player2"] : ["PlayerName"];
+    const header = doubles 
+      ? ["Player1 Name", "Player1 Personal Email", "Player1 IISc Email", "Player2 Name", "Player2 Personal Email", "Player2 IISc Email"] 
+      : ["Player Name", "Personal Email", "IISc Email"];
     const examples = doubles
-      ? [["Rahul Sharma", "Priya Nair"], ["Arun Kumar", "Meena R"]]
-      : [["Rahul Sharma"], ["Priya Nair"], ["Arun Kumar"]];
+      ? [["Rahul Sharma", "rahul@gmail.com", "rahul@iisc.ac.in", "Priya Nair", "priya@gmail.com", "priya@iisc.ac.in"]]
+      : [["Rahul Sharma", "rahul@gmail.com", "rahul@iisc.ac.in"]];
     downloadCSV(`${cat}_participants_template.csv`, [header, ...examples]);
   };
 
@@ -844,7 +1069,13 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
     const doubles = isDoubles(cat);
     // Skip header row if first cell looks like a header label
     const dataRows = rows[0]?.[0]?.toLowerCase().match(/^(player|name)/) ? rows.slice(1) : rows;
-    const lines = dataRows.map((r) => doubles ? `${r[0] ?? ""}\t${r[1] ?? ""}` : (r[0] ?? "")).filter(Boolean);
+    const lines = dataRows.map((r) => {
+      if (doubles) {
+        return [r[0] ?? "", r[1] ?? "", r[2] ?? "", r[3] ?? "", r[4] ?? "", r[5] ?? ""].join("\t");
+      } else {
+        return [r[0] ?? "", r[1] ?? "", r[2] ?? ""].join("\t");
+      }
+    }).filter(line => line.replace(/\t/g, '').trim().length > 0);
     setBulkText(lines.join("\n"));
     setBulkCat(cat);
   };
@@ -852,6 +1083,92 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
   const hasMatches = async () => {
     const { count } = await supabase.from("tournament_matches").select("id", { count: "exact", head: true }).eq("tournament_id", tournament.id);
     return (count ?? 0) > 0;
+  };
+
+  const checkDuplicates = (cat: string, catParts: any[], doubles: boolean) => {
+    const isSimilar = (n1: string, n2: string) => {
+      const clean = (s: string) => s.replace(/\bguest\b/gi, '').replace(/[^a-z0-9\s]/gi, '').toLowerCase().trim();
+      const a = clean(n1);
+      const b = clean(n2);
+      if (a === b) return true;
+      if (a.length > 5 && b.includes(a)) return true;
+      if (b.length > 5 && a.includes(b)) return true;
+      
+      const wa = a.split(/\s+/).filter(w => w.length > 2);
+      const wb = b.split(/\s+/).filter(w => w.length > 2);
+      if (wa.length === 0 || wb.length === 0) return false;
+      let match = 0;
+      wa.forEach(w => { if (wb.some(x => x === w)) match++; });
+      if (match >= 2) return true;
+      
+      const dist = (s1: string, s2: string) => {
+        const m = s1.length, n = s2.length;
+        const dp = Array.from({length: m+1}, () => new Array(n+1).fill(0));
+        for(let i=0; i<=m; i++) dp[i][0] = i;
+        for(let j=0; j<=n; j++) dp[0][j] = j;
+        for(let i=1; i<=m; i++) {
+          for(let j=1; j<=n; j++) {
+            dp[i][j] = s1[i-1] === s2[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+          }
+        }
+        return dp[m][n];
+      };
+      if (Math.abs(a.length - b.length) < 3 && dist(a, b) <= 2) return true;
+      return false;
+    };
+
+    const mappedNames: { name: string, details: string }[] = [];
+    catParts.forEach((p, index) => {
+      const details = p.seed ? `Seed ${p.seed}` : `Row ${index + 1}`;
+      if (doubles) {
+        let n1 = p.display_name ?? allPlayers?.find((pl) => pl.id === p.player_id)?.full_name ?? "Unknown";
+        let n2 = allPlayers?.find((pl) => pl.id === p.partner_id)?.full_name ?? "partner";
+        if (p.display_name && p.display_name.includes("&")) {
+          const splitNames = p.display_name.split("&").map(s => s.trim());
+          n1 = splitNames[0];
+          n2 = splitNames[1] || n2;
+        }
+        mappedNames.push({ name: n1, details });
+        mappedNames.push({ name: n2, details });
+      } else {
+        let n = p.display_name ?? allPlayers?.find((pl) => pl.id === p.player_id)?.full_name ?? "Unknown";
+        mappedNames.push({ name: n, details });
+      }
+    });
+
+    const nameItems = mappedNames.filter(n => n.name && n.name.toLowerCase() !== "unknown" && n.name.toLowerCase() !== "partner");
+    const groups: { name: string, details: string }[][] = [];
+    const visited = new Set<number>();
+
+    for (let i = 0; i < nameItems.length; i++) {
+      if (visited.has(i)) continue;
+      
+      let currentGroup = [nameItems[i]];
+      visited.add(i);
+
+      let added = true;
+      while(added) {
+        added = false;
+        for (let j = 0; j < nameItems.length; j++) {
+          if (visited.has(j)) continue;
+          if (currentGroup.some(gItem => isSimilar(gItem.name, nameItems[j].name))) {
+             currentGroup.push(nameItems[j]);
+             visited.add(j);
+             added = true;
+          }
+        }
+      }
+
+      if (currentGroup.length > 1) {
+        groups.push(currentGroup);
+      }
+    }
+
+    if (groups.length > 0) {
+      setDuplicateReport({ cat, groups });
+    } else {
+      toast.success(`No similar or duplicate names found in ${cat}!`);
+    }
   };
 
   const generateBracket = async (onlyCat?: string) => {
@@ -918,8 +1235,82 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
 
   return (
     <div className="space-y-4">
-      {tournament.categories.map((cat) => {
-        const parts = participants[cat] ?? [];
+      {duplicateReport && (
+        <div className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
+            <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+               <h2 className="font-black text-lg text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                 <AlertCircle className="w-5 h-5 text-amber-500" />
+                 Potential Duplicates in {duplicateReport.cat}
+               </h2>
+               <div className="flex items-center gap-2">
+                 <button 
+                   onClick={() => {
+                     const rows = [["Group", "Name", "Details"]];
+                     duplicateReport.groups.forEach((g, i) => g.forEach(item => rows.push([`Group ${i+1}`, item.name, item.details])));
+                     const csvContent = rows.map(e => e.map(cell => `"${cell}"`).join(",")).join("\n");
+                     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                     const link = document.createElement("a");
+                     link.href = URL.createObjectURL(blob);
+                     link.setAttribute("download", `duplicates_${duplicateReport.cat}.csv`);
+                     document.body.appendChild(link);
+                     link.click();
+                     document.body.removeChild(link);
+                   }}
+                   className="flex items-center gap-1 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-primary transition px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md"
+                 >
+                   <Download className="w-3 h-3" /> Download
+                 </button>
+                 <button onClick={() => setDuplicateReport(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
+                   <X className="w-5 h-5"/>
+                 </button>
+               </div>
+            </div>
+            <div className="p-5 overflow-y-auto space-y-4">
+               {duplicateReport.groups.map((g, i) => (
+                  <div key={i} className="bg-amber-50/50 dark:bg-amber-950/10 p-4 rounded-xl border border-amber-200/50 dark:border-amber-900/50">
+                     <h4 className="text-[10px] font-black text-amber-600/80 uppercase tracking-widest mb-2">Match Group {i+1}</h4>
+                     <ul className="space-y-2">
+                        {g.map((item, j) => (
+                          <li key={j} className="text-sm flex items-center justify-between font-bold text-slate-700 dark:text-slate-300 before:content-[''] before:w-1.5 before:h-1.5 before:bg-amber-400 before:rounded-full before:mr-2">
+                            <span className="truncate">{item.name}</span>
+                            <span className="text-[10px] uppercase tracking-widest text-muted-foreground bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md shrink-0">{item.details}</span>
+                          </li>
+                        ))}
+                     </ul>
+                  </div>
+               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="flex flex-wrap gap-2 mb-4">
+        {tournament.categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setTabCat(cat)}
+            className={`px-4 py-2 rounded-full text-sm font-black transition ${
+              activeCat === cat
+                ? "bg-primary text-primary-foreground shadow-md"
+                : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+            }`}
+          >
+            {cat} <span className="opacity-75 ml-1">({participants[cat]?.length ?? 0})</span>
+          </button>
+        ))}
+      </div>
+
+      {tournament.categories.includes(activeCat) && (() => {
+        const cat = activeCat;
+        const allParts = participants[cat] ?? [];
+        const statusFilt = filterStatus[cat] || "all";
+        const parts = allParts.filter(p => {
+          if (statusFilt === "registered") return p.player_id !== null;
+          if (statusFilt === "external") return p.player_id === null;
+          return true;
+        });
+
         const doubles = isDoubles(cat);
         const catSearch = search[cat] ?? "";
         const catPartnerSearch = partnerSearch[cat] ?? "";
@@ -938,31 +1329,54 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
 
         return (
           <div key={cat} className={cardCls}>
-            <button onClick={() => setOpenCat(openCat === cat ? "" : cat)}
-              className="w-full flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-black px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-muted-foreground dark:text-slate-300">{cat}</span>
-                <span className="text-sm text-muted-foreground">{parts.length} participants</span>
-              </div>
-              {openCat === cat ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-            </button>
-
-            {openCat === cat && (
-              <div className="mt-4 space-y-3">
-                <div className="flex items-center justify-between px-1 mb-2">
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedParts(prev => 
-                        parts.every(p => prev.includes(p.id)) 
-                          ? prev.filter(id => !parts.some(p => p.id === id)) 
-                          : Array.from(new Set([...prev, ...parts.map(p => p.id)]))
-                      );
-                    }}
-                    className="text-xs font-bold text-primary hover:underline px-2 py-1 bg-primary/10 rounded-md"
-                  >
-                    {parts.length > 0 && parts.every(p => selectedParts.includes(p.id)) ? "Deselect All" : "Select All"}
-                  </button>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between px-1 mb-2">
+                  <div className="flex items-center gap-4">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedParts(prev => 
+                          parts.every(p => prev.includes(p.id)) 
+                            ? prev.filter(id => !parts.some(p => p.id === id)) 
+                            : Array.from(new Set([...prev, ...parts.map(p => p.id)]))
+                        );
+                      }}
+                      className="text-xs font-bold text-primary hover:underline px-2 py-1 bg-primary/10 rounded-md"
+                    >
+                      {parts.length > 0 && parts.every(p => selectedParts.includes(p.id)) ? "Deselect All" : "Select All"}
+                    </button>
+                    
+                    <select
+                      value={filterStatus[cat] || "all"}
+                      onChange={(e) => setFilterStatus(prev => ({ ...prev, [cat]: e.target.value as any }))}
+                      className="text-xs font-bold px-2 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:ring-1 focus:ring-primary"
+                    >
+                      <option value="all">All</option>
+                      <option value="registered">Registered Only</option>
+                      <option value="external">External Only</option>
+                    </select>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => checkDuplicates(cat, parts, doubles)}
+                      className="flex items-center gap-1 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-amber-500 transition px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md"
+                    >
+                      <AlertCircle className="w-3 h-3" /> Check Duplicates
+                    </button>
+                    <button
+                      onClick={() => downloadCategoryJPG(cat)}
+                      className="flex items-center gap-1 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-green-500 transition px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md"
+                    >
+                      <Camera className="w-3 h-3" /> Export JPG
+                    </button>
+                    <button
+                      onClick={() => downloadCategoryCSV(cat)}
+                      className="flex items-center gap-1 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-primary transition px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md"
+                    >
+                      <Download className="w-3 h-3" /> Export CSV
+                    </button>
+                  </div>
                 </div>
                 {selectedParts.length > 0 && parts.some(p => selectedParts.includes(p.id)) && (
                   <div className="flex items-center gap-3 p-3 bg-primary/10 rounded-xl mb-4">
@@ -991,17 +1405,75 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                           value={p.seed ?? i + 1}
                           onChange={(e) => updateSeed(p.id, parseInt(e.target.value))}
                           className="w-12 text-center text-sm font-black rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 py-1 outline-none" />
-                        <div className="flex-1 text-sm font-bold text-slate-800 dark:text-foreground">
-                          {p.display_name ?? player?.full_name ?? "Unknown"}
-                          {doubles && (partner || p.display_name) && (
-                            <span className="text-muted-foreground font-medium"> & {partner?.full_name ?? "partner"}</span>
-                          )}
-                          {!p.player_id && (
-                            <span className="ml-2 text-[10px] font-black text-amber-500 bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.5 rounded">external</span>
-                          )}
+                        <div className="flex-1 flex flex-col min-w-0">
+                          {(() => {
+                            let name1 = p.display_name ?? player?.full_name ?? "Unknown";
+                            let name2 = partner?.full_name ?? "partner";
+                            let dept1 = player?.department || "External/Other";
+                            let dept2 = partner?.department || "External/Other";
+
+                            if (doubles && p.display_name && p.display_name.includes("&")) {
+                               const names = p.display_name.split("&").map(s => s.trim());
+                               name1 = names[0];
+                               name2 = names[1];
+                            }
+                            
+                            if (doubles) {
+                              return (
+                                <div className="flex justify-between items-start w-full gap-2">
+                                  <div className="flex flex-col flex-1 min-w-0 pr-2 border-r border-slate-200 dark:border-slate-700">
+                                    <div className="text-sm font-bold text-slate-800 dark:text-foreground truncate">
+                                      {name1}
+                                      {!p.player_id && <span className="ml-2 text-[9px] font-black uppercase text-amber-500 bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.5 rounded inline-block align-middle">ext</span>}
+                                    </div>
+                                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 truncate mt-0.5">{getDepartmentAcronym(dept1)}</span>
+                                  </div>
+                                  <div className="flex flex-col flex-1 min-w-0 pl-1">
+                                    <div className="text-sm font-bold text-slate-800 dark:text-foreground truncate">
+                                      {name2}
+                                      {!p.partner_id && <span className="ml-2 text-[9px] font-black uppercase text-amber-500 bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.5 rounded inline-block align-middle">ext</span>}
+                                    </div>
+                                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 truncate mt-0.5">{getDepartmentAcronym(dept2)}</span>
+                                  </div>
+                                </div>
+                              );
+                            } else {
+                              return (
+                                <>
+                                  <div className="text-sm font-bold text-slate-800 dark:text-foreground truncate">
+                                    {p.display_name ?? player?.full_name ?? "Unknown"}
+                                    {!p.player_id && (
+                                      <span className="ml-2 text-[10px] font-black uppercase text-amber-500 bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.5 rounded inline-block align-middle">external</span>
+                                    )}
+                                  </div>
+                                  {player?.department && (
+                                    <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-0.5 truncate">
+                                      {getDepartmentAcronym(player.department)}
+                                    </div>
+                                  )}
+                                </>
+                              );
+                            }
+                          })()}
                         </div>
                         <button
-                          onClick={() => { setLinkingId(linkingId === p.id ? null : p.id); setLinkSearch(""); }}
+                          onClick={() => {
+                            let n1 = p.display_name ?? player?.full_name ?? "Unknown";
+                            let n2 = partner?.full_name ?? "partner";
+                            if (doubles && p.display_name && p.display_name.includes("&")) {
+                               const names = p.display_name.split("&").map(s => s.trim());
+                               n1 = names[0];
+                               n2 = names[1];
+                            }
+                            setEditingName({ id: p.id, name1: n1, name2: n2 });
+                            setLinkingId(null);
+                          }}
+                          title="Edit Names"
+                          className="p-1 text-muted-foreground hover:text-blue-500 transition">
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => { setLinkingId(linkingId === p.id ? null : p.id); setLinkSearch(""); setEditingName(null); }}
                           title={p.player_id ? "Change linked player" : "Link to registered player"}
                           className={`p-1 transition ${p.player_id ? "text-blue-400 hover:text-blue-300" : "text-muted-foreground hover:text-blue-500"}`}>
                           <Link className="w-4 h-4" />
@@ -1009,35 +1481,93 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                         {p.player_id && (
                           <button
                             onClick={() => linkParticipantToPlayer(p.id, null, p.display_name?.split(' &')[0] || "")}
-                            title="Unlink player"
+                            title="Unlink Player 1"
                             className="p-1 text-amber-500 hover:text-amber-400 transition">
+                            <Unlink className="w-4 h-4" />
+                          </button>
+                        )}
+                        {doubles && p.partner_id && (
+                          <button
+                            onClick={() => linkParticipantToPartner(p.id, null, p.display_name?.split('&')[1]?.trim() || "")}
+                            title="Unlink Player 2"
+                            className="p-1 text-rose-500 hover:text-rose-400 transition">
                             <Unlink className="w-4 h-4" />
                           </button>
                         )}
                         <button onClick={() => removeParticipant(p.id)}
                           className="p-1 text-muted-foreground hover:text-rose-500 transition"><X className="w-4 h-4" /></button>
                       </div>
-                      {linkingId === p.id && (
-                        <div className="ml-14 relative">
-                          <input
+                      
+                      {editingName?.id === p.id && (
+                        <div className="ml-14 mt-1 flex items-center gap-2">
+                          <input 
+                            value={editingName.name1}
+                            onChange={(e) => setEditingName({ ...editingName, name1: e.target.value })}
+                            placeholder={doubles ? "Player 1 Name" : "Player Name"}
                             autoFocus
-                            value={linkSearch}
-                            onChange={(e) => setLinkSearch(e.target.value)}
-                            placeholder="Search registered player to link…"
-                            className="w-full px-3 py-1.5 text-xs rounded-lg border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-900 outline-none focus:ring-1 focus:ring-blue-500"
+                            className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none"
                           />
-                          {linkSearch && (
-                            <div className="absolute z-10 top-full mt-1 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg max-h-40 overflow-y-auto">
-                              {(allPlayers ?? [])
-                                .filter((pl) => !pl.is_guest && genderFilter(pl) && pl.full_name.toLowerCase().includes(linkSearch.toLowerCase()))
-                                .slice(0, 8)
-                                .map((pl) => (
-                                  <button key={pl.id}
-                                    className="w-full text-left px-3 py-2 text-xs hover:bg-blue-50 dark:hover:bg-blue-950/30 transition"
-                                    onClick={() => linkParticipantToPlayer(p.id, pl.id, pl.full_name)}>
-                                    {pl.full_name}
-                                  </button>
-                                ))}
+                          {doubles && (
+                            <input 
+                              value={editingName.name2}
+                              onChange={(e) => setEditingName({ ...editingName, name2: e.target.value })}
+                              placeholder="Player 2 Name"
+                              className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none"
+                            />
+                          )}
+                          <button onClick={saveEditedName} className="px-3 py-1.5 bg-primary text-primary-foreground text-xs font-bold rounded-lg hover:opacity-90">Save</button>
+                          <button onClick={() => setEditingName(null)} className="px-3 py-1.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-lg hover:opacity-90">Cancel</button>
+                        </div>
+                      )}
+
+                      {linkingId === p.id && (
+                        <div className="ml-14 mt-1 flex flex-col gap-2">
+                          <div className="relative">
+                            <input
+                              autoFocus
+                              value={linkSearch}
+                              onChange={(e) => setLinkSearch(e.target.value)}
+                              placeholder={doubles ? "Search Player 1 to link…" : "Search registered player to link…"}
+                              className="w-full px-3 py-1.5 text-xs rounded-lg border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-900 outline-none focus:ring-1 focus:ring-blue-500"
+                            />
+                            {linkSearch && (
+                              <div className="mt-1 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm max-h-40 overflow-y-auto">
+                                {(allPlayers ?? [])
+                                  .filter((pl) => !pl.is_guest && genderFilter(pl) && pl.full_name.toLowerCase().includes(linkSearch.toLowerCase()))
+                                  .slice(0, 8)
+                                  .map((pl) => (
+                                    <button key={pl.id}
+                                      className="w-full text-left px-3 py-2 text-xs hover:bg-blue-50 dark:hover:bg-blue-950/30 transition"
+                                      onClick={() => linkParticipantToPlayer(p.id, pl.id, pl.full_name)}>
+                                      {pl.full_name}
+                                    </button>
+                                  ))}
+                              </div>
+                            )}
+                          </div>
+                          
+                          {doubles && (
+                            <div className="relative mt-2">
+                              <input
+                                value={linkSearch2}
+                                onChange={(e) => setLinkSearch2(e.target.value)}
+                                placeholder="Search Player 2 to link…"
+                                className="w-full px-3 py-1.5 text-xs rounded-lg border border-purple-300 dark:border-purple-700 bg-white dark:bg-slate-900 outline-none focus:ring-1 focus:ring-purple-500"
+                              />
+                              {linkSearch2 && (
+                                <div className="mt-1 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm max-h-40 overflow-y-auto">
+                                  {(allPlayers ?? [])
+                                    .filter((pl) => !pl.is_guest && genderFilter(pl) && pl.full_name.toLowerCase().includes(linkSearch2.toLowerCase()))
+                                    .slice(0, 8)
+                                    .map((pl) => (
+                                      <button key={pl.id}
+                                        className="w-full text-left px-3 py-2 text-xs hover:bg-purple-50 dark:hover:bg-purple-950/30 transition"
+                                        onClick={() => linkParticipantToPartner(p.id, pl.id, pl.full_name)}>
+                                        {pl.full_name}
+                                      </button>
+                                    ))}
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
@@ -1049,33 +1579,59 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                 {/* Add panel */}
                 {adding === cat ? (
                   <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 space-y-2">
-                    <div className="relative">
-                      <Search className="w-4 h-4 absolute left-2.5 top-2.5 text-muted-foreground" />
-                      <input
-                        value={catSearch}
-                        onChange={(e) => setSearch((p) => ({ ...p, [cat]: e.target.value }))}
-                        placeholder="Search registered player…"
-                        className="w-full pl-8 pr-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-1 focus:ring-primary"
-                      />
-                      {catSearch && (
-                        <div className="absolute z-10 top-full mt-1 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg max-h-40 overflow-y-auto">
-                          {filteredPlayers.slice(0, 8).map((pl) => (
-                            <button key={pl.id} className="w-full text-left px-3 py-2 text-sm hover:bg-primary/10 dark:hover:bg-primary/90/30 transition"
-                              onClick={() => {
-                                if (!doubles) {
-                                  addParticipant(cat, pl.id, null, pl.full_name);
-                                } else {
-                                  setSearch((p) => ({ ...p, [cat]: pl.full_name }));
-                                  // store pending player1
-                                  sessionStorage.setItem(`tp_p1_${cat}`, JSON.stringify({ id: pl.id, name: pl.full_name }));
-                                }
-                              }}>
-                              {pl.full_name}
+                    {(() => {
+                      let p1 = null;
+                      if (doubles) {
+                        try {
+                          const p1Data = sessionStorage.getItem(`tp_p1_${cat}`);
+                          if (p1Data) p1 = JSON.parse(p1Data);
+                        } catch (e) {}
+                      }
+
+                      if (p1) {
+                        return (
+                          <div className="flex items-center justify-between px-3 py-2 bg-primary/10 border border-primary/20 rounded-lg mb-2">
+                            <span className="text-sm font-bold text-primary">Selected: {p1.name}</span>
+                            <button onClick={() => {
+                              sessionStorage.removeItem(`tp_p1_${cat}`);
+                              setSearch((p) => ({ ...p, [cat]: "" }));
+                            }} className="text-primary hover:text-primary/70 transition">
+                              <X className="w-4 h-4" />
                             </button>
-                          ))}
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="relative mb-2">
+                          <Search className="w-4 h-4 absolute left-2.5 top-2.5 text-muted-foreground" />
+                          <input
+                            value={catSearch}
+                            onChange={(e) => setSearch((p) => ({ ...p, [cat]: e.target.value }))}
+                            placeholder={doubles ? "Search player 1…" : "Search registered player…"}
+                            className="w-full pl-8 pr-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-1 focus:ring-primary"
+                          />
+                          {catSearch && (
+                            <div className="mt-1 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm max-h-40 overflow-y-auto">
+                              {filteredPlayers.slice(0, 8).map((pl) => (
+                                <button key={pl.id} className="w-full text-left px-3 py-2 text-sm hover:bg-primary/10 dark:hover:bg-primary/90/30 transition"
+                                  onClick={() => {
+                                    if (!doubles) {
+                                      addParticipant(cat, pl.id, null, pl.full_name);
+                                      setSearch((p) => ({ ...p, [cat]: "" }));
+                                    } else {
+                                      setSearch((p) => ({ ...p, [cat]: "" }));
+                                      sessionStorage.setItem(`tp_p1_${cat}`, JSON.stringify({ id: pl.id, name: pl.full_name }));
+                                    }
+                                  }}>
+                                  {pl.full_name}
+                                </button>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
+                      );
+                    })()}
                     {doubles && (
                       <div className="relative">
                         <Search className="w-4 h-4 absolute left-2.5 top-2.5 text-muted-foreground" />
@@ -1086,7 +1642,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                           className="w-full pl-8 pr-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-1 focus:ring-primary"
                         />
                         {catPartnerSearch && (
-                          <div className="absolute z-10 top-full mt-1 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg max-h-40 overflow-y-auto">
+                          <div className="mt-1 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm max-h-40 overflow-y-auto">
                             {filteredPartners.slice(0, 8).map((pl) => (
                               <button key={pl.id} className="w-full text-left px-3 py-2 text-sm hover:bg-primary/10 dark:hover:bg-primary/90/30 transition"
                                 onClick={() => {
@@ -1096,9 +1652,12 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                                       const p1 = JSON.parse(p1Data);
                                       addParticipant(cat, p1.id, pl.id, `${p1.name} & ${pl.full_name}`);
                                       sessionStorage.removeItem(`tp_p1_${cat}`);
+                                      setPartnerSearch((p) => ({ ...p, [cat]: "" }));
                                     } catch (e) {
                                       sessionStorage.removeItem(`tp_p1_${cat}`);
                                     }
+                                  } else {
+                                    toast.error("Please select Player 1 first");
                                   }
                                 }}>
                               {pl.full_name}
@@ -1108,21 +1667,43 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                         )}
                       </div>
                     )}
-                    <div className="border-t border-slate-200 dark:border-slate-700 pt-2">
-                      <input
-                        value={externalName}
-                        onChange={(e) => setExternalName(e.target.value)}
-                        placeholder="Or type external player name…"
-                        className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-1 focus:ring-primary"
-                      />
-                      {externalName && (
+                    {(catSearch.trim() || catPartnerSearch.trim()) && (
+                      <div className="border-t border-slate-200 dark:border-slate-700 pt-2">
                         <button
-                          onClick={() => addParticipant(cat, null, null, externalName)}
-                          className="mt-2 w-full py-1.5 text-xs font-black rounded-lg bg-slate-700 hover:bg-slate-600 text-foreground transition">
-                          Add "{externalName}" as external player
+                          onClick={() => {
+                            if (!doubles) {
+                              addParticipant(cat, null, null, catSearch.trim());
+                            } else {
+                              const p1Data = sessionStorage.getItem(`tp_p1_${cat}`);
+                              if (p1Data) {
+                                try {
+                                  const p1 = JSON.parse(p1Data);
+                                  addParticipant(cat, p1.id, null, `${p1.name} & ${catPartnerSearch.trim() || 'Unknown'}`);
+                                  sessionStorage.removeItem(`tp_p1_${cat}`);
+                                } catch (e) {
+                                  sessionStorage.removeItem(`tp_p1_${cat}`);
+                                }
+                              } else {
+                                addParticipant(cat, null, null, `${catSearch.trim() || 'Unknown'} & ${catPartnerSearch.trim() || 'Unknown'}`);
+                              }
+                            }
+                          }}
+                          className="mt-2 w-full py-2 text-xs font-black rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm transition">
+                          {doubles ? (
+                            (() => {
+                              const p1Data = sessionStorage.getItem(`tp_p1_${cat}`);
+                              if (p1Data) {
+                                try {
+                                  const p1 = JSON.parse(p1Data);
+                                  return `Add external partner "${catPartnerSearch.trim()}" for ${p1.name}`;
+                                } catch(e) {}
+                              }
+                              return `Add external team "${catSearch.trim() || '?'} & ${catPartnerSearch.trim() || '?'}"`;
+                            })()
+                          ) : `Add external player "${catSearch.trim()}"`}
                         </button>
-                      )}
-                    </div>
+                      </div>
+                    )}
                     <button onClick={() => setAdding(null)} className="text-xs text-muted-foreground hover:text-muted-foreground transition">Cancel</button>
                   </div>
                 ) : bulkCat === cat ? (
@@ -1177,22 +1758,22 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                               <span className={`w-2 h-2 rounded-full shrink-0 ${e.match1 ? "bg-primary" : "bg-amber-400"}`} />
                               <span className="flex-1 text-muted-foreground dark:text-slate-300 truncate">{e.raw}</span>
                               <span className={`text-[10px] font-black uppercase ${e.match1 ? "text-primary" : "text-amber-500"}`}>
-                                {e.match1 ? "matched" : "external"}
+                                {e.match1 ? "Found" : "External"}
                               </span>
                             </div>
                           ))}
                         </div>
                       );
                     })()}
-                    <div className="flex items-center gap-2">
+                    <div className="flex gap-2 pt-2">
                       <button
-                        onClick={() => runBulkImport(cat)}
                         disabled={bulkImporting || !bulkText.trim()}
-                        className="flex-1 py-2 text-xs font-black rounded-lg bg-primary hover:bg-primary text-primary-foreground transition disabled:opacity-50 flex items-center justify-center gap-1">
-                        {bulkImporting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
-                        Import {bulkText.trim() ? parseBulkLines(bulkText, cat).length : 0} Participants
+                        onClick={() => runBulkImport(cat)}
+                        className="flex-1 bg-primary text-primary-foreground text-xs font-black py-2 rounded-lg hover:opacity-90 disabled:opacity-50 transition"
+                      >
+                        {bulkImporting ? "Importing..." : "Run Import"}
                       </button>
-                      <button onClick={() => { setBulkCat(null); setBulkText(""); }} className="text-xs text-muted-foreground hover:text-muted-foreground transition px-2">Cancel</button>
+                      <button onClick={() => { setBulkCat(null); setBulkText(""); }} className="px-4 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-black py-2 rounded-lg transition">Cancel</button>
                     </div>
                   </div>
                 ) : (
@@ -1228,11 +1809,10 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                     <Swords className="w-3.5 h-3.5" /> Generate Bracket
                   </button>
                 </div>
-              </div>
-            )}
+            </div>
           </div>
         );
-      })}
+      })()}
 
     </div>
   );

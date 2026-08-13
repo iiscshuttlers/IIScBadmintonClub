@@ -333,7 +333,26 @@ export function useProfileSetup() {
       }
     }
 
-    if (!silent) setLoading(true);
+    if (!silent) {
+      setLoading(true);
+      if (iiscEmail) {
+        const { data: existingProfiles, error: emailError } = await supabase
+          .from("players")
+          .select("id")
+          .eq("iisc_email", iiscEmail)
+          .neq("id", targetUserId || session.user.id)
+          .limit(1);
+
+        if (!emailError && existingProfiles && existingProfiles.length > 0) {
+          toast.error("Duplicate profile", {
+            description: "This IISc Email belongs to an existing profile.\nPlease log out and Sign In using that exact email, OR contact a club admin to manually link it."
+          });
+          setLoading(false);
+          return;
+        }
+      }
+    }
+    
     const payload = buildPayload();
     const timeoutMs = 30000;
     const mkTimeout = () => new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Save timed out")), timeoutMs));
@@ -342,6 +361,8 @@ export function useProfileSetup() {
         playerService.upsertProfile(targetUserId || session.user.id, isEditing, payload, session.user.email),
         mkTimeout()
       ]);
+      
+      if (!isEditing) setIsEditing(true);
       
       queryClient.invalidateQueries({ queryKey: ["playerProfile", targetUserId || session.user.id] });
       queryClient.invalidateQueries({ queryKey: ["playerRank", targetUserId || session.user.id] });
