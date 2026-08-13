@@ -436,7 +436,7 @@ export default function PlayerProfile() {
         {/* Navigation Bar */}
         <div className="relative z-50 w-full px-4 py-4 flex flex-wrap items-center justify-between gap-3">
           <button
-            onClick={() => window.history.length > 2 ? window.history.back() : window.location.href = "/pulse#h2h"}
+            onClick={() => window.history.length > 2 ? window.history.back() : setLocation("/pulse#h2h")}
             className="w-10 h-10 md:w-12 md:h-12 bg-white/90 hover:bg-white text-slate-700 dark:bg-black/40 dark:hover:bg-black/60 dark:text-white backdrop-blur-md shadow-sm rounded-full flex items-center justify-center transition-all border border-slate-200 dark:border-white/10"
             aria-label="Go back"
           >
