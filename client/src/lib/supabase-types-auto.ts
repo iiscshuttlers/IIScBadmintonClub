@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -1965,6 +1965,7 @@ export type Database = {
           category: string
           created_at: string | null
           display_name: string | null
+          entry_round: number | null
           id: string
           partner_id: string | null
           player_id: string | null
@@ -1975,6 +1976,7 @@ export type Database = {
           category: string
           created_at?: string | null
           display_name?: string | null
+          entry_round?: number | null
           id?: string
           partner_id?: string | null
           player_id?: string | null
@@ -1985,6 +1987,7 @@ export type Database = {
           category?: string
           created_at?: string | null
           display_name?: string | null
+          entry_round?: number | null
           id?: string
           partner_id?: string | null
           player_id?: string | null
@@ -2092,6 +2095,8 @@ export type Database = {
           tournament_type: string
           venue: string | null
           year: number
+          show_participants: boolean | null
+          show_brackets: boolean | null
         }
         Insert: {
           archived_at?: string | null
@@ -2136,6 +2141,8 @@ export type Database = {
           tournament_type?: string
           venue?: string | null
           year?: number
+          show_participants?: boolean | null
+          show_brackets?: boolean | null
         }
         Relationships: [
           {

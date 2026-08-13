@@ -69,6 +69,8 @@ interface SupabaseTournament {
   require_app_registration?: boolean;
   archived_at: string | null;
   slug?: string;
+  show_brackets?: boolean | null;
+  show_participants?: boolean | null;
 }
 
 interface PastMatch {
@@ -536,7 +538,11 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
 
         {activeTab === "players" && liveTournament && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <LivePlayersSection tournamentId={liveTournament.id} categories={liveTournament.categories || []} />
+            <LivePlayersSection 
+              tournamentId={liveTournament.id} 
+              categories={liveTournament.categories || []} 
+              showParticipants={liveTournament.show_participants} 
+            />
           </div>
         )}
 
@@ -680,7 +686,10 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
         )}
         {activeTab === "brackets" && (
           <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-md border border-slate-100 dark:border-slate-700 p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-[500px]">
-            <LiveBracketsSection tournamentId={liveTournament?.id ?? null} />
+            <LiveBracketsSection 
+              tournamentId={liveTournament?.id ?? null} 
+              showBrackets={liveTournament?.show_brackets} 
+            />
           </div>
         )}
 

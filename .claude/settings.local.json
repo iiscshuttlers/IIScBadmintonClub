@@ -41,7 +41,18 @@
       "Bash(grep -E \"^d|\\\\.tsx$|\\\\.ts$\")",
       "Bash(xargs grep -l \"find\\\\|lost\")",
       "Bash(xargs grep -l \"notification\\\\|buddy\\\\|follow\")",
-      "PowerShell(cd \"D:\\\\NF\\\\New folder\\\\iiscshuttlers\\\\client\"; npx tsc --noEmit 2>&1 | Where-Object { $_ -notmatch \"npm warn\" })"
+      "PowerShell(cd \"D:\\\\NF\\\\New folder\\\\iiscshuttlers\\\\client\"; npx tsc --noEmit 2>&1 | Where-Object { $_ -notmatch \"npm warn\" })",
+      "Bash(npx vitest *)",
+      "Bash(node -e \"const p=require\\('./package.json'\\);console.log\\(JSON.stringify\\(p.scripts,null,1\\)\\)\")",
+      "Bash(sed -i 's#\"./client/src/lib/bracketGenerator\"#\"E:/Github/IIScBadmintonClub/client/src/lib/bracketGenerator\"#' /tmp/draw_proof.ts)",
+      "Bash(npx tsx *)",
+      "Bash(cp client/src/components/admin/TournamentManager.tsx /tmp/TM.bak)",
+      "Bash(python -c ' *)",
+      "Bash(cp /tmp/TM.bak client/src/components/admin/TournamentManager.tsx)",
+      "Bash(echo \"probe lines remaining: $?\")",
+      "Bash(npx vite *)",
+      "Bash(node -e \"const p=require\\('./package.json'\\);const d={...p.dependencies,...p.devDependencies};for\\(const k of Object.keys\\(d\\)\\)if\\(/testing-library|jsdom|vitest/.test\\(k\\)\\)console.log\\(k,d[k]\\)\")",
+      "Bash(git checkout *)"
     ]
   }
 }

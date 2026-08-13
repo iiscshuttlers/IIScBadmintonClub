@@ -1,5 +1,5 @@
 import * as XLSX from "xlsx";
-import { toPng } from "html-to-image";
+import { toPng, toJpeg } from "html-to-image";
 import { jsPDF } from "jspdf";
 import { toast } from "sonner";
 import { Share } from '@capacitor/share';
@@ -247,6 +247,39 @@ export const exportElementToImage = async (element: HTMLElement, filename: strin
   } catch (err) {
     console.error(err);
     toast.error("Failed to generate image", { id: "export-elem-img" });
+  }
+};
+
+export const exportElementToJpeg = async (element: HTMLElement, filename: string, backgroundColor: string = "#ffffff", style?: any) => {
+  try {
+    toast.loading("Generating JPG...", { id: "export-elem-jpg" });
+    const dataUrl = await toJpeg(element, { 
+      backgroundColor,
+      quality: 0.95,
+      pixelRatio: 2,
+      style
+    });
+    
+    if (Capacitor.isNativePlatform()) {
+      const path = `${filename}.jpg`;
+      const result = await Filesystem.writeFile({
+        path,
+        data: dataUrl,
+        directory: Directory.Cache
+      });
+      await Share.share({ title: "Export Image", url: result.uri });
+      toast.dismiss("export-elem-jpg");
+      return;
+    }
+    
+    const a = document.createElement("a");
+    a.href = dataUrl;
+    a.download = `${filename}.jpg`;
+    a.click();
+    toast.dismiss("export-elem-jpg");
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to generate JPG", { id: "export-elem-jpg" });
   }
 };
 

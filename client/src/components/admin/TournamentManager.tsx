@@ -1,12 +1,12 @@
 // @ts-nocheck
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminHistory } from "@/contexts/AdminHistoryContext";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { usePlayers } from "@/hooks/usePlayers";
-import { generateSingleElimBracket } from "@/lib/bracketGenerator";
+import { generateSingleElimBracket, planDraw, entryRoundLabel, findWalkoverMatches } from "@/lib/bracketGenerator";
 import { MatchScoreDisplay } from "@/components/tournament/MatchScoreDisplay";
 import { BracketVisual } from "@/components/tournament/BracketVisual";
 import {
@@ -74,6 +74,8 @@ interface Tournament {
   auto_reminders_enabled?: boolean;
   archived_at: string | null;
   created_at: string;
+  show_participants?: boolean | null;
+  show_brackets?: boolean | null;
 }
 
 interface Participant {
@@ -83,6 +85,8 @@ interface Participant {
   partner_id: string | null;
   display_name: string | null;
   seed: number | null;
+  /** Pinned first-match round. null = automatic bye allocation. */
+  entry_round: number | null;
 }
 
 interface TournamentMatch {
@@ -257,7 +261,8 @@ export function TournamentManager() {
               title="TOURNAMENT MANAGER"
               items={[
                 { badge: "FORMATS", title: "Bracket Formats", desc: "Supports Single Elimination, Double Elimination, and Round Robin formats." },
-                { badge: "SEEDING", title: "Automatic Seeding", desc: "Players are automatically seeded based on their current ELO rating at the time of bracket generation." }
+                { badge: "SEEDING", title: "Automatic Seeding", desc: "Players are automatically seeded based on their current ELO rating at the time of bracket generation." },
+                { badge: "BYES", title: "Manual Entry Rounds", desc: "By default the draw's spare slots become byes for the top seeds, one each. On the Participants tab you can pin any player's first-match round instead — a second bye costs 3 slots, so the counter above the list shows what's left." }
               ]}
             />
             <select
@@ -457,6 +462,34 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
           {form.status === "draft" && (
             <span className="text-[10px] text-muted-foreground">Drafts are only visible to admins</span>
           )}
+        </div>
+      </div>
+
+      {/* Public Visibility */}
+      <div className={cardCls}>
+        <h3 className="font-black text-slate-800 dark:text-foreground mb-4">Public Visibility</h3>
+        <p className="text-xs text-muted-foreground mb-4">
+          Control which tabs are visible to players on the public Pulse page.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-6">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input 
+              type="checkbox" 
+              checked={!!form.show_participants}
+              onChange={(e) => upd("show_participants", e.target.checked)}
+              className="w-5 h-5 accent-primary rounded border-slate-300"
+            />
+            <span className="text-sm font-bold text-slate-700 dark:text-slate-200">Show Participants Tab</span>
+          </label>
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input 
+              type="checkbox" 
+              checked={!!form.show_brackets}
+              onChange={(e) => upd("show_brackets", e.target.checked)}
+              className="w-5 h-5 accent-primary rounded border-slate-300"
+            />
+            <span className="text-sm font-bold text-slate-700 dark:text-slate-200">Show Brackets Tab</span>
+          </label>
         </div>
       </div>
 
@@ -838,6 +871,36 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
     });
   };
 
+  const updateEntryRound = async (id: string, entryRound: number | null) => {
+    const { error } = await supabase
+      .from("tournament_participants")
+      .update({ entry_round: entryRound })
+      .eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    setParticipants((prev) => {
+      const updated = { ...prev };
+      for (const cat of Object.keys(updated)) {
+        updated[cat] = updated[cat].map((p) => p.id === id ? { ...p, entry_round: entryRound } : p);
+      }
+      return updated;
+    });
+  };
+
+  const clearEntryRounds = async (cat: string) => {
+    const pinned = (participants[cat] ?? []).filter((p) => p.entry_round != null);
+    if (!pinned.length) { toast.success(`No manual entry rounds set in ${cat}`); return; }
+    const { error } = await supabase
+      .from("tournament_participants")
+      .update({ entry_round: null })
+      .in("id", pinned.map((p) => p.id));
+    if (error) { toast.error(error.message); return; }
+    setParticipants((prev) => ({
+      ...prev,
+      [cat]: (prev[cat] ?? []).map((p) => ({ ...p, entry_round: null })),
+    }));
+    toast.success(`Reset ${pinned.length} manual entry round(s) in ${cat}`);
+  };
+
   const linkParticipantToPlayer = async (participantId: string, playerId: string | null, playerName: string) => {
     // Determine the new display name if it's doubles (preserve the partner's name)
     const p = participants[Object.keys(participants).find(cat => participants[cat].some(p => p.id === participantId)) || ""]?.find(p => p.id === participantId);
@@ -1171,6 +1234,21 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
     }
   };
 
+  // Runs on every render (the draw preview needs it), so keep the name lookup O(1).
+  const playerNameById = useMemo(
+    () => new Map((allPlayers ?? []).map((pl) => [pl.id, pl.full_name])),
+    [allPlayers]
+  );
+
+  const toBracketParticipant = useCallback((p: Participant) => ({
+    playerId: p.player_id,
+    partnerId: p.partner_id,
+    displayName: p.display_name ?? (p.player_id ? playerNameById.get(p.player_id) : null) ?? "Unknown",
+    seed: p.seed ?? 99,
+    entryRound: p.entry_round,
+    refId: p.id,
+  }), [playerNameById]);
+
   const generateBracket = async (onlyCat?: string) => {
     if (bulkText.trim() && bulkCat && (!onlyCat || onlyCat === bulkCat)) {
       toast.error(`You have un-imported participants in ${bulkCat}. Please click 'Import' first.`);
@@ -1178,6 +1256,20 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
     }
 
     const catsToGenerate = onlyCat ? [onlyCat] : Object.keys(participants);
+
+    // Refuse up front if the pinned entry rounds ask for more of the draw than exists.
+    for (const cat of catsToGenerate) {
+      const parts = participants[cat] ?? [];
+      if (parts.length < 2) continue;
+      const plan = planDraw(parts.map(toBracketParticipant));
+      if (plan.overAllocatedSlots > 0) {
+        toast.error(
+          `${cat}: manual entry rounds need ${plan.overAllocatedSlots} more slot(s) than the ${plan.drawSize}-player draw has. Move some seeds to a later round.`
+        );
+        return;
+      }
+    }
+
     if (await hasMatches()) {
       const msg = onlyCat
         ? `This will delete existing bracket matches for ${onlyCat} and regenerate. Continue?`
@@ -1193,42 +1285,42 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
     for (const cat of catsToGenerate) {
       const parts = participants[cat] ?? [];
       if (parts.length < 2) continue;
-      const mapped = parts.map((p) => ({
-        playerId: p.player_id,
-        partnerId: p.partner_id,
-        displayName: p.display_name ?? (allPlayers?.find((pl) => pl.id === p.player_id)?.full_name ?? "Unknown"),
-        seed: p.seed ?? 99,
-      }));
-      allRows.push(...generateSingleElimBracket(mapped, cat, tournament.id, thirdPlacePerCat[cat] ?? false));
+      allRows.push(...generateSingleElimBracket(
+        parts.map(toBracketParticipant), cat, tournament.id, thirdPlacePerCat[cat] ?? false
+      ));
     }
     if (!allRows.length) { toast.error("Need at least 2 participants in a category to generate bracket"); return; }
     const { error } = await supabase.from("tournament_matches").insert(allRows);
     if (error) { toast.error(error.message); return; }
 
-    // Auto-advance byes: find R1 matches where one side is "BYE" and submit walkover
-    const byeMatches = allRows.filter(
-      (r) => r.round === 1 && (r.team1_label === "BYE" || r.team2_label === "BYE")
-    );
+    // Auto-advance byes. A participant given more than one bye is walked over in
+    // several consecutive rounds, so these must be submitted in round order —
+    // each result has to land before the next round's match is decided.
+    const byeMatches = findWalkoverMatches(allRows);
+    let advanced = 0;
     if (byeMatches.length) {
       const { data: insertedRows } = await supabase
         .from("tournament_matches")
         .select("id, match_code, team1_label, team2_label")
         .eq("tournament_id", tournament.id)
-        .eq("round", 1)
         .in("match_code", byeMatches.map((r) => r.match_code));
-      for (const row of (insertedRows ?? [])) {
-        const winningSide: 1 | 2 = row.team2_label === "BYE" ? 1 : 2;
-        await supabase.rpc("submit_tournament_match", {
+      const byCode = new Map((insertedRows ?? []).map((r) => [r.match_code, r]));
+      for (const bye of byeMatches) {
+        const row = byCode.get(bye.match_code);
+        if (!row) continue;
+        const winningSide: 1 | 2 = bye.team2_label === "BYE" ? 1 : 2;
+        const { error: rpcError } = await supabase.rpc("submit_tournament_match", {
           p_match_id: row.id,
           p_winner_side: winningSide,
           p_score: "W/O",
           p_sets: [],
           p_umpire_id: null,
         });
+        if (!rpcError) advanced++;
       }
     }
 
-    toast.success(`Bracket generated — ${allRows.length} matches created${byeMatches.length ? `, ${byeMatches.length} bye(s) advanced` : ""}`);
+    toast.success(`Bracket generated — ${allRows.length} matches created${advanced ? `, ${advanced} bye(s) advanced` : ""}`);
   };
 
   if (loading) return <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
@@ -1315,6 +1407,14 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
         const catSearch = search[cat] ?? "";
         const catPartnerSearch = partnerSearch[cat] ?? "";
 
+        // Live draw preview — drives the bye budget counter and the per-player
+        // entry round options below. Uses the full category list, not the
+        // filtered view, so the numbers stay honest while searching.
+        const drawPlan = allParts.length >= 2 ? planDraw(allParts.map(toBracketParticipant)) : null;
+        const resolvedEntryRound = new Map(
+          (drawPlan?.entries ?? []).map((e) => [e.participant.refId!, e.entryRound])
+        );
+
         const genderFilter = (p: { gender?: string | null }) => {
           if (cat === "MS" || cat === "MD") return p.gender == null || p.gender === "Male";
           if (cat === "WS" || cat === "WD") return p.gender == null || p.gender === "Female";
@@ -1394,9 +1494,42 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                     </button>
                   </div>
                 )}
+                {drawPlan && (
+                  <div className={`rounded-xl border p-3 mb-3 ${drawPlan.overAllocatedSlots > 0 ? "border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/30" : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40"}`}>
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                      <div className="text-xs font-black text-slate-700 dark:text-slate-200">
+                        Draw of {drawPlan.drawSize}
+                        <span className="font-bold text-muted-foreground"> · {allParts.length} entries</span>
+                      </div>
+                      <button
+                        onClick={() => clearEntryRounds(cat)}
+                        className="text-[11px] font-bold text-slate-500 dark:text-slate-400 hover:text-primary transition px-2 py-1 rounded-md hover:bg-slate-200/60 dark:hover:bg-slate-800"
+                      >
+                        Reset to automatic
+                      </button>
+                    </div>
+                    {drawPlan.overAllocatedSlots > 0 ? (
+                      <p className="mt-1.5 text-xs font-bold text-rose-600 dark:text-rose-400">
+                        Manual entry rounds need {drawPlan.overAllocatedSlots} more slot(s) than the draw has — move some seeds to a later round before generating.
+                      </p>
+                    ) : (
+                      <p className="mt-1.5 text-xs font-bold text-muted-foreground">
+                        {drawPlan.totalByeSlots} bye slot{drawPlan.totalByeSlots === 1 ? "" : "s"}:
+                        {" "}<span className="text-slate-700 dark:text-slate-200">{drawPlan.manualByeSlots} assigned by hand</span>,
+                        {" "}<span className="text-slate-700 dark:text-slate-200">{drawPlan.autoByeSlots} auto-filled down the seed list</span>.
+                      </p>
+                    )}
+                    {drawPlan.forcedAdjustments.length > 0 && (
+                      <p className="mt-1 text-xs font-bold text-amber-600 dark:text-amber-400">
+                        {drawPlan.forcedAdjustments.length} pinned entr{drawPlan.forcedAdjustments.length === 1 ? "y was" : "ies were"} moved a round later to fill the draw.
+                      </p>
+                    )}
+                  </div>
+                )}
                 {parts.map((p, i) => {
                   const player = allPlayers?.find((pl) => pl.id === p.player_id);
                   const partner = allPlayers?.find((pl) => pl.id === p.partner_id);
+                  const effectiveRound = resolvedEntryRound.get(p.id) ?? 1;
                   return (
                     <div key={p.id} className="flex flex-col gap-1 py-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
                       <div className="flex items-center gap-3">
@@ -1456,6 +1589,25 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                             }
                           })()}
                         </div>
+                        {drawPlan && (
+                          <select
+                            value={p.entry_round == null ? "" : String(p.entry_round)}
+                            onChange={(e) => updateEntryRound(p.id, e.target.value === "" ? null : parseInt(e.target.value))}
+                            title="Round this player plays their first match in"
+                            className={`shrink-0 text-[11px] font-bold rounded-lg border py-1 px-1.5 outline-none max-w-[9.5rem] ${p.entry_round == null ? "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-muted-foreground" : "border-primary/50 bg-primary/10 text-primary"}`}
+                          >
+                            <option value="" className="bg-slate-800 text-slate-100">Auto — {entryRoundLabel(effectiveRound, drawPlan.drawSize)}</option>
+                            {Array.from(
+                              { length: Math.max(1, Math.min(drawPlan.totalRounds - 1, 4)) },
+                              (_, idx) => idx + 1
+                            ).map((r) => (
+                              <option key={r} value={r} className="bg-slate-800 text-slate-100">
+                                {entryRoundLabel(r, drawPlan.drawSize)}
+                                {r > 1 ? ` (${r - 1} bye${r > 2 ? "s" : ""})` : ""}
+                              </option>
+                            ))}
+                          </select>
+                        )}
                         <button
                           onClick={() => {
                             let n1 = p.display_name ?? player?.full_name ?? "Unknown";
@@ -2049,20 +2201,31 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
     const results: { matchCode: string; court: string; at: string; found: boolean }[] = [];
     for (const line of lines) {
       if (line.startsWith("#") || line.startsWith("//")) continue;
-      // Normalise separators
-      const parts = line.split(/[:,\t]+/).map((p) => p.trim()).filter(Boolean);
-      if (parts.length < 1) continue;
-      const matchCode = parts[0].toUpperCase();
+      const matchCode = line.split(/[\s,:,\t]+/)[0].toUpperCase();
+      if (!matchCode) continue;
 
       let court = "";
       let at = "";
 
       // key=value style
       const kvCourt = line.match(/court\s*=\s*([^\s,]+)/i);
-      const kvDate = line.match(/date\s*=\s*(\d{4}-\d{2}-\d{2})/i);
-      const kvTime = line.match(/time\s*=\s*(\d{2}:\d{2})/i);
+      const kvDate = line.match(/date\s*=\s*(\d{4}[-\/]\d{2}[-\/]\d{2}|\d{2}[-\/]\d{2}[-\/]\d{4})/i);
+      const kvTime = line.match(/time\s*=\s*(\d{1,2})(:\d{2})?(:\d{2})?/i);
       if (kvCourt) court = kvCourt[1];
-      if (kvDate && kvTime) at = `${kvDate[1]}T${kvTime[1]}`;
+      if (kvDate && kvTime) {
+        let d = kvDate[1];
+        if (d.match(/^\d{2}[-\/]\d{2}[-\/]\d{4}$/)) {
+          const dParts = d.split(/[-\/]/);
+          d = `${dParts[2]}-${dParts[1]}-${dParts[0]}`;
+        }
+        let t = kvTime[1].padStart(2, "0");
+        t += kvTime[2] ? kvTime[2] : ":00";
+        try {
+          at = new Date(`${d}T${t}`).toISOString();
+        } catch (e) {
+          at = `${d}T${t}`;
+        }
+      }
 
       if (!court || !at) {
         // Free-form: find "court N" token
@@ -2072,8 +2235,12 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
         // Find datetime: YYYY-MM-DD HH:MM or DD/MM/YYYY HH:MM or DD-MM-YYYY HH:MM
         const isoDate = line.match(/(\d{4}-\d{2}-\d{2})[T\s](\d{2}:\d{2})/i);
         const dmy = line.match(/(\d{2})[\/\-](\d{2})[\/\-](\d{4})\s+(\d{2}:\d{2})/i);
-        if (isoDate) at = `${isoDate[1]}T${isoDate[2]}`;
-        else if (dmy) at = `${dmy[3]}-${dmy[2]}-${dmy[1]}T${dmy[4]}`;
+        if (isoDate) {
+          try { at = new Date(`${isoDate[1]}T${isoDate[2]}`).toISOString(); } catch(e) { at = `${isoDate[1]}T${isoDate[2]}`; }
+        }
+        else if (dmy) {
+          try { at = new Date(`${dmy[3]}-${dmy[2]}-${dmy[1]}T${dmy[4]}`).toISOString(); } catch(e) { at = `${dmy[3]}-${dmy[2]}-${dmy[1]}T${dmy[4]}`; }
+        }
       }
 
       const found = matches.some((m) => m.match_code === matchCode);
@@ -2193,11 +2360,13 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
               partnerId: p.partner_id,
               displayName: p.display_name ?? (allPlayers?.find((pl) => pl.id === p.player_id)?.full_name ?? "Unknown"),
               seed: p.seed ?? 99,
+              entryRound: p.entry_round,
             }));
-            
+
             // Generate virtual bracket to find where seeds land
             const newRows = generateSingleElimBracket(mapped, activeCategory, tournament.id, false);
-            
+            if (!newRows.length) { toast.error("Manual entry rounds don't fit the draw — fix them on the Participants tab first"); return; }
+
             let updatedCount = 0;
             // Only update Round 1 matches in the DB
             for (const row of newRows.filter(r => r.round === 1)) {
@@ -2229,7 +2398,30 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
       {/* Round rules panel */}
       {showRules && (
         <div className={cardCls}>
-          <h3 className="font-black text-slate-800 dark:text-foreground mb-3 text-sm">Round Scoring Rules — {activeCategory}</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-black text-slate-800 dark:text-foreground text-sm">Round Scoring Rules — {activeCategory}</h3>
+            <button
+              onClick={async () => {
+                const p = toast.loading("Saving all round rules...");
+                await Promise.all(rounds.map(async (round) => {
+                  const rule = roundRules.find((r) => r.category === activeCategory && r.round === round) ?? {
+                    category: activeCategory, round,
+                    round_name: categoryMatches.find((m) => m.round === round)?.round_name ?? null,
+                    points_to_win: 21, best_of_sets: 3, golden_point: 30,
+                  };
+                  const ptw = parseInt((document.getElementById(`rule-${activeCategory}-${round}-points_to_win`) as HTMLInputElement)?.value || "21");
+                  const bos = parseInt((document.getElementById(`rule-${activeCategory}-${round}-best_of_sets`) as HTMLInputElement)?.value || "3");
+                  const gp = parseInt((document.getElementById(`rule-${activeCategory}-${round}-golden_point`) as HTMLInputElement)?.value || "30");
+                  await saveRoundRule({ ...rule, points_to_win: ptw, best_of_sets: bos, golden_point: gp });
+                }));
+                toast.success("Saved all round rules!", { id: p });
+                load();
+              }}
+              className="px-3 py-1.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-black transition shadow-sm"
+            >
+              Save All
+            </button>
+          </div>
           <div className="space-y-2">
             {rounds.map((round) => {
               const rule = roundRules.find((r) => r.category === activeCategory && r.round === round) ?? {
@@ -2816,16 +3008,18 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                 <div className="grid grid-cols-4 gap-0 bg-slate-50 dark:bg-slate-800 px-3 py-2 font-black text-muted-foreground uppercase tracking-wider text-[10px]">
                   <span>Match</span><span>Court</span><span>Date & Time</span><span>Status</span>
                 </div>
-                {bulkPreview.map((row, i) => (
-                  <div key={i} className={`grid grid-cols-4 gap-0 px-3 py-2 border-t border-slate-100 dark:border-slate-800 ${!row.found ? "bg-red-50 dark:bg-red-950/20" : ""}`}>
-                    <span className="font-bold text-muted-foreground dark:text-slate-300">{row.matchCode}</span>
-                    <span className="text-muted-foreground dark:text-muted-foreground">{row.court || <span className="text-slate-300">—</span>}</span>
-                    <span className="text-muted-foreground dark:text-muted-foreground">{row.at ? new Date(row.at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : <span className="text-slate-300">—</span>}</span>
-                    <span className={row.found ? "text-primary font-bold" : "text-red-500 font-bold"}>
-                      {row.found ? "✓ Found" : "✗ Not found"}
-                    </span>
-                  </div>
-                ))}
+                <div className="max-h-60 overflow-y-auto">
+                  {bulkPreview.map((row, i) => (
+                    <div key={i} className={`grid grid-cols-4 gap-0 px-3 py-2 border-t border-slate-100 dark:border-slate-800 ${!row.found ? "bg-red-50 dark:bg-red-950/20" : ""}`}>
+                      <span className="font-bold text-muted-foreground dark:text-slate-300">{row.matchCode}</span>
+                      <span className="text-muted-foreground dark:text-muted-foreground">{row.court || <span className="text-slate-300">—</span>}</span>
+                      <span className="text-muted-foreground dark:text-muted-foreground">{row.at ? new Date(row.at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : <span className="text-slate-300">—</span>}</span>
+                      <span className={row.found ? "text-primary font-bold" : "text-red-500 font-bold"}>
+                        {row.found ? "✓ Found" : "✗ Not found"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 

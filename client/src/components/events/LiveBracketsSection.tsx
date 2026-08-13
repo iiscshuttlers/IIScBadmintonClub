@@ -5,7 +5,13 @@ import { BracketVisual, type BracketMatch } from "@/components/tournament/Bracke
 
 const CATEGORY_ORDER = ["MS", "WS", "MD", "WD", "XD"];
 
-export function LiveBracketsSection({ tournamentId }: { tournamentId: string | null }) {
+export function LiveBracketsSection({ 
+  tournamentId, 
+  showBrackets 
+}: { 
+  tournamentId: string | null;
+  showBrackets?: boolean | null;
+}) {
   const [activeFormat, setActiveFormat] = useState("MS");
   const [formats, setFormats] = useState<string[]>([]);
   const [matchesByFormat, setMatchesByFormat] = useState<Record<string, BracketMatch[]>>({});
@@ -16,6 +22,12 @@ export function LiveBracketsSection({ tournamentId }: { tournamentId: string | n
     const load = async () => {
       if (!tournamentId) {
         setError("Tournament brackets are not available yet.");
+        setLoading(false);
+        return;
+      }
+      
+      if (!showBrackets) {
+        setError("Brackets have not been published yet.");
         setLoading(false);
         return;
       }

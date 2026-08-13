@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Trophy, ZoomIn, ZoomOut, X, ChevronRight, Clock, CheckCircle2, Play } from "lucide-react";
+import { Trophy, ZoomIn, ZoomOut, X, ChevronRight, Clock, CheckCircle2, Play, Download, ImageIcon } from "lucide-react";
 import { getCourtColor, cn } from "@/lib/utils";
 
 export interface BracketMatch {
@@ -369,9 +369,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
     return () => window.removeEventListener("resize", computeScale);
   }, [computeScale]);
 
-  const r1Count = matches.filter((m) => m.round === rounds[0]).length;
   const SLOT_H = Math.max(MATCH_H + 20, 90);
-  const totalH = r1Count * SLOT_H;
 
   const getExportFilename = () => {
     const safeName = tournamentName.replace(/[^a-zA-Z0-9]/g, '_');
@@ -381,37 +379,66 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
 
   type Pos = { match: BracketMatch; y: number; cy: number };
 
-  const roundData = rounds.map((round, ri) => {
-    const roundMatches = matches
-      .filter((m) => m.round === round)
-      .sort((a, b) => a.match_number - b.match_number);
-    const slotH = totalH / roundMatches.length;
-    const positions: Pos[] = roundMatches.map((m, mi) => ({
-      match: m,
-      y: mi * slotH + slotH / 2 - MATCH_H / 2,
-      cy: mi * slotH + slotH / 2,
-    }));
-    return { round, ri, positions, label: roundMatches[0]?.round_name ?? `R${round}` };
+  // The 3rd place playoff shares a round number with the semifinal but sits
+  // outside the knockout tree, so it must not take part in the slot layout.
+  const isPlayoff = (m: BracketMatch) =>
+    m.match_number >= 99 || (m.round_name ?? "").toLowerCase().includes("3rd");
+
+  // Matches are placed by their structural slot (match_number), never by array
+  // index: a player with more than one bye leaves a match out of the draw
+  // entirely, and indexing would then shift everything below the gap upwards.
+  const roundShapes = rounds.map((round, ri) => {
+    const inRound = matches.filter((m) => m.round === round);
+    const tree = inRound.filter((m) => !isPlayoff(m)).sort((a, b) => a.match_number - b.match_number);
+    const slots = Math.max(
+      Math.pow(2, rounds.length - 1 - ri),
+      ...tree.map((m) => m.match_number),
+      1
+    );
+    return { round, ri, tree, playoffs: inRound.filter(isPlayoff), slots };
   });
 
-  // SVG connector lines
+  const treeH = (roundShapes[0]?.slots ?? 1) * SLOT_H;
+  const playoffRows = Math.max(0, ...roundShapes.map((r) => r.playoffs.length));
+  const totalH = treeH + playoffRows * SLOT_H;
+
+  const roundData = roundShapes.map(({ round, ri, tree, playoffs, slots }) => {
+    const slotH = treeH / slots;
+    const bySlot = new Map<number, Pos>();
+    const positions: Pos[] = [];
+    for (const m of tree) {
+      const slot = Math.min(Math.max(m.match_number - 1, 0), slots - 1);
+      const cy = slot * slotH + slotH / 2;
+      const pos = { match: m, y: cy - MATCH_H / 2, cy };
+      bySlot.set(slot, pos);
+      positions.push(pos);
+    }
+    // Playoffs hang below the tree so they can't disturb its spacing.
+    playoffs.forEach((m, i) => {
+      const cy = treeH + SLOT_H / 2 + i * SLOT_H;
+      positions.push({ match: m, y: cy - MATCH_H / 2, cy });
+    });
+    const label = tree[0]?.round_name ?? playoffs[0]?.round_name ?? `R${round}`;
+    return { round, ri, positions, bySlot, label };
+  });
+
+  // SVG connector lines — driven by the next round's slots, so a missing feeder
+  // simply draws no stub instead of pulling the whole column out of alignment.
   const lines: React.ReactNode[] = [];
   for (let ri = 0; ri < roundData.length - 1; ri++) {
     const cur = roundData[ri];
+    const next = roundData[ri + 1];
     const x1 = ri * COL_W + MATCH_W;
     const xMid = x1 + COL_GAP / 2;
-    for (let i = 0; i < cur.positions.length; i += 2) {
-      const m1 = cur.positions[i];
-      const m2 = cur.positions[i + 1];
-      const nm = roundData[ri + 1]?.positions[Math.floor(i / 2)];
-      if (!nm) continue;
-      lines.push(<line key={`a-${ri}-${i}`} x1={x1} y1={m1?.cy || 0} x2={xMid} y2={m1?.cy || 0} stroke="#444" strokeWidth={1.5} />);
-      if (m2) {
-        lines.push(<line key={`b-${ri}-${i}`} x1={x1} y1={m2.cy || 0} x2={xMid} y2={m2.cy || 0} stroke="#444" strokeWidth={1.5} />);
-        lines.push(<line key={`c-${ri}-${i}`} x1={xMid} y1={m1?.cy || 0} x2={xMid} y2={m2.cy || 0} stroke="#444" strokeWidth={1.5} />);
-      }
-      const x2 = ri + 1 < roundData.length - 1 ? (ri + 1) * COL_W : xMid + COL_GAP / 2;
-      lines.push(<line key={`d-${ri}-${i}`} x1={xMid} y1={nm.cy || 0} x2={x2} y2={nm.cy || 0} stroke="#444" strokeWidth={1.5} />);
+    const x2 = ri + 1 < roundData.length - 1 ? (ri + 1) * COL_W : xMid + COL_GAP / 2;
+    for (const [slot, nm] of next.bySlot) {
+      const c1 = cur.bySlot.get(slot * 2);
+      const c2 = cur.bySlot.get(slot * 2 + 1);
+      if (!c1 && !c2) continue;
+      if (c1) lines.push(<line key={`a-${ri}-${slot}`} x1={x1} y1={c1.cy} x2={xMid} y2={c1.cy} stroke="#444" strokeWidth={1.5} />);
+      if (c2) lines.push(<line key={`b-${ri}-${slot}`} x1={x1} y1={c2.cy} x2={xMid} y2={c2.cy} stroke="#444" strokeWidth={1.5} />);
+      if (c1 && c2) lines.push(<line key={`c-${ri}-${slot}`} x1={xMid} y1={c1.cy} x2={xMid} y2={c2.cy} stroke="#444" strokeWidth={1.5} />);
+      lines.push(<line key={`d-${ri}-${slot}`} x1={xMid} y1={nm.cy} x2={x2} y2={nm.cy} stroke="#444" strokeWidth={1.5} />);
     }
   }
 
@@ -484,7 +511,20 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
             }}
             className="px-2 py-1 flex items-center gap-1 text-[10px] font-bold uppercase rounded-md text-slate-300 hover:text-white hover:bg-blue-500/20 active:bg-blue-500/30 transition-colors"
           >
-            Image
+            PNG
+          </button>
+          <button
+            onClick={() => {
+              const el = document.getElementById("bracket-visual-export-container");
+              if (el) {
+                import("@/utils/exportUtils").then(({ exportElementToJpeg }) => {
+                  exportElementToJpeg(el, getExportFilename(), "#0d1117", { transform: 'scale(1)' });
+                });
+              }
+            }}
+            className="px-2 py-1 flex items-center gap-1 text-[10px] font-bold uppercase rounded-md text-slate-300 hover:text-white hover:bg-indigo-500/20 active:bg-indigo-500/30 transition-colors"
+          >
+            JPG
           </button>
         </div>
         {/* Zoom controls */}

@@ -61,9 +61,9 @@ export function DirectoryWrapper() {
         }
         return true;
       })
-      .filter((p) => levelFilter === "All" || p.playing_level === levelFilter)
+      .filter((p) => levelFilter === "All" || (p.playing_level || "").toLowerCase() === levelFilter.toLowerCase())
       .filter(
-        (p) => departmentFilter === "All" || p.department === departmentFilter
+        (p) => departmentFilter === "All" || (p.department || "").toLowerCase() === departmentFilter.toLowerCase()
       )
       .sort((a, b) => {
         if (sortBy === "elo") return (b.elo_rating || 0) - (a.elo_rating || 0);

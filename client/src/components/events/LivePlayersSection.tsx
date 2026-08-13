@@ -16,9 +16,18 @@ interface Participant {
   partner: { full_name: string | null; department: string | null } | null;
 }
 
-export function LivePlayersSection({ tournamentId, categories }: { tournamentId: string; categories: string[] }) {
+export function LivePlayersSection({ 
+  tournamentId, 
+  categories,
+  showParticipants 
+}: { 
+  tournamentId: string; 
+  categories: string[];
+  showParticipants?: boolean | null;
+}) {
   const [participants, setParticipants] = useState<Record<string, Participant[]>>({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const searchParams = safeGetSearchParams();
   const [activeCat, setActiveCat] = useState<string>(searchParams.get("cat") || "");
   const exportRef = useRef<HTMLDivElement>(null);
@@ -136,6 +145,12 @@ export function LivePlayersSection({ tournamentId, categories }: { tournamentId:
   };
 
   useEffect(() => {
+    if (!showParticipants) {
+      setError("The participants list has not been published yet.");
+      setLoading(false);
+      return;
+    }
+
     supabase
       .from("tournament_participants")
       .select(`
@@ -183,6 +198,16 @@ export function LivePlayersSection({ tournamentId, categories }: { tournamentId:
     return (
       <div className="flex justify-center py-12">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12 bg-white/5 dark:bg-slate-800/50 rounded-3xl border border-slate-200 dark:border-slate-700">
+        <Users className="w-12 h-12 text-slate-300 dark:text-muted-foreground mx-auto mb-4" />
+        <h3 className="text-lg font-black text-slate-800 dark:text-foreground">Participants Not Yet Available</h3>
+        <p className="text-muted-foreground mt-1">{error}</p>
       </div>
     );
   }
