@@ -367,6 +367,10 @@ export function BracketVisual(props: BracketVisualProps) {
 
 function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onExportExcel, tournamentName = "Tournament", category = "All" }: BracketVisualProps) {
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [bracketSegment, setBracketSegment] = useState<string>("full");
+  const [hiddenRounds, setHiddenRounds] = useState<number[]>([]);
+  const [viewMode, setViewMode] = useState<"tree" | "list">("tree");
   const [scale, setScale] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -396,7 +400,8 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
     const safeName = tournamentName.replace(/[^a-zA-Z0-9]/g, '_');
     return `${safeName}_Bracket_${category}_Visual`;
   };
-  const totalW = rounds.length * COL_W;
+  const visibleRounds = rounds.filter((r) => !hiddenRounds.includes(r));
+  const totalW = visibleRounds.length * COL_W;
 
   type Pos = { match: BracketMatch; y: number; cy: number };
 
@@ -408,20 +413,40 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
   // Matches are placed by their structural slot (match_number), never by array
   // index: a player with more than one bye leaves a match out of the draw
   // entirely, and indexing would then shift everything below the gap upwards.
-  const roundShapes = rounds.map((round, ri) => {
+  const roundShapes = visibleRounds.map((round, ri) => {
+    const originalRi = rounds.indexOf(round);
     const inRound = matches.filter((m) => m.round === round);
     const tree = inRound.filter((m) => !isPlayoff(m)).sort((a, b) => a.match_number - b.match_number);
     const slots = Math.max(
-      Math.pow(2, rounds.length - 1 - ri),
+      Math.pow(2, rounds.length - 1 - originalRi),
       ...tree.map((m) => m.match_number),
       1
     );
     return { round, ri, tree, playoffs: inRound.filter(isPlayoff), slots };
   });
 
-  const treeH = (roundShapes[0]?.slots ?? 1) * SLOT_H;
+  const currentBaseSlots = roundShapes[0]?.slots ?? 1;
+  let viewStartSlot = 0;
+  let viewEndSlot = currentBaseSlots - 1;
+
+  if (bracketSegment === "top-half") { viewEndSlot = Math.floor(currentBaseSlots / 2) - 1; }
+  else if (bracketSegment === "bottom-half") { viewStartSlot = Math.floor(currentBaseSlots / 2); }
+  else if (bracketSegment === "q1") { viewEndSlot = Math.floor(currentBaseSlots / 4) - 1; }
+  else if (bracketSegment === "q2") { viewStartSlot = Math.floor(currentBaseSlots / 4); viewEndSlot = Math.floor(currentBaseSlots / 2) - 1; }
+  else if (bracketSegment === "q3") { viewStartSlot = Math.floor(currentBaseSlots / 2); viewEndSlot = Math.floor((currentBaseSlots * 3) / 4) - 1; }
+  else if (bracketSegment === "q4") { viewStartSlot = Math.floor((currentBaseSlots * 3) / 4); }
+
+  viewEndSlot = Math.max(viewStartSlot, viewEndSlot);
+
+  const pixelStart = viewStartSlot * SLOT_H;
+  const pixelEnd = (viewEndSlot + 1) * SLOT_H;
+  const viewH = pixelEnd - pixelStart;
+
+  const treeH = currentBaseSlots * SLOT_H;
   const playoffRows = Math.max(0, ...roundShapes.map((r) => r.playoffs.length));
-  const totalH = treeH + playoffRows * SLOT_H;
+  
+  const isBottomSegment = bracketSegment === "full" || bracketSegment === "bottom-half" || bracketSegment === "q4";
+  const totalH = viewH + (isBottomSegment ? playoffRows * SLOT_H : 0);
 
   const roundData = roundShapes.map(({ round, ri, tree, playoffs, slots }) => {
     const slotH = treeH / slots;
@@ -429,15 +454,21 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
     const positions: Pos[] = [];
     for (const m of tree) {
       const slot = Math.min(Math.max(m.match_number - 1, 0), slots - 1);
-      const cy = slot * slotH + slotH / 2;
+      const cy = slot * slotH + slotH / 2 - pixelStart;
       const pos = { match: m, y: cy - MATCH_H / 2, cy };
       bySlot.set(slot, pos);
-      positions.push(pos);
+      if (cy >= -MATCH_H && cy <= totalH + MATCH_H) {
+        positions.push(pos);
+      }
     }
     // Playoffs hang below the tree so they can't disturb its spacing.
     playoffs.forEach((m, i) => {
-      const cy = treeH + SLOT_H / 2 + i * SLOT_H;
-      positions.push({ match: m, y: cy - MATCH_H / 2, cy });
+      const cy = treeH + SLOT_H / 2 + i * SLOT_H - pixelStart;
+      const pos = { match: m, y: cy - MATCH_H / 2, cy };
+      bySlot.set(9999 + i, pos);
+      if (cy >= -MATCH_H && cy <= totalH + MATCH_H) {
+        positions.push(pos);
+      }
     });
     const label = tree[0]?.round_name ?? playoffs[0]?.round_name ?? `R${round}`;
     return { round, ri, positions, bySlot, label };
@@ -486,20 +517,115 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
   const scaledH = (totalH + PADDING * 2 + LABEL_H) * scale;
   const scaledW = (totalW + PADDING * 2) * scale;
 
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setSearchTerm(val);
+    
+    if (val.length < 2) {
+      if (val.length === 0 && enablePathHighlight) setSelectedPlayer(null);
+      return;
+    }
+
+    const lowerVal = val.toLowerCase();
+    let foundPos = null;
+    let foundRi = 0;
+
+    for (let ri = 0; ri < roundData.length; ri++) {
+      for (const pos of roundData[ri].positions) {
+        if (
+          pos.match.team1_label?.toLowerCase().includes(lowerVal) ||
+          pos.match.team2_label?.toLowerCase().includes(lowerVal)
+        ) {
+          foundPos = pos;
+          foundRi = ri;
+          break;
+        }
+      }
+      if (foundPos) break;
+    }
+
+    if (foundPos && containerRef.current) {
+      if (enablePathHighlight) setSelectedPlayer(val);
+      const x = foundRi * COL_W + PADDING;
+      const y = foundPos.y + PADDING + LABEL_H;
+      
+      const scaledX = x * scale;
+      const scaledY = y * scale;
+      
+      containerRef.current.scrollTo({
+        left: Math.max(0, scaledX - containerRef.current.clientWidth / 2 + (MATCH_W * scale) / 2),
+        top: Math.max(0, scaledY - containerRef.current.clientHeight / 2 + (MATCH_H * scale) / 2),
+        behavior: "smooth",
+      });
+    }
+  };
+
   // Touch target height for player rows (min 44px for mobile)
   const playerRowH = isMobile ? 44 : 36;
 
   return (
     <div className="rounded-2xl border border-slate-700 overflow-hidden" style={{ background: "#0d1117" }}>
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-slate-800">
-        <span className="text-[10px] text-muted-foreground uppercase tracking-widest truncate mr-2">
-          {enablePathHighlight && selectedPlayer
-            ? <><span className="text-primary font-black">{selectedPlayer}</span><span className="text-muted-foreground"> · roadmap open</span></>
-            : enablePathHighlight ? "Tap a player to see roadmap" : "Bracket"
-          }
-        </span>
-        <div className="flex items-center gap-1 shrink-0 ml-auto mr-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-3 py-2 border-b border-slate-800 gap-2">
+        <div className="flex w-full sm:w-auto items-center justify-between">
+          <span className="text-[10px] text-muted-foreground uppercase tracking-widest truncate mr-2">
+            {enablePathHighlight && selectedPlayer
+              ? <><span className="text-primary font-black">{selectedPlayer}</span><span className="text-muted-foreground"> · roadmap open</span></>
+              : enablePathHighlight ? "Tap a player to see roadmap" : "Bracket"
+            }
+          </span>
+          <input
+            type="text"
+            placeholder="Find player..."
+            value={searchTerm}
+            onChange={handleSearch}
+            className="sm:hidden bg-slate-900/50 text-white text-[10px] sm:text-xs rounded border border-slate-700 px-2 py-1 outline-none focus:border-primary w-28 ml-auto"
+          />
+        </div>
+        <div className="flex items-center gap-1 shrink-0 ml-auto sm:mr-4">
+          <input
+            type="text"
+            placeholder="Find player..."
+            value={searchTerm}
+            onChange={handleSearch}
+            className="hidden sm:block bg-slate-900/50 text-white text-[10px] sm:text-xs rounded border border-slate-700 px-2 py-1 outline-none focus:border-primary w-28 mr-2"
+          />
+          <select
+            value={viewMode}
+            onChange={(e) => setViewMode(e.target.value as "tree" | "list")}
+            className="bg-slate-900/50 text-slate-300 text-[10px] sm:text-xs rounded border border-slate-700 px-2 py-1 outline-none focus:border-primary mr-2"
+          >
+            <option value="tree">Tree View</option>
+            <option value="list">List View</option>
+          </select>
+          {currentBaseSlots >= 16 && (
+            <select
+              value={bracketSegment}
+              onChange={(e) => setBracketSegment(e.target.value)}
+              className="bg-slate-900/50 text-slate-300 text-[10px] sm:text-xs rounded border border-slate-700 px-2 py-1 outline-none focus:border-primary mr-2"
+            >
+              <option value="full">Full Tree</option>
+              <option value="top-half">Top Half</option>
+              <option value="bottom-half">Bottom Half</option>
+              {currentBaseSlots >= 32 && (
+                <>
+                  <option value="q1">Quarter 1</option>
+                  <option value="q2">Quarter 2</option>
+                  <option value="q3">Quarter 3</option>
+                  <option value="q4">Quarter 4</option>
+                </>
+              )}
+            </select>
+          )}
+          {hiddenRounds.length > 0 && (
+            <button
+              onClick={() => setHiddenRounds([])}
+              className="px-2 py-1 mr-1 flex items-center gap-1 text-[10px] font-bold uppercase rounded-md text-amber-400 hover:text-white hover:bg-amber-500/20 active:bg-amber-500/30 transition-colors border border-amber-500/30"
+              title="Show hidden rounds"
+            >
+              Unhide ({hiddenRounds.length})
+            </button>
+          )}
           {onExportExcel && (
             <button
               onClick={onExportExcel}
@@ -574,150 +700,218 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
         </div>
       </div>
 
-      {/* Scrollable bracket */}
-      <div
-        ref={containerRef}
-        style={{
-          overflowX: "auto",
-          overflowY: "auto",
-          WebkitOverflowScrolling: "touch" as React.CSSProperties["WebkitOverflowScrolling"],
-          touchAction: "pan-x pan-y",
-          maxHeight: isMobile ? "60vh" : "75vh",
-        }}
-      >
+      {/* View Content */}
+      {viewMode === "list" ? (
+        <div className="p-4 space-y-8 overflow-y-auto w-full" style={{ maxHeight: isMobile ? "60vh" : "75vh", background: "#0d1117" }}>
+          {roundData.map(({ ri, label, round, positions }) => (
+            <div key={ri} className="space-y-4">
+              <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+                <h3 className="text-sm font-black uppercase tracking-widest text-indigo-400">{label}</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {positions.map(({ match: m }) => {
+                  const isCompleted = m.status === "completed";
+                  const isLive = m.status === "in_progress";
+                  const t1 = m.team1_label ?? "TBD";
+                  const t2 = m.team2_label ?? "TBD";
+                  const t1Won = isCompleted && m.winner_side === 1;
+                  const t2Won = isCompleted && m.winner_side === 2;
+
+                  return (
+                    <div key={m.id} className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm flex flex-col hover:border-slate-700 transition-colors">
+                      <div className="flex justify-between items-center px-3 py-1.5 bg-slate-950/50 border-b border-slate-800 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                        <span>{m.match_code}</span>
+                        {m.court_number && <span>Court {m.court_number}</span>}
+                      </div>
+                      <div className="flex flex-col p-3 gap-2 flex-1 justify-center">
+                        <div className={`flex justify-between items-center ${t1Won ? "text-primary font-black" : isCompleted ? "text-muted-foreground" : "text-slate-200"}`}>
+                          <span className="truncate pr-2 text-xs">{t1}</span>
+                          {t1Won && <Trophy size={12} className="text-amber-400 shrink-0" />}
+                        </div>
+                        <div className={`flex justify-between items-center ${t2Won ? "text-primary font-black" : isCompleted ? "text-muted-foreground" : "text-slate-200"}`}>
+                          <span className="truncate pr-2 text-xs">{t2}</span>
+                          {t2Won && <Trophy size={12} className="text-amber-400 shrink-0" />}
+                        </div>
+                      </div>
+                      {(m.score || isLive) && (
+                        <div className="px-3 py-2 bg-slate-950/30 border-t border-slate-800 flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
+                          {isLive ? (
+                            <span className="text-amber-500 animate-pulse flex items-center gap-1"><Play size={10} /> Live Match</span>
+                          ) : (
+                            <span className="text-slate-400">{m.score}</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        /* Scrollable bracket */
         <div
-          id="bracket-visual-export-container"
-          className="bracket-export-bg"
+          ref={containerRef}
           style={{
-            transformOrigin: "top left",
-            transform: `scale(${scale})`,
-            width: totalW + PADDING * 2,
-            height: totalH + PADDING * 2 + LABEL_H,
-            minWidth: scaledW,
-            minHeight: scaledH,
-            position: "relative",
-            backgroundColor: "#0d1117"
+            overflowX: "auto",
+            overflowY: "auto",
+            WebkitOverflowScrolling: "touch" as React.CSSProperties["WebkitOverflowScrolling"],
+            touchAction: "pan-x pan-y",
+            maxHeight: isMobile ? "60vh" : "75vh",
           }}
         >
-          {/* Round labels */}
-          <div className="flex absolute top-0 left-0" style={{ paddingLeft: PADDING, paddingTop: PADDING / 2 }}>
-            {roundData.map(({ ri, label }) => (
-              <div key={ri} style={{ width: COL_W, flexShrink: 0 }}
-                className="text-[10px] font-black uppercase tracking-widest text-center text-amber-400">
-                {label}
-              </div>
-            ))}
-          </div>
+          <div
+            id="bracket-visual-export-container"
+            className="bracket-export-bg"
+            style={{
+              transformOrigin: "top left",
+              transform: `scale(${scale})`,
+              width: totalW + PADDING * 2,
+              height: totalH + PADDING * 2 + LABEL_H,
+              minWidth: scaledW,
+              minHeight: scaledH,
+              position: "relative",
+              backgroundColor: "#0d1117"
+            }}
+          >
+            {/* Round labels */}
+            <div className="flex absolute top-0 left-0" style={{ paddingLeft: PADDING, paddingTop: PADDING / 2 }}>
+              {roundData.map(({ ri, label, round }) => (
+                <div key={ri} style={{ width: COL_W, flexShrink: 0 }}
+                  className="text-[10px] font-black uppercase tracking-widest text-center text-indigo-400 flex items-center justify-center gap-1 group">
+                  {label}
+                  <button
+                    onClick={() => setHiddenRounds(prev => [...prev, round])}
+                    className="opacity-50 hover:opacity-100 p-0.5 rounded hover:bg-slate-800 text-indigo-300 hover:text-white transition-all"
+                    title="Hide this round"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
 
-          {/* SVG connectors */}
-          <svg style={{ position: "absolute", left: PADDING, top: PADDING + LABEL_H, pointerEvents: "none" }}
-            width={totalW} height={totalH} overflow="visible">
-            {lines}
-          </svg>
+            {/* SVG connectors */}
+            <svg style={{ position: "absolute", left: PADDING, top: PADDING + LABEL_H, pointerEvents: "none" }}
+              width={totalW} height={totalH} overflow="visible">
+              {lines}
+            </svg>
 
-          {/* Match cards */}
-          {roundData.map(({ ri, positions }) =>
-            positions.map(({ match: m, y }) => {
-              const isCompleted = m.status === "completed";
-              const isLive = m.status === "in_progress";
-              const t1 = m.team1_label ?? "TBD";
-              const t2 = m.team2_label ?? "TBD";
-              const t1Won = isCompleted && m.winner_side === 1;
-              const t2Won = isCompleted && m.winner_side === 2;
-              const sets = m.sets_history?.length && Array.isArray(m.sets_history)
-                ? m.sets_history.map((s) => {
-                    if (typeof s !== "string") return { t1: 0, t2: 0 };
-                    const [a, b] = s.split("-").map(Number);
-                    return { t1: isNaN(a) ? 0 : a, t2: isNaN(b) ? 0 : b };
-                  })
-                : null;
+            {/* Match cards */}
+            {roundData.map(({ ri, positions }) =>
+              positions.map(({ match: m, y }) => {
+                const isCompleted = m.status === "completed";
+                const isLive = m.status === "in_progress";
+                const t1 = m.team1_label ?? "TBD";
+                const t2 = m.team2_label ?? "TBD";
+                const t1Won = isCompleted && m.winner_side === 1;
+                const t2Won = isCompleted && m.winner_side === 2;
+                
+                const isMatchOnPath = pathSet.has(m.id);
+                const opacity = enablePathHighlight && selectedPlayer && !isMatchOnPath ? 0.3 : 1;
+                
+                const sets = m.sets_history?.length && Array.isArray(m.sets_history)
+                  ? m.sets_history.map((s) => {
+                      if (typeof s !== "string") return { t1: 0, t2: 0 };
+                      const [a, b] = s.split("-").map(Number);
+                      return { t1: isNaN(a) ? 0 : a, t2: isNaN(b) ? 0 : b };
+                    })
+                  : null;
 
-              const isOnPath = pathSet.has(m.id);
-              const isDirectMatch = isOnPath && (t1.includes(selectedPlayer ?? "") || t2.includes(selectedPlayer ?? ""));
-
-              const borderCls = isLive
-                ? "border-red-500 shadow-red-900/40 shadow-lg ring-1 ring-red-500"
-                : isDirectMatch ? "border-primary ring-2 ring-primary"
-                : isOnPath ? "border-primary ring-1 ring-primary"
-                : "border-slate-700";
-
-              return (
-                <div key={m.id}
-                  style={{ position: "absolute", left: ri * COL_W + PADDING, top: y + PADDING + LABEL_H, width: MATCH_W }}>
-                  <div className={`rounded-lg overflow-hidden border ${borderCls} transition-all`} style={{ background: "#161b22" }}>
-                    {/* Match header */}
-                    <div className="px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-muted-foreground border-b border-slate-700/50 flex justify-between items-center">
-                      <span>{m.match_code}</span>
-                      <span className="flex items-center gap-1.5 whitespace-nowrap">
-                        {(!isLive && !isCompleted && t1 !== "BYE" && t2 !== "BYE") && (
-                          ((m as any).scheduled_at || m.court_number) ? (
-                            <span className="flex items-center gap-1.5 text-[10px] whitespace-nowrap">
-                              {m.court_number && (
-                                <span className={cn("font-black px-1.5 py-0.5 rounded-md bg-slate-800/80 border border-slate-600/50 shadow-sm", getCourtColor(m.court_number))}>
-                                  {String(m.court_number).toUpperCase().startsWith('C') ? String(m.court_number).toUpperCase() : `C${m.court_number}`}
-                                </span>
-                              )}
-                              {(m as any).scheduled_at && (
+                return (
+                  <div
+                    key={m.id}
+                    className={`absolute flex flex-col justify-center transition-opacity duration-300 ${isMatchOnPath ? 'z-10' : 'z-0'}`}
+                    style={{
+                      left: PADDING + ri * COL_W,
+                      top: PADDING + y + LABEL_H,
+                      width: MATCH_W,
+                      height: MATCH_H,
+                      opacity
+                    }}
+                  >
+                    <div className={`flex flex-col bg-slate-900 border ${isMatchOnPath ? 'border-primary ring-2 ring-primary/20 shadow-lg shadow-primary/10' : 'border-slate-700/80 shadow-md'} rounded overflow-hidden`}>
+                      {/* Match header */}
+                      <div className={`flex justify-between items-center px-2 py-1 text-[9px] font-black uppercase tracking-widest ${isCompleted ? 'bg-slate-800 text-slate-400' : isLive ? 'bg-amber-500/20 text-amber-500' : 'bg-slate-800/50 text-muted-foreground'}`}>
+                        <span>{m.match_code}</span>
+                        <span className="flex items-center gap-1">
+                          {isCompleted ? (
+                            <span className="text-slate-500">Done</span>
+                          ) : (
+                            isLive ? (
+                              <span className="flex items-center gap-1 text-amber-500 font-bold">
+                                Live
+                                {m.court_number && (
+                                  <span className={cn("font-black px-1.5 py-0.5 rounded-md text-[8px] bg-slate-800/80 border border-slate-600/50 shadow-sm", getCourtColor(m.court_number))}>
+                                    {String(m.court_number).toUpperCase().startsWith('C') ? String(m.court_number).toUpperCase() : `C${m.court_number}`}
+                                  </span>
+                                )}
+                              </span>
+                            ) : (m as any).scheduled_at ? (
+                              <span className="flex items-center gap-1 text-[9px]">
+                                {m.court_number && (
+                                  <span className={cn("font-black px-1.5 py-0.5 rounded-md bg-slate-800/80 border border-slate-600/50 shadow-sm", getCourtColor(m.court_number))}>
+                                    {String(m.court_number).toUpperCase().startsWith('C') ? String(m.court_number).toUpperCase() : `C${m.court_number}`}
+                                  </span>
+                                )}
                                 <span className="text-slate-100 font-black tracking-wide drop-shadow-sm">
                                   {new Date((m as any).scheduled_at).toLocaleString("en-GB", { hour: "2-digit", minute: "2-digit" })}
                                   <span className="font-bold text-amber-400 ml-1">
                                     {new Date((m as any).scheduled_at).toLocaleString("en-GB", { day: "2-digit", month: "2-digit" })}
                                   </span>
                                 </span>
-                              )}
-                            </span>
-                          ) : (
-                            <span className="text-[10px] font-black text-slate-400 tracking-widest">TBD</span>
-                          )
-                        )}
-                        {isLive && <span className="animate-pulse w-1.5 h-1.5 rounded-full bg-red-500" />}
-                      </span>
-                    </div>
-                    {/* Players + scores */}
-                    <div className="flex">
-                      <div className="flex-1 min-w-0 flex flex-col">
-                        {/* Team 1 */}
-                        <div
-                          onClick={enablePathHighlight ? () => setSelectedPlayer(selectedPlayer === t1 ? null : t1) : undefined}
-                          style={{ minHeight: playerRowH }}
-                          className={`flex-1 flex items-center gap-1 px-2 border-b border-slate-700/50 ${t1Won ? "bg-amber-500/20" : ""} ${enablePathHighlight ? "cursor-pointer active:bg-slate-700/50" : ""}`}
-                        >
-                          <span className={`flex-1 text-[11px] font-bold truncate leading-tight ${t1Won ? "text-amber-300" : "text-slate-300"}`}>{t1}</span>
-                          {t1Won && <Trophy size={11} className="text-amber-400 shrink-0" />}
-                        </div>
-                        {/* Team 2 */}
-                        <div
-                          onClick={enablePathHighlight ? () => setSelectedPlayer(selectedPlayer === t2 ? null : t2) : undefined}
-                          style={{ minHeight: playerRowH }}
-                          className={`flex-1 flex items-center gap-1 px-2 ${t2Won ? "bg-amber-500/20" : ""} ${enablePathHighlight ? "cursor-pointer active:bg-slate-700/50" : ""}`}
-                        >
-                          <span className={`flex-1 text-[11px] font-bold truncate leading-tight ${t2Won ? "text-amber-300" : "text-slate-300"}`}>{t2}</span>
-                          {t2Won && <Trophy size={11} className="text-amber-400 shrink-0" />}
-                        </div>
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-black text-slate-400 tracking-widest">TBD</span>
+                            )
+                          )}
+                          {isLive && <span className="animate-pulse w-1.5 h-1.5 rounded-full bg-red-500" />}
+                        </span>
                       </div>
-                      {/* Set scores */}
-                      {isCompleted && sets && (
-                        <div className="flex shrink-0 border-l border-slate-700/50">
-                          {sets.map((s, i) => (
-                            <div key={i} className={`flex flex-col${i < sets.length - 1 ? " border-r border-slate-700/30" : ""}`} style={{ width: 22 }}>
-                              <div style={{ minHeight: playerRowH }} className={`flex items-center justify-center text-[11px] font-mono font-bold border-b border-slate-700/50 ${t1Won ? "bg-amber-500/10" : ""} ${s.t1 > s.t2 ? "text-foreground" : "text-muted-foreground"}`}>
-                                {s.t1}
-                              </div>
-                              <div style={{ minHeight: playerRowH }} className={`flex items-center justify-center text-[11px] font-mono font-bold ${t2Won ? "bg-amber-500/10" : ""} ${s.t2 > s.t1 ? "text-foreground" : "text-muted-foreground"}`}>
-                                {s.t2}
-                              </div>
-                            </div>
-                          ))}
+                      {/* Players + scores */}
+                      <div className="flex">
+                        <div className="flex-1 min-w-0 flex flex-col">
+                          <div
+                            onClick={enablePathHighlight ? () => setSelectedPlayer(selectedPlayer === t1 ? null : t1) : undefined}
+                            style={{ minHeight: playerRowH }}
+                            className={`flex-1 flex items-center gap-1 px-2 border-b border-slate-700/50 ${t1Won ? "bg-amber-500/20" : ""} ${enablePathHighlight ? "cursor-pointer active:bg-slate-700/50" : ""}`}
+                          >
+                            <span className={`flex-1 text-[11px] font-bold truncate leading-tight ${t1Won ? "text-amber-300" : "text-slate-300"}`}>{t1}</span>
+                            {t1Won && <Trophy size={11} className="text-amber-400 shrink-0" />}
+                          </div>
+                          <div
+                            onClick={enablePathHighlight ? () => setSelectedPlayer(selectedPlayer === t2 ? null : t2) : undefined}
+                            style={{ minHeight: playerRowH }}
+                            className={`flex-1 flex items-center gap-1 px-2 ${t2Won ? "bg-amber-500/20" : ""} ${enablePathHighlight ? "cursor-pointer active:bg-slate-700/50" : ""}`}
+                          >
+                            <span className={`flex-1 text-[11px] font-bold truncate leading-tight ${t2Won ? "text-amber-300" : "text-slate-300"}`}>{t2}</span>
+                            {t2Won && <Trophy size={11} className="text-amber-400 shrink-0" />}
+                          </div>
                         </div>
-                      )}
+                        {isCompleted && sets && (
+                          <div className="flex shrink-0 border-l border-slate-700/50">
+                            {sets.map((s, i) => (
+                              <div key={i} className={`flex flex-col${i < sets.length - 1 ? " border-r border-slate-700/30" : ""}`} style={{ width: 22 }}>
+                                <div style={{ minHeight: playerRowH }} className={`flex items-center justify-center text-[11px] font-mono font-bold border-b border-slate-700/50 ${t1Won ? "bg-amber-500/10" : ""} ${s.t1 > s.t2 ? "text-foreground" : "text-muted-foreground"}`}>
+                                  {s.t1}
+                                </div>
+                                <div style={{ minHeight: playerRowH }} className={`flex items-center justify-center text-[11px] font-mono font-bold ${t2Won ? "bg-amber-500/10" : ""} ${s.t2 > s.t1 ? "text-foreground" : "text-muted-foreground"}`}>
+                                  {s.t2}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })
-          )}
+                );
+              })
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Roadmap modal */}
       {enablePathHighlight && selectedPlayer && (

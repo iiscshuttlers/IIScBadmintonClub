@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Bell, Pin, CalendarDays, Trophy, ExternalLink, Clock, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Calendar, Bell, Pin, CalendarDays, Trophy, ExternalLink, Clock, AlertCircle, CheckCircle2, MapPin } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSiteData } from "@/lib/siteData";
 import { SocialCTA } from "@/components/SocialCTA";
@@ -119,7 +119,7 @@ export function AnnouncementsSection() {
         if (data?.length) {
           const t = data[0] as LiveTournament;
           // Override form_status if deadline has passed
-          if (t.form_close_date) {
+          if (t.form_close_date && t.form_status !== "disabled") {
             const closeTime = new Date(t.form_close_date).getTime();
             if (!isNaN(closeTime) && Date.now() >= closeTime) {
               t.form_status = "closed";
@@ -262,81 +262,77 @@ export function AnnouncementsSection() {
                 ? "bg-amber-500/5 dark:bg-amber-500/10 border-amber-500/30"
                 : "bg-slate-100 dark:bg-slate-800/60 border-slate-300 dark:border-slate-700"
             }`}>
-              <div className="flex flex-wrap items-start gap-4">
-                <div className={`p-2.5 rounded-xl flex-shrink-0 ${
-                  liveTournament.form_status === "open"
-                    ? "bg-primary/15"
-                    : liveTournament.form_status === "closing_soon"
-                    ? "bg-amber-500/15"
-                    : "bg-slate-200 dark:bg-slate-700"
-                }`}>
-                  <Trophy className={`w-5 h-5 ${
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-start gap-3.5 flex-1 min-w-0">
+                  <div className={`p-2.5 rounded-xl flex-shrink-0 ${
                     liveTournament.form_status === "open"
-                      ? "text-primary"
+                      ? "bg-primary/15"
                       : liveTournament.form_status === "closing_soon"
-                      ? "text-amber-500"
-                      : "text-slate-500"
-                  }`} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <span className="font-black text-sm text-foreground">{liveTournament.name}</span>
-                    <Badge className={`text-[10px] font-bold border-0 ${
+                      ? "bg-amber-500/15"
+                      : "bg-slate-200 dark:bg-slate-700"
+                  }`}>
+                    <Trophy className={`w-5 h-5 ${
                       liveTournament.form_status === "open"
-                        ? "bg-primary/15 text-primary"
+                        ? "text-primary"
                         : liveTournament.form_status === "closing_soon"
-                        ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
-                        : "bg-slate-200 dark:bg-slate-700 text-muted-foreground"
-                    }`}>
-                      {liveTournament.form_status === "open" ? "🟢 Registrations Open"
-                        : liveTournament.form_status === "closing_soon" ? "🟡 Closing Soon"
-                        : liveTournament.form_status === "disabled" ? "⚪ Form Disabled"
-                        : "🔴 Registrations Closed"}
-                    </Badge>
-                    {liveTournament.status === "active" && (
-                      <Badge className="text-[10px] font-bold border-0 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">🏸 Active</Badge>
-                    )}
-                    {liveTournament.status === "upcoming" && (
-                      <Badge className="text-[10px] font-bold border-0 bg-blue-500/15 text-blue-700 dark:text-blue-400">📅 Upcoming</Badge>
-                    )}
+                        ? "text-amber-500"
+                        : "text-slate-500"
+                    }`} />
                   </div>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground mt-1">
-                    {liveTournament.start_date && (
-                      <span className="flex items-center gap-1">
-                        <CalendarDays className="w-3 h-3" />
-                        {liveTournament.start_date}{liveTournament.end_date && liveTournament.end_date !== liveTournament.start_date ? ` – ${liveTournament.end_date}` : ""}
-                      </span>
-                    )}
-                    {liveTournament.venue && (
-                      <span>📍 {liveTournament.venue}</span>
-                    )}
-                    {liveTournament.form_close_date && liveTournament.form_status !== "closed" && (
-                      <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium">
-                        <Clock className="w-3 h-3" />
-                        Closes {new Date(liveTournament.form_close_date).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
-                      </span>
-                    )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <span className="font-black text-sm md:text-base text-foreground">{liveTournament.name}</span>
+                      {liveTournament.status === "active" && (
+                        <Badge className="text-[10px] font-bold border-0 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">🏸 Active</Badge>
+                      )}
+                      {liveTournament.status === "upcoming" && (
+                        <Badge className="text-[10px] font-bold border-0 bg-blue-500/15 text-blue-700 dark:text-blue-400">📅 Upcoming</Badge>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground mt-1">
+                      {liveTournament.start_date && (
+                        <span className="flex items-center gap-1.5">
+                          <CalendarDays className="w-3.5 h-3.5 opacity-70" />
+                          {liveTournament.start_date}{liveTournament.end_date && liveTournament.end_date !== liveTournament.start_date ? ` – ${liveTournament.end_date}` : ""}
+                        </span>
+                      )}
+                      {liveTournament.venue && (
+                        <span className="flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 opacity-70 text-rose-500" /> 
+                          {liveTournament.venue}
+                        </span>
+                      )}
+                      {liveTournament.form_close_date && liveTournament.form_status !== "closed" && (
+                        <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium">
+                          <Clock className="w-3.5 h-3.5" />
+                          Closes {new Date(liveTournament.form_close_date).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-                {liveTournament.form_url && liveTournament.form_status !== "closed" && liveTournament.form_status !== "disabled" && (
-                  <a
-                    href={liveTournament.form_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-black transition-all flex-shrink-0 ${
-                      liveTournament.form_status === "open"
-                        ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                        : "bg-amber-500 text-white hover:bg-amber-600"
-                    }`}
-                  >
-                    Register Now <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                )}
-                {(liveTournament.form_status === "closed" || liveTournament.form_status === "disabled") && (
-                  <span className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold bg-slate-200 dark:bg-slate-700 text-muted-foreground flex-shrink-0 cursor-not-allowed">
-                    <CheckCircle2 className="w-4 h-4" /> Form {liveTournament.form_status === "disabled" ? "Disabled" : "Closed"}
-                  </span>
-                )}
+                
+                <div className="flex-shrink-0 flex sm:block mt-2 sm:mt-0">
+                  {liveTournament.form_url && liveTournament.form_status !== "closed" && liveTournament.form_status !== "disabled" && (
+                    <a
+                      href={liveTournament.form_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-black transition-all ${
+                        liveTournament.form_status === "open"
+                          ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                          : "bg-amber-500 text-white hover:bg-amber-600"
+                      }`}
+                    >
+                      Register Now <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  )}
+                  {(liveTournament.form_status === "closed" || liveTournament.form_status === "disabled") && (
+                    <span className="flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold bg-slate-200 dark:bg-slate-800 text-muted-foreground cursor-not-allowed border border-slate-300 dark:border-slate-700">
+                      <CheckCircle2 className="w-4 h-4" /> Form {liveTournament.form_status === "disabled" ? "Disabled" : "Closed"}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>

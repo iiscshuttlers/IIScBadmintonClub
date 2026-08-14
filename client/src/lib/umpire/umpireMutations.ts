@@ -50,15 +50,20 @@ export function computeAddPoint(match: BwfMatchState, team: 1 | 2, note?: string
   };
   const newPointLog = [...pointLog, newLog];
 
-  const isDeciding = currentGameNum === bestOfSets;
-  const justHit11 =
+  const safePointsToWin = pointsToWin || 30;
+  const safeBestOfSets = bestOfSets || 1;
+  const safeGoldenPoint = goldenPoint || 30;
+
+  const isDeciding = currentGameNum === safeBestOfSets;
+  const intervalPoint = Math.ceil(safePointsToWin / 2);
+  const justHitInterval =
     isDeciding &&
-    !pointLog.slice(0, -1).some(e => e.gameNum === currentGameNum && (e.t1Score + e.t2Score) >= 11) &&
-    (newT1.score + newT2.score) === 11;
+    !pointLog.slice(0, -1).some(e => e.gameNum === currentGameNum && (e.t1Score >= intervalPoint || e.t2Score >= intervalPoint)) &&
+    (newT1.score === intervalPoint || newT2.score === intervalPoint);
 
   let t1WonGame = false, t2WonGame = false;
-  if (newT1.score >= pointsToWin && (newT1.score - newT2.score >= 2 || newT1.score === goldenPoint)) t1WonGame = true;
-  else if (newT2.score >= pointsToWin && (newT2.score - newT1.score >= 2 || newT2.score === goldenPoint)) t2WonGame = true;
+  if (newT1.score >= safePointsToWin && (newT1.score - newT2.score >= 2 || newT1.score === safeGoldenPoint)) t1WonGame = true;
+  else if (newT2.score >= safePointsToWin && (newT2.score - newT1.score >= 2 || newT2.score === safeGoldenPoint)) t2WonGame = true;
 
   let nextStatus: "setup" | "playing" | "finished" = match.status;
   let nextWinner: 1 | 2 | undefined = match.winner;
@@ -73,7 +78,7 @@ export function computeAddPoint(match: BwfMatchState, team: 1 | 2, note?: string
     if (t2WonGame) newT2.games++;
     newT1.score = 0;
     newT2.score = 0;
-    const gamesToWin = Math.ceil(bestOfSets / 2);
+    const gamesToWin = Math.ceil(safeBestOfSets / 2);
     if (newT1.games >= gamesToWin) { nextStatus = "finished"; nextWinner = 1; }
     else if (newT2.games >= gamesToWin) { nextStatus = "finished"; nextWinner = 2; }
     else {
@@ -88,9 +93,9 @@ export function computeAddPoint(match: BwfMatchState, team: 1 | 2, note?: string
       const reason = `End of Game ${gamesPlayed} — Change Ends`;
       specialEvent = { _changeEnds: true, _reason: reason, _break: breakSecs };
     }
-  } else if (justHit11) {
+  } else if (justHitInterval) {
     newEndsSwapped = !newEndsSwapped;
-    specialEvent = { _changeEnds: true, _reason: "Deciding Game — 11 pts Interval (Change Ends)", _break: 60 };
+    specialEvent = { _changeEnds: true, _reason: `Deciding Game — ${intervalPoint} pts Interval (Change Ends)`, _break: 60 };
   }
 
   return {
@@ -112,12 +117,29 @@ export function computeAddPoint(match: BwfMatchState, team: 1 | 2, note?: string
 
 export function computeDeductPoint(match: BwfMatchState, team: 1 | 2): Partial<BwfMatchState> | null {
   if (match.status !== "playing") return null;
-  const { t1, t2 } = match;
+  const { t1, t2, bestOfSets, pointsToWin, endsSwapped } = match;
+  
+  const safePointsToWin = pointsToWin || 30;
+  const safeBestOfSets = bestOfSets || 1;
+  const intervalPoint = Math.ceil(safePointsToWin / 2);
+  const currentGameNum = t1.games + t2.games + 1;
+  const isDeciding = currentGameNum === safeBestOfSets;
+
   if (team === 1 && t1.score > 0) {
-    return { t1: { ...t1, score: t1.score - 1 }, pointLog: match.pointLog.slice(0, -1) };
+    const isUndoingInterval = isDeciding && t1.score === intervalPoint && t2.score < intervalPoint;
+    return { 
+      t1: { ...t1, score: t1.score - 1 }, 
+      pointLog: match.pointLog.slice(0, -1),
+      ...(isUndoingInterval ? { endsSwapped: !endsSwapped } : {})
+    };
   }
   if (team === 2 && t2.score > 0) {
-    return { t2: { ...t2, score: t2.score - 1 }, pointLog: match.pointLog.slice(0, -1) };
+    const isUndoingInterval = isDeciding && t2.score === intervalPoint && t1.score < intervalPoint;
+    return { 
+      t2: { ...t2, score: t2.score - 1 }, 
+      pointLog: match.pointLog.slice(0, -1),
+      ...(isUndoingInterval ? { endsSwapped: !endsSwapped } : {})
+    };
   }
   return null;
 }
@@ -134,15 +156,17 @@ export function computeForceEndSet(match: BwfMatchState): Partial<BwfMatchState>
   let newT1 = { ...t1 };
   let newT2 = { ...t2 };
 
+  const safeBestOfSets = bestOfSets || 1;
+
   const newSetsHistory = [...setsHistory, `${newT1.score}-${newT2.score}`];
   if (t1Won) newT1.games++;
   if (t2Won) newT2.games++;
   newT1.score = 0;
   newT2.score = 0;
 
-  const gamesToWin = Math.ceil(bestOfSets / 2);
-  let nextStatus: "setup" | "playing" | "finished" = match.status;
-  let nextWinner = match.winner;
+  const gamesToWin = Math.ceil(safeBestOfSets / 2);
+  let nextStatus: "setup" | "playing" | "finished" = "playing";
+  let nextWinner: 1 | 2 | undefined = undefined;
 
   if (newT1.games >= gamesToWin) { nextStatus = "finished"; nextWinner = 1; }
   else if (newT2.games >= gamesToWin) { nextStatus = "finished"; nextWinner = 2; }

@@ -34,8 +34,6 @@ import { useGlobalNotifications } from "./hooks/useGlobalNotifications";
 import { useEngagementReminders } from "./hooks/useEngagementReminders";
 import { initSounds, playOnUnlock, playSmashSound } from "./lib/sounds";
 import { OnboardingTour } from "./components/OnboardingTour";
-import { useShakeToFeedback } from "./hooks/useShakeToFeedback";
-import { BetaFeedbackModal } from "@/components/BetaFeedbackModal";
 
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { FileOpener } from "@capacitor-community/file-opener";
@@ -378,15 +376,10 @@ function GlobalAuthGuard() {
 function AppContent() {
   const { updateInfo, isDialogOpen, dismissUpdate } = useAppUpdate();
   const [isLogMatchOpen, setIsLogMatchOpen] = useState(false);
-  const [isBetaFeedbackOpen, setIsBetaFeedbackOpen] = useState(false);
   const [defaultOpponentId, setDefaultOpponentId] = useState<string | undefined>(undefined);
   const { profile, session } = useAuth();
   const [location, setLocation] = useLocation();
   const { mode } = useAppMode();
-
-  useShakeToFeedback(() => {
-    setIsBetaFeedbackOpen(true);
-  });
 
   useInactivityLogout();
   useNativeBackButton();
@@ -537,7 +530,6 @@ function AppContent() {
                 defaultOpponentId={defaultOpponentId}
               />
             )}
-            <BetaFeedbackModal isOpen={isBetaFeedbackOpen} onClose={() => setIsBetaFeedbackOpen(false)} />
             {isDialogOpen && updateInfo && (
               <UpdateDialog info={updateInfo} onDismiss={dismissUpdate} />
             )}

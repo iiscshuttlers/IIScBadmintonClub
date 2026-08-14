@@ -53,6 +53,7 @@ export function MatchCard({
   const [isEditVideoOpen, setIsEditVideoOpen] = useState(false);
   const [isScorecardOpen, setIsScorecardOpen] = useState(false);
   const [isNotifyOpen, setIsNotifyOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(isLiveNow || isMatchOfTheDay);
 
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
@@ -113,6 +114,17 @@ export function MatchCard({
     return cat;
   };
 
+  const getMatchCodeColor = (code: string | undefined) => {
+    if (!code) return { text: "text-amber-500 dark:text-amber-400", bg: "bg-amber-500/10 border-amber-500/20 group-hover/header:bg-amber-500/20" };
+    const c = code.toUpperCase();
+    if (c.startsWith("MS")) return { text: "text-blue-500 dark:text-blue-400", bg: "bg-blue-500/10 border-blue-500/20 group-hover/header:bg-blue-500/20" };
+    if (c.startsWith("MD")) return { text: "text-emerald-500 dark:text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20 group-hover/header:bg-emerald-500/20" };
+    if (c.startsWith("WS")) return { text: "text-pink-500 dark:text-pink-400", bg: "bg-pink-500/10 border-pink-500/20 group-hover/header:bg-pink-500/20" };
+    if (c.startsWith("WD")) return { text: "text-purple-500 dark:text-purple-400", bg: "bg-purple-500/10 border-purple-500/20 group-hover/header:bg-purple-500/20" };
+    if (c.startsWith("XD")) return { text: "text-orange-500 dark:text-orange-400", bg: "bg-orange-500/10 border-orange-500/20 group-hover/header:bg-orange-500/20" };
+    return { text: "text-amber-500 dark:text-amber-400", bg: "bg-amber-500/10 border-amber-500/20 group-hover/header:bg-amber-500/20" };
+  };
+
 
 
   const isPlayerInMatch = currentUser && (
@@ -142,6 +154,8 @@ export function MatchCard({
   const actualP2 = p2 || mockPlayer(match.team2_label);
 
   const hasWinner = !!match.winner_id || !!match.winner_side;
+  const actualIsLiveNow = isLiveNow && !hasWinner;
+
   const team1Win = hasWinner && (match.winner_side === 1 || match.winner_id === p1?.id || match.winner_id === match.partner1?.id);
   const team2Win = hasWinner && !team1Win;
 
@@ -160,7 +174,7 @@ export function MatchCard({
   const winnerSetCount = team1Win ? setsWonP1 : setsWonP2;
   const loserSetCount = team1Win ? setsWonP2 : setsWonP1;
   const joinNames = (members: { player: any }[]) =>
-    members.map((m) => m.player?.full_name?.split(" ")[0]).filter(Boolean).join(" & ");
+    members.map((m) => m.player?.full_name).filter(Boolean).join(" & ");
 
   // Renders a team's players as stacked avatar + name rows (singles = one row)
   const renderTeam = (
@@ -173,7 +187,7 @@ export function MatchCard({
       {members.map(({ player }, i) => {
         const nameEl = (
           <div className="flex-1 min-w-0">
-            <span className={`font-bold text-xs block group-hover/p:underline line-clamp-2 whitespace-normal leading-tight ${win ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-slate-300"}`}>
+            <span className={`font-bold text-xs block group-hover/p:underline line-clamp-2 whitespace-normal leading-tight ${align === "right" ? "text-right" : "text-left"} ${win ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-slate-300"}`}>
               {player.full_name}
             </span>
           </div>
@@ -229,8 +243,8 @@ export function MatchCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
       id={`match-card-${match.id}`}
-      className={`bg-white dark:bg-slate-900 rounded-3xl p-2 shadow-sm relative overflow-hidden group transition-all duration-200 hover:-translate-y-0.5 ${isMatchOfTheDay
-          ? "border-2 border-amber-400 shadow-amber-500/20 shadow-xl hover:shadow-amber-400/30"
+      className={`bg-white dark:bg-slate-900 rounded-3xl p-1 sm:p-2 shadow-sm relative overflow-hidden group transition-all duration-200 hover:-translate-y-0.5 ${isMatchOfTheDay
+          ? "border-2 border-indigo-500 shadow-indigo-500/20 shadow-xl hover:shadow-indigo-500/30"
           : "border border-slate-100 dark:border-slate-800 hover:shadow-lg dark:hover:shadow-slate-700/40"
         }`}
       drag="x"
@@ -245,26 +259,18 @@ export function MatchCard({
       }}
     >
       {/* LIVE NOW Badge */}
-      {isLiveNow && (
+      {actualIsLiveNow && (
         <div className="absolute top-0 left-0 bg-gradient-to-r from-red-500 to-rose-600 text-foreground text-[10px] font-black uppercase tracking-wider px-4 py-1.5 rounded-br-xl shadow-md z-10 flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-white animate-ping inline-block" />
           LIVE NOW
         </div>
       )}
 
-      {isAdmin && !hideActions && (
-        <button
-          onClick={deleteMatch}
-          title="Delete Match (Admin)"
-          className="absolute top-4 right-4 p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-colors z-20"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
-      )}
+
 
       {/* Match of the Day Badge */}
-      {isMatchOfTheDay && !isLiveNow && (
-        <div className="absolute top-0 left-0 bg-gradient-to-r from-amber-400 to-orange-500 text-foreground text-[10px] font-black uppercase tracking-wider px-4 py-1.5 rounded-br-xl shadow-md z-10 flex items-center gap-1.5">
+      {isMatchOfTheDay && !actualIsLiveNow && (
+        <div className="absolute top-0 left-0 bg-gradient-to-r from-indigo-500 to-violet-600 text-white text-[10px] font-black uppercase tracking-wider px-4 py-1.5 rounded-br-xl shadow-md z-10 flex items-center gap-1.5">
           <Sparkles className="w-3.5 h-3.5" /> Match of the Day
         </div>
       )}
@@ -276,42 +282,103 @@ export function MatchCard({
         </div>
       )}
 
-      <div className="flex items-center justify-center gap-1.5 mb-1 mt-1 md:mt-0 flex-wrap">
-        <span className="flex items-center gap-1 text-xs font-bold text-muted-foreground dark:text-muted-foreground">
-          <Swords className="w-3.5 h-3.5" />
-          {match.is_friendly === false ? "Tournament" : "Friendly"}
-        </span>
-        {(match.match_code || match.match_number) && (
-          <span className="text-xs font-black text-amber-500 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-            {match.match_code || `Match #${match.match_number}`}
-          </span>
-        )}
-        {match.category && (
-          <span className="text-xs font-black text-muted-foreground dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
-            {getDisplayCategory()}
-          </span>
-        )}
-        {match.round_name && (
-          <span className="text-[11px] font-semibold text-muted-foreground dark:text-slate-400">
-            • {match.round_name}
-          </span>
-        )}
-      </div>
+      {!isExpanded ? (
+        <div className={`cursor-pointer select-none ${actualIsLiveNow || isMatchOfTheDay ? 'pt-6 sm:pt-4' : ''}`} onClick={() => setIsExpanded(true)}>
+          <div className="flex flex-row items-stretch px-1 py-1 mt-1 sm:mt-0 gap-2 w-full">
+            {/* Main 2-row content */}
+            <div className="flex flex-col gap-1 flex-1 min-w-0">
+              {/* Row 1: Tournament label + match code on left, category + round on right */}
+              <div className="flex flex-row items-center justify-between w-full min-w-0">
+                <div className={`flex items-center gap-1.5 font-black uppercase tracking-widest text-[9px] sm:text-[10px] min-w-0 ${match.status === "finished" || hasWinner ? "text-slate-400 dark:text-slate-500" : "text-primary"}`}>
+                  {match.status === "finished" || hasWinner ? <Trophy className="w-3 h-3 shrink-0" /> : <Swords className="w-3 h-3 shrink-0" />}
+                  <span className="truncate">{match.is_friendly === false ? "Tournament" : "Friendly"}</span>
+                  <span className="text-slate-600 shrink-0">•</span>
+                  <span className={`${getMatchCodeColor(match.match_code).text} truncate font-black`}>{match.match_code || `Match #${match.match_number}`}</span>
+                </div>
+                <div className="text-[9px] sm:text-[10px] text-slate-500 font-bold truncate shrink-0 ml-2">
+                  {getDisplayCategory()}{match.round_name ? ` • ${match.round_name}` : ""}
+                </div>
+              </div>
 
-      {/* Date */}
-      <div className="text-[11px] text-muted-foreground dark:text-muted-foreground font-bold uppercase tracking-widest text-center mb-1">
-        {new Date(match.created_at).toLocaleString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}
-      </div>
+              {/* Row 2: Name | Score | Name */}
+              <div className="flex flex-row items-center justify-between gap-1.5 font-bold">
+                <span className={`text-xs sm:text-sm leading-tight text-right break-words w-full ${team1Win ? 'text-amber-500 dark:text-amber-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                  {joinNames(team1)}
+                </span>
 
-      {/* Scoreboard */}
+                <div className="shrink-0">
+                  <div className={`text-xs sm:text-sm font-black tracking-widest px-2 sm:px-3 py-0.5 rounded-lg border shadow-inner whitespace-nowrap ${hasWinner ? 'text-amber-500 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20' : 'text-slate-800 dark:text-slate-100 bg-slate-100 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'}`}>
+                    {parsedSets.length > 0 ? (
+                      <span>{setsWonP1}-{setsWonP2}</span>
+                    ) : (
+                      displayScore || "—"
+                    )}
+                  </div>
+                </div>
+
+                <span className={`text-xs sm:text-sm leading-tight text-left break-words w-full ${team2Win ? 'text-amber-500 dark:text-amber-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                  {joinNames(team2)}
+                </span>
+              </div>
+            </div>
+
+            {/* Expand chevron — spans both rows */}
+            <div className="flex items-center justify-center shrink-0 pl-1 border-l border-slate-200 dark:border-slate-800/50">
+              <button className="p-1.5 sm:p-2 bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 rounded-full group-hover:bg-slate-200 dark:group-hover:bg-slate-700 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col relative pt-2 sm:pt-0">
+          
+          <div 
+            className="cursor-pointer group/header transition-opacity hover:opacity-80" 
+            onClick={() => setIsExpanded(false)}
+            title="Collapse Match"
+          >
+            <div className="flex items-center justify-center gap-1.5 mb-1 mt-1 md:mt-0 flex-wrap">
+              <span className="flex items-center gap-1 text-xs font-bold text-muted-foreground dark:text-muted-foreground">
+                <Swords className="w-3.5 h-3.5" />
+                {match.is_friendly === false ? "Tournament" : "Friendly"}
+              </span>
+              {(match.match_code || match.match_number) && (
+                <span className={`text-xs font-black ${getMatchCodeColor(match.match_code).text} ${getMatchCodeColor(match.match_code).bg} px-2 py-0.5 rounded-full border transition-colors`}>
+                  {match.match_code || `Match #${match.match_number}`}
+                </span>
+              )}
+              {match.category && (
+                <span className="text-xs font-black text-muted-foreground dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+                  {getDisplayCategory()}
+                </span>
+              )}
+              {match.round_name && (
+                <span className="text-[11px] font-semibold text-muted-foreground dark:text-slate-400">
+                  • {match.round_name}
+                </span>
+              )}
+            </div>
+
+            {/* Date */}
+            <div className="text-[11px] text-muted-foreground dark:text-muted-foreground font-bold uppercase tracking-widest text-center mb-1">
+              {new Date(match.created_at).toLocaleString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}
+            </div>
+          </div>
+
+          {/* Scoreboard */}
       <div className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 p-1">
         {/* Teams */}
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1 mb-0.5">
-          {renderTeam(team1, team1Win, hasWinner && !team1Win, "left")}
-          <div className="text-[10px] text-muted-foreground dark:text-muted-foreground font-black uppercase tracking-widest text-center px-1">
+        <div className="flex flex-col sm:grid sm:grid-cols-[1fr_auto_1fr] items-stretch sm:items-center gap-1 mb-0.5">
+          <div className="flex justify-start w-full min-w-0">
+            {renderTeam(team1, team1Win, hasWinner && !team1Win, "left")}
+          </div>
+          <div className="text-[10px] text-muted-foreground dark:text-muted-foreground font-black uppercase tracking-widest text-center px-1 py-0.5 sm:py-0">
             vs
           </div>
-          {renderTeam(team2, team2Win, hasWinner && !team2Win, "right")}
+          <div className="flex justify-end w-full min-w-0">
+            {renderTeam(team2, team2Win, hasWinner && !team2Win, "right")}
+          </div>
         </div>
 
         {/* Sets-won headline */}
@@ -370,27 +437,22 @@ export function MatchCard({
             </a>
           </div>
         )}
-      </div>
-
-      {/* Result recap */}
+          {/* Result recap - Single Sentence */}
       {hasWinner && winnerMembers && loserMembers && (
-        <div className="text-center text-[11px] mt-1.5 px-1 leading-snug flex flex-col gap-0.5">
-          <span className="block font-black text-primary dark:text-primary">{joinNames(winnerMembers)}</span>
-          <span className="block text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mt-0.5">defeated</span>
-          <span className="block font-semibold text-slate-500 dark:text-slate-400 line-through decoration-slate-400/50 mb-0.5">{joinNames(loserMembers)}</span>
-          <span className="block mt-0.5">
-            <span style={{ color: 'var(--color-primary)' }} className="font-black">{winnerSetCount}</span>
-            <span className="text-slate-400 dark:text-slate-500 mx-1">–</span>
-            <span style={{ color: '#ef4444' }} className="font-black dark:text-rose-400">{loserSetCount}</span>
-          </span>
+        <div className="text-center text-[12px] sm:text-[13px] mt-2 px-2 leading-snug">
+          <span className="font-black text-primary dark:text-primary">{joinNames(winnerMembers)}</span>
+          <span className="text-emerald-600 dark:text-emerald-400 font-bold mx-1.5 uppercase text-[10px] sm:text-xs tracking-wider">defeated</span>
+          <span className="font-semibold text-slate-500 dark:text-slate-400">{joinNames(loserMembers)}</span>
+          <span className="font-medium text-slate-400 mx-1">by</span>
+          <span className="font-bold text-slate-600 dark:text-slate-300">{winnerSetCount}-{loserSetCount}</span>
           {displayScore && (
-            <span className="block tabular-nums text-slate-600 dark:text-slate-400">
+            <span className="tabular-nums font-bold text-slate-500 dark:text-slate-400 ml-1">
               ({parsedSets.map((s, i) => (
                 <span key={i}>
-                  <span style={{ color: team1Win ? 'var(--color-primary)' : '#ef4444' }} className="font-semibold">{s.p1}</span>
-                  <span className="text-slate-400 dark:text-slate-500 mx-0.5">-</span>
-                  <span style={{ color: team2Win ? 'var(--color-primary)' : '#ef4444' }} className="font-semibold">{s.p2}</span>
-                  {i < parsedSets.length - 1 && <span className="text-slate-400 dark:text-slate-500">, </span>}
+                  <span>{s.p1}</span>
+                  <span className="mx-0.5">-</span>
+                  <span>{s.p2}</span>
+                  {i < parsedSets.length - 1 && <span>, </span>}
                 </span>
               ))})
             </span>
@@ -466,112 +528,159 @@ export function MatchCard({
         </motion.div>
       )}
 
-      {/* Reaction Kudos & Edit */}
+      {/* Grid Actions & Score Row */}
       {!hideActions && (
-        <div className="mt-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800/50 flex flex-col gap-0.5 relative z-10">
-          {/* Actions Row */}
-          <div className="flex justify-between items-center px-1">
+        <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/50 grid grid-cols-[1fr_auto_1fr] items-center gap-y-1 relative z-10 px-0.5">
+          {/* Left Column: AI Recap, Like */}
+          <div className="flex flex-col items-start gap-1 w-full overflow-hidden">
             <button
               onPointerDown={(e) => e.stopPropagation()}
               onClick={handleGenerateSummary}
               disabled={isGeneratingSummary || !!aiSummary}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all active:scale-95 ${aiSummary
+              className={`flex items-center justify-start gap-1.5 px-2 py-1.5 rounded-full text-[11px] font-bold transition-all active:scale-95 max-w-full ${aiSummary
                   ? "text-indigo-500 bg-indigo-50 dark:bg-indigo-500/20 opacity-70"
-                  : "text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
+                  : "text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
                 }`}
             >
-              {isGeneratingSummary ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-              AI Recap
+              {isGeneratingSummary ? <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" /> : <Sparkles className="w-3.5 h-3.5 flex-shrink-0" />}
+              <span className="truncate">AI Recap</span>
             </button>
-
-            <div className="flex gap-1">
-              {(!hasWinner || match.status === "scheduled" || match.status === "pending") && (
-                (() => {
-                  const alert = matchAlerts.find(a => a.match_id === match.id);
-                  if (alert && match.scheduled_at) {
-                    const notifyDate = new Date(match.scheduled_at);
-                    if (!isNaN(notifyDate.getTime())) {
-                      notifyDate.setMinutes(notifyDate.getMinutes() - alert.notify_before_mins);
-                      const timeStr = notifyDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
-                      return (
-                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold text-accent bg-accent/10 border border-accent/20">
-                          <Bell className="w-3.5 h-3.5 fill-current" />
-                          <span>Notified at {timeStr}</span>
-                          <button
-                            onPointerDown={(e) => e.stopPropagation()}
-                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsNotifyOpen(true); }}
-                            className="ml-0.5 underline hover:text-accent-foreground"
-                          >
-                            Edit
-                          </button>
-                        </div>
-                      );
-                    }
-                  }
-                  return (
-                    <button
-                      onPointerDown={(e) => e.stopPropagation()}
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsNotifyOpen(true); }}
-                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
-                    >
-                      <Bell className="w-3.5 h-3.5" /> Notify
-                    </button>
-                  );
-                })()
-              )}
-              <button
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsScorecardOpen(true); }}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
-              >
-                <BarChart2 className="w-3.5 h-3.5" /> Scorecard
-              </button>
-            </div>
-          </div>
-
-          {/* Like / Share */}
-          <div className="flex justify-between items-center px-1">
+            
             <button
               onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (onKudos) onKudos();
-              }}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all active:scale-95 ${isKudosed
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onKudos) onKudos(); }}
+              className={`flex items-center justify-start gap-1.5 px-2 py-1.5 rounded-full text-[11px] font-bold transition-all active:scale-95 max-w-full ${isKudosed
                   ? "text-rose-500 bg-rose-50 dark:bg-rose-500/20"
-                  : "text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
+                  : "text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
                 }`}
             >
-              <Heart className={`w-4 h-4 ${isKudosed ? "scale-110" : ""}`} fill={isKudosed ? "currentColor" : "none"} stroke="currentColor" />
-              <span className="kudos-count font-medium ml-0.5">{kudosCount} {kudosCount === 1 ? 'like' : 'likes'}</span>
+              <Heart className={`w-3.5 h-3.5 flex-shrink-0 ${isKudosed ? "scale-110" : ""}`} fill={isKudosed ? "currentColor" : "none"} stroke="currentColor" />
+              <span className="truncate">{kudosCount} {kudosCount === 1 ? 'like' : 'likes'}</span>
+            </button>
+          </div>
+
+          {/* Center Column: Score Summary */}
+          <div className="flex flex-col items-center justify-center gap-0.5 text-center px-2">
+            {hasWinner ? (
+              <>
+                <span className="block text-sm leading-tight">
+                  <span style={{ color: 'var(--color-primary)' }} className="font-black">{winnerSetCount}</span>
+                  <span className="text-slate-400 mx-1.5">–</span>
+                  <span style={{ color: '#ef4444' }} className="font-black dark:text-rose-400">{loserSetCount}</span>
+                </span>
+                {displayScore && (
+                  <span className="block tabular-nums text-[10px] text-slate-500 dark:text-slate-400 font-bold leading-tight">
+                    ({parsedSets.map((s, i) => (
+                      <span key={i}>
+                        <span style={{ color: team1Win ? 'var(--color-primary)' : '#ef4444' }}>{s.p1}</span>
+                        <span className="text-slate-400 dark:text-slate-500 mx-0.5">-</span>
+                        <span style={{ color: team2Win ? 'var(--color-primary)' : '#ef4444' }}>{s.p2}</span>
+                        {i < parsedSets.length - 1 && <span className="text-slate-400">, </span>}
+                      </span>
+                    ))})
+                  </span>
+                )}
+              </>
+            ) : (
+              <span className="text-[10px] font-bold text-slate-300 dark:text-slate-600 tracking-widest uppercase">vs</span>
+            )}
+          </div>
+
+          {/* Right Column: Scoreboard, Share, Notify */}
+          <div className="flex flex-col items-end gap-1 w-full overflow-hidden">
+            <button
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsScorecardOpen(true); }}
+              className="flex items-center justify-end gap-1.5 px-2 py-1.5 rounded-full text-[11px] font-bold text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 max-w-full"
+            >
+              <span className="truncate">Scoreboard</span>
+              <BarChart2 className="w-3.5 h-3.5 flex-shrink-0" />
             </button>
 
             <button
               onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (onShare) onShare();
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onShare) onShare(); }}
+              className="flex items-center justify-end gap-1.5 px-2 py-1.5 rounded-full text-[11px] font-bold text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 max-w-full"
             >
-              <Share2 className="w-4 h-4" /> Share
+              <span className="truncate">Share</span>
+              <Share2 className="w-3.5 h-3.5 flex-shrink-0" />
             </button>
+            
+            {(!hasWinner || match.status === "scheduled" || match.status === "pending") && (
+              (() => {
+                const alert = matchAlerts.find(a => a.match_id === match.id);
+                if (alert && match.scheduled_at) {
+                  const notifyDate = new Date(match.scheduled_at);
+                  if (!isNaN(notifyDate.getTime())) {
+                    notifyDate.setMinutes(notifyDate.getMinutes() - alert.notify_before_mins);
+                    const timeStr = notifyDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+                    return (
+                      <div className="flex items-center justify-end gap-1 px-2 py-1 rounded-full text-[10px] font-bold text-accent bg-accent/10 border border-accent/20 max-w-full">
+                        <span className="truncate">At {timeStr}</span>
+                        <Bell className="w-3 h-3 fill-current flex-shrink-0" />
+                        <button
+                          onPointerDown={(e) => e.stopPropagation()}
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsNotifyOpen(true); }}
+                          className="ml-0.5 underline hover:text-accent-foreground flex-shrink-0"
+                        >
+                          Edit
+                        </button>
+                      </div>
+                    );
+                  }
+                }
+                return (
+                  <button
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsNotifyOpen(true); }}
+                    className="flex items-center justify-end gap-1.5 px-2 py-1.5 rounded-full text-[11px] font-bold text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 max-w-full"
+                  >
+                    <span className="truncate">Notify</span>
+                    <Bell className="w-3.5 h-3.5 flex-shrink-0" />
+                  </button>
+                );
+              })()
+            )}
           </div>
 
-          {/* Add Video — last, centered, only for players involved in this match */}
+          {/* Add Video — span full width, centered, only for players involved in this match */}
           {isPlayerInMatch && (
-            <div className="flex justify-center">
+            <div className="col-span-3 flex justify-center mt-1">
               <button
                 onClick={() => setIsEditVideoOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
               >
                 <Edit2 className="w-3.5 h-3.5" />
                 {highlightUrl ? "Edit Video" : "Add Video"}
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      </div>
+
+          <div className="mt-4 flex items-center justify-between border-t border-slate-100 dark:border-slate-800/50 pt-2 px-2">
+            {isAdmin && !hideActions ? (
+              <button
+                onClick={deleteMatch}
+                title="Delete Match (Admin)"
+                className="p-1.5 sm:p-2 text-rose-400 hover:text-rose-600 bg-rose-50 dark:bg-rose-900/10 hover:bg-rose-100 dark:hover:bg-rose-900/30 rounded-full transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            ) : <div className="w-8" />}
+
+            <button
+              onClick={(e) => { e.stopPropagation(); setIsExpanded(false); }}
+              className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white bg-slate-100 dark:bg-slate-800/50 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition shadow-sm"
+              title="Collapse"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+            </button>
+
+            <div className="w-8" />
+          </div>
         </div>
       )}
     </motion.div>

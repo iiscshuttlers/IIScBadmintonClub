@@ -375,6 +375,32 @@ function SiteAdminInner() {
             <div className="flex flex-col sm:items-end items-start gap-1 w-full sm:w-auto mt-2 sm:mt-0">
               <div className="flex flex-wrap items-center gap-2">
                 <button
+                  onClick={() => handleTabChange("umpire_duty")}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 text-sm font-bold transition"
+                  title="Open Umpire Assignments"
+                >
+                  <Clock className="w-4 h-4" />
+                  <span className="hidden sm:inline">Assignments</span>
+                </button>
+                <button
+                  onClick={() => handleTabChange("players")}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-sm font-bold transition"
+                  title="Manage Players"
+                >
+                  <Users className="w-4 h-4" />
+                  <span className="hidden sm:inline">Players</span>
+                </button>
+                {isMasterAdmin && (
+                  <button
+                    onClick={() => handleTabChange("role_manager")}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 text-sm font-bold transition"
+                    title="Manage Roles"
+                  >
+                    <ShieldAlert className="w-4 h-4" />
+                    <span className="hidden lg:inline">Roles</span>
+                  </button>
+                )}
+                <button
                   onClick={() => setLocation("/tournament-admin")}
                   className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-sm font-bold transition"
                   title="Open full Tournament Manager"

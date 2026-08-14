@@ -2507,12 +2507,10 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
             className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700 text-xs font-black text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition w-full">
             <RefreshCw className="w-3.5 h-3.5 shrink-0" /> Sync Names
           </button>
-          {isMasterAdmin && (
-            <button onClick={batchAdvance}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-foreground text-xs font-black transition w-full">
-              <SkipForward className="w-3.5 h-3.5 shrink-0" /> Batch Advance
-            </button>
-          )}
+          <button onClick={batchAdvance}
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-foreground text-xs font-black transition w-full">
+            <SkipForward className="w-3.5 h-3.5 shrink-0" /> Batch Advance
+          </button>
         </div>
       </div>
 

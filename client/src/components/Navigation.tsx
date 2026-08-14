@@ -52,7 +52,6 @@ import { PreferencesModal } from "@/components/QuickSettings";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { NotificationsMenu } from "@/components/NotificationsMenu";
-import { BetaFeedbackModal } from "@/components/BetaFeedbackModal";
 
 const CLUB_LINKS = [
   { href: "/pulse", label: "Pulse" },
@@ -65,7 +64,6 @@ const CLUB_LINKS = [
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [location, setLocation] = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [liveEventCount, setLiveEventCount] = useState(0);
@@ -604,15 +602,6 @@ export default function Navigation() {
                       <BookOpen className="h-4 w-4 text-muted-foreground" /> Glossary
                     </Link>
                     <button
-                      className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-950/30 text-amber-600 font-medium text-sm transition-colors cursor-pointer"
-                      onClick={() => {
-                        setIsOpen(false);
-                        setIsFeedbackOpen(true);
-                      }}
-                    >
-                      <MessageSquare className="h-4 w-4" /> Send Beta Feedback
-                    </button>
-                    <button
                       className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-600 font-medium text-sm transition-colors cursor-pointer"
                       onClick={() => {
                         setIsOpen(false);
@@ -698,10 +687,6 @@ export default function Navigation() {
       <PreferencesModal
         isOpen={isPreferencesOpen}
         onClose={() => setIsPreferencesOpen(false)}
-      />
-      <BetaFeedbackModal
-        isOpen={isFeedbackOpen}
-        onClose={() => setIsFeedbackOpen(false)}
       />
 
       <ConfirmDialog

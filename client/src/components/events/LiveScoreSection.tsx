@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import { Trophy, Activity, Tv2, Trash2, Save, ShieldCheck, X, MonitorPlay, Bell, Loader2, Plus, Volume2, VolumeX, Smartphone, Zap, CalendarDays, MapPin, Clock } from "lucide-react";
+import { Trophy, Activity, Tv2, Trash2, Save, ShieldCheck, X, MonitorPlay, Bell, Loader2, Plus, Volume2, VolumeX, Smartphone, Zap, CalendarDays, MapPin, Clock, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { MatchService } from "@/services/matchService";
 import { getCourtColor, cn } from "@/lib/utils";
@@ -39,7 +39,7 @@ function MatchBroadcastCard({
   flashEnabled: boolean;
   vibrateEnabled: boolean;
   onKill: (matchId: string) => void;
-  onSubmit: (m: BwfMatchState, winner: 1 | 2, setsText: string) => void;
+  onSubmit: (m: BwfMatchState, winner: 1 | 2, setsText: string) => Promise<void>;
   onTakeover: (matchId: string) => void;
   onTakeoverRequest: (match: BwfMatchState) => void;
   isScorePinned: boolean;
@@ -48,12 +48,17 @@ function MatchBroadcastCard({
   const [, setLocation] = useLocation();
   const { confirm } = useConfirm();
   const [showAdminForm, setShowAdminForm] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(match.status === "playing");
   const [adminWinner, setAdminWinner] = useState<1 | 2 | null>(null);
-  const [adminSets, setAdminSets] = useState("");
+  const [adminSets, setAdminSets] = useState<{t1: string, t2: string}[]>([]);
   const [sendingPush, setSendingPush] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [flashT1, setFlashT1] = useState(false);
   const [flashT2, setFlashT2] = useState(false);
   const prevScores = useRef({ t1: match.t1.score, t2: match.t2.score });
+
+  const t1Label = match.t1.p1Name + (match.t1.p2Name ? ` & ${match.t1.p2Name}` : "");
+  const t2Label = match.t2.p1Name + (match.t2.p2Name ? ` & ${match.t2.p2Name}` : "");
 
   useEffect(() => {
     if (match.status !== "playing") return;
@@ -139,8 +144,6 @@ function MatchBroadcastCard({
   const sendScorePush = async () => {
     setSendingPush(true);
     try {
-      const t1Label = match.t1.p1Name + (match.t1.p2Name ? ` & ${match.t1.p2Name}` : "");
-      const t2Label = match.t2.p1Name + (match.t2.p2Name ? ` & ${match.t2.p2Name}` : "");
       const scoreStr = `${match.t1.score} – ${match.t2.score}`;
       const setsStr = match.setsHistory.length ? ` (${match.setsHistory.join(", ")})` : "";
       const round = match.matchNumber || (match.isFriendly ? "Friendly" : "");
@@ -176,14 +179,100 @@ function MatchBroadcastCard({
 
   if (match.status === "setup") return null;
 
-  const t1Label = match.t1.p1Name + (match.t1.p2Name ? ` & ${match.t1.p2Name}` : "");
-  const t2Label = match.t2.p1Name + (match.t2.p2Name ? ` & ${match.t2.p2Name}` : "");
+
+  const touchStartX = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diffX = touchStartX.current - touchEndX;
+    
+    // threshold for swipe
+    if (Math.abs(diffX) > 40) {
+      setIsExpanded(!isExpanded);
+    }
+    touchStartX.current = null;
+  };
+
+  if (!isExpanded) {
+    return (
+      <div 
+        onClick={() => setIsExpanded(true)}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        className="bg-slate-900 border border-slate-800 rounded-xl p-3 text-foreground max-w-4xl mx-auto shadow hover:border-slate-600 transition-all cursor-pointer relative overflow-hidden group select-none"
+      >
+        <div className={`absolute left-0 top-0 bottom-0 w-1 ${match.status === "finished" ? "bg-slate-700" : "bg-primary animate-pulse"}`} />
+        
+        <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 pl-1 sm:pl-2">
+          <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+            
+            <div className="flex flex-col min-w-0 shrink-0">
+              <div className={`flex items-center gap-1.5 font-black uppercase tracking-widest text-[9px] sm:text-[10px] ${match.status === "finished" ? "text-slate-400" : "text-primary"}`}>
+                {match.status === "finished" ? <Trophy className="w-3 h-3 shrink-0" /> : <Activity className="w-3 h-3 shrink-0 animate-pulse" />}
+                <span className="truncate">{match.status === "finished" ? "Match Concluded" : "Live"}</span>
+                <span className="text-slate-600 shrink-0">•</span>
+                <span className="text-amber-500 truncate">{match.isFriendly ? "Friendly" : match.matchNumber}</span>
+              </div>
+              <div className="text-[9px] sm:text-[10px] text-slate-500 font-bold mt-0.5 truncate">
+                {match.inferredCategory || match.category} • Umpire: <span className="text-indigo-400">{match.umpireName}</span>
+              </div>
+            </div>
+            
+            <div className="flex flex-row items-center justify-between sm:justify-end gap-2 sm:gap-3 flex-1 min-w-0 font-bold">
+              <span className={`text-xs sm:text-sm text-right truncate w-full ${match.winner === 1 ? 'text-amber-400' : 'text-slate-200'}`}>
+                {t1Label}
+              </span>
+              
+              <div className="flex flex-col items-center shrink-0">
+                {match.status === "finished" ? (
+                  <div className="text-sm sm:text-base font-black tracking-widest text-amber-400 bg-amber-500/10 px-3 py-1 rounded-lg border border-amber-500/20 shadow-inner">
+                    {match.setsHistory.join(", ") || "Concluded"}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 bg-slate-950 px-3 py-1 rounded-lg border border-slate-800 shadow-inner">
+                    <span className={`text-base sm:text-xl font-black tabular-nums ${match.winner === 1 ? 'text-amber-400' : 'text-slate-100'}`}>{match.t1.score}</span>
+                    <span className="text-slate-600 text-[10px]">-</span>
+                    <span className={`text-base sm:text-xl font-black tabular-nums ${match.winner === 2 ? 'text-amber-400' : 'text-slate-100'}`}>{match.t2.score}</span>
+                  </div>
+                )}
+                {match.status !== "finished" && match.setsHistory.length > 0 && (
+                  <div className="text-[9px] text-slate-500 mt-1 font-semibold tracking-wider text-center absolute -bottom-3 sm:relative sm:bottom-0 sm:mt-0.5">
+                    {match.setsHistory.join(", ")}
+                  </div>
+                )}
+              </div>
+
+              <span className={`text-xs sm:text-sm text-left truncate w-full ${match.winner === 2 ? 'text-amber-400' : 'text-slate-200'}`}>
+                {t2Label}
+              </span>
+            </div>
+            
+          </div>
+          
+          <div className="flex items-center justify-center shrink-0 pl-1 sm:border-l border-slate-800/50">
+            <button className="p-1.5 sm:p-2 bg-slate-800/50 text-slate-400 rounded-full group-hover:bg-slate-700 group-hover:text-white transition-colors">
+              <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-[2rem] p-6 sm:p-10 text-foreground max-w-4xl mx-auto shadow-2xl relative overflow-hidden">
+    <div 
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      className="bg-slate-900 border border-slate-800 rounded-3xl p-4 sm:p-6 text-foreground max-w-4xl mx-auto shadow-2xl relative overflow-hidden select-none"
+    >
       <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-primary to-sky-500" />
       
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 mb-4">
         <div className="flex-1 min-w-0">
           <div className={`flex items-center gap-2 font-black uppercase tracking-widest text-sm mb-1 ${match.status === "finished" ? "text-slate-400" : "text-primary"}`}>
             {match.status === "finished" ? (
@@ -220,73 +309,73 @@ function MatchBroadcastCard({
       </div>
 
       {match.status === "finished" ? (
-        <div className="text-center py-12">
-          <Trophy className="w-20 h-20 mx-auto text-amber-400 mb-6 drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]" />
-          <h2 className="text-3xl font-black mb-2">Match Finished!</h2>
-          <p className="text-xl text-slate-300">
+        <div className="text-center py-6">
+          <Trophy className="w-12 h-12 mx-auto text-amber-400 mb-3 drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]" />
+          <h2 className="text-2xl font-black mb-1">Match Finished!</h2>
+          <p className="text-lg text-slate-300">
             {match.winner === 1 ? match.t1.p1Name : match.t2.p1Name} Won {match.setsHistory.join(", ")}
           </p>
         </div>
       ) : (
-        <div className="grid md:grid-cols-[1fr_auto_1fr] gap-6 items-center">
-          <div className={`p-6 rounded-3xl border-2 transition-all ${match.serverTeam === 1 ? "bg-primary/80/20 border-primary/50 shadow-[0_0_30px_rgba(16,185,129,0.15)]" : "bg-slate-800/50 border-slate-700/50"}`}>
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-bold truncate flex items-center justify-center gap-2">
-                {match.serverTeam === 1 && match.serverPlayerIndex === 0 && <span className="text-xs font-black text-primary bg-primary/10 px-1.5 py-0.5 rounded">S</span>}
-                {match.serverTeam === 2 && match.receiverPlayerIndex === 0 && <span className="text-xs font-black text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded">R</span>}
+        <div className="grid md:grid-cols-[1fr_auto_1fr] gap-3 sm:gap-4 items-center">
+          <div className={`p-3 sm:p-4 rounded-2xl border-2 transition-all ${match.serverTeam === 1 ? "bg-primary/80/20 border-primary/50 shadow-[0_0_30px_rgba(16,185,129,0.15)]" : "bg-slate-800/50 border-slate-700/50"}`}>
+            <div className="text-center mb-2">
+              <h3 className="text-lg font-bold truncate flex items-center justify-center gap-1.5">
+                {match.serverTeam === 1 && match.serverPlayerIndex === 0 && <span className="text-[10px] font-black text-primary bg-primary/10 px-1 py-0.5 rounded">S</span>}
+                {match.serverTeam === 2 && match.receiverPlayerIndex === 0 && <span className="text-[10px] font-black text-amber-400 bg-amber-400/10 px-1 py-0.5 rounded">R</span>}
                 {match.t1.p1Name}
               </h3>
               {match.t1.p2Name && (
-                <h3 className="text-xl font-bold truncate flex items-center justify-center gap-2">
-                  {match.serverTeam === 1 && match.serverPlayerIndex === 1 && <span className="text-xs font-black text-primary bg-primary/10 px-1.5 py-0.5 rounded">S</span>}
-                  {match.serverTeam === 2 && match.receiverPlayerIndex === 1 && <span className="text-xs font-black text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded">R</span>}
+                <h3 className="text-lg font-bold truncate flex items-center justify-center gap-1.5">
+                  {match.serverTeam === 1 && match.serverPlayerIndex === 1 && <span className="text-[10px] font-black text-primary bg-primary/10 px-1 py-0.5 rounded">S</span>}
+                  {match.serverTeam === 2 && match.receiverPlayerIndex === 1 && <span className="text-[10px] font-black text-amber-400 bg-amber-400/10 px-1 py-0.5 rounded">R</span>}
                   {match.t1.p2Name}
                 </h3>
               )}
-              {!match.t1.p2Name && match.serverTeam === 2 && <span className="text-xs font-black text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded mt-1 inline-block">R · Receiving</span>}
+              {!match.t1.p2Name && match.serverTeam === 2 && <span className="text-[10px] font-black text-amber-400 bg-amber-400/10 px-1 py-0.5 rounded mt-1 inline-block">R · Receiving</span>}
             </div>
             
-            <div className="flex justify-center mb-6">
-              <div className={`text-[8rem] leading-none font-black tracking-tighter tabular-nums drop-shadow-md transition-all duration-300 ${flashT1 ? 'text-primary scale-110 drop-shadow-[0_0_20px_rgba(52,211,153,0.8)]' : ''}`}>
+            <div className="flex justify-center mb-2">
+              <div className={`text-[5rem] sm:text-[6rem] leading-none font-black tracking-tighter tabular-nums drop-shadow-md transition-all duration-300 ${flashT1 ? 'text-primary scale-110 drop-shadow-[0_0_20px_rgba(52,211,153,0.8)]' : ''}`}>
                 {match.t1.score}
               </div>
             </div>
             
-            <div className="mt-6 flex justify-center gap-2">
+            <div className="mt-2 flex justify-center gap-1.5">
               {Array.from({ length: Math.ceil(match.bestOfSets / 2) }).map((_, i) => (
-                <div key={i} className={`w-4 h-4 rounded-full ${i < match.t1.games ? "bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.5)]" : "bg-slate-700"}`} />
+                <div key={i} className={`w-3 h-3 rounded-full ${i < match.t1.games ? "bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.5)]" : "bg-slate-700"}`} />
               ))}
             </div>
           </div>
 
-          <div className="text-4xl font-black italic text-muted-foreground text-center py-4">VS</div>
+          <div className="text-2xl font-black italic text-muted-foreground text-center py-1">VS</div>
 
-          <div className={`p-6 rounded-3xl border-2 transition-all ${match.serverTeam === 2 ? "bg-primary/80/20 border-primary/50 shadow-[0_0_30px_rgba(16,185,129,0.15)]" : "bg-slate-800/50 border-slate-700/50"}`}>
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-bold truncate flex items-center justify-center gap-2">
-                {match.serverTeam === 2 && match.serverPlayerIndex === 0 && <span className="text-xs font-black text-primary bg-primary/10 px-1.5 py-0.5 rounded">S</span>}
-                {match.serverTeam === 1 && match.receiverPlayerIndex === 0 && <span className="text-xs font-black text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded">R</span>}
+          <div className={`p-3 sm:p-4 rounded-2xl border-2 transition-all ${match.serverTeam === 2 ? "bg-primary/80/20 border-primary/50 shadow-[0_0_30px_rgba(16,185,129,0.15)]" : "bg-slate-800/50 border-slate-700/50"}`}>
+            <div className="text-center mb-2">
+              <h3 className="text-lg font-bold truncate flex items-center justify-center gap-1.5">
+                {match.serverTeam === 2 && match.serverPlayerIndex === 0 && <span className="text-[10px] font-black text-primary bg-primary/10 px-1 py-0.5 rounded">S</span>}
+                {match.serverTeam === 1 && match.receiverPlayerIndex === 0 && <span className="text-[10px] font-black text-amber-400 bg-amber-400/10 px-1 py-0.5 rounded">R</span>}
                 {match.t2.p1Name}
               </h3>
               {match.t2.p2Name && (
-                <h3 className="text-xl font-bold truncate flex items-center justify-center gap-2">
-                  {match.serverTeam === 2 && match.serverPlayerIndex === 1 && <span className="text-xs font-black text-primary bg-primary/10 px-1.5 py-0.5 rounded">S</span>}
-                  {match.serverTeam === 1 && match.receiverPlayerIndex === 1 && <span className="text-xs font-black text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded">R</span>}
+                <h3 className="text-lg font-bold truncate flex items-center justify-center gap-1.5">
+                  {match.serverTeam === 2 && match.serverPlayerIndex === 1 && <span className="text-[10px] font-black text-primary bg-primary/10 px-1 py-0.5 rounded">S</span>}
+                  {match.serverTeam === 1 && match.receiverPlayerIndex === 1 && <span className="text-[10px] font-black text-amber-400 bg-amber-400/10 px-1 py-0.5 rounded">R</span>}
                   {match.t2.p2Name}
                 </h3>
               )}
-              {!match.t2.p2Name && match.serverTeam === 1 && <span className="text-xs font-black text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded mt-1 inline-block">R · Receiving</span>}
+              {!match.t2.p2Name && match.serverTeam === 1 && <span className="text-[10px] font-black text-amber-400 bg-amber-400/10 px-1 py-0.5 rounded mt-1 inline-block">R · Receiving</span>}
             </div>
             
-            <div className="flex justify-center mb-6">
-              <div className={`text-[8rem] leading-none font-black tracking-tighter tabular-nums drop-shadow-md transition-all duration-300 ${flashT2 ? 'text-primary scale-110 drop-shadow-[0_0_20px_rgba(52,211,153,0.8)]' : ''}`}>
+            <div className="flex justify-center mb-2">
+              <div className={`text-[5rem] sm:text-[6rem] leading-none font-black tracking-tighter tabular-nums drop-shadow-md transition-all duration-300 ${flashT2 ? 'text-primary scale-110 drop-shadow-[0_0_20px_rgba(52,211,153,0.8)]' : ''}`}>
                 {match.t2.score}
               </div>
             </div>
             
-            <div className="mt-6 flex justify-center gap-2">
+            <div className="mt-2 flex justify-center gap-1.5">
               {Array.from({ length: Math.ceil(match.bestOfSets / 2) }).map((_, i) => (
-                <div key={i} className={`w-4 h-4 rounded-full ${i < match.t2.games ? "bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.5)]" : "bg-slate-700"}`} />
+                <div key={i} className={`w-3 h-3 rounded-full ${i < match.t2.games ? "bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.5)]" : "bg-slate-700"}`} />
               ))}
             </div>
           </div>
@@ -295,8 +384,8 @@ function MatchBroadcastCard({
 
       {/* ── Admin/Umpire controls ── */}
       {(isAdmin || isUmpire) && (
-        <div className="mt-8 pt-5 border-t border-slate-800">
-          <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-amber-400 mb-3">
+        <div className="mt-4 pt-3 border-t border-slate-800">
+          <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-amber-400 mb-2">
             <ShieldCheck className="w-3.5 h-3.5" /> {isAdmin ? "Admin" : "Umpire"} Controls
           </div>
 
@@ -310,9 +399,16 @@ function MatchBroadcastCard({
                 <MonitorPlay className="w-4 h-4" /> Open in Umpire
               </button>
               
-              {isAdmin && (<>
               <button
-                onClick={() => { setAdminSets(match.setsHistory.join(", ")); setShowAdminForm(true); }}
+                onClick={() => { 
+                  const parsed = match.setsHistory.map(s => {
+                    const parts = s.split("-");
+                    return { t1: parts[0]?.trim() || "", t2: parts[1]?.trim() || "" };
+                  });
+                  if (parsed.length === 0) parsed.push({ t1: "", t2: "" });
+                  setAdminSets(parsed);
+                  setShowAdminForm(true); 
+                }}
                 className="flex items-center gap-1.5 px-4 py-2.5 bg-primary/15 hover:bg-primary/25 border border-primary/40 text-primary/70 font-bold text-xs rounded-xl transition"
               >
                 <Save className="w-4 h-4" /> Enter Final Score
@@ -333,7 +429,6 @@ function MatchBroadcastCard({
               >
                 <Trash2 className="w-4 h-4" /> Kill Broadcast
               </button>
-              </>)}
               <button
                 onClick={sendScorePush}
                 disabled={sendingPush}
@@ -352,29 +447,94 @@ function MatchBroadcastCard({
                   <button onClick={() => setAdminWinner(2)} className={`py-2.5 rounded-xl font-bold text-sm border transition truncate ${adminWinner === 2 ? "bg-sky-500/20 border-sky-500 text-sky-300" : "bg-slate-900 border-slate-700 text-muted-foreground"}`}>{t2Label}</button>
                 </div>
               </div>
-              <div>
-                <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Set Scores (e.g. 21-15, 21-18)</label>
-                <input value={adminSets} onChange={(e) => setAdminSets(e.target.value)} placeholder="21-15, 21-18" className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-foreground text-sm outline-none focus:border-primary transition" />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Set Scores</label>
+                  <button onClick={() => setAdminSets([...adminSets, {t1: "", t2: ""}])} className="text-[10px] font-bold text-primary hover:text-primary/80 bg-primary/10 px-2 py-1 rounded flex items-center gap-1 transition">
+                    <Plus className="w-3 h-3" /> Add Set
+                  </button>
+                </div>
+                
+                <div className="flex items-center gap-2 px-1 mb-1">
+                   <div className="w-10"></div>
+                   <div className="flex-1 text-center text-[10px] font-bold text-slate-400 truncate px-1">{t1Label}</div>
+                   <div className="w-4"></div>
+                   <div className="flex-1 text-center text-[10px] font-bold text-slate-400 truncate px-1">{t2Label}</div>
+                   {adminSets.length > 1 && <div className="w-8 shrink-0"></div>}
+                </div>
+
+                {adminSets.map((set, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="text-[11px] font-bold text-slate-500 w-10 text-center bg-slate-800/50 py-2 rounded-lg border border-slate-700/30">S{i+1}</span>
+                    <input 
+                      type="number" 
+                      value={set.t1} 
+                      onChange={(e) => {
+                        const newSets = [...adminSets];
+                        newSets[i].t1 = e.target.value;
+                        setAdminSets(newSets);
+                      }} 
+                      className="flex-1 w-full min-w-0 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-center text-foreground text-sm outline-none focus:border-primary transition [color-scheme:dark]" 
+                    />
+                    <span className="text-slate-500 font-bold">-</span>
+                    <input 
+                      type="number" 
+                      value={set.t2} 
+                      onChange={(e) => {
+                        const newSets = [...adminSets];
+                        newSets[i].t2 = e.target.value;
+                        setAdminSets(newSets);
+                      }} 
+                      className="flex-1 w-full min-w-0 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-center text-foreground text-sm outline-none focus:border-primary transition [color-scheme:dark]" 
+                    />
+                    {adminSets.length > 1 ? (
+                      <button onClick={() => setAdminSets(adminSets.filter((_, idx) => idx !== i))} className="p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition shrink-0">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <div className="w-8 shrink-0"></div>
+                    )}
+                  </div>
+                ))}
               </div>
               <div className="flex gap-2 pt-1">
                 <button onClick={() => { setShowAdminForm(false); setAdminWinner(null); }} className="flex-1 py-2.5 bg-slate-700 hover:bg-slate-600 text-foreground rounded-xl font-bold text-sm flex items-center justify-center gap-1.5">
                   <X className="w-4 h-4" /> Cancel
                 </button>
                 <button
-                  onClick={() => {
+                  disabled={isSubmitting}
+                  onClick={async () => {
                     if (!adminWinner) { toast.error("Pick a winner"); return; }
-                    if (!adminSets.trim()) { toast.error("Enter set scores"); return; }
-                    onSubmit(match, adminWinner, adminSets);
+                    const validSets = adminSets.filter(s => s.t1.trim() !== "" && s.t2.trim() !== "");
+                    if (validSets.length === 0) { toast.error("Enter at least one set score"); return; }
+                    
+                    const setsStr = validSets.map(s => `${s.t1}-${s.t2}`).join(", ");
+                    setIsSubmitting(true);
+                    try {
+                      await onSubmit(match, adminWinner, setsStr);
+                    } finally {
+                      setIsSubmitting(false);
+                    }
                   }}
-                  className="flex-1 py-2.5 bg-primary hover:bg-primary text-primary-foreground rounded-xl font-bold text-sm flex items-center justify-center gap-1.5"
+                  className="flex-1 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold text-sm flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed transition active:scale-95 cursor-pointer"
                 >
-                  <Save className="w-4 h-4" /> Submit & Save
+                  {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Submit & Save
                 </button>
               </div>
             </div>
           )}
         </div>
       )}
+      
+      <div className="mt-4 flex justify-center border-t border-slate-800/50 pt-2">
+        <button
+          onClick={() => setIsExpanded(false)}
+          className="p-1 sm:p-2 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-800 rounded-full transition shadow-md"
+          title="Collapse"
+        >
+          <ChevronDown className="w-5 h-5 rotate-180" />
+        </button>
+      </div>
     </div>
   );
 }
@@ -681,7 +841,7 @@ export function LiveScoreSection() {
 
     lm[matchId].takeoverRequest = {
       requesterId: session?.user?.id || "",
-      requesterName: profile?.full_name || session?.user?.user_metadata?.full_name || "Guest",
+      requesterName: profile?.full_name || session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0] || "Guest",
       status: "pending"
     };
 
@@ -925,7 +1085,7 @@ export function LiveScoreSection() {
     }
     try {
       const { data: submitId, error } = await supabase.rpc("umpire_submit_match", {
-        umpire_id:        m.id,
+        umpire_id:        session?.user?.id || "",
         player1_id:       m.t1.p1Id,
         player2_id:       m.t2.p1Id,
         team1_partner_id: m.t1.p2Id || "",
@@ -935,16 +1095,30 @@ export function LiveScoreSection() {
         match_category:   m.category,
         match_round:      m.matchNumber || (m.isFriendly ? "Friendly" : "Tournament"),
         is_friendly:      m.isFriendly,
+        sets_history:     sets,
+        started_at:       new Date(m.pointLog?.[0]?.ts || Date.now()).toISOString(),
+        ended_at:         new Date().toISOString(),
       });
-      if (error) throw error;
+      if (error) {
+        if (!m.isFriendly && m.id) {
+          console.warn("umpire_submit_match failed, but continuing for tournament match:", error);
+        } else {
+          throw error;
+        }
+      }
+      
       if (!m.isFriendly && m.id) {
-        await supabase.rpc("submit_tournament_match", {
+        const { error: tsErr } = await supabase.rpc("submit_tournament_match", {
           p_match_id: m.id,
           p_winner_side: winner,
           p_score: sets.join(", "),
           p_sets: sets,
           p_umpire_id: null,
-        }).catch(err => console.warn("submit_tournament_match error:", err));
+        });
+        if (tsErr) {
+          console.warn("submit_tournament_match error:", tsErr);
+          throw tsErr;
+        }
       }
       if (submitId && m.isFriendly) await supabase.rpc("confirm_friendly_match", { match_uuid: submitId, confirmer_id: "umpire_bypass" });
       const notifMsg = `🏆 ${m.isFriendly ? "Friendly" : "Tournament"} Match: ${m.t1.p1Name}${m.t1.p2Name ? ` & ${m.t1.p2Name}` : ""} vs ${m.t2.p1Name}${m.t2.p2Name ? ` & ${m.t2.p2Name}` : ""} — ${sets.join(", ")}`;
@@ -1161,12 +1335,22 @@ export function LiveScoreSection() {
                 <p className="text-sm text-slate-300">
                   Waiting for <span className="font-bold text-amber-400">{takeoverTarget.umpireName}</span> to approve your request...
                 </p>
-                <button
-                  onClick={() => setTakeoverTarget(null)}
-                  className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-foreground font-bold text-sm rounded-xl transition"
-                >
-                  Cancel Request
-                </button>
+                <div className="flex flex-col gap-2 pt-2">
+                  <button
+                    onClick={() => setTakeoverTarget(null)}
+                    className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-foreground font-bold text-sm rounded-xl transition"
+                  >
+                    Cancel Request
+                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => handleForceTakeover(takeoverTarget.id)}
+                      className="w-full py-2.5 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-400 font-bold text-sm rounded-xl transition mt-2"
+                    >
+                      Force Takeover (Admin)
+                    </button>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="space-y-4">

@@ -218,86 +218,119 @@ export function PlayerCard({
         }}
         className={`h-full w-full overflow-hidden cursor-pointer bg-white dark:bg-slate-900
         hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:shadow-xl hover:-translate-y-1
-        transition-all duration-300 flex flex-col items-center text-center relative p-6 rounded-3xl border
+        transition-all duration-300 flex flex-col relative p-4 sm:p-5 rounded-3xl border
         ${
           isOwn
             ? "border-primary dark:border-primary ring-2 ring-primary/20 shadow-primary/10 dark:shadow-none"
             : "border-slate-100 dark:border-slate-800 shadow-sm"
         }`}
       >
-        {/* Top: Avatar & Department Badge */}
-        <div className="relative mb-4">
-          <div
-            className={`absolute inset-0 bg-gradient-to-br ${getEloTier(player.elo_rating).color} blur-md opacity-40 rounded-full scale-110`}
-          />
-          <div
-            className={`relative w-20 h-20 rounded-full overflow-hidden border-2 shadow-md ${getEloTier(player.elo_rating).border}`}
-          >
-            {player.avatar_url ? (
-              <img
-                loading="lazy"
-                src={player.avatar_url}
-                alt={player.full_name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div
-                className={`w-full h-full bg-gradient-to-br ${avatarGradient(player.full_name || "")} flex items-center justify-center text-foreground font-black text-2xl`}
-              >
-                {(player.full_name || "?").charAt(0).toUpperCase()}
-              </div>
-            )}
-          </div>
-          {/* Dept Badge */}
-          <div className="absolute -bottom-1 -right-2 flex items-center justify-center min-w-8 h-8 px-1 rounded-full bg-slate-100 dark:bg-slate-800 text-[9px] font-black text-muted-foreground dark:text-slate-300 border-2 border-white dark:border-slate-900 shadow-sm" title={player.department || "Indian Institute of Science"}>
-            {getDepartmentAcronym(player.department)}
-          </div>
+        {/* Top: Avatar, Name, Share */}
+        <div className="grid grid-cols-[45%_45%_10%] gap-1 w-full mb-3 items-center">
           
-          {/* Status Dot */}
-          {(player as any).status === "playing" && (
-            <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-amber-500 border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" />
-          )}
-          {((player as any).status === "looking" || player.is_looking_to_play) && (
-            <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-primary border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" />
-          )}
-        </div>
-
-        {/* Center: Name & Rank */}
-        <div className="flex flex-col items-center w-full mb-6">
-          <div className={emphasizeFirst 
-            ? "text-2xl font-black text-foreground dark:text-foreground leading-none uppercase tracking-tight w-full truncate px-2" 
-            : "text-[10px] font-black text-muted-foreground dark:text-muted-foreground uppercase tracking-[0.2em] mb-0.5 w-full truncate px-2 min-h-[14px]"
-          }>
-            {displayFirst || "\u00A0"}
-          </div>
-          <div className={emphasizeFirst 
-            ? "text-[10px] font-black text-muted-foreground dark:text-muted-foreground uppercase tracking-[0.2em] mb-0.5 w-full truncate px-2 min-h-[14px]"
-            : "text-2xl font-black text-foreground dark:text-foreground leading-none uppercase tracking-tight w-full truncate px-2"
-          }>
-            {lastName}
-          </div>
-          {player.is_retired && (
-            <div className="mt-2 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm bg-rose-500 text-foreground shadow-sm">
-              Retired
+          {/* 1. Avatar side (45%) */}
+          <div className="flex justify-start items-center relative w-full">
+            <div className="relative shrink-0">
+              <div
+                className={`absolute inset-0 bg-gradient-to-br ${getEloTier(player.elo_rating).color} blur-md opacity-40 rounded-full scale-110`}
+              />
+              <div
+                className={`relative w-16 h-16 rounded-full overflow-hidden border-2 shadow-md ${getEloTier(player.elo_rating).border}`}
+              >
+                {player.avatar_url ? (
+                  <img
+                    loading="lazy"
+                    src={player.avatar_url}
+                    alt={player.full_name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div
+                    className={`w-full h-full bg-gradient-to-br ${avatarGradient(player.full_name || "")} flex items-center justify-center text-foreground font-black text-2xl`}
+                  >
+                    {(player.full_name || "?").charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+              {/* Dept Badge */}
+              <div className="absolute -bottom-1 -right-2 flex items-center justify-center min-w-8 h-8 px-1 rounded-full bg-slate-100 dark:bg-slate-800 text-[9px] font-black text-muted-foreground dark:text-slate-300 border-2 border-white dark:border-slate-900 shadow-sm" title={player.department || "Indian Institute of Science"}>
+                {getDepartmentAcronym(player.department)}
+              </div>
+              
+              {/* Status Dot */}
+              {(player as any).status === "playing" && (
+                <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-amber-500 border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" />
+              )}
+              {((player as any).status === "looking" || player.is_looking_to_play) && (
+                <span className="absolute top-1 right-0 w-4 h-4 rounded-full bg-primary border-2 border-white dark:border-slate-900 shadow-sm animate-pulse" />
+              )}
             </div>
-          )}
-          <div className="mt-3 flex items-center justify-center gap-2 flex-wrap">
-            {isHot && (
-              <span className="text-[10px] flex items-center justify-center font-bold text-orange-700 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30 px-2.5 py-1 rounded-md" title={`${streakLen} Match Win Streak!`}>
-                🔥 HOT
-              </span>
-            )}
-            {isCold && (
-              <span className="text-[10px] flex items-center justify-center font-bold text-sky-700 dark:text-sky-400 bg-sky-100 dark:bg-sky-900/30 px-2.5 py-1 rounded-md" title={`${streakLen} Match Losing Streak`}>
-                🧊 COLD
-              </span>
+          </div>
+
+          {/* 2. Name side (45%) */}
+          <div className="flex flex-col items-start w-full min-w-0 text-left pr-1">
+            <div className={emphasizeFirst 
+              ? "text-[18px] sm:text-[20px] font-black text-foreground dark:text-foreground leading-tight uppercase tracking-tight w-full truncate" 
+              : "text-[9px] font-black text-muted-foreground dark:text-muted-foreground uppercase tracking-[0.2em] mb-0.5 w-full truncate"
+            }>
+              {displayFirst || "\u00A0"}
+            </div>
+            <div className={emphasizeFirst 
+              ? "text-[9px] font-black text-muted-foreground dark:text-muted-foreground uppercase tracking-[0.2em] mb-0.5 w-full truncate"
+              : "text-[18px] sm:text-[20px] font-black text-foreground dark:text-foreground leading-tight uppercase tracking-tight w-full truncate"
+            }>
+              {lastName}
+            </div>
+            
+            <div className="mt-1 flex flex-col items-start gap-1 flex-wrap">
+              {player.is_retired && (
+                <div className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-rose-500 text-foreground shadow-sm">
+                  Retired
+                </div>
+              )}
+              {isHot && (
+                <span className="text-[8px] flex items-center justify-center font-bold text-orange-700 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30 px-1.5 py-0.5 rounded" title={`${streakLen} Match Win Streak!`}>
+                  🔥 HOT
+                </span>
+              )}
+              {isCold && (
+                <span className="text-[8px] flex items-center justify-center font-bold text-sky-700 dark:text-sky-400 bg-sky-100 dark:bg-sky-900/30 px-1.5 py-0.5 rounded" title={`${streakLen} Match Losing Streak`}>
+                  🧊 COLD
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* 3. Action / Share side (10%) */}
+          <div className="flex flex-col items-end justify-start self-start w-full gap-2 -mt-2 -mr-2">
+            <button
+              onClick={handleShare}
+              className="flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
+              title="Share profile"
+            >
+              <div className="p-2 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-primary/10 dark:hover:bg-primary/90/30">
+                <Share2 className="w-4 h-4" />
+              </div>
+            </button>
+            {isPersonalView && !isOwn && (
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); handlePing(); }}
+                className={`flex items-center justify-center transition-colors ${
+                  isPinged ? "text-amber-500" : "text-muted-foreground hover:text-amber-500"
+                }`}
+                title="Ping player"
+              >
+                <div className={`p-2 rounded-full ${isPinged ? "bg-amber-50 dark:bg-amber-950/30" : "bg-slate-50 dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-950/30"}`}>
+                  <BellRing className="w-4 h-4" />
+                </div>
+              </button>
             )}
           </div>
         </div>
 
         {/* Admin Detailed Stats */}
         {/* Detailed Stats */}
-        <div className="w-full mt-2 mb-4 px-2">
+        <div className="w-full mt-1 mb-3 px-1">
           <div className="flex items-center gap-1.5 text-[9px] uppercase font-bold text-muted-foreground mb-1.5 tracking-wider pl-1 border-b border-slate-100 dark:border-slate-800 pb-1">
             <span>Player Stats</span>
             <TooltipProvider delayDuration={100}>
@@ -367,10 +400,9 @@ export function PlayerCard({
         </div>
         
         {/* ACTION BUTTONS */}
-        <div className="mt-auto w-full border-t border-slate-100 dark:border-slate-800 pt-3 space-y-2">
-
-          {/* Row 1: Social actions (buddy + follow) — full-width pills */}
-          {isPersonalView && !isOwn && (onBuddyAction || onToggleFollow) && (
+        {isPersonalView && !isOwn && (onBuddyAction || onToggleFollow) && (
+          <div className="mt-auto w-full border-t border-slate-100 dark:border-slate-800 pt-3 space-y-2">
+            {/* Row 1: Social actions (buddy + follow) — full-width pills */}
             <div className="flex gap-2">
               {onBuddyAction && (
                 <button
@@ -433,38 +465,8 @@ export function PlayerCard({
                 </button>
               )}
             </div>
-          )}
-
-          {/* Row 2: Utility icon buttons with labels */}
-          <div className="flex items-center justify-center gap-6 pt-1">
-            {isPersonalView && !isOwn && (
-              <button
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); handlePing(); }}
-                className={`flex flex-col items-center justify-center gap-1 transition-colors ${
-                  isPinged ? "text-amber-500" : "text-muted-foreground hover:text-amber-500"
-                }`}
-                title="Ping player"
-              >
-                <div className={`p-2 rounded-full ${isPinged ? "bg-amber-50 dark:bg-amber-950/30" : "bg-slate-50 dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-950/30"}`}>
-                  <BellRing className="w-3.5 h-3.5" />
-                </div>
-                <span className="text-[9px] font-black uppercase tracking-wider">Ping</span>
-              </button>
-            )}
-            
-            <button
-              onClick={handleShare}
-              className="flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-primary transition-colors"
-              title="Share profile"
-            >
-              <div className="p-2 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-primary/10 dark:hover:bg-primary/90/30">
-                <Share2 className="w-3.5 h-3.5" />
-              </div>
-              <span className="text-[9px] font-black uppercase tracking-wider">Share</span>
-            </button>
-
           </div>
-        </div>
+        )}
         
         {/* 'You' badge */}
         {isOwn && (

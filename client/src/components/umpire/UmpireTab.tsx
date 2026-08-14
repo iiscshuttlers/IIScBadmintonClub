@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { UmpireEngine } from "./UmpireEngine";
 import { BwfMatchState, MatchEditState } from "@/types/umpire";
-import { Play, Tv2, AlertTriangle, Swords, Lock, CalendarX, ChevronDown, ChevronUp, Clock } from "lucide-react";
+import { Play, Tv2, AlertTriangle, Swords, Lock, CalendarX, ChevronDown, ChevronUp, Clock, Hash } from "lucide-react";
 import { format } from "date-fns";
 import { useUmpireStore } from "@/store/umpireStore";
 import { fetchSiteData } from "@/lib/siteData";
@@ -242,7 +242,7 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
             key={('id' in currentMatch ? currentMatch.id : activeMatchIndex)}
             userId={session.user.id}
             userEmail={session.user.email!}
-            userName={session.user.user_metadata?.full_name || "Guest"}
+            userName={profile?.full_name || session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || "Guest"}
             isTournamentUmpire={canRunTournament}
             initialMatchState={isTournamentMatch ? null : currentMatch as BwfMatchState | MatchEditState}
             tournamentMatch={isTournamentMatch ? currentMatch as TournamentMatchForUmpire : undefined}
@@ -328,6 +328,7 @@ type RecentMatch = {
   partner2: { full_name: string; gender?: string | null } | null;
   team1_label?: string;
   team2_label?: string;
+  match_code?: string | null;
 };
 
 function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditState) => void, isTournament: boolean }) {
@@ -336,6 +337,7 @@ function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditSt
   const [isExpanded, setIsExpanded] = useState(false);
 
   const [filterFormat, setFilterFormat] = useState<string>("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -346,13 +348,13 @@ function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditSt
       if (isTournament) {
         let query = supabase
           .from("tournament_matches")
-          .select("id, player1_id, player2_id, team1_partner_id:player3_id, team2_partner_id:player4_id, winner_id, score, sets_history, round:round_name, category, created_at:scored_at, team1_label, team2_label, player1:players!player1_id(full_name, gender), player2:players!player2_id(full_name, gender), partner1:players!tournament_matches_player3_id_fkey(full_name, gender), partner2:players!tournament_matches_player4_id_fkey(full_name, gender)")
+          .select("id, match_code, player1_id, player2_id, team1_partner_id:player3_id, team2_partner_id:player4_id, winner_id, score, sets_history, round:round_name, category, created_at:scored_at, team1_label, team2_label, player1:players!player1_id(full_name, gender), player2:players!player2_id(full_name, gender), partner1:players!tournament_matches_player3_id_fkey(full_name, gender), partner2:players!tournament_matches_player4_id_fkey(full_name, gender)")
           .eq("status", "completed")
           .order("scored_at", { ascending: false });
         if (isAdmin) {
-          query = query.limit(50);
+          query = query.limit(500);
         } else {
-          query = query.eq("scored_by", profile.id).limit(30);
+          query = query.eq("scored_by", profile.id).limit(100);
         }
         const res = await query;
         if (res.error) {
@@ -367,9 +369,9 @@ function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditSt
           .eq("is_friendly", true)
           .order("created_at", { ascending: false });
         if (isAdmin) {
-          query = query.limit(50);
+          query = query.limit(500);
         } else {
-          query = query.eq("submitted_by", profile.id).limit(30);
+          query = query.eq("submitted_by", profile.id).limit(100);
         }
         const res = await query;
         if (res.error) {
@@ -402,18 +404,27 @@ function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditSt
           </div>
         </div>
         {isExpanded && (
-          <div className="flex bg-slate-800 p-1 rounded-xl w-fit overflow-x-auto hide-scrollbar" onClick={(e) => e.stopPropagation()}>
-            {["ALL", "MS", "WS", "MD", "WD", "XD"].map(f => (
-              <button
-                key={f}
-                onClick={() => setFilterFormat(f)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-black whitespace-nowrap transition-all ${
-                  filterFormat === f ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-primary-foreground"
-                }`}
-              >
-                {f}
-              </button>
-            ))}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2" onClick={(e) => e.stopPropagation()}>
+            <input
+              type="text"
+              placeholder="Search matches..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="bg-slate-900/50 text-white text-xs rounded-xl border border-slate-700 px-3 py-2 outline-none focus:border-primary w-full sm:w-48"
+            />
+            <div className="flex bg-slate-800 p-1 rounded-xl w-fit overflow-x-auto hide-scrollbar">
+              {["ALL", "MS", "WS", "MD", "WD", "XD"].map(f => (
+                <button
+                  key={f}
+                  onClick={() => setFilterFormat(f)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black whitespace-nowrap transition-all ${
+                    filterFormat === f ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-primary-foreground"
+                  }`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -423,7 +434,7 @@ function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditSt
           {recent.filter(m => {
           const isByeMatch = m.team1_label === "BYE" || m.team2_label === "BYE" || m.score === "BYE" || (m.team1_label || "").toUpperCase().includes("BYE") || (m.team2_label || "").toUpperCase().includes("BYE");
           if (isByeMatch) return false;
-          if (filterFormat === "ALL") return true;
+
           const p1g = m.player1?.gender?.toLowerCase();
           const p2g = m.player2?.gender?.toLowerCase();
           const p3g = m.partner1?.gender?.toLowerCase();
@@ -443,7 +454,23 @@ function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditSt
             if (p1g === "male" && p2g === "male") matchFormat = "MS";
             else if (p1g === "female" && p2g === "female") matchFormat = "WS";
           }
-          return matchFormat === filterFormat;
+          
+          if (filterFormat !== "ALL" && matchFormat !== filterFormat) return false;
+
+          if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase().trim();
+            const p1Name = m.player1?.full_name?.toLowerCase() || "";
+            const p2Name = m.player2?.full_name?.toLowerCase() || "";
+            const p3Name = m.partner1?.full_name?.toLowerCase() || "";
+            const p4Name = m.partner2?.full_name?.toLowerCase() || "";
+            const t1Label = m.team1_label?.toLowerCase() || "";
+            const t2Label = m.team2_label?.toLowerCase() || "";
+            if (!p1Name.includes(q) && !p2Name.includes(q) && !p3Name.includes(q) && !p4Name.includes(q) && !t1Label.includes(q) && !t2Label.includes(q)) {
+              return false;
+            }
+          }
+
+          return true;
         }).map(m => {
           const team1Won = m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id;
           const team2Won = m.winner_id === m.player2_id || m.winner_id === m.team2_partner_id;
@@ -480,21 +507,28 @@ function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditSt
                     {m.player2?.full_name ? `${m.player2.full_name} ${m.partner2 ? `& ${m.partner2.full_name}` : ""}` : m.team2_label}
                   </span>
                 </p>
-                <div className="flex flex-wrap items-center gap-2 mt-1">
+                <div className="flex flex-wrap items-center gap-2 mt-2">
                   {matchFormat && (
-                    <span className="text-[10px] font-black uppercase tracking-widest bg-indigo-900/50 text-indigo-300 px-2 py-0.5 rounded-md border border-indigo-800/50">
+                    <span className="text-[10px] font-black uppercase tracking-widest bg-indigo-900/50 text-indigo-300 px-2 py-0.5 rounded-md border border-indigo-800/50 shrink-0">
                       {matchFormat}
                     </span>
                   )}
-                  <BeautifulScoreDisplay score={m.score} />
+                  {m.match_code && (
+                    <span className="text-[10px] font-black uppercase tracking-widest bg-emerald-900/30 text-emerald-400 px-2 py-0.5 rounded-md border border-emerald-800/50 shrink-0">
+                      {m.match_code}
+                    </span>
+                  )}
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold tracking-wider uppercase text-slate-400 bg-slate-900/80 px-2 py-0.5 rounded-md border border-slate-700/50 shrink-0">
+                    <Clock className="w-3 h-3 text-slate-500" />
+                    {format(new Date(m.created_at || new Date()), "MMM d, h:mm a")}
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5 mt-2 text-xs text-slate-500 font-medium">
-                  <Clock className="w-3.5 h-3.5" />
-                  {format(new Date(m.created_at || new Date()), "MMM d, h:mm a")}
+                <div className="mt-3">
+                  <BeautifulScoreDisplay score={m.score} />
                 </div>
               </div>
               {(() => {
-                const isEditable = Date.now() - new Date(m.created_at || new Date()).getTime() <= 10 * 60 * 1000;
+                const isEditable = isAdmin || (Date.now() - new Date(m.created_at || new Date()).getTime() <= 10 * 60 * 1000);
                 return isEditable ? (
                   <button 
                     onClick={() => onEdit({ ...m, is_edit_mode: true } as MatchEditState)}

@@ -247,6 +247,8 @@ export default function ScheduleCalendar() {
     .filter((e) => e.registrationDeadline)
     .map((e) => new Date(e.registrationDeadline as string));
 
+  const holidayEvents = events.filter(e => e.type === "holiday").sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
   return (
     <section className="font-sans pb-32 lg:pb-12">
       <div className="container mx-auto px-4 relative z-20 pt-8">
@@ -490,6 +492,31 @@ export default function ScheduleCalendar() {
                 )}
               </div>
             </Card>
+
+            {/* Gymkhana Holidays Card */}
+            {holidayEvents.length > 0 && (
+              <Card className="rounded-3xl shadow-lg border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 mt-6 overflow-hidden">
+                <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-rose-50 dark:bg-rose-950/20">
+                  <h3 className="font-bold text-rose-800 dark:text-rose-300 flex items-center gap-2">
+                    <CalendarDays className="w-4 h-4" /> Gymkhana Holidays {new Date().getFullYear()}
+                  </h3>
+                </div>
+                <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {holidayEvents.map((h, idx) => {
+                    const d = new Date(h.date);
+                    const isPast = d.getTime() < new Date().getTime() - 86400000;
+                    return (
+                      <div key={idx} className={`flex items-center justify-between p-3 rounded-xl border ${isPast ? 'bg-slate-50 border-slate-100 dark:bg-slate-800/50 dark:border-slate-800 opacity-60' : 'bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-700'}`}>
+                        <div className="flex flex-col">
+                          <span className={`font-bold text-sm ${isPast ? 'text-slate-500 dark:text-slate-400' : 'text-slate-800 dark:text-slate-200'}`}>{h.title}</span>
+                          <span className="text-xs font-semibold text-muted-foreground">{d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+            )}
           </motion.div>
 
           {/* Right: Selected Date Details */}

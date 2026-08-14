@@ -48,9 +48,37 @@ export function useFeedMatches(ownProfile: any) {
     return list.map(String);
   }, [ownProfile?.buddies]);
 
+  const [searchQuery, setSearchQuery] = useState("");
+
   const displayMatches = useMemo(() => {
-    return matches;
-  }, [matches]);
+    if (!searchQuery.trim()) return matches;
+    const q = searchQuery.toLowerCase().trim();
+    return matches.filter((m) => {
+      const p1Name = m.player1?.full_name?.toLowerCase() || "";
+      const p2Name = m.player2?.full_name?.toLowerCase() || "";
+      const p3Name = m.player3?.full_name?.toLowerCase() || m.partner1?.full_name?.toLowerCase() || "";
+      const p4Name = m.player4?.full_name?.toLowerCase() || m.partner2?.full_name?.toLowerCase() || "";
+      const t1Label = m.team1_label?.toLowerCase() || "";
+      const t2Label = m.team2_label?.toLowerCase() || "";
+      const mId = m.id?.toLowerCase() || "";
+      const mNumber = m.match_number?.toString().toLowerCase() || "";
+      const mFormat = m.format?.toLowerCase() || "";
+      const mCategory = m.category?.toLowerCase() || "";
+
+      return (
+        p1Name.includes(q) ||
+        p2Name.includes(q) ||
+        p3Name.includes(q) ||
+        p4Name.includes(q) ||
+        t1Label.includes(q) ||
+        t2Label.includes(q) ||
+        mId.includes(q) ||
+        mNumber.includes(q) ||
+        mFormat.includes(q) ||
+        mCategory.includes(q)
+      );
+    });
+  }, [matches, searchQuery]);
 
   const courtUtil = useMemo(() => {
     const hours = new Array(24).fill(0);
@@ -141,6 +169,8 @@ export function useFeedMatches(ownProfile: any) {
     timeFilter,
     setTimeFilter,
     tournamentFilter,
-    setTournamentFilter
+    setTournamentFilter,
+    searchQuery,
+    setSearchQuery
   };
 }

@@ -51,6 +51,7 @@ export function useUmpireState({
     isEditSetupOpen, setIsEditSetupOpen,
     showToolsMenu, setShowToolsMenu,
     isDirectScoreOpen, setIsDirectScoreOpen,
+    isSaving, setIsSaving,
     showFullTimer, setShowFullTimer,
     directSetsText, setDirectSetsText,
     directWinner, setDirectWinner,
@@ -58,6 +59,8 @@ export function useUmpireState({
     breakTotalSeconds, setBreakTotalSeconds,
     breakLabel, setBreakLabel
   } = useUmpireStore();
+
+  const [hasSaved, setHasSaved] = useState(false);
 
 
   const match = storeMatch || (() => {
@@ -525,7 +528,8 @@ export function useUmpireState({
       const oldT1Games = match.t1.games;
       const oldT2Games = match.t2.games;
       
-      const halfPoint = match.pointsToWin === 21 ? 11 : match.pointsToWin === 15 ? 8 : -1;
+      const safePointsToWin = match.pointsToWin || 30;
+      const halfPoint = Math.ceil(safePointsToWin / 2);
       const isHalfPoint = (newT1Score === halfPoint && newT2Score < halfPoint) || (newT2Score === halfPoint && newT1Score < halfPoint);
       const isSetWon = t1Games > oldT1Games || t2Games > oldT2Games;
 
@@ -631,191 +635,203 @@ export function useUmpireState({
   
     // ── Save match ─────────────────────────────────────────────────────────────
     const saveMatchToProfile = async () => {
-      if (match.status !== "finished") return;
-
-      // Real match window, derived from the first/last scored point — used to
-      // correlate Health Connect watch data instead of guessing a fixed window.
-      const matchStartTs = match.pointLog.length > 0 ? match.pointLog[0].ts : Date.now();
-      const matchEndTs = match.pointLog.length > 0 ? match.pointLog[match.pointLog.length - 1].ts : Date.now();
-
-      // Tournament match path — submit to tournament_matches, no ELO impact
-      if (tournamentMatch || match.isTournamentMatch || (!match.isFriendly && match.id)) {
-        const matchId = tournamentMatch?.id || match.dbId || match.id;
-        if (!matchId) return toast.error("Match ID missing");
-
-        const winnerSide: 1 | 2 = match.winner === 1 ? 1 : 2;
-        const scoreStr = match.setsHistory.join(", ");
-        try {
-          const { error } = await supabase.rpc("submit_tournament_match", {
-            p_match_id: matchId,
-            p_winner_side: winnerSide,
-            p_score: scoreStr,
-            p_sets: match.setsHistory,
-            p_umpire_id: userId || null,
-          });
-          if (error) throw error;
-          // Best-effort: a failure here shouldn't block the match result itself from saving.
-          await supabase.rpc("set_tournament_match_times", {
-            p_match_id: matchId,
-            p_started_at: new Date(matchStartTs).toISOString(),
-            p_ended_at: new Date(matchEndTs).toISOString(),
-          }).then(({ error: timesError }) => {
-            if (timesError) console.error("Failed to persist match start/end times", timesError);
-          });
-          const notifMsg = `🏆 Tournament: ${match.t1.p1Name}${match.t1.p2Name ? ` & ${match.t1.p2Name}` : ""} vs ${match.t2.p1Name}${match.t2.p2Name ? ` & ${match.t2.p2Name}` : ""} — ${scoreStr}`;
-          try {
-            await supabase.from("site_data").upsert({
-              key: "match_alert",
-              value: { message: notifMsg, time: Date.now() },
-            });
-            await supabase.rpc("push_match_alert", { p_message: notifMsg });
-            await supabase.functions.invoke("push-live-score", {
-              body: { message: notifMsg, match_id: matchId },
-            });
-            const authUser = (await supabase.auth.getUser()).data.user;
-            const isUuid = (s?: string) => typeof s === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
-            const pIds = Array.from(new Set([match.t1.p1Id, match.t1.p2Id, match.t2.p1Id, match.t2.p2Id, userId, authUser?.id].filter(isUuid)));
-            if (pIds.length > 0) {
-              const rows = pIds.map(pid => ({
-                user_id: pid,
-                title: "🏆 Tournament Match Result",
-                message: notifMsg,
-                type: "match_result",
-                link: "/pulse",
-                is_read: false,
-              }));
-              const { error: notifErr } = await supabase.from("notifications").insert(rows);
-              if (notifErr) console.error("Failed to insert notification rows:", notifErr);
-              window.dispatchEvent(new Event("notifications_changed"));
-            }
-          } catch (e) {
-            console.error("Notification push error:", e);
-          }
-
-          onMatchSaved?.(matchId, "tournament");
-          toast.success("Tournament match result saved!");
-          handleClose();
-        } catch (err: any) {
-          toast.error("Failed to save tournament match: " + err.message);
-        }
-        return;
-      }
-      const realIds = new Set(players.map(p => p.id));
-      const toRealId = (id?: string) => (id && realIds.has(id) ? id : "");
-      const hasAnyRealPlayer = [match.t1.p1Id, match.t1.p2Id, match.t2.p1Id, match.t2.p2Id]
-        .some(id => id && realIds.has(id));
-      if (!hasAnyRealPlayer) {
-        toast.info("Match ended. Cannot log — all players are guests.");
-        handleClose();
-        return;
-      }
-      const t1IsWinner = match.winner === 1;
-      const winnerTeam = t1IsWinner ? match.t1 : match.t2;
-      const winnerId = toRealId(winnerTeam.p1Id) || toRealId(winnerTeam.p2Id);
-      let finalScoreStr = match.retiredTeam
-        ? match.setsHistory.join(", ") + ` (T${match.retiredTeam} Retired)`
-        : match.setsHistory.join(", ");
-      if (match.category !== "Singles") {
-        finalScoreStr += ` [${match.t1.p1Name}+${match.t1.p2Name ?? ""} vs ${match.t2.p1Name}+${match.t2.p2Name ?? ""}]`;
-      }
+      setIsSaving(true);
       try {
-        const durationMinutes = Math.max(1, Math.round((matchEndTs - matchStartTs) / 60000));
-        const roundLabel = `${match.matchNumber || (match.isFriendly ? "Friendly" : "Tournament")} • ${durationMinutes}m`;
-  
-        const umpirePlayerId = toRealId(userId);
-        let dbCategory = match.category;
-        if (dbCategory === "XD") dbCategory = "Mixed Doubles";
-        else if (dbCategory === "MD" || dbCategory === "WD") dbCategory = "Doubles";
-        else if (dbCategory === "MS" || dbCategory === "WS") dbCategory = "Singles";
+        if (match.status !== "finished") return;
 
-        const payload = {
-          umpire_id:          umpirePlayerId,
-          player1_id:         toRealId(match.t1.p1Id),
-          player2_id:         toRealId(match.t2.p1Id),
-          team1_partner_id:   toRealId(match.t1.p2Id),
-          team2_partner_id:   toRealId(match.t2.p2Id),
-          winner_id:          winnerId,
-          match_score:        finalScoreStr,
-          match_category:     dbCategory,
-          match_round:        roundLabel,
-          is_friendly:        match.isFriendly,
-          sets_history:       match.setsHistory,
-          started_at:         new Date(matchStartTs).toISOString(),
-          ended_at:           new Date(matchEndTs).toISOString(),
-        };
+        // Real match window, derived from the first/last scored point — used to
+        // correlate Health Connect watch data instead of guessing a fixed window.
+        const matchStartTs = match.pointLog.length > 0 ? match.pointLog[0].ts : Date.now();
+        const matchEndTs = match.pointLog.length > 0 ? match.pointLog[match.pointLog.length - 1].ts : Date.now();
+
+        // Tournament match path — submit to tournament_matches, no ELO impact
+        if (tournamentMatch || match.isTournamentMatch || (!match.isFriendly && match.id)) {
+          const matchId = tournamentMatch?.id || match.dbId || match.id;
+          if (!matchId) return toast.error("Match ID missing");
+
+          const winnerSide: 1 | 2 = match.winner === 1 ? 1 : 2;
+          const scoreStr = match.setsHistory.join(", ");
+          try {
+            const { error } = await supabase.rpc("submit_tournament_match", {
+              p_match_id: matchId,
+              p_winner_side: winnerSide,
+              p_score: scoreStr,
+              p_sets: match.setsHistory,
+              p_umpire_id: userId || null,
+            });
+            if (error) throw error;
+            
+            // Close UI immediately
+            onMatchSaved?.(matchId, "tournament");
+            toast.success("Tournament match result saved!");
+            setHasSaved(true);
+
+            // Background tasks: Notifications, edge functions, start/end times
+            (async () => {
+              // Best-effort: a failure here shouldn't block the match result itself from saving.
+              await supabase.rpc("set_tournament_match_times", {
+                p_match_id: matchId,
+                p_started_at: new Date(matchStartTs).toISOString(),
+                p_ended_at: new Date(matchEndTs).toISOString(),
+              }).then(({ error: timesError }) => {
+                if (timesError) console.error("Failed to persist match start/end times", timesError);
+              });
+              const notifMsg = `🏆 Tournament: ${match.t1.p1Name}${match.t1.p2Name ? ` & ${match.t1.p2Name}` : ""} vs ${match.t2.p1Name}${match.t2.p2Name ? ` & ${match.t2.p2Name}` : ""} — ${scoreStr}`;
+              try {
+                await supabase.from("site_data").upsert({
+                  key: "match_alert",
+                  value: { message: notifMsg, time: Date.now() },
+                });
+                await supabase.rpc("push_match_alert", { p_message: notifMsg });
+                await supabase.functions.invoke("push-live-score", {
+                  body: { message: notifMsg, match_id: matchId },
+                });
+                const authUser = (await supabase.auth.getUser()).data.user;
+                const isUuid = (s?: string) => typeof s === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+                const pIds = Array.from(new Set([match.t1.p1Id, match.t1.p2Id, match.t2.p1Id, match.t2.p2Id, userId, authUser?.id].filter(isUuid)));
+                if (pIds.length > 0) {
+                  const rows = pIds.map(pid => ({
+                    user_id: pid,
+                    title: "🏆 Tournament Match Result",
+                    message: notifMsg,
+                    type: "match_result",
+                    link: "/pulse",
+                    is_read: false,
+                  }));
+                  const { error: notifErr } = await supabase.from("notifications").insert(rows);
+                  if (notifErr) console.error("Failed to insert notification rows:", notifErr);
+                  window.dispatchEvent(new Event("notifications_changed"));
+                }
+              } catch (e) {
+                console.error("Notification push error:", e);
+              }
+            })();
+
+          } catch (err: any) {
+            toast.error("Failed to save tournament match: " + err.message);
+          }
+          return;
+        }
+
+        const realIds = new Set(players.map(p => p.id));
+        const toRealId = (id?: string) => (id && realIds.has(id) ? id : "");
+        const hasAnyRealPlayer = [match.t1.p1Id, match.t1.p2Id, match.t2.p1Id, match.t2.p2Id]
+          .some(id => id && realIds.has(id));
+        if (!hasAnyRealPlayer) {
+          toast.info("Match ended. Cannot log — all players are guests.");
+          handleClose();
+          return;
+        }
+        const t1IsWinner = match.winner === 1;
+        const winnerTeam = t1IsWinner ? match.t1 : match.t2;
+        const winnerId = toRealId(winnerTeam.p1Id) || toRealId(winnerTeam.p2Id);
+        let finalScoreStr = match.retiredTeam
+          ? match.setsHistory.join(", ") + ` (T${match.retiredTeam} Retired)`
+          : match.setsHistory.join(", ");
+        if (match.category !== "Singles") {
+          finalScoreStr += ` [${match.t1.p1Name}+${match.t1.p2Name ?? ""} vs ${match.t2.p1Name}+${match.t2.p2Name ?? ""}]`;
+        }
         
-        let newMatchId = "";
-        if (match.dbId) {
-          // Update existing match
-          await MatchService.updateMatch(match.dbId, winnerId, finalScoreStr, match.category, match.setsHistory);
-          const updateError = null;
-          if (updateError) throw updateError;
-          newMatchId = match.dbId;
-          toast.success("Match score updated successfully!");
-        } else {
-          const submitId = await MatchService.submitMatch(payload);
-          const submitError = null;
-          if (submitError) throw submitError;
-          newMatchId = submitId;
-          
-          if (newMatchId && !match.isFriendly) {
-            // Auto-confirm tournament matches only (admin-controlled)
-            // Friendly matches require opponent confirmation
-            await MatchService.confirmFriendlyMatch(newMatchId);
-          }
-        }
-  
-        const notifTitle = match.isFriendly ? "🏸 Friendly Match Result" : "🏆 Tournament Match Result";
-        const notifMsg = `${match.t1.p1Name}${match.t1.p2Name ? ` & ${match.t1.p2Name}` : ""} vs ${match.t2.p1Name}${match.t2.p2Name ? ` & ${match.t2.p2Name}` : ""} — ${match.setsHistory.join(", ")}`;
         try {
-          await supabase.from("site_data").upsert({ key: "match_alert", value: { title: notifTitle, message: notifMsg, time: Date.now() } });
-          await supabase.rpc("push_match_alert", { p_message: notifMsg });
-          await supabase.functions.invoke("push-live-score", {
-            body: { message: notifMsg, title: notifTitle, match_id: newMatchId || match.id },
-          });
-          const authUser = (await supabase.auth.getUser()).data.user;
-          const isUuid = (s?: string) => typeof s === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
-          const pIds = Array.from(new Set([match.t1.p1Id, match.t1.p2Id, match.t2.p1Id, match.t2.p2Id, userId, authUser?.id].filter(isUuid)));
-          if (pIds.length > 0) {
-            const rows = pIds.map(pid => ({
-              user_id: pid,
-              title: match.isFriendly ? "🏸 Friendly Match Result" : "🏆 Tournament Match Result",
-              message: notifMsg,
-              type: "match_result",
-              link: "/pulse",
-              is_read: false,
-            }));
-            const { error: notifErr } = await supabase.from("notifications").insert(rows);
-            if (notifErr) console.error("Failed to insert notification rows:", notifErr);
-            window.dispatchEvent(new Event("notifications_changed"));
+          const durationMinutes = Math.max(1, Math.round((matchEndTs - matchStartTs) / 60000));
+          const roundLabel = `${match.matchNumber || (match.isFriendly ? "Friendly" : "Tournament")} • ${durationMinutes}m`;
+  
+          const umpirePlayerId = toRealId(userId);
+          let dbCategory = match.category;
+          if (dbCategory === "XD") dbCategory = "Mixed Doubles";
+          else if (dbCategory === "MD" || dbCategory === "WD") dbCategory = "Doubles";
+          else if (dbCategory === "MS" || dbCategory === "WS") dbCategory = "Singles";
+
+          const payload = {
+            umpire_id:          umpirePlayerId,
+            player1_id:         toRealId(match.t1.p1Id),
+            player2_id:         toRealId(match.t2.p1Id),
+            team1_partner_id:   toRealId(match.t1.p2Id),
+            team2_partner_id:   toRealId(match.t2.p2Id),
+            winner_id:          winnerId,
+            match_score:        finalScoreStr,
+            match_category:     dbCategory,
+            match_round:        roundLabel,
+            is_friendly:        match.isFriendly,
+            sets_history:       match.setsHistory,
+            started_at:         new Date(matchStartTs).toISOString(),
+            ended_at:           new Date(matchEndTs).toISOString(),
+          };
+          
+          let newMatchId = "";
+          if (match.dbId) {
+            // Update existing match
+            await MatchService.updateMatch(match.dbId, winnerId, finalScoreStr, match.category, match.setsHistory);
+            newMatchId = match.dbId;
+          } else {
+            const submitId = await MatchService.submitMatch(payload);
+            newMatchId = submitId;
+            
+            if (newMatchId && !match.isFriendly) {
+              // Auto-confirm tournament matches only (admin-controlled)
+              // Friendly matches require opponent confirmation
+              await MatchService.confirmFriendlyMatch(newMatchId);
+            }
           }
-        } catch (e) {
-          console.error("Notification push error:", e);
+  
+          if (newMatchId) onMatchSaved?.(newMatchId, "friendly");
+          const hasGuests = [match.t1.p1Id, match.t1.p2Id, match.t2.p1Id, match.t2.p2Id]
+            .some(id => id && !realIds.has(id));
+          toast.success(hasGuests ? "Match saved! Guest players are not credited to any profile." : "Match saved to profiles!");
+          
+          // Close UI immediately
+          setHasSaved(true);
+
+          // Background tasks: Notifications and edge functions
+          (async () => {
+            const notifTitle = match.isFriendly ? "🏸 Friendly Match Result" : "🏆 Tournament Match Result";
+            const notifMsg = `${match.t1.p1Name}${match.t1.p2Name ? ` & ${match.t1.p2Name}` : ""} vs ${match.t2.p1Name}${match.t2.p2Name ? ` & ${match.t2.p2Name}` : ""} — ${match.setsHistory.join(", ")}`;
+            try {
+              await supabase.from("site_data").upsert({ key: "match_alert", value: { title: notifTitle, message: notifMsg, time: Date.now() } });
+              await supabase.rpc("push_match_alert", { p_message: notifMsg });
+              await supabase.functions.invoke("push-live-score", {
+                body: { message: notifMsg, title: notifTitle, match_id: newMatchId || match.id },
+              });
+              const authUser = (await supabase.auth.getUser()).data.user;
+              const isUuid = (s?: string) => typeof s === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+              const pIds = Array.from(new Set([match.t1.p1Id, match.t1.p2Id, match.t2.p1Id, match.t2.p2Id, userId, authUser?.id].filter(isUuid)));
+              if (pIds.length > 0) {
+                const rows = pIds.map(pid => ({
+                  user_id: pid,
+                  title: match.isFriendly ? "🏸 Friendly Match Result" : "🏆 Tournament Match Result",
+                  message: notifMsg,
+                  type: "match_result",
+                  link: "/pulse",
+                  is_read: false,
+                }));
+                const { error: notifErr } = await supabase.from("notifications").insert(rows);
+                if (notifErr) console.error("Failed to insert notification rows:", notifErr);
+                window.dispatchEvent(new Event("notifications_changed"));
+              }
+            } catch (e) {
+              console.error("Notification push error:", e);
+            }
+          })();
+
+        } catch (err: any) {
+          toast.error("Failed to save: " + err.message);
         }
-        if (newMatchId) onMatchSaved?.(newMatchId, "friendly");
-        const hasGuests = [match.t1.p1Id, match.t1.p2Id, match.t2.p1Id, match.t2.p2Id]
-          .some(id => id && !realIds.has(id));
-        toast.success(hasGuests ? "Match saved! Guest players are not credited to any profile." : "Match saved to profiles!");
-        handleClose();
       } catch (err: any) {
         toast.error("Failed to save: " + err.message);
+      } finally {
+        setIsSaving(false);
       }
     };
 
     const prevStatusRef = useRef(match.status);
     useEffect(() => {
-      // Only auto-save if transitioning from live "playing" state to "finished"
-      if (prevStatusRef.current === "playing" && match.status === "finished") {
-        saveMatchToProfile();
-      }
       prevStatusRef.current = match.status;
     }, [match.status]);
 
-    const handleClose = async () => {
-      try {
-        await MatchService.removeLiveMatch(userId);
-      } catch (err) {
-        console.error("Failed to remove live match:", err);
+    const handleClose = () => {
+      const liveMatchId = tournamentMatch?.id || match.dbId || match.id || userId;
+      if (liveMatchId) {
+        MatchService.removeLiveMatch(liveMatchId).catch(console.error);
       }
       onClose();
     };
@@ -864,6 +880,7 @@ export function useUmpireState({
     breakSecondsLeft,
     breakTotalSeconds,
     breakLabel,
+    hasSaved,
     setMatch,
     setCards,
     setShowLog,
@@ -912,6 +929,7 @@ export function useUmpireState({
     currentGameNum,
     serverScore,
     receiverScore,
-    cardBadge
+    cardBadge,
+    isSaving
   };
 }

@@ -19,6 +19,7 @@ import {
   Bell,
   Tv2,
   ChevronDown,
+  Search,
 } from "lucide-react";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { useAuth } from "@/contexts/AuthContext";
@@ -70,7 +71,9 @@ export default function FeedTab() {
     timeFilter,
     setTimeFilter,
     tournamentFilter,
-    setTournamentFilter
+    setTournamentFilter,
+    searchQuery,
+    setSearchQuery
   } = useFeedMatches(ownProfile);
 
   const [tournaments, setTournaments] = useState<{ id: string, name: string }[]>([]);
@@ -262,6 +265,18 @@ export default function FeedTab() {
                 </div>
               </div>
             )}
+
+            {/* Search Bar */}
+            <div className="mb-3 relative w-full">
+              <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search matches, players, formats..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-white dark:bg-slate-900 text-foreground text-sm font-bold rounded-2xl pl-11 pr-4 py-3 outline-none border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary shadow-sm placeholder:text-slate-400 dark:placeholder:text-slate-500"
+              />
+            </div>
 
             {/* Feed filter tabs and Advanced Filters */}
             <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">

@@ -27,14 +27,12 @@ export function UmpireAssignmentPanel() {
     setLoading(true);
     
     // Load assignments
-    const { data: aData } = await supabase
+    const { data: aData, error: aErr } = await supabase
       .from("umpire_assignments")
-      .select(`
-        *,
-        user:user_id(id, raw_user_meta_data),
-        created_by_user:created_by(id, raw_user_meta_data)
-      `)
+      .select("*")
       .order("created_at", { ascending: false });
+    
+    if (aErr) console.error("Failed to load umpire assignments:", aErr);
     
     setAssignments(aData || []);
 

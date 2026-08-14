@@ -107,6 +107,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
   const initialTab = rawT === "draft" ? "upcoming" : (rawT || "active");
   const [viewStatus, setViewStatus] = useState<string>(initialTab);
   const [activeTid, setActiveTid] = useState<string | null>(searchParams.get("tid"));
+  const [showDetails, setShowDetails] = useState(false);
   const [allTournaments, setAllTournaments] = useState<SupabaseTournament[]>([]);
   const [files, setFiles] = useState<any[]>([]);
   const [loadingFiles, setLoadingFiles] = useState(true);
@@ -297,7 +298,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
   
   // Calculate effective form status using both explicit form_status and form_close_date deadline
   let displayFormStatus = liveTournament?.form_status ?? config.formStatus;
-  if ((liveTournament as any)?.form_close_date) {
+  if (displayFormStatus !== "disabled" && (liveTournament as any)?.form_close_date) {
     const closeTime = new Date((liveTournament as any).form_close_date).getTime();
     const now = Date.now();
     if (!isNaN(closeTime) && now >= closeTime) {
@@ -431,9 +432,18 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
               </h2>
             </div>
 
-        {/* Info cards */}
+        <div className="md:hidden flex justify-center mt-2 mb-4">
+          <button
+            onClick={() => setShowDetails(!showDetails)}
+            className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors px-4 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm"
+          >
+            {showDetails ? "Hide Tournament Details" : "Show Tournament Details"}
+            {showDetails ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
+        </div>
+
         <motion.div
-          className="grid grid-cols-2 md:grid-cols-4 gap-4"
+          className={`${showDetails ? "flex flex-col" : "hidden"} md:grid md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-0`}
           initial="hidden"
           animate="visible"
           variants={{ visible: { transition: { staggerChildren: 0.08 } } }}
@@ -443,18 +453,18 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
               key={label}
               custom={i}
               variants={fadeUp}
-              className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col items-center text-center gap-3 hover:shadow-md transition-shadow"
+              className="bg-white dark:bg-slate-800 rounded-2xl p-3 md:p-5 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-row md:flex-col items-center md:text-center text-left gap-3 md:gap-4 hover:shadow-md transition-shadow"
             >
               <div
-                className={`w-11 h-11 rounded-2xl ${color} flex items-center justify-center shadow-sm`}
+                className={`w-9 h-9 md:w-11 md:h-11 rounded-xl md:rounded-2xl ${color} flex items-center justify-center shadow-sm shrink-0`}
               >
-                <Icon className="w-5 h-5" />
+                <Icon className="w-4 h-4 md:w-5 md:h-5" />
               </div>
-              <div>
-                <p className="text-xs font-black text-gray-400 dark:text-muted-foreground uppercase tracking-wider">
+              <div className="flex-1 w-full flex flex-col justify-center">
+                <p className="text-[10px] md:text-xs font-black text-gray-400 dark:text-muted-foreground uppercase tracking-wider mb-0.5 md:mb-1">
                   {label}
                 </p>
-                <div className="text-sm font-bold text-blue-900 dark:text-foreground mt-0.5 leading-snug">
+                <div className="text-xs md:text-sm font-bold text-blue-900 dark:text-foreground leading-snug">
                   {value}
                 </div>
               </div>
@@ -512,7 +522,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
         )}
 
         {/* Tab Navigation */}
-        <div className="flex flex-wrap sm:flex-nowrap bg-white/5 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-1.5 rounded-2xl mb-6 shadow-sm gap-1.5">
+        <div className="mt-8 flex flex-wrap sm:flex-nowrap bg-gradient-to-r from-slate-900/90 via-slate-800/90 to-slate-900/90 dark:from-black/60 dark:via-slate-900/60 dark:to-black/60 backdrop-blur-xl border border-white/10 dark:border-white/10 p-2 sm:p-2.5 rounded-3xl mb-8 shadow-2xl shadow-black/50 gap-2 overflow-x-auto hide-scrollbar sticky top-[68px] z-30">
           {[
             { id: "notices", label: "Info & Notices", icon: FileText },
             { id: "players", label: "Players", icon: Users },
@@ -524,13 +534,13 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-3 rounded-xl text-sm font-bold transition-all whitespace-nowrap flex-1 basis-[45%] sm:basis-auto shrink-0 ${
+              className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-3 sm:py-3.5 rounded-2xl text-[13px] sm:text-sm font-bold transition-all whitespace-nowrap flex-1 basis-[45%] sm:basis-auto shrink-0 ${
                 activeTab === tab.id
-                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
-                  : "text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-[1.02]"
+                  : "text-slate-400 dark:text-slate-400 hover:text-white hover:bg-white/10 dark:hover:bg-white/10 hover:scale-[1.02]"
               }`}
             >
-              <tab.icon className="w-4 h-4" />
+              <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? "" : "opacity-70"}`} />
               {tab.label}
             </button>
           ))}

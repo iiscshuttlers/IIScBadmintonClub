@@ -16,6 +16,7 @@ interface UmpireStoreState {
   isEditSetupOpen: boolean;
   showToolsMenu: boolean;
   isDirectScoreOpen: boolean;
+  isSaving: boolean;
   
   // Timer State
   showFullTimer: boolean;
@@ -42,6 +43,7 @@ interface UmpireStoreState {
   setIsEditSetupOpen: (show: boolean) => void;
   setShowToolsMenu: (show: boolean) => void;
   setIsDirectScoreOpen: (show: boolean) => void;
+  setIsSaving: (saving: boolean) => void;
   
   setShowFullTimer: (show: boolean) => void;
   setBreakSecondsLeft: (seconds: number | null) => void;
@@ -68,6 +70,7 @@ const initialState = {
   isEditSetupOpen: false,
   showToolsMenu: false,
   isDirectScoreOpen: false,
+  isSaving: false,
   
   showFullTimer: false,
   breakSecondsLeft: null,
@@ -97,6 +100,7 @@ export const useUmpireStore = create<UmpireStoreState>((set) => ({
   setIsEditSetupOpen: (isEditSetupOpen) => set({ isEditSetupOpen }),
   setShowToolsMenu: (showToolsMenu) => set({ showToolsMenu }),
   setIsDirectScoreOpen: (isDirectScoreOpen) => set({ isDirectScoreOpen }),
+  setIsSaving: (isSaving) => set({ isSaving }),
   
   setShowFullTimer: (showFullTimer) => set({ showFullTimer }),
   setBreakSecondsLeft: (breakSecondsLeft) => set({ breakSecondsLeft }),

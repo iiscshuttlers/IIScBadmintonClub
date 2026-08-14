@@ -169,7 +169,7 @@ export function DirectScoreModal({
     else newSets[idx].t2 = val;
     
     const validSets = newSets.filter((s, i) => i <= idx || s.t1 !== "" || s.t2 !== ""); // Keep sets up to the highest edited
-    const str = validSets.map(s => `${s.t1 || "0"}-${s.t2 || "0"}`).join(",");
+    const str = validSets.map(s => `${s.t1}-${s.t2}`).join(",");
     setDirectSetsText(str);
   };
 
