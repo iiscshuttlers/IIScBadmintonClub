@@ -509,10 +509,10 @@ function CronJobsPanel() {
 }
 
 export function AdminFeaturesPanel() {
-  const [section, setSection] = useState<"live" | "predictions" | "challenges" | "notifications" | "api" | "health">(() => {
+  const [section, setSection] = useState<"live" | "predictions" | "challenges" | "umpires" | "notifications" | "api" | "health">(() => {
     const params = safeGetSearchParams();
     const tab = params.get("tab") as any;
-    return ["live", "predictions", "challenges", "notifications", "api", "health"].includes(tab) ? tab : "live";
+    return ["live", "predictions", "challenges", "umpires", "notifications", "api", "health"].includes(tab) ? tab : "live";
   });
 
   useEffect(() => {
@@ -527,6 +527,7 @@ export function AdminFeaturesPanel() {
     { id: "live", label: "Live Scores", icon: <Circle className="w-3.5 h-3.5 fill-red-500 text-red-500" /> },
     { id: "predictions", label: "Predictions", icon: <TrendingUp className="w-3.5 h-3.5" /> },
     { id: "challenges", label: "Challenges", icon: <Target className="w-3.5 h-3.5" /> },
+    { id: "umpires", label: "Umpire Duty", icon: <Users className="w-3.5 h-3.5" /> },
     { id: "notifications", label: "Notifications", icon: <Bell className="w-3.5 h-3.5" /> },
     { id: "api", label: "Public API", icon: <Globe className="w-3.5 h-3.5" /> },
     { id: "health", label: "DB Health", icon: <ShieldCheck className="w-3.5 h-3.5" /> },
@@ -571,11 +572,15 @@ export function AdminFeaturesPanel() {
           </div>
         </div>
       )}
+      {section === "umpires" && (
+        <div className="max-w-4xl">
+          <UmpireAssignmentPanel />
+        </div>
+      )}
       {section === "notifications" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <NotifQueuePanel />
           <CronJobsPanel />
-          <UmpireAssignmentPanel />
         </div>
       )}
       {section === "api" && <PublicApiPanel />}

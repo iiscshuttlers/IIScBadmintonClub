@@ -53,7 +53,7 @@ const CAT_COLORS: Record<string, { bg: string; active: string; dot: string }> = 
 const DEFAULT_COLORS = { bg: "bg-slate-700 border-slate-600 text-slate-300", active: "bg-slate-600 text-foreground border-slate-600", dot: "bg-slate-400" };
 
 export function UmpireTournamentTab({ onStartMatch }: Props) {
-  const { isAdmin } = useAuth();
+  const { isAdmin, profile } = useAuth();
   const [allMatches, setAllMatches] = useState<TournamentMatchForUmpire[]>([]);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState<"format" | "match" | "confirm">("format");
@@ -551,10 +551,11 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
                   return;
                 }
 
+                const possibleUserIds = [userId, profile?.id].filter(Boolean) as string[];
                 const { data: assignments } = await supabase
                   .from("umpire_assignments")
                   .select("*")
-                  .eq("user_id", userId);
+                  .in("user_id", possibleUserIds);
                 
                 if (isAdmin) {
                   onStartMatch(selectedMatch);

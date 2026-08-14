@@ -217,6 +217,14 @@ export const FEATURES: Feature[] = [
     icon: "Whistle",
   },
   {
+    id: "umpire-assignments",
+    name: "Umpire Assignments & Time Blocks",
+    description: "Assign umpires to specific matches or time blocks/shifts for tournament scoring",
+    category: "Umpiring",
+    status: "active",
+    icon: "Clock",
+  },
+  {
     id: "umpire-dispute-resolution",
     name: "Match Dispute Resolution",
     description: "Admins can review and resolve disputed match results",

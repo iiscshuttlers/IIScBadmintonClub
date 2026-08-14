@@ -12,12 +12,12 @@ import { BracketVisual } from "@/components/tournament/BracketVisual";
 import {
   Loader2, Save, Trophy, Users, Swords, Archive, Plus, X, Search,
   ChevronDown, ChevronUp, Lock, Unlock, Play, SkipForward, Settings2,
-  CalendarDays, MapPin, Link, Unlink, Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw, Check, Bell, Camera, Pencil
+  CalendarDays, MapPin, Link, Unlink, Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw, Check, Bell, Camera, Pencil, FileText
 } from "lucide-react";
 import { InfoModal } from "@/components/InfoModal";
 import { PlayerSelect } from "@/components/umpire/PlayerSelect";
 import { getDepartmentAcronym } from "@/data/departments";
-import { exportToImage } from "@/utils/exportUtils";
+import { exportToImage, exportToPDF } from "@/utils/exportUtils";
 
 // ── CSV helpers ────────────────────────────────────────────────────────────────
 
@@ -2311,6 +2311,119 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
     </div>
   );
 
+  const downloadMatchesPDF = async (cat: string) => {
+    const catMatches = matches.filter((m) => m.category === cat);
+    if (!catMatches.length) {
+      toast.error("No matches to export");
+      return;
+    }
+
+    const header = [
+      "Match Code",
+      "Round",
+      "Court",
+      "Schedule",
+      "Team 1",
+      "Team 2",
+      "Status",
+      "Score / Result"
+    ];
+
+    const rows = catMatches.map((m) => {
+      const scheduleStr = m.scheduled_at
+        ? new Date(m.scheduled_at).toLocaleString("en-IN", {
+            weekday: "short",
+            day: "2-digit",
+            month: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : "TBD";
+
+      const courtStr = m.court_number ? `Court ${m.court_number}` : "-";
+      
+      let scoreStr = "-";
+      if (m.status === "walkover") {
+        scoreStr = `W/O (${m.winner_side === 1 ? m.team1_label : m.team2_label})`;
+      } else if (m.sets_history && m.sets_history.length > 0) {
+        scoreStr = m.sets_history.join(", ");
+      } else if (m.score) {
+        scoreStr = m.score;
+      }
+
+      return [
+        m.match_code || "",
+        m.round_name || `Round ${m.round}`,
+        courtStr,
+        scheduleStr,
+        m.team1_label || "TBD",
+        m.team2_label || "TBD",
+        (m.status || "pending").toUpperCase(),
+        scoreStr
+      ];
+    });
+
+    const sheetName = `${tournament.name} - ${cat} Matches`;
+    const filename = `${tournament.name.replace(/\s+/g, '_')}_${cat}_matches`;
+
+    await exportToPDF([{ name: sheetName, data: [header, ...rows] }], filename);
+  };
+
+  const downloadMatchesCSV = (cat: string) => {
+    const catMatches = matches.filter((m) => m.category === cat);
+    if (!catMatches.length) {
+      toast.error("No matches to export");
+      return;
+    }
+
+    const header = [
+      "Match Code",
+      "Round",
+      "Court",
+      "Scheduled Time",
+      "Team 1",
+      "Team 2",
+      "Status",
+      "Score / Result"
+    ];
+
+    const rows = catMatches.map((m) => {
+      const scheduleStr = m.scheduled_at
+        ? new Date(m.scheduled_at).toLocaleString("en-IN", {
+            weekday: "short",
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : "TBD";
+
+      const courtStr = m.court_number ? `Court ${m.court_number}` : "";
+      let scoreStr = "";
+      if (m.status === "walkover") {
+        scoreStr = `W/O (${m.winner_side === 1 ? m.team1_label : m.team2_label})`;
+      } else if (m.sets_history && m.sets_history.length > 0) {
+        scoreStr = m.sets_history.join(", ");
+      } else if (m.score) {
+        scoreStr = m.score;
+      }
+
+      return [
+        m.match_code || "",
+        m.round_name || `Round ${m.round}`,
+        courtStr,
+        scheduleStr,
+        m.team1_label || "TBD",
+        m.team2_label || "TBD",
+        (m.status || "pending").toUpperCase(),
+        scoreStr
+      ];
+    });
+
+    downloadCSV(`${tournament.name.replace(/\s+/g, '_')}_${cat}_matches_list.csv`, [header, ...rows]);
+  };
+
   const categoryMatches = matches.filter((m) => m.category === activeCategory);
   const rounds = [...new Set(categoryMatches.map((m) => m.round))].sort((a, b) => a - b);
 
@@ -2326,17 +2439,25 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
             </button>
           ))}
         </div>
-        <div className="grid grid-cols-2 gap-2 w-full sm:w-auto">
-          <div className="flex rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden text-xs font-black w-full">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 w-full sm:w-auto">
+          <div className="flex rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden text-xs font-black w-full sm:w-auto">
             <button onClick={() => setViewMode("visual")}
-              className={`flex-1 px-3 py-1.5 transition ${viewMode === "visual" ? "bg-slate-800 text-foreground" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}>
+              className={`flex-1 sm:flex-initial px-3 py-1.5 transition ${viewMode === "visual" ? "bg-slate-800 text-foreground" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}>
               Visual
             </button>
             <button onClick={() => setViewMode("list")}
-              className={`flex-1 px-3 py-1.5 transition ${viewMode === "list" ? "bg-slate-800 text-foreground" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}>
+              className={`flex-1 sm:flex-initial px-3 py-1.5 transition ${viewMode === "list" ? "bg-slate-800 text-foreground" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}>
               List
             </button>
           </div>
+          <button onClick={() => downloadMatchesPDF(activeCategory)}
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-300 dark:border-rose-700 text-xs font-black text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition">
+            <FileText className="w-3.5 h-3.5 shrink-0" /> Export PDF
+          </button>
+          <button onClick={() => downloadMatchesCSV(activeCategory)}
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-700 text-xs font-black text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition">
+            <Download className="w-3.5 h-3.5 shrink-0" /> Export CSV
+          </button>
           <button onClick={() => setShowRules((v) => !v)}
             className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-black text-muted-foreground dark:text-slate-300 hover:border-primary transition w-full">
             <Settings2 className="w-3.5 h-3.5 shrink-0" /> Round Rules

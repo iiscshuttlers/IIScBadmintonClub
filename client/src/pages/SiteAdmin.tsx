@@ -28,6 +28,7 @@ import {
   LayoutGrid,
   UserRound,
   MessageSquare,
+  Clock,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
@@ -42,6 +43,7 @@ import {
   NoticeboardManager,
 } from "@/components/admin/AdminEditors";
 import { UmpireTab } from "@/components/umpire/UmpireTab";
+import { UmpireAssignmentPanel } from "@/components/admin/UmpireAssignmentPanel";
 import { ConvenerEditor, DEFAULT_CONVENER_DATA } from "@/components/admin/ConvenerEditor";
 import { AdminStatsOverview } from "@/components/admin/AdminStatsOverview";
 import { DisputePanel } from "@/components/admin/DisputePanel";
@@ -79,6 +81,7 @@ type TabId =
   | "players"
   | "guests"
   | "umpire"
+  | "umpire_duty"
   | "registrations"
   | "matches"
   | "changelog"
@@ -132,6 +135,7 @@ const TAB_GROUPS: TabGroup[] = [
       { id: "tournament", label: "Tournament", icon: Trophy },
       { id: "matches", label: "Matches", icon: Trophy },
       { id: "umpire", label: "Umpire Mode", icon: Activity },
+      { id: "umpire_duty", label: "Umpire Assignments", icon: Clock },
       { id: "disputes", label: "Disputes", icon: AlertTriangle },
     ],
   },
@@ -485,6 +489,7 @@ function SiteAdminInner() {
             {activeTab === "disputes" && <DisputePanel />}
             {activeTab === "elo_audit" && <EloAuditPanel />}
             {activeTab === "umpire" && <UmpireTab />}
+            {activeTab === "umpire_duty" && <UmpireAssignmentPanel />}
             {activeTab === "settings" && <AdminSettings />}
             {activeTab === "feedback" && <AdminFeedbackPanel />}
             {activeTab === "activity_log" && <AdminActivityLog />}
