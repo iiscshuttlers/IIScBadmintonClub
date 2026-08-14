@@ -70,6 +70,9 @@ const getSteps = () => {
       icon: <Smartphone className="w-12 h-12 text-amber-400 opacity-90" />,
       detail: (
         <div className="flex flex-col gap-2 mt-4 text-xs font-semibold">
+          <p className="mb-1 text-[11px] font-medium text-slate-300 leading-tight">
+            <strong className="text-white">Crucial:</strong> Ensure you join the group using the exact same Google account as your Android phone's Play Store.
+          </p>
           <a href="https://groups.google.com/g/iisc-badminton-app-testers/about" target="_blank" rel="noreferrer" className="bg-violet-500/20 text-violet-300 py-2 px-3 rounded-lg flex items-center justify-center gap-2 border border-violet-500/30 hover:bg-violet-500/30 transition-colors">
             <span className="w-5 h-5 rounded-full bg-violet-500 flex items-center justify-center text-slate-900 font-black">1</span> Join Testing Group
           </a>
