@@ -251,18 +251,18 @@ export function MatchPredictionCard({
                 setTally(prev => ({ ...prev, t1: prev.t1 + 1 }));
                 onPick(1);
               }}
-              className="flex-1 p-2.5 rounded-xl bg-primary/10 dark:bg-primary/20 hover:bg-primary/15 dark:hover:bg-primary/80/30 border border-primary/40 dark:border-primary/80 text-sm font-black text-primary dark:text-primary transition break-words whitespace-normal"
+              className="flex-1 flex items-center justify-center p-2.5 min-h-[4.5rem] rounded-xl bg-primary/10 dark:bg-primary/20 hover:bg-primary/15 dark:hover:bg-primary/80/30 border border-primary/40 dark:border-primary/80 text-sm font-black text-primary dark:text-primary transition overflow-hidden"
             >
-              {t1Label}
+              <span className="line-clamp-2 break-words leading-tight">{t1Label}</span>
             </button>
             <button
               onClick={() => {
                 setTally(prev => ({ ...prev, t2: prev.t2 + 1 }));
                 onPick(2);
               }}
-              className="flex-1 p-2.5 rounded-xl bg-sky-50 dark:bg-sky-950/20 hover:bg-sky-100 dark:hover:bg-sky-900/30 border border-sky-200 dark:border-sky-800 text-sm font-black text-sky-700 dark:text-sky-400 transition break-words whitespace-normal"
+              className="flex-1 flex items-center justify-center p-2.5 min-h-[4.5rem] rounded-xl bg-sky-50 dark:bg-sky-950/20 hover:bg-sky-100 dark:hover:bg-sky-900/30 border border-sky-200 dark:border-sky-800 text-sm font-black text-sky-700 dark:text-sky-400 transition overflow-hidden"
             >
-              {t2Label}
+              <span className="line-clamp-2 break-words leading-tight">{t2Label}</span>
             </button>
           </div>
         </div>

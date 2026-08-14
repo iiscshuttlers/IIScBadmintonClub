@@ -271,6 +271,28 @@
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
   }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60vh;
+    height: 60vh;
+    background-image: url('/iisc-logo.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: -1;
+  }
+  
+  .dark body::before {
+    opacity: 0.05;
+  }
+
   h1,
   h2,
   h3,

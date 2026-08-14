@@ -16,7 +16,7 @@ export function TeaserOverlay({
   message = "Sign Up to unlock full player analytics & head-to-head stats",
   ctaText = "Create an Account"
 }: TeaserOverlayProps) {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
 
   if (!isLocked) {
     return <>{children}</>;
@@ -43,7 +43,7 @@ export function TeaserOverlay({
           </p>
           <Button 
             onClick={() => {
-              sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
+              sessionStorage.setItem("return_url", location + window.location.search + window.location.hash);
               setLocation("/join");
             }}
             className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-primary-foreground font-black text-sm uppercase tracking-widest shadow-lg shadow-primary/25 transition-all"
@@ -52,7 +52,7 @@ export function TeaserOverlay({
           </Button>
           <button
             onClick={() => {
-              sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
+              sessionStorage.setItem("return_url", location + window.location.search + window.location.hash);
               setLocation("/join");
             }}
             className="mt-3 text-sm font-bold text-primary hover:text-primary/80 underline underline-offset-4 transition"

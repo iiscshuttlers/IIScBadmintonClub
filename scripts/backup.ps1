@@ -2,6 +2,11 @@ param(
     [string]$OutDir = ".\backups"
 )
 
+# Set working directory to the project root (parent of 'scripts' directory)
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$ProjectRoot = Split-Path -Parent $ScriptDir
+Set-Location -Path $ProjectRoot
+
 # Ensure the backup directory exists
 if (-not (Test-Path -Path $OutDir)) {
     New-Item -ItemType Directory -Path $OutDir | Out-Null
@@ -21,6 +26,9 @@ New-Item -ItemType Directory -Path $StorageFolder | Out-Null
 Write-Host "`n[1/3] Backing up Database (Schema + Data)..." -ForegroundColor Yellow
 # Using --linked to backup the remote database attached to this project
 npx supabase db dump -f $DbFile --linked
+
+Write-Host "Backing up Data..." -ForegroundColor Yellow
+npx supabase db dump --data-only -f "$BackupFolder\data.sql" --linked
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Database backup failed!" -ForegroundColor Red
@@ -69,4 +77,5 @@ Write-Host "Copied backup to $OneDriveBackupDir" -ForegroundColor Green
 # Clean up old backups in OneDrive as well
 Write-Host "Cleaning up old backups in OneDrive..." -ForegroundColor DarkGray
 Get-ChildItem -Path $OneDriveBackupDir -Filter "*.zip" | Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-$RetentionDays) } | Remove-Item -Force
+
 

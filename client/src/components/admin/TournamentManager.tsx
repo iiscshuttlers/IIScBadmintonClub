@@ -2161,7 +2161,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
   const downloadScheduleTemplate = () => {
     const header = ["MatchCode", "Court", "Date (YYYY-MM-DD)", "Time (HH:MM)"];
     const rows = matches
-      .filter((m) => m.category === activeCategory)
+      .filter((m) => m.category === activeCategory && m.team1_label !== "BYE" && m.team2_label !== "BYE")
       .sort((a, b) => a.round - b.round || a.match_number - b.match_number)
       .map((m) => [
         m.match_code,

@@ -379,6 +379,123 @@ function MatchBroadcastCard({
   );
 }
 
+function MiniMatchCard({
+  m,
+  session,
+  profile,
+  matchAlerts,
+  setNotifMatchTarget,
+  picks,
+  handlePick,
+  revealedMatchIds,
+  isAdmin,
+  toggleRevealMatchPoll,
+  showDate = false
+}: any) {
+  return (
+    <div className="h-full bg-slate-800/80 border border-slate-700 rounded-2xl p-4 flex flex-col gap-3 transition-colors hover:border-slate-500">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground bg-slate-900 px-2 py-0.5 rounded-full shrink-0">{m.category}</span>
+          {(m.match_code || m.match_number) && (
+            <span className="text-[10px] font-black text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 shrink-0">
+              {m.match_code || `Match #${m.match_number}`}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {m.status === "in_progress" && <span className="text-[10px] font-black text-amber-400 animate-pulse shrink-0">● LIVE</span>}
+          {m.court_number && (
+            <div className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700/50 shadow-inner font-black tracking-widest shrink-0", getCourtColor(m.court_number))}>
+              <MapPin className="w-3.5 h-3.5 opacity-70 shrink-0" /> 
+              <span className="text-xs uppercase whitespace-nowrap">Court {m.court_number}</span>
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 my-1">
+        <div className="flex-1 text-center sm:text-left">
+          <p className="font-bold text-[15px] sm:text-sm text-foreground break-words">
+            {[m.player1?.full_name, m.partner1?.full_name].filter(Boolean).join(" & ") || m.team1_label || "TBD"}
+          </p>
+        </div>
+        <div className="flex items-center justify-center gap-3">
+          <div className="h-[1px] bg-slate-700/50 flex-1 sm:hidden"></div>
+          <span className="text-[10px] font-black text-rose-400 shrink-0">VS</span>
+          <div className="h-[1px] bg-slate-700/50 flex-1 sm:hidden"></div>
+        </div>
+        <div className="flex-1 text-center sm:text-right">
+          <p className="font-bold text-[15px] sm:text-sm text-foreground break-words">
+            {[m.player2?.full_name, m.partner2?.full_name].filter(Boolean).join(" & ") || m.team2_label || "TBD"}
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center justify-between gap-2 mt-2">
+        <div className="flex items-center gap-1.5 text-[11px] text-slate-300 font-bold bg-slate-900/50 self-start px-2.5 py-1.5 rounded-lg border border-slate-800">
+          <Clock className="w-3.5 h-3.5 text-muted-foreground" /> 
+          {m.scheduled_at 
+            ? (showDate ? new Date(m.scheduled_at).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) 
+                        : new Date(m.scheduled_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }))
+            : "TBD"}
+        </div>
+        {session?.user && (
+          (() => {
+            const alert = matchAlerts.find((a: any) => a.match_id === m.id);
+            if (alert) {
+              let timeStr = "ON";
+              if (m.scheduled_at) {
+                const notifyDate = new Date(m.scheduled_at);
+                notifyDate.setMinutes(notifyDate.getMinutes() - alert.notify_before_mins);
+                timeStr = `at ${notifyDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}`;
+              }
+              return (
+                <div className="flex items-center gap-1.5 text-[11px] px-2.5 py-1.5 rounded-lg border border-accent/30 bg-accent/10 text-accent font-medium">
+                  <Bell className="w-3.5 h-3.5" fill="currentColor" />
+                  <span>Notified {timeStr}</span>
+                  <button 
+                    onClick={() => setNotifMatchTarget(m.id)}
+                    className="ml-1 font-bold underline hover:text-accent-foreground"
+                  >
+                    Edit
+                  </button>
+                </div>
+              );
+            }
+            return (
+              <button 
+                onClick={() => setNotifMatchTarget(m.id)}
+                className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg border transition-colors border-slate-700 bg-slate-800/50 hover:bg-slate-700 text-slate-300"
+              >
+                <Bell className="w-3.5 h-3.5" />
+                Notify me
+              </button>
+            );
+          })()
+        )}
+      </div>
+
+      {m.team1_label !== "BYE" && m.team2_label !== "BYE" && (
+        <div className="mt-auto">
+          <MatchPredictionCard
+            matchId={m.id}
+            t1Ids={[m.player1_id, m.player3_id].filter(Boolean)}
+            t2Ids={[m.player2_id, m.player4_id].filter(Boolean)}
+            t1Label={[m.player1?.full_name, m.partner1?.full_name].filter(Boolean).join(" & ") || m.team1_label || "TBD"}
+            t2Label={[m.player2?.full_name, m.partner2?.full_name].filter(Boolean).join(" & ") || m.team2_label || "TBD"}
+            hasStarted={m.status !== "scheduled" && m.status !== "pending"}
+            myPick={picks[m.id]}
+            profileId={profile?.id}
+            onPick={(team) => handlePick(m.id, team)}
+            isResultsRevealed={!!revealedMatchIds[m.id]}
+            isAdmin={isAdmin}
+            onToggleRevealResults={() => toggleRevealMatchPoll(m.id)}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
 import { MatchPredictionCard } from "@/components/feed/MatchPredictions";
 
 export function LiveScoreSection() {
@@ -390,6 +507,10 @@ export function LiveScoreSection() {
   const [todayMatchesLoading, setTodayMatchesLoading] = useState(true);
   const [picks, setPicks] = useState<Record<string, 1 | 2>>({});
   const [revealedMatchIds, setRevealedMatchIds] = useState<Record<string, boolean>>({});
+
+  const [myMatches, setMyMatches] = useState<any[]>([]);
+  const [myMatchesLoading, setMyMatchesLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"my" | "today">("my");
 
   useEffect(() => {
     supabase
@@ -472,6 +593,38 @@ export function LiveScoreSection() {
     };
     loadTodayMatches();
   }, []);
+
+  useEffect(() => {
+    const loadMyMatches = async () => {
+      if (!profile?.id) {
+        setMyMatches([]);
+        setMyMatchesLoading(false);
+        return;
+      }
+      setMyMatchesLoading(true);
+      try {
+        const { data } = await supabase
+          .from("tournament_matches")
+          .select("*, tournaments(name, id), player1:players!player1_id(full_name), player2:players!player2_id(full_name), partner1:players!player3_id(full_name), partner2:players!player4_id(full_name)")
+          .or(`player1_id.eq.${profile.id},player2_id.eq.${profile.id},player3_id.eq.${profile.id},player4_id.eq.${profile.id}`)
+          .in("status", ["scheduled", "in_progress", "pending"]);
+          
+        if (data) {
+          data.sort((a, b) => {
+            if (!a.scheduled_at) return 1;
+            if (!b.scheduled_at) return -1;
+            return new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime();
+          });
+          setMyMatches(data);
+        }
+      } catch (e) {
+        console.error("Failed to load my matches", e);
+      } finally {
+        setMyMatchesLoading(false);
+      }
+    };
+    loadMyMatches();
+  }, [profile?.id]);
 
   const [voiceEnabled, setVoiceEnabled] = useState(() => localStorage.getItem("live_voice") === "true");
   const [flashEnabled, setFlashEnabled] = useState(() => localStorage.getItem("live_flash") !== "false");
@@ -902,116 +1055,96 @@ export function LiveScoreSection() {
         </div>
       )}
 
-      {/* TODAY'S SCHEDULED MATCHES */}
-      <div className="mt-8 bg-slate-900 rounded-[2rem] p-6 shadow-xl border border-slate-800">
-        <h2 className="text-xl font-black text-foreground flex items-center gap-2 mb-6">
-          <CalendarDays className="w-6 h-6 text-blue-400" /> Today's Schedule
-        </h2>
-        
-        {todayMatchesLoading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : todayMatches.length === 0 ? (
-          <div className="text-center py-8 bg-slate-800/30 rounded-2xl border border-slate-700/50">
-            <p className="text-sm text-muted-foreground">No matches scheduled for today.</p>
-          </div>
-        ) : (
-          <div className="grid sm:grid-cols-2 gap-4">
-            {todayMatches.map(m => (
-              <div key={m.id} className="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 flex flex-col gap-3 transition-colors hover:border-slate-500">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground bg-slate-900 px-2 py-0.5 rounded-full shrink-0">{m.category}</span>
-                    {(m.match_code || m.match_number) && (
-                      <span className="text-[10px] font-black text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 shrink-0">
-                        {m.match_code || `Match #${m.match_number}`}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {m.status === "in_progress" && <span className="text-[10px] font-black text-amber-400 animate-pulse shrink-0">● LIVE</span>}
-                    {m.court_number && (
-                      <div className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700/50 shadow-inner font-black tracking-widest shrink-0", getCourtColor(m.court_number))}>
-                        <MapPin className="w-3.5 h-3.5 opacity-70 shrink-0" /> 
-                        <span className="text-xs uppercase whitespace-nowrap">Court {m.court_number}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 my-1">
-                  <div className="flex-1 text-center sm:text-left">
-                    <p className="font-bold text-[15px] sm:text-sm text-foreground break-words">
-                      {[m.player1?.full_name, m.partner1?.full_name].filter(Boolean).join(" & ") || m.team1_label || "TBD"}
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-center gap-3">
-                    <div className="h-[1px] bg-slate-700/50 flex-1 sm:hidden"></div>
-                    <span className="text-[10px] font-black text-rose-400 shrink-0">VS</span>
-                    <div className="h-[1px] bg-slate-700/50 flex-1 sm:hidden"></div>
-                  </div>
-                  <div className="flex-1 text-center sm:text-right">
-                    <p className="font-bold text-[15px] sm:text-sm text-foreground break-words">
-                      {[m.player2?.full_name, m.partner2?.full_name].filter(Boolean).join(" & ") || m.team2_label || "TBD"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between gap-2 mt-2">
-                  <div className="flex items-center gap-1.5 text-[11px] text-slate-300 font-bold bg-slate-900/50 self-start px-2.5 py-1.5 rounded-lg border border-slate-800">
-                    <Clock className="w-3.5 h-3.5 text-muted-foreground" /> 
-                    {new Date(m.scheduled_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
-                  </div>
-                  {session?.user && (
-                    (() => {
-                      const alert = matchAlerts.find(a => a.match_id === m.id);
-                      if (alert) {
-                        const notifyDate = new Date(m.scheduled_at);
-                        notifyDate.setMinutes(notifyDate.getMinutes() - alert.notify_before_mins);
-                        const timeStr = notifyDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
-                        return (
-                          <div className="flex items-center gap-1.5 text-[11px] px-2.5 py-1.5 rounded-lg border border-accent/30 bg-accent/10 text-accent font-medium">
-                            <Bell className="w-3.5 h-3.5" fill="currentColor" />
-                            <span>Notified at {timeStr}</span>
-                            <button 
-                              onClick={() => setNotifMatchTarget(m.id)}
-                              className="ml-1 font-bold underline hover:text-accent-foreground"
-                            >
-                              Edit
-                            </button>
-                          </div>
-                        );
-                      }
-                      return (
-                        <button 
-                          onClick={() => setNotifMatchTarget(m.id)}
-                          className="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-lg border transition-colors border-slate-700 bg-slate-800/50 hover:bg-slate-700 text-slate-300"
-                        >
-                          <Bell className="w-3.5 h-3.5" />
-                          Notify me
-                        </button>
-                      );
-                    })()
-                  )}
-                </div>
+      {/* MATCHES TABS */}
+      <div className="mt-8 relative z-10">
+        <div className="flex items-center mb-6 bg-slate-900/50 p-1.5 rounded-xl border border-slate-800 w-full">
+          <button 
+            onClick={() => setActiveTab("my")}
+            className={cn("flex-1 flex justify-center items-center gap-2 px-4 py-2 rounded-lg text-sm font-black transition-colors", activeTab === "my" ? "bg-slate-800 text-violet-400 shadow-sm" : "text-muted-foreground hover:text-slate-300 hover:bg-slate-800/50")}
+          >
+            <Activity className="w-4 h-4" /> My Matches
+          </button>
+          <button 
+            onClick={() => setActiveTab("today")}
+            className={cn("flex-1 flex justify-center items-center gap-2 px-4 py-2 rounded-lg text-sm font-black transition-colors", activeTab === "today" ? "bg-slate-800 text-blue-400 shadow-sm" : "text-muted-foreground hover:text-slate-300 hover:bg-slate-800/50")}
+          >
+            <CalendarDays className="w-4 h-4" /> Today's Schedule
+          </button>
+        </div>
 
-                {m.player1_id && m.player2_id && (
-                  <MatchPredictionCard
-                    matchId={m.id}
-                    t1Ids={[m.player1_id, m.player3_id].filter(Boolean)}
-                    t2Ids={[m.player2_id, m.player4_id].filter(Boolean)}
-                    t1Label={[m.player1?.full_name, m.partner1?.full_name].filter(Boolean).join(" & ") || m.team1_label || "TBD"}
-                    t2Label={[m.player2?.full_name, m.partner2?.full_name].filter(Boolean).join(" & ") || m.team2_label || "TBD"}
-                    hasStarted={m.status !== "scheduled" && m.status !== "pending"}
-                    myPick={picks[m.id]}
-                    profileId={profile?.id}
-                    onPick={(team) => handlePick(m.id, team)}
-                    isResultsRevealed={!!revealedMatchIds[m.id]}
-                    isAdmin={isAdmin}
-                    onToggleRevealResults={() => toggleRevealMatchPoll(m.id)}
-                  />
-                )}
+        {activeTab === "my" && (
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+            {!profile?.id ? (
+              <div className="text-center py-6 bg-slate-800/30 rounded-xl border border-slate-700/50">
+                <p className="text-sm text-slate-400 mb-3">Log in to see your matches</p>
+                <button 
+                  onClick={() => navigate("/join")}
+                  className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-lg transition-colors text-sm"
+                >
+                  Log In / Join
+                </button>
               </div>
-            ))}
+            ) : myMatchesLoading ? (
+              <div className="flex justify-center p-8">
+                <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
+              </div>
+            ) : myMatches.length === 0 ? (
+              <div className="text-center py-6 bg-slate-800/30 rounded-xl border border-slate-700/50">
+                <p className="text-sm text-slate-400">You have no upcoming matches.</p>
+              </div>
+            ) : (
+              <div className="grid sm:grid-cols-2 gap-4">
+                {myMatches.map(m => (
+                  <MiniMatchCard 
+                    key={m.id}
+                    m={m}
+                    session={session}
+                    profile={profile}
+                    matchAlerts={matchAlerts}
+                    setNotifMatchTarget={setNotifMatchTarget}
+                    picks={picks}
+                    handlePick={handlePick}
+                    revealedMatchIds={revealedMatchIds}
+                    isAdmin={isAdmin}
+                    toggleRevealMatchPoll={toggleRevealMatchPoll}
+                    showDate={true}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "today" && (
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+            {todayMatchesLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : todayMatches.length === 0 ? (
+              <div className="text-center py-8 bg-slate-800/30 rounded-2xl border border-slate-700/50">
+                <p className="text-sm text-muted-foreground">No matches scheduled for today.</p>
+              </div>
+            ) : (
+              <div className="grid sm:grid-cols-2 gap-4">
+                {todayMatches.map(m => (
+                  <MiniMatchCard 
+                    key={m.id}
+                    m={m}
+                    session={session}
+                    profile={profile}
+                    matchAlerts={matchAlerts}
+                    setNotifMatchTarget={setNotifMatchTarget}
+                    picks={picks}
+                    handlePick={handlePick}
+                    revealedMatchIds={revealedMatchIds}
+                    isAdmin={isAdmin}
+                    toggleRevealMatchPoll={toggleRevealMatchPoll}
+                    showDate={false}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

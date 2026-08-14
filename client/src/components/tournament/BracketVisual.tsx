@@ -98,7 +98,7 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
     if (m.status === "completed") return "Done";
     if (m.status === "in_progress") return "Live";
     if (m.team1_label === "BYE" || m.team2_label === "BYE") return "Advance";
-    return "Soon";
+    return "";
   };
 
   return (
@@ -206,10 +206,31 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
                         </p>
                         <p className="text-[8px] text-muted-foreground">{m.match_code}</p>
                       </div>
-                      <div className="flex items-center gap-0.5 shrink-0">
+                      <div className="flex items-center gap-0.5 shrink-0 text-right">
                         {statusIcon(m)}
                         <span className={`text-[8px] font-bold ${isLive ? "text-red-400" : isCompleted ? "text-primary" : "text-muted-foreground"}`}>
                           {statusLabel(m)}
+                          {isLive || isCompleted || statusLabel(m) === "Advance" ? null : (
+                            ((m as any).scheduled_at || m.court_number) ? (
+                              <span className="flex items-center gap-1.5 text-[10px] whitespace-nowrap ml-1">
+                                {m.court_number && (
+                                  <span className={cn("font-black px-1.5 py-0.5 rounded-md bg-slate-800/80 border border-slate-600/50 shadow-sm", getCourtColor(m.court_number))}>
+                                    {String(m.court_number).toUpperCase().startsWith('C') ? String(m.court_number).toUpperCase() : `C${m.court_number}`}
+                                  </span>
+                                )}
+                                {(m as any).scheduled_at && (
+                                  <span className="text-slate-100 font-black tracking-wide drop-shadow-sm">
+                                    {new Date((m as any).scheduled_at).toLocaleString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                                    <span className="font-bold text-amber-400 ml-1">
+                                      {new Date((m as any).scheduled_at).toLocaleString("en-GB", { day: "2-digit", month: "2-digit" })}
+                                    </span>
+                                  </span>
+                                )}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-black text-slate-400 ml-1 tracking-widest">TBD</span>
+                            )
+                          )}
                         </span>
                       </div>
                     </div>
@@ -628,12 +649,27 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                     <div className="px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-muted-foreground border-b border-slate-700/50 flex justify-between items-center">
                       <span>{m.match_code}</span>
                       <span className="flex items-center gap-1.5 whitespace-nowrap">
-                        {(m as any).scheduled_at && (
-                          <span className="text-slate-400 font-bold">
-                            {new Date((m as any).scheduled_at).toLocaleString("en-GB", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                          </span>
+                        {(!isLive && !isCompleted && t1 !== "BYE" && t2 !== "BYE") && (
+                          ((m as any).scheduled_at || m.court_number) ? (
+                            <span className="flex items-center gap-1.5 text-[10px] whitespace-nowrap">
+                              {m.court_number && (
+                                <span className={cn("font-black px-1.5 py-0.5 rounded-md bg-slate-800/80 border border-slate-600/50 shadow-sm", getCourtColor(m.court_number))}>
+                                  {String(m.court_number).toUpperCase().startsWith('C') ? String(m.court_number).toUpperCase() : `C${m.court_number}`}
+                                </span>
+                              )}
+                              {(m as any).scheduled_at && (
+                                <span className="text-slate-100 font-black tracking-wide drop-shadow-sm">
+                                  {new Date((m as any).scheduled_at).toLocaleString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                                  <span className="font-bold text-amber-400 ml-1">
+                                    {new Date((m as any).scheduled_at).toLocaleString("en-GB", { day: "2-digit", month: "2-digit" })}
+                                  </span>
+                                </span>
+                              )}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-black text-slate-400 tracking-widest">TBD</span>
+                          )
                         )}
-                        {m.court_number && <span className={getCourtColor(m.court_number)}>C{m.court_number}</span>}
                         {isLive && <span className="animate-pulse w-1.5 h-1.5 rounded-full bg-red-500" />}
                       </span>
                     </div>

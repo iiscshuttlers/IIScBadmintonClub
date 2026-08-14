@@ -362,7 +362,7 @@ export default function Navigation() {
                   </div>
                 ) : (
                   <div onClick={() => {
-                    sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
+                    sessionStorage.setItem("return_url", location + window.location.search + window.location.hash);
                     setLocation("/join");
                   }} className="cursor-pointer">
                     <Button className="flex items-center gap-1.5 bg-primary hover:bg-primary text-primary-foreground font-bold text-xs px-3 rounded-full h-8 shadow-sm cursor-pointer pointer-events-none">
@@ -449,7 +449,7 @@ export default function Navigation() {
               ) : (
 
                 <div className="cursor-pointer" onClick={() => {
-                  sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
+                  sessionStorage.setItem("return_url", location + window.location.search + window.location.hash);
                   setLocation("/join");
                 }}>
                   <Button className="flex items-center gap-1.5 bg-primary hover:bg-primary text-primary-foreground font-bold text-xs px-3 rounded-full h-7 shadow-sm cursor-pointer pointer-events-none">
@@ -624,7 +624,7 @@ export default function Navigation() {
                   </div>
                 ) : (
                   <div onClick={() => {
-                    sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
+                    sessionStorage.setItem("return_url", location + window.location.search + window.location.hash);
                     setIsOpen(false);
                     setLocation("/join");
                   }} className="w-full">

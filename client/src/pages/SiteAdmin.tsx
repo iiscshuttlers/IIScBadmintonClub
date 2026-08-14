@@ -192,7 +192,7 @@ function SiteAdminInner() {
     title: "Admin",
     description: "Manage site content, players, and live tournaments",
   });
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
 
   const [authState, setAuthState] = useState<"loading" | "denied" | "ok">("loading");
   const { session, isInitializing, isAdmin, isMasterAdmin, isUmpire } = useAuth();
@@ -261,7 +261,7 @@ function SiteAdminInner() {
           {!session ? (
             <button
               onClick={() => {
-                sessionStorage.setItem("return_url", window.location.pathname + window.location.search + window.location.hash);
+                sessionStorage.setItem("return_url", location + window.location.search + window.location.hash);
                 setLocation("/join");
               }}
               className="px-6 py-3 bg-primary hover:bg-primary text-primary-foreground font-bold rounded-xl transition shadow-lg shadow-primary/20"
@@ -513,3 +513,4 @@ function SiteAdminInner() {
     </div>
   );
 }
+
