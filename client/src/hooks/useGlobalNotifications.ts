@@ -35,6 +35,8 @@ export function useGlobalNotifications() {
 
         if (row.key === "announcements") {
           try {
+            const notifyAnnouncements = localStorage.getItem("iisc_notify_announcements") !== "false";
+            if (!notifyAnnouncements) return;
             const data = row.value;
             if (data && data.recent && data.recent.length > 0) {
               const latest = data.recent[0];
@@ -80,13 +82,14 @@ export function useGlobalNotifications() {
             Object.values(liveMatches).forEach((match: any) => {
               if (match.status === "playing" && !knownMatchesRef.current.has(match.id)) {
                 knownMatchesRef.current.add(match.id);
-                playWhistleSound();
-                
+
                 const notifyFriendly = localStorage.getItem("iisc_notify_friendly_matches") !== "false";
-                const notifyTourney = localStorage.getItem("iisc_notify_tournament_matches") !== "false";
-                
+                const notifyTourney = localStorage.getItem("iisc_notify_tournament_started") !== "false";
+
                 if (match.isFriendly && !notifyFriendly) return;
                 if (!match.isFriendly && !notifyTourney) return;
+
+                playWhistleSound();
 
                 if (match.isFriendly) {
                   const currentProfile = profileRef.current;
@@ -153,6 +156,8 @@ export function useGlobalNotifications() {
           }
         } else if (row.key === "admin_push") {
           try {
+            const notifyAdmin = localStorage.getItem("iisc_notify_admin_push") !== "false";
+            if (!notifyAdmin) return;
             const data = row.value;
             if (data && data.title && data.timestamp && data.timestamp !== lastAdminPushRef.current) {
               lastAdminPushRef.current = data.timestamp;
@@ -179,36 +184,36 @@ export function useGlobalNotifications() {
           }
         } else if (row.key === "match_alert") {
           try {
+            const notifyMatchResults = localStorage.getItem("iisc_notify_match_results") !== "false";
+            if (!notifyMatchResults) return;
             const data = row.value;
             if (data && data.message && data.time && data.time !== lastAdminPushRef.current) {
-              if (data.time !== lastAdminPushRef.current) {
-                lastAdminPushRef.current = data.time;
-                playWhistleSound();
-                const matchTitle = data.title || "🏆 Live Match Update";
-                toast.success(matchTitle, { 
-                  description: data.message,
-                  action: {
-                    label: "View",
-                    onClick: () => window.location.href = `${import.meta.env.BASE_URL || "/"}pulse`
-                  },
-                  className: "bg-background border-primary text-foreground shadow-lg dark:bg-slate-800 dark:border-sky-500 dark:text-sky-50",
+              lastAdminPushRef.current = data.time;
+              playWhistleSound();
+              const matchTitle = data.title || "🏆 Live Match Update";
+              toast.success(matchTitle, { 
+                description: data.message,
+                action: {
+                  label: "View",
+                  onClick: () => window.location.href = `${import.meta.env.BASE_URL || "/"}pulse`
+                },
+                className: "bg-background border-primary text-foreground shadow-lg dark:bg-slate-800 dark:border-sky-500 dark:text-sky-50",
+              });
+              
+              if (Capacitor.isNativePlatform()) {
+                LocalNotifications.schedule({
+                  notifications: [{
+                    title: matchTitle,
+                    body: data.message,
+                    id: Math.floor(Math.random() * 1000000),
+                    schedule: { at: new Date(Date.now() + 100) },
+                    channelId: "notify_whistle",
+                  }]
+                }).catch(console.warn);
+              } else {
+                showWebNotification(matchTitle, data.message, () => {
+                  window.location.href = `${import.meta.env.BASE_URL || "/"}pulse`;
                 });
-                
-                if (Capacitor.isNativePlatform()) {
-                  LocalNotifications.schedule({
-                    notifications: [{
-                      title: matchTitle,
-                      body: data.message,
-                      id: Math.floor(Math.random() * 1000000),
-                      schedule: { at: new Date(Date.now() + 100) },
-                      channelId: "notify_whistle",
-                    }]
-                  }).catch(console.warn);
-                } else {
-                  showWebNotification(matchTitle, data.message, () => {
-                    window.location.href = `${import.meta.env.BASE_URL || "/"}pulse`;
-                  });
-                }
               }
             }
           } catch (e) {

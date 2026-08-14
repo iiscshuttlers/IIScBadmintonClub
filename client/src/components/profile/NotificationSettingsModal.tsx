@@ -5,7 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Bell, BellRing, BellOff, Loader2 } from "lucide-react";
+import { Bell, BellRing, BellOff, Loader2, Trophy, Megaphone, ShieldAlert, Swords } from "lucide-react";
 import { PushNotifications } from "@capacitor/push-notifications";
 import { Capacitor } from "@capacitor/core";
 
@@ -14,23 +14,55 @@ interface NotificationSettingsModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// localStorage keys for category toggles (opt-out: absent or "true" = enabled)
+const LS_KEYS = {
+  match_results:        "iisc_notify_match_results",
+  tournament_started:   "iisc_notify_tournament_started",
+  announcements:        "iisc_notify_announcements",
+  admin_push:           "iisc_notify_admin_push",
+} as const;
+
+type LocalPrefKey = keyof typeof LS_KEYS;
+
+function getLocalPref(key: LocalPrefKey): boolean {
+  return localStorage.getItem(LS_KEYS[key]) !== "false";
+}
+
+function setLocalPref(key: LocalPrefKey, value: boolean) {
+  localStorage.setItem(LS_KEYS[key], value ? "true" : "false");
+}
+
 export function NotificationSettingsModal({ open, onOpenChange }: NotificationSettingsModalProps) {
   const { session, profile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [pushGranted, setPushGranted] = useState(false);
 
-  // Preference states mapped to existing columns in public.players
+  // DB-backed sound preferences
   const [prefs, setPrefs] = useState({
-    pref_notify_smash: profile?.pref_notify_smash ?? true,
-    pref_notify_point: profile?.pref_notify_point ?? true,
-    pref_notify_serve: profile?.pref_notify_serve ?? true,
+    pref_notify_smash:   profile?.pref_notify_smash   ?? true,
+    pref_notify_point:   profile?.pref_notify_point   ?? true,
+    pref_notify_serve:   profile?.pref_notify_serve   ?? true,
     pref_notify_whistle: profile?.pref_notify_whistle ?? true,
     pref_notify_victory: profile?.pref_notify_victory ?? true,
   });
 
+  // localStorage-backed category preferences (instant, no DB needed)
+  const [localPrefs, setLocalPrefs] = useState<Record<LocalPrefKey, boolean>>({
+    match_results:      true,
+    tournament_started: true,
+    announcements:      true,
+    admin_push:         true,
+  });
+
   useEffect(() => {
-    if (open && Capacitor.isNativePlatform()) {
-      checkPermissions();
+    if (open) {
+      setLocalPrefs({
+        match_results:      getLocalPref("match_results"),
+        tournament_started: getLocalPref("tournament_started"),
+        announcements:      getLocalPref("announcements"),
+        admin_push:         getLocalPref("admin_push"),
+      });
+      if (Capacitor.isNativePlatform()) checkPermissions();
     }
   }, [open]);
 
@@ -80,9 +112,7 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
         .from("players")
         .update({ [key]: newValue } as any)
         .eq("id", session.user.id);
-      
       if (error) {
-        // revert on error
         setPrefs((prev) => ({ ...prev, [key]: !newValue }));
         throw error;
       }
@@ -92,9 +122,15 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
     }
   };
 
+  const handleToggleLocal = (key: LocalPrefKey) => {
+    const newValue = !localPrefs[key];
+    setLocalPrefs(prev => ({ ...prev, [key]: newValue }));
+    setLocalPref(key, newValue);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[440px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl flex items-center gap-2">
             <Bell className="w-5 h-5 text-primary" />
@@ -123,9 +159,46 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
             )}
           </div>
 
+          {/* ── Live Alert Categories ── */}
+          <div className="space-y-1">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-1 mb-3">Live Alerts</h4>
+            <CategoryItem
+              icon={<Trophy className="w-4 h-4 text-amber-400" />}
+              iconBg="bg-amber-400/10"
+              title="Match Results"
+              description="Tournament match scores when submitted"
+              checked={localPrefs.match_results}
+              onCheckedChange={() => handleToggleLocal("match_results")}
+            />
+            <CategoryItem
+              icon={<Swords className="w-4 h-4 text-sky-400" />}
+              iconBg="bg-sky-400/10"
+              title="Tournament Match Started"
+              description="When a tournament match goes live"
+              checked={localPrefs.tournament_started}
+              onCheckedChange={() => handleToggleLocal("tournament_started")}
+            />
+            <CategoryItem
+              icon={<Megaphone className="w-4 h-4 text-indigo-400" />}
+              iconBg="bg-indigo-400/10"
+              title="Club Announcements"
+              description="New announcements from club admins"
+              checked={localPrefs.announcements}
+              onCheckedChange={() => handleToggleLocal("announcements")}
+            />
+            <CategoryItem
+              icon={<ShieldAlert className="w-4 h-4 text-rose-400" />}
+              iconBg="bg-rose-400/10"
+              title="Admin Alerts"
+              description="Important notices pushed by admins"
+              checked={localPrefs.admin_push}
+              onCheckedChange={() => handleToggleLocal("admin_push")}
+            />
+          </div>
+
+          {/* ── Activity Preferences ── */}
           <div className="space-y-4">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-1">Alert Preferences</h4>
-            
+            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-1">Activity</h4>
             <PreferenceItem
               title="Match Confirmations"
               description="When someone confirms a match you logged"
@@ -145,12 +218,6 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
               onCheckedChange={() => handleTogglePref("pref_notify_serve")}
             />
             <PreferenceItem
-              title="Announcements"
-              description="Club announcements and live match alerts"
-              checked={prefs.pref_notify_whistle}
-              onCheckedChange={() => handleTogglePref("pref_notify_whistle")}
-            />
-            <PreferenceItem
               title="Achievements"
               description="ELO milestones and top 10 rankings"
               checked={prefs.pref_notify_victory}
@@ -160,6 +227,32 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function CategoryItem({
+  icon, iconBg, title, description, checked, onCheckedChange
+}: {
+  icon: React.ReactNode;
+  iconBg: string;
+  title: string;
+  description: string;
+  checked: boolean;
+  onCheckedChange: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900/60 transition-colors">
+      <div className="flex items-center gap-3 min-w-0">
+        <div className={`p-2 rounded-lg shrink-0 ${iconBg}`}>
+          {icon}
+        </div>
+        <div className="min-w-0">
+          <h5 className="text-sm font-semibold text-foreground">{title}</h5>
+          <p className="text-xs text-muted-foreground">{description}</p>
+        </div>
+      </div>
+      <Switch checked={checked} onCheckedChange={onCheckedChange} className="shrink-0" />
+    </div>
   );
 }
 
