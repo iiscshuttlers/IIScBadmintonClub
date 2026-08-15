@@ -57,9 +57,14 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
   matches.forEach((m) => byCode.set(m.match_code, m));
 
   // Seed path with matches where player appears directly
+  const lowerPlayer = player.toLowerCase();
   const pathMatchIds = new Set<string>(
     matches
-      .filter((m) => (m.team1_label ?? "").includes(player) || (m.team2_label ?? "").includes(player))
+      .filter((m) => 
+        (m.team1_label ?? "").toLowerCase().includes(lowerPlayer) || 
+        (m.team2_label ?? "").toLowerCase().includes(lowerPlayer) ||
+        (m.match_code ?? "").toLowerCase().includes(lowerPlayer)
+      )
       .map((m) => m.id)
   );
 
@@ -497,9 +502,14 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
   // Player path highlight
   const pathSet = (() => {
     if (!enablePathHighlight || !selectedPlayer) return new Set<string>();
+    const lowerPlayer = selectedPlayer.toLowerCase();
     const path = new Set<string>();
     matches.forEach((m) => {
-      if ((m.team1_label ?? "").includes(selectedPlayer) || (m.team2_label ?? "").includes(selectedPlayer))
+      if (
+        (m.team1_label ?? "").toLowerCase().includes(lowerPlayer) || 
+        (m.team2_label ?? "").toLowerCase().includes(lowerPlayer) ||
+        (m.match_code ?? "").toLowerCase().includes(lowerPlayer)
+      )
         path.add(m.id);
     });
     let changed = true;
@@ -508,7 +518,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
       matches.forEach((m) => {
         if (path.has(m.id)) return;
         const winner = m.winner_side === 1 ? m.team1_label : m.winner_side === 2 ? m.team2_label : null;
-        if (winner?.includes(selectedPlayer)) { path.add(m.id); changed = true; }
+        if (winner?.toLowerCase().includes(lowerPlayer) || (m.match_code ?? "").toLowerCase().includes(lowerPlayer)) { path.add(m.id); changed = true; }
       });
     }
     return path;
@@ -534,7 +544,8 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
       for (const pos of roundData[ri].positions) {
         if (
           pos.match.team1_label?.toLowerCase().includes(lowerVal) ||
-          pos.match.team2_label?.toLowerCase().includes(lowerVal)
+          pos.match.team2_label?.toLowerCase().includes(lowerVal) ||
+          pos.match.match_code?.toLowerCase().includes(lowerVal)
         ) {
           foundPos = pos;
           foundRi = ri;
