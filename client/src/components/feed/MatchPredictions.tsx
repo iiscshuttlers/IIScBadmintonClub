@@ -192,7 +192,7 @@ export function MatchPredictionCard({
   const voteT1Pct = totalVotes === 0 ? 50 : Math.round((tally.t1 / totalVotes) * 100);
   const voteT2Pct = totalVotes === 0 ? 50 : 100 - voteT1Pct;
 
-  const shouldShowResults = hasStarted || isResultsRevealed;
+  const shouldShowResults = isResultsRevealed;
 
   return (
     <div className="pt-2 border-t border-slate-700/50 mt-2">
@@ -274,7 +274,7 @@ export function MatchPredictionCard({
             onClick={onToggleRevealResults}
             className="text-[10px] font-bold text-amber-500 hover:text-amber-400 inline-flex items-center gap-1 uppercase tracking-wider transition"
           >
-            {isResultsRevealed ? "Hide Poll Results" : "Manual Admin Reveal Results"}
+            {isResultsRevealed ? "Hide Poll Results" : "Reveal"}
           </button>
         </div>
       )}
