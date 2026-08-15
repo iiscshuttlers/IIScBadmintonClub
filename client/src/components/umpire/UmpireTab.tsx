@@ -175,9 +175,24 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
     resetUmpireStore();
   };
 
-  const startMatch = (m: any) => {
+  const startMatch = async (m: any) => {
     try { localStorage.removeItem(SETUP_STORAGE_KEY); } catch {}
     resetUmpireStore();
+
+    if (m.status === "in_progress" && m.match_code) {
+      const { data } = await supabase.from("site_data").select("value").eq("key", "live_matches").maybeSingle();
+      if (data?.value && typeof data.value === 'object') {
+        const liveState = (data.value as Record<string, any>)[m.id];
+        if (liveState) {
+          setActiveMatches(prev => {
+            setActiveMatchIndex(prev.length);
+            return [...prev, liveState];
+          });
+          return;
+        }
+      }
+    }
+
     setActiveMatches(prev => {
       setActiveMatchIndex(prev.length);
       return [...prev, m];
