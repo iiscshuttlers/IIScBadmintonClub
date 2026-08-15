@@ -698,8 +698,9 @@ export function LiveScoreSection() {
   };
 
   useEffect(() => {
-    if (!profile?.id || todayMatches.length === 0) return;
-    const ids = todayMatches.map(m => m.id);
+    const allMatches = [...todayMatches, ...myMatches];
+    if (!profile?.id || allMatches.length === 0) return;
+    const ids = Array.from(new Set(allMatches.map(m => m.id)));
     supabase
       .from("live_match_votes")
       .select("live_match_id, pick")
@@ -711,18 +712,23 @@ export function LiveScoreSection() {
         for (const row of data) map[row.live_match_id] = row.pick as 1 | 2;
         setPicks(map);
       });
-  }, [profile?.id, todayMatches]);
+  }, [profile?.id, todayMatches, myMatches]);
 
   const handlePick = async (matchId: string, team: 1 | 2) => {
     if (!profile?.id || picks[matchId]) return;
     setPicks(prev => ({ ...prev, [matchId]: team }));
-    const { error } = await supabase.from("live_match_votes").insert({
+    const { error } = await supabase.from("live_match_votes").upsert({
       live_match_id: matchId,
       user_id: profile.id,
       pick: team,
-    });
+    }, { onConflict: "live_match_id,user_id" });
     if (error) {
-      setPicks(prev => { const next = { ...prev }; delete next[matchId]; return next; });
+      if (error.code === '23505') {
+        toast.success("Your vote is already recorded!");
+      } else {
+        toast.error(`Failed to submit vote: ${error.message}`);
+        setPicks(prev => { const next = { ...prev }; delete next[matchId]; return next; });
+      }
     }
   };
 

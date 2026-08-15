@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { TrendingUp, Check, HelpCircle } from "lucide-react";
+import { toast } from "sonner";
 import type { BwfMatchState } from "@/types/umpire";
 
 type VoteTally = { t1: number; t2: number };
@@ -365,13 +366,18 @@ export function MatchPredictions() {
   const pick = async (matchId: string, team: 1 | 2) => {
     if (!profile?.id || picks[matchId]) return;
     setPicks(prev => ({ ...prev, [matchId]: team }));
-    const { error } = await supabase.from("live_match_votes").insert({
+    const { error } = await supabase.from("live_match_votes").upsert({
       live_match_id: matchId,
       user_id: profile.id,
       pick: team,
-    });
+    }, { onConflict: "live_match_id,user_id" });
     if (error) {
-      setPicks(prev => { const next = { ...prev }; delete next[matchId]; return next; });
+      if (error.code === '23505') { // 23505 is unique_violation
+        toast.success("Your vote is already recorded!");
+      } else {
+        toast.error(`Failed to submit vote: ${error.message}`);
+        setPicks(prev => { const next = { ...prev }; delete next[matchId]; return next; });
+      }
     }
   };
 

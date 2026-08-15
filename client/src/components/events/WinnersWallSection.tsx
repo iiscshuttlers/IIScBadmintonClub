@@ -123,6 +123,7 @@ export function WinnersWallSection() {
           map["raja"] = map["raja janmejay"] || map["raja"];
           map["shaili"] = map["shailli"] || map["shaili"];
           map["abhisek"] = map["abhishek"];
+          map["renu"] = map["renu tewari"] || map["renu"];
           setPlayerMap(map);
         }
       });
@@ -141,6 +142,7 @@ export function WinnersWallSection() {
       if (lookup === "raja") lookup = "raja janmejay";
       if (lookup === "shaili") lookup = "shailli";
       if (lookup === "abhisek") lookup = "abhishek";
+      if (lookup === "renu") lookup = "renu tewari";
       
       let foundId = playerMap[lookup] || playerMap[clean.split(" ")[0].toLowerCase()];
 

@@ -102,7 +102,7 @@ export const ARCHIVED_TOURNAMENTS: ArchivedTournament[] = [
         category: "Men's Doubles",
         winner: "Abhisek & Krishnendu",
         runnerUp: "Raja & Kaling",
-        bronze: ["Bhuppi & Piyush", "Shiv Pratap & Shubham"],
+        bronze: ["Bhuppi & Piyush", "Shiv Pratap & Kota"],
       },
       {
         category: "Women's Doubles",

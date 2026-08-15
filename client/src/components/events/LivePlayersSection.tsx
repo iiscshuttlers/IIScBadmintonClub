@@ -112,7 +112,7 @@ export function LivePlayersSection({
           y = 40;
         }
         
-        const rowStr = p.seed ? `[${p.seed}]` : `${idx + 1}`;
+        const rowStr = `${idx + 1}`;
         if (isDoubles) {
           let p1Name = p.display_name?.split("&")[0]?.trim() || p.player?.full_name || "TBD";
           let p2Name = p.display_name?.split("&")[1]?.trim() || p.partner?.full_name || "TBD";
@@ -249,7 +249,7 @@ export function LivePlayersSection({
         <div className="flex items-center gap-2">
           <Info className="w-4 h-4 text-primary dark:text-primary" />
           <p className="text-xs font-semibold text-muted-foreground dark:text-muted-foreground">
-            Note: Player order is randomized to hide seedings.
+            Players are not listed in seeding order.
           </p>
         </div>
         <div className="flex items-center gap-2">

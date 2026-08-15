@@ -1155,6 +1155,12 @@ export function UmpireEngine({
                       delete lm[match.id];
                       await supabase.from("site_data").upsert({ key: "live_matches", value: lm });
                     }
+                    if (!match.isFriendly) {
+                      const tId = tournamentMatch?.id || match.dbId || match.id;
+                      if (tId) {
+                        await supabase.from("tournament_matches").update({ status: "scheduled" }).eq("id", tId);
+                      }
+                    }
                   } catch (e) {
                     console.error("Failed to abort broadcast", e);
                   }

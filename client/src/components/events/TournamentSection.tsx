@@ -522,7 +522,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
         )}
 
         {/* Tab Navigation */}
-        <div className="mt-8 flex flex-wrap sm:flex-nowrap bg-gradient-to-r from-slate-900/90 via-slate-800/90 to-slate-900/90 dark:from-black/60 dark:via-slate-900/60 dark:to-black/60 backdrop-blur-xl border border-white/10 dark:border-white/10 p-2 sm:p-2.5 rounded-3xl mb-8 shadow-2xl shadow-black/50 gap-2 overflow-x-auto hide-scrollbar sticky top-[68px] z-30">
+        <div className="mt-8 flex flex-wrap justify-center bg-gradient-to-r from-slate-900/90 via-slate-800/90 to-slate-900/90 dark:from-black/60 dark:via-slate-900/60 dark:to-black/60 backdrop-blur-xl border border-white/10 dark:border-white/10 p-2 sm:p-2.5 rounded-3xl mb-8 shadow-2xl shadow-black/50 gap-2 sticky top-[68px] z-30">
           {[
             { id: "notices", label: "Info & Notices", icon: FileText },
             { id: "players", label: "Players", icon: Users },
@@ -534,13 +534,13 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-3 sm:py-3.5 rounded-2xl text-[13px] sm:text-sm font-bold transition-all whitespace-nowrap flex-1 basis-[45%] sm:basis-auto shrink-0 ${
+              className={`flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap grow sm:grow-0 ${
                 activeTab === tab.id
                   ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-[1.02]"
                   : "text-slate-400 dark:text-slate-400 hover:text-white hover:bg-white/10 dark:hover:bg-white/10 hover:scale-[1.02]"
               }`}
             >
-              <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? "" : "opacity-70"}`} />
+              <tab.icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${activeTab === tab.id ? "" : "opacity-70"}`} />
               {tab.label}
             </button>
           ))}
