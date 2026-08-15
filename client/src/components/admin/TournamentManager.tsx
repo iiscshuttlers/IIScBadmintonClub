@@ -1532,13 +1532,16 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                   const partner = allPlayers?.find((pl) => pl.id === p.partner_id);
                   const effectiveRound = resolvedEntryRound.get(p.id) ?? 1;
                   return (
-                    <div key={p.id} className="flex flex-col gap-1 py-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
-                      <div className="flex items-center gap-3">
-                        <input type="checkbox" checked={selectedParts.includes(p.id)} onChange={() => toggleSelect(p.id)} className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary" />
-                        <input type="number" min={1}
-                          value={p.seed ?? i + 1}
-                          onChange={(e) => updateSeed(p.id, parseInt(e.target.value))}
-                          className="w-12 text-center text-sm font-black rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 py-1 outline-none" />
+                    <div key={p.id} className="flex flex-col gap-2 py-3 border-b border-slate-100 dark:border-slate-800 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-900/20 px-2 -mx-2 rounded-xl transition-colors">
+                      {/* Top Row */}
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <div className="flex items-center gap-2 sm:gap-3 mt-1 shrink-0">
+                          <input type="checkbox" checked={selectedParts.includes(p.id)} onChange={() => toggleSelect(p.id)} className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer" />
+                          <input type="number" min={1}
+                            value={p.seed ?? i + 1}
+                            onChange={(e) => updateSeed(p.id, parseInt(e.target.value))}
+                            className="w-10 sm:w-12 text-center text-sm font-black rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 py-1 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all" />
+                        </div>
                         <div className="flex-1 flex flex-col min-w-0">
                           {(() => {
                             let name1 = p.display_name ?? player?.full_name ?? "Unknown";
@@ -1554,18 +1557,18 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                             
                             if (doubles) {
                               return (
-                                <div className="flex justify-between items-start w-full gap-2">
-                                  <div className="flex flex-col flex-1 min-w-0 pr-2 border-r border-slate-200 dark:border-slate-700">
-                                    <div className="text-sm font-bold text-slate-800 dark:text-foreground truncate">
-                                      {name1}
-                                      {!p.player_id && <span className="ml-2 text-[9px] font-black uppercase text-amber-500 bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.5 rounded inline-block align-middle">ext</span>}
+                                <div className="flex flex-col sm:flex-row sm:items-start w-full gap-1.5 sm:gap-3">
+                                  <div className="flex flex-col flex-1 min-w-0 sm:pr-3 sm:border-r border-slate-200 dark:border-slate-700">
+                                    <div className="text-sm font-bold text-slate-800 dark:text-foreground truncate flex items-center gap-1.5">
+                                      <span className="truncate">{name1}</span>
+                                      {!p.player_id && <span className="text-[9px] font-black uppercase text-amber-600 bg-amber-100 dark:text-amber-400 dark:bg-amber-950/50 px-1.5 py-0.5 rounded-full shrink-0">ext</span>}
                                     </div>
                                     <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 truncate mt-0.5">{getDepartmentAcronym(dept1)}</span>
                                   </div>
-                                  <div className="flex flex-col flex-1 min-w-0 pl-1">
-                                    <div className="text-sm font-bold text-slate-800 dark:text-foreground truncate">
-                                      {name2}
-                                      {!p.partner_id && <span className="ml-2 text-[9px] font-black uppercase text-amber-500 bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.5 rounded inline-block align-middle">ext</span>}
+                                  <div className="flex flex-col flex-1 min-w-0 sm:pl-1">
+                                    <div className="text-sm font-bold text-slate-800 dark:text-foreground truncate flex items-center gap-1.5">
+                                      <span className="truncate">{name2}</span>
+                                      {!p.partner_id && <span className="text-[9px] font-black uppercase text-amber-600 bg-amber-100 dark:text-amber-400 dark:bg-amber-950/50 px-1.5 py-0.5 rounded-full shrink-0">ext</span>}
                                     </div>
                                     <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 truncate mt-0.5">{getDepartmentAcronym(dept2)}</span>
                                   </div>
@@ -1573,11 +1576,11 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                               );
                             } else {
                               return (
-                                <>
-                                  <div className="text-sm font-bold text-slate-800 dark:text-foreground truncate">
-                                    {p.display_name ?? player?.full_name ?? "Unknown"}
+                                <div className="flex flex-col justify-center min-h-[32px]">
+                                  <div className="text-sm font-bold text-slate-800 dark:text-foreground truncate flex items-center gap-2">
+                                    <span className="truncate">{p.display_name ?? player?.full_name ?? "Unknown"}</span>
                                     {!p.player_id && (
-                                      <span className="ml-2 text-[10px] font-black uppercase text-amber-500 bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.5 rounded inline-block align-middle">external</span>
+                                      <span className="text-[9px] font-black uppercase text-amber-600 bg-amber-100 dark:text-amber-400 dark:bg-amber-950/50 px-1.5 py-0.5 rounded-full shrink-0">external</span>
                                     )}
                                   </div>
                                   {player?.department && (
@@ -1585,17 +1588,26 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                                       {getDepartmentAcronym(player.department)}
                                     </div>
                                   )}
-                                </>
+                                </div>
                               );
                             }
                           })()}
                         </div>
+                        <button onClick={() => removeParticipant(p.id)}
+                          title="Remove Participant"
+                          className="p-1.5 mt-0.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-lg transition shrink-0 ml-1">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* Bottom Row */}
+                      <div className="flex flex-wrap items-center gap-2 pl-[3.25rem] sm:pl-[4.25rem]">
                         {drawPlan && (
                           <select
                             value={p.entry_round == null ? "" : String(p.entry_round)}
                             onChange={(e) => updateEntryRound(p.id, e.target.value === "" ? null : parseInt(e.target.value))}
                             title="Round this player plays their first match in"
-                            className={`shrink-0 text-[11px] font-bold rounded-lg border py-1 px-1.5 outline-none max-w-[9.5rem] ${p.entry_round == null ? "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-muted-foreground" : "border-primary/50 bg-primary/10 text-primary"}`}
+                            className={`shrink-0 text-[11px] font-bold rounded-lg border py-1.5 px-2 outline-none max-w-[10rem] cursor-pointer transition-colors ${p.entry_round == null ? "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-muted-foreground hover:border-slate-300 dark:hover:border-slate-600" : "border-primary/50 bg-primary/10 text-primary hover:bg-primary/20"}`}
                           >
                             <option value="" className="bg-slate-800 text-slate-100">Auto — {entryRoundLabel(effectiveRound, drawPlan.drawSize)}</option>
                             {Array.from(
@@ -1609,46 +1621,46 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                             ))}
                           </select>
                         )}
-                        <button
-                          onClick={() => {
-                            let n1 = p.display_name ?? player?.full_name ?? "Unknown";
-                            let n2 = partner?.full_name ?? "partner";
-                            if (doubles && p.display_name && p.display_name.includes("&")) {
-                               const names = p.display_name.split("&").map(s => s.trim());
-                               n1 = names[0];
-                               n2 = names[1];
-                            }
-                            setEditingName({ id: p.id, name1: n1, name2: n2 });
-                            setLinkingId(null);
-                          }}
-                          title="Edit Names"
-                          className="p-1 text-muted-foreground hover:text-blue-500 transition">
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => { setLinkingId(linkingId === p.id ? null : p.id); setLinkSearch(""); setEditingName(null); }}
-                          title={p.player_id ? "Change linked player" : "Link to registered player"}
-                          className={`p-1 transition ${p.player_id ? "text-blue-400 hover:text-blue-300" : "text-muted-foreground hover:text-blue-500"}`}>
-                          <Link className="w-4 h-4" />
-                        </button>
-                        {p.player_id && (
+                        <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800/80 rounded-lg p-0.5 border border-slate-200 dark:border-slate-700/50">
                           <button
-                            onClick={() => linkParticipantToPlayer(p.id, null, p.display_name?.split(' &')[0] || "")}
-                            title="Unlink Player 1"
-                            className="p-1 text-amber-500 hover:text-amber-400 transition">
-                            <Unlink className="w-4 h-4" />
+                            onClick={() => {
+                              let n1 = p.display_name ?? player?.full_name ?? "Unknown";
+                              let n2 = partner?.full_name ?? "partner";
+                              if (doubles && p.display_name && p.display_name.includes("&")) {
+                                 const names = p.display_name.split("&").map(s => s.trim());
+                                 n1 = names[0];
+                                 n2 = names[1];
+                              }
+                              setEditingName({ id: p.id, name1: n1, name2: n2 });
+                              setLinkingId(null);
+                            }}
+                            title="Edit Names"
+                            className="p-1.5 text-slate-500 hover:text-blue-500 hover:bg-white dark:hover:bg-slate-700 rounded-md transition">
+                            <Pencil className="w-3.5 h-3.5" />
                           </button>
-                        )}
-                        {doubles && p.partner_id && (
                           <button
-                            onClick={() => linkParticipantToPartner(p.id, null, p.display_name?.split('&')[1]?.trim() || "")}
-                            title="Unlink Player 2"
-                            className="p-1 text-rose-500 hover:text-rose-400 transition">
-                            <Unlink className="w-4 h-4" />
+                            onClick={() => { setLinkingId(linkingId === p.id ? null : p.id); setLinkSearch(""); setEditingName(null); }}
+                            title={p.player_id ? "Change linked player" : "Link to registered player"}
+                            className={`p-1.5 rounded-md transition hover:bg-white dark:hover:bg-slate-700 ${p.player_id ? "text-blue-500" : "text-slate-500 hover:text-blue-500"}`}>
+                            <Link className="w-3.5 h-3.5" />
                           </button>
-                        )}
-                        <button onClick={() => removeParticipant(p.id)}
-                          className="p-1 text-muted-foreground hover:text-rose-500 transition"><X className="w-4 h-4" /></button>
+                          {p.player_id && (
+                            <button
+                              onClick={() => linkParticipantToPlayer(p.id, null, p.display_name?.split(' &')[0] || "")}
+                              title="Unlink Player 1"
+                              className="p-1.5 text-amber-500 hover:text-amber-600 hover:bg-white dark:hover:bg-slate-700 rounded-md transition">
+                              <Unlink className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          {doubles && p.partner_id && (
+                            <button
+                              onClick={() => linkParticipantToPartner(p.id, null, p.display_name?.split('&')[1]?.trim() || "")}
+                              title="Unlink Player 2"
+                              className="p-1.5 text-rose-500 hover:text-rose-600 hover:bg-white dark:hover:bg-slate-700 rounded-md transition">
+                              <Unlink className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                       
                       {editingName?.id === p.id && (
