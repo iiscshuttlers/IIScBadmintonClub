@@ -665,6 +665,9 @@ export function useUmpireState({
             onMatchSaved?.(matchId, "tournament");
             toast.success("Tournament match result saved!");
             setHasSaved(true);
+            
+            // Clear from live matches immediately
+            await MatchService.removeLiveMatch(match.id).catch(console.error);
 
             // Background tasks: Notifications, edge functions, start/end times
             (async () => {
@@ -813,8 +816,14 @@ export function useUmpireState({
             }
           })();
 
+          onMatchSaved?.(newMatchId, match.isFriendly ? "friendly" : "tournament");
+          toast.success("Match saved successfully!");
+          setHasSaved(true);
+          
+          // Clear from live matches immediately
+          await MatchService.removeLiveMatch(match.id).catch(console.error);
         } catch (err: any) {
-          toast.error("Failed to save: " + err.message);
+          toast.error("Failed to save match: " + err.message);
         }
       } catch (err: any) {
         toast.error("Failed to save: " + err.message);

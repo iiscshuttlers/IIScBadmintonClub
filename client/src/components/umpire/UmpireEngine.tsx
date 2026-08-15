@@ -5,8 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import {
-  Trophy, Activity, Plus, Minus, X, Settings, Save, Timer, Play,
-  AlertTriangle, BookOpen, ArrowLeftRight, Flag, ChevronDown, ChevronUp, Repeat, Tv2, MonitorPlay, ActivitySquare, Camera, Edit2, Loader2
+  Trophy, Plus, Minus, RotateCcw, X, Edit3, Trash2, ShieldAlert, Zap, Users, UserPlus, Info, Save, ChevronLeft, ChevronRight, CornerUpLeft, MessageSquare, AlertTriangle, Play, Shield, Shuffle, Timer, History, RefreshCw, Settings, ArrowLeftRight, Flag, ChevronDown, ChevronUp, Repeat, Tv2, MonitorPlay, ActivitySquare, Camera, Edit2, Loader2, BookOpen
 } from "lucide-react";
 import { toast } from "sonner";
 import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
@@ -28,6 +27,9 @@ import { CourtVisual } from "./CourtVisual";
 import { ChangeEndsModal, DisciplineCardModal, RetireModal, DirectScoreModal, ConfirmActionModal } from "./MatchModals";
 import { useUmpireState } from "@/hooks/useUmpireState";
 import { useOfflineUmpireSync } from "@/hooks/useOfflineUmpireSync";
+import { MatchService } from "@/services/matchService";
+
+
 
 // ── Player Select ─────────────────────────────────────────────────────────────
 
@@ -686,6 +688,13 @@ export function UmpireEngine({
                 {isSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />} Saving...
               </button>
             )}
+            <button disabled={isSaving} onClick={() => {
+              MatchService.upsertLiveMatch(match.id, match)
+                .then(() => toast.success("Score pushed to Live Feed"))
+                .catch(err => toast.error("Failed to push score"));
+            }} className="flex-1 px-2 py-1.5 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 rounded-lg font-bold text-[9px] uppercase tracking-wider border border-indigo-500/30 flex items-center justify-center gap-1 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95">
+              <RefreshCw className="w-3 h-3 text-indigo-400" /> Push Score
+            </button>
             <button disabled={isSaving} onClick={handleClose} className="flex-1 px-2 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg font-bold text-[9px] uppercase tracking-wider border border-slate-700 flex items-center justify-center gap-1 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95">
               <X className="w-3 h-3 text-rose-400" /> Close
             </button>
