@@ -402,12 +402,6 @@ export function UmpireEngine({
     lastPointLogLenRef.current = log.length;
   }, [match?.pointLog, isMotionTracking]);
 
-  // Auto-save when match finishes
-  useEffect(() => {
-    if (match?.status === "finished" && !hasSaved && !isSaving && match.setsHistory.length > 0) {
-      saveMatchToProfile();
-    }
-  }, [match?.status, hasSaved, isSaving, match?.setsHistory.length, saveMatchToProfile]);
 
   // Sync Home Screen Widget with live score
   useEffect(() => {
@@ -685,7 +679,7 @@ export function UmpireEngine({
               </div>
             ) : (
               <button disabled={isSaving} onClick={saveMatchToProfile} className="flex-1 px-2 py-1.5 bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-foreground rounded-lg font-black text-[9px] uppercase tracking-wider shadow-sm flex items-center justify-center gap-1 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95">
-                {isSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />} Saving...
+                {isSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />} {isSaving ? "Saving..." : "Save Result"}
               </button>
             )}
             <button disabled={isSaving} onClick={() => {

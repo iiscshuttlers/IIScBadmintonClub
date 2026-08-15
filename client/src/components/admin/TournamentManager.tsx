@@ -2293,7 +2293,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
   };
 
   const batchAdvance = async () => {
-    const completed = matches.filter((m) => m.status === "completed" && m.advances_to_match);
+    const completed = matches.filter((m) => (m.status === "completed" || m.status === "walkover") && m.advances_to_match);
     for (const m of completed) {
       await supabase.rpc("admin_edit_tournament_match", {
         p_match_id: m.id, p_winner_side: m.winner_side, p_score: m.score, p_sets: m.sets_history,
@@ -2502,6 +2502,18 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
               if (!error) updatedCount++;
             }
             toast.success(`Synced ${updatedCount} matches in Round 1`);
+            
+            // Cascade updates down the bracket for players who had BYEs or completed matches
+            const completed = matches.filter((m) => (m.status === "completed" || m.status === "walkover") && m.advances_to_match);
+            if (completed.length > 0) {
+              toast.info("Cascading name updates to advanced rounds...");
+              for (const m of completed) {
+                await supabase.rpc("admin_edit_tournament_match", {
+                  p_match_id: m.id, p_winner_side: m.winner_side, p_score: m.score, p_sets: m.sets_history,
+                });
+              }
+            }
+            
             load();
           }}
             className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700 text-xs font-black text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition w-full">
