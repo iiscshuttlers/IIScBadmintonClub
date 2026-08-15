@@ -9,6 +9,7 @@ import { usePlayers } from "@/hooks/usePlayers";
 import { generateSingleElimBracket, planDraw, entryRoundLabel, findWalkoverMatches } from "@/lib/bracketGenerator";
 import { MatchScoreDisplay } from "@/components/tournament/MatchScoreDisplay";
 import { BracketVisual } from "@/components/tournament/BracketVisual";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import {
   Loader2, Save, Trophy, Users, Swords, Archive, Plus, X, Search,
   ChevronDown, ChevronUp, Lock, Unlock, Play, SkipForward, Settings2,
@@ -2007,6 +2008,8 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
   const [bulkSaving, setBulkSaving] = useState(false);
   const [remindSendingId, setRemindSendingId] = useState<string | null>(null);
   const [remindSentMap, setRemindSentMap] = useState<Record<string, boolean>>({});
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [isAdvancing, setIsAdvancing] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -2466,62 +2469,66 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
             className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-blue-300 dark:border-blue-700 text-xs font-black text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition w-full">
             <CalendarDays className="w-3.5 h-3.5 shrink-0" /> Bulk Schedule
           </button>
-          <button onClick={async () => {
-            if (!confirm("This will synchronize Round 1 bracket match names with the latest Participants list. Continue?")) return;
-            const { data: parts, error: partsErr } = await supabase
-              .from("tournament_participants")
-              .select("*")
-              .eq("tournament_id", tournament.id)
-              .eq("category", activeCategory);
-            if (partsErr) { toast.error(partsErr.message); return; }
-            if (!parts || parts.length < 2) { toast.error("Not enough participants"); return; }
-            
-            const mapped = parts.map((p) => ({
-              playerId: p.player_id,
-              partnerId: p.partner_id,
-              displayName: p.display_name ?? (allPlayers?.find((pl) => pl.id === p.player_id)?.full_name ?? "Unknown"),
-              seed: p.seed ?? 99,
-              entryRound: p.entry_round,
-            }));
+          <button 
+            disabled={isSyncing}
+            onClick={async () => {
+              if (!confirm("This will synchronize Round 1 bracket match names with the latest Participants list. Continue?")) return;
+              setIsSyncing(true);
+              try {
+                const { data: pData, error: pErr } = await supabase.from("tournament_participants").select("*").eq("tournament_id", tournament.id).eq("category", activeCategory);
+                if (pErr) { toast.error(pErr.message); return; }
+                const parts = (pData as Participant[]) ?? [];
+                
+                const mapped = parts.map((p) => ({
+                  playerId: p.player_id,
+                  partnerId: p.partner_id,
+                  displayName: p.display_name ?? (allPlayers?.find((pl) => pl.id === p.player_id)?.full_name ?? "Unknown"),
+                  seed: p.seed ?? 99,
+                  entryRound: p.entry_round,
+                }));
 
-            // Generate virtual bracket to find where seeds land
-            const newRows = generateSingleElimBracket(mapped, activeCategory, tournament.id, false);
-            if (!newRows.length) { toast.error("Manual entry rounds don't fit the draw — fix them on the Participants tab first"); return; }
+                const newRows = generateSingleElimBracket(mapped, activeCategory, tournament.id, false);
+                if (!newRows.length) { toast.error("Manual entry rounds don't fit the draw"); return; }
 
-            let updatedCount = 0;
-            // Only update Round 1 matches in the DB
-            for (const row of newRows.filter(r => r.round === 1)) {
-              const { error } = await supabase.from("tournament_matches").update({
-                player1_id: row.player1_id,
-                team1_label: row.team1_label,
-                player3_id: row.player3_id,
-                player2_id: row.player2_id,
-                team2_label: row.team2_label,
-                player4_id: row.player4_id,
-              }).eq("tournament_id", tournament.id).eq("match_code", row.match_code);
-              if (!error) updatedCount++;
-            }
-            toast.success(`Synced ${updatedCount} matches in Round 1`);
-            
-            // Cascade updates down the bracket for players who had BYEs or completed matches
-            const completed = matches.filter((m) => (m.status === "completed" || m.status === "walkover") && m.advances_to_match);
-            if (completed.length > 0) {
-              toast.info("Cascading name updates to advanced rounds...");
-              for (const m of completed) {
-                await supabase.rpc("admin_edit_tournament_match", {
-                  p_match_id: m.id, p_winner_side: m.winner_side, p_score: m.score, p_sets: m.sets_history,
-                });
+                let updatedCount = 0;
+                for (const row of newRows.filter(r => r.round === 1)) {
+                  const { error } = await supabase.from("tournament_matches").update({
+                    player1_id: row.player1_id,
+                    team1_label: row.team1_label,
+                    player3_id: row.player3_id,
+                    player2_id: row.player2_id,
+                    team2_label: row.team2_label,
+                    player4_id: row.player4_id,
+                  }).eq("tournament_id", tournament.id).eq("match_code", row.match_code);
+                  if (!error) updatedCount++;
+                }
+                toast.success(`Synced ${updatedCount} matches in Round 1`);
+                
+                const completed = matches.filter((m) => (m.status === "completed" || m.status === "walkover") && m.advances_to_match);
+                if (completed.length > 0) {
+                  toast.info("Cascading name updates to advanced rounds...");
+                  for (const m of completed) {
+                    await supabase.rpc("admin_edit_tournament_match", {
+                      p_match_id: m.id, p_winner_side: m.winner_side, p_score: m.score, p_sets: m.sets_history,
+                    });
+                  }
+                }
+                load();
+              } finally { 
+                setIsSyncing(false); 
               }
-            }
-            
-            load();
-          }}
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700 text-xs font-black text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition w-full">
-            <RefreshCw className="w-3.5 h-3.5 shrink-0" /> Sync Names
+            }}
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700 text-xs font-black text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition w-full disabled:opacity-50">
+            {isSyncing ? <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5 shrink-0" />} Sync Names
           </button>
-          <button onClick={batchAdvance}
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-foreground text-xs font-black transition w-full">
-            <SkipForward className="w-3.5 h-3.5 shrink-0" /> Batch Advance
+          <button 
+            disabled={isAdvancing}
+            onClick={async () => {
+              setIsAdvancing(true);
+              try { await batchAdvance(); } finally { setIsAdvancing(false); }
+            }}
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-foreground text-xs font-black transition w-full disabled:opacity-50">
+            {isAdvancing ? <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" /> : <SkipForward className="w-3.5 h-3.5 shrink-0" />} Batch Advance
           </button>
         </div>
       </div>
@@ -2597,7 +2604,9 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
 
       {/* Visual bracket */}
       {viewMode === "visual" && (
-        <BracketVisual matches={categoryMatches} rounds={rounds} enablePathHighlight />
+        <ErrorBoundary>
+          <BracketVisual matches={categoryMatches} rounds={rounds} enablePathHighlight />
+        </ErrorBoundary>
       )}
 
       {/* Match cards by round */}

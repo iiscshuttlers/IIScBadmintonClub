@@ -178,6 +178,8 @@ export class MatchService {
     if (error) throw error;
   }
 
+  private static liveMatchDebounceTimers: Record<string, ReturnType<typeof setTimeout>> = {};
+
   static async upsertLiveMatch(matchId: string, matchState: BwfMatchState) {
     // 1. Instant sub-50ms WebSocket broadcast directly to camera & TV screens
     try {
@@ -190,12 +192,25 @@ export class MatchService {
       console.warn("Realtime broadcast send warning", e);
     }
 
-    // 2. Persist to site_data in Supabase DB
-    const { error } = await supabase.rpc("upsert_live_match_by_id", {
-      p_match_id: matchId,
-      match_state: matchState as any,
+    // 2. Persist to site_data in Supabase DB (Debounced by 500ms)
+    if (MatchService.liveMatchDebounceTimers[matchId]) {
+      clearTimeout(MatchService.liveMatchDebounceTimers[matchId]);
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      MatchService.liveMatchDebounceTimers[matchId] = setTimeout(async () => {
+        try {
+          const { error } = await supabase.rpc("upsert_live_match_by_id", {
+            p_match_id: matchId,
+            match_state: matchState as any,
+          });
+          if (error) reject(error);
+          else resolve();
+        } catch (e) {
+          reject(e);
+        }
+      }, 500);
     });
-    if (error) throw error;
   }
 
   static async removeLiveMatch(matchId: string) {

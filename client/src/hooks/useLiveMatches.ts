@@ -32,12 +32,18 @@ export function useLiveMatches() {
 
     fetchLive();
 
+    const handleOnline = () => fetchLive();
+    window.addEventListener("online", handleOnline);
+
     const sub = supabase.channel("feed_live_matches")
       .on("postgres_changes", { event: "*", schema: "public", table: "site_data", filter: "key=eq.live_matches" },
         (payload) => parseLiveData((payload.new as any)?.value || {}))
       .subscribe();
 
-    return () => { supabase.removeChannel(sub); };
+    return () => { 
+      supabase.removeChannel(sub); 
+      window.removeEventListener("online", handleOnline);
+    };
   }, []);
 
   return { liveMatchIds, hasLiveMatches };

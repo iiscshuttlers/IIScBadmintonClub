@@ -38,6 +38,7 @@ import { MatchCard } from "@/components/feed/MatchCard";
 import { PollsSection } from "@/components/feed/PollsSection";
 import { RivalryCards } from "@/components/feed/RivalryCards";
 import { H2HSection } from "@/components/players-directory/H2HSection";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 import { useHashTab } from "@/hooks/useHashTab";
 
@@ -424,19 +425,21 @@ export default function FeedTab() {
                   }
 
                   return (
-                    <MatchCard
-                      key={match.id}
-                      match={match}
-                      currentUser={session?.user}
-                      isLiveNow={isLiveNow}
-                      isMatchOfTheDay={isMatchOfTheDay}
-                      upsetDiff={upsetDiff}
-                      isKudosed={isLikedLocally || isIncludedInBackend}
-                      kudosCount={finalKudosCount}
-                      onKudos={() => handleKudos(match)}
-                      onShare={() => handleShare(match)}
-                      index={i}
-                    />
+                    <ErrorBoundary key={`eb-${match.id}`}>
+                      <MatchCard
+                        key={match.id}
+                        match={match}
+                        currentUser={session?.user}
+                        isLiveNow={isLiveNow}
+                        isMatchOfTheDay={isMatchOfTheDay}
+                        upsetDiff={upsetDiff}
+                        isKudosed={isLikedLocally || isIncludedInBackend}
+                        kudosCount={finalKudosCount}
+                        onKudos={() => handleKudos(match)}
+                        onShare={() => handleShare(match)}
+                        index={i}
+                      />
+                    </ErrorBoundary>
                   );
                 })}
 

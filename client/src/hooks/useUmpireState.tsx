@@ -247,6 +247,17 @@ export function useUmpireState({
     return () => { supabase.removeChannel(sub); };
   }, [match.id, match.status]);
 
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (match.status === "playing") {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [match.status]);
+
   
     // Discipline cards: per player slot, array of card types issued
     // cards now in Zustand
