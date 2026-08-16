@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Loader2, Swords, MapPin, Clock, Settings2, ChevronRight,
-  ChevronLeft, ChevronDown, Trophy, Users, Play, CalendarDays,
+  ChevronLeft, ChevronDown, Trophy, Users, Play, CalendarDays, Bell
 } from "lucide-react";
 import { toast } from "sonner";
 import { getCourtColor, cn } from "@/lib/utils";
@@ -65,6 +65,27 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
   const [upcomingFormat, setUpcomingFormat] = useState("ALL");
   const [upcomingDate, setUpcomingDate] = useState("ALL");
   const [collapsedRounds, setCollapsedRounds] = useState<Record<string, boolean>>({});
+  const [notifyingId, setNotifyingId] = useState<string | null>(null);
+
+  const handleNotify = async (e: React.MouseEvent, matchId: string) => {
+    e.stopPropagation();
+    try {
+      setNotifyingId(matchId);
+      const { error } = await supabase.functions.invoke("match-notifier", {
+        body: { type: "manual", match_id: matchId }
+      });
+      if (error) throw error;
+      toast.success("Notification Sent", {
+        description: "Players have been notified via email and push.",
+      });
+    } catch (error: any) {
+      toast.error("Error", {
+        description: error.message || "Failed to send notification",
+      });
+    } finally {
+      setNotifyingId(null);
+    }
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -207,15 +228,16 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
                   const noPlayers = !m.team1_label || !m.team2_label;
 
                   return (
-                  <button
+                  <div
                     key={m.id}
-                    disabled={noPlayers}
-                    onClick={() => { setSelectedMatch(m); setStep("confirm"); }}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => { if (!noPlayers) { setSelectedMatch(m); setStep("confirm"); } }}
                     className={cn(
                       "relative w-full p-4 sm:p-5 rounded-2xl border text-left transition-all duration-300 group overflow-hidden shadow-sm",
                       noPlayers
                         ? "bg-slate-800/40 border-slate-800/50 opacity-60 cursor-not-allowed"
-                        : "bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 hover:border-primary/50 hover:shadow-primary/20 hover:shadow-lg hover:-translate-y-1"
+                        : "bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 hover:border-primary/50 hover:shadow-primary/20 hover:shadow-lg hover:-translate-y-1 cursor-pointer"
                     )}
                   >
                     {!noPlayers && (
@@ -238,6 +260,16 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
                               <Clock className="w-3 h-3 text-primary" />
                               {new Date(m.scheduled_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
                             </span>
+                          )}
+                          {!noPlayers && m.scheduled_at && (
+                            <button
+                              onClick={(e) => handleNotify(e, m.id)}
+                              disabled={notifyingId === m.id}
+                              className="flex items-center justify-center bg-primary/10 hover:bg-primary/30 text-primary p-1.5 rounded-md border border-primary/20 transition-colors ml-1 z-10"
+                              title="Send Reminder to Players"
+                            >
+                              {notifyingId === m.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Bell className="w-3.5 h-3.5" />}
+                            </button>
                           )}
                         </div>
                       </div>
@@ -266,7 +298,7 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
                         </p>
                       )}
                     </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>

@@ -381,15 +381,15 @@ serve(async (req) => {
 
     if (type === "manual" && match_id) {
       const { data: match } = await supabase.from("tournament_matches").select("*, tournaments(*)").eq("id", match_id).single();
-      if (!match) return new Response(JSON.stringify({ error: "Match not found" }), { headers: corsHeaders, status: 404 });
+      if (!match) return new Response(JSON.stringify({ error: "Match not found" }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 404 });
       
       await dispatchNotifications(supabase, match, match.tournaments);
       
-      return new Response(JSON.stringify({ message: "Reminder sent manually!" }), { headers: corsHeaders, status: 200 });
+      return new Response(JSON.stringify({ message: "Reminder sent manually!" }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 });
       
     } else {
       const message = await runAutoReminders(supabase);
-      return new Response(JSON.stringify({ message }), { headers: corsHeaders });
+      return new Response(JSON.stringify({ message }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
   } catch (err: any) {
@@ -401,15 +401,3 @@ serve(async (req) => {
   }
 });
 
-Deno.cron("Match Notifier Cron", "*/5 * * * *", async () => {
-  try {
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
-    const message = await runAutoReminders(supabase);
-    console.log(`[match-notifier-cron] ${message}`);
-  } catch (err: any) {
-    console.error("[match-notifier-cron] Error:", err);
-  }
-});
