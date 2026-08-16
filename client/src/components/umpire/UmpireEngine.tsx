@@ -673,15 +673,9 @@ export function UmpireEngine({
           </div>
 
           <div className="flex flex-row items-center justify-center gap-2 max-w-xs mx-auto">
-            {hasSaved ? (
-              <div className="flex-1 px-2 py-1.5 bg-emerald-500/20 text-emerald-400 rounded-lg font-bold text-[9px] uppercase tracking-wider flex items-center justify-center gap-1 border border-emerald-500/30">
-                <Save className="w-3 h-3" /> Saved ✓
-              </div>
-            ) : (
-              <button disabled={isSaving} onClick={saveMatchToProfile} className="flex-1 px-2 py-1.5 bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-foreground rounded-lg font-black text-[9px] uppercase tracking-wider shadow-sm flex items-center justify-center gap-1 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95">
-                {isSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />} {isSaving ? "Saving..." : "Save Result"}
-              </button>
-            )}
+            <button disabled={isSaving} onClick={saveMatchToProfile} className={`flex-1 px-2 py-1.5 rounded-lg font-black text-[9px] uppercase tracking-wider shadow-sm flex items-center justify-center gap-1 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 ${hasSaved ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30" : "bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-foreground"}`}>
+              {isSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />} {isSaving ? "Saving..." : hasSaved ? "Save Again" : "Save Result"}
+            </button>
             <button disabled={isSaving} onClick={() => {
               MatchService.upsertLiveMatch(match.id, match)
                 .then(() => toast.success("Score pushed to Live Feed"))

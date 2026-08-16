@@ -371,7 +371,7 @@ class BracketVisualErrorBoundary extends React.Component<
 export function BracketVisual(props: BracketVisualProps) {
   return (
     <BracketVisualErrorBoundary>
-      <BracketVisualInner {...props} />
+      <BracketVisualInner key={props.category} {...props} />
     </BracketVisualErrorBoundary>
   );
 }
@@ -380,7 +380,21 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [bracketSegment, setBracketSegment] = useState<string>("full");
-  const [hiddenRounds, setHiddenRounds] = useState<number[]>([]);
+  const [hiddenRounds, setHiddenRounds] = useState<number[]>(() => {
+    const toHide: number[] = [];
+    for (const r of rounds) {
+      const matchesInRound = matches.filter((m) => m.round === r);
+      if (
+        matchesInRound.length >= 16 && 
+        matchesInRound.every((m) => m.status === "completed")
+      ) {
+        toHide.push(r);
+      } else {
+        break;
+      }
+    }
+    return toHide;
+  });
   const [viewMode, setViewMode] = useState<"tree" | "list">("tree");
   const [scale, setScale] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);

@@ -13,7 +13,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import {
   Loader2, Save, Trophy, Users, Swords, Archive, Plus, X, Search,
   ChevronDown, ChevronUp, Lock, Unlock, Play, SkipForward, Settings2,
-  CalendarDays, MapPin, Link, Unlink, Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw, Check, Bell, Camera, Pencil, FileText, Undo2
+  CalendarDays, MapPin, Link, Unlink, Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw, Check, Bell, Camera, Pencil, FileText, Undo2, Printer
 } from "lucide-react";
 import { InfoModal } from "@/components/InfoModal";
 import { PlayerSelect } from "@/components/umpire/PlayerSelect";
@@ -1990,6 +1990,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
   const [matches, setMatches] = useState<TournamentMatch[]>([]);
   const [roundRules, setRoundRules] = useState<RoundRule[]>([]);
   const [loading, setLoading] = useState(true);
+  const [scheduleDate, setScheduleDate] = useState<string>(new Date().toISOString().split("T")[0]);
   const [activeCategory, setActiveCategory] = useState(() => {
     const hash = window.location.hash.replace("#", "");
     const parts = hash.split("/");
@@ -2443,6 +2444,73 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
     await exportToPDF([{ name: sheetName, data: [header, ...rows] }], filename);
   };
 
+  const printDailySchedulePDF = async () => {
+    // Filter ALL matches by scheduleDate
+    const dateMatches = matches.filter(m => {
+      if (!m.scheduled_at) return false;
+      const mDate = new Date(m.scheduled_at).toISOString().split("T")[0];
+      return mDate === scheduleDate;
+    });
+
+    if (!dateMatches.length) {
+      toast.error(`No matches scheduled for ${scheduleDate}`);
+      return;
+    }
+
+    // Sort by court then by time
+    dateMatches.sort((a, b) => {
+      const timeA = new Date(a.scheduled_at!).getTime();
+      const timeB = new Date(b.scheduled_at!).getTime();
+      if (timeA !== timeB) return timeA - timeB;
+      const courtA = a.court_number || "";
+      const courtB = b.court_number || "";
+      return courtA.localeCompare(courtB);
+    });
+
+    const header = [
+      "Time",
+      "Court",
+      "Category",
+      "Match",
+      "Round",
+      "Team 1",
+      "Team 2",
+      "Score / Result"
+    ];
+
+    const rows = dateMatches.map((m) => {
+      const scheduleStr = new Date(m.scheduled_at!).toLocaleString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      let scoreStr = "-";
+      if (m.status === "walkover") {
+        scoreStr = `W/O (${m.winner_side === 1 ? m.team1_label : m.team2_label})`;
+      } else if (m.sets_history && m.sets_history.length > 0) {
+        scoreStr = m.sets_history.join(", ");
+      } else if (m.score) {
+        scoreStr = m.score;
+      }
+
+      return [
+        scheduleStr,
+        m.court_number ? `Court ${m.court_number}` : "-",
+        m.category,
+        m.match_code || "",
+        m.round_name || `Round ${m.round}`,
+        m.team1_label || "TBD",
+        m.team2_label || "TBD",
+        scoreStr
+      ];
+    });
+
+    const sheetName = `Schedule - ${scheduleDate}`;
+    const filename = `${tournament.name.replace(/\s+/g, '_')}_schedule_${scheduleDate}`;
+
+    await exportToPDF([{ name: sheetName, data: [header, ...rows] }], filename);
+  };
+
   const downloadMatchesCSV = (cat: string) => {
     const catMatches = matches.filter((m) => m.category === cat);
     if (!catMatches.length) {
@@ -2538,6 +2606,20 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
             </button>
           </div>
 
+          {/* Row 2.5: Daily Schedule Print */}
+          <div className="flex gap-2 w-full items-center bg-slate-50 dark:bg-slate-900/50 p-2 rounded-xl border border-slate-200 dark:border-slate-800">
+            <input 
+              type="date"
+              value={scheduleDate}
+              onChange={(e) => setScheduleDate(e.target.value)}
+              className="px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-bold w-32 focus:outline-none focus:ring-2 focus:ring-primary/50 text-slate-800 dark:text-slate-200"
+            />
+            <button onClick={printDailySchedulePDF}
+              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800 text-xs font-black transition">
+              <Printer className="w-3.5 h-3.5 shrink-0" /> Print Daily Schedule
+            </button>
+          </div>
+
           {/* Row 3: Admin Actions (flex-wrap for responsiveness) */}
           <div className="flex flex-wrap gap-2 w-full">
             <button onClick={() => setShowRules((v) => !v)}
@@ -2570,18 +2652,33 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                 if (!newRows.length) { toast.error("Manual entry rounds don't fit the draw"); return; }
 
                 let updatedCount = 0;
-                for (const row of newRows.filter(r => r.round === 1)) {
-                  const { error } = await supabase.from("tournament_matches").update({
-                    player1_id: row.player1_id,
-                    team1_label: row.team1_label,
-                    player3_id: row.player3_id,
-                    player2_id: row.player2_id,
-                    team2_label: row.team2_label,
-                    player4_id: row.player4_id,
-                  }).eq("tournament_id", tournament.id).eq("match_code", row.match_code);
+                for (const row of newRows) {
+                  // Only sync names for initial placements, not generic "Winner of..." placeholders
+                  const isT1Initial = row.team1_label !== "TBD" && !row.team1_label.startsWith("Winner of") && !row.team1_label.startsWith("Loser of");
+                  const isT2Initial = row.team2_label !== "TBD" && !row.team2_label.startsWith("Winner of") && !row.team2_label.startsWith("Loser of");
+                  
+                  if (!isT1Initial && !isT2Initial) continue;
+                  
+                  const updatePayload: any = {};
+                  if (isT1Initial) {
+                    updatePayload.player1_id = row.player1_id;
+                    updatePayload.team1_label = row.team1_label;
+                    updatePayload.player3_id = row.player3_id;
+                  }
+                  if (isT2Initial) {
+                    updatePayload.player2_id = row.player2_id;
+                    updatePayload.team2_label = row.team2_label;
+                    updatePayload.player4_id = row.player4_id;
+                  }
+
+                  const { error } = await supabase.from("tournament_matches")
+                    .update(updatePayload)
+                    .eq("tournament_id", tournament.id)
+                    .eq("match_code", row.match_code);
+                  
                   if (!error) updatedCount++;
                 }
-                toast.success(`Synced ${updatedCount} matches in Round 1`);
+                toast.success(`Synced ${updatedCount} participant names`);
                 
                 const completed = matches.filter((m) => (m.status === "completed" || m.status === "walkover") && m.advances_to_match);
                 if (completed.length > 0) {
@@ -2685,18 +2782,21 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
       {/* Visual bracket */}
       {viewMode === "visual" && (
         <ErrorBoundary>
-          <BracketVisual matches={categoryMatches} rounds={rounds} enablePathHighlight />
+          <BracketVisual matches={categoryMatches} rounds={rounds} category={activeCategory} enablePathHighlight />
         </ErrorBoundary>
       )}
 
       {/* Match cards by round */}
-      {viewMode === "list" && rounds.map((round) => {
+      {viewMode === "list" && [...rounds].reverse().map((round) => {
         const roundMatches = categoryMatches.filter((m) => m.round === round);
         const roundName = roundMatches[0]?.round_name ?? `Round ${round}`;
         return (
-          <div key={round}>
-            <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">{roundName}</h3>
-            <div className="space-y-2">
+          <details key={round} className="group mb-6">
+            <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden flex items-center gap-2 mb-3 select-none outline-none hover:bg-slate-50 dark:hover:bg-slate-900/50 p-2 rounded-xl transition">
+              <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform group-open:-rotate-180" />
+              <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">{roundName}</h3>
+            </summary>
+            <div className="space-y-2 pl-2">
               {roundMatches.map((m) => {
                 const busy = actingOn === m.id;
                 const isEditing = editScore?.matchId === m.id;
@@ -3182,7 +3282,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                 );
               })}
             </div>
-          </div>
+          </details>
         );
       })}
       {/* Bulk Schedule Modal */}

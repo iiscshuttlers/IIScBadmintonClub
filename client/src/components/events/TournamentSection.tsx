@@ -996,7 +996,7 @@ export function TournamentArchiveBrackets({ tournamentId }: { tournamentId: stri
           {(() => {
             const catMatches = matches.filter((m) => m.category === activeCategory);
             const rounds = [...new Set(catMatches.map((m) => m.round))].sort((a, b) => a - b);
-            return <BracketVisual matches={catMatches as any} rounds={rounds} />;
+            return <BracketVisual matches={catMatches as any} rounds={rounds} category={activeCategory} />;
           })()}
         </div>
       ) : (

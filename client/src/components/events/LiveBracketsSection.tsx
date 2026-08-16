@@ -128,7 +128,7 @@ export function LiveBracketsSection({
             No matches scheduled for {activeFormat} yet.
           </div>
         ) : (
-          <BracketVisual matches={currentMatches} rounds={rounds} enablePathHighlight />
+          <BracketVisual matches={currentMatches} rounds={rounds} category={activeFormat} enablePathHighlight />
         )}
       </div>
     </div>

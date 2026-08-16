@@ -64,6 +64,7 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
   const [upcomingSearch, setUpcomingSearch] = useState("");
   const [upcomingFormat, setUpcomingFormat] = useState("ALL");
   const [upcomingDate, setUpcomingDate] = useState("ALL");
+  const [upcomingCourt, setUpcomingCourt] = useState("ALL");
   const [collapsedRounds, setCollapsedRounds] = useState<Record<string, boolean>>({});
   const [notifyingId, setNotifyingId] = useState<string | null>(null);
 
@@ -163,6 +164,7 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
       .sort((a, b) => new Date(a.scheduled_at!).getTime() - new Date(b.scheduled_at!).getTime());
 
     const availableDates = [...new Set(upcomingScheduled.map(m => new Date(m.scheduled_at!).toLocaleDateString()))];
+    const availableCourts = [...new Set(upcomingScheduled.filter(m => m.court_number).map(m => m.court_number!))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
     if (upcomingSearch.trim()) {
       const lowerQ = upcomingSearch.toLowerCase();
@@ -178,6 +180,9 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
     }
     if (upcomingDate !== "ALL") {
       upcomingScheduled = upcomingScheduled.filter(m => new Date(m.scheduled_at!).toLocaleDateString() === upcomingDate);
+    }
+    if (upcomingCourt !== "ALL") {
+      upcomingScheduled = upcomingScheduled.filter(m => m.court_number === upcomingCourt);
     }
 
     return (
@@ -213,6 +218,16 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
                   >
                     <option value="ALL">All Dates</option>
                     {availableDates.map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                )}
+                {availableCourts.length > 0 && (
+                  <select 
+                    value={upcomingCourt}
+                    onChange={e => setUpcomingCourt(e.target.value)}
+                    className="bg-slate-800 border border-slate-700 text-sm text-foreground rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary cursor-pointer"
+                  >
+                    <option value="ALL">All Courts</option>
+                    {availableCourts.map(c => <option key={c} value={c}>Court {c}</option>)}
                   </select>
                 )}
               </div>

@@ -264,6 +264,12 @@ export default function FeedTab() {
             )}
 
             {!loading && (
+              <div className="mb-6">
+                <PollsSection />
+              </div>
+            )}
+
+            {!loading && (
               <div className="flex bg-slate-100/80 dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 mb-6 shadow-sm">
                 <button
                   onClick={() => setFeedView("my")}
@@ -285,93 +291,6 @@ export default function FeedTab() {
                 >
                   <Trophy className="w-4 h-4" /> Tournament Matches
                 </button>
-              </div>
-            )}
-
-            {!loading && displayMatches.length > 0 && (
-              <>
-                <div className="mb-6 bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden">
-                  <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground dark:text-muted-foreground mb-4">
-                    <BarChart3 className="w-4 h-4 text-primary" /> Court
-                    Utilization (Recent)
-                    <InfoModal
-                      title="COURT UTILIZATION"
-                      items={[
-                        { badge: "TIME", title: "Time of Day", desc: "Shows when matches were played recently (Morning, Afternoon, Evening). Useful to know when the courts are busiest." }
-                      ]}
-                    />
-                  </div>
-                  <div className="flex h-3 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${courtUtil.morning}%` }}
-                      transition={{ duration: 1 }}
-                      className="bg-sky-400 border-r border-white/20"
-                      title="Morning (5AM - 12PM)"
-                    />
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${courtUtil.afternoon}%` }}
-                      transition={{ duration: 1, delay: 0.2 }}
-                      className="bg-amber-400 border-r border-white/20"
-                      title="Afternoon (12PM - 5PM)"
-                    />
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${courtUtil.evening}%` }}
-                      transition={{ duration: 1, delay: 0.4 }}
-                      className="bg-indigo-500"
-                      title="Evening (5PM - 5AM)"
-                    />
-                  </div>
-                  <div className="flex justify-between mt-3 text-[10px] font-bold text-muted-foreground uppercase">
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full bg-sky-400" /> Morning
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full bg-amber-400" /> Afternoon
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full bg-indigo-500" /> Evening
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
-
-            {/* Community Polls */}
-            {!loading && (
-              <div className="mb-6">
-                <PollsSection />
-              </div>
-            )}
-            {!loading && displayMatches.length >= 6 && (
-              <RivalryCards matches={displayMatches} limit={3} />
-            )}
-
-            {!loading && weeklyRecap && (
-              <div className="mb-6 bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 shadow-xl border border-slate-700 relative overflow-hidden text-foreground">
-                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-amber-500/20 blur-3xl rounded-full pointer-events-none" />
-                <h3 className="text-sm font-black uppercase tracking-widest text-amber-400 mb-6 flex items-center gap-2">
-                  <Trophy className="w-5 h-5" /> Weekly Club Recap
-                </h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {weeklyRecap.mostActive && (
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                        Most Active Player
-                      </span>
-                      <div className="text-base font-bold text-foreground line-clamp-1">
-                        {weeklyRecap.mostActive.name}
-                      </div>
-                      <div className="text-sm font-black text-primary">
-                        {weeklyRecap.mostActive.matches} Matches Played
-                      </div>
-                    </div>
-                  )}
-
-                </div>
               </div>
             )}
 
@@ -473,9 +392,10 @@ export default function FeedTab() {
                   myMatchesList.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
                   // Sort upcoming matches by scheduled_at ascending, placing unscheduled matches last
                   upcomingMatches.sort((a, b) => {
-                    const timeA = a.scheduled_at ? new Date(a.scheduled_at).getTime() : Infinity;
-                    const timeB = b.scheduled_at ? new Date(b.scheduled_at).getTime() : Infinity;
-                    return timeA - timeB;
+                    if (!a.scheduled_at && !b.scheduled_at) return 0;
+                    if (!a.scheduled_at) return 1;
+                    if (!b.scheduled_at) return -1;
+                    return new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime();
                   });
 
                   const renderCard = (match: any, i: number) => {
@@ -637,6 +557,90 @@ export default function FeedTab() {
                 </p>
               </div>
             )}
+
+            {/* --- MOVED SECTIONS --- */}
+            {!loading && displayMatches.length > 0 && (
+              <>
+                <div className="mb-6 bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden">
+                  <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground dark:text-muted-foreground mb-4">
+                    <BarChart3 className="w-4 h-4 text-primary" /> Court
+                    Utilization (Recent)
+                    <InfoModal
+                      title="COURT UTILIZATION"
+                      items={[
+                        { badge: "TIME", title: "Time of Day", desc: "Shows when matches were played recently (Morning, Afternoon, Evening). Useful to know when the courts are busiest." }
+                      ]}
+                    />
+                  </div>
+                  <div className="flex h-3 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${courtUtil.morning}%` }}
+                      transition={{ duration: 1 }}
+                      className="bg-sky-400 border-r border-white/20"
+                      title="Morning (5AM - 12PM)"
+                    />
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${courtUtil.afternoon}%` }}
+                      transition={{ duration: 1, delay: 0.2 }}
+                      className="bg-amber-400 border-r border-white/20"
+                      title="Afternoon (12PM - 5PM)"
+                    />
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${courtUtil.evening}%` }}
+                      transition={{ duration: 1, delay: 0.4 }}
+                      className="bg-indigo-500"
+                      title="Evening (5PM - 5AM)"
+                    />
+                  </div>
+                  <div className="flex justify-between mt-3 text-[10px] font-bold text-muted-foreground uppercase">
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full bg-sky-400" /> Morning
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full bg-amber-400" /> Afternoon
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full bg-indigo-500" /> Evening
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+
+            {!loading && displayMatches.length >= 6 && (
+              <RivalryCards matches={displayMatches} limit={3} />
+            )}
+
+            {!loading && weeklyRecap && (
+              <div className="mb-6 bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 shadow-xl border border-slate-700 relative overflow-hidden text-foreground">
+                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-amber-500/20 blur-3xl rounded-full pointer-events-none" />
+                <h3 className="text-sm font-black uppercase tracking-widest text-amber-400 mb-6 flex items-center gap-2">
+                  <Trophy className="w-5 h-5" /> Weekly Club Recap
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {weeklyRecap.mostActive && (
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                        Most Active Player
+                      </span>
+                      <div className="text-base font-bold text-foreground line-clamp-1">
+                        {weeklyRecap.mostActive.name}
+                      </div>
+                      <div className="text-sm font-black text-primary">
+                        {weeklyRecap.mostActive.matches} Matches Played
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              </div>
+            )}
+
           </>
         )}
       </div>

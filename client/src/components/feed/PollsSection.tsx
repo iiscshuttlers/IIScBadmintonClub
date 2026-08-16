@@ -48,9 +48,16 @@ function PollCard({ poll, onVote, onArchive, onDelete, onNotify, onToggleReveal,
         <div className={`p-2 rounded-xl ${poll.is_archived ? "bg-slate-100 dark:bg-slate-800" : "bg-violet-100 dark:bg-violet-900/50"}`}>
           <BarChart2 className={`w-5 h-5 ${poll.is_archived ? "text-muted-foreground" : "text-violet-600 dark:text-violet-400"}`} />
         </div>
-        <span className={`text-xs font-black uppercase tracking-widest ${poll.is_archived ? "text-muted-foreground" : "text-violet-500"}`}>
-          {poll.is_archived ? "Archived Poll" : "Community Poll"}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className={`text-xs font-black uppercase tracking-widest ${poll.is_archived ? "text-muted-foreground" : "text-violet-500"}`}>
+            {poll.is_archived ? "Archived Poll" : "Community Poll"}
+          </span>
+          {isAdmin && !poll.results_revealed && (
+            <span className="text-[9px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400 px-1.5 py-0.5 rounded uppercase tracking-widest">
+              Hidden from public
+            </span>
+          )}
+        </div>
       </div>
       {isAdmin && (
         <div className="flex flex-wrap justify-end items-center gap-3 mb-4 mt-[-8px]">
@@ -59,7 +66,7 @@ function PollCard({ poll, onVote, onArchive, onDelete, onNotify, onToggleReveal,
               onClick={() => onToggleReveal(poll.id, !poll.results_revealed)}
               className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-emerald-500 transition-colors flex items-center gap-1"
             >
-              {poll.results_revealed ? "Hide Results" : "Reveal Results"}
+              {poll.results_revealed ? "Hide from Public" : "Reveal to Public"}
             </button>
           )}
           {onNotify && (
@@ -262,7 +269,7 @@ function CreatePollForm({ onCreated, onCancel }: { onCreated: () => void; onCanc
 }
 
 export function PollsSection() {
-  const { profile, session, isAdmin } = useAuth();
+  const { profile, session, isMasterAdmin } = useAuth();
   const [polls, setPolls] = useState<Poll[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -349,12 +356,12 @@ export function PollsSection() {
   };
 
   if (loading) return null;
-  if (!isAdmin && polls.filter(isPollVisible).length === 0) return null;
+  if (!isMasterAdmin && polls.filter(isPollVisible).length === 0) return null;
 
   return (
     <div className="space-y-4">
       {/* Admin create button */}
-      {isAdmin && !showCreate && (
+      {isMasterAdmin && !showCreate && (
         <button
           onClick={() => setShowCreate(true)}
           className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-violet-200 dark:border-violet-800 text-violet-500 font-bold text-sm hover:bg-violet-50 dark:hover:bg-violet-900/20 transition"
@@ -364,7 +371,7 @@ export function PollsSection() {
       )}
 
       <AnimatePresence>
-        {showCreate && isAdmin && (
+        {showCreate && isMasterAdmin && (
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
             <CreatePollForm
               onCreated={() => { setShowCreate(false); fetchPolls(); }}
@@ -376,7 +383,7 @@ export function PollsSection() {
 
       {polls.filter(isPollVisible).map((poll) => (
         <motion.div key={poll.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <PollCard poll={poll} onVote={handleVote} onArchive={isAdmin ? handleArchive : undefined} onDelete={isAdmin ? handleDelete : undefined} onNotify={isAdmin ? handleNotify : undefined} onToggleReveal={isAdmin ? handleToggleReveal : undefined} currentUserId={profile?.id} isAdmin={isAdmin} />
+          <PollCard poll={poll} onVote={handleVote} onArchive={isMasterAdmin ? handleArchive : undefined} onDelete={isMasterAdmin ? handleDelete : undefined} onNotify={isMasterAdmin ? handleNotify : undefined} onToggleReveal={isMasterAdmin ? handleToggleReveal : undefined} currentUserId={profile?.id} isAdmin={isMasterAdmin} />
         </motion.div>
       ))}
 
@@ -388,7 +395,7 @@ export function PollsSection() {
           </div>
           <div className="space-y-4">
             {polls.filter(p => p.is_archived).map(poll => (
-              <PollCard key={poll.id} poll={poll} onVote={handleVote} onArchive={isAdmin ? handleArchive : undefined} onDelete={isAdmin ? handleDelete : undefined} onNotify={isAdmin ? handleNotify : undefined} onToggleReveal={isAdmin ? handleToggleReveal : undefined} currentUserId={profile?.id} isAdmin={isAdmin} />
+              <PollCard key={poll.id} poll={poll} onVote={handleVote} onArchive={isMasterAdmin ? handleArchive : undefined} onDelete={isMasterAdmin ? handleDelete : undefined} onNotify={isMasterAdmin ? handleNotify : undefined} onToggleReveal={isMasterAdmin ? handleToggleReveal : undefined} currentUserId={profile?.id} isAdmin={isMasterAdmin} />
             ))}
           </div>
         </div>

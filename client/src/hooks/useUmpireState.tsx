@@ -62,6 +62,12 @@ export function useUmpireState({
 
   const [hasSaved, setHasSaved] = useState(false);
 
+  useEffect(() => {
+    if (storeMatch?.status === "playing") {
+      setHasSaved(false);
+    }
+  }, [storeMatch?.status]);
+
 
   const match = storeMatch || (() => {
     

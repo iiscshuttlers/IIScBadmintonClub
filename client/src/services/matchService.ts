@@ -141,8 +141,8 @@ export async function fetchFeedMatches(
 
   const mappedTourney = [...(completedData ?? []), ...(upcomingData ?? [])]
     .filter((m: any) => {
-      const hasTeam1 = m.player1_id || (m.team1_label && !m.team1_label.toLowerCase().includes("bye") && !m.team1_label.toLowerCase().startsWith("winner"));
-      const hasTeam2 = m.player2_id || (m.team2_label && !m.team2_label.toLowerCase().includes("bye") && !m.team2_label.toLowerCase().startsWith("winner"));
+      const hasTeam1 = m.player1_id || (m.team1_label && !m.team1_label.toLowerCase().includes("bye") && !m.team1_label.toLowerCase().startsWith("winner") && !m.team1_label.toLowerCase().startsWith("loser"));
+      const hasTeam2 = m.player2_id || (m.team2_label && !m.team2_label.toLowerCase().includes("bye") && !m.team2_label.toLowerCase().startsWith("winner") && !m.team2_label.toLowerCase().startsWith("loser"));
       return hasTeam1 && hasTeam2;
     })
     .map((m: any) => ({
