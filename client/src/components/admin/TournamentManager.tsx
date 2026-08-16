@@ -2342,14 +2342,39 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
   };
 
   const batchAdvance = async () => {
+    let advanced = 0;
+
+    // 1) Submit pending BYE matches
+    const pendingByes = matches.filter((m) => 
+      (m.status === "scheduled" || m.status === "in_progress") &&
+      (m.team1_label === "BYE" || m.team2_label === "BYE")
+    );
+    for (const m of pendingByes) {
+      let winningSide: 0 | 1 | 2 = 0;
+      if (m.team1_label === "BYE" && m.team2_label !== "BYE") winningSide = 2;
+      else if (m.team2_label === "BYE" && m.team1_label !== "BYE") winningSide = 1;
+      
+      const { error } = await supabase.rpc("submit_tournament_match", {
+        p_match_id: m.id,
+        p_winner_side: winningSide,
+        p_score: winningSide === 0 ? "Double W/O" : "W/O",
+        p_sets: [],
+        p_umpire_id: null,
+      });
+      if (!error) advanced++;
+    }
+
+    // 2) Cascade existing completed matches to the next round
     const completed = matches.filter((m) => (m.status === "completed" || m.status === "walkover") && m.advances_to_match);
     for (const m of completed) {
-      await supabase.rpc("admin_edit_tournament_match", {
+      const { error } = await supabase.rpc("admin_edit_tournament_match", {
         p_match_id: m.id, p_winner_side: m.winner_side, p_score: m.score, p_sets: m.sets_history,
       });
+      if (!error) advanced++;
     }
+    
     await load();
-    toast.success("All winners advanced");
+    toast.success(`Batch advanced (${advanced} actions applied)`);
   };
 
   if (loading) return <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;

@@ -320,6 +320,45 @@ async function dispatchFanNotifications(supabase: any, tournamentIds: string[], 
   }
 }
 
+async function runAutoReminders(supabase: any) {
+  const { data: tournaments } = await supabase
+    .from("tournaments")
+    .select("id, name")
+    .or("auto_reminders_enabled.eq.true,auto_reminders_enabled.is.null")
+    .neq("status", "draft")
+    .neq("status", "completed")
+    .neq("status", "deleted");
+
+  if (!tournaments || tournaments.length === 0) {
+    return "No active auto-reminder tournaments";
+  }
+
+  const tournamentIds = tournaments.map((t: any) => t.id);
+  
+  const now = new Date();
+  const in30Mins = new Date(now.getTime() + 30 * 60000);
+
+  const { data: matches } = await supabase
+    .from("tournament_matches")
+    .select("*, tournaments(*)")
+    .in("tournament_id", tournamentIds)
+    .gte("scheduled_at", now.toISOString())
+    .lte("scheduled_at", in30Mins.toISOString())
+    .eq("reminder_sent", false);
+
+  if (matches && matches.length > 0) {
+    for (const match of matches) {
+      await dispatchNotifications(supabase, match, match.tournaments);
+    }
+  }
+  
+  const fcmAccessToken = await getFirebaseAccessToken().catch(e => null);
+  const projectId = Deno.env.get("FIREBASE_SERVICE_ACCOUNT") ? JSON.parse(Deno.env.get("FIREBASE_SERVICE_ACCOUNT")!).project_id : null;
+  await dispatchFanNotifications(supabase, tournamentIds, fcmAccessToken, projectId);
+
+  return `Sent reminders for ${matches ? matches.length : 0} matches`;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -349,41 +388,8 @@ serve(async (req) => {
       return new Response(JSON.stringify({ message: "Reminder sent manually!" }), { headers: corsHeaders, status: 200 });
       
     } else {
-      const { data: tournaments } = await supabase
-        .from("tournaments")
-        .select("id, name")
-        .or("auto_reminders_enabled.eq.true,auto_reminders_enabled.is.null")
-        .neq("status", "draft")
-        .neq("status", "completed")
-        .neq("status", "deleted");
-      if (!tournaments || tournaments.length === 0) {
-        return new Response(JSON.stringify({ message: "No active auto-reminder tournaments" }), { headers: corsHeaders });
-      }
-
-      const tournamentIds = tournaments.map((t: any) => t.id);
-      
-      const now = new Date();
-      const in30Mins = new Date(now.getTime() + 30 * 60000);
-
-      const { data: matches } = await supabase
-        .from("tournament_matches")
-        .select("*, tournaments(*)")
-        .in("tournament_id", tournamentIds)
-        .gte("scheduled_at", now.toISOString())
-        .lte("scheduled_at", in30Mins.toISOString())
-        .eq("reminder_sent", false);
-
-      if (matches && matches.length > 0) {
-        for (const match of matches) {
-          await dispatchNotifications(supabase, match, match.tournaments);
-        }
-      }
-      
-      const fcmAccessToken = await getFirebaseAccessToken().catch(e => null);
-      const projectId = Deno.env.get("FIREBASE_SERVICE_ACCOUNT") ? JSON.parse(Deno.env.get("FIREBASE_SERVICE_ACCOUNT")!).project_id : null;
-      await dispatchFanNotifications(supabase, tournamentIds, fcmAccessToken, projectId);
-
-      return new Response(JSON.stringify({ message: `Sent reminders for ${matches ? matches.length : 0} matches` }), { headers: corsHeaders });
+      const message = await runAutoReminders(supabase);
+      return new Response(JSON.stringify({ message }), { headers: corsHeaders });
     }
 
   } catch (err: any) {
@@ -392,5 +398,18 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
+  }
+});
+
+Deno.cron("Match Notifier Cron", "*/5 * * * *", async () => {
+  try {
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+    const message = await runAutoReminders(supabase);
+    console.log(`[match-notifier-cron] ${message}`);
+  } catch (err: any) {
+    console.error("[match-notifier-cron] Error:", err);
   }
 });
