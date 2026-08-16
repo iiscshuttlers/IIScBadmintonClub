@@ -13,7 +13,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import {
   Loader2, Save, Trophy, Users, Swords, Archive, Plus, X, Search,
   ChevronDown, ChevronUp, Lock, Unlock, Play, SkipForward, Settings2,
-  CalendarDays, MapPin, Link, Unlink, Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw, Check, Bell, Camera, Pencil, FileText
+  CalendarDays, MapPin, Link, Unlink, Download, Upload, Trash2, Clipboard, RotateCcw, AlertCircle, RefreshCw, Check, Bell, Camera, Pencil, FileText, Undo2
 } from "lucide-react";
 import { InfoModal } from "@/components/InfoModal";
 import { PlayerSelect } from "@/components/umpire/PlayerSelect";
@@ -2064,16 +2064,41 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
     setActingOn(null);
   };
 
-  const submitWalkover = async (matchId: string, winningSide: 1 | 2) => {
+  const submitWalkover = async (matchId: string, winningSide: 0 | 1 | 2) => {
     setActingOn(matchId);
     const { error } = await supabase.rpc("submit_tournament_match", {
       p_match_id: matchId,
       p_winner_side: winningSide,
-      p_score: "W/O",
+      p_score: winningSide === 0 ? "Double Walkover" : "W/O",
       p_sets: [],
       p_umpire_id: null,
     });
-    if (error) { toast.error(error.message); } else { toast.success("Walkover recorded"); await load(); }
+    if (error) { toast.error(error.message); } else { toast.success(winningSide === 0 ? "Double Walkover recorded" : "Walkover recorded"); await load(); }
+    setActingOn(null);
+  };
+
+  const undoTournamentMatch = async (id: string) => {
+    if (!confirm("Are you sure you want to undo this tournament match? This will clear the score, reset the bracket slot, and recalculate tournament ELO for all players.")) return;
+    setActingOn(id);
+    try {
+      const { error } = await supabase.from("tournament_matches").update({
+        score: null,
+        sets_history: [],
+        winner_side: null,
+        status: "pending",
+        locked: false,
+        scored_at: null,
+      }).eq("id", id);
+      if (error) throw error;
+      
+      const { error: calcErr } = await supabase.rpc("recalculate_tournament_elo");
+      if (calcErr) throw calcErr;
+
+      toast.success("Tournament match undone and ELO recalculated");
+      await load();
+    } catch (err: any) {
+      toast.error("Failed to undo tournament match: " + err.message);
+    }
     setActingOn(null);
   };
 
@@ -2745,27 +2770,37 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                               className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 transition">
                               <SkipForward className="w-3 h-3" /> W/O T2
                             </button>
+                            <button onClick={() => submitWalkover(m.id, 0)} disabled={busy}
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition">
+                              <SkipForward className="w-3 h-3" /> Double W/O
+                            </button>
                           </>
                         )}
                         {m.status === "completed" && isMasterAdmin && (
-                          <button onClick={() => {
-                            const bo = m.best_of_sets ?? 3;
-                            const gp = m.golden_point ?? 30;
-                            const ptw = m.points_to_win ?? 21;
-                            const hist = m.sets_history ?? [];
-                            const setsData = Array.from({ length: bo }, (_, i) => {
-                              const parts = (hist[i] ?? "").split("-");
-                              let t1Str = parts[0] ?? "";
-                              let t2Str = parts[1] ?? "";
-                              if (parseInt(t1Str, 10) > gp) t1Str = gp.toString();
-                              if (parseInt(t2Str, 10) > gp) t2Str = gp.toString();
-                              return { t1: t1Str, t2: t2Str };
-                            });
-                            setEditScore({ matchId: m.id, side: m.winner_side ?? 1, sets: hist.join(", "), bestOfSets: bo, goldenPoint: gp, pointsToWin: ptw, setsData });
-                          }}
-                            className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition">
-                            <Unlock className="w-3 h-3" /> Edit
-                          </button>
+                          <>
+                            <button onClick={() => {
+                              const bo = m.best_of_sets ?? 3;
+                              const gp = m.golden_point ?? 30;
+                              const ptw = m.points_to_win ?? 21;
+                              const hist = m.sets_history ?? [];
+                              const setsData = Array.from({ length: bo }, (_, i) => {
+                                const parts = (hist[i] ?? "").split("-");
+                                let t1Str = parts[0] ?? "";
+                                let t2Str = parts[1] ?? "";
+                                if (parseInt(t1Str, 10) > gp) t1Str = gp.toString();
+                                if (parseInt(t2Str, 10) > gp) t2Str = gp.toString();
+                                return { t1: t1Str, t2: t2Str };
+                              });
+                              setEditScore({ matchId: m.id, side: m.winner_side ?? 1, sets: hist.join(", "), bestOfSets: bo, goldenPoint: gp, pointsToWin: ptw, setsData });
+                            }}
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition">
+                              <Unlock className="w-3 h-3" /> Edit
+                            </button>
+                            <button onClick={() => undoTournamentMatch(m.id)} disabled={busy}
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition">
+                              <Undo2 className="w-3 h-3" /> Undo Match
+                            </button>
+                          </>
                         )}
 
                         {/* Spacer to push secondary actions right */}
