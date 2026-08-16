@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { Trophy, Swords, Sparkles, TrendingUp, Heart, Share2, Video, Edit2, BarChart2, Trash2, Loader2, Bot, Bell } from "lucide-react";
+import { Trophy, Swords, Sparkles, TrendingUp, Heart, Share2, Video, Edit2, BarChart2, Trash2, Loader2, Bot, Bell, Clock, MapPin } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -300,6 +300,24 @@ export function MatchCard({
                 </div>
               </div>
 
+              {/* Schedule & Court Info */}
+              {(match.scheduled_at || match.court_number) && (
+                <div className="flex flex-row items-center justify-start gap-3 w-full min-w-0 mb-0.5">
+                  {match.scheduled_at && (
+                    <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {new Date(match.scheduled_at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                    </span>
+                  )}
+                  {match.court_number && (
+                    <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      Court {match.court_number}
+                    </span>
+                  )}
+                </div>
+              )}
+
               {/* Row 2: Name | Score | Name */}
               <div className="flex flex-row items-center justify-between gap-1.5 font-bold">
                 <span className={`text-xs sm:text-sm leading-tight text-right break-words w-full ${team1Win ? 'text-amber-500 dark:text-amber-400' : 'text-slate-700 dark:text-slate-300'}`}>
@@ -360,9 +378,18 @@ export function MatchCard({
               )}
             </div>
 
-            {/* Date */}
-            <div className="text-[11px] text-muted-foreground dark:text-muted-foreground font-bold uppercase tracking-widest text-center mb-1">
-              {new Date(match.created_at).toLocaleString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}
+            {/* Schedule & Court Info */}
+            <div className="flex flex-row items-center justify-center gap-4 text-[10px] text-muted-foreground dark:text-muted-foreground font-bold uppercase tracking-widest text-center mb-2 mt-1">
+              <span className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                {new Date(match.scheduled_at || match.created_at).toLocaleString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}
+              </span>
+              {match.court_number && (
+                <span className="flex items-center gap-1 text-primary">
+                  <MapPin className="w-3 h-3" />
+                  Court {match.court_number}
+                </span>
+              )}
             </div>
           </div>
 

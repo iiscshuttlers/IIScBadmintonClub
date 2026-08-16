@@ -15,6 +15,7 @@ import { playSmashSound } from "@/lib/sounds";
 import type { BwfMatchState } from "@/types/umpire";
 import { NotificationModal } from "./NotificationModal";
 import { useConfirm } from "@/contexts/ConfirmContext";
+import { MatchSection } from "../pulse/FeedTab";
 
 function MatchBroadcastCard({
   match,
@@ -1159,175 +1160,71 @@ export function LiveScoreSection() {
   });
 
   return (
-    <div className="w-full max-w-5xl mx-auto p-4 space-y-6">
-      <div className="flex flex-col sm:flex-row items-center justify-between bg-slate-900 rounded-[2rem] p-6 shadow-xl border border-slate-800 gap-4 text-center sm:text-left">
-        <div>
-          <h2 className="text-xl font-black text-foreground flex items-center justify-center sm:justify-start gap-2">
-            <Tv2 className="w-6 h-6 text-primary" /> Live Broadcasts
-          </h2>
-          <p className="text-muted-foreground text-sm mt-1">Watch live matches happening right now.</p>
-        </div>
-        <div className="flex flex-wrap items-center justify-center gap-2 mt-4 sm:mt-0">
+    <div className="w-full max-w-5xl mx-auto space-y-2">
+      {activeMatchList.filter(m => m.status !== "setup").length > 0 && (
+        <div className="flex flex-wrap items-center justify-end gap-2 mb-2 px-4">
           <button
             onClick={() => {
               if (!voiceEnabled && window.speechSynthesis) {
-                // Unlock speech synthesis on mobile webviews with a silent utterance during user gesture
                 const u = new SpeechSynthesisUtterance("");
                 u.volume = 0;
                 window.speechSynthesis.speak(u);
               }
               setVoiceEnabled(!voiceEnabled);
             }}
-            className={`flex justify-center items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-bold transition-colors ${
+            className={`flex justify-center items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] uppercase tracking-wider font-bold transition-colors ${
               voiceEnabled ? 'bg-primary/20 text-primary border-primary/50 hover:bg-primary/30' : 'bg-slate-800 text-muted-foreground border-slate-700 hover:bg-slate-700'
             }`}
           >
-            {voiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            {voiceEnabled ? <Volume2 className="w-3 h-3" /> : <VolumeX className="w-3 h-3" />}
             <span className="hidden sm:inline">Voice</span>
           </button>
           <button
             onClick={() => setFlashEnabled(!flashEnabled)}
-            className={`flex justify-center items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-bold transition-colors ${
+            className={`flex justify-center items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] uppercase tracking-wider font-bold transition-colors ${
               flashEnabled ? 'bg-primary/20 text-primary border-primary/50 hover:bg-primary/30' : 'bg-slate-800 text-muted-foreground border-slate-700 hover:bg-slate-700'
             }`}
           >
-            <Zap className="w-4 h-4" />
+            <Zap className="w-3 h-3" />
             <span className="hidden sm:inline">Flash</span>
           </button>
           <button
             onClick={() => setVibrateEnabled(!vibrateEnabled)}
-            className={`flex justify-center items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-bold transition-colors ${
+            className={`flex justify-center items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] uppercase tracking-wider font-bold transition-colors ${
               vibrateEnabled ? 'bg-primary/20 text-primary border-primary/50 hover:bg-primary/30' : 'bg-slate-800 text-muted-foreground border-slate-700 hover:bg-slate-700'
             }`}
           >
-            <Smartphone className="w-4 h-4" />
+            <Smartphone className="w-3 h-3" />
             <span className="hidden sm:inline">Vibrate</span>
           </button>
         </div>
-      </div>
-
-      {activeMatchList.filter(m => m.status !== "setup").length === 0 ? (
-        <div className="text-center py-12 bg-slate-900/50 rounded-3xl border border-slate-800 border-dashed">
-          <Activity className="w-16 h-16 mx-auto mb-4 opacity-20 text-muted-foreground" />
-          <h2 className="text-2xl font-bold text-slate-300">No Live Matches</h2>
-          <p className="mt-2 text-muted-foreground">Wait for someone to start broadcasting...</p>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {activeMatchList.map((m) => (
-            <MatchBroadcastCard 
-              key={m.id} 
-              match={m} 
-              isAdmin={isAdmin} 
-              isUmpire={isUmpire} 
-              session={session} 
-              voiceEnabled={voiceEnabled} 
-              flashEnabled={flashEnabled} 
-              vibrateEnabled={vibrateEnabled} 
-              onKill={handleKill} 
-              onSubmit={handleSubmit} 
-              onTakeover={handleForceTakeover} 
-              onTakeoverRequest={handleTakeoverRequest} 
-              isScorePinned={pinnedMatchIds.includes(m.id)}
-              togglePinScore={togglePinScore}
-            />
-          ))}
-        </div>
       )}
 
-      {/* MATCHES TABS */}
-      <div className="mt-8 relative z-10">
-        <div className="flex items-center mb-6 bg-slate-900/50 p-1.5 rounded-xl border border-slate-800 w-full">
-          <button 
-            onClick={() => setActiveTab("my")}
-            className={cn("flex-1 flex justify-center items-center gap-2 px-4 py-2 rounded-lg text-sm font-black transition-colors", activeTab === "my" ? "bg-slate-800 text-violet-400 shadow-sm" : "text-muted-foreground hover:text-slate-300 hover:bg-slate-800/50")}
-          >
-            <Activity className="w-4 h-4" /> My Matches
-          </button>
-          <button 
-            onClick={() => setActiveTab("today")}
-            className={cn("flex-1 flex justify-center items-center gap-2 px-4 py-2 rounded-lg text-sm font-black transition-colors", activeTab === "today" ? "bg-slate-800 text-blue-400 shadow-sm" : "text-muted-foreground hover:text-slate-300 hover:bg-slate-800/50")}
-          >
-            <CalendarDays className="w-4 h-4" /> Today's Schedule
-          </button>
-        </div>
-
-        {activeTab === "my" && (
-          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-            {!profile?.id ? (
-              <div className="text-center py-6 bg-slate-800/30 rounded-xl border border-slate-700/50">
-                <p className="text-sm text-slate-400 mb-3">Log in to see your matches</p>
-                <button 
-                  onClick={() => navigate("/join")}
-                  className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-lg transition-colors text-sm"
-                >
-                  Log In / Join
-                </button>
-              </div>
-            ) : myMatchesLoading ? (
-              <div className="flex justify-center p-8">
-                <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
-              </div>
-            ) : myMatches.length === 0 ? (
-              <div className="text-center py-6 bg-slate-800/30 rounded-xl border border-slate-700/50">
-                <p className="text-sm text-slate-400">You have no upcoming matches.</p>
-              </div>
-            ) : (
-              <div className="grid sm:grid-cols-2 gap-4">
-                {myMatches.map(m => (
-                  <MiniMatchCard 
-                    key={m.id}
-                    m={m}
-                    session={session}
-                    profile={profile}
-                    matchAlerts={matchAlerts}
-                    setNotifMatchTarget={setNotifMatchTarget}
-                    picks={picks}
-                    handlePick={handlePick}
-                    revealedMatchIds={revealedMatchIds}
-                    isAdmin={isAdmin}
-                    toggleRevealMatchPoll={toggleRevealMatchPoll}
-                    showDate={true}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+      <MatchSection 
+        title="Live Matches" 
+        icon={<Activity className="w-5 h-5 text-red-500 animate-pulse" />} 
+        matches={activeMatchList.filter(m => m.status !== "setup")} 
+        defaultExpanded={true} 
+        renderMatchCard={(m) => (
+          <MatchBroadcastCard 
+            key={m.id} 
+            match={m} 
+            isAdmin={isAdmin} 
+            isUmpire={isUmpire} 
+            session={session} 
+            voiceEnabled={voiceEnabled} 
+            flashEnabled={flashEnabled} 
+            vibrateEnabled={vibrateEnabled} 
+            onKill={handleKill} 
+            onSubmit={handleSubmit} 
+            onTakeover={handleForceTakeover} 
+            onTakeoverRequest={handleTakeoverRequest} 
+            isScorePinned={pinnedMatchIds.includes(m.id)}
+            togglePinScore={togglePinScore}
+          />
         )}
+      />
 
-        {activeTab === "today" && (
-          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-            {todayMatchesLoading ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : todayMatches.length === 0 ? (
-              <div className="text-center py-8 bg-slate-800/30 rounded-2xl border border-slate-700/50">
-                <p className="text-sm text-muted-foreground">No matches scheduled for today.</p>
-              </div>
-            ) : (
-              <div className="grid sm:grid-cols-2 gap-4">
-                {todayMatches.map(m => (
-                  <MiniMatchCard 
-                    key={m.id}
-                    m={m}
-                    session={session}
-                    profile={profile}
-                    matchAlerts={matchAlerts}
-                    setNotifMatchTarget={setNotifMatchTarget}
-                    picks={picks}
-                    handlePick={handlePick}
-                    revealedMatchIds={revealedMatchIds}
-                    isAdmin={isAdmin}
-                    toggleRevealMatchPoll={toggleRevealMatchPoll}
-                    showDate={false}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
 
       {takeoverTarget && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">

@@ -2147,9 +2147,18 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
 
   const saveSchedule = async () => {
     if (!editSchedule) return;
+    
+    let isoAt = editSchedule.at || null;
+    if (isoAt) {
+      const d = new Date(isoAt);
+      if (!isNaN(d.getTime())) {
+        isoAt = d.toISOString();
+      }
+    }
+
     await supabase.from("tournament_matches").update({
       court_number: editSchedule.court || null,
-      scheduled_at: editSchedule.at || null,
+      scheduled_at: isoAt,
       reminder_sent: false,
     }).eq("id", editSchedule.matchId);
     await load();

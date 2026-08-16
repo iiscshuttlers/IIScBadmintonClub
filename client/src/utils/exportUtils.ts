@@ -283,7 +283,13 @@ export const exportElementToJpeg = async (element: HTMLElement, filename: string
   }
 };
 
-export const exportElementToPDF = async (element: HTMLElement, filename: string, backgroundColor: string = "#ffffff", style?: any) => {
+export const exportElementToPDF = async (
+  element: HTMLElement,
+  filename: string,
+  backgroundColor: string = "#ffffff",
+  style?: any,
+  pages: number = 1
+) => {
   try {
     toast.loading("Generating PDF...", { id: "export-elem-pdf" });
     const dataUrl = await toPng(element, { 
@@ -294,32 +300,107 @@ export const exportElementToPDF = async (element: HTMLElement, filename: string,
     
     const width = element.scrollWidth;
     const height = element.scrollHeight;
-    
-    const pdf = new jsPDF({
-      orientation: width > height ? 'landscape' : 'portrait',
-      unit: 'px',
-      format: [width, height]
-    });
-    
-    pdf.addImage(dataUrl, 'PNG', 0, 0, width, height);
-    
-    if (Capacitor.isNativePlatform()) {
-      const base64 = pdf.output('datauristring');
-      const path = `${filename}.pdf`;
-      const result = await Filesystem.writeFile({
-        path,
-        data: base64,
-        directory: Directory.Cache
+
+    if (pages <= 1) {
+      const pdf = new jsPDF({
+        orientation: width > height ? 'landscape' : 'portrait',
+        unit: 'px',
+        format: [width, height]
       });
-      await Share.share({ title: "Export PDF", url: result.uri });
+      // Force solid white background
+      pdf.setFillColor(255, 255, 255);
+      pdf.rect(0, 0, width, height, 'F');
+      pdf.addImage(dataUrl, 'PNG', 0, 0, width, height);
+      await savePdf(pdf, filename);
       toast.dismiss("export-elem-pdf");
       return;
     }
+
+    // Multi-page slicing logic
+    const img = new Image();
+    img.src = dataUrl;
+    await new Promise((resolve) => {
+      img.onload = resolve;
+    });
+
+    const pixelRatio = 2;
+    // PADDING(16) + LABEL_H(26) = 42px header in DOM space
+    const headerDOM = 42;
+    // Bottom padding = 16px in DOM space
+    const footerDOM = 16;
     
-    pdf.save(`${filename}.pdf`);
+    const headerPx = headerDOM * pixelRatio;
+    const footerPx = footerDOM * pixelRatio;
+    
+    const totalImgHeight = img.height;
+    const imgWidth = img.width;
+    const treePx = totalImgHeight - headerPx - footerPx;
+    const slicePx = treePx / pages;
+    
+    // In DOM space (for PDF dimensions):
+    const sliceDOM = slicePx / pixelRatio;
+    const pageDOMHeight = headerDOM + sliceDOM + footerDOM;
+
+    const pdf = new jsPDF({
+      orientation: width > pageDOMHeight ? 'landscape' : 'portrait',
+      unit: 'px',
+      format: [width, pageDOMHeight]
+    });
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error("Failed to get 2d context");
+
+    canvas.width = imgWidth;
+    canvas.height = headerPx + slicePx + footerPx;
+
+    for (let i = 0; i < pages; i++) {
+      if (i > 0) {
+        pdf.addPage([width, pageDOMHeight], width > pageDOMHeight ? 'landscape' : 'portrait');
+      }
+      
+      // Clear canvas with white
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw Header
+      ctx.drawImage(img, 0, 0, imgWidth, headerPx, 0, 0, imgWidth, headerPx);
+      // Draw Tree Slice
+      const sourceY = headerPx + i * slicePx;
+      ctx.drawImage(img, 0, sourceY, imgWidth, slicePx, 0, headerPx, imgWidth, slicePx);
+      // Draw Footer
+      const sourceFooterY = headerPx + treePx;
+      ctx.drawImage(img, 0, sourceFooterY, imgWidth, footerPx, 0, headerPx + slicePx, imgWidth, footerPx);
+      
+      const partDataUrl = canvas.toDataURL('image/png', 1.0);
+      
+      // Force solid white background in PDF
+      pdf.setFillColor(255, 255, 255);
+      pdf.rect(0, 0, width, pageDOMHeight, 'F');
+      
+      // Add the sliced image (mapping DOM width/height)
+      pdf.addImage(partDataUrl, 'PNG', 0, 0, width, pageDOMHeight);
+    }
+
+    await savePdf(pdf, filename);
     toast.dismiss("export-elem-pdf");
   } catch (err) {
     console.error(err);
     toast.error("Failed to generate PDF", { id: "export-elem-pdf" });
   }
 };
+
+async function savePdf(pdf: any, filename: string) {
+  if (Capacitor.isNativePlatform()) {
+    const base64 = pdf.output('datauristring');
+    const path = `${filename}.pdf`;
+    const result = await Filesystem.writeFile({
+      path,
+      data: base64,
+      directory: Directory.Cache
+    });
+    await Share.share({ title: "Export PDF", url: result.uri });
+    return;
+  }
+  pdf.save(`${filename}.pdf`);
+}

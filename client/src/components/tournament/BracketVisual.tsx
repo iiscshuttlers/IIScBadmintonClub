@@ -1,6 +1,12 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Trophy, ZoomIn, ZoomOut, X, ChevronRight, Clock, CheckCircle2, Play, Download, ImageIcon } from "lucide-react";
+import { Trophy, ZoomIn, ZoomOut, X, ChevronRight, Clock, CheckCircle2, Play, Download, ImageIcon, ChevronDown } from "lucide-react";
 import { getCourtColor, cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export interface BracketMatch {
   id: string;
@@ -539,16 +545,19 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
     const lowerVal = val.toLowerCase();
     let foundPos = null;
     let foundRi = 0;
+    let exactPlayerName: string | null = null;
 
     for (let ri = 0; ri < roundData.length; ri++) {
       for (const pos of roundData[ri].positions) {
-        if (
-          pos.match.team1_label?.toLowerCase().includes(lowerVal) ||
-          pos.match.team2_label?.toLowerCase().includes(lowerVal) ||
-          pos.match.match_code?.toLowerCase().includes(lowerVal)
-        ) {
+        const t1Match = pos.match.team1_label?.toLowerCase().includes(lowerVal);
+        const t2Match = pos.match.team2_label?.toLowerCase().includes(lowerVal);
+        const codeMatch = pos.match.match_code?.toLowerCase().includes(lowerVal);
+        
+        if (t1Match || t2Match || codeMatch) {
           foundPos = pos;
           foundRi = ri;
+          if (t1Match) exactPlayerName = pos.match.team1_label;
+          else if (t2Match) exactPlayerName = pos.match.team2_label;
           break;
         }
       }
@@ -556,7 +565,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
     }
 
     if (foundPos && containerRef.current) {
-      if (enablePathHighlight) setSelectedPlayer(val);
+      if (enablePathHighlight && exactPlayerName) setSelectedPlayer(exactPlayerName);
       const x = foundRi * COL_W + PADDING;
       const y = foundPos.y + PADDING + LABEL_H;
       
@@ -658,6 +667,38 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
           >
             PDF
           </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="px-2 py-1 flex items-center gap-1 text-[10px] font-bold uppercase rounded-md text-slate-300 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200 transition-colors border border-slate-600/50"
+                title="Export a light-themed PDF suitable for printing"
+              >
+                Print PDF <ChevronDown size={12} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              {[1, 2, 4].map(pages => (
+                <DropdownMenuItem
+                  key={pages}
+                  onClick={async () => {
+                    const el = document.getElementById("bracket-visual-export-container");
+                    if (el) {
+                      el.classList.add("print-light-theme");
+                      await new Promise(r => setTimeout(r, 50));
+                      import("@/utils/exportUtils").then(({ exportElementToPDF }) => {
+                        exportElementToPDF(el, `${getExportFilename()}_Print_${pages}Pg`, "#ffffff", { transform: 'scale(1)', backgroundColor: '#ffffff' }, pages).finally(() => {
+                          el.classList.remove("print-light-theme");
+                        });
+                      });
+                    }
+                  }}
+                  className="text-xs"
+                >
+                  {pages === 1 ? "Single Page (Full)" : pages === 2 ? "2 Pages (Halves)" : "4 Pages (Quarters)"}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
           <button
             onClick={() => {
               const el = document.getElementById("bracket-visual-export-container");
@@ -782,8 +823,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
               height: totalH + PADDING * 2 + LABEL_H,
               minWidth: scaledW,
               minHeight: scaledH,
-              position: "relative",
-              backgroundColor: "#0d1117"
+              position: "relative"
             }}
           >
             {/* Round labels */}

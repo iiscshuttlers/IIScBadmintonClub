@@ -728,6 +728,201 @@
 }
 .visible-scrollbar::-webkit-scrollbar-track {
   background: transparent;
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.marquee-anim {
+  display: flex;
+  width: max-content;
+  animation: marquee 90s linear infinite;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* Shimmer loading effect */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Pulse glow for live indicators */
+@keyframes pulseGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+}
+
+.pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* Floating animation */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.float-anim {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Barlow Condensed for stat numbers / display counters */
+.font-stat {
+  font-family: var(--font-stat);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* ── Brainy "VOLT" premium surfaces (glow stat cards) ─────────────────────── */
+/* Oversized data numerals — tabular so digits don't jitter as they animate */
+.text-display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.95;
+}
+
+/* Hairline top-light on dark cards for that premium sheen */
+.sheen {
+  position: relative;
+}
+.dark .sheen::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--foreground) 14%, transparent), transparent);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Ambient blurred colour orbs for hero areas */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.18;
+  pointer-events: none;
+}
+.dark .orb {
+  opacity: 0.24;
+}
+.orb-volt {
+  background: radial-gradient(circle, var(--primary), transparent 70%);
+}
+.orb-cyan {
+  background: radial-gradient(circle, var(--accent), transparent 70%);
+}
+.orb-amber {
+  background: radial-gradient(circle, var(--secondary), transparent 70%);
+}
+
+/* Subtle grid texture masked to the top of hero areas */
+.grid-texture {
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--foreground) 5%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--foreground) 5%, transparent) 1px, transparent 1px);
+  background-size: 32px 32px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 20%, transparent 75%);
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 20%, transparent 75%);
+}
+
+/* ── Accessibility: respect reduced-motion preference ──────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Specifically pause infinite animations */
+  .marquee-anim,
+  .float-anim,
+  .pulse-glow,
+  .shimmer {
+    animation: none !important;
+  }
+}
+
+/* Mobile Safe Areas */
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.racket-anim { transform-origin: 50px 170px; animation: swing 1.5s infinite ease-in-out; }
+@keyframes swing {
+  0%, 100% { transform: rotate(-15deg); }
+  35% { transform: rotate(-50deg); }
+  47% { transform: rotate(-50deg); }
+  50% { transform: rotate(20deg); }
+  58% { transform: rotate(55deg); }
+  75% { transform: rotate(-15deg); }
+}
+.shuttle-anim { transform-origin: 30px 30px; animation: fly 1.5s infinite linear; }
+@keyframes fly {
+  0% { transform: translate(-180px, -120px) rotate(135deg); opacity: 0; }
+  10% { opacity: 1; }
+  47% { transform: translate(25px, -5px) rotate(135deg); }
+  50% { transform: translate(40px, 10px) rotate(45deg) scale(0.6, 0.9); }
+  52% { transform: translate(55px, -5px) rotate(45deg) scale(1, 1); }
+  80% { transform: translate(200px, -150px) rotate(45deg); opacity: 1; }
+  90% { transform: translate(250px, -200px) rotate(45deg); opacity: 0; }
+  100% { transform: translate(250px, -200px) rotate(45deg); opacity: 0; }
+}
+.spark-anim { transform-origin: center; animation: spark 1.5s infinite; }
+@keyframes spark {
+  0%, 48% { opacity: 0; transform: scale(0) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.2) rotate(45deg); }
+  54% { opacity: 0; transform: scale(1.8) rotate(90deg); }
+  100% { opacity: 0; }
+}
+
+/* Custom Scrollbar for Notice Board */
+.visible-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.visible-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
 }
 .visible-scrollbar::-webkit-scrollbar-thumb {
   background-color: rgba(156, 163, 175, 0.4);
@@ -735,4 +930,240 @@
 }
 .visible-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: rgba(156, 163, 175, 0.6);
+}
+
+.marquee-anim {
+  display: flex;
+  width: max-content;
+  animation: marquee 90s linear infinite;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* Shimmer loading effect */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Pulse glow for live indicators */
+@keyframes pulseGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+}
+
+.pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* Floating animation */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.float-anim {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Barlow Condensed for stat numbers / display counters */
+.font-stat {
+  font-family: var(--font-stat);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* ── Brainy "VOLT" premium surfaces (glow stat cards) ─────────────────────── */
+/* Oversized data numerals — tabular so digits don't jitter as they animate */
+.text-display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.95;
+}
+
+/* Hairline top-light on dark cards for that premium sheen */
+.sheen {
+  position: relative;
+}
+.dark .sheen::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--foreground) 14%, transparent), transparent);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Ambient blurred colour orbs for hero areas */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.18;
+  pointer-events: none;
+}
+.dark .orb {
+  opacity: 0.24;
+}
+.orb-volt {
+  background: radial-gradient(circle, var(--primary), transparent 70%);
+}
+.orb-cyan {
+  background: radial-gradient(circle, var(--accent), transparent 70%);
+}
+.orb-amber {
+  background: radial-gradient(circle, var(--secondary), transparent 70%);
+}
+
+/* Subtle grid texture masked to the top of hero areas */
+.grid-texture {
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--foreground) 5%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--foreground) 5%, transparent) 1px, transparent 1px);
+  background-size: 32px 32px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 20%, transparent 75%);
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 20%, transparent 75%);
+}
+
+/* ── Accessibility: respect reduced-motion preference ──────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Specifically pause infinite animations */
+  .marquee-anim,
+  .float-anim,
+  .pulse-glow,
+  .shimmer {
+    animation: none !important;
+  }
+}
+
+/* Mobile Safe Areas */
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.racket-anim { transform-origin: 50px 170px; animation: swing 1.5s infinite ease-in-out; }
+@keyframes swing {
+  0%, 100% { transform: rotate(-15deg); }
+  35% { transform: rotate(-50deg); }
+  47% { transform: rotate(-50deg); }
+  50% { transform: rotate(20deg); }
+  58% { transform: rotate(55deg); }
+  75% { transform: rotate(-15deg); }
+}
+.shuttle-anim { transform-origin: 30px 30px; animation: fly 1.5s infinite linear; }
+@keyframes fly {
+  0% { transform: translate(-180px, -120px) rotate(135deg); opacity: 0; }
+  10% { opacity: 1; }
+  47% { transform: translate(25px, -5px) rotate(135deg); }
+  50% { transform: translate(40px, 10px) rotate(45deg) scale(0.6, 0.9); }
+  52% { transform: translate(55px, -5px) rotate(45deg) scale(1, 1); }
+  80% { transform: translate(200px, -150px) rotate(45deg); opacity: 1; }
+  90% { transform: translate(250px, -200px) rotate(45deg); opacity: 0; }
+  100% { transform: translate(250px, -200px) rotate(45deg); opacity: 0; }
+}
+.spark-anim { transform-origin: center; animation: spark 1.5s infinite; }
+@keyframes spark {
+  0%, 48% { opacity: 0; transform: scale(0) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.2) rotate(45deg); }
+  54% { opacity: 0; transform: scale(1.8) rotate(90deg); }
+  100% { opacity: 0; }
+}
+
+/* Custom Scrollbar for Notice Board */
+.visible-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.visible-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.visible-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.4);
+  border-radius: 10px;
+}
+.visible-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.6);
+}
+
+/* Bracket Light Theme Export */
+.print-light-theme {
+  background-color: #ffffff !important;
+}
+.print-light-theme * {
+  border-color: #cccccc !important;
+}
+.print-light-theme .bg-slate-900,
+.print-light-theme .bg-slate-950\/50,
+.print-light-theme .bg-slate-950\/30,
+.print-light-theme .bg-slate-800,
+.print-light-theme .bg-slate-800\/50,
+.print-light-theme .bg-slate-800\/80 {
+  background-color: #ffffff !important;
+  border-color: #cccccc !important;
+}
+.print-light-theme .text-slate-300,
+.print-light-theme .text-slate-400,
+.print-light-theme .text-slate-200,
+.print-light-theme .text-slate-100,
+.print-light-theme .text-muted-foreground,
+.print-light-theme .text-indigo-400,
+.print-light-theme .text-slate-500 {
+  color: #000000 !important;
+}
+.print-light-theme .text-amber-400,
+.print-light-theme .text-amber-500,
+.print-light-theme .text-amber-300 {
+  color: #d97706 !important;
+}
+.print-light-theme .bg-amber-500\/20,
+.print-light-theme .bg-amber-500\/10 {
+  background-color: #fef3c7 !important;
+}
+.print-light-theme line {
+  stroke: #000000 !important;
+}
+
+.bracket-export-bg {
+  background-color: #0d1117;
 }

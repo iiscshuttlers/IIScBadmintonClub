@@ -42,6 +42,88 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 
 import { useHashTab } from "@/hooks/useHashTab";
 
+export function MatchSection({ 
+  title, 
+  icon, 
+  matches, 
+  defaultExpanded = false,
+  renderMatchCard 
+}: { 
+  title: string; 
+  icon: React.ReactNode; 
+  matches: any[]; 
+  defaultExpanded?: boolean;
+  renderMatchCard: (match: any, index: number) => React.ReactNode;
+}) {
+  const [expanded, setExpanded] = useState(defaultExpanded);
+  const [category, setCategory] = useState<string>("ALL");
+
+  const CATEGORIES = ["ALL", "MS", "MD", "XD", "WS", "WD"];
+
+  const filteredMatches = matches.filter(m => {
+    if (category === "ALL") return true;
+    const c = (m.match_code || m.matchNumber || "").toUpperCase();
+    if (c.startsWith(category)) return true;
+    // Fallback if match_code is empty, try to infer from category string
+    const cat = (m.category || "").toUpperCase();
+    if (category === "MS" && (cat.includes("MEN'S SINGLES") || cat === "MS" || cat === "SINGLES")) return true;
+    if (category === "MD" && (cat.includes("MEN'S DOUBLES") || cat === "MD" || cat === "DOUBLES")) return true;
+    if (category === "WS" && (cat.includes("WOMEN'S SINGLES") || cat === "WS")) return true;
+    if (category === "WD" && (cat.includes("WOMEN'S DOUBLES") || cat === "WD")) return true;
+    if (category === "XD" && (cat.includes("MIXED") || cat === "XD")) return true;
+    return false;
+  });
+
+  return (
+    <div className="mb-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden transition-all duration-300">
+      <div 
+        className="px-5 py-4 flex items-center justify-between cursor-pointer bg-slate-50/50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-white dark:bg-slate-900 rounded-xl shadow-sm text-primary">
+            {icon}
+          </div>
+          <h3 className="font-black text-lg text-slate-800 dark:text-slate-100">{title} <span className="text-muted-foreground font-semibold text-sm ml-2">({matches.length})</span></h3>
+        </div>
+        <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`} />
+      </div>
+
+      {expanded && (
+        <div className="p-4 sm:p-5 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div className="mb-5 bg-slate-100/50 dark:bg-slate-950 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-1">
+              {CATEGORIES.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setCategory(cat)}
+                  className={`flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs font-black transition-all ${
+                    category === cat
+                      ? "bg-white dark:bg-slate-800 text-primary dark:text-primary shadow-sm ring-1 ring-slate-200 dark:ring-slate-700"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {filteredMatches.length > 0 ? (
+              filteredMatches.map((match, i) => renderMatchCard(match, i))
+            ) : (
+              <div className="text-center py-8 text-slate-500 dark:text-slate-400 text-sm font-medium">
+                No {category !== "ALL" ? category : ""} matches found in this section.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function FeedTab() {
   const { session, profile: ownProfile, isUmpire, isAdmin } = useAuth();
   const [, setLocation] = useLocation();
@@ -57,6 +139,7 @@ export default function FeedTab() {
   }, []);
 
   const { liveMatchIds, hasLiveMatches } = useLiveMatches();
+  const [feedView, setFeedView] = useState<"my" | "tournament">("tournament");
 
   const {
     loading,
@@ -177,6 +260,31 @@ export default function FeedTab() {
             {!loading && (
               <div className="-mx-4 sm:mx-0 mb-6">
                 <LiveScoreSection />
+              </div>
+            )}
+
+            {!loading && (
+              <div className="flex bg-slate-100/80 dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 mb-6 shadow-sm">
+                <button
+                  onClick={() => setFeedView("my")}
+                  className={`flex-1 flex justify-center items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-black transition-all ${
+                    feedView === "my"
+                      ? "bg-white dark:bg-slate-800 text-violet-500 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50"
+                  }`}
+                >
+                  <Activity className="w-4 h-4" /> My Matches
+                </button>
+                <button
+                  onClick={() => setFeedView("tournament")}
+                  className={`flex-1 flex justify-center items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-black transition-all ${
+                    feedView === "tournament"
+                      ? "bg-white dark:bg-slate-800 text-primary shadow-sm ring-1 ring-slate-200 dark:ring-slate-700"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50"
+                  }`}
+                >
+                  <Trophy className="w-4 h-4" /> Tournament Matches
+                </button>
               </div>
             )}
 
@@ -330,118 +438,180 @@ export default function FeedTab() {
               renderSkeleton()
             ) : displayMatches.length > 0 ? (
               <div className="space-y-4">
-                {displayMatches.map((match: any, i: number) => {
-                  const p1 = match.player1;
-                  const p2 = match.player2;
-                  const isP1Winner = match.winner_id === p1?.id;
+                {(() => {
+                  const upcomingMatches: any[] = [];
+                  const completedMatches: any[] = [];
+                  const myMatchesList: any[] = [];
 
-
-                  // Determine Elo difference before match
-                  let upsetDiff = 0;
-                  if (
-                    match.elo_change_p1 !== undefined &&
-                    match.elo_change_p2 !== undefined &&
-                    p1 && p2
-                  ) {
-                    // If the player who had lower ELO won
-                    const eloDiff = p1.elo_rating - p2.elo_rating;
-                    if (
-                      (isP1Winner && eloDiff < -150) ||
-                      (!isP1Winner && eloDiff > 150)
-                    ) {
-                      upsetDiff = Math.abs(eloDiff);
+                  displayMatches.forEach(match => {
+                    const isMyMatch = ownProfile?.id && (
+                      match.player1_id === ownProfile.id ||
+                      match.player2_id === ownProfile.id ||
+                      match.player3_id === ownProfile.id ||
+                      match.player4_id === ownProfile.id
+                    );
+                    
+                    if (isMyMatch) {
+                      myMatchesList.push(match);
                     }
-                  }
 
-                  // Parse video URL
-                  let displayScore = match.score || "";
-                  let highlightUrl = null;
-                  if (displayScore.includes(" | ")) {
-                    const parts = displayScore.split(" | ");
-                    displayScore = parts[0];
-                    highlightUrl = parts[1];
-                  }
+                    const isLiveNow = !match.is_friendly &&
+                      (liveMatchIds.has(match.player1_id) || liveMatchIds.has(match.player2_id) ||
+                        (match.team1_partner_id && liveMatchIds.has(match.team1_partner_id)) ||
+                        (match.team2_partner_id && liveMatchIds.has(match.team2_partner_id)));
+                    
+                    if (isLiveNow) {
+                      // Handled by LiveScoreSection, exclude from here
+                    } else if (match.status === 'scheduled') {
+                      upcomingMatches.push(match);
+                    } else {
+                      completedMatches.push(match);
+                    }
+                  });
 
-                  const isMatchOfTheDay = match.id === matchOfTheDayId;
-                  const isLiveNow = !match.is_friendly &&
-                    (liveMatchIds.has(match.player1_id) || liveMatchIds.has(match.player2_id) ||
-                      (match.team1_partner_id && liveMatchIds.has(match.team1_partner_id)) ||
-                      (match.team2_partner_id && liveMatchIds.has(match.team2_partner_id)));
+                  // Sort myMatches by created_at
+                  myMatchesList.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                  // Sort upcoming matches by scheduled_at ascending, placing unscheduled matches last
+                  upcomingMatches.sort((a, b) => {
+                    const timeA = a.scheduled_at ? new Date(a.scheduled_at).getTime() : Infinity;
+                    const timeB = b.scheduled_at ? new Date(b.scheduled_at).getTime() : Infinity;
+                    return timeA - timeB;
+                  });
 
-                  const isKudosed = (m: any) => {
-                    if (kudosState.hasOwnProperty(m.id)) return kudosState[m.id];
+                  const renderCard = (match: any, i: number) => {
+                    const p1 = match.player1;
+                    const p2 = match.player2;
+                    const isP1Winner = match.winner_id === p1?.id;
+
+                    // Determine Elo difference before match
+                    let upsetDiff = 0;
+                    if (
+                      match.elo_change_p1 !== undefined &&
+                      match.elo_change_p2 !== undefined &&
+                      p1 && p2
+                    ) {
+                      // If the player who had lower ELO won
+                      const eloDiff = p1.elo_rating - p2.elo_rating;
+                      if (
+                        (isP1Winner && eloDiff < -150) ||
+                        (!isP1Winner && eloDiff > 150)
+                      ) {
+                        upsetDiff = Math.abs(eloDiff);
+                      }
+                    }
+
+                    const isMatchOfTheDay = match.id === matchOfTheDayId;
+                    const isLiveNow = !match.is_friendly &&
+                      (liveMatchIds.has(match.player1_id) || liveMatchIds.has(match.player2_id) ||
+                        (match.team1_partner_id && liveMatchIds.has(match.team1_partner_id)) ||
+                        (match.team2_partner_id && liveMatchIds.has(match.team2_partner_id)));
+
+                    const isKudosed = (m: any) => {
+                      if (kudosState.hasOwnProperty(m.id)) return kudosState[m.id];
+                      return (
+                        (Array.isArray(m.kudos_users) &&
+                          session?.user?.id &&
+                          m.kudos_users.includes(session.user.id)) ||
+                        !!localStorage.getItem(`liked_${m.id}`)
+                      );
+                    };
+
+                    const handleKudos = async (match: any) => {
+                      const storageKey = `liked_${match.id}`;
+                      const isCurrentlyLiked = isKudosed(match);
+
+                      if (!isCurrentlyLiked) {
+                        localStorage.setItem(storageKey, "1");
+                        setKudosState((prev) => ({ ...prev, [match.id]: true }));
+                        toast.success("Match liked! ❤️");
+                      } else {
+                        localStorage.removeItem(storageKey);
+                        setKudosState((prev) => ({ ...prev, [match.id]: false }));
+                        toast.success("Like removed");
+                      }
+
+                      if (session?.user?.id) {
+                        supabase
+                          .rpc("toggle_match_kudos", { p_match_id: match.id })
+                          .then(({ error }) => {
+                            if (error)
+                              console.warn("Failed to sync kudos live:", error);
+                          });
+
+                        if (!isCurrentlyLiked) {
+                          const giverName = ownProfile?.full_name ?? "Someone";
+                          supabase.functions
+                            .invoke("notify-kudos", {
+                              body: { match_id: match.id, giver_name: giverName },
+                            })
+                            .catch(() => { });
+                        }
+                      }
+                    };
+
+                    const handleShare = (match: any) => shareMatch(match);
+                    
+                    const isLikedLocally = kudosState[match.id] ?? !!localStorage.getItem(`liked_${match.id}`);
+                    const baseCount = Array.isArray(match.kudos_users) ? match.kudos_users.length : 0;
+                    const isIncludedInBackend = Array.isArray(match.kudos_users) && match.kudos_users.includes(session?.user?.id);
+                    let finalKudosCount = baseCount;
+                    
+                    if (isLikedLocally && !isIncludedInBackend) {
+                      finalKudosCount += 1;
+                    } else if (!isLikedLocally && isIncludedInBackend) {
+                      finalKudosCount -= 1;
+                    }
+
                     return (
-                      (Array.isArray(m.kudos_users) &&
-                        session?.user?.id &&
-                        m.kudos_users.includes(session.user.id)) ||
-                      !!localStorage.getItem(`liked_${m.id}`)
+                      <ErrorBoundary key={`eb-${match.id}`}>
+                        <MatchCard
+                          key={match.id}
+                          match={match}
+                          currentUser={session?.user}
+                          isLiveNow={isLiveNow}
+                          isMatchOfTheDay={isMatchOfTheDay}
+                          upsetDiff={upsetDiff}
+                          isKudosed={isLikedLocally || isIncludedInBackend}
+                          kudosCount={finalKudosCount}
+                          onKudos={() => handleKudos(match)}
+                          onShare={() => handleShare(match)}
+                          index={i}
+                        />
+                      </ErrorBoundary>
                     );
                   };
 
-                  const handleKudos = async (match: any) => {
-                    const storageKey = `liked_${match.id}`;
-                    const isCurrentlyLiked = isKudosed(match);
-
-                    if (!isCurrentlyLiked) {
-                      localStorage.setItem(storageKey, "1");
-                      setKudosState((prev) => ({ ...prev, [match.id]: true }));
-                      toast.success("Match liked! ❤️");
-                    } else {
-                      localStorage.removeItem(storageKey);
-                      setKudosState((prev) => ({ ...prev, [match.id]: false }));
-                      toast.success("Like removed");
-                    }
-
-                    if (session?.user?.id) {
-                      supabase
-                        .rpc("toggle_match_kudos", { p_match_id: match.id })
-                        .then(({ error }) => {
-                          if (error)
-                            console.warn("Failed to sync kudos live:", error);
-                        });
-
-                      if (!isCurrentlyLiked) {
-                        const giverName = ownProfile?.full_name ?? "Someone";
-                        supabase.functions
-                          .invoke("notify-kudos", {
-                            body: { match_id: match.id, giver_name: giverName },
-                          })
-                          .catch(() => { });
-                      }
-                    }
-                  };
-
-                  const handleShare = (match: any) => shareMatch(match);
-                  
-                  const isLikedLocally = kudosState[match.id] ?? !!localStorage.getItem(`liked_${match.id}`);
-                  const baseCount = Array.isArray(match.kudos_users) ? match.kudos_users.length : 0;
-                  const isIncludedInBackend = Array.isArray(match.kudos_users) && match.kudos_users.includes(session?.user?.id);
-                  let finalKudosCount = baseCount;
-                  
-                  if (isLikedLocally && !isIncludedInBackend) {
-                    finalKudosCount += 1;
-                  } else if (!isLikedLocally && isIncludedInBackend) {
-                    finalKudosCount -= 1;
-                  }
-
                   return (
-                    <ErrorBoundary key={`eb-${match.id}`}>
-                      <MatchCard
-                        key={match.id}
-                        match={match}
-                        currentUser={session?.user}
-                        isLiveNow={isLiveNow}
-                        isMatchOfTheDay={isMatchOfTheDay}
-                        upsetDiff={upsetDiff}
-                        isKudosed={isLikedLocally || isIncludedInBackend}
-                        kudosCount={finalKudosCount}
-                        onKudos={() => handleKudos(match)}
-                        onShare={() => handleShare(match)}
-                        index={i}
-                      />
-                    </ErrorBoundary>
+                    <>
+                      {feedView === "my" ? (
+                        <MatchSection 
+                          title="My Matches" 
+                          icon={<Activity className="w-5 h-5 text-violet-500" />} 
+                          matches={myMatchesList} 
+                          defaultExpanded={true} 
+                          renderMatchCard={renderCard}
+                        />
+                      ) : (
+                        <>
+                          <MatchSection 
+                            title="Upcoming Matches" 
+                            icon={<Clock className="w-5 h-5 text-amber-500" />} 
+                            matches={upcomingMatches} 
+                            defaultExpanded={true} 
+                            renderMatchCard={renderCard}
+                          />
+                          <MatchSection 
+                            title="Completed Matches" 
+                            icon={<UserCheck className="w-5 h-5 text-emerald-500" />} 
+                            matches={completedMatches} 
+                            defaultExpanded={false} 
+                            renderMatchCard={renderCard}
+                          />
+                        </>
+                      )}
+                    </>
                   );
-                })}
+                })()}
 
                 {matches.length >= limitCount && (
                   <div className="flex justify-center mt-6 pt-4 pb-8">
