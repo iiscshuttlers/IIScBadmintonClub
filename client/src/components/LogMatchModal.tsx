@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { SwipeToConfirm } from "@/components/ui/SwipeToConfirm";
 import { supabase } from "@/lib/supabase";
+import { Preferences } from "@capacitor/preferences";
 import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
 import { toast } from "sonner";
 import { useOtherPlayersSlim } from "@/hooks/usePlayers";
@@ -196,9 +197,10 @@ export default function LogMatchModal({
       if (Array.isArray(stored)) setRecentOpponentIds(stored.slice(0, 3));
     } catch (e) {}
 
-    const updateQueueCount = () => {
+    const updateQueueCount = async () => {
       try {
-        const q = JSON.parse(localStorage.getItem("offline_matches") || "[]");
+        const { value } = await Preferences.get({ key: "offline_matches" });
+        const q = JSON.parse(value || "[]");
         setOfflineQueueCount(q.length);
       } catch (e) {}
     };
@@ -400,14 +402,20 @@ export default function LogMatchModal({
     };
 
     if (!navigator.onLine) {
-      let existingQueue: any[] = [];
-      try {
-        existingQueue = JSON.parse(localStorage.getItem("offline_matches") || "[]");
-      } catch (e) {}
-      existingQueue.push({ ...rpcPayload, match_category: matchCategory, timestamp: Date.now() });
-      localStorage.setItem("offline_matches", JSON.stringify(existingQueue));
-      toast.success("Offline (Gym Mode) — match queued, will sync when reconnected.", { duration: 5000 });
-      onSuccess(); onClose(); return;
+      const saveOffline = async () => {
+        let existingQueue: any[] = [];
+        try {
+          const { value } = await Preferences.get({ key: "offline_matches" });
+          existingQueue = JSON.parse(value || "[]");
+        } catch (e) {}
+        existingQueue.push({ ...rpcPayload, match_category: matchCategory, timestamp: Date.now() });
+        await Preferences.set({ key: "offline_matches", value: JSON.stringify(existingQueue) });
+        toast.success("Offline (Gym Mode) — match queued, will sync when reconnected.", { duration: 5000 });
+        onSuccess(); 
+        onClose();
+      };
+      saveOffline();
+      return;
     }
 
     setLoading(true);

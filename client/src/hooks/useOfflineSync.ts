@@ -1,19 +1,22 @@
 import { useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { Preferences } from "@capacitor/preferences";
+import { App } from "@capacitor/app";
 
 type OfflineAction =
   | { type: "confirm"; matchId: string; confirmerId: string }
   | { type: "reject"; matchId: string; rejecterId: string }
   | { type: "withdraw"; matchId: string };
 
-export function queueOfflineAction(action: OfflineAction) {
+export async function queueOfflineAction(action: OfflineAction) {
   let queue: OfflineAction[] = [];
   try {
-    queue = JSON.parse(localStorage.getItem("offline_match_actions") || "[]");
+    const { value } = await Preferences.get({ key: "offline_match_actions" });
+    queue = JSON.parse(value || "[]");
   } catch (e) {}
   queue.push(action);
-  localStorage.setItem("offline_match_actions", JSON.stringify(queue));
+  await Preferences.set({ key: "offline_match_actions", value: JSON.stringify(queue) });
 }
 
 export function useOfflineSync() {
@@ -25,7 +28,8 @@ export function useOfflineSync() {
 
     const syncMatches = async () => {
       try {
-        const queue = JSON.parse(localStorage.getItem("offline_matches") || "[]");
+        const { value } = await Preferences.get({ key: "offline_matches" });
+        const queue = JSON.parse(value || "[]");
         if (queue.length === 0) return;
 
         toast.info("Back online! Syncing queued matches...");
@@ -46,7 +50,7 @@ export function useOfflineSync() {
 
         if (successCount > 0) toast.success(`Synced ${successCount} offline match(es)!`);
         if (failedQueue.length > 0) toast.error(`Failed to sync ${failedQueue.length} match(es).`);
-        localStorage.setItem("offline_matches", JSON.stringify(failedQueue));
+        await Preferences.set({ key: "offline_matches", value: JSON.stringify(failedQueue) });
       } catch (err) {
         console.error("Offline match sync error:", err);
       }
@@ -54,7 +58,8 @@ export function useOfflineSync() {
 
     const syncActions = async () => {
       try {
-        const queue: OfflineAction[] = JSON.parse(localStorage.getItem("offline_match_actions") || "[]");
+        const { value } = await Preferences.get({ key: "offline_match_actions" });
+        const queue: OfflineAction[] = JSON.parse(value || "[]");
         if (queue.length === 0) return;
 
         let successCount = 0;
@@ -81,17 +86,27 @@ export function useOfflineSync() {
 
         if (successCount > 0) toast.success(`Synced ${successCount} queued match action(s)!`);
         if (failedQueue.length > 0) toast.error(`Failed to sync ${failedQueue.length} action(s).`);
-        localStorage.setItem("offline_match_actions", JSON.stringify(failedQueue));
+        await Preferences.set({ key: "offline_match_actions", value: JSON.stringify(failedQueue) });
       } catch (err) {
         console.error("Offline action sync error:", err);
       }
     };
 
     window.addEventListener("online", syncAll);
+    
+    // Resume listener for mobile native apps
+    const appStateListener = App.addListener("appStateChange", ({ isActive }) => {
+      if (isActive && navigator.onLine) {
+        syncAll();
+      }
+    });
 
     // Check once on mount in case they started app online with queued items
     if (navigator.onLine) syncAll();
 
-    return () => window.removeEventListener("online", syncAll);
+    return () => {
+      window.removeEventListener("online", syncAll);
+      appStateListener.then(listener => listener.remove());
+    };
   }, []);
 }

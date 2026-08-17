@@ -102,6 +102,27 @@ export async function exportProfilePdf(data: ProfilePdfData) {
     canvas.height = H;
     const ctx = canvas.getContext("2d")!;
 
+    // ── Theme Selection ──
+    let primaryGradColors = ["#b45309", "#d97706", "#f59e0b"]; // Amber (default)
+    let accentGlow1 = "rgba(245,158,11,0.18)";
+    let accentGlow2 = "rgba(59,130,246,0.12)";
+    let shadowColor = "rgba(245,158,11,0.4)";
+    let strokeColor = "#f59e0b";
+    
+    if (winRate >= 70 && totalMatches >= 10) {
+      primaryGradColors = ["#0ea5e9", "#3b82f6", "#2563eb"]; // Blue / Diamond
+      accentGlow1 = "rgba(59,130,246,0.25)";
+      accentGlow2 = "rgba(168,85,247,0.12)";
+      shadowColor = "rgba(59,130,246,0.5)";
+      strokeColor = "#3b82f6";
+    } else if (winRate >= 50 && totalMatches >= 5) {
+      primaryGradColors = ["#059669", "#10b981", "#34d399"]; // Emerald
+      accentGlow1 = "rgba(16,185,129,0.2)";
+      accentGlow2 = "rgba(59,130,246,0.12)";
+      shadowColor = "rgba(16,185,129,0.5)";
+      strokeColor = "#10b981";
+    }
+
     // ── Background ──
     const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
     bgGrad.addColorStop(0, "#0d1f3c");
@@ -110,21 +131,18 @@ export async function exportProfilePdf(data: ProfilePdfData) {
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, W, H);
 
-    // Decorative amber glow top-right
     const glow1 = ctx.createRadialGradient(W, 0, 0, W, 0, 600);
-    glow1.addColorStop(0, "rgba(245,158,11,0.18)");
+    glow1.addColorStop(0, accentGlow1);
     glow1.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = glow1;
     ctx.fillRect(0, 0, W, H);
 
-    // Decorative blue glow bottom-left
     const glow2 = ctx.createRadialGradient(0, H, 0, 0, H, 700);
-    glow2.addColorStop(0, "rgba(59,130,246,0.12)");
+    glow2.addColorStop(0, accentGlow2);
     glow2.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = glow2;
     ctx.fillRect(0, 0, W, H);
 
-    // Subtle grid pattern
     ctx.save();
     ctx.globalAlpha = 0.03;
     ctx.strokeStyle = "#ffffff";
@@ -137,17 +155,27 @@ export async function exportProfilePdf(data: ProfilePdfData) {
     }
     ctx.restore();
 
+    try {
+      const logoImg = await loadImage("/iisc-logo.png");
+      if (logoImg) {
+        ctx.save();
+        ctx.globalAlpha = 0.05;
+        const logoSize = 800;
+        ctx.drawImage(logoImg, W/2 - logoSize/2, H/2 - logoSize/2, logoSize, logoSize);
+        ctx.restore();
+      }
+    } catch (e) {}
+
     // ── Header ──
     const headerH = 200;
     const headerGrad = ctx.createLinearGradient(0, 0, W, 0);
-    headerGrad.addColorStop(0, "#b45309");
-    headerGrad.addColorStop(0.5, "#d97706");
-    headerGrad.addColorStop(1, "#f59e0b");
+    headerGrad.addColorStop(0, primaryGradColors[0]);
+    headerGrad.addColorStop(0.5, primaryGradColors[1]);
+    headerGrad.addColorStop(1, primaryGradColors[2]);
     ctx.fillStyle = headerGrad;
     roundRect(ctx, 0, 0, W, headerH, 0);
     ctx.fill();
 
-    // Header shine
     ctx.save();
     ctx.globalAlpha = 0.15;
     const shine = ctx.createLinearGradient(0, 0, 0, headerH);
@@ -163,7 +191,7 @@ export async function exportProfilePdf(data: ProfilePdfData) {
     ctx.fillText("IISc BADMINTON CLUB", 54, 105);
     ctx.font = "700 36px sans-serif";
     ctx.globalAlpha = 0.7;
-    ctx.fillText("PLAYER PROFILE", 54, 160);
+    ctx.fillText("PLAYER CARD", 54, 160);
     ctx.globalAlpha = 1;
 
     // ── Avatar ──
@@ -171,18 +199,16 @@ export async function exportProfilePdf(data: ProfilePdfData) {
     const avatarCY = headerH + 200;
     const avatarR = 150;
 
-    // Drop shadow behind avatar
     ctx.save();
-    ctx.shadowColor = "rgba(245,158,11,0.4)";
+    ctx.shadowColor = shadowColor;
     ctx.shadowBlur = 60;
     ctx.beginPath();
     ctx.arc(avatarCX, avatarCY, avatarR + 8, 0, Math.PI * 2);
-    ctx.strokeStyle = "#f59e0b";
+    ctx.strokeStyle = strokeColor;
     ctx.lineWidth = 8;
     ctx.stroke();
     ctx.restore();
 
-    // Avatar circle
     ctx.save();
     ctx.beginPath();
     ctx.arc(avatarCX, avatarCY, avatarR, 0, Math.PI * 2);
@@ -192,7 +218,6 @@ export async function exportProfilePdf(data: ProfilePdfData) {
     if (avatarImg) {
       ctx.drawImage(avatarImg, avatarCX - avatarR, avatarCY - avatarR, avatarR * 2, avatarR * 2);
     } else {
-      // Initials fallback
       const initGrad = ctx.createLinearGradient(avatarCX - avatarR, avatarCY - avatarR, avatarCX + avatarR, avatarCY + avatarR);
       initGrad.addColorStop(0, "#1e3a5f");
       initGrad.addColorStop(1, "#0d2644");
@@ -200,7 +225,7 @@ export async function exportProfilePdf(data: ProfilePdfData) {
       ctx.fillRect(avatarCX - avatarR, avatarCY - avatarR, avatarR * 2, avatarR * 2);
       const initials = playerName.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
       ctx.font = `900 ${avatarR}px sans-serif`;
-      ctx.fillStyle = "#f59e0b";
+      ctx.fillStyle = strokeColor;
       ctx.textAlign = "center";
       ctx.fillText(initials, avatarCX, avatarCY + avatarR * 0.35);
     }
@@ -226,15 +251,14 @@ export async function exportProfilePdf(data: ProfilePdfData) {
     ctx.textAlign = "center";
     ctx.fillText(lastName.toUpperCase(), W / 2, nameY);
 
-    // Amber underline accent
     const ulW = Math.min(ctx.measureText(lastName.toUpperCase()).width * 0.6, 300);
-    ctx.fillStyle = "#f59e0b";
+    ctx.fillStyle = strokeColor;
     ctx.fillRect(W / 2 - ulW / 2, nameY + 20, ulW, 6);
 
-    // ── Info Chips (wrapping rows) ──
+    // ── Info Chips ──
     const chips: string[] = [];
     if (department) chips.push(department);
-    if (joinedYear) chips.push(`Member Since ${joinedYear}`);
+    if (joinedYear) chips.push(`Class of ${joinedYear}`);
     if (playingLevel) chips.push(playingLevel);
     if (instagram) chips.push(`@${instagram.replace("@", "")}`);
 
@@ -246,7 +270,6 @@ export async function exportProfilePdf(data: ProfilePdfData) {
     const chipMaxX = W - 60;
     const chipStartY = nameY + 70;
 
-    // Layout chips into rows first, then center each row
     const chipRows: Array<Array<{ label: string; w: number }>> = [];
     let currentRow: Array<{ label: string; w: number }> = [];
     let rowW = 0;
@@ -281,84 +304,138 @@ export async function exportProfilePdf(data: ProfilePdfData) {
       });
       chipRowY += chipH + chipRowGap;
     });
-    // chipRowY now points just below the last chip row
+
     const chipY = chipRowY;
-
-    // ── Stats Row ──
-    const statsY = chipY + chipH + 80;
-    const statsH = 280;
-    ctx.fillStyle = "rgba(255,255,255,0.04)";
-    roundRect(ctx, 60, statsY, W - 120, statsH, 32);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(255,255,255,0.08)";
-    ctx.lineWidth = 1.5;
-    roundRect(ctx, 60, statsY, W - 120, statsH, 32);
-    ctx.stroke();
-
-    const stats = [
-      { label: "MATCHES", value: totalMatches.toString() },
-      { label: "WIN RATE", value: `${winRate}%` },
-      { label: "WINS", value: wins.toString() },
-      { label: "LOSSES", value: losses.toString() },
+    const radarCY = chipY + 320;
+    
+    // ── Radar Chart ──
+    const mapRank = (r?: number) => {
+      if (!r || r > 50) return 30;
+      return Math.max(0, 100 - (r * 1.5));
+    };
+    
+    const radarData = [
+      { label: "Win Rate", value: Math.min(100, Math.max(0, winRate)) },
+      { label: "Singles", value: mapRank(ranking.overall || ranking.singles) },
+      { label: "Doubles", value: mapRank(ranking.doubles) },
+      { label: "Mixed", value: mapRank(ranking.mixed) },
+      { label: "Activity", value: Math.min(100, totalMatches * 2) },
     ];
-    const statCW = (W - 120) / stats.length;
-    stats.forEach((s, i) => {
-      const sx = 60 + i * statCW + statCW / 2;
-      // Vertical separator
-      if (i > 0) {
-        ctx.fillStyle = "rgba(255,255,255,0.08)";
-        ctx.fillRect(60 + i * statCW, statsY + 40, 1, statsH - 80);
+    
+    const radarR = 210;
+    const numAxes = radarData.length;
+    const angleStep = (Math.PI * 2) / numAxes;
+    
+    ctx.save();
+    ctx.translate(W/2, radarCY);
+    
+    for (let level = 1; level <= 4; level++) {
+      const r = (radarR / 4) * level;
+      ctx.beginPath();
+      for (let i = 0; i < numAxes; i++) {
+        const angle = i * angleStep - Math.PI / 2;
+        const x = Math.cos(angle) * r;
+        const y = Math.sin(angle) * r;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
       }
-      ctx.font = "900 86px sans-serif";
-      ctx.fillStyle = "#f59e0b";
-      ctx.textAlign = "center";
-      ctx.fillText(s.value, sx, statsY + 170);
-      ctx.font = "600 26px sans-serif";
-      ctx.fillStyle = "rgba(255,255,255,0.4)";
-      ctx.fillText(s.label, sx, statsY + 230);
-    });
-
-    // ── Rankings ──
-    const rankY = statsY + statsH + 70;
-
-    ctx.font = "900 38px sans-serif";
-    ctx.fillStyle = "#f59e0b";
-    ctx.textAlign = "center";
-    ctx.fillText("RANKINGS", W / 2, rankY);
-
-    const rankItems = [
-      { label: "OVERALL", value: ranking.overall },
-      { label: "SINGLES", value: ranking.singles },
-      { label: "DOUBLES", value: ranking.doubles },
-      { label: "MIXED XD", value: ranking.mixed },
-    ];
-    const rCW = (W - 120) / 2 - 10;
-    rankItems.forEach((r, i) => {
-      const col = i % 2;
-      const row = Math.floor(i / 2);
-      const rx = 60 + col * (rCW + 20);
-      const ry = rankY + 55 + row * 210;
-
-      ctx.fillStyle = "rgba(255,255,255,0.05)";
-      roundRect(ctx, rx, ry, rCW, 180, 24);
-      ctx.fill();
-      ctx.strokeStyle = r.value ? "rgba(245,158,11,0.3)" : "rgba(255,255,255,0.06)";
+      ctx.closePath();
+      ctx.strokeStyle = "rgba(255,255,255,0.1)";
       ctx.lineWidth = 1.5;
-      roundRect(ctx, rx, ry, rCW, 180, 24);
       ctx.stroke();
-
-      ctx.font = r.value ? "900 82px sans-serif" : "900 60px sans-serif";
-      ctx.fillStyle = r.value ? "#ffffff" : "rgba(255,255,255,0.15)";
+      if (level === 4) {
+        ctx.fillStyle = "rgba(255,255,255,0.02)";
+        ctx.fill();
+      }
+    }
+    
+    for (let i = 0; i < numAxes; i++) {
+      const angle = i * angleStep - Math.PI / 2;
+      const x = Math.cos(angle) * radarR;
+      const y = Math.sin(angle) * radarR;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = "rgba(255,255,255,0.15)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      
+      const lx = Math.cos(angle) * (radarR + 40);
+      const ly = Math.sin(angle) * (radarR + 40);
+      ctx.font = "700 24px sans-serif";
+      ctx.fillStyle = "rgba(255,255,255,0.6)";
       ctx.textAlign = "center";
-      ctx.fillText(r.value ? `#${r.value}` : "—", rx + rCW / 2, ry + 115);
+      ctx.textBaseline = "middle";
+      ctx.fillText(radarData[i].label.toUpperCase(), lx, ly);
+    }
+    
+    ctx.beginPath();
+    for (let i = 0; i < numAxes; i++) {
+      const angle = i * angleStep - Math.PI / 2;
+      const value = radarData[i].value;
+      const r = (value / 100) * radarR;
+      const x = Math.cos(angle) * r;
+      const y = Math.sin(angle) * r;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.save();
+    ctx.fillStyle = strokeColor;
+    ctx.globalAlpha = 0.35;
+    ctx.fill();
+    ctx.restore();
+    
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    
+    for (let i = 0; i < numAxes; i++) {
+      const angle = i * angleStep - Math.PI / 2;
+      const value = radarData[i].value;
+      const r = (value / 100) * radarR;
+      const x = Math.cos(angle) * r;
+      const y = Math.sin(angle) * r;
+      ctx.beginPath();
+      ctx.arc(x, y, 6, 0, Math.PI * 2);
+      ctx.fillStyle = "#ffffff";
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = strokeColor;
+      ctx.stroke();
+    }
+    ctx.restore();
 
-      ctx.font = "600 24px sans-serif";
+    // ── Key Metrics ──
+    const metricsY = radarCY + radarR + 100;
+    const statsH = 260;
+    
+    const statBox = (x: number, y: number, w: number, h: number, val: string, label: string) => {
+      ctx.fillStyle = "rgba(255,255,255,0.04)";
+      roundRect(ctx, x, y, w, h, 24);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,0.08)";
+      ctx.lineWidth = 1.5;
+      roundRect(ctx, x, y, w, h, 24);
+      ctx.stroke();
+      
+      ctx.font = "900 70px sans-serif";
+      ctx.fillStyle = strokeColor;
+      ctx.textAlign = "center";
+      ctx.fillText(val, x + w/2, y + h/2 + 10);
+      
+      ctx.font = "700 22px sans-serif";
       ctx.fillStyle = "rgba(255,255,255,0.4)";
-      ctx.fillText(r.label, rx + rCW / 2, ry + 158);
-    });
+      ctx.fillText(label.toUpperCase(), x + w/2, y + h/2 + 55);
+    };
+
+    const sCW = (W - 120 - 40) / 3;
+    statBox(60, metricsY, sCW, statsH, `${winRate}%`, "Win Rate");
+    statBox(60 + sCW + 20, metricsY, sCW, statsH, totalMatches.toString(), "Matches");
+    statBox(60 + 2*(sCW + 20), metricsY, sCW, statsH, wins.toString(), "Wins");
 
     // ── Extra info ──
-    const extY = rankY + 55 + 2 * 210 + 50;
+    const extY = metricsY + statsH + 100;
     const extras: string[] = [];
     if (favoriteShot) extras.push(`Fav Shot: ${favoriteShot}`);
     if (favoriteFormat) extras.push(`Fav Format: ${favoriteFormat}`);
@@ -371,8 +448,8 @@ export async function exportProfilePdf(data: ProfilePdfData) {
 
     // ── Footer bar ──
     const footerGrad = ctx.createLinearGradient(0, H - 90, W, H - 90);
-    footerGrad.addColorStop(0, "#b45309");
-    footerGrad.addColorStop(1, "#f59e0b");
+    footerGrad.addColorStop(0, primaryGradColors[0]);
+    footerGrad.addColorStop(1, primaryGradColors[2]);
     ctx.fillStyle = footerGrad;
     ctx.fillRect(0, H - 90, W, 90);
     ctx.font = "700 30px sans-serif";

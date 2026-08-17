@@ -40,7 +40,7 @@ function PollCard({ poll, onVote, onArchive, onDelete, onNotify, onToggleReveal,
     ? poll.options.find(o => o.votes?.includes(currentUserId))?.id
     : null;
   const hasVoted = !!userVotedId || !!poll.is_archived;
-  const shouldShowResults = isAdmin || poll.results_revealed || poll.is_archived;
+  const shouldShowResults = hasVoted || isAdmin || poll.results_revealed || poll.is_archived;
 
   return (
     <div className={`bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 relative ${poll.is_archived ? "opacity-75" : ""}`}>
@@ -110,33 +110,37 @@ function PollCard({ poll, onVote, onArchive, onDelete, onNotify, onToggleReveal,
               key={option.id}
               onClick={() => !hasVoted && onVote(poll.id, option.id)}
               disabled={hasVoted}
-              className={`w-full text-left relative overflow-hidden rounded-xl border transition-all ${
+              className={`w-full text-left relative overflow-hidden rounded-xl border-2 transition-all duration-300 ${
                 isMyVote
-                  ? "border-violet-400 dark:border-violet-600"
+                  ? "border-violet-500 dark:border-violet-400 shadow-sm shadow-violet-500/20"
                   : hasVoted
-                  ? "border-slate-200 dark:border-slate-700 cursor-default"
+                  ? "border-slate-200 dark:border-slate-800 cursor-default"
                   : "border-slate-200 dark:border-slate-700 hover:border-violet-300 dark:hover:border-violet-700 cursor-pointer"
               }`}
             >
               {/* Progress bar background */}
               {hasVoted && shouldShowResults && (
                 <motion.div
-                  className={`absolute inset-0 ${isMyVote ? "bg-violet-100 dark:bg-violet-900/30" : "bg-slate-50 dark:bg-slate-800/50"}`}
+                  className={`absolute inset-0 ${isMyVote ? "bg-violet-100 dark:bg-violet-500/25" : "bg-slate-50 dark:bg-slate-800/60"}`}
                   initial={{ scaleX: 0 }}
                   animate={{ scaleX: pct / 100 }}
                   transition={{ duration: 0.6, ease: "easeOut" }}
                   style={{ transformOrigin: "left" }}
                 />
               )}
-              <div className="relative z-10 flex items-center justify-between px-4 py-3">
-                <div className="flex items-center gap-2">
-                  {isMyVote && <CheckCircle2 className="w-4 h-4 text-violet-500 shrink-0" />}
-                  <span className={`text-sm font-bold ${isMyVote ? "text-violet-700 dark:text-violet-300" : "text-muted-foreground dark:text-slate-300"}`}>
+              <div className="relative z-10 flex items-center justify-between px-4 py-3.5">
+                <div className="flex items-center gap-3">
+                  {isMyVote ? (
+                    <CheckCircle2 className="w-5 h-5 text-violet-600 dark:text-violet-400 shrink-0" />
+                  ) : (
+                    <div className="w-5 h-5 rounded-full border-2 border-slate-300 dark:border-slate-600 shrink-0" />
+                  )}
+                  <span className={`text-sm font-bold ${isMyVote ? "text-violet-800 dark:text-violet-200" : "text-slate-700 dark:text-slate-300"}`}>
                     {option.text}
                   </span>
                 </div>
                 {hasVoted && shouldShowResults && (
-                  <span className="text-xs font-black text-muted-foreground dark:text-muted-foreground ml-2 whitespace-nowrap">
+                  <span className={`text-sm font-black ${isMyVote ? "text-violet-700 dark:text-violet-300" : "text-slate-500 dark:text-slate-400"} ml-2 whitespace-nowrap`}>
                     {pct}%
                   </span>
                 )}

@@ -257,8 +257,7 @@ export function NoticeBoard() {
                     transition={{ delay: i * 0.05 }}
                     key={item.id}
                   >
-                    <Link href={item.link}>
-                      <a className="flex items-start gap-4 p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group relative">
+                    <Link href={item.link} className="flex items-start gap-4 p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group relative">
                         <div className={cn("p-2.5 rounded-2xl shrink-0 flex items-center justify-center transition-all group-hover:scale-110", item.iconWrapperClass)}>
                           <Icon className={cn("w-5 h-5", item.iconClass)} />
                         </div>
@@ -284,7 +283,6 @@ export function NoticeBoard() {
                         <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity absolute right-4 bottom-4">
                           <ExternalLink className="w-4 h-4 text-muted-foreground" />
                         </div>
-                      </a>
                     </Link>
                   </motion.div>
                 );

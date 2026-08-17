@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { Preferences } from "@capacitor/preferences";
+import { App } from "@capacitor/app";
 import type { BwfMatchState } from "@/types/umpire";
 
 const OFFLINE_QUEUE_KEY = "umpire_offline_queue_v1";
@@ -16,20 +18,20 @@ export function useOfflineUmpireSync() {
   const [isOffline, setIsOffline] = useState<boolean>(!navigator.onLine);
   const [queuedCount, setQueuedCount] = useState<number>(0);
 
-  const updateQueueCount = useCallback(() => {
+  const updateQueueCount = useCallback(async () => {
     try {
-      const stored = localStorage.getItem(OFFLINE_QUEUE_KEY);
-      const items: QueuedUmpireAction[] = stored ? JSON.parse(stored) : [];
+      const { value } = await Preferences.get({ key: OFFLINE_QUEUE_KEY });
+      const items: QueuedUmpireAction[] = value ? JSON.parse(value) : [];
       setQueuedCount(items.length);
     } catch {
       setQueuedCount(0);
     }
   }, []);
 
-  const queueMatchStateUpdate = useCallback((matchState: BwfMatchState) => {
+  const queueMatchStateUpdate = useCallback(async (matchState: BwfMatchState) => {
     try {
-      const stored = localStorage.getItem(OFFLINE_QUEUE_KEY);
-      const items: QueuedUmpireAction[] = stored ? JSON.parse(stored) : [];
+      const { value } = await Preferences.get({ key: OFFLINE_QUEUE_KEY });
+      const items: QueuedUmpireAction[] = value ? JSON.parse(value) : [];
       
       const index = items.findIndex(i => i.matchId === matchState.id);
       const action: QueuedUmpireAction = {
@@ -45,7 +47,7 @@ export function useOfflineUmpireSync() {
         items.push(action);
       }
 
-      localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(items));
+      await Preferences.set({ key: OFFLINE_QUEUE_KEY, value: JSON.stringify(items) });
       setQueuedCount(items.length);
     } catch (e) {
       console.error("Failed to queue offline match state update", e);
@@ -54,10 +56,10 @@ export function useOfflineUmpireSync() {
 
   const flushOfflineQueue = useCallback(async () => {
     try {
-      const stored = localStorage.getItem(OFFLINE_QUEUE_KEY);
-      if (!stored) return;
+      const { value } = await Preferences.get({ key: OFFLINE_QUEUE_KEY });
+      if (!value) return;
       
-      const items: QueuedUmpireAction[] = JSON.parse(stored);
+      const items: QueuedUmpireAction[] = JSON.parse(value);
       if (items.length === 0) return;
 
       toast.info(`Syncing ${items.length} offline score update(s)...`);
@@ -80,7 +82,7 @@ export function useOfflineUmpireSync() {
 
       if (error) throw error;
 
-      localStorage.removeItem(OFFLINE_QUEUE_KEY);
+      await Preferences.remove({ key: OFFLINE_QUEUE_KEY });
       setQueuedCount(0);
       toast.success("Offline scores successfully synced!");
     } catch (e: any) {
@@ -105,9 +107,16 @@ export function useOfflineUmpireSync() {
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
 
+    const appStateListener = App.addListener("appStateChange", ({ isActive }) => {
+      if (isActive && navigator.onLine) {
+        flushOfflineQueue();
+      }
+    });
+
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
+      appStateListener.then(listener => listener.remove());
     };
   }, [flushOfflineQueue, updateQueueCount]);
 

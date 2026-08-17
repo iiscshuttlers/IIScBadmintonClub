@@ -432,7 +432,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
               </h2>
             </div>
 
-        <div className="md:hidden flex justify-center mt-2 mb-4">
+        <div className="flex justify-center mt-2 mb-4">
           <button
             onClick={() => setShowDetails(!showDetails)}
             className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors px-4 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm"
@@ -443,7 +443,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
         </div>
 
         <motion.div
-          className={`${showDetails ? "flex flex-col" : "hidden"} md:grid md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-0`}
+          className={`${showDetails ? "flex flex-col md:grid md:grid-cols-4" : "hidden"} gap-3 md:gap-4 mb-4 md:mb-0`}
           initial="hidden"
           animate="visible"
           variants={{ visible: { transition: { staggerChildren: 0.08 } } }}
@@ -810,6 +810,9 @@ function SupabaseScheduleView({ tournamentId }: { tournamentId: string | null })
   const [schedMatches, setSchedMatches] = useState<ScheduledMatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("ALL");
+  const [showLive, setShowLive] = useState(true);
+  const [showUpcoming, setShowUpcoming] = useState(true);
+  const [showCompleted, setShowCompleted] = useState(false);
 
   useEffect(() => {
     if (!tournamentId) { setLoading(false); return; }
@@ -831,16 +834,6 @@ function SupabaseScheduleView({ tournamentId }: { tournamentId: string | null })
   const categories = ["ALL", ...new Set(schedMatches.map((m) => m.category))];
   const filtered = activeCategory === "ALL" ? schedMatches : schedMatches.filter((m) => m.category === activeCategory);
 
-  // Group by date
-  const grouped: Record<string, ScheduledMatch[]> = {};
-  for (const m of filtered) {
-    const key = m.scheduled_at
-      ? new Date(m.scheduled_at).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })
-      : "Unscheduled";
-    if (!grouped[key]) grouped[key] = [];
-    grouped[key].push(m);
-  }
-
   if (!schedMatches.length) return (
     <div className="py-16 flex flex-col items-center justify-center text-center">
       <Calendar className="w-12 h-12 text-slate-300 dark:text-muted-foreground mx-auto mb-4" />
@@ -849,10 +842,78 @@ function SupabaseScheduleView({ tournamentId }: { tournamentId: string | null })
     </div>
   );
 
+  const liveMatches = filtered.filter(m => m.status === "in_progress");
+  const completedMatches = filtered.filter(m => m.status === "completed" || m.status === "walkover").reverse();
+  const upcomingMatches = filtered.filter(m => m.status === "scheduled" || (!["in_progress", "completed", "walkover"].includes(m.status)));
+
+  const renderMatchList = (matches: ScheduledMatch[]) => {
+    const grouped: Record<string, ScheduledMatch[]> = {};
+    for (const m of matches) {
+      const key = m.scheduled_at
+        ? new Date(m.scheduled_at).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })
+        : "Unscheduled";
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(m);
+    }
+
+    return (
+      <div className="space-y-6 mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
+        {Object.entries(grouped).map(([date, dayMatches]) => (
+          <div key={date}>
+            <div className="flex items-center gap-3 mb-3">
+              <Calendar className="w-4 h-4 text-primary" />
+              <h4 className="font-black text-muted-foreground dark:text-slate-200 text-sm">{date}</h4>
+            </div>
+            <div className="space-y-3">
+              {dayMatches.map((m) => {
+                const catCls = CAT_COLORS[m.category] ?? "bg-slate-50 dark:bg-slate-800 text-muted-foreground border-slate-200";
+                const isCompleted = m.status === "completed" || m.status === "walkover";
+                const isLive = m.status === "in_progress";
+                return (
+                  <div key={m.id} className={`rounded-2xl border p-4 ${isLive ? "border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/20 shadow-md shadow-red-500/10" : "border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900"}`}>
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg border ${catCls}`}>{m.category}</span>
+                      <span className="text-[10px] text-muted-foreground font-bold">{m.round_name} · {m.match_code}</span>
+                      {m.court_number && (
+                        <span className={cn("flex items-center gap-1 text-[10px] font-bold", getCourtColor(m.court_number))}>
+                          <MapPin className="w-3 h-3" /> Court {m.court_number}
+                        </span>
+                      )}
+                      {m.scheduled_at && (
+                        <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                          <Clock className="w-3 h-3" />
+                          {new Date(m.scheduled_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      )}
+                      {isLive && <span className="text-[10px] font-black text-red-500 animate-pulse">● LIVE</span>}
+                      {isCompleted && <span className="text-[10px] font-black text-primary">✓ Done</span>}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className={`text-sm font-bold flex-1 ${m.winner_side === 1 ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-slate-200"}`}>
+                        {m.team1_label ?? "TBD"}
+                      </span>
+                      <span className="text-[10px] font-black text-rose-400 shrink-0">VS</span>
+                      <span className={`text-sm font-bold flex-1 text-right ${m.winner_side === 2 ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-slate-200"}`}>
+                        {m.team2_label ?? "TBD"}
+                      </span>
+                    </div>
+                    {isCompleted && m.sets_history?.length ? (
+                      <p className="mt-1.5 text-xs font-mono text-muted-foreground">{m.sets_history.join(", ")}</p>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* Category filter */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 mb-2">
         {categories.map((cat) => (
           <button key={cat} onClick={() => setActiveCategory(cat)}
             className={`px-4 py-1.5 rounded-xl text-sm font-black transition-all border ${
@@ -865,54 +926,44 @@ function SupabaseScheduleView({ tournamentId }: { tournamentId: string | null })
         ))}
       </div>
 
-      {Object.entries(grouped).map(([date, dayMatches]) => (
-        <div key={date}>
-          <div className="flex items-center gap-3 mb-3">
-            <Calendar className="w-4 h-4 text-primary" />
-            <h3 className="font-black text-muted-foreground dark:text-slate-200">{date}</h3>
-          </div>
-          <div className="space-y-3">
-            {dayMatches.map((m) => {
-              const catCls = CAT_COLORS[m.category] ?? "bg-slate-50 dark:bg-slate-800 text-muted-foreground border-slate-200";
-              const isCompleted = m.status === "completed" || m.status === "walkover";
-              const isLive = m.status === "in_progress";
-              return (
-                <div key={m.id} className={`rounded-2xl border p-4 ${isLive ? "border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/20" : "border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900"}`}>
-                  <div className="flex items-center gap-2 mb-2 flex-wrap">
-                    <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg border ${catCls}`}>{m.category}</span>
-                    <span className="text-[10px] text-muted-foreground font-bold">{m.round_name} · {m.match_code}</span>
-                    {m.court_number && (
-                      <span className={cn("flex items-center gap-1 text-[10px] font-bold", getCourtColor(m.court_number))}>
-                        <MapPin className="w-3 h-3" /> Court {m.court_number}
-                      </span>
-                    )}
-                    {m.scheduled_at && (
-                      <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                        <Clock className="w-3 h-3" />
-                        {new Date(m.scheduled_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
-                      </span>
-                    )}
-                    {isLive && <span className="text-[10px] font-black text-red-500 animate-pulse">● LIVE</span>}
-                    {isCompleted && <span className="text-[10px] font-black text-primary">✓ Done</span>}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className={`text-sm font-bold flex-1 ${m.winner_side === 1 ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-slate-200"}`}>
-                      {m.team1_label ?? "TBD"}
-                    </span>
-                    <span className="text-[10px] font-black text-rose-400 shrink-0">VS</span>
-                    <span className={`text-sm font-bold flex-1 text-right ${m.winner_side === 2 ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-slate-200"}`}>
-                      {m.team2_label ?? "TBD"}
-                    </span>
-                  </div>
-                  {isCompleted && m.sets_history?.length ? (
-                    <p className="mt-1.5 text-xs font-mono text-muted-foreground">{m.sets_history.join(", ")}</p>
-                  ) : null}
-                </div>
-              );
-            })}
-          </div>
+      {liveMatches.length > 0 && (
+        <div className="bg-red-50/50 dark:bg-red-950/20 rounded-3xl p-4 sm:p-5 border border-red-200/50 dark:border-red-900/30">
+          <button onClick={() => setShowLive(!showLive)} className="w-full flex items-center justify-between text-left group">
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+              <h3 className="text-lg font-black text-red-900 dark:text-red-400">Live Matches <span className="text-sm text-red-600/70 dark:text-red-400/70 font-bold">({liveMatches.length})</span></h3>
+            </div>
+            {showLive ? <ChevronUp className="w-5 h-5 text-red-400 group-hover:text-red-500 transition" /> : <ChevronDown className="w-5 h-5 text-red-400 group-hover:text-red-500 transition" />}
+          </button>
+          {showLive && renderMatchList(liveMatches)}
         </div>
-      ))}
+      )}
+
+      {upcomingMatches.length > 0 && (
+        <div className="bg-blue-50/50 dark:bg-blue-950/20 rounded-3xl p-4 sm:p-5 border border-blue-200/50 dark:border-blue-900/30">
+          <button onClick={() => setShowUpcoming(!showUpcoming)} className="w-full flex items-center justify-between text-left group">
+            <div className="flex items-center gap-3">
+              <Calendar className="w-5 h-5 text-blue-500 dark:text-blue-400" />
+              <h3 className="text-lg font-black text-blue-900 dark:text-blue-400">Upcoming <span className="text-sm text-blue-600/70 dark:text-blue-400/70 font-bold">({upcomingMatches.length})</span></h3>
+            </div>
+            {showUpcoming ? <ChevronUp className="w-5 h-5 text-blue-400 group-hover:text-blue-500 transition" /> : <ChevronDown className="w-5 h-5 text-blue-400 group-hover:text-blue-500 transition" />}
+          </button>
+          {showUpcoming && renderMatchList(upcomingMatches)}
+        </div>
+      )}
+
+      {completedMatches.length > 0 && (
+        <div className="bg-slate-100/50 dark:bg-slate-800/40 rounded-3xl p-4 sm:p-5 border border-slate-200 dark:border-slate-700/60">
+          <button onClick={() => setShowCompleted(!showCompleted)} className="w-full flex items-center justify-between text-left group">
+            <div className="flex items-center gap-3">
+              <Archive className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+              <h3 className="text-lg font-black text-slate-800 dark:text-slate-300">Completed <span className="text-sm text-slate-500/70 dark:text-slate-400/70 font-bold">({completedMatches.length})</span></h3>
+            </div>
+            {showCompleted ? <ChevronUp className="w-5 h-5 text-slate-400 group-hover:text-slate-300 transition" /> : <ChevronDown className="w-5 h-5 text-slate-400 group-hover:text-slate-300 transition" />}
+          </button>
+          {showCompleted && renderMatchList(completedMatches)}
+        </div>
+      )}
     </div>
   );
 }
