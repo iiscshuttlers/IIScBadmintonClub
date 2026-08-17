@@ -151,7 +151,7 @@ writeFileSync(
     {
       versionCode: newCode,
       versionName: newName,
-      downloadUrl: `https://play.google.com/store/apps/details?id=com.iiscshuttlers.app`,
+      downloadUrl: `https://play.google.com/store/apps/details?id=shuttlers.iisc.com`,
       changelog,
     },
     null,

@@ -321,21 +321,23 @@ export default function Home() {
                               <Sparkles className="w-5 h-5 text-amber-400 sparkle-1 hidden sm:block" />
                             </div>
                             <p className="text-sm font-medium text-slate-300 leading-relaxed mt-2 max-w-2xl">
-                              We are getting ready to launch our brand new app on the Google Play Store! We need <span className="text-amber-400 font-bold">20 active testers</span> for the next <span className="text-amber-400 font-bold">14 days</span> before Google allows us to publish it to the public. If you have an Android phone, please help us out by following these steps:
+                              We are getting ready to launch our brand new app on the Google Play Store! We need <span className="bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded font-bold border border-amber-500/20">20 active testers</span> for the next <span className="bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded font-bold border border-amber-500/20">14 days</span> before Google allows us to publish it to the public. If you have an Android phone, please help us out by following these steps:
                             </p>
                             
-                            <div className="bg-slate-800/50 rounded-xl p-4 mt-4 mb-4 border border-slate-700/50 max-w-2xl mx-auto sm:mx-0 text-left space-y-3 shadow-inner">
+                            <div className="bg-slate-800/50 rounded-xl p-4 mt-4 mb-4 border border-slate-700/50 max-w-2xl mx-auto sm:mx-0 text-left space-y-4 shadow-inner">
                               <div className="flex gap-3 items-start">
                                 <span className="flex-shrink-0 w-6 h-6 rounded-full bg-violet-400 text-slate-900 flex items-center justify-center text-xs font-black shadow-md mt-0.5">1</span>
-                                <p className="text-sm text-slate-300 leading-snug">
-                                  Click <strong className="text-violet-300">Join Testing Group</strong> below and click "Join group" on the page that opens.<br/>
-                                  <span className="text-xs text-amber-400/90 font-medium inline-block mt-1">Crucial: Make sure you join using the exact same Google account as your Android phone's Play Store!</span>
-                                </p>
+                                <div className="text-sm text-slate-300 leading-snug">
+                                  Click <strong className="bg-violet-500/20 text-violet-300 px-1.5 py-0.5 rounded border border-violet-500/20 font-bold mx-0.5">Join Testing Group</strong> below and click "Join group" on the page that opens.<br/>
+                                  <div className="mt-2 bg-amber-500/10 border-l-2 border-amber-500/50 pl-2.5 py-1.5 pr-2 rounded-r-md">
+                                    <span className="text-xs text-amber-400 font-medium">Crucial: Make sure you join using the exact same Google account as your Android phone's Play Store!</span>
+                                  </div>
+                                </div>
                               </div>
                               <div className="flex gap-3 items-start">
                                 <span className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-400 text-slate-900 flex items-center justify-center text-xs font-black shadow-md mt-0.5">2</span>
                                 <p className="text-sm text-slate-300 leading-snug">
-                                  Click <strong className="text-amber-300">Download on Play Store</strong> below, then click <strong className="text-white">"Become a tester"</strong> to get the Play Store download link for your phone.
+                                  Click <strong className="bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded border border-amber-500/20 font-bold mx-0.5">Download on Play Store</strong> below, then click <strong className="bg-white/10 text-white px-1.5 py-0.5 rounded border border-white/10 font-bold mx-0.5">"Become a tester"</strong> to get the Play Store download link for your phone.
                                 </p>
                               </div>
                             </div>

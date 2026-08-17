@@ -8,7 +8,7 @@ interface Props {
 }
 
 export function AppUpdatePrompt({ updateInfo, onDismiss }: Props) {
-  const PACKAGE_ID = "com.iiscshuttlers.app";
+  const PACKAGE_ID = "shuttlers.iisc.com";
 
   const handleUpdate = () => {
     // Try opening Play Store app directly; fall back to browser
