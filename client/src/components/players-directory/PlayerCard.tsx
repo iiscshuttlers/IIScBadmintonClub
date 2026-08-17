@@ -45,7 +45,21 @@ export function formatWinLossRecord(record?: string | any): string {
   } catch {
     // Not JSON, continue to fallback
   }
-  return String(record);
+  
+  // Clean up any string format (e.g. "0w-0L", "0w - 0l", "0w-0l") to "0W - 0L"
+  const strRecord = String(record).toUpperCase();
+  const m = strRecord.match(/(\d+)\s*W\s*-?\s*(\d+)\s*L/);
+  if (m) {
+    return `${m[1]}W - ${m[2]}L`;
+  }
+  
+  // If it's a simple dash format "0-0"
+  const dashMatch = strRecord.match(/^(\d+)\s*-\s*(\d+)$/);
+  if (dashMatch) {
+    return `${dashMatch[1]}W - ${dashMatch[2]}L`;
+  }
+
+  return strRecord;
 }
 
 export function parseWinPct(record?: string | any): number | null {

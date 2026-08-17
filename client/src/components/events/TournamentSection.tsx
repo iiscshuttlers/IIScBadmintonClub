@@ -115,7 +115,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useHashTab(
     ["notices", "players", "schedule", "broadcast", "brackets", "past", "umpire"] as const,
-    "notices",
+    "brackets",
   );
   const mountedRef = useRef(true);
 

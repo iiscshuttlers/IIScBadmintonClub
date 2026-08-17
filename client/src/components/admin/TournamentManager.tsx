@@ -2078,29 +2078,34 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
     setActingOn(null);
   };
 
+  const assignBye = async (matchId: string, winningSide: 1 | 2) => {
+    setActingOn(matchId);
+    const { error } = await supabase.rpc("submit_tournament_match", {
+      p_match_id: matchId,
+      p_winner_side: winningSide,
+      p_score: "BYE",
+      p_sets: [],
+      p_umpire_id: null,
+    });
+    if (error) { toast.error(error.message); } else { toast.success("BYE assigned"); await load(); }
+    setActingOn(null);
+  };
+
+
   const undoTournamentMatch = async (id: string) => {
-    if (!confirm("Are you sure you want to undo this tournament match? This will clear the score, reset the bracket slot, and recalculate tournament ELO for all players.")) return;
+    if (!confirm("Are you sure you want to undo this tournament match? This will clear the score, reset the bracket slot, and revert ELO for all players.")) return;
     setActingOn(id);
     try {
-      const { error } = await supabase.from("tournament_matches").update({
-        score: null,
-        sets_history: [],
-        winner_side: null,
-        status: "pending",
-        locked: false,
-        scored_at: null,
-      }).eq("id", id);
+      const { error } = await supabase.rpc("undo_tournament_match", { p_match_id: id });
       if (error) throw error;
       
-      const { error: calcErr } = await supabase.rpc("recalculate_tournament_elo");
-      if (calcErr) throw calcErr;
-
-      toast.success("Tournament match undone and ELO recalculated");
+      toast.success("Tournament match undone successfully");
       await load();
     } catch (err: any) {
-      toast.error("Failed to undo tournament match: " + err.message);
+      toast.error(err.message ?? "Failed to undo match");
+    } finally {
+      setActingOn(null);
     }
-    setActingOn(null);
   };
 
   const autoWinnerFromSets = (setsStr: string, bestOfSets: number): 1 | 2 | null => {
@@ -2898,6 +2903,14 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                             <button onClick={() => submitWalkover(m.id, 0)} disabled={busy}
                               className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition">
                               <SkipForward className="w-3 h-3" /> Double W/O
+                            </button>
+                            <button onClick={() => assignBye(m.id, 1)} disabled={busy}
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-indigo-200 dark:border-indigo-900/40 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition">
+                              <SkipForward className="w-3 h-3" /> BYE T1
+                            </button>
+                            <button onClick={() => assignBye(m.id, 2)} disabled={busy}
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-indigo-200 dark:border-indigo-900/40 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition">
+                              <SkipForward className="w-3 h-3" /> BYE T2
                             </button>
                           </>
                         )}

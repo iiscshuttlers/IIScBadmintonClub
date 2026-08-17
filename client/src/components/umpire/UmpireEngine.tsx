@@ -103,6 +103,7 @@ export function UmpireEngine({
   const pendingMatchIdRef = useRef<string>("");
   const rallyCountRef = useRef(0);
   const lastPointLogLenRef = useRef(0);
+  const hasAutoSavedRef = useRef(false);
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform() || !isMotionTracking) return;
@@ -344,6 +345,36 @@ export function UmpireEngine({
     selectedPlayerIds, buddyCheckPassed, isDoubles, serverName, receiverName,
     currentGameNum, serverScore, receiverScore, cardBadge, isSaving
   } = umpireState;
+
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    if (match.status === "playing") {
+      hasAutoSavedRef.current = false;
+      toast.dismiss("auto-save");
+    } else if (match.status === "finished" && !hasSaved && !isSaving && !hasAutoSavedRef.current) {
+      hasAutoSavedRef.current = true;
+      
+      toast("Match Finished!", {
+        id: "auto-save",
+        description: "Auto-saving in 3 seconds...",
+        duration: 3500,
+        action: {
+          label: "Undo",
+          onClick: () => {
+            clearTimeout(timeoutId);
+            updateMatch({ status: "playing" });
+            hasAutoSavedRef.current = false;
+          }
+        }
+      });
+
+      timeoutId = setTimeout(() => {
+        saveMatchToProfile();
+      }, 3000);
+    }
+    return () => clearTimeout(timeoutId);
+  }, [match.status, hasSaved, isSaving, saveMatchToProfile, updateMatch]);
+
 
   // Render variables
   // friendlyOnly = no tournament in progress OR user lacks umpire/admin role

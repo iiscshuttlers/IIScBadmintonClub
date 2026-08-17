@@ -227,7 +227,7 @@ export default function Pulse() {
       if (tab === "events") {
         const currentHash = window.location.hash.replace("#", "");
         if (!EVENTS_TABS.includes(currentHash) || currentHash === "events") {
-          window.location.hash = "calendar";
+          window.location.hash = "tournament";
         }
       } else if (tab === "feed") {
         const currentHash = window.location.hash.replace("#", "");
@@ -243,7 +243,7 @@ export default function Pulse() {
 
   const [activeTab, setActiveTab] = useHashTab(
     ["calendar", "tournament", "history", ...TOURNAMENT_SUB_TABS] as const,
-    "calendar"
+    "tournament"
   );
   // Treat any tournament sub-tab hash as "tournament" at the top level
   const effectiveTab = TOURNAMENT_SUB_TABS.includes(activeTab as string)
