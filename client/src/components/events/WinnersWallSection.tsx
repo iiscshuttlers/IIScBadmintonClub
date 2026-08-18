@@ -321,7 +321,7 @@ export function WinnersWallSection() {
           <div className="bg-white dark:bg-slate-900 p-1.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex gap-1">
             <button
               onClick={() => setFilter("all")}
-              className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${filter === "all" ? "bg-blue-900 text-foreground shadow-md" : "text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"}`}
+              className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${filter === "all" ? "bg-blue-900 text-on-accent shadow-md" : "text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"}`}
             >
               All Events
             </button>
@@ -333,7 +333,7 @@ export function WinnersWallSection() {
             </button>
             <button
               onClick={() => setFilter("team")}
-              className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${filter === "team" ? "bg-indigo-600 text-foreground shadow-md" : "text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"}`}
+              className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${filter === "team" ? "bg-indigo-600 text-on-accent shadow-md" : "text-muted-foreground dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"}`}
             >
               Team Events
             </button>

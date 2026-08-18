@@ -79,7 +79,7 @@ export default function MyStatsPage() {
             <button
               key={type}
               onClick={() => setMatchTypeFilter(type)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${matchTypeFilter === type ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${matchTypeFilter === type ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-muted-foreground hover:text-on-accent'}`}
             >
               {type === "ALL" ? "OVERALL" : type}
             </button>
@@ -90,7 +90,7 @@ export default function MyStatsPage() {
             <button
               key={cat}
               onClick={() => setCategoryFilter(cat)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${categoryFilter === cat ? 'bg-white dark:bg-slate-700 text-accent shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${categoryFilter === cat ? 'bg-white dark:bg-slate-700 text-accent shadow-sm' : 'text-muted-foreground hover:text-on-accent'}`}
             >
               {cat === "ALL" ? "ALL CATS" : cat}
             </button>

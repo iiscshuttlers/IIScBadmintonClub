@@ -373,7 +373,7 @@ export default function FindLost() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-safe pb-24 lg:pb-8">
       {/* Hero */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-foreground py-6 relative overflow-hidden">
+      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-on-accent py-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(99,102,241,0.15),transparent)] pointer-events-none" />
         <div className="container mx-auto px-4 max-w-3xl relative z-10 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-black uppercase tracking-widest mb-2">
@@ -392,7 +392,7 @@ export default function FindLost() {
           {session && (
             <button
               onClick={openNewPost}
-              className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-foreground font-bold shadow-lg shadow-indigo-900/40 transition"
+              className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-on-accent font-bold shadow-lg shadow-indigo-900/40 transition"
             >
               <Plus className="w-4 h-4" /> Post Item
             </button>
@@ -489,7 +489,7 @@ export default function FindLost() {
                         <button
                           type="button"
                           onClick={() => removeImage(url)}
-                          className="absolute -top-2 -right-2 bg-rose-500 hover:bg-rose-600 text-foreground rounded-full p-0.5 shadow"
+                          className="absolute -top-2 -right-2 bg-rose-500 hover:bg-rose-600 text-on-accent rounded-full p-0.5 shadow"
                           aria-label="Remove image"
                         >
                           <X className="w-3.5 h-3.5" />
@@ -561,7 +561,7 @@ export default function FindLost() {
                 <Button
                   onClick={submit}
                   disabled={submitting || !form.title.trim()}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-foreground"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-on-accent"
                 >
                   {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : (editingId ? <Edit2 className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />)}
                   {submitting ? "Saving…" : (editingId ? "Save Changes" : "Publish Post")}
@@ -577,7 +577,7 @@ export default function FindLost() {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-4 py-1.5 rounded-full text-sm font-bold transition ${filter === f ? "bg-indigo-600 text-foreground shadow-md" : "bg-white dark:bg-slate-900 text-muted-foreground dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-indigo-400"}`}
+              className={`px-4 py-1.5 rounded-full text-sm font-bold transition ${filter === f ? "bg-indigo-600 text-on-accent shadow-md" : "bg-white dark:bg-slate-900 text-muted-foreground dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-indigo-400"}`}
             >
               {f === "all" ? "All" : f === "lost" ? "Lost" : "Found"}
             </button>
@@ -845,7 +845,7 @@ export default function FindLost() {
                               <button
                                 onClick={() => deletePost(post)}
                                 title="Confirm delete"
-                                className="flex items-center justify-center w-6 h-6 rounded-lg font-bold bg-rose-500 text-foreground hover:bg-rose-600 transition"
+                                className="flex items-center justify-center w-6 h-6 rounded-lg font-bold bg-rose-500 text-on-accent hover:bg-rose-600 transition"
                               >
                                 <CheckCircle className="w-3.5 h-3.5" />
                               </button>

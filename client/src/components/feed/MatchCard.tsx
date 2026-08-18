@@ -267,7 +267,7 @@ export function MatchCard({
     >
       {/* LIVE NOW Badge */}
       {actualIsLiveNow && (
-        <div className="absolute top-0 left-0 bg-gradient-to-r from-red-500 to-rose-600 text-foreground text-[10px] font-black uppercase tracking-wider px-4 py-1.5 rounded-br-xl shadow-md z-10 flex items-center gap-1.5">
+        <div className="absolute top-0 left-0 bg-gradient-to-r from-red-500 to-rose-600 text-on-accent text-[10px] font-black uppercase tracking-wider px-4 py-1.5 rounded-br-xl shadow-md z-10 flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-white animate-ping inline-block" />
           LIVE NOW
         </div>
@@ -284,7 +284,7 @@ export function MatchCard({
 
       {/* Upset Badge */}
       {upsetDiff > 0 && (
-        <div className="absolute top-0 right-0 bg-gradient-to-r from-rose-500 to-red-600 text-foreground text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-bl-xl shadow-md z-10 flex items-center gap-1.5">
+        <div className="absolute top-0 right-0 bg-gradient-to-r from-rose-500 to-red-600 text-on-accent text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-bl-xl shadow-md z-10 flex items-center gap-1.5">
           <TrendingUp className="w-3.5 h-3.5 animate-bounce" /> MASSIVE UPSET
         </div>
       )}
@@ -547,7 +547,7 @@ export function MatchCard({
       {aiSummary && !isGeneratingSummary && (
         <motion.div
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-          className="mt-1.5 p-2.5 rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-950 text-foreground shadow-lg border border-indigo-500/30 relative overflow-hidden"
+          className="mt-1.5 p-2.5 rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-950 text-on-accent shadow-lg border border-indigo-500/30 relative overflow-hidden"
         >
           <div className="absolute -top-6 -right-6 text-indigo-500/20">
             <Sparkles className="w-24 h-24" />

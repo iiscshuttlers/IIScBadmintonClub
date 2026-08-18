@@ -75,7 +75,7 @@ export function NetworkTab({
                           {player.avatar_url ? (
                             <img src={player.avatar_url} className="w-12 h-12 rounded-full object-cover" />
                           ) : (
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-teal-500 flex items-center justify-center text-foreground font-black text-lg">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-teal-500 flex items-center justify-center text-on-accent font-black text-lg">
                               {player.full_name[0]}
                             </div>
                           )}
@@ -126,7 +126,7 @@ export function NetworkTab({
                           {player.avatar_url ? (
                             <img src={player.avatar_url} className="w-12 h-12 rounded-full object-cover" />
                           ) : (
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-slate-400 to-slate-500 flex items-center justify-center text-foreground font-black text-lg">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-slate-400 to-slate-500 flex items-center justify-center text-on-accent font-black text-lg">
                               {player.full_name[0]}
                             </div>
                           )}

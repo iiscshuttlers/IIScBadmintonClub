@@ -394,7 +394,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
                 onClick={() => setViewStatus(st.id)}
                 className={`flex-1 py-2 px-4 rounded-xl text-sm font-bold transition-all capitalize ${
                   viewStatus === st.id
-                    ? "bg-white dark:bg-slate-700 text-blue-900 dark:text-foreground shadow-sm"
+                    ? "bg-white dark:bg-slate-700 text-blue-900 dark:text-on-accent shadow-sm"
                     : "text-muted-foreground hover:text-muted-foreground dark:text-muted-foreground dark:hover:text-slate-300"
                 }`}
               >
@@ -417,7 +417,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
                     className={`px-4 py-1.5 rounded-xl text-sm font-bold transition-all ${
                       isActive
                         ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700/50"
+                        : "text-muted-foreground hover:text-on-accent dark:text-muted-foreground dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700/50"
                     }`}
                   >
                     {event.name}
@@ -481,7 +481,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
         {/* Registration CTA / Form — only when a form is configured */}
         {hasForm && (
           <motion.div custom={4} variants={fadeUp} initial="hidden" animate="visible">
-            <div className="bg-gradient-to-r from-slate-800 to-slate-900 dark:from-slate-900 dark:to-slate-950 rounded-3xl p-6 text-foreground text-center relative overflow-hidden border border-slate-700/50">
+            <div className="bg-gradient-to-r from-slate-800 to-slate-900 dark:from-slate-900 dark:to-slate-950 rounded-3xl p-6 text-on-accent text-center relative overflow-hidden border border-slate-700/50">
               <div className="absolute inset-0 hero-pattern opacity-20" />
               <div className="relative z-10">
                 <div
@@ -515,7 +515,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
                     rel="noopener noreferrer"
                     className={`inline-flex items-center gap-2 px-6 py-4 rounded-xl font-black transition shadow-xl ${
                       formClosed
-                        ? "bg-slate-600 text-foreground opacity-70 cursor-not-allowed pointer-events-none"
+                        ? "bg-slate-600 text-on-accent opacity-70 cursor-not-allowed pointer-events-none"
                         : "bg-primary hover:bg-primary text-primary-foreground"
                     }`}
                   >
@@ -1172,10 +1172,10 @@ export function TournamentArchiveBrackets({ tournamentId }: { tournamentId: stri
       {categories.length > 0 && matches.length > 0 && (
         <div className="space-y-4 border-b border-slate-100 dark:border-slate-700 pb-4">
           <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-fit">
-            <button onClick={() => setViewMode("list")} className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-1.5 text-xs font-black uppercase tracking-widest rounded-lg transition ${viewMode === "list" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-foreground shadow" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}>
+            <button onClick={() => setViewMode("list")} className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-1.5 text-xs font-black uppercase tracking-widest rounded-lg transition ${viewMode === "list" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-on-accent shadow" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}>
               <LayoutList className="w-3.5 h-3.5" /> List View
             </button>
-            <button onClick={() => setViewMode("bracket")} className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-1.5 text-xs font-black uppercase tracking-widest rounded-lg transition ${viewMode === "bracket" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-foreground shadow" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}>
+            <button onClick={() => setViewMode("bracket")} className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-1.5 text-xs font-black uppercase tracking-widest rounded-lg transition ${viewMode === "bracket" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-on-accent shadow" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}>
               <Tv2 className="w-3.5 h-3.5" /> Bracket Tree
             </button>
           </div>

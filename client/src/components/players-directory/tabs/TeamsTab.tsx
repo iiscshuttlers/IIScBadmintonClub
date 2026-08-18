@@ -66,7 +66,7 @@ export function TeamsTab({ searchQuery = "" }: TeamsTabProps) {
 
           <button
             onClick={() => setShowRegistration(!showRegistration)}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black transition-all bg-violet-600 hover:bg-violet-700 text-foreground shadow-lg shadow-violet-500/20"
+            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black transition-all bg-violet-600 hover:bg-violet-700 text-on-accent shadow-lg shadow-violet-500/20"
           >
             {showRegistration ? "Cancel" : <><Plus className="w-4 h-4" /> Register New Team</>}
           </button>
@@ -127,7 +127,7 @@ export function TeamsTab({ searchQuery = "" }: TeamsTabProps) {
                       <span className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground truncate">
                         {p1?.full_name || "Unknown"}
                         {p1?.is_retired && (
-                          <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-sm bg-rose-500 text-foreground shadow-sm shrink-0">
+                          <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-sm bg-rose-500 text-on-accent shadow-sm shrink-0">
                             Retired
                           </span>
                         )}
@@ -136,7 +136,7 @@ export function TeamsTab({ searchQuery = "" }: TeamsTabProps) {
                       <span className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground truncate">
                         {p2?.full_name || "Unknown"}
                         {p2?.is_retired && (
-                          <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-sm bg-rose-500 text-foreground shadow-sm shrink-0">
+                          <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-sm bg-rose-500 text-on-accent shadow-sm shrink-0">
                             Retired
                           </span>
                         )}

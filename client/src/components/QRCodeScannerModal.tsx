@@ -182,7 +182,7 @@ export function QRCodeScannerModal({ isOpen, onClose, onScan }: QRCodeScannerMod
               </h2>
               <button
                 onClick={onClose}
-                className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-muted-foreground hover:text-foreground dark:hover:text-foreground transition-colors"
+                className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-muted-foreground hover:text-on-accent dark:hover:text-on-accent transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>

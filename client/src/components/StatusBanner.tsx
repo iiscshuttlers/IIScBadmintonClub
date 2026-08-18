@@ -205,7 +205,7 @@ export default function StatusBanner() {
   return (
     <div className="flex flex-col">
       {maintenance.mode && (
-        <div className="bg-rose-600 text-foreground p-3 text-center text-sm font-bold shadow-md z-50 relative flex items-center justify-center gap-2">
+        <div className="bg-rose-600 text-on-accent p-3 text-center text-sm font-bold shadow-md z-50 relative flex items-center justify-center gap-2">
           <span className="animate-pulse">🔴</span>
           {maintenance.msg}
         </div>

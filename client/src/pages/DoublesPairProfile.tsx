@@ -115,7 +115,7 @@ export default function DoublesPairProfile() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 lg:pb-8">
       {/* Hero */}
-      <div className="bg-gradient-to-br from-teal-800 via-emerald-700 to-teal-800 text-foreground py-6 relative overflow-hidden">
+      <div className="bg-gradient-to-br from-teal-800 via-emerald-700 to-teal-800 text-on-accent py-6 relative overflow-hidden">
         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,rgba(34,197,94,0.5),transparent)] pointer-events-none" />
         <div className="container mx-auto px-4 max-w-3xl relative z-10">
           <Link href="/pulse#h2h" className="inline-flex items-center gap-1.5 text-foreground/60 hover:text-foreground text-sm font-bold mb-6 transition">

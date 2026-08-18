@@ -89,7 +89,7 @@ export function MediaTab({
                       });
                     }}
                     onBlur={(e) => handleImageBlur(idx, e.target.value)}
-                    className={`w-full px-3 py-2 rounded-xl border bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-xs outline-none focus:ring-2 focus:ring-primary
+                    className={`w-full px-3 py-2 rounded-xl border bg-white dark:bg-slate-900 text-on-accent dark:text-on-accent text-xs outline-none focus:ring-2 focus:ring-primary
                       ${
                         imagePreviewStatus[idx] === "error"
                           ? "border-rose-400 dark:border-rose-500"
@@ -124,7 +124,7 @@ export function MediaTab({
                       updated[idx].caption = e.target.value;
                       setMediaImages(updated);
                     }}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-xs outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-on-accent dark:text-on-accent text-xs outline-none focus:ring-2 focus:ring-primary"
                     placeholder="e.g. Winning Smash in Doubles Final"
                   />
                 </div>
@@ -192,7 +192,7 @@ export function MediaTab({
                       });
                     }}
                     onBlur={(e) => handleVideoBlur(idx, e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-xs outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-on-accent dark:text-on-accent text-xs outline-none focus:ring-2 focus:ring-primary"
                     placeholder="e.g. https://youtube.com/watch?v=..."
                   />
                   {videoPreviewIds[idx] && (
@@ -224,7 +224,7 @@ export function MediaTab({
                       updated[idx].caption = e.target.value;
                       setMediaVideos(updated);
                     }}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-xs outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-on-accent dark:text-on-accent text-xs outline-none focus:ring-2 focus:ring-primary"
                     placeholder="e.g. IISc Shuttlers Open 2024"
                   />
                 </div>

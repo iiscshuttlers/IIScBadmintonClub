@@ -395,7 +395,7 @@ export function StartLiveScoringButton() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-foreground text-sm font-black transition-all shadow-md"
+        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-on-accent text-sm font-black transition-all shadow-md"
       >
         <Circle className="w-2.5 h-2.5 fill-white animate-pulse" />
         Score Live Match
@@ -415,13 +415,13 @@ export function StartLiveScoringButton() {
             <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
               <button
                 onClick={() => setIsDoubles(false)}
-                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${!isDoubles ? "bg-white dark:bg-slate-700 shadow text-foreground dark:text-foreground" : "text-muted-foreground"}`}
+                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${!isDoubles ? "bg-white dark:bg-slate-700 shadow text-on-accent dark:text-on-accent" : "text-muted-foreground"}`}
               >
                 Singles
               </button>
               <button
                 onClick={() => setIsDoubles(true)}
-                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 ${isDoubles ? "bg-white dark:bg-slate-700 shadow text-foreground dark:text-foreground" : "text-muted-foreground"}`}
+                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 ${isDoubles ? "bg-white dark:bg-slate-700 shadow text-on-accent dark:text-on-accent" : "text-muted-foreground"}`}
               >
                 <Users className="w-3.5 h-3.5" /> Doubles
               </button>
@@ -480,7 +480,7 @@ export function StartLiveScoringButton() {
             <button
               onClick={start}
               disabled={loading || !canStart}
-              className="w-full py-3 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-foreground font-black transition"
+              className="w-full py-3 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-on-accent font-black transition"
             >
               {loading ? "Starting..." : "Start Match"}
             </button>

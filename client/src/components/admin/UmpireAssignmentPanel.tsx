@@ -248,7 +248,7 @@ export function UmpireAssignmentPanel() {
             <div className="relative">
               <div
                 onClick={() => setIsDropdownOpen(true)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-foreground flex items-center justify-between cursor-pointer focus-within:border-indigo-500"
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-on-accent flex items-center justify-between cursor-pointer focus-within:border-indigo-500"
               >
                 <div className="flex items-center gap-2 flex-1 mr-2">
                   <Search className="w-4 h-4 text-slate-400 shrink-0" />
@@ -316,7 +316,7 @@ export function UmpireAssignmentPanel() {
             <select
               value={form.tournamentMatchId}
               onChange={e => setForm(f => ({ ...f, tournamentMatchId: e.target.value }))}
-              className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-foreground focus:border-indigo-500 outline-none"
+              className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-on-accent focus:border-indigo-500 outline-none"
             >
               <option value="">Any Match in Time Block</option>
               {tournamentMatches.map(tm => (
@@ -331,7 +331,7 @@ export function UmpireAssignmentPanel() {
               type="datetime-local"
               value={form.startTime}
               onChange={e => setForm(f => ({ ...f, startTime: e.target.value }))}
-              className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-foreground focus:border-indigo-500 outline-none [color-scheme:dark]"
+              className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-on-accent focus:border-indigo-500 outline-none [color-scheme:dark]"
             />
           </div>
 
@@ -341,7 +341,7 @@ export function UmpireAssignmentPanel() {
               type="datetime-local"
               value={form.endTime}
               onChange={e => setForm(f => ({ ...f, endTime: e.target.value }))}
-              className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-foreground focus:border-indigo-500 outline-none [color-scheme:dark]"
+              className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-on-accent focus:border-indigo-500 outline-none [color-scheme:dark]"
             />
           </div>
         </div>

@@ -90,7 +90,7 @@ export function PollEditor({
         </div>
         <button
           onClick={addPoll}
-          className="flex items-center gap-2 bg-indigo-600 text-foreground px-4 py-2 rounded-xl text-sm font-bold shadow-md hover:bg-indigo-500 active:scale-95 transition-all"
+          className="flex items-center gap-2 bg-indigo-600 text-on-accent px-4 py-2 rounded-xl text-sm font-bold shadow-md hover:bg-indigo-500 active:scale-95 transition-all"
         >
           <Plus className="w-4 h-4" /> Add Poll
         </button>

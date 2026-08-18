@@ -170,7 +170,7 @@ export default function DeleteAccount() {
                     placeholder="We'd love to know how we can improve..."
                     rows={3}
                     maxLength={500}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-foreground outline-none focus:ring-2 focus:ring-rose-500 resize-none"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-on-accent outline-none focus:ring-2 focus:ring-rose-500 resize-none"
                   />
                 </div>
 
@@ -180,7 +180,7 @@ export default function DeleteAccount() {
                     Cancel
                   </button>
                   <button onClick={() => setStep("final")}
-                    className="flex-1 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-foreground font-bold text-sm transition shadow-md shadow-rose-500/20">
+                    className="flex-1 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-on-accent font-bold text-sm transition shadow-md shadow-rose-500/20">
                     Continue
                   </button>
                 </div>
@@ -211,7 +211,7 @@ export default function DeleteAccount() {
                   <button
                     onClick={handleDelete}
                     disabled={loading || confirmText.trim().toLowerCase() !== "delete my account"}
-                    className="flex-1 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-foreground font-bold text-sm transition flex items-center justify-center gap-2"
+                    className="flex-1 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-on-accent font-bold text-sm transition flex items-center justify-center gap-2"
                   >
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                     {loading ? "Deleting…" : "Delete Forever"}

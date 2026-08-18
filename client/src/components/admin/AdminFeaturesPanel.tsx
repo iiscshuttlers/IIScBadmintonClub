@@ -222,7 +222,7 @@ function PredictionsPanel() {
           </div>
           <p className="text-xs text-muted-foreground mb-3">🏆 Top points: <strong>{stats.topPlayer}</strong></p>
           <button onClick={resolveAll}
-            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-foreground text-sm font-black transition">
+            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-on-accent text-sm font-black transition">
             <Coins className="w-4 h-4" /> Resolve Pending Predictions
           </button>
         </>

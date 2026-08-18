@@ -63,7 +63,7 @@ export function InfoModal({ title, items, footer, triggerIcon, triggerClassName 
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-2 -mr-2 text-muted-foreground hover:text-foreground hover:bg-slate-800 rounded-full transition-colors focus:outline-none shrink-0"
+                  className="p-2 -mr-2 text-muted-foreground hover:text-on-accent hover:bg-slate-800 rounded-full transition-colors focus:outline-none shrink-0"
                 >
                   <X className="w-5 h-5" />
                 </button>

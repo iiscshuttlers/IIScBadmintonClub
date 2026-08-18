@@ -255,7 +255,7 @@ export default function ExchangeTab() {
                 <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-full shrink-0">
                   <button
                     onClick={() => setTypeFilter('all')}
-                    className={`px-3 py-1 text-xs font-black rounded-full transition-all ${typeFilter === 'all' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-foreground shadow-sm' : 'text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300'}`}
+                    className={`px-3 py-1 text-xs font-black rounded-full transition-all ${typeFilter === 'all' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-on-accent shadow-sm' : 'text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300'}`}
                   >
                     All
                   </button>
@@ -278,7 +278,7 @@ export default function ExchangeTab() {
                   onClick={() => setShowSold(s => !s)}
                   className={`px-4 py-1.5 rounded-full text-xs font-black whitespace-nowrap transition-all ${
                     showSold
-                      ? 'bg-slate-500 text-foreground shadow-sm'
+                      ? 'bg-slate-500 text-on-accent shadow-sm'
                       : 'bg-slate-100 text-muted-foreground hover:bg-slate-200 dark:bg-slate-800 dark:text-muted-foreground dark:hover:bg-slate-700'
                   }`}
                 >
@@ -357,7 +357,7 @@ export default function ExchangeTab() {
                     </div>
                     {item.listing_type === 'buy' && (
                       <div className="absolute inset-0 z-10 bg-indigo-900/10 backdrop-blur-[1px] flex items-center justify-center pointer-events-none">
-                        <div className="bg-indigo-600 text-foreground text-lg font-black px-4 py-1.5 rounded-lg shadow-lg rotate-[-10deg] tracking-widest border-2 border-white/20">
+                        <div className="bg-indigo-600 text-on-accent text-lg font-black px-4 py-1.5 rounded-lg shadow-lg rotate-[-10deg] tracking-widest border-2 border-white/20">
                           WANT TO BUY
                         </div>
                       </div>

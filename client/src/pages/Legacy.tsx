@@ -540,7 +540,7 @@ export default function Legacy() {
   return (
     <div className="min-h-screen font-sans">
       {/* Hero Section */}
-      <section className="bg-gradient-to-tr from-teal-800 via-emerald-700 to-lime-600 text-foreground py-4 relative overflow-hidden">
+      <section className="bg-gradient-to-tr from-teal-800 via-emerald-700 to-lime-600 text-on-accent py-4 relative overflow-hidden">
         <div className="absolute inset-0 hero-pattern" />
         <div className="container mx-auto px-4 text-center relative z-10">
           <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 px-4 py-1.5 rounded-full text-sm font-semibold mb-2">
@@ -657,7 +657,7 @@ export default function Legacy() {
                 }}
                 className={`col-span-2 w-full px-5 py-2.5 sm:py-2 rounded-xl sm:rounded-full text-sm font-semibold transition ${
                   selectedSubfolder === "all"
-                    ? "bg-blue-900 dark:bg-blue-700 text-foreground"
+                    ? "bg-blue-900 dark:bg-blue-700 text-on-accent"
                     : "bg-gray-100 dark:bg-slate-800 text-muted-foreground dark:text-muted-foreground hover:bg-gray-200 dark:hover:bg-slate-700"
                 }`}
               >
@@ -674,7 +674,7 @@ export default function Legacy() {
                       }}
                       className={`w-full px-4 py-2.5 sm:py-2 rounded-xl sm:rounded-full text-[13px] sm:text-sm font-semibold transition pr-10 truncate ${
                         selectedSubfolder === sub
-                          ? "bg-blue-900 dark:bg-blue-700 text-foreground shadow-md"
+                          ? "bg-blue-900 dark:bg-blue-700 text-on-accent shadow-md"
                           : "bg-gray-100 dark:bg-slate-800 text-muted-foreground dark:text-muted-foreground hover:bg-gray-200 dark:hover:bg-slate-700"
                       }`}
                     >
@@ -721,7 +721,7 @@ export default function Legacy() {
                   {isSelectionMode && session && item.url && (
                     <div className="absolute top-3 left-3 z-20">
                       {selectedPaths.has(item.path) ? (
-                        <div className="w-6 h-6 rounded-full bg-red-500 text-foreground flex items-center justify-center shadow-lg">
+                        <div className="w-6 h-6 rounded-full bg-red-500 text-on-accent flex items-center justify-center shadow-lg">
                           <CheckCircle2 className="w-4 h-4" />
                         </div>
                       ) : (
@@ -807,7 +807,7 @@ export default function Legacy() {
                         </div>
                       )}
                       <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                        <div className="w-16 h-16 bg-red-600/90 text-foreground rounded-full flex items-center justify-center backdrop-blur-sm shadow-lg group-hover:scale-110 group-hover:bg-red-600 transition-all duration-300">
+                        <div className="w-16 h-16 bg-red-600/90 text-on-accent rounded-full flex items-center justify-center backdrop-blur-sm shadow-lg group-hover:scale-110 group-hover:bg-red-600 transition-all duration-300">
                           <Play className="w-8 h-8 ml-1" fill="currentColor" stroke="none" />
                         </div>
                       </div>
@@ -871,7 +871,7 @@ export default function Legacy() {
                     </div>
                   )}
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                    <div className="w-16 h-16 bg-red-600/90 text-foreground rounded-full flex items-center justify-center backdrop-blur-sm shadow-lg group-hover:scale-110 group-hover:bg-red-600 transition-all duration-300">
+                    <div className="w-16 h-16 bg-red-600/90 text-on-accent rounded-full flex items-center justify-center backdrop-blur-sm shadow-lg group-hover:scale-110 group-hover:bg-red-600 transition-all duration-300">
                       <Play
                         className="w-8 h-8 ml-1"
                         fill="currentColor"
@@ -1129,7 +1129,7 @@ export default function Legacy() {
       {session && (activeTab === "albums" || activeTab === "photos") && (
         <div className="fixed bottom-24 sm:bottom-6 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-3">
           {isSelectionMode ? (
-            <div className="bg-slate-900 text-foreground px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 animate-in slide-in-from-bottom-5">
+            <div className="bg-slate-900 text-on-accent px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 animate-in slide-in-from-bottom-5">
               <span className="font-bold">{selectedPaths.size} selected</span>
               <button
                 className="text-primary hover:text-primary/70 font-bold transition flex items-center gap-2 text-sm whitespace-nowrap"
@@ -1176,7 +1176,7 @@ export default function Legacy() {
             </div>
           ) : (
             <button
-              className="bg-slate-900/80 hover:bg-slate-900 backdrop-blur-md text-foreground px-6 py-3 rounded-full shadow-2xl font-bold transition-all hover:scale-105 active:scale-95"
+              className="bg-slate-900/80 hover:bg-slate-900 backdrop-blur-md text-on-accent px-6 py-3 rounded-full shadow-2xl font-bold transition-all hover:scale-105 active:scale-95"
               onClick={toggleSelectionMode}
             >
               Select Photos

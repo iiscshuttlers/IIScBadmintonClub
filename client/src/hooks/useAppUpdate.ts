@@ -48,14 +48,18 @@ export function AppUpdateProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
-    (async () => {
+    const check = async () => {
       try {
         const [info, latest] = await Promise.all([
           CapApp.getInfo(),
           fetchSiteData<any>("app_version", "app-version.json")
         ]);
 
-        if (Number.parseInt(info.build, 10) < latest.versionCode) {
+        const installed = Number.parseInt(info.build, 10);
+        const required = Number(latest?.versionCode);
+        if (!Number.isFinite(installed) || !Number.isFinite(required)) return;
+
+        if (installed < required) {
           setUpdateInfo({
             versionName: latest.versionName,
             changelog: latest.changelog,
@@ -64,17 +68,33 @@ export function AppUpdateProvider({ children }: { children: ReactNode }) {
               "https://play.google.com/store/apps/details?id=shuttlers.iisc.com",
           });
 
-          // Auto-show the prompt only once per app launch.
-          const shownFor = localStorage.getItem(AUTO_PROMPT_KEY);
-          if (shownFor !== String(latest.versionCode)) {
-            localStorage.setItem(AUTO_PROMPT_KEY, String(latest.versionCode));
+          // Re-prompt when the admin forces again, even at the same version:
+          // `forcedAt` changes on every force, so a user who dismissed once is
+          // asked again. Without it, keying on versionCode alone meant a repeat
+          // force was silently swallowed.
+          const promptToken = `${required}:${latest?.forcedAt ?? ""}`;
+          if (localStorage.getItem(AUTO_PROMPT_KEY) !== promptToken) {
+            localStorage.setItem(AUTO_PROMPT_KEY, promptToken);
             setIsDialogOpen(true);
           }
+        } else {
+          setUpdateInfo(null);
         }
       } catch {
         // Update checks should never block the app.
       }
-    })();
+    };
+
+    check();
+
+    // Android resumes the app rather than cold-starting it, so a mount-only
+    // check could go days without running — an admin forcing an update saw
+    // nothing happen. Re-check whenever the app comes back to the foreground.
+    const listener = CapApp.addListener("appStateChange", ({ isActive }) => {
+      if (isActive) check();
+    });
+
+    return () => { listener.then((l) => l.remove()).catch(() => {}); };
   }, []);
 
   const openUpdateDialog = useCallback(() => setIsDialogOpen(true), []);

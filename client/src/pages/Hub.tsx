@@ -48,7 +48,7 @@ export default function Hub() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 lg:pb-8 font-sans selection:bg-primary/30">
-      <div className="bg-gradient-to-r from-teal-800 via-emerald-700 to-lime-600 text-foreground py-4 relative overflow-hidden">
+      <div className="bg-gradient-to-r from-teal-800 via-emerald-700 to-lime-600 text-on-accent py-4 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(132,204,22,0.15),transparent)] pointer-events-none" />
         <div className="absolute inset-0 hero-pattern opacity-50" />
 

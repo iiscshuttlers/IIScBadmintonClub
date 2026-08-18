@@ -185,7 +185,7 @@ export function FacilitiesSection() {
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
-                className="mb-8 bg-gradient-to-r from-emerald-700 to-lime-600 text-foreground p-5 rounded-2xl shadow-md relative overflow-hidden"
+                className="mb-8 bg-gradient-to-r from-emerald-700 to-lime-600 text-on-accent p-5 rounded-2xl shadow-md relative overflow-hidden"
               >
                 <div className="absolute inset-0 hero-pattern opacity-30" />
                 <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-3">

@@ -72,7 +72,7 @@ export function HighlightsTab({
           rows={3}
           value={bio}
           onChange={(e) => setBio(e.target.value)}
-          className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
+          className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-on-accent dark:text-on-accent focus:ring-2 focus:ring-primary outline-none transition-all"
           placeholder="PhD researcher at IISc. Known for aggressive net play and quick reflexes..."
         />
       </div>
@@ -85,7 +85,7 @@ export function HighlightsTab({
           type="text"
           value={quote}
           onChange={(e) => setQuote(e.target.value)}
-          className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none"
+          className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-on-accent dark:text-on-accent focus:ring-2 focus:ring-primary outline-none"
           placeholder="e.g. Enjoying the Game is the best strategy"
         />
       </div>
@@ -137,14 +137,14 @@ export function HighlightsTab({
               value={tourName}
               onChange={(e) => setTourName(e.target.value)}
               placeholder="Tournament Name (e.g. Farewell Tournament)"
-              className="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-xs outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-on-accent dark:text-on-accent text-xs outline-none focus:ring-2 focus:ring-blue-500"
             />
             <input
               type="number"
               value={tourYear}
               onChange={(e) => setTourYear(e.target.value)}
               placeholder="Year (e.g. 2025)"
-              className="w-full sm:w-32 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-xs outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full sm:w-32 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-on-accent dark:text-on-accent text-xs outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button
               type="button"
@@ -159,7 +159,7 @@ export function HighlightsTab({
                 }
               }}
               disabled={!tourName.trim() || !tourYear.trim() || !/^\d{4}$/.test(tourYear.trim())}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-foreground rounded-xl text-xs font-bold transition shrink-0"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-on-accent rounded-xl text-xs font-bold transition shrink-0"
             >
               Add
             </button>
@@ -212,7 +212,7 @@ export function HighlightsTab({
             <select
               value={achCategory}
               onChange={(e) => setAchCategory(e.target.value)}
-              className="w-full sm:w-auto shrink-0 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-xs outline-none focus:ring-2 focus:ring-primary"
+              className="w-full sm:w-auto shrink-0 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-on-accent dark:text-on-accent text-xs outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="Men's">Men's</option>
               <option value="Women's">Women's</option>
@@ -221,7 +221,7 @@ export function HighlightsTab({
             <select
               value={achEventType}
               onChange={(e) => setAchEventType(e.target.value)}
-              className="w-full sm:w-auto shrink-0 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-xs outline-none focus:ring-2 focus:ring-primary"
+              className="w-full sm:w-auto shrink-0 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-on-accent dark:text-on-accent text-xs outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="Singles">Singles</option>
               <option value="Doubles">Doubles</option>
@@ -230,7 +230,7 @@ export function HighlightsTab({
               <select
                 value={achMedal}
                 onChange={(e) => setAchMedal(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-xs outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-on-accent dark:text-on-accent text-xs outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="Gold">🥇 Gold / Winner</option>
                 <option value="Silver">🥈 Silver / Runner-up</option>
@@ -244,13 +244,13 @@ export function HighlightsTab({
                 value={achCustomMedal}
                 onChange={(e) => setAchCustomMedal(e.target.value)}
                 placeholder="e.g. Quarter-Finalist"
-                className="w-full sm:w-32 shrink-0 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-xs outline-none focus:ring-2 focus:ring-primary"
+                className="w-full sm:w-32 shrink-0 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-on-accent dark:text-on-accent text-xs outline-none focus:ring-2 focus:ring-primary"
               />
             )}
             <select
               value={achTournament}
               onChange={(e) => setAchTournament(e.target.value)}
-              className="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-xs outline-none focus:ring-2 focus:ring-primary"
+              className="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-on-accent dark:text-on-accent text-xs outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="">-- Select Tournament Played --</option>
               {tournamentsRaw

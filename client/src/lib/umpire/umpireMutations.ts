@@ -1,7 +1,7 @@
 import { ScoringLogic, type MatchFormat } from "./scoringLogic";
 import type { BwfMatchState, PointLogEntry } from "@/types/umpire";
 
-export function computeAddPoint(match: BwfMatchState, team: 1 | 2, note?: string): Partial<BwfMatchState> & { _changeEnds?: boolean; _reason?: string; _break?: number } | null {
+export function computeAddPoint(match: BwfMatchState, team: 1 | 2, note?: string): Partial<BwfMatchState> & { _changeEnds?: boolean; _reason?: string; _break?: number; _title?: string } | null {
   if (match.status !== "playing") return null;
 
   const { t1, t2, serverTeam, serverPlayerIndex, receiverPlayerIndex, receiverP0AtTop,
@@ -10,8 +10,11 @@ export function computeAddPoint(match: BwfMatchState, team: 1 | 2, note?: string
         
   let newT1 = { ...t1 };
   let newT2 = { ...t2 };
-  const isT1Doubles = !!newT1.p2Id;
-  const isT2Doubles = !!newT2.p2Id;
+  // A doubles pair entered by name only (partner never linked to a player
+  // record) has no p2Id. Keying purely off the id silently demoted such a team
+  // to singles, so the server never alternated between the two partners.
+  const isT1Doubles = !!newT1.p2Id || !!newT1.p2Name;
+  const isT2Doubles = !!newT2.p2Id || !!newT2.p2Name;
 
   const formatStr = bestOfSets === 3 ? `BestOf3_${pointsToWin}` : `Single_${pointsToWin}`;
   const engine = new ScoringLogic(formatStr as MatchFormat, {
@@ -38,6 +41,58 @@ export function computeAddPoint(match: BwfMatchState, team: 1 | 2, note?: string
   let newT1LastServedBy = engine.state.t1LastServedBy as 0 | 1;
   let newT2LastServedBy = engine.state.t2LastServedBy as 0 | 1;
 
+  // ── Court positions: the authoritative model for server + receiver ────────
+  // BWF 9.1.6 / 9.2: when the serving side wins a rally that same player serves
+  // again from the *other* service court — i.e. the serving pair swap courts and
+  // the receiving pair stay put. When the receiving side wins, nobody swaps and
+  // serve simply passes over. Server and receiver are then whoever is standing
+  // in the court matching the serving score's parity (even → right).
+  //
+  // Seed from the current server/receiver when a match predates these fields.
+  const prevServerTeam = serverTeam;
+  const prevServerScore = prevServerTeam === 1 ? t1.score : t2.score;
+  const serverInRightBefore = prevServerScore % 2 === 0;
+
+  let t1Right: 0 | 1 =
+    match.t1RightCourt ??
+    (prevServerTeam === 1
+      ? ((serverInRightBefore ? serverPlayerIndex : (1 - serverPlayerIndex)) as 0 | 1)
+      : ((serverInRightBefore ? receiverPlayerIndex : (1 - receiverPlayerIndex)) as 0 | 1));
+  let t2Right: 0 | 1 =
+    match.t2RightCourt ??
+    (prevServerTeam === 2
+      ? ((serverInRightBefore ? serverPlayerIndex : (1 - serverPlayerIndex)) as 0 | 1)
+      : ((serverInRightBefore ? receiverPlayerIndex : (1 - receiverPlayerIndex)) as 0 | 1));
+
+  const servingSideWonRally = team === prevServerTeam;
+  if (servingSideWonRally) {
+    // Only the side that served swaps courts.
+    if (team === 1 && isT1Doubles) t1Right = (1 - t1Right) as 0 | 1;
+    if (team === 2 && isT2Doubles) t2Right = (1 - t2Right) as 0 | 1;
+  }
+
+  const scoringSideScore = team === 1 ? newT1.score : newT2.score;
+  const serveFromRight = scoringSideScore % 2 === 0;
+  const winnerRight = team === 1 ? t1Right : t2Right;
+  const loserRight = team === 1 ? t2Right : t1Right;
+  const winnerDoubles = team === 1 ? isT1Doubles : isT2Doubles;
+  const loserDoubles = team === 1 ? isT2Doubles : isT1Doubles;
+
+  newServerTeam = team;
+  newServerPlayerIndex = winnerDoubles
+    ? ((serveFromRight ? winnerRight : 1 - winnerRight) as 0 | 1)
+    : 0;
+  // Receiver is diagonally opposite: same court designation on the other side.
+  let newReceiverPlayerIndex: 0 | 1 = loserDoubles
+    ? ((serveFromRight ? loserRight : 1 - loserRight) as 0 | 1)
+    : 0;
+
+  if (newServerTeam === 1) newT1LastServedBy = newServerPlayerIndex;
+  else newT2LastServedBy = newServerPlayerIndex;
+
+  // Keep the court visual's flag consistent with the derived receiver.
+  newReceiverP0AtTop = newReceiverPlayerIndex === 0;
+
   const currentGameNum = newT1.games + newT2.games + 1;
   const newLog: PointLogEntry = {
     gameNum: currentGameNum,
@@ -47,6 +102,18 @@ export function computeAddPoint(match: BwfMatchState, team: 1 | 2, note?: string
     serverTeam: newServerTeam,
     ...(note ? { note } : {}),
     ts: Date.now(),
+    // Snapshot of serve/receive as it stood BEFORE this rally, so deducting the
+    // point restores the serve exactly instead of only rolling back the score.
+    prev: {
+      serverTeam,
+      serverPlayerIndex,
+      receiverPlayerIndex,
+      receiverP0AtTop,
+      t1LastServedBy,
+      t2LastServedBy,
+      t1RightCourt: match.t1RightCourt,
+      t2RightCourt: match.t2RightCourt,
+    },
   };
   const newPointLog = [...pointLog, newLog];
 
@@ -56,9 +123,17 @@ export function computeAddPoint(match: BwfMatchState, team: 1 | 2, note?: string
 
   const isDeciding = currentGameNum === safeBestOfSets;
   const intervalPoint = Math.ceil(safePointsToWin / 2);
+
+  // `pointLog` here is the log *before* this point, so it must be inspected in
+  // full. It previously used `.slice(0, -1)`, which dropped the very entry that
+  // recorded the interval being reached — so the next point by the trailing
+  // side (e.g. 15-11 → 15-12, where the leader is still sitting on 15) saw a
+  // clean log and fired the interval a second time, swapping ends again.
+  const alreadyReachedInterval = pointLog.some(
+    e => e.gameNum === currentGameNum && (e.t1Score >= intervalPoint || e.t2Score >= intervalPoint)
+  );
   const justHitInterval =
-    isDeciding &&
-    !pointLog.slice(0, -1).some(e => e.gameNum === currentGameNum && (e.t1Score >= intervalPoint || e.t2Score >= intervalPoint)) &&
+    !alreadyReachedInterval &&
     (newT1.score === intervalPoint || newT2.score === intervalPoint);
 
   let t1WonGame = false, t2WonGame = false;
@@ -87,6 +162,11 @@ export function computeAddPoint(match: BwfMatchState, team: 1 | 2, note?: string
       newT1LastServedBy = 1;
       newT2LastServedBy = 0;
       newReceiverP0AtTop = true;
+      // New game starts 0-0: both sides line up with player 0 on the right,
+      // so player 0 serves and player 0 receives.
+      newReceiverPlayerIndex = 0;
+      t1Right = 0;
+      t2Right = 0;
       newEndsSwapped = !newEndsSwapped;
       const gamesPlayed = newT1.games + newT2.games;
       const breakSecs = 60;
@@ -94,8 +174,26 @@ export function computeAddPoint(match: BwfMatchState, team: 1 | 2, note?: string
       specialEvent = { _changeEnds: true, _reason: reason, _break: breakSecs };
     }
   } else if (justHitInterval) {
-    newEndsSwapped = !newEndsSwapped;
-    specialEvent = { _changeEnds: true, _reason: `Deciding Game — ${intervalPoint} pts Interval (Change Ends)`, _break: 60 };
+    // BWF: the 60s interval is taken in *every* game once the leading score
+    // reaches the interval point. Ends are additionally changed at that
+    // interval only in the deciding game. The interval used to be gated on
+    // `isDeciding` entirely, so games 1 and 2 got no break at all.
+    if (isDeciding) {
+      newEndsSwapped = !newEndsSwapped;
+      specialEvent = {
+        _changeEnds: true,
+        _reason: `Deciding Game — ${intervalPoint} pts Interval (Change Ends)`,
+        _break: 60,
+        _title: "Change Ends",
+      };
+    } else {
+      specialEvent = {
+        _changeEnds: true,
+        _reason: `${intervalPoint} pts Interval — 60 second break`,
+        _break: 60,
+        _title: "Interval",
+      };
+    }
   }
 
   return {
@@ -103,9 +201,12 @@ export function computeAddPoint(match: BwfMatchState, team: 1 | 2, note?: string
     t2: newT2,
     serverTeam: newServerTeam,
     serverPlayerIndex: newServerPlayerIndex,
+    receiverPlayerIndex: newReceiverPlayerIndex,
     receiverP0AtTop: newReceiverP0AtTop,
     t1LastServedBy: newT1LastServedBy,
     t2LastServedBy: newT2LastServedBy,
+    t1RightCourt: t1Right,
+    t2RightCourt: t2Right,
     endsSwapped: newEndsSwapped,
     pointLog: newPointLog,
     setsHistory: newSetsHistory,
@@ -125,19 +226,39 @@ export function computeDeductPoint(match: BwfMatchState, team: 1 | 2): Partial<B
   const currentGameNum = t1.games + t2.games + 1;
   const isDeciding = currentGameNum === safeBestOfSets;
 
+  // Deducting used to roll back only the score and the log entry, leaving the
+  // serve with whoever had just won it — so undoing a point that changed service
+  // left the wrong side (and in doubles the wrong partner) serving. Restore the
+  // snapshot the point carried, when present.
+  const lastEntry = match.pointLog[match.pointLog.length - 1];
+  const restoreServe = lastEntry?.prev
+    ? {
+        serverTeam: lastEntry.prev.serverTeam,
+        serverPlayerIndex: lastEntry.prev.serverPlayerIndex,
+        receiverPlayerIndex: lastEntry.prev.receiverPlayerIndex,
+        receiverP0AtTop: lastEntry.prev.receiverP0AtTop,
+        t1LastServedBy: lastEntry.prev.t1LastServedBy,
+        t2LastServedBy: lastEntry.prev.t2LastServedBy,
+        ...(lastEntry.prev.t1RightCourt !== undefined ? { t1RightCourt: lastEntry.prev.t1RightCourt } : {}),
+        ...(lastEntry.prev.t2RightCourt !== undefined ? { t2RightCourt: lastEntry.prev.t2RightCourt } : {}),
+      }
+    : {};
+
   if (team === 1 && t1.score > 0) {
     const isUndoingInterval = isDeciding && t1.score === intervalPoint && t2.score < intervalPoint;
-    return { 
-      t1: { ...t1, score: t1.score - 1 }, 
+    return {
+      t1: { ...t1, score: t1.score - 1 },
       pointLog: match.pointLog.slice(0, -1),
+      ...restoreServe,
       ...(isUndoingInterval ? { endsSwapped: !endsSwapped } : {})
     };
   }
   if (team === 2 && t2.score > 0) {
     const isUndoingInterval = isDeciding && t2.score === intervalPoint && t1.score < intervalPoint;
-    return { 
-      t2: { ...t2, score: t2.score - 1 }, 
+    return {
+      t2: { ...t2, score: t2.score - 1 },
       pointLog: match.pointLog.slice(0, -1),
+      ...restoreServe,
       ...(isUndoingInterval ? { endsSwapped: !endsSwapped } : {})
     };
   }

@@ -86,7 +86,7 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
             <input 
               {...register("title", { required: true })} 
               placeholder={listingType === 'sell' ? "e.g. Yonex Astrox 99 Pro" : "e.g. Size 9 Yonex Shoes"}
-              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-foreground font-semibold focus:outline-none focus:ring-2 focus:ring-primary/50"
+              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-on-accent font-semibold focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
             {errors.title && <span className="text-xs text-rose-500 mt-1 block">Title is required</span>}
           </div>
@@ -115,7 +115,7 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
                   disabled={isGiveaway}
                   {...register("price", { required: !isGiveaway, min: { value: 0, message: "Price cannot be negative" } })} 
                   placeholder={isGiveaway ? "0 (Free)" : "2500"}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-4 py-3 text-slate-800 dark:text-foreground font-semibold focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-4 py-3 text-slate-800 dark:text-on-accent font-semibold focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
                 />
               </div>
               {errors.price && <span className="text-xs text-rose-500 mt-1 block">{(errors.price as any).message || "Invalid price"}</span>}
@@ -126,7 +126,7 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
               </label>
               <select 
                 {...register("condition", { required: true })}
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-foreground font-semibold focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none"
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-on-accent font-semibold focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none"
               >
                 <option value="New">New</option>
                 <option value="Like New">Like New</option>
@@ -155,7 +155,7 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
               {...register("description", { required: true })} 
               placeholder="Describe the item (age, any stringing details, exact condition, why selling...)"
               rows={3}
-              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-foreground text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-on-accent text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
             />
           </div>
 
@@ -166,7 +166,7 @@ export function CreateListingModal({ isOpen, onClose, sellerId, onSuccess }: Cre
               <input 
                 {...register("image_url")} 
                 placeholder="https://example.com/image.jpg"
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-4 py-3 text-slate-800 dark:text-foreground text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/50"
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-4 py-3 text-slate-800 dark:text-on-accent text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
             </div>
           </div>

@@ -100,8 +100,10 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
     }
   };
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  // `silent` is used by the realtime/focus refresh so the list updates in place
+  // without flashing the spinner or surfacing a toast for a transient blip.
+  const load = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
+    if (!silent) setLoading(true);
     const { data: tournaments } = await supabase
       .from("tournaments")
       .select("id, name")
@@ -119,7 +121,7 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
       .order("round")
       .order("match_number");
 
-    if (error) { toast.error(error.message); setLoading(false); return; }
+    if (error) { if (!silent) toast.error(error.message); setLoading(false); return; }
 
     const { data: rules } = await supabase
       .from("tournament_round_rules")
@@ -141,10 +143,44 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
     });
 
     setAllMatches(enriched);
+    // Keep an open match-detail screen in step with the refreshed data, so a
+    // renamed team updates in front of the umpire instead of going stale.
+    setSelectedMatch((prev) => (prev ? enriched.find((m) => m.id === prev.id) ?? prev : prev));
     setLoading(false);
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  // The match list used to be fetched exactly once on mount, so a bracket edit
+  // (participant renamed, partner added late, Sync Names run) never reached an
+  // umpire with the panel already open — they had to restart the app. Refresh
+  // on realtime bracket changes and whenever the tab regains focus.
+  //
+  // This only refreshes the *selection* list. `selectedMatch` is separate state
+  // and an in-progress scoring session lives in UmpireEngine, so neither is
+  // disturbed by a refetch.
+  useEffect(() => {
+    const channel = supabase
+      .channel("umpire_tournament_matches")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tournament_matches" },
+        () => { load({ silent: true }); },
+      )
+      .subscribe();
+
+    const onFocus = () => {
+      if (document.visibilityState === "visible") load({ silent: true });
+    };
+    document.addEventListener("visibilitychange", onFocus);
+    window.addEventListener("focus", onFocus);
+
+    return () => {
+      supabase.removeChannel(channel);
+      document.removeEventListener("visibilitychange", onFocus);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [load]);
 
   const categories = [...new Set(allMatches.map((m) => m.category))];
   const matchesForCategory = allMatches.filter((m) => m.category === selectedCategory);
@@ -217,12 +253,12 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
                   placeholder="Search player, match #..."
                   value={upcomingSearch}
                   onChange={e => setUpcomingSearch(e.target.value)}
-                  className="bg-slate-800 border border-slate-700 text-sm text-foreground rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary w-[160px]"
+                  className="bg-slate-800 border border-slate-700 text-sm text-on-accent rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary w-[160px]"
                 />
                 <select 
                   value={upcomingFormat}
                   onChange={e => setUpcomingFormat(e.target.value)}
-                  className="bg-slate-800 border border-slate-700 text-sm text-foreground rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary cursor-pointer"
+                  className="bg-slate-800 border border-slate-700 text-sm text-on-accent rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary cursor-pointer"
                 >
                   <option value="ALL">All Formats</option>
                   {categories.map(c => <option key={c} value={c}>{c}</option>)}
@@ -231,7 +267,7 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
                   <select 
                     value={upcomingDate}
                     onChange={e => setUpcomingDate(e.target.value)}
-                    className="bg-slate-800 border border-slate-700 text-sm text-foreground rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary cursor-pointer"
+                    className="bg-slate-800 border border-slate-700 text-sm text-on-accent rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary cursor-pointer"
                   >
                     <option value="ALL">All Dates</option>
                     {availableDates.map(d => <option key={d} value={d}>{d} ({dateCounts[d]})</option>)}
@@ -241,7 +277,7 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
                   <select 
                     value={upcomingCourt}
                     onChange={e => setUpcomingCourt(e.target.value)}
-                    className="bg-slate-800 border border-slate-700 text-sm text-foreground rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary cursor-pointer"
+                    className="bg-slate-800 border border-slate-700 text-sm text-on-accent rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary cursor-pointer"
                   >
                     <option value="ALL">All Courts</option>
                     {availableCourts.map(c => <option key={c} value={c}>Court {c}</option>)}
@@ -386,7 +422,7 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
         <div className="flex items-center gap-3">
           <button
             onClick={() => { setStep("format"); setSelectedCategory(null); }}
-            className="p-2 rounded-xl bg-slate-800 border border-slate-700 hover:border-slate-500 transition text-muted-foreground hover:text-foreground"
+            className="p-2 rounded-xl bg-slate-800 border border-slate-700 hover:border-slate-500 transition text-muted-foreground hover:text-on-accent"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -526,7 +562,7 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
         <div className="flex items-center gap-3">
           <button
             onClick={() => { setStep(selectedCategory ? "match" : "format"); setSelectedMatch(null); }}
-            className="p-2 rounded-xl bg-slate-800 border border-slate-700 hover:border-slate-500 transition text-muted-foreground hover:text-foreground"
+            className="p-2 rounded-xl bg-slate-800 border border-slate-700 hover:border-slate-500 transition text-muted-foreground hover:text-on-accent"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>

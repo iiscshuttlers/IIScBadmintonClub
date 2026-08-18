@@ -9,6 +9,8 @@ interface UmpireStoreState {
   showLog: boolean;
   showChangeEnds: boolean;
   changeEndsReason: string;
+  /** Heading for the interval overlay: "Change Ends" vs plain "Interval". */
+  changeEndsTitle: string;
   pendingBreakAfterEnds: number | null;
   showCardPanel: boolean;
   cardTarget: CardTarget | null;
@@ -36,6 +38,7 @@ interface UmpireStoreState {
   setShowLog: (show: boolean) => void;
   setShowChangeEnds: (show: boolean) => void;
   setChangeEndsReason: (reason: string) => void;
+  setChangeEndsTitle: (title: string) => void;
   setPendingBreakAfterEnds: (seconds: number | null) => void;
   setShowCardPanel: (show: boolean) => void;
   setCardTarget: (target: CardTarget | null) => void;
@@ -63,6 +66,7 @@ const initialState = {
   showLog: false,
   showChangeEnds: false,
   changeEndsReason: "",
+  changeEndsTitle: "Change Ends",
   pendingBreakAfterEnds: null,
   showCardPanel: false,
   cardTarget: null,
@@ -93,6 +97,7 @@ export const useUmpireStore = create<UmpireStoreState>((set) => ({
   setShowLog: (showLog) => set({ showLog }),
   setShowChangeEnds: (showChangeEnds) => set({ showChangeEnds }),
   setChangeEndsReason: (changeEndsReason) => set({ changeEndsReason }),
+  setChangeEndsTitle: (changeEndsTitle) => set({ changeEndsTitle }),
   setPendingBreakAfterEnds: (pendingBreakAfterEnds) => set({ pendingBreakAfterEnds }),
   setShowCardPanel: (showCardPanel) => set({ showCardPanel }),
   setCardTarget: (cardTarget) => set({ cardTarget }),

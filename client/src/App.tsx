@@ -321,7 +321,7 @@ function OfflineBanner() {
     <div
       role="status"
       aria-live="polite"
-      className="fixed top-0 inset-x-0 z-[9998] flex items-center justify-center gap-2 bg-slate-800 text-foreground text-sm font-bold py-2 px-4 shadow-lg"
+      className="fixed top-0 inset-x-0 z-[9998] flex items-center justify-center gap-2 bg-slate-800 text-on-accent text-sm font-bold py-2 px-4 shadow-lg"
     >
       <WifiOff className="w-4 h-4 shrink-0" />
       You're offline — some features may be unavailable

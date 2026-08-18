@@ -90,8 +90,8 @@ export const FormPill = ({
     className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black shadow-md
       ${
         result === "W"
-          ? "bg-gradient-to-br from-primary to-primary text-foreground shadow-primary/40"
-          : "bg-gradient-to-br from-rose-400 to-rose-600 text-foreground shadow-rose-500/40"
+          ? "bg-gradient-to-br from-primary to-primary text-on-accent shadow-primary/40"
+          : "bg-gradient-to-br from-rose-400 to-rose-600 text-on-accent shadow-rose-500/40"
       }`}
   >
     {result}

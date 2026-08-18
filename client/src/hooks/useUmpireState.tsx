@@ -44,6 +44,7 @@ export function useUmpireState({
     showLog, setShowLog,
     showChangeEnds, setShowChangeEnds,
     changeEndsReason, setChangeEndsReason,
+    changeEndsTitle, setChangeEndsTitle,
     pendingBreakAfterEnds, setPendingBreakAfterEnds,
     showCardPanel, setShowCardPanel,
     cardTarget, setCardTarget,
@@ -158,6 +159,18 @@ export function useUmpireState({
         const isByeMatch = isT1Bye || isT2Bye;
         const byeWinner: 1 | 2 = isT1Bye ? 2 : 1;
 
+        // A bracket team label is a single string like "Kriti Kalia & Deepak Kumar".
+        // It used to be assigned wholesale to p1Name with p2Name hardcoded to "",
+        // so a doubles pair rendered as one long truncated line and the second
+        // player was invisible everywhere downstream.
+        const splitLabel = (label: string | null | undefined): [string, string] => {
+          const parts = (label ?? "").split(/\s*[&,]\s*/).map((s) => s.trim()).filter(Boolean);
+          return [parts[0] ?? "", parts[1] ?? ""];
+        };
+        const isDoublesCat = (catMap[tournamentMatch.category] ?? "Singles") === "Doubles";
+        const [t1n1, t1n2] = splitLabel(tournamentMatch.team1_label);
+        const [t2n1, t2n2] = splitLabel(tournamentMatch.team2_label);
+
         return {
           id: tournamentMatch.id || crypto.randomUUID(),
           umpireId: userId,
@@ -171,17 +184,17 @@ export function useUmpireState({
           goldenPoint: tournamentMatch.golden_point,
           t1: {
             p1Id: tournamentMatch.player1_id ?? "",
-            p1Name: tournamentMatch.team1_label ?? "Team 1",
+            p1Name: t1n1 || tournamentMatch.team1_label || "Team 1",
             p2Id: tournamentMatch.player3_id ?? undefined,
-            p2Name: "",
+            p2Name: isDoublesCat ? t1n2 : "",
             score: 0,
             games: isByeMatch && byeWinner === 1 ? 2 : 0,
           },
           t2: {
             p1Id: tournamentMatch.player2_id ?? "",
-            p1Name: tournamentMatch.team2_label ?? "Team 2",
+            p1Name: t2n1 || tournamentMatch.team2_label || "Team 2",
             p2Id: tournamentMatch.player4_id ?? undefined,
-            p2Name: "",
+            p2Name: isDoublesCat ? t2n2 : "",
             score: 0,
             games: isByeMatch && byeWinner === 2 ? 2 : 0,
           },
@@ -410,6 +423,11 @@ export function useUmpireState({
         status: "playing",
         category: cat,
         receiverP0AtTop: initReceiverP0AtTop,
+        // At 0-0 the server stands in the right service court, and the chosen
+        // receiver stands in theirs. Seed court positions from that so serve and
+        // receive stay correct for the rest of the game.
+        t1RightCourt: (match.serverTeam === 1 ? match.serverPlayerIndex : match.receiverPlayerIndex) as 0 | 1,
+        t2RightCourt: (match.serverTeam === 2 ? match.serverPlayerIndex : match.receiverPlayerIndex) as 0 | 1,
         t1: { ...match.t1, p1Name: getName(match.t1.p1Id), p2Name: match.t1.p2Id ? getName(match.t1.p2Id) : undefined },
         t2: { ...match.t2, p1Name: getName(match.t2.p1Id), p2Name: match.t2.p2Id ? getName(match.t2.p2Id) : undefined },
       });
@@ -429,6 +447,11 @@ export function useUmpireState({
         status: "playing",
         category: cat,
         receiverP0AtTop: initReceiverP0AtTop,
+        // At 0-0 the server stands in the right service court, and the chosen
+        // receiver stands in theirs. Seed court positions from that so serve and
+        // receive stay correct for the rest of the game.
+        t1RightCourt: (match.serverTeam === 1 ? match.serverPlayerIndex : match.receiverPlayerIndex) as 0 | 1,
+        t2RightCourt: (match.serverTeam === 2 ? match.serverPlayerIndex : match.receiverPlayerIndex) as 0 | 1,
         // preserve pre-filled names — do NOT call getName() which needs player IDs
         t1: { ...match.t1 },
         t2: { ...match.t2 },
@@ -532,7 +555,7 @@ export function useUmpireState({
       const updates = computeAddPoint(match, team, note);
       if (!updates) return;
       
-      const { _changeEnds, _reason, _break, ...stateUpdates } = updates as any;
+      const { _changeEnds, _reason, _break, _title, ...stateUpdates } = updates as any;
       updateMatch(stateUpdates);
 
       // Check if we should auto-push score (half point or set end)
@@ -571,6 +594,9 @@ export function useUmpireState({
       if (_changeEnds) {
         setPendingBreakAfterEnds(_break || null);
         setChangeEndsReason(_reason || "Change Ends");
+        // Games 1 and 2 take the interval without switching sides, so the
+        // overlay must not claim the ends changed.
+        setChangeEndsTitle(_title || "Change Ends");
         setShowChangeEnds(true);
       }
     };
@@ -892,6 +918,7 @@ export function useUmpireState({
     showLog,
     showChangeEnds,
     changeEndsReason,
+    changeEndsTitle,
     pendingBreakAfterEnds,
     showCardPanel,
     cardTarget,

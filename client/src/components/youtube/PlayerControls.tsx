@@ -92,7 +92,7 @@ export function PlayerControls({ player, videoId, chapters, scoreLogs }: PlayerC
           {scoreLogs && scoreLogs.length > 0 && (
              <button
                onClick={() => { setAutoHighlightsMode(!autoHighlightsMode); showHint(autoHighlightsMode ? "Highlights Off" : "Highlights On"); }}
-               className={`text-[10px] md:text-xs font-bold uppercase tracking-wider px-2 py-1.5 rounded-lg transition-colors flex items-center gap-1 shadow-sm border ${autoHighlightsMode ? 'bg-amber-500 text-foreground border-amber-400' : 'bg-white/10 text-foreground hover:bg-white/20 border-white/20'}`}
+               className={`text-[10px] md:text-xs font-bold uppercase tracking-wider px-2 py-1.5 rounded-lg transition-colors flex items-center gap-1 shadow-sm border ${autoHighlightsMode ? 'bg-amber-500 text-on-accent border-amber-400' : 'bg-white/10 text-on-accent hover:bg-white/20 border-white/20'}`}
                title="Auto-Skip Dead Time"
              >
                <Sparkles className="w-3 h-3" /> Highlights

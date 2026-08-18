@@ -275,7 +275,7 @@ function SiteAdminInner() {
           ) : (
             <button
               onClick={() => setLocation("/")}
-              className="px-6 py-3 bg-slate-600 hover:bg-slate-700 text-foreground font-bold rounded-xl transition shadow-lg shadow-slate-500/20"
+              className="px-6 py-3 bg-slate-600 hover:bg-slate-700 text-on-accent font-bold rounded-xl transition shadow-lg shadow-slate-500/20"
             >
               Back to Home
             </button>
@@ -292,7 +292,7 @@ function SiteAdminInner() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-safe pb-24 lg:pb-8">
       {/* Header */}
-      <section className="bg-gradient-to-r from-slate-900 via-slate-800 to-primary/80 text-foreground py-10 md:sticky md:top-[48px] lg:top-[88px] md:z-40 shadow-xl border-b border-slate-900">
+      <section className="bg-gradient-to-r from-slate-900 via-slate-800 to-primary/80 text-on-accent py-10 md:sticky md:top-[48px] lg:top-[88px] md:z-40 shadow-xl border-b border-slate-900">
         <div className="container mx-auto px-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>

@@ -14,6 +14,13 @@
   --radius-xl: calc(var(--radius) + 4px);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-on-accent: var(--on-accent);
+  --color-team-1: var(--team-1);
+  --color-team-2: var(--team-2);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
@@ -75,6 +82,19 @@
   --radius: 0.875rem;
   --background: #f7f8f4;
   --foreground: #0c0d10;
+  /* Text that sits on a SATURATED brand/status fill (bg-*-500..900, gradients).
+     Deliberately identical in both themes: the fill is dark in either theme, so
+     the text on it must stay light. Using --foreground here renders near-black
+     on violet/rose/indigo in light mode. */
+  --on-accent: #ffffff;
+  /* Semantic status + team colours, so the same meaning keeps the same hue
+     instead of drifting per file. */
+  --team-1: #10b981;
+  --team-2: #0ea5e9;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger:  #f43f5e;
+  --info:    #0ea5e9;
   --card: #ffffff;
   --card-foreground: #0c0d10;
   --popover: #ffffff;
@@ -107,6 +127,13 @@
   --sidebar-primary-foreground: #0a0a0b;
   --background: #0a0a0b;
   --foreground: #f4f5f0;
+  --on-accent: #ffffff;
+  --team-1: #34d399;
+  --team-2: #38bdf8;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --danger:  #fb7185;
+  --info:    #38bdf8;
   --card: #131417;
   --card-foreground: #f4f5f0;
   --popover: #1b1c20;

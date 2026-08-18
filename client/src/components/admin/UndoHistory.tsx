@@ -58,7 +58,7 @@ export function UndoHistory() {
         <h2 className="text-lg font-black text-slate-800 dark:text-foreground flex items-center gap-2">
           <History className="w-5 h-5 text-indigo-500" /> Undo History
         </h2>
-        <button onClick={() => { setPage(0); load(0); }} className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-slate-800 dark:hover:text-foreground transition px-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
+        <button onClick={() => { setPage(0); load(0); }} className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-slate-800 dark:hover:text-on-accent transition px-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
           <RefreshCw className="w-3.5 h-3.5" /> Refresh
         </button>
       </div>

@@ -727,7 +727,7 @@ function SnapshotTab({
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search by name or department..."
-            className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
+            className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm font-medium text-on-accent placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
           />
           {searchQuery && (
             <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -761,13 +761,13 @@ function SnapshotTab({
           </button>
           {showExportMenu && (
             <div className="absolute right-0 top-full mt-1 z-20 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden min-w-[180px]">
-              <button onClick={() => handleExport("excel")} className="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-bold text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-foreground transition">
+              <button onClick={() => handleExport("excel")} className="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-bold text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-on-accent transition">
                 <FileSpreadsheet className="w-4 h-4 text-green-500" /> Excel (.xlsx)
               </button>
-              <button onClick={() => handleExport("pdf")} className="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-bold text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-foreground transition border-t border-slate-100 dark:border-slate-800">
+              <button onClick={() => handleExport("pdf")} className="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-bold text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-on-accent transition border-t border-slate-100 dark:border-slate-800">
                 <FileText className="w-4 h-4 text-rose-500" /> PDF Document
               </button>
-              <button onClick={() => handleExport("image")} className="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-bold text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-foreground transition border-t border-slate-100 dark:border-slate-800">
+              <button onClick={() => handleExport("image")} className="w-full flex items-center gap-2.5 px-4 py-3 text-xs font-bold text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-on-accent transition border-t border-slate-100 dark:border-slate-800">
                 <FileImage className="w-4 h-4 text-blue-500" /> Image (.png)
               </button>
             </div>
@@ -786,7 +786,7 @@ function SnapshotTab({
                 <button
                   key={g}
                   onClick={() => setGenderFilter(g)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${genderFilter === g ? "bg-primary text-primary-foreground shadow-sm" : "bg-slate-100 dark:bg-slate-800 text-muted-foreground hover:text-foreground"}`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${genderFilter === g ? "bg-primary text-primary-foreground shadow-sm" : "bg-slate-100 dark:bg-slate-800 text-muted-foreground hover:text-on-accent"}`}
                 >
                   {g === "all" ? "All" : g}
                 </button>

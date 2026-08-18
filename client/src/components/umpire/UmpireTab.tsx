@@ -175,6 +175,44 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
     resetUmpireStore();
   };
 
+  /**
+   * Overlay the bracket's current team labels onto a resumed live-match
+   * snapshot. Only names and the player ids behind them are touched — scores,
+   * games, serve state, point log and status are taken from the snapshot
+   * untouched, so resuming can never alter the state of a match in play.
+   */
+  const withFreshTeamNames = (liveState: any, bracketRow: any) => {
+    if (!liveState || !bracketRow) return liveState;
+
+    const splitTeam = (label: string | null | undefined): string[] =>
+      (label ?? "").split(/[&,]/).map((s: string) => s.trim()).filter(Boolean);
+
+    const applySide = (
+      side: any,
+      label: string | null | undefined,
+      p1Id: string | null | undefined,
+      p2Id: string | null | undefined,
+    ) => {
+      const names = splitTeam(label);
+      if (!names.length) return side; // nothing usable in the bracket — keep the snapshot
+      return {
+        ...side,
+        p1Name: names[0] ?? side?.p1Name,
+        // Only fill p2 for a genuine doubles pairing; never invent one.
+        ...(names.length > 1 ? { p2Name: names[1] } : {}),
+        ...(p1Id ? { p1Id } : {}),
+        ...(p2Id ? { p2Id } : {}),
+        teamName: label ?? side?.teamName,
+      };
+    };
+
+    return {
+      ...liveState,
+      t1: applySide(liveState.t1, bracketRow.team1_label, bracketRow.player1_id, bracketRow.player3_id),
+      t2: applySide(liveState.t2, bracketRow.team2_label, bracketRow.player2_id, bracketRow.player4_id),
+    };
+  };
+
   const startMatch = async (m: any) => {
     try { localStorage.removeItem(SETUP_STORAGE_KEY); } catch {}
     resetUmpireStore();
@@ -186,7 +224,11 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
         if (liveState) {
           setActiveMatches(prev => {
             setActiveMatchIndex(prev.length);
-            return [...prev, liveState];
+            // The snapshot froze the team names at the moment the match started,
+            // so a participant fixed up afterwards (a partner supplied late, a
+            // typo corrected) never showed here. Re-apply the current bracket
+            // labels while keeping every bit of scoring state from the snapshot.
+            return [...prev, withFreshTeamNames(liveState, m)];
           });
           return;
         }
@@ -547,7 +589,7 @@ function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditSt
                 return isEditable ? (
                   <button 
                     onClick={() => onEdit({ ...m, is_edit_mode: true } as MatchEditState)}
-                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-foreground text-xs font-bold rounded-lg transition-colors shrink-0"
+                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-on-accent text-xs font-bold rounded-lg transition-colors shrink-0"
                   >
                     Edit Score
                   </button>

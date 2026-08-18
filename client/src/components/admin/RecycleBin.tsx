@@ -148,7 +148,7 @@ export function RecycleBin() {
             onClick={() => setFilter("all")}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
               filter === "all"
-                ? "bg-slate-900 dark:bg-white text-white dark:text-foreground"
+                ? "bg-slate-900 dark:bg-white text-white dark:text-on-accent"
                 : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-muted-foreground dark:text-muted-foreground hover:border-slate-400"
             }`}
           >
@@ -160,7 +160,7 @@ export function RecycleBin() {
               onClick={() => setFilter(t)}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition capitalize ${
                 filter === t
-                  ? "bg-slate-900 dark:bg-white text-white dark:text-foreground"
+                  ? "bg-slate-900 dark:bg-white text-white dark:text-on-accent"
                   : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-muted-foreground dark:text-muted-foreground hover:border-slate-400"
               }`}
             >

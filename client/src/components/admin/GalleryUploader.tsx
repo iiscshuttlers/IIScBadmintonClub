@@ -135,7 +135,7 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-24 sm:bottom-6 left-4 sm:left-6 z-[60] bg-blue-600 hover:bg-blue-700 text-foreground p-4 rounded-full shadow-2xl transition-transform hover:scale-110 flex items-center gap-2 group"
+        className="fixed bottom-24 sm:bottom-6 left-4 sm:left-6 z-[60] bg-blue-600 hover:bg-blue-700 text-on-accent p-4 rounded-full shadow-2xl transition-transform hover:scale-110 flex items-center gap-2 group"
       >
         <Upload className="w-6 h-6" />
         <span className="font-bold hidden sm:block w-0 overflow-hidden group-hover:w-32 transition-all duration-300 whitespace-nowrap">Upload Photos</span>
@@ -280,7 +280,7 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
                       <ImageIcon className="absolute inset-0 m-auto text-muted-foreground w-6 h-6" />
                       <button 
                         onClick={() => removeFile(i)}
-                        className="absolute top-1 right-1 bg-black/60 text-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition z-10 hover:bg-red-500"
+                        className="absolute top-1 right-1 bg-black/60 text-on-accent rounded-full p-1 opacity-0 group-hover:opacity-100 transition z-10 hover:bg-red-500"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -314,7 +314,7 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
             <button
               onClick={handleUpload}
               disabled={files.length === 0 || !finalCategory.trim()}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:dark:bg-slate-700 disabled:text-muted-foreground disabled:cursor-not-allowed text-foreground font-bold py-3.5 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25"
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:dark:bg-slate-700 disabled:text-muted-foreground disabled:cursor-not-allowed text-on-accent font-bold py-3.5 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25"
             >
               <Upload className="w-5 h-5" />
               Upload {files.length > 0 && `${files.length} photos`}

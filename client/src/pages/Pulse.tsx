@@ -145,7 +145,7 @@ function UpcomingCountdown({ event }: { event: any }) {
   if (!time) return null;
 
   return (
-    <div className="rounded-3xl bg-gradient-to-br from-teal-800 to-emerald-700 text-foreground p-6 mb-8 shadow-2xl relative overflow-hidden">
+    <div className="rounded-3xl bg-gradient-to-br from-teal-800 to-emerald-700 text-on-accent p-6 mb-8 shadow-2xl relative overflow-hidden">
       <div className="absolute inset-0 hero-pattern" />
       <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-6">
         <div className="flex-1">
@@ -440,7 +440,7 @@ export default function Pulse() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 lg:pb-8">
-      <section className="bg-gradient-to-tr from-teal-800 via-emerald-700 to-lime-600 text-foreground py-4 relative overflow-hidden">
+      <section className="bg-gradient-to-tr from-teal-800 via-emerald-700 to-lime-600 text-on-accent py-4 relative overflow-hidden">
         <div className="absolute inset-0 hero-pattern" />
         <div className="container mx-auto px-4 text-center relative z-10">
           <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 px-4 py-1.5 rounded-full text-sm font-semibold mb-2">
@@ -518,8 +518,8 @@ export default function Pulse() {
                   onClick={() => setActiveTab("tournament")}
                   className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-black transition-all flex-1 basis-[45%] sm:basis-auto shrink-0 ${
                     effectiveTab === "tournament"
-                      ? "bg-rose-500 text-foreground shadow-md scale-100 shadow-rose-500/30"
-                      : "text-foreground/80 hover:text-rose-400 hover:bg-rose-500/10 scale-95"
+                      ? "bg-rose-500 text-on-accent shadow-md scale-100 shadow-rose-500/30"
+                      : "text-on-accent/80 hover:text-rose-400 hover:bg-rose-500/10 scale-95"
                   }`}
                 >
                   <Trophy className="w-4 h-4" /> 

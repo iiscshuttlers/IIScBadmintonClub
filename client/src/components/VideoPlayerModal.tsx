@@ -150,7 +150,7 @@ export function VideoPlayerModal({ video, onClose }: Props) {
                 )}
                 <button
                   onClick={() => setEnableScoringMode(v => !v)}
-                  className={`text-xs font-bold px-3 py-1.5 rounded-full transition-colors shrink-0 ${enableScoringMode ? 'bg-rose-500 text-foreground shadow-[0_0_15px_rgba(244,63,94,0.5)]' : 'bg-white/10 text-foreground/70 hover:bg-white/20'}`}
+                  className={`text-xs font-bold px-3 py-1.5 rounded-full transition-colors shrink-0 ${enableScoringMode ? 'bg-rose-500 text-on-accent shadow-[0_0_15px_rgba(244,63,94,0.5)]' : 'bg-white/10 text-on-accent/70 hover:bg-white/20'}`}
                 >
                   {enableScoringMode ? 'Exit Scoring' : 'Score Mode'}
                 </button>

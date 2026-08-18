@@ -205,7 +205,7 @@ function MatchBroadcastCard({
         onClick={() => setIsExpanded(true)}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className="bg-slate-900 border border-slate-800 rounded-xl p-3 text-foreground max-w-4xl mx-auto shadow hover:border-slate-600 transition-all cursor-pointer relative overflow-hidden group select-none"
+        className="bg-slate-900 border border-slate-800 rounded-xl p-3 text-on-accent max-w-4xl mx-auto shadow hover:border-slate-600 transition-all cursor-pointer relative overflow-hidden group select-none"
       >
         <div className={`absolute left-0 top-0 bottom-0 w-1 ${match.status === "finished" ? "bg-slate-700" : "bg-primary animate-pulse"}`} />
         
@@ -269,7 +269,7 @@ function MatchBroadcastCard({
     <div 
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      className="bg-slate-900 border border-slate-800 rounded-3xl p-4 sm:p-6 text-foreground max-w-4xl mx-auto shadow-2xl relative overflow-hidden select-none"
+      className="bg-slate-900 border border-slate-800 rounded-3xl p-4 sm:p-6 text-on-accent max-w-4xl mx-auto shadow-2xl relative overflow-hidden select-none"
     >
       <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-primary to-sky-500" />
       
@@ -475,7 +475,7 @@ function MatchBroadcastCard({
                         newSets[i].t1 = e.target.value;
                         setAdminSets(newSets);
                       }} 
-                      className="flex-1 w-full min-w-0 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-center text-foreground text-sm outline-none focus:border-primary transition [color-scheme:dark]" 
+                      className="flex-1 w-full min-w-0 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-center text-on-accent text-sm outline-none focus:border-primary transition [color-scheme:dark]" 
                     />
                     <span className="text-slate-500 font-bold">-</span>
                     <input 
@@ -486,7 +486,7 @@ function MatchBroadcastCard({
                         newSets[i].t2 = e.target.value;
                         setAdminSets(newSets);
                       }} 
-                      className="flex-1 w-full min-w-0 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-center text-foreground text-sm outline-none focus:border-primary transition [color-scheme:dark]" 
+                      className="flex-1 w-full min-w-0 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-center text-on-accent text-sm outline-none focus:border-primary transition [color-scheme:dark]" 
                     />
                     {adminSets.length > 1 ? (
                       <button onClick={() => setAdminSets(adminSets.filter((_, idx) => idx !== i))} className="p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition shrink-0">
@@ -499,7 +499,7 @@ function MatchBroadcastCard({
                 ))}
               </div>
               <div className="flex gap-2 pt-1">
-                <button onClick={() => { setShowAdminForm(false); setAdminWinner(null); }} className="flex-1 py-2.5 bg-slate-700 hover:bg-slate-600 text-foreground rounded-xl font-bold text-sm flex items-center justify-center gap-1.5">
+                <button onClick={() => { setShowAdminForm(false); setAdminWinner(null); }} className="flex-1 py-2.5 bg-slate-700 hover:bg-slate-600 text-on-accent rounded-xl font-bold text-sm flex items-center justify-center gap-1.5">
                   <X className="w-4 h-4" /> Cancel
                 </button>
                 <button
@@ -1241,7 +1241,7 @@ export function LiveScoreSection() {
                 <div className="flex flex-col gap-2 pt-2">
                   <button
                     onClick={() => setTakeoverTarget(null)}
-                    className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-foreground font-bold text-sm rounded-xl transition"
+                    className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-on-accent font-bold text-sm rounded-xl transition"
                   >
                     Cancel Request
                   </button>
@@ -1277,7 +1277,7 @@ export function LiveScoreSection() {
                   )}
                   <button
                     onClick={() => setTakeoverTarget(null)}
-                    className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-foreground font-bold text-sm rounded-xl transition mt-1"
+                    className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-on-accent font-bold text-sm rounded-xl transition mt-1"
                   >
                     Cancel
                   </button>

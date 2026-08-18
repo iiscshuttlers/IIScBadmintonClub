@@ -733,7 +733,7 @@ function NavLink({ href, label, isActive, badge }: { href: string; label: string
       >
         {label}
         {!!badge && (
-          <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-black text-foreground px-0.5 shadow ring-2 ring-white dark:ring-slate-950">
+          <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-black text-on-accent px-0.5 shadow ring-2 ring-white dark:ring-slate-950">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-50" />
             {badge > 0 && <span className="relative">{badge}</span>}
           </span>

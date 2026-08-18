@@ -95,7 +95,7 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
                     {heroRestName}
                   </span>
                   {player.is_retired && (
-                    <span className="px-2.5 py-1 text-xs font-black uppercase tracking-widest bg-rose-500 text-foreground rounded-md shadow-md border border-rose-400">
+                    <span className="px-2.5 py-1 text-xs font-black uppercase tracking-widest bg-rose-500 text-on-accent rounded-md shadow-md border border-rose-400">
                       Retired
                     </span>
                   )}
@@ -103,7 +103,7 @@ export function PlayerHeroBanner({ player, eloRank, theme }: PlayerHeroBannerPro
               )}
               {!heroRestName && player.is_retired && (
                 <div className="mb-2">
-                  <span className="px-2.5 py-1 text-xs font-black uppercase tracking-widest bg-rose-500 text-foreground rounded-md shadow-md border border-rose-400">
+                  <span className="px-2.5 py-1 text-xs font-black uppercase tracking-widest bg-rose-500 text-on-accent rounded-md shadow-md border border-rose-400">
                     Retired
                   </span>
                 </div>

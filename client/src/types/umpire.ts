@@ -24,6 +24,20 @@ export type MatchEditState = {
   team2_label?: string | null;
 };
 
+/** Serve/receive state captured immediately BEFORE a rally, so it can be
+ *  restored exactly when an umpire deducts that point. */
+export type ServeSnapshot = {
+  serverTeam: 1 | 2;
+  serverPlayerIndex: 0 | 1;
+  receiverPlayerIndex: 0 | 1;
+  receiverP0AtTop: boolean;
+  t1LastServedBy: 0 | 1;
+  t2LastServedBy: 0 | 1;
+  /** Which player (0|1) currently stands in each team's right service court. */
+  t1RightCourt?: 0 | 1;
+  t2RightCourt?: 0 | 1;
+};
+
 export type PointLogEntry = {
   gameNum: number;
   team: 1 | 2 | "let" | "fault";
@@ -32,6 +46,9 @@ export type PointLogEntry = {
   serverTeam: 1 | 2;
   note?: string;
   ts: number;
+  /** Optional — absent on logs written before this was introduced, so undo
+   *  falls back to score-only rollback for matches already in progress. */
+  prev?: ServeSnapshot;
 };
 
 export type BwfMatchState = {
@@ -56,6 +73,13 @@ export type BwfMatchState = {
   receiverP0AtTop: boolean;
   t1LastServedBy: 0 | 1;
   t2LastServedBy: 0 | 1;
+  /** Which player (0|1) stands in each team's RIGHT service court.
+   *  Authoritative basis for who serves and who receives: BWF 9.1.6 — the
+   *  serving side swaps courts on winning a rally, the receiving side never
+   *  does; server and receiver then follow from score parity.
+   *  Optional so matches already in progress keep working. */
+  t1RightCourt?: 0 | 1;
+  t2RightCourt?: 0 | 1;
   endsSwapped: boolean;
   pointLog: PointLogEntry[];
   status: "setup" | "playing" | "finished";

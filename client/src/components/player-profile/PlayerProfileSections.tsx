@@ -327,7 +327,7 @@ export function EquipmentArsenalSection({
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-black text-lg text-slate-800 dark:text-foreground">{item.data.name}</h3>
                           {item.isMain && (
-                            <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 bg-violet-500 text-foreground rounded-lg">Primary</span>
+                            <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 bg-violet-500 text-on-accent rounded-lg">Primary</span>
                           )}
                         </div>
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground dark:text-foreground/45 font-medium">
@@ -373,7 +373,7 @@ export function EquipmentArsenalSection({
                       </div>
                     </div>
                     {item.data.primary && (
-                      <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 bg-blue-500 text-foreground rounded-lg shrink-0">Primary</span>
+                      <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 bg-blue-500 text-on-accent rounded-lg shrink-0">Primary</span>
                     )}
                   </div>
                 </div>

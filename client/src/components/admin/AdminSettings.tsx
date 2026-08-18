@@ -60,19 +60,42 @@ export function AdminSettings() {
     }))) return;
     setSavingUpdate(true);
     try {
-      // Import fetchSiteData dynamically to avoid circular dependencies if any, or just fetch directly
+      // Anchor to the ACTUAL released build, never to whatever this row held
+      // before. This used to do `(row.versionCode || 1) + 1`, so the row crept
+      // up by one per click while real releases advanced independently — it
+      // drifted ~20 versions *behind* the installed app, and the client check
+      // (`installedBuild < versionCode`) could never be true. Bumping past the
+      // released build would be worse still: it would nag users who are already
+      // fully up to date and have nothing to install.
       const { fetchSiteData } = await import("@/lib/siteData");
-      const latest = await fetchSiteData<any>("app_version", "app-version.json");
-      const currentVersion = latest?.versionCode || 1;
-      const nextVersion = currentVersion + 1;
-      
+      const released = await fetch(
+        `${import.meta.env.BASE_URL}data/app-version.json?v=${Date.now()}`,
+        { cache: "no-store" },
+      ).then((r) => r.json());
+
+      const existing = await fetchSiteData<any>("app_version", "app-version.json").catch(() => null);
+      const nextVersion = Number(released?.versionCode);
+
+      if (!Number.isFinite(nextVersion)) {
+        throw new Error("Could not read the released versionCode from app-version.json");
+      }
+
       const newAppVersion = {
-        ...(latest || {}),
+        ...(existing || {}),
         versionCode: nextVersion,
-        versionName: `Update (Forced)`,
-        changelog: "A new mandatory update is available. Please update the app to continue."
+        versionName: released?.versionName ?? "Latest",
+        // The published package is shuttlers.iisc.com — the row previously held
+        // com.iiscshuttlers.app, which is not a real listing, so the button
+        // opened a dead Play Store page.
+        downloadUrl:
+          released?.downloadUrl ??
+          "https://play.google.com/store/apps/details?id=shuttlers.iisc.com",
+        changelog: "A new mandatory update is available. Please update the app to continue.",
+        // Bumped on every force so the client can re-prompt users who already
+        // dismissed this same version.
+        forcedAt: Date.now(),
       };
-      
+
       await supabase.from("site_data").upsert({ key: "app_version", value: newAppVersion, updated_at: new Date().toISOString() }, { onConflict: "key" });
       
       await supabase.functions.invoke("send-announcement", {
@@ -81,7 +104,7 @@ export function AdminSettings() {
       
       await supabase.from("admin_logs").insert({ admin_email: session?.user?.email || "admin", action: `Forced app update prompt (v${nextVersion})`, created_at: new Date().toISOString() });
       
-      toast.success("Update notification sent and popup forced!");
+      toast.success(`Update forced to v${nextVersion} — anyone on an older build will be prompted.`);
     } catch (err: any) {
       toast.error(err?.message || "Failed to force update");
     } finally {

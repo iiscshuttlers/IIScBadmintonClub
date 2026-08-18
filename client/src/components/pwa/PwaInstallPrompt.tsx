@@ -81,7 +81,7 @@ export function PwaInstallPrompt() {
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -50 }}
-          className="bg-gradient-to-r from-blue-600 to-indigo-600 shadow-md text-foreground px-4 py-3 flex items-center justify-between"
+          className="bg-gradient-to-r from-blue-600 to-indigo-600 shadow-md text-on-accent px-4 py-3 flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
             <div className="bg-white/20 p-2 rounded-lg">

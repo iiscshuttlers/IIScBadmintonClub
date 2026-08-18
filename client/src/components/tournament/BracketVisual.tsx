@@ -152,7 +152,7 @@ function RoadmapPanel({ player, matches, isMobile, onClose }: RoadmapPanelProps)
           </div>
           <button
             onClick={onClose}
-            className="shrink-0 ml-3 flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-slate-700 active:bg-slate-600 transition-colors"
+            className="shrink-0 ml-3 flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-on-accent hover:bg-slate-700 active:bg-slate-600 transition-colors"
             aria-label="Close"
           >
             <X size={16} />
@@ -756,7 +756,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
         <div className="flex items-center gap-1 shrink-0">
           <button
             onClick={() => setScale((s) => Math.max(0.4, +(s - 0.1).toFixed(1)))}
-            className="w-8 h-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-slate-700 active:bg-slate-600 transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-on-accent hover:bg-slate-700 active:bg-slate-600 transition-colors"
             aria-label="Zoom out"
           >
             <ZoomOut size={15} />
@@ -764,14 +764,14 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
           <span className="text-[10px] text-muted-foreground w-8 text-center tabular-nums">{Math.round(scale * 100)}%</span>
           <button
             onClick={() => setScale((s) => Math.min(1.5, +(s + 0.1).toFixed(1)))}
-            className="w-8 h-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-slate-700 active:bg-slate-600 transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-on-accent hover:bg-slate-700 active:bg-slate-600 transition-colors"
             aria-label="Zoom in"
           >
             <ZoomIn size={15} />
           </button>
           <button
             onClick={computeScale}
-            className="text-[10px] text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-slate-700 transition-colors"
+            className="text-[10px] text-muted-foreground hover:text-on-accent px-2 py-1 rounded-md hover:bg-slate-700 transition-colors"
           >
             Fit
           </button>

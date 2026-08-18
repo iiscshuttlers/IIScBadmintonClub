@@ -51,7 +51,7 @@ export function ProfileStatsTabLeft({
             <HelpCircle className="w-4 h-4 text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-200 transition-colors cursor-help" />
             
             {/* Tooltip positioned to drop DOWNWARD so it doesn't get clipped by the container's overflow-hidden */}
-            <div className="absolute right-0 md:left-1/2 md:-translate-x-1/2 top-full mt-2 w-64 bg-slate-900 text-foreground text-[10px] sm:text-xs p-3 rounded-xl shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 normal-case tracking-normal font-medium leading-relaxed">
+            <div className="absolute right-0 md:left-1/2 md:-translate-x-1/2 top-full mt-2 w-64 bg-slate-900 text-on-accent text-[10px] sm:text-xs p-3 rounded-xl shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 normal-case tracking-normal font-medium leading-relaxed">
               <ul className="space-y-1">
                 <li><strong className="text-primary">Singles/Doubles/Mixed:</strong> Win % in each format</li>
                 <li><strong className="text-primary">Activity:</strong> Based on total matches logged</li>

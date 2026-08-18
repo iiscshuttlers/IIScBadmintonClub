@@ -286,7 +286,7 @@ export function MatchScorecardModal({ match, isOpen, onClose, currentUser }: Mat
                         <button
                           onClick={handleDispute}
                           disabled={disputing}
-                          className="flex-1 py-2 rounded-xl text-xs font-bold bg-rose-500 hover:bg-rose-600 text-foreground transition disabled:opacity-50"
+                          className="flex-1 py-2 rounded-xl text-xs font-bold bg-rose-500 hover:bg-rose-600 text-on-accent transition disabled:opacity-50"
                         >
                           {disputing ? "Filing..." : "Submit Dispute"}
                         </button>

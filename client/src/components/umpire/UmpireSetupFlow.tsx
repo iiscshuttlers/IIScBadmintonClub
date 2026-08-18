@@ -52,7 +52,7 @@ export function UmpireSetupFlow({
   const initials = (name: string) => name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
 
   return (
-    <div className="bg-slate-900 rounded-3xl text-foreground max-w-lg mx-auto shadow-2xl">
+    <div className="bg-slate-900 rounded-3xl text-on-accent max-w-lg mx-auto shadow-2xl">
 
       {/* ── Header ── */}
       <div className="sticky top-0 z-20 bg-gradient-to-br from-slate-800 to-slate-900 px-6 pt-6 pb-5 shadow-md">
@@ -104,7 +104,7 @@ export function UmpireSetupFlow({
               value={match.matchNumber}
               onChange={(e) => setMatch({ ...match, matchNumber: e.target.value })}
               placeholder="e.g. MS-14"
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-foreground text-sm outline-none focus:border-primary transition"
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-on-accent text-sm outline-none focus:border-primary transition"
             />
           </div>
         )}
@@ -253,7 +253,7 @@ export function UmpireSetupFlow({
                   if (e.target.value === "Other") setMatch({ ...match, customCategory: "" });
                   else setMatch({ ...match, customCategory: e.target.value });
                 }}
-                className="w-36 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-foreground text-xs outline-none focus:border-primary transition"
+                className="w-36 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-on-accent text-xs outline-none focus:border-primary transition"
               >
                 <option value="">Override…</option>
                 <option value="MS">MS</option>
@@ -271,7 +271,7 @@ export function UmpireSetupFlow({
                   onChange={(e) => setMatch({ ...match, customCategory: e.target.value })}
                   placeholder="Custom category"
                   autoFocus
-                  className="w-36 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-foreground text-xs outline-none focus:border-primary transition"
+                  className="w-36 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-on-accent text-xs outline-none focus:border-primary transition"
                 />
               )}
             </div>
@@ -319,10 +319,17 @@ export function UmpireSetupFlow({
                 <div className="grid grid-cols-2 gap-2">
                   {([0, 1] as const).map(i => {
                     const receivingTeam = match.serverTeam === 1 ? match.t2 : match.t1;
-                    const pName = i === 0
-                      ? (receivingTeam.p1Id ? getName(receivingTeam.p1Id).split(" ")[0] : "P1")
-                      : (receivingTeam.p2Id ? getName(receivingTeam.p2Id).split(" ")[0] : "P2");
-                    if (i === 1 && !receivingTeam.p2Id) return null;
+                    // Tournament pairs often have no linked player record for the
+                    // partner, only a name off the bracket label. Keying purely on
+                    // p2Id hid the second option entirely (so the umpire was never
+                    // asked who receives) and showed "P1"/"P2" instead of names.
+                    const nameFor = (id: string | undefined, fallback: string | undefined) =>
+                      (id ? getName(id) : "") || fallback || "";
+                    const raw = i === 0
+                      ? nameFor(receivingTeam.p1Id, receivingTeam.p1Name)
+                      : nameFor(receivingTeam.p2Id, receivingTeam.p2Name);
+                    const pName = raw ? raw.split(" ")[0] : (i === 0 ? "P1" : "P2");
+                    if (i === 1 && !receivingTeam.p2Id && !receivingTeam.p2Name) return null;
                     return (
                       <button key={i}
                         onClick={() => setMatch({ ...match, receiverPlayerIndex: i })}

@@ -298,7 +298,7 @@ export function PlayerCard({
             
             <div className="mt-1 flex flex-col items-start gap-1 flex-wrap">
               {player.is_retired && (
-                <div className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-rose-500 text-foreground shadow-sm">
+                <div className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-rose-500 text-on-accent shadow-sm">
                   Retired
                 </div>
               )}

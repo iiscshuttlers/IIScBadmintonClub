@@ -112,7 +112,7 @@ export default function SettingsHubPage() {
       <div className="border-t border-slate-200 dark:border-slate-800 pt-6">
         <Button
           onClick={() => setSignOutDialog(true)}
-          className="w-full flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-700 text-foreground font-semibold py-3 rounded-xl transition-colors"
+          className="w-full flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-700 text-on-accent font-semibold py-3 rounded-xl transition-colors"
         >
           <LogOut className="w-5 h-5" />
           Sign Out

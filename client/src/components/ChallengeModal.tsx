@@ -126,7 +126,7 @@ export function ChallengeModal({ isOpen, onClose, currentUser, targetPlayer }: C
                 form="challenge-form"
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3.5 bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-foreground rounded-xl font-black text-sm uppercase tracking-widest shadow-md shadow-orange-500/20 hover:shadow-orange-500/40 transition-all flex justify-center items-center gap-2 disabled:opacity-50"
+                className="w-full py-3.5 bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-on-accent rounded-xl font-black text-sm uppercase tracking-widest shadow-md shadow-orange-500/20 hover:shadow-orange-500/40 transition-all flex justify-center items-center gap-2 disabled:opacity-50"
               >
                 {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Swords className="w-5 h-5" /> Send Challenge</>}
               </button>

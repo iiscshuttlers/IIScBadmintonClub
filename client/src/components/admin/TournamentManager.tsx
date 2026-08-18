@@ -7,6 +7,7 @@ import { useAdminHistory } from "@/contexts/AdminHistoryContext";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { usePlayers } from "@/hooks/usePlayers";
 import { generateSingleElimBracket, planDraw, entryRoundLabel, findWalkoverMatches } from "@/lib/bracketGenerator";
+import { syncBracketNames } from "@/lib/bracketSync";
 import { MatchScoreDisplay } from "@/components/tournament/MatchScoreDisplay";
 import { BracketVisual } from "@/components/tournament/BracketVisual";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -445,18 +446,18 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
           {form.status === "active" && (
             <>
               <button onClick={() => transition("completed")} disabled={transitioning}
-                className="px-3 py-1 text-xs font-black rounded-xl bg-blue-600 hover:bg-blue-500 text-foreground disabled:opacity-50 transition">
+                className="px-3 py-1 text-xs font-black rounded-xl bg-blue-600 hover:bg-blue-500 text-on-accent disabled:opacity-50 transition">
                 {transitioning ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "→ Mark Completed"}
               </button>
               <button onClick={() => transition("draft")} disabled={transitioning}
-                className="px-3 py-1 text-xs font-black rounded-xl bg-slate-600 hover:bg-slate-500 text-foreground disabled:opacity-50 transition">
+                className="px-3 py-1 text-xs font-black rounded-xl bg-slate-600 hover:bg-slate-500 text-on-accent disabled:opacity-50 transition">
                 {transitioning ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "↺ Revert to Draft"}
               </button>
             </>
           )}
           {form.status === "completed" && (
             <button onClick={() => transition("active")} disabled={transitioning}
-              className="px-3 py-1 text-xs font-black rounded-xl bg-amber-600 hover:bg-amber-500 text-foreground disabled:opacity-50 transition">
+              className="px-3 py-1 text-xs font-black rounded-xl bg-amber-600 hover:bg-amber-500 text-on-accent disabled:opacity-50 transition">
               {transitioning ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "↺ Re-Activate (Live)"}
             </button>
           )}
@@ -657,7 +658,7 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
                 if (onDelete) onDelete(); // Close setup tab view by clearing selected
               }
             }}
-            className="shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-foreground font-black transition shadow"
+            className="shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-on-accent font-black transition shadow"
           >
             Trash Tournament
           </button>
@@ -902,6 +903,35 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
     toast.success(`Reset ${pinned.length} manual entry round(s) in ${cat}`);
   };
 
+  /**
+   * Push a participant edit straight into the bracket so it also reaches the
+   * umpire panel, live scores and anything else reading `tournament_matches`.
+   *
+   * Restricted to `scheduled` rows: a late partner edit must never rewrite a
+   * match that is already in progress or completed. The manual "Sync Names"
+   * button remains the way to force a full sweep across every round.
+   */
+  const autoSyncBracket = async (category: string | undefined, whatChanged: string) => {
+    if (!category || !tournament?.id) return;
+    try {
+      const { updated, invalidDraw } = await syncBracketNames({
+        tournamentId: tournament.id,
+        category,
+        onlyScheduled: true,
+        resolvePlayerName: (id) => allPlayers?.find((pl) => pl.id === id)?.full_name,
+      });
+      if (invalidDraw) return; // bracket not generated yet, or draw doesn't fit
+      if (updated > 0) {
+        // Participant state is already updated optimistically by the caller, and
+        // the bracket tab reloads on its own — no refetch needed here.
+        toast.success(`${whatChanged} — bracket updated (${updated} match${updated === 1 ? "" : "es"})`);
+      }
+    } catch (err: any) {
+      // Never let a sync failure mask the successful participant edit.
+      toast.error(`Participant saved, but bracket sync failed: ${err?.message ?? "unknown error"}. Use "Sync Names" on the Bracket tab.`);
+    }
+  };
+
   const linkParticipantToPlayer = async (participantId: string, playerId: string | null, playerName: string) => {
     // Determine the new display name if it's doubles (preserve the partner's name)
     const p = participants[Object.keys(participants).find(cat => participants[cat].some(p => p.id === participantId)) || ""]?.find(p => p.id === participantId);
@@ -929,7 +959,8 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
     });
     setLinkingId(null);
     setLinkSearch("");
-    toast.success(`Linked to ${playerName}. Hint: Go to Bracket tab and click "Sync Names" to update bracket!`);
+    toast.success(`Linked to ${playerName}`);
+    await autoSyncBracket(p?.category, `Linked to ${playerName}`);
   };
 
   const linkParticipantToPartner = async (participantId: string, partnerId: string | null, partnerName: string) => {
@@ -960,6 +991,8 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
     });
     setLinkingId(null);
     setLinkSearch2("");
+    toast.success(`Partner set to ${partnerName}`);
+    await autoSyncBracket(p?.category, `Partner set to ${partnerName}`);
   };
 
   const saveEditedName = async () => {
@@ -988,7 +1021,8 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
       return updated;
     });
     setEditingName(null);
-    toast.success("Name updated. Sync bracket if generated!");
+    toast.success("Name updated");
+    await autoSyncBracket(p.category, "Name updated");
   };
 
   const saveSeeds = async (cat: string) => {
@@ -1970,7 +2004,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                     Save
                   </button>
                   <button onClick={() => generateBracket(cat)}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-foreground text-xs font-black shadow transition">
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-on-accent text-xs font-black shadow transition">
                     <Swords className="w-3.5 h-3.5" /> Generate Bracket
                   </button>
                 </div>
@@ -2647,11 +2681,11 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
           {/* Row 1: Visual and List */}
           <div className="flex rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden text-xs font-black w-full">
             <button onClick={() => setViewMode("visual")}
-              className={`flex-1 px-3 py-1.5 transition ${viewMode === "visual" ? "bg-slate-800 text-foreground" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}>
+              className={`flex-1 px-3 py-1.5 transition ${viewMode === "visual" ? "bg-slate-800 text-on-accent" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}>
               Visual
             </button>
             <button onClick={() => setViewMode("list")}
-              className={`flex-1 px-3 py-1.5 transition ${viewMode === "list" ? "bg-slate-800 text-foreground" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}>
+              className={`flex-1 px-3 py-1.5 transition ${viewMode === "list" ? "bg-slate-800 text-on-accent" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}>
               List
             </button>
           </div>
@@ -2698,49 +2732,21 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
               if (!confirm("This will synchronize Round 1 bracket match names with the latest Participants list. Continue?")) return;
               setIsSyncing(true);
               try {
-                const { data: pData, error: pErr } = await supabase.from("tournament_participants").select("*").eq("tournament_id", tournament.id).eq("category", activeCategory);
-                if (pErr) { toast.error(pErr.message); return; }
-                const parts = (pData as Participant[]) ?? [];
-                
-                const mapped = parts.map((p) => ({
-                  playerId: p.player_id,
-                  partnerId: p.partner_id,
-                  displayName: p.display_name ?? (allPlayers?.find((pl) => pl.id === p.player_id)?.full_name ?? "Unknown"),
-                  seed: p.seed ?? 99,
-                  entryRound: p.entry_round,
-                }));
-
-                const newRows = generateSingleElimBracket(mapped, activeCategory, tournament.id, false);
-                if (!newRows.length) { toast.error("Manual entry rounds don't fit the draw"); return; }
-
-                let updatedCount = 0;
-                for (const row of newRows) {
-                  // Only sync names for initial placements, not generic "Winner of..." placeholders
-                  const isT1Initial = row.team1_label !== "TBD" && !row.team1_label.startsWith("Winner of") && !row.team1_label.startsWith("Loser of");
-                  const isT2Initial = row.team2_label !== "TBD" && !row.team2_label.startsWith("Winner of") && !row.team2_label.startsWith("Loser of");
-                  
-                  if (!isT1Initial && !isT2Initial) continue;
-                  
-                  const updatePayload: any = {};
-                  if (isT1Initial) {
-                    updatePayload.player1_id = row.player1_id;
-                    updatePayload.team1_label = row.team1_label;
-                    updatePayload.player3_id = row.player3_id;
-                  }
-                  if (isT2Initial) {
-                    updatePayload.player2_id = row.player2_id;
-                    updatePayload.team2_label = row.team2_label;
-                    updatePayload.player4_id = row.player4_id;
-                  }
-
-                  const { error } = await supabase.from("tournament_matches")
-                    .update(updatePayload)
-                    .eq("tournament_id", tournament.id)
-                    .eq("match_code", row.match_code);
-                  
-                  if (!error) updatedCount++;
+                let result;
+                try {
+                  result = await syncBracketNames({
+                    tournamentId: tournament.id,
+                    category: activeCategory,
+                    // Explicit admin action: sweep every round, not just scheduled rows.
+                    onlyScheduled: false,
+                    resolvePlayerName: (id) => allPlayers?.find((pl) => pl.id === id)?.full_name,
+                  });
+                } catch (err: any) {
+                  toast.error(err?.message ?? "Failed to sync names");
+                  return;
                 }
-                toast.success(`Synced ${updatedCount} participant names`);
+                if (result.invalidDraw) { toast.error("Manual entry rounds don't fit the draw"); return; }
+                toast.success(`Synced ${result.updated} participant names`);
                 
                 const completed = matches.filter((m) => (m.status === "completed" || m.status === "walkover") && m.advances_to_match);
                 if (completed.length > 0) {
@@ -2765,7 +2771,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
               setIsAdvancing(true);
               try { await batchAdvance(); } finally { setIsAdvancing(false); }
             }}
-            className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-foreground text-xs font-black transition min-w-[120px] disabled:opacity-50">
+            className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-on-accent text-xs font-black transition min-w-[120px] disabled:opacity-50">
             {isAdvancing ? <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" /> : <SkipForward className="w-3.5 h-3.5 shrink-0" />} Batch Advance
           </button>
           </div>
@@ -3229,7 +3235,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                                   placeholder="—"
                                   className={`text-center font-black text-base rounded-xl border-2 py-2 outline-none transition w-full
                                     ${t1Won ? "border-primary bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary/70"
-                                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-foreground"}
+                                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-on-accent"}
                                     focus:border-primary`}
                                 />
                                 <span className="text-center text-xs font-bold text-muted-foreground">–</span>
@@ -3240,7 +3246,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                                   placeholder="—"
                                   className={`text-center font-black text-base rounded-xl border-2 py-2 outline-none transition w-full
                                     ${t2Won ? "border-primary bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary/70"
-                                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-foreground"}
+                                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-on-accent"}
                                     focus:border-primary`}
                                 />
                               </div>
@@ -3322,7 +3328,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <button onClick={saveSchedule} className="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-foreground text-xs font-black transition">Save</button>
+                          <button onClick={saveSchedule} className="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-on-accent text-xs font-black transition">Save</button>
                           <button onClick={() => setEditSchedule(null)} className="text-xs text-muted-foreground hover:text-muted-foreground transition">Cancel</button>
                         </div>
                       </div>
@@ -3343,7 +3349,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <button onClick={saveUmpire} className="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-foreground text-xs font-black transition">Save</button>
+                          <button onClick={saveUmpire} className="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-on-accent text-xs font-black transition">Save</button>
                           <button onClick={() => setAssignUmpire(null)} className="text-xs text-muted-foreground hover:text-muted-foreground transition">Cancel</button>
                         </div>
                       </div>
@@ -3392,7 +3398,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
             <div className="flex items-center gap-3">
               <button
                 onClick={() => parseBulkSchedule(bulkText)}
-                className="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-foreground text-xs font-black transition">
+                className="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-on-accent text-xs font-black transition">
                 Preview
               </button>
               <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground hover:text-blue-500 transition">
@@ -3427,7 +3433,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
               <button
                 onClick={saveBulkSchedule}
                 disabled={bulkSaving || bulkPreview.length === 0 || bulkPreview.every((r) => !r.found)}
-                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-foreground text-xs font-black transition disabled:opacity-40 disabled:cursor-not-allowed">
+                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-on-accent text-xs font-black transition disabled:opacity-40 disabled:cursor-not-allowed">
                 {bulkSaving ? "Saving…" : `Save ${bulkPreview.filter((r) => r.found).length} Match${bulkPreview.filter((r) => r.found).length !== 1 ? "es" : ""}`}
               </button>
               <button onClick={() => { setShowBulkSchedule(false); setBulkText(""); setBulkPreview([]); }}
@@ -3484,7 +3490,7 @@ function ArchiveTab({ tournament, isMasterAdmin, onArchived }: {
               <p className="text-sm text-muted-foreground mt-1">Freeze all results and make this a historical record. Cannot be undone.</p>
             </div>
             <button onClick={archive} disabled={archiving}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-foreground font-black transition disabled:opacity-50">
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-on-accent font-black transition disabled:opacity-50">
               {archiving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Archive className="w-4 h-4" />}
               Archive
             </button>

@@ -106,7 +106,7 @@ export function PushBroadcastPanel() {
         <button
           onClick={sendCustomPush}
           disabled={pushing || !customPush.title.trim()}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-foreground font-bold shadow-lg shadow-indigo-500/20 transition disabled:opacity-50"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-on-accent font-bold shadow-lg shadow-indigo-500/20 transition disabled:opacity-50"
         >
           {pushing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bell className="w-4 h-4" />}
           {pushing ? "Sending…" : "Send Broadcast"}

@@ -24,11 +24,64 @@ if (!versionCodeMatch || !versionNameMatch) {
 const currentVersionCode = parseInt(versionCodeMatch[1], 10);
 const currentVersionName = parseFloat(versionNameMatch[1]);
 
-// 2. Bump versions
-const newVersionCode = currentVersionCode + 1;
-const newVersionName = (currentVersionName + 0.01).toFixed(2);
+// Catch drift before compounding it. build.gradle is the source of truth; if
+// app-version.json has fallen behind (e.g. build.gradle was edited by hand),
+// say so loudly — a stale app-version.json means the in-app update prompt
+// compares against the wrong number and never fires.
+try {
+  const existingJson = JSON.parse(fs.readFileSync(appVersionJsonPath, 'utf8'));
+  if (existingJson.versionCode !== currentVersionCode) {
+    console.warn(
+      `\n⚠️  Version mismatch before bump:\n` +
+      `      build.gradle      versionCode ${currentVersionCode}\n` +
+      `      app-version.json  versionCode ${existingJson.versionCode}\n` +
+      `    build.gradle wins; app-version.json will be realigned by this bump.\n`
+    );
+  }
+} catch {
+  // Missing or unreadable app-version.json is handled later in the script.
+}
 
-console.log(`Bumping version...`);
+// 2. Bump versions
+//
+// The step is configurable so you never have to hand-edit build.gradle to skip
+// numbers. Editing it by hand is the one way these files drift apart, because
+// app-version.json is what the running app compares against — if it lags behind
+// the published build, the update prompt silently never fires.
+//
+//   npm run bump          → +1   (340 → 341)
+//   npm run bump -- 10    → +10  (340 → 350)
+//   npm run bump -- --to=350     → set exactly
+const arg = process.argv[2];
+let newVersionCode;
+
+if (arg && arg.startsWith('--to=')) {
+  newVersionCode = parseInt(arg.slice('--to='.length), 10);
+  if (!Number.isFinite(newVersionCode)) {
+    console.error(`Invalid --to value: ${arg}`);
+    process.exit(1);
+  }
+  if (newVersionCode <= currentVersionCode) {
+    console.error(
+      `versionCode must increase: current is ${currentVersionCode}, got ${newVersionCode}.\n` +
+      `Google Play rejects a build whose versionCode is not higher than the last one.`
+    );
+    process.exit(1);
+  }
+} else {
+  const step = arg ? parseInt(arg, 10) : 1;
+  if (!Number.isFinite(step) || step < 1) {
+    console.error(`Invalid step "${arg}" — pass a positive integer, e.g. "npm run bump -- 10".`);
+    process.exit(1);
+  }
+  newVersionCode = currentVersionCode + step;
+}
+
+// versionName tracks the code so the two stay recognisable together.
+const bumpedBy = newVersionCode - currentVersionCode;
+const newVersionName = (currentVersionName + 0.01 * bumpedBy).toFixed(2);
+
+console.log(`Bumping version (step ${bumpedBy})...`);
 console.log(`Version Code: ${currentVersionCode} -> ${newVersionCode}`);
 console.log(`Version Name: ${currentVersionName.toFixed(2)} -> ${newVersionName}`);
 
