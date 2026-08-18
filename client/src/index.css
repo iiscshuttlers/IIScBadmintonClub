@@ -20,6 +20,9 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
+  --color-winner: var(--winner);
+  --color-series-a: var(--series-a);
+  --color-series-b: var(--series-b);
   --color-info: var(--info);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
@@ -94,6 +97,13 @@
   --success: #10b981;
   --warning: #f59e0b;
   --danger:  #f43f5e;
+  --winner:  #f59e0b;
+  --series-a: #3b82f6;
+  --series-b: #f43f5e;
+  --status-available: #047857;
+  --status-playing:   #b45309;
+  --status-resting:   #4338ca;
+  --status-injured:   #be123c;
   --info:    #0ea5e9;
   --card: #ffffff;
   --card-foreground: #0c0d10;
@@ -133,6 +143,13 @@
   --success: #34d399;
   --warning: #fbbf24;
   --danger:  #fb7185;
+  --winner:  #fbbf24;
+  --series-a: #60a5fa;
+  --series-b: #fb7185;
+  --status-available: #6ee7b7;
+  --status-playing:   #fcd34d;
+  --status-resting:   #a5b4fc;
+  --status-injured:   #fda4af;
   --info:    #38bdf8;
   --card: #131417;
   --card-foreground: #f4f5f0;

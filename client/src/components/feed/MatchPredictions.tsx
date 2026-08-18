@@ -400,7 +400,7 @@ export function MatchPredictions() {
             className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
               activeTab === "predictions"
                 ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
-                : "text-muted-foreground hover:text-on-accent"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             Matches

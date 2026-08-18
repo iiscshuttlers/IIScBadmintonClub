@@ -48,7 +48,7 @@ export function LeaderboardPodium({
               )}
             </div>
             <div className="w-full bg-gradient-to-b from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 rounded-t-2xl p-4 md:p-6 text-center border-t border-x border-white/20 shadow-2xl relative transition-colors group-hover:from-slate-300 group-hover:to-slate-400 dark:group-hover:from-slate-600 dark:group-hover:to-slate-700">
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-slate-300 dark:bg-slate-600 text-slate-800 dark:text-on-accent flex items-center justify-center font-black text-sm shadow-md border-2 border-white/20">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-slate-300 dark:bg-slate-600 text-slate-800 dark:text-foreground flex items-center justify-center font-black text-sm shadow-md border-2 border-white/20">
                 2
               </div>
               <h3 className="font-black text-slate-800 dark:text-foreground text-lg line-clamp-1 mt-2">
@@ -157,7 +157,7 @@ export function LeaderboardPodium({
               )}
             </div>
             <div className="w-full bg-gradient-to-b from-orange-200 to-orange-300 dark:from-orange-800 dark:to-orange-900 rounded-t-2xl p-3 md:p-5 text-center border-t border-x border-white/10 shadow-2xl relative transition-colors group-hover:from-orange-300 group-hover:to-orange-400 dark:group-hover:from-orange-700 dark:group-hover:to-orange-800">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-orange-300 dark:bg-orange-700 text-orange-950 dark:text-on-accent flex items-center justify-center font-black text-xs shadow-md border-2 border-white/20">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-orange-300 dark:bg-orange-700 text-orange-950 dark:text-foreground flex items-center justify-center font-black text-xs shadow-md border-2 border-white/20">
                 3
               </div>
               <h3 className="font-black text-orange-950 dark:text-foreground text-base line-clamp-1 mt-2">

@@ -477,7 +477,11 @@ export default function Navigation() {
 
               <div className="pt-2 mt-2">
 
-                {/* ── Light / Dark toggle — always visible ── */}
+                {/* Light/Dark toggle is hidden while ThemeContext enforces dark
+                    (switchable=false makes toggleTheme undefined). Rendering it
+                    gave users a control that did nothing — and calling it would
+                    have thrown, since toggleTheme is optional. */}
+                {toggleTheme && (
                 <div className="mb-3 flex bg-slate-100 dark:bg-slate-900 rounded-2xl p-1.5 gap-1.5 border border-slate-200/60 dark:border-slate-800">
                   <button
                     onClick={() => { if (theme === "dark") toggleTheme(); }}
@@ -499,7 +503,7 @@ export default function Navigation() {
                   >
                     <Moon className="w-4 h-4" /> Dark
                   </button>
-                </div>
+                </div>)}
 
                 {updateInfo && (
                   <button

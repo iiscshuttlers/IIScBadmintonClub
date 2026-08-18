@@ -415,13 +415,13 @@ export function StartLiveScoringButton() {
             <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
               <button
                 onClick={() => setIsDoubles(false)}
-                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${!isDoubles ? "bg-white dark:bg-slate-700 shadow text-on-accent dark:text-on-accent" : "text-muted-foreground"}`}
+                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${!isDoubles ? "bg-white dark:bg-slate-700 shadow text-foreground dark:text-foreground" : "text-muted-foreground"}`}
               >
                 Singles
               </button>
               <button
                 onClick={() => setIsDoubles(true)}
-                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 ${isDoubles ? "bg-white dark:bg-slate-700 shadow text-on-accent dark:text-on-accent" : "text-muted-foreground"}`}
+                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 ${isDoubles ? "bg-white dark:bg-slate-700 shadow text-foreground dark:text-foreground" : "text-muted-foreground"}`}
               >
                 <Users className="w-3.5 h-3.5" /> Doubles
               </button>

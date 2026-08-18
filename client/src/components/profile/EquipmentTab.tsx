@@ -107,7 +107,7 @@ export function EquipmentTab({
                     updated[index].name = e.target.value;
                     setRackets(updated);
                   }}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-on-accent dark:text-on-accent text-sm outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary"
                   placeholder="e.g. Yonex Astrox 99 Pro"
                 />
               </div>
@@ -125,7 +125,7 @@ export function EquipmentTab({
                       updated[index].string = e.target.value;
                       setRackets(updated);
                     }}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-on-accent dark:text-on-accent text-sm outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary"
                     placeholder="e.g. Yonex BG80"
                   />
                 </div>
@@ -142,7 +142,7 @@ export function EquipmentTab({
                       updated[index].tension = e.target.value;
                       setRackets(updated);
                     }}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-on-accent dark:text-on-accent text-sm outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary"
                     placeholder="e.g. 26"
                   />
                 </div>
@@ -222,7 +222,7 @@ export function EquipmentTab({
                     updated[index].name = e.target.value;
                     setShoesList(updated);
                   }}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-on-accent dark:text-on-accent text-sm outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary"
                   placeholder="e.g. Yonex Power Cushion 65 Z3"
                 />
               </div>
@@ -239,7 +239,7 @@ export function EquipmentTab({
           type="text"
           value={apparel}
           onChange={(e) => setApparel(e.target.value)}
-          className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-on-accent dark:text-on-accent focus:ring-2 focus:ring-primary outline-none"
+          className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none"
           placeholder="e.g. Yonex, Li-Ning"
         />
       </div>

@@ -473,7 +473,7 @@ export function UmpireEngine({
 
     return (
       <div className="bg-slate-900 border border-slate-800 rounded-4xl p-5 sm:p-6 text-on-accent max-w-lg mx-auto shadow-2xl">
-        <div className="absolute top-0 inset-x-0 h-1.5 bg-linear-to-r from-primary to-sky-500 rounded-t-4xl" />
+        <div className="absolute top-0 inset-x-0 h-1.5 bg-linear-to-r from-primary to-[var(--info)] rounded-t-4xl" />
 
         {/* Header */}
         <div className="flex items-start justify-between mb-6">
@@ -509,7 +509,7 @@ export function UmpireEngine({
             {[1, 3, 5].map((sets) => (
               <button key={sets}
                 onClick={() => setMatch({ ...match, bestOfSets: sets })}
-                className={`flex-1 py-2 rounded-xl font-black text-sm border transition ${match.bestOfSets === sets ? "bg-sky-500/20 border-sky-500 text-sky-400" : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"}`}>
+                className={`flex-1 py-2 rounded-xl font-black text-sm border transition ${match.bestOfSets === sets ? "bg-[color-mix(in_srgb,var(--info)_20%,transparent)] border-[var(--info)] text-[var(--info)]" : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"}`}>
                 BO{sets}
               </button>
             ))}
@@ -562,7 +562,7 @@ export function UmpireEngine({
                     onClick={() => setMatch({ ...match, serverPlayerIndex: idx as 0 | 1 })}
                     className={`py-2 px-3 rounded-xl text-xs font-black border transition ${
                       match.serverPlayerIndex === idx
-                        ? "bg-sky-500/20 border-sky-500 text-sky-400"
+                        ? "bg-[color-mix(in_srgb,var(--info)_20%,transparent)] border-[var(--info)] text-[var(--info)]"
                         : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"
                     }`}>
                     {name}
@@ -629,7 +629,7 @@ export function UmpireEngine({
   // ── PLAYING / FINISHED SCREEN ──────────────────────────────────────────────
   return (
     <div className="bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border border-slate-800/50 rounded-[2rem] p-3 sm:p-6 text-on-accent max-w-4xl lg:max-w-5xl mx-auto shadow-2xl shadow-black/40 relative overflow-hidden">
-      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-primary via-sky-400 to-primary bg-[length:200%_100%] animate-[shimmer_3s_ease-in-out_infinite]" />
+      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-primary via-[var(--info)] to-primary bg-[length:200%_100%] animate-[shimmer_3s_ease-in-out_infinite]" />
       {renderSetupOverlay()}
       {/* ── Change Ends Overlay ── */}
       {showChangeEnds && (
@@ -695,7 +695,7 @@ export function UmpireEngine({
             </>
           ) : (
             <div className="flex flex-col gap-1">
-              <span className="text-[11px] font-black text-emerald-400 uppercase tracking-widest">Match Finished</span>
+              <span className="text-[11px] font-black text-[var(--success)] uppercase tracking-widest">Match Finished</span>
               <div className="text-slate-500 text-[10px] sm:text-[11px] font-bold truncate">
                 {match.isFriendly ? "Friendly" : `Tournament · ${match.matchNumber || "—"}`} · {match.inferredCategory || match.category}
               </div>
@@ -736,20 +736,20 @@ export function UmpireEngine({
                 : (match.t2.p1Name + (match.t2.p2Name ? ` / ${match.t2.p2Name}` : ""))
               }
             </p>
-            <p className="text-emerald-400 font-black text-sm mt-1 tabular-nums">
+            <p className="text-[var(--success)] font-black text-sm mt-1 tabular-nums">
               {match.setsHistory.join("  ·  ")}{match.retiredTeam ? ` (T${match.retiredTeam} Retired)` : ""}
             </p>
           </div>
 
           <div className="flex flex-row items-center justify-center gap-2 max-w-xs mx-auto">
-            <button disabled={isSaving} onClick={saveMatchToProfile} className={`flex-1 px-3 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 ${hasSaved ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/25" : "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black shadow-[0_0_20px_rgba(245,158,11,0.25)]"}`}>
+            <button disabled={isSaving} onClick={saveMatchToProfile} className={`flex-1 px-3 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 ${hasSaved ? "bg-[color-mix(in_srgb,var(--success)_15%,transparent)] text-[var(--success)] border border-[color-mix(in_srgb,var(--success)_25%,transparent)] hover:bg-[color-mix(in_srgb,var(--success)_25%,transparent)]" : "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black shadow-[0_0_20px_rgba(245,158,11,0.25)]"}`}>
               {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} {isSaving ? "Saving..." : hasSaved ? "Save Again" : "Save Result"}
             </button>
             <button disabled={isSaving} onClick={() => {
               MatchService.upsertLiveMatch(match.id, match)
                 .then(() => toast.success("Score pushed to Live Feed"))
                 .catch(err => toast.error("Failed to push score"));
-            }} className="flex-1 px-3 py-2.5 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 rounded-xl font-bold text-[10px] uppercase tracking-wider border border-sky-500/20 flex items-center justify-center gap-1.5 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95">
+            }} className="flex-1 px-3 py-2.5 bg-[color-mix(in_srgb,var(--info)_10%,transparent)] hover:bg-[color-mix(in_srgb,var(--info)_20%,transparent)] text-[var(--info)] rounded-xl font-bold text-[10px] uppercase tracking-wider border border-[color-mix(in_srgb,var(--info)_20%,transparent)] flex items-center justify-center gap-1.5 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95">
               <RefreshCw className="w-3.5 h-3.5" /> Push Score
             </button>
             <button disabled={isSaving} onClick={handleClose} className="flex-1 px-3 py-2.5 bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 rounded-xl font-bold text-[10px] uppercase tracking-wider border border-white/[0.08] flex items-center justify-center gap-1.5 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95">
@@ -819,32 +819,31 @@ export function UmpireEngine({
                   ? "translateX(calc(100% + var(--card-gap)))"
                   : "translateX(calc(-100% - var(--card-gap)))";
               
-              const teamGradient = isServing 
-                ? team === 1 
-                  ? "bg-gradient-to-b from-emerald-950/80 to-emerald-900/30 border-emerald-500/60 shadow-[0_0_40px_rgba(16,185,129,0.15)]"
-                  : "bg-gradient-to-b from-sky-950/80 to-sky-900/30 border-sky-500/60 shadow-[0_0_40px_rgba(14,165,233,0.15)]"
+              // Team identity resolves to ONE css variable, so every surface below
+              // (text, border, glow, gradient) derives from a single token rather
+              // than repeating a hard-coded hue in four branches. Retheming a team
+              // is now a one-line change in index.css.
+              const teamVar = team === 1 ? "var(--team-1)" : "var(--team-2)";
+
+              const teamGradient = isServing
+                ? "bg-[linear-gradient(to_bottom,color-mix(in_srgb,var(--team)_22%,transparent),color-mix(in_srgb,var(--team)_6%,transparent))] border-[color-mix(in_srgb,var(--team)_60%,transparent)] shadow-[0_0_40px_color-mix(in_srgb,var(--team)_15%,transparent)]"
                 : "bg-gradient-to-b from-slate-800/60 to-slate-900/40 border-slate-700/40";
-              
-              // Keep the score's colour fixed per team. It used to switch between
-              // full and 60%-opacity (and sky-400 vs sky-300) every time serve
-              // changed, so both numbers visibly shifted colour on every rally.
-              // Serve is signalled by the glow, border and "Serving" label instead.
-              const teamTextColor = team === 1 ? "text-emerald-400" : "text-sky-400";
+
+              // Score colour is fixed per team; only the glow reacts to serve, so
+              // the number never changes colour mid-rally.
               const scoreGlow = isServing
-                ? team === 1
-                  ? `${teamTextColor} drop-shadow-[0_0_20px_rgba(16,185,129,0.4)]`
-                  : `${teamTextColor} drop-shadow-[0_0_20px_rgba(14,165,233,0.4)]`
-                : teamTextColor;
-              
-              const servingColor = team === 1 ? "text-emerald-400" : "text-sky-400";
-              const servingDotColor = team === 1 ? "bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.6)]" : "bg-sky-400 shadow-[0_0_8px_rgba(14,165,233,0.6)]";
+                ? "text-[var(--team)] drop-shadow-[0_0_20px_color-mix(in_srgb,var(--team)_40%,transparent)]"
+                : "text-[var(--team)]";
+
+              const servingColor = "text-[var(--team)]";
+              const servingDotColor = "bg-[var(--team)] shadow-[0_0_8px_color-mix(in_srgb,var(--team)_60%,transparent)]";
 
               return (
                 <div
                   key={team}
                   data-testid={`btn-add-point-t${team}`}
                   onClick={() => !isSyncing && addPointMutate({ team, matchId: match.id || tournamentMatch?.id || "" })}
-                  style={{ transform: match.endsSwapped ? swapOffset : "translateX(0)" }}
+                  style={{ transform: match.endsSwapped ? swapOffset : "translateX(0)", ["--team" as any]: teamVar }}
                   className={`relative cursor-pointer select-none rounded-[1.25rem] sm:rounded-3xl border-2 p-2 sm:p-4 md:p-6 flex flex-col items-center backdrop-blur-sm transition-[transform,background-color,border-color,box-shadow] duration-500 ease-in-out active:duration-75 active:scale-[0.97] ${teamGradient}`}
                 >
                   {/* Minus (corner) */}
@@ -910,17 +909,17 @@ export function UmpireEngine({
               churn on this screen. The serving side is now marked with a pulsing
               dot instead of by reordering. */}
           <div className="flex items-center justify-center gap-2 mt-3 sm:mt-4 px-4 py-2 sm:py-2.5 mx-auto w-fit rounded-2xl bg-white/[0.04] border border-white/[0.06] backdrop-blur-sm">
-            <span className={`w-1.5 h-1.5 rounded-full shrink-0 transition-opacity duration-300 ${match.serverTeam === 1 ? "bg-emerald-400 animate-pulse" : "bg-transparent"}`} />
-            <span className="text-emerald-400 text-[9px] sm:text-[11px] font-black uppercase tracking-wider truncate max-w-[80px] sm:max-w-none">
+            <span className={`w-1.5 h-1.5 rounded-full shrink-0 transition-opacity duration-300 ${match.serverTeam === 1 ? "bg-[var(--team-1)] animate-pulse" : "bg-transparent"}`} />
+            <span className="text-[var(--team-1)] text-[9px] sm:text-[11px] font-black uppercase tracking-wider truncate max-w-[80px] sm:max-w-none">
               {match.t1.p2Name ? `${match.t1.p1Name} / ${match.t1.p2Name}` : match.t1.p1Name}
             </span>
-            <span className="text-emerald-400 text-base sm:text-lg font-black tabular-nums">{match.t1.score}</span>
+            <span className="text-[var(--team-1)] text-base sm:text-lg font-black tabular-nums">{match.t1.score}</span>
             <span className="text-slate-600 text-xs font-black">—</span>
-            <span className="text-sky-400 text-base sm:text-lg font-black tabular-nums">{match.t2.score}</span>
-            <span className="text-sky-400 text-[9px] sm:text-[11px] font-black uppercase tracking-wider truncate max-w-[80px] sm:max-w-none">
+            <span className="text-[var(--team-2)] text-base sm:text-lg font-black tabular-nums">{match.t2.score}</span>
+            <span className="text-[var(--team-2)] text-[9px] sm:text-[11px] font-black uppercase tracking-wider truncate max-w-[80px] sm:max-w-none">
               {match.t2.p2Name ? `${match.t2.p1Name} / ${match.t2.p2Name}` : match.t2.p1Name}
             </span>
-            <span className={`w-1.5 h-1.5 rounded-full shrink-0 transition-opacity duration-300 ${match.serverTeam === 2 ? "bg-sky-400 animate-pulse" : "bg-transparent"}`} />
+            <span className={`w-1.5 h-1.5 rounded-full shrink-0 transition-opacity duration-300 ${match.serverTeam === 2 ? "bg-[var(--team-2)] animate-pulse" : "bg-transparent"}`} />
             {match.setsHistory.length > 0 && <span className="text-[8px] sm:text-[10px] font-bold text-slate-500 ml-1">({match.setsHistory.join(", ")})</span>}
           </div>
 
@@ -1058,7 +1057,7 @@ export function UmpireEngine({
                 {showMore && (
                   <>
                   <button onClick={forceEndSet}
-                    className="py-2.5 px-2 bg-white/[0.04] hover:bg-emerald-500/10 border border-white/[0.06] hover:border-emerald-500/30 text-slate-300 hover:text-emerald-300 font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 transition">
+                    className="py-2.5 px-2 bg-white/[0.04] hover:bg-[color-mix(in_srgb,var(--success)_10%,transparent)] border border-white/[0.06] hover:border-[color-mix(in_srgb,var(--success)_30%,transparent)] text-slate-300 hover:text-[var(--success)] font-bold text-[10px] sm:text-xs rounded-xl flex justify-center items-center gap-1.5 transition">
                     <Plus className="w-3.5 h-3.5 shrink-0" /> Add Set
                   </button>
                   <button onClick={callLet}
@@ -1103,7 +1102,7 @@ export function UmpireEngine({
                         {match.t1.p2Name && <span className="line-clamp-2 leading-tight">& {match.t1.p2Name}</span>}
                       </div>
                     </th>
-                    <th className="px-2 sm:px-4 py-3 border-b border-slate-700 text-center font-black text-sky-400 w-[30%]">
+                    <th className="px-2 sm:px-4 py-3 border-b border-slate-700 text-center font-black text-[var(--info)] w-[30%]">
                       <div className="flex flex-col items-center justify-center gap-0.5 break-words">
                         <span className="line-clamp-2 leading-tight">{match.t2.p1Name}</span>
                         {match.t2.p2Name && <span className="line-clamp-2 leading-tight">& {match.t2.p2Name}</span>}
@@ -1152,7 +1151,7 @@ export function UmpireEngine({
                               const capped = raw && parseInt(raw) > match.goldenPoint ? match.goldenPoint.toString() : raw;
                               handleEditSet(i, s1, capped);
                             }}
-                            className="w-10 sm:w-16 bg-slate-900 border border-slate-600 rounded-lg px-1 sm:px-2 py-1 text-center font-bold text-sky-400 outline-none focus:border-sky-500 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-10 sm:w-16 bg-slate-900 border border-slate-600 rounded-lg px-1 sm:px-2 py-1 text-center font-bold text-[var(--info)] outline-none focus:border-[var(--info)] transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                         </td>
                         <td className="px-2 sm:px-4 py-3 font-semibold text-[10px] sm:text-xs text-muted-foreground text-center">
@@ -1195,7 +1194,7 @@ export function UmpireEngine({
                   <span className="text-xs font-black text-muted-foreground uppercase tracking-wider">Match Log</span>
                   <div className="flex items-center gap-3 mt-1 text-[10px]">
                     <span className="text-primary font-bold">T1: {match.t1.p1Name}{match.t1.p2Name && ` / ${match.t1.p2Name}`}</span>
-                    <span className="text-sky-400 font-bold">T2: {match.t2.p1Name}{match.t2.p2Name && ` / ${match.t2.p2Name}`}</span>
+                    <span className="text-[var(--info)] font-bold">T2: {match.t2.p1Name}{match.t2.p2Name && ` / ${match.t2.p2Name}`}</span>
                   </div>
                 </div>
                 <span className="text-xs text-muted-foreground">{match.pointLog.length} events</span>
@@ -1209,7 +1208,7 @@ export function UmpireEngine({
                       <div className="flex items-center gap-2">
                         <span className={`font-black ${
                           entry.team === 1 ? "text-primary"
-                          : entry.team === 2 ? "text-sky-400"
+                          : entry.team === 2 ? "text-[var(--info)]"
                           : entry.team === "let" ? "text-blue-400"
                           : "text-orange-400"
                         }`}>
@@ -1220,7 +1219,7 @@ export function UmpireEngine({
                       </div>
                       <div className="font-mono font-bold text-slate-300 shrink-0">
                         {entry.t1Score} — {entry.t2Score}
-                        <span className={`ml-1.5 text-[9px] ${entry.serverTeam === 1 ? "text-primary" : "text-sky-500"}`}>
+                        <span className={`ml-1.5 text-[9px] ${entry.serverTeam === 1 ? "text-primary" : "text-[var(--info)]"}`}>
                           🏸T{entry.serverTeam}
                         </span>
                       </div>
@@ -1276,7 +1275,7 @@ export function UmpireEngine({
                       toast.success(`Score pushed to all users! (${pushResp?.sent ?? 0} devices notified)`);
                     }
                   }}
-                  className="px-2 py-3 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 font-bold text-[10px] sm:text-xs rounded-xl flex flex-row justify-center items-center gap-1.5 border border-sky-500/15 hover:border-sky-500/30 transition active:scale-95"
+                  className="px-2 py-3 bg-[color-mix(in_srgb,var(--info)_10%,transparent)] hover:bg-[color-mix(in_srgb,var(--info)_20%,transparent)] text-[var(--info)] font-bold text-[10px] sm:text-xs rounded-xl flex flex-row justify-center items-center gap-1.5 border border-[color-mix(in_srgb,var(--info)_15%,transparent)] hover:border-[color-mix(in_srgb,var(--info)_30%,transparent)] transition active:scale-95"
                 >
                   <Tv2 className="w-3.5 h-3.5" /> Push Score
                 </button>
@@ -1286,7 +1285,7 @@ export function UmpireEngine({
                   confirmLabel: "Finish Match",
                   confirmColor: "bg-primary hover:bg-primary",
                   onConfirm: () => updateMatch({ status: 'finished', winner: match.t1.games >= match.t2.games ? 1 : 2 })
-                })} className="px-2 py-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold text-[10px] sm:text-xs rounded-xl flex flex-row justify-center items-center gap-1.5 border border-emerald-500/20 hover:border-emerald-500/40 transition active:scale-95 shadow-[0_0_16px_rgba(16,185,129,0.08)]">
+                })} className="px-2 py-3 bg-[color-mix(in_srgb,var(--success)_10%,transparent)] hover:bg-[color-mix(in_srgb,var(--success)_20%,transparent)] text-[var(--success)] font-bold text-[10px] sm:text-xs rounded-xl flex flex-row justify-center items-center gap-1.5 border border-[color-mix(in_srgb,var(--success)_20%,transparent)] hover:border-[color-mix(in_srgb,var(--success)_40%,transparent)] transition active:scale-95 shadow-[0_0_16px_rgba(16,185,129,0.08)]">
                   <Save className="w-3.5 h-3.5" /> Finish
                 </button>
                 <button onClick={() => setConfirmAction({

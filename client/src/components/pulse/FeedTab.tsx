@@ -351,7 +351,7 @@ export default function FeedTab() {
                 placeholder="Search matches, players, formats..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white dark:bg-slate-900 text-on-accent text-sm font-bold rounded-2xl pl-11 pr-4 py-3 outline-none border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary shadow-sm placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                className="w-full bg-white dark:bg-slate-900 text-foreground text-sm font-bold rounded-2xl pl-11 pr-4 py-3 outline-none border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-primary shadow-sm placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
             </div>
 

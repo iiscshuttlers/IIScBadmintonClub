@@ -130,8 +130,8 @@ export function DirectoryTab({
             onClick={() => setViewMode("individuals")}
             className={`flex-1 flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${
               viewMode === "individuals"
-                ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-on-accent shadow-sm"
-                : "text-muted-foreground hover:text-on-accent"
+                ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Users className="w-4 h-4" /> Individuals

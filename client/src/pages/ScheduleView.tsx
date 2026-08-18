@@ -224,7 +224,7 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
               onClick={() => setActiveFormat("ALL")}
               className={`px-3 sm:px-4 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap ${
                 activeFormat === "ALL"
-                  ? "bg-white dark:bg-slate-900 text-on-accent dark:text-on-accent shadow-sm ring-1 ring-slate-200"
+                  ? "bg-white dark:bg-slate-900 text-foreground dark:text-foreground shadow-sm ring-1 ring-slate-200"
                   : "text-muted-foreground dark:text-muted-foreground hover:text-muted-foreground hover:bg-white dark:hover:text-white dark:bg-slate-800/50"
               }`}
             >
@@ -237,7 +237,7 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
                   onClick={() => setActiveFormat(code)}
                   className={`px-3 sm:px-4 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all duration-200 whitespace-nowrap ${
                     activeFormat === code
-                      ? "bg-white dark:bg-slate-900 text-on-accent dark:text-on-accent shadow-sm ring-1 ring-slate-200"
+                      ? "bg-white dark:bg-slate-900 text-foreground dark:text-foreground shadow-sm ring-1 ring-slate-200"
                       : "text-muted-foreground dark:text-muted-foreground hover:text-muted-foreground hover:bg-white dark:hover:text-white dark:bg-slate-800/50"
                   }`}
                 >

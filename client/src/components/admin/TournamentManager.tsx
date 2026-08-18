@@ -164,19 +164,19 @@ function StatusChip({ status }: { status: string }) {
 }
 
 function MatchStatusChip({ match }: { match: { status: string, scheduled_at?: string | null, court_number?: string | null } }) {
-  if (match.status === "walkover") return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/40 text-blue-600 whitespace-nowrap">W/O</span>;
+  if (match.status === "walkover") return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-[var(--info)] dark:bg-[var(--info)]/40 text-[var(--info)] whitespace-nowrap">W/O</span>;
   if (match.status === "completed") return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-primary/15 dark:bg-primary/40 text-primary whitespace-nowrap">COMPLETED</span>;
-  if (match.status === "in_progress") return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-600 whitespace-nowrap">LIVE</span>;
-  if (match.scheduled_at) return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 whitespace-nowrap">SCHEDULED</span>;
+  if (match.status === "in_progress") return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-[var(--warning)] dark:bg-[var(--warning)]/40 text-[var(--warning)] whitespace-nowrap">LIVE</span>;
+  if (match.scheduled_at) return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-[var(--info)] dark:bg-[var(--info)]/40 text-[var(--info)] whitespace-nowrap">SCHEDULED</span>;
   return <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-muted-foreground whitespace-nowrap">PENDING</span>;
 }
 
 const COURT_COLORS: Record<string, string> = {
-  C1: "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300",
-  C2: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300",
+  C1: "bg-[var(--info)] dark:bg-[var(--info)]/40 text-[var(--info)] dark:text-[var(--info)]",
+  C2: "bg-[var(--success)] dark:bg-[var(--success)]/40 text-[var(--success)] dark:text-[var(--success)]",
   C3: "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300",
-  C4: "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300",
-  C5: "bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300",
+  C4: "bg-[var(--warning)] dark:bg-[var(--warning)]/40 text-[var(--warning)] dark:text-[var(--warning)]",
+  C5: "bg-[var(--danger)] dark:bg-[var(--danger)]/40 text-[var(--danger)] dark:text-[var(--danger)]",
   C6: "bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300",
 };
 function getCourtColorClass(court: string) {
@@ -258,7 +258,7 @@ export function TournamentManager() {
       <div className={cardCls}>
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3 flex-wrap">
-            <Trophy className="w-5 h-5 text-amber-500 shrink-0" />
+            <Trophy className="w-5 h-5 text-[var(--warning)] shrink-0" />
             <InfoModal
               title="TOURNAMENT MANAGER"
               items={[
@@ -446,7 +446,7 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
           {form.status === "active" && (
             <>
               <button onClick={() => transition("completed")} disabled={transitioning}
-                className="px-3 py-1 text-xs font-black rounded-xl bg-blue-600 hover:bg-blue-500 text-on-accent disabled:opacity-50 transition">
+                className="px-3 py-1 text-xs font-black rounded-xl bg-[var(--info)] hover:bg-[var(--info)] text-foreground disabled:opacity-50 transition">
                 {transitioning ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "→ Mark Completed"}
               </button>
               <button onClick={() => transition("draft")} disabled={transitioning}
@@ -457,7 +457,7 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
           )}
           {form.status === "completed" && (
             <button onClick={() => transition("active")} disabled={transitioning}
-              className="px-3 py-1 text-xs font-black rounded-xl bg-amber-600 hover:bg-amber-500 text-on-accent disabled:opacity-50 transition">
+              className="px-3 py-1 text-xs font-black rounded-xl bg-[var(--warning)] hover:bg-[var(--warning)] text-foreground disabled:opacity-50 transition">
               {transitioning ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "↺ Re-Activate (Live)"}
             </button>
           )}
@@ -585,7 +585,7 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
         <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4 flex-wrap">
           <div>
             <label className="font-bold text-slate-800 dark:text-slate-200 text-sm flex items-center gap-1.5">
-              <Bell className="w-4 h-4 text-amber-500" /> Auto Match & Umpire Reminders
+              <Bell className="w-4 h-4 text-[var(--warning)]" /> Auto Match & Umpire Reminders
             </label>
             <p className="text-xs text-muted-foreground">
               Sends push & email notifications to players and umpires 30 mins before scheduled matches.
@@ -596,7 +596,7 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
             onClick={() => upd("auto_reminders_enabled", !form.auto_reminders_enabled)}
             className={`px-4 py-2 rounded-xl text-xs font-black border transition-all ${
               form.auto_reminders_enabled !== false
-                ? "bg-emerald-600 text-white border-emerald-500 shadow-xs"
+                ? "bg-[var(--success)] text-white border-[var(--success)] shadow-xs"
                 : "bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700"
             }`}
           >
@@ -609,7 +609,7 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
         <div>
           {form.status === "draft" && (
             <button onClick={deleteDraft} disabled={saving || transitioning}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-900/50 text-rose-600 dark:text-rose-400 font-bold transition">
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-50 hover:bg-[var(--danger)] dark:bg-[var(--danger)]/30 dark:hover:bg-[var(--danger)]/50 text-[var(--danger)] dark:text-[var(--danger)] font-bold transition">
               <Trash2 className="w-4 h-4" />
               Delete Draft
             </button>
@@ -623,14 +623,14 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
       </div>
 
       {/* Danger Zone */}
-      <div className="mt-12 pt-8 border-t-2 border-red-100 dark:border-red-900/30">
-        <h3 className="text-sm font-black text-red-600 dark:text-red-400 mb-4 flex items-center gap-2">
+      <div className="mt-12 pt-8 border-t-2 border-[var(--danger)] dark:border-[var(--danger)]/30">
+        <h3 className="text-sm font-black text-[var(--danger)] dark:text-[var(--danger)] mb-4 flex items-center gap-2">
           <AlertCircle className="w-4 h-4" /> Danger Zone
         </h3>
-        <div className="bg-red-50 dark:bg-red-950/20 rounded-2xl p-6 border border-red-200 dark:border-red-900/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="bg-red-50 dark:bg-[var(--danger)]/20 rounded-2xl p-6 border border-[var(--danger)] dark:border-[var(--danger)]/50 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
-            <h4 className="font-bold text-red-900 dark:text-red-100">Send to Trash (Soft Delete)</h4>
-            <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+            <h4 className="font-bold text-[var(--danger)] dark:text-[var(--danger)]">Send to Trash (Soft Delete)</h4>
+            <p className="text-sm text-[var(--danger)] dark:text-[var(--danger)] mt-1">
               Move this tournament to the trash instead of permanently deleting it. You can undo this action from the admin panel history.
             </p>
           </div>
@@ -658,7 +658,7 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
                 if (onDelete) onDelete(); // Close setup tab view by clearing selected
               }
             }}
-            className="shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-on-accent font-black transition shadow"
+            className="shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--danger)] hover:bg-[var(--danger)] text-foreground font-black transition shadow"
           >
             Trash Tournament
           </button>
@@ -1367,7 +1367,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
           <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
             <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
                <h2 className="font-black text-lg text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                 <AlertCircle className="w-5 h-5 text-amber-500" />
+                 <AlertCircle className="w-5 h-5 text-[var(--warning)]" />
                  Potential Duplicates in {duplicateReport.cat}
                </h2>
                <div className="flex items-center gap-2">
@@ -1395,11 +1395,11 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
             </div>
             <div className="p-5 overflow-y-auto space-y-4">
                {duplicateReport.groups.map((g, i) => (
-                  <div key={i} className="bg-amber-50/50 dark:bg-amber-950/10 p-4 rounded-xl border border-amber-200/50 dark:border-amber-900/50">
-                     <h4 className="text-[10px] font-black text-amber-600/80 uppercase tracking-widest mb-2">Match Group {i+1}</h4>
+                  <div key={i} className="bg-amber-50/50 dark:bg-[var(--warning)]/10 p-4 rounded-xl border border-[var(--warning)]/50 dark:border-[var(--warning)]/50">
+                     <h4 className="text-[10px] font-black text-[var(--warning)]/80 uppercase tracking-widest mb-2">Match Group {i+1}</h4>
                      <ul className="space-y-2">
                         {g.map((item, j) => (
-                          <li key={j} className="text-sm flex items-center justify-between font-bold text-slate-700 dark:text-slate-300 before:content-[''] before:w-1.5 before:h-1.5 before:bg-amber-400 before:rounded-full before:mr-2">
+                          <li key={j} className="text-sm flex items-center justify-between font-bold text-slate-700 dark:text-slate-300 before:content-[''] before:w-1.5 before:h-1.5 before:bg-[var(--warning)] before:rounded-full before:mr-2">
                             <span className="truncate">{item.name}</span>
                             <span className="text-[10px] uppercase tracking-widest text-muted-foreground bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md shrink-0">{item.details}</span>
                           </li>
@@ -1495,7 +1495,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => checkDuplicates(cat, parts, doubles)}
-                      className="flex items-center gap-1 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-amber-500 transition px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md"
+                      className="flex items-center gap-1 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-[var(--warning)] transition px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md"
                     >
                       <AlertCircle className="w-3 h-3" /> Check Duplicates
                     </button>
@@ -1518,10 +1518,10 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                     <span className="text-sm font-bold text-primary flex-1">
                       {selectedParts.filter(id => parts.some(p => p.id === id)).length} selected in {cat}
                     </span>
-                    <button onClick={bulkUnlink} className="px-3 py-1.5 text-xs font-bold text-amber-600 bg-amber-100 hover:bg-amber-200 rounded-lg transition flex items-center gap-1">
+                    <button onClick={bulkUnlink} className="px-3 py-1.5 text-xs font-bold text-[var(--warning)] bg-[var(--warning)] hover:bg-[var(--warning)] rounded-lg transition flex items-center gap-1">
                       <Unlink className="w-3 h-3" /> Unlink
                     </button>
-                    <button onClick={bulkRemove} className="px-3 py-1.5 text-xs font-bold text-rose-600 bg-rose-100 hover:bg-rose-200 rounded-lg transition flex items-center gap-1">
+                    <button onClick={bulkRemove} className="px-3 py-1.5 text-xs font-bold text-[var(--danger)] bg-[var(--danger)] hover:bg-[var(--danger)] rounded-lg transition flex items-center gap-1">
                       <X className="w-3 h-3" /> Delete
                     </button>
                     <button onClick={() => setSelectedParts(prev => prev.filter(id => !parts.some(p => p.id === id)))} className="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-200 hover:bg-slate-300 rounded-lg transition flex items-center gap-1">
@@ -1530,7 +1530,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                   </div>
                 )}
                 {drawPlan && (
-                  <div className={`rounded-xl border p-3 mb-3 ${drawPlan.overAllocatedSlots > 0 ? "border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/30" : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40"}`}>
+                  <div className={`rounded-xl border p-3 mb-3 ${drawPlan.overAllocatedSlots > 0 ? "border-[var(--danger)] dark:border-[var(--danger)] bg-rose-50 dark:bg-[var(--danger)]/30" : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40"}`}>
                     <div className="flex items-center justify-between gap-3 flex-wrap">
                       <div className="text-xs font-black text-slate-700 dark:text-slate-200">
                         Draw of {drawPlan.drawSize}
@@ -1544,7 +1544,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                       </button>
                     </div>
                     {drawPlan.overAllocatedSlots > 0 ? (
-                      <p className="mt-1.5 text-xs font-bold text-rose-600 dark:text-rose-400">
+                      <p className="mt-1.5 text-xs font-bold text-[var(--danger)] dark:text-[var(--danger)]">
                         Manual entry rounds need {drawPlan.overAllocatedSlots} more slot(s) than the draw has — move some seeds to a later round before generating.
                       </p>
                     ) : (
@@ -1555,7 +1555,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                       </p>
                     )}
                     {drawPlan.forcedAdjustments.length > 0 && (
-                      <p className="mt-1 text-xs font-bold text-amber-600 dark:text-amber-400">
+                      <p className="mt-1 text-xs font-bold text-[var(--warning)] dark:text-[var(--warning)]">
                         {drawPlan.forcedAdjustments.length} pinned entr{drawPlan.forcedAdjustments.length === 1 ? "y was" : "ies were"} moved a round later to fill the draw.
                       </p>
                     )}
@@ -1595,14 +1595,14 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                                   <div className="flex flex-col flex-1 min-w-0 sm:pr-3 sm:border-r border-slate-200 dark:border-slate-700">
                                     <div className="text-sm font-bold text-slate-800 dark:text-foreground truncate flex items-center gap-1.5">
                                       <span className="truncate">{name1}</span>
-                                      {!p.player_id && <span className="text-[9px] font-black uppercase text-amber-600 bg-amber-100 dark:text-amber-400 dark:bg-amber-950/50 px-1.5 py-0.5 rounded-full shrink-0">ext</span>}
+                                      {!p.player_id && <span className="text-[9px] font-black uppercase text-[var(--warning)] bg-[var(--warning)] dark:text-[var(--warning)] dark:bg-[var(--warning)]/50 px-1.5 py-0.5 rounded-full shrink-0">ext</span>}
                                     </div>
                                     <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 truncate mt-0.5">{getDepartmentAcronym(dept1)}</span>
                                   </div>
                                   <div className="flex flex-col flex-1 min-w-0 sm:pl-1">
                                     <div className="text-sm font-bold text-slate-800 dark:text-foreground truncate flex items-center gap-1.5">
                                       <span className="truncate">{name2}</span>
-                                      {!p.partner_id && <span className="text-[9px] font-black uppercase text-amber-600 bg-amber-100 dark:text-amber-400 dark:bg-amber-950/50 px-1.5 py-0.5 rounded-full shrink-0">ext</span>}
+                                      {!p.partner_id && <span className="text-[9px] font-black uppercase text-[var(--warning)] bg-[var(--warning)] dark:text-[var(--warning)] dark:bg-[var(--warning)]/50 px-1.5 py-0.5 rounded-full shrink-0">ext</span>}
                                     </div>
                                     <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 truncate mt-0.5">{getDepartmentAcronym(dept2)}</span>
                                   </div>
@@ -1614,7 +1614,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                                   <div className="text-sm font-bold text-slate-800 dark:text-foreground truncate flex items-center gap-2">
                                     <span className="truncate">{p.display_name ?? player?.full_name ?? "Unknown"}</span>
                                     {!p.player_id && (
-                                      <span className="text-[9px] font-black uppercase text-amber-600 bg-amber-100 dark:text-amber-400 dark:bg-amber-950/50 px-1.5 py-0.5 rounded-full shrink-0">external</span>
+                                      <span className="text-[9px] font-black uppercase text-[var(--warning)] bg-[var(--warning)] dark:text-[var(--warning)] dark:bg-[var(--warning)]/50 px-1.5 py-0.5 rounded-full shrink-0">external</span>
                                     )}
                                   </div>
                                   {player?.department && (
@@ -1629,7 +1629,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                         </div>
                         <button onClick={() => removeParticipant(p.id)}
                           title="Remove Participant"
-                          className="p-1.5 mt-0.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-lg transition shrink-0 ml-1">
+                          className="p-1.5 mt-0.5 text-slate-400 hover:text-[var(--danger)] hover:bg-rose-50 dark:hover:bg-[var(--danger)]/30 rounded-lg transition shrink-0 ml-1">
                           <X className="w-4 h-4" />
                         </button>
                       </div>
@@ -1669,20 +1669,20 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                               setLinkingId(null);
                             }}
                             title="Edit Names"
-                            className="p-1.5 text-slate-500 hover:text-blue-500 hover:bg-white dark:hover:bg-slate-700 rounded-md transition">
+                            className="p-1.5 text-slate-500 hover:text-[var(--info)] hover:bg-white dark:hover:bg-slate-700 rounded-md transition">
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => { setLinkingId(linkingId === p.id ? null : p.id); setLinkSearch(""); setEditingName(null); }}
                             title={p.player_id ? "Change linked player" : "Link to registered player"}
-                            className={`p-1.5 rounded-md transition hover:bg-white dark:hover:bg-slate-700 ${p.player_id ? "text-blue-500" : "text-slate-500 hover:text-blue-500"}`}>
+                            className={`p-1.5 rounded-md transition hover:bg-white dark:hover:bg-slate-700 ${p.player_id ? "text-[var(--info)]" : "text-slate-500 hover:text-[var(--info)]"}`}>
                             <Link className="w-3.5 h-3.5" />
                           </button>
                           {p.player_id && (
                             <button
                               onClick={() => linkParticipantToPlayer(p.id, null, p.display_name?.split(' &')[0] || "")}
                               title="Unlink Player 1"
-                              className="p-1.5 text-amber-500 hover:text-amber-600 hover:bg-white dark:hover:bg-slate-700 rounded-md transition">
+                              className="p-1.5 text-[var(--warning)] hover:text-[var(--warning)] hover:bg-white dark:hover:bg-slate-700 rounded-md transition">
                               <Unlink className="w-3.5 h-3.5" />
                             </button>
                           )}
@@ -1690,7 +1690,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                             <button
                               onClick={() => linkParticipantToPartner(p.id, null, p.display_name?.split('&')[1]?.trim() || "")}
                               title="Unlink Player 2"
-                              className="p-1.5 text-rose-500 hover:text-rose-600 hover:bg-white dark:hover:bg-slate-700 rounded-md transition">
+                              className="p-1.5 text-[var(--danger)] hover:text-[var(--danger)] hover:bg-white dark:hover:bg-slate-700 rounded-md transition">
                               <Unlink className="w-3.5 h-3.5" />
                             </button>
                           )}
@@ -1727,7 +1727,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                               value={linkSearch}
                               onChange={(e) => setLinkSearch(e.target.value)}
                               placeholder={doubles ? "Search Player 1 to link…" : "Search registered player to link…"}
-                              className="w-full px-3 py-1.5 text-xs rounded-lg border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-900 outline-none focus:ring-1 focus:ring-blue-500"
+                              className="w-full px-3 py-1.5 text-xs rounded-lg border border-[var(--info)] dark:border-[var(--info)] bg-white dark:bg-slate-900 outline-none focus:ring-1 focus:ring-[var(--info)]"
                             />
                             {linkSearch && (
                               <div className="mt-1 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm max-h-40 overflow-y-auto">
@@ -1736,7 +1736,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                                   .slice(0, 8)
                                   .map((pl) => (
                                     <button key={pl.id}
-                                      className="w-full text-left px-3 py-2 text-xs hover:bg-blue-50 dark:hover:bg-blue-950/30 transition"
+                                      className="w-full text-left px-3 py-2 text-xs hover:bg-blue-50 dark:hover:bg-[var(--info)]/30 transition"
                                       onClick={() => linkParticipantToPlayer(p.id, pl.id, pl.full_name)}>
                                       {pl.full_name}
                                     </button>
@@ -1922,7 +1922,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                               toast.error("Clipboard access denied or empty");
                             }
                           }}
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-[10px] font-black text-blue-500 hover:text-blue-600 hover:border-blue-400 transition"
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-[10px] font-black text-[var(--info)] hover:text-[var(--info)] hover:border-[var(--info)] transition"
                         >
                           <Clipboard className="w-3 h-3" /> Paste
                         </button>
@@ -1942,7 +1942,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                       placeholder={isDoubles(cat) ? "Rahul Sharma\tPriya Nair\nArun K\tMeena R" : "Rahul Sharma\nPriya Nair\nArun Kumar"}
                       className="w-full px-3 py-2 text-sm font-mono rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-1 focus:ring-primary resize-none"
                     />
-                    <label className="flex items-center gap-2 cursor-pointer text-xs text-muted-foreground hover:text-blue-500 transition w-fit">
+                    <label className="flex items-center gap-2 cursor-pointer text-xs text-muted-foreground hover:text-[var(--info)] transition w-fit">
                       <Upload className="w-3.5 h-3.5" />
                       <span>Upload CSV instead</span>
                       <input type="file" accept=".csv" className="hidden"
@@ -1954,9 +1954,9 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                         <div className="space-y-1 max-h-48 overflow-y-auto">
                           {entries.map((e, i) => (
                             <div key={i} className="flex items-center gap-2 text-xs py-1 border-b border-slate-100 dark:border-slate-800 last:border-0">
-                              <span className={`w-2 h-2 rounded-full shrink-0 ${e.match1 ? "bg-primary" : "bg-amber-400"}`} />
+                              <span className={`w-2 h-2 rounded-full shrink-0 ${e.match1 ? "bg-primary" : "bg-[var(--warning)]"}`} />
                               <span className="flex-1 text-muted-foreground dark:text-slate-300 truncate">{e.raw}</span>
-                              <span className={`text-[10px] font-black uppercase ${e.match1 ? "text-primary" : "text-amber-500"}`}>
+                              <span className={`text-[10px] font-black uppercase ${e.match1 ? "text-primary" : "text-[var(--warning)]"}`}>
                                 {e.match1 ? "Found" : "External"}
                               </span>
                             </div>
@@ -1982,7 +1982,7 @@ function ParticipantsTab({ tournament }: { tournament: Tournament }) {
                       <Plus className="w-3.5 h-3.5" /> Add Participant
                     </button>
                     <button onClick={() => { setBulkCat(cat); setBulkText(""); setAdding(null); }}
-                      className="px-3 py-2 text-xs font-black rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-muted-foreground hover:border-blue-400 hover:text-blue-600 transition flex items-center justify-center gap-1">
+                      className="px-3 py-2 text-xs font-black rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-muted-foreground hover:border-[var(--info)] hover:text-[var(--info)] transition flex items-center justify-center gap-1">
                       <Upload className="w-3.5 h-3.5" /> Bulk / CSV
                     </button>
                   </div>
@@ -2693,11 +2693,11 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
           {/* Row 2: Export PDF and Export CSV */}
           <div className="flex gap-2 w-full">
             <button onClick={() => downloadMatchesPDF(activeCategory)}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-300 dark:border-rose-700 text-xs font-black text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition">
+              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--danger)] dark:border-[var(--danger)] text-xs font-black text-[var(--danger)] dark:text-[var(--danger)] hover:bg-rose-50 dark:hover:bg-[var(--danger)]/30 transition">
               <FileText className="w-3.5 h-3.5 shrink-0" /> Export PDF
             </button>
             <button onClick={() => downloadMatchesCSV(activeCategory)}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-700 text-xs font-black text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition">
+              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--success)] dark:border-[var(--success)] text-xs font-black text-[var(--success)] dark:text-[var(--success)] hover:bg-emerald-50 dark:hover:bg-[var(--success)]/30 transition">
               <Download className="w-3.5 h-3.5 shrink-0" /> Export CSV
             </button>
           </div>
@@ -2723,7 +2723,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
               <Settings2 className="w-3.5 h-3.5 shrink-0" /> Round Rules
             </button>
             <button onClick={() => { setShowBulkSchedule(true); setBulkPreview([]); setBulkText(""); }}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-blue-300 dark:border-blue-700 text-xs font-black text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition min-w-[120px]">
+              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--info)] dark:border-[var(--info)] text-xs font-black text-[var(--info)] dark:text-[var(--info)] hover:bg-blue-50 dark:hover:bg-[var(--info)]/30 transition min-w-[120px]">
               <CalendarDays className="w-3.5 h-3.5 shrink-0" /> Bulk Schedule
             </button>
             <button 
@@ -2762,7 +2762,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                 setIsSyncing(false); 
               }
             }}
-            className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700 text-xs font-black text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition min-w-[120px] disabled:opacity-50">
+            className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--warning)] dark:border-[var(--warning)] text-xs font-black text-[var(--warning)] dark:text-[var(--warning)] hover:bg-amber-50 dark:hover:bg-[var(--warning)]/30 transition min-w-[120px] disabled:opacity-50">
             {isSyncing ? <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5 shrink-0" />} Sync Names
           </button>
           <button 
@@ -2878,7 +2878,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                     <div className="flex items-center gap-2 flex-wrap px-4 py-2.5 bg-slate-50/50 dark:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800">
                       <span className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider bg-slate-200/60 dark:bg-slate-700/60 px-2 py-0.5 rounded-md">{m.match_code}</span>
                       <MatchStatusChip match={m} />
-                      {m.locked && <Lock className="w-3.5 h-3.5 text-amber-500" aria-label="Locked" />}
+                      {m.locked && <Lock className="w-3.5 h-3.5 text-[var(--warning)]" aria-label="Locked" />}
                       {m.scored_by && m.status === 'completed' && (
                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 flex items-center gap-1 ml-auto">
                           <Trophy className="w-3 h-3" /> {allPlayers?.find((p) => p.id === m.scored_by)?.full_name || "Umpire"}
@@ -2940,7 +2940,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {m.status === "scheduled" && canEdit && (
                           <button onClick={() => setStatus(m.id, "in_progress")} disabled={busy}
-                            className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/40 transition">
+                            className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg bg-[var(--warning)] dark:bg-[var(--warning)]/40 text-[var(--warning)] dark:text-[var(--warning)] hover:bg-[var(--warning)] dark:hover:bg-[var(--warning)]/40 transition">
                             <Play className="w-3 h-3" /> Start
                           </button>
                         )}
@@ -2964,7 +2964,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                               <SkipForward className="w-3 h-3" /> W/O T2
                             </button>
                             <button onClick={() => submitWalkover(m.id, 0)} disabled={busy}
-                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition">
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-[var(--danger)] dark:border-[var(--danger)]/40 text-[var(--danger)] dark:text-[var(--danger)] hover:bg-red-50 dark:hover:bg-[var(--danger)]/20 transition">
                               <SkipForward className="w-3 h-3" /> Double W/O
                             </button>
                             <button onClick={() => assignBye(m.id, 1)} disabled={busy}
@@ -2994,11 +2994,11 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                               });
                               setEditScore({ matchId: m.id, side: m.winner_side ?? 1, sets: hist.join(", "), bestOfSets: bo, goldenPoint: gp, pointsToWin: ptw, setsData });
                             }}
-                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition">
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-[var(--warning)] dark:border-[var(--warning)] text-[var(--warning)] dark:text-[var(--warning)] hover:bg-amber-50 dark:hover:bg-[var(--warning)]/30 transition">
                               <Unlock className="w-3 h-3" /> Edit
                             </button>
                             <button onClick={() => undoTournamentMatch(m.id)} disabled={busy}
-                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition">
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-[var(--danger)] dark:border-[var(--danger)] text-[var(--danger)] dark:text-[var(--danger)] hover:bg-red-50 dark:hover:bg-[var(--danger)]/30 transition">
                               <Undo2 className="w-3 h-3" /> Undo Match
                             </button>
                           </>
@@ -3030,17 +3030,17 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                           >
                             {remindSendingId === m.id ? (
                               <>
-                                <Loader2 className="w-3 h-3 animate-spin text-amber-500" />
+                                <Loader2 className="w-3 h-3 animate-spin text-[var(--warning)]" />
                                 <span>Sending...</span>
                               </>
                             ) : remindSentMap[m.id] ? (
                               <>
-                                <Check className="w-3 h-3 text-emerald-500" />
-                                <span className="text-emerald-600 dark:text-emerald-400 font-black">Sent!</span>
+                                <Check className="w-3 h-3 text-[var(--success)]" />
+                                <span className="text-[var(--success)] dark:text-[var(--success)] font-black">Sent!</span>
                               </>
                             ) : (
                               <>
-                                <AlertCircle className="w-3 h-3 text-amber-500" />
+                                <AlertCircle className="w-3 h-3 text-[var(--warning)]" />
                                 <span>Remind</span>
                               </>
                             )}
@@ -3061,7 +3061,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                               <CalendarDays className="w-3 h-3" /> Schedule
                             </button>
                             <button onClick={() => { window.location.href = `${import.meta.env.BASE_URL}tv/camera/${m.id}`; }}
-                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition">
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg border border-[var(--danger)] dark:border-[var(--danger)]/50 text-[var(--danger)] dark:text-[var(--danger)] hover:bg-rose-50 dark:hover:bg-[var(--danger)]/30 transition">
                               <Camera className="w-3 h-3" /> Camera
                             </button>
                           </>
@@ -3098,7 +3098,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                               if (!res.error) setMatches((res.data as TournamentMatch[]) ?? []);
                             }}
                               disabled={busy}
-                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg bg-red-50 dark:bg-red-950/30 text-red-500 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition">
+                              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg bg-red-50 dark:bg-[var(--danger)]/30 text-[var(--danger)] dark:text-[var(--danger)] hover:bg-[var(--danger)] dark:hover:bg-[var(--danger)]/30 transition">
                               <RotateCcw className="w-3 h-3" /> Reset
                             </button>
                           )}
@@ -3235,7 +3235,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                                   placeholder="—"
                                   className={`text-center font-black text-base rounded-xl border-2 py-2 outline-none transition w-full
                                     ${t1Won ? "border-primary bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary/70"
-                                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-on-accent"}
+                                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-foreground"}
                                     focus:border-primary`}
                                 />
                                 <span className="text-center text-xs font-bold text-muted-foreground">–</span>
@@ -3246,7 +3246,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                                   placeholder="—"
                                   className={`text-center font-black text-base rounded-xl border-2 py-2 outline-none transition w-full
                                     ${t2Won ? "border-primary bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary/70"
-                                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-on-accent"}
+                                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-foreground"}
                                     focus:border-primary`}
                                 />
                               </div>
@@ -3328,7 +3328,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <button onClick={saveSchedule} className="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-on-accent text-xs font-black transition">Save</button>
+                          <button onClick={saveSchedule} className="px-4 py-1.5 rounded-xl bg-[var(--info)] hover:bg-[var(--info)] text-foreground text-xs font-black transition">Save</button>
                           <button onClick={() => setEditSchedule(null)} className="text-xs text-muted-foreground hover:text-muted-foreground transition">Cancel</button>
                         </div>
                       </div>
@@ -3349,7 +3349,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <button onClick={saveUmpire} className="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-on-accent text-xs font-black transition">Save</button>
+                          <button onClick={saveUmpire} className="px-4 py-1.5 rounded-xl bg-[var(--info)] hover:bg-[var(--info)] text-foreground text-xs font-black transition">Save</button>
                           <button onClick={() => setAssignUmpire(null)} className="text-xs text-muted-foreground hover:text-muted-foreground transition">Cancel</button>
                         </div>
                       </div>
@@ -3378,7 +3378,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
               <div className="flex items-center gap-2">
                 <button
                   onClick={downloadScheduleTemplate}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-black text-muted-foreground hover:text-blue-600 hover:border-blue-400 transition">
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-black text-muted-foreground hover:text-[var(--info)] hover:border-[var(--info)] transition">
                   <Download className="w-3.5 h-3.5" /> CSV Template
                 </button>
                 <button onClick={() => setShowBulkSchedule(false)} className="text-muted-foreground hover:text-muted-foreground transition">
@@ -3401,7 +3401,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                 className="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-on-accent text-xs font-black transition">
                 Preview
               </button>
-              <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground hover:text-blue-500 transition">
+              <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground hover:text-[var(--info)] transition">
                 <Upload className="w-3.5 h-3.5" />
                 <span>Upload CSV</span>
                 <input type="file" accept=".csv" className="hidden"
@@ -3416,11 +3416,11 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                 </div>
                 <div className="max-h-60 overflow-y-auto">
                   {bulkPreview.map((row, i) => (
-                    <div key={i} className={`grid grid-cols-4 gap-0 px-3 py-2 border-t border-slate-100 dark:border-slate-800 ${!row.found ? "bg-red-50 dark:bg-red-950/20" : ""}`}>
+                    <div key={i} className={`grid grid-cols-4 gap-0 px-3 py-2 border-t border-slate-100 dark:border-slate-800 ${!row.found ? "bg-red-50 dark:bg-[var(--danger)]/20" : ""}`}>
                       <span className="font-bold text-muted-foreground dark:text-slate-300">{row.matchCode}</span>
                       <span className="text-muted-foreground dark:text-muted-foreground">{row.court || <span className="text-slate-300">—</span>}</span>
                       <span className="text-muted-foreground dark:text-muted-foreground">{row.at ? new Date(row.at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : <span className="text-slate-300">—</span>}</span>
-                      <span className={row.found && !row.wrongCategory ? "text-primary font-bold" : "text-red-500 font-bold"}>
+                      <span className={row.found && !row.wrongCategory ? "text-primary font-bold" : "text-[var(--danger)] font-bold"}>
                         {!row.found ? "✗ Not found" : row.wrongCategory ? "⚠️ Wrong Category" : "✓ Found"}
                       </span>
                     </div>
@@ -3433,7 +3433,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
               <button
                 onClick={saveBulkSchedule}
                 disabled={bulkSaving || bulkPreview.length === 0 || bulkPreview.every((r) => !r.found)}
-                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-on-accent text-xs font-black transition disabled:opacity-40 disabled:cursor-not-allowed">
+                className="px-5 py-2 rounded-xl bg-[var(--info)] hover:bg-[var(--info)] text-foreground text-xs font-black transition disabled:opacity-40 disabled:cursor-not-allowed">
                 {bulkSaving ? "Saving…" : `Save ${bulkPreview.filter((r) => r.found).length} Match${bulkPreview.filter((r) => r.found).length !== 1 ? "es" : ""}`}
               </button>
               <button onClick={() => { setShowBulkSchedule(false); setBulkText(""); setBulkPreview([]); }}
@@ -3490,7 +3490,7 @@ function ArchiveTab({ tournament, isMasterAdmin, onArchived }: {
               <p className="text-sm text-muted-foreground mt-1">Freeze all results and make this a historical record. Cannot be undone.</p>
             </div>
             <button onClick={archive} disabled={archiving}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-on-accent font-black transition disabled:opacity-50">
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--warning)] hover:bg-[var(--warning)] text-foreground font-black transition disabled:opacity-50">
               {archiving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Archive className="w-4 h-4" />}
               Archive
             </button>
@@ -3500,7 +3500,7 @@ function ArchiveTab({ tournament, isMasterAdmin, onArchived }: {
 
       {tournament.status === "archived" && (
         <div className="flex flex-col items-center gap-3 py-2">
-          <span className="text-xs font-black text-amber-600 uppercase tracking-widest px-3 py-1.5 bg-amber-100 dark:bg-amber-950/40 rounded-full">
+          <span className="text-xs font-black text-[var(--warning)] uppercase tracking-widest px-3 py-1.5 bg-[var(--warning)] dark:bg-[var(--warning)]/40 rounded-full">
             Archived {tournament.archived_at ? new Date(tournament.archived_at).toLocaleDateString() : ""}
           </span>
           {isMasterAdmin && (

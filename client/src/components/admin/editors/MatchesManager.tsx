@@ -344,7 +344,7 @@ export function MatchesManager() {
       {activeTab === "tournament" && (
         <div className="flex flex-col gap-2">
           <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Select Tournament</label>
-          <select value={selectedTournamentId} onChange={e => setSelectedTournamentId(e.target.value)} className="w-full p-2.5 text-sm font-bold border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-on-accent outline-none focus:ring-2 focus:ring-primary">
+          <select value={selectedTournamentId} onChange={e => setSelectedTournamentId(e.target.value)} className="w-full p-2.5 text-sm font-bold border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-foreground outline-none focus:ring-2 focus:ring-primary">
             {tournaments.map(t => (
                <option key={t.id} value={t.id}>{t.name} {t.status === 'completed' ? '(Completed)' : t.status === 'deleted' ? '(Deleted/Trashed)' : ''}</option>
             ))}

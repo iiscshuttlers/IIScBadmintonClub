@@ -116,27 +116,27 @@ export default function SubBarProfileButton({
             </div>
           )}
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
-            <DropdownMenuItem onSelect={() => setLocation("/profile/setup")} className="cursor-pointer font-semibold rounded-none text-muted-foreground dark:text-slate-300 focus:text-on-accent dark:focus:text-on-accent focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2.5 gap-2.5">
+            <DropdownMenuItem onSelect={() => setLocation("/profile/setup")} className="cursor-pointer font-semibold rounded-none text-muted-foreground dark:text-slate-300 focus:text-foreground dark:focus:text-foreground focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2.5 gap-2.5">
               <User className="w-4 h-4 text-muted-foreground" /> Edit Profile
             </DropdownMenuItem>
             {myPlayerId && (
-              <DropdownMenuItem onSelect={() => setLocation(`/player/${myPlayerId}/personal`)} className="cursor-pointer font-semibold rounded-none text-muted-foreground dark:text-slate-300 focus:text-on-accent dark:focus:text-on-accent focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2.5 border-t border-slate-100 dark:border-slate-800 gap-2.5">
+              <DropdownMenuItem onSelect={() => setLocation(`/player/${myPlayerId}/personal`)} className="cursor-pointer font-semibold rounded-none text-muted-foreground dark:text-slate-300 focus:text-foreground dark:focus:text-foreground focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2.5 border-t border-slate-100 dark:border-slate-800 gap-2.5">
                 <Trophy className="w-4 h-4 text-muted-foreground" /> Personal
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem onSelect={() => setLocation("/profile/password")} className="cursor-pointer font-semibold rounded-none text-muted-foreground dark:text-slate-300 focus:text-on-accent dark:focus:text-on-accent focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2.5 border-t border-slate-100 dark:border-slate-800 gap-2.5">
+            <DropdownMenuItem onSelect={() => setLocation("/profile/password")} className="cursor-pointer font-semibold rounded-none text-muted-foreground dark:text-slate-300 focus:text-foreground dark:focus:text-foreground focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2.5 border-t border-slate-100 dark:border-slate-800 gap-2.5">
               <Lock className="w-4 h-4 text-muted-foreground" /> Change Password
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setIsPreferencesOpen(true); }} className="cursor-pointer font-semibold rounded-none text-muted-foreground dark:text-slate-300 focus:text-on-accent dark:focus:text-on-accent focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2.5 border-t border-slate-100 dark:border-slate-800 gap-2.5">
+            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setIsPreferencesOpen(true); }} className="cursor-pointer font-semibold rounded-none text-muted-foreground dark:text-slate-300 focus:text-foreground dark:focus:text-foreground focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2.5 border-t border-slate-100 dark:border-slate-800 gap-2.5">
               <Settings className="w-4 h-4 text-muted-foreground" /> App Preferences
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => setLocation("/join?add_account=true")} className="cursor-pointer font-semibold rounded-none text-muted-foreground dark:text-slate-300 focus:text-on-accent dark:focus:text-on-accent focus:bg-slate-50 dark:focus:bg-slate-800 gap-2.5 px-3 py-2.5 border-t border-slate-100 dark:border-slate-800">
+            <DropdownMenuItem onSelect={() => setLocation("/join?add_account=true")} className="cursor-pointer font-semibold rounded-none text-muted-foreground dark:text-slate-300 focus:text-foreground dark:focus:text-foreground focus:bg-slate-50 dark:focus:bg-slate-800 gap-2.5 px-3 py-2.5 border-t border-slate-100 dark:border-slate-800">
               <UserPlus className="h-4 w-4 text-muted-foreground" /> Add Account
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={handleInvite} className="cursor-pointer font-semibold rounded-none text-muted-foreground dark:text-slate-300 focus:text-on-accent dark:focus:text-on-accent focus:bg-slate-50 dark:focus:bg-slate-800 border-t border-slate-100 dark:border-slate-800 gap-2.5 px-3 py-2.5">
+            <DropdownMenuItem onSelect={handleInvite} className="cursor-pointer font-semibold rounded-none text-muted-foreground dark:text-slate-300 focus:text-foreground dark:focus:text-foreground focus:bg-slate-50 dark:focus:bg-slate-800 border-t border-slate-100 dark:border-slate-800 gap-2.5 px-3 py-2.5">
               <UserPlus className="h-4 w-4 text-primary" /> Invite Friends
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => setLocation("/privacy")} className="cursor-pointer font-semibold rounded-none text-muted-foreground dark:text-slate-300 focus:text-on-accent dark:focus:text-on-accent focus:bg-slate-50 dark:focus:bg-slate-800 border-t border-slate-100 dark:border-slate-800 gap-2.5 px-3 py-2.5">
+            <DropdownMenuItem onSelect={() => setLocation("/privacy")} className="cursor-pointer font-semibold rounded-none text-muted-foreground dark:text-slate-300 focus:text-foreground dark:focus:text-foreground focus:bg-slate-50 dark:focus:bg-slate-800 border-t border-slate-100 dark:border-slate-800 gap-2.5 px-3 py-2.5">
               <Shield className="h-4 w-4 text-muted-foreground" /> Privacy Policy
             </DropdownMenuItem>
             {isAdmin && (
@@ -149,7 +149,7 @@ export default function SubBarProfileButton({
             <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
               <div className="px-3 py-2 text-[10px] font-black text-muted-foreground dark:text-muted-foreground uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">Switch Account</div>
               {savedAccounts.map((acc) => (
-                <DropdownMenuItem key={acc.id} className="cursor-pointer font-medium rounded-none focus:text-on-accent dark:focus:text-on-accent focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2.5 border-b border-slate-50 dark:border-slate-800/50 last:border-b-0" onClick={async () => { await switchAccount(acc); }}>
+                <DropdownMenuItem key={acc.id} className="cursor-pointer font-medium rounded-none focus:text-foreground dark:focus:text-foreground focus:bg-slate-50 dark:focus:bg-slate-800 px-3 py-2.5 border-b border-slate-50 dark:border-slate-800/50 last:border-b-0" onClick={async () => { await switchAccount(acc); }}>
                   <div className="flex flex-col">
                     <span className="text-sm font-bold text-muted-foreground dark:text-slate-200">{acc.name}</span>
                     <span className="text-[10px] text-muted-foreground dark:text-muted-foreground">{acc.email}</span>

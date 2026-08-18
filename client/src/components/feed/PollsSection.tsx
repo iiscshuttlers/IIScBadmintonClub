@@ -225,7 +225,7 @@ function CreatePollForm({ onCreated, onCancel }: { onCreated: () => void; onCanc
         value={question}
         onChange={e => setQuestion(e.target.value)}
         placeholder="Ask the community something..."
-        className="w-full text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 outline-none text-slate-800 dark:text-on-accent placeholder:text-muted-foreground mb-4"
+        className="w-full text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 outline-none text-slate-800 dark:text-foreground placeholder:text-muted-foreground mb-4"
       />
       <div className="space-y-2 mb-3">
         {options.map((opt, i) => (
@@ -234,7 +234,7 @@ function CreatePollForm({ onCreated, onCancel }: { onCreated: () => void; onCanc
               value={opt}
               onChange={e => updateOption(i, e.target.value)}
               placeholder={`Option ${i + 1}`}
-              className="flex-1 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 outline-none text-slate-800 dark:text-on-accent placeholder:text-muted-foreground"
+              className="flex-1 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 outline-none text-slate-800 dark:text-foreground placeholder:text-muted-foreground"
             />
             {options.length > 2 && (
               <button onClick={() => removeOption(i)} className="p-2 text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition">

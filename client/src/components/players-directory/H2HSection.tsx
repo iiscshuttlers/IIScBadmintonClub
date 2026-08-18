@@ -449,7 +449,7 @@ export function H2HSection() {
               <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-full sm:w-auto overflow-x-auto hide-scrollbar">
                 <button
                   onClick={() => setMatchTab("club")}
-                  className={`flex-1 sm:flex-none whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${matchTab === "club" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-on-accent shadow-sm" : "text-muted-foreground hover:text-muted-foreground"}`}
+                  className={`flex-1 sm:flex-none whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${matchTab === "club" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-foreground shadow-sm" : "text-muted-foreground hover:text-muted-foreground"}`}
                 >
                   Club {h2hMatches.length > 0 && <span className="ml-1 opacity-60">({h2hMatches.length})</span>}
                 </button>

@@ -50,7 +50,7 @@ export default function TournamentAdmin() {
           <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
             <button
               onClick={() => navigate("/admin")}
-              className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition text-muted-foreground hover:text-slate-800 dark:hover:text-on-accent"
+              className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition text-muted-foreground hover:text-slate-800 dark:hover:text-foreground"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
