@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Trophy,
   Clock,
@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { InfoModal } from "@/components/InfoModal";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
+import { MatchPredictionCard } from "@/components/feed/MatchPredictions";
 
 const FORMAT_LABELS: Record<string, string> = {
   MS: "Men's Singles",
@@ -76,6 +78,51 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
   const [activeFormat, setActiveFormat] = useState<string>("ALL");
   const { profile } = useAuth();
   const playerName = profile?.full_name ?? null;
+
+  // Polls state
+  const [picks, setPicks] = useState<Record<string, 1 | 2>>({});
+  const [revealedMatchIds, setRevealedMatchIds] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (!profile?.id) return;
+    const loadPicks = async () => {
+      // Load user picks
+      const { data: myVotes } = await supabase
+        .from("live_match_votes")
+        .select("live_match_id, pick")
+        .eq("user_id", profile.id);
+      if (myVotes) {
+        const p: Record<string, 1 | 2> = {};
+        myVotes.forEach(v => { p[v.live_match_id] = v.pick as 1 | 2; });
+        setPicks(p);
+      }
+
+      // Load revealed matches state
+      const { data: siteData } = await supabase
+        .from("site_data")
+        .select("value")
+        .eq("key", "poll_revealed_matches")
+        .single();
+      
+      if (siteData?.value) {
+        setRevealedMatchIds(siteData.value as Record<string, boolean>);
+      }
+    };
+    loadPicks();
+  }, [profile?.id]);
+
+  const handlePick = async (matchId: string, team: 1 | 2) => {
+    if (!profile?.id) return;
+    
+    // Optimistic update
+    setPicks(prev => ({ ...prev, [matchId]: team }));
+
+    await supabase.from("live_match_votes").upsert({
+      live_match_id: matchId,
+      user_id: profile.id,
+      pick: team
+    }, { onConflict: 'live_match_id,user_id' });
+  };
 
   if (!tournamentData) return (
     <div className="py-12 flex flex-col items-center justify-center text-center">

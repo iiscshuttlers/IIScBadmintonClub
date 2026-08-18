@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Bell, BellRing, BellOff, Loader2, Trophy, Megaphone, ShieldAlert, Swords } from "lucide-react";
 import { PushNotifications } from "@capacitor/push-notifications";
 import { Capacitor } from "@capacitor/core";
+import { enableWebPush } from "@/hooks/usePushNotifications";
 
 interface NotificationSettingsModalProps {
   open: boolean;
@@ -62,37 +63,71 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
         announcements:      getLocalPref("announcements"),
         admin_push:         getLocalPref("admin_push"),
       });
-      if (Capacitor.isNativePlatform()) checkPermissions();
+      checkPermissions();
     }
   }, [open]);
 
+  // Web and PWA report permission through the Notification API, not the
+  // Capacitor plugin. Checking only the native path left browser users looking
+  // at a permanently "off" panel with a button that refused to do anything.
   const checkPermissions = async () => {
     try {
-      const { receive } = await PushNotifications.checkPermissions();
-      setPushGranted(receive === "granted");
+      if (Capacitor.isNativePlatform()) {
+        const { receive } = await PushNotifications.checkPermissions();
+        setPushGranted(receive === "granted");
+      } else if ("Notification" in window) {
+        setPushGranted(Notification.permission === "granted");
+      } else {
+        setPushGranted(false);
+      }
     } catch (e) {
       console.warn("Could not check push permissions", e);
     }
   };
 
   const handleEnablePush = async () => {
-    if (!Capacitor.isNativePlatform()) {
-      toast("Not Supported", { description: "Push notifications are only available on the mobile app." });
-      return;
-    }
     setLoading(true);
     try {
-      let permStatus = await PushNotifications.checkPermissions();
-      if (permStatus.receive === "prompt" || permStatus.receive === "prompt-with-rationale") {
-        permStatus = await PushNotifications.requestPermissions();
+      if (Capacitor.isNativePlatform()) {
+        let permStatus = await PushNotifications.checkPermissions();
+        if (permStatus.receive === "prompt" || permStatus.receive === "prompt-with-rationale") {
+          permStatus = await PushNotifications.requestPermissions();
+        }
+
+        if (permStatus.receive === "granted") {
+          setPushGranted(true);
+          await PushNotifications.register();
+          toast("Notifications Enabled!", { icon: "✅" });
+        } else {
+          toast("Permission Denied", { description: "Please enable notifications in your phone's settings.", icon: "❌" });
+        }
+        return;
       }
-      
-      if (permStatus.receive === "granted") {
-        setPushGranted(true);
-        await PushNotifications.register();
+
+      if (!("Notification" in window)) {
+        toast("Not Supported", { description: "This browser can't receive push notifications." });
+        return;
+      }
+
+      if (Notification.permission === "denied") {
+        toast("Permission Blocked", {
+          description: "Notifications are blocked for this site. Re-allow them in your browser's site settings.",
+          icon: "❌",
+        });
+        return;
+      }
+
+      // Same flow the app runs automatically on load — registers the FCM
+      // service worker and saves a web push token.
+      const ok = await enableWebPush();
+      setPushGranted(ok);
+      if (ok) {
         toast("Notifications Enabled!", { icon: "✅" });
       } else {
-        toast("Permission Denied", { description: "Please enable notifications in your phone's settings.", icon: "❌" });
+        toast("Couldn't Enable Notifications", {
+          description: "Permission was not granted, or this browser blocked the push service.",
+          icon: "❌",
+        });
       }
     } catch (e: any) {
       toast("Error", { description: e.message, icon: "❌" });

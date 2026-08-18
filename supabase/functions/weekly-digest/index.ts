@@ -67,7 +67,13 @@ async function sendFcmToAll(tokens: string[], title: string, body: string) {
               priority: "normal",
               notification: { channel_id: "notify_whistle" }
             },
-            webpush: { headers: { Urgency: "normal" } },
+            webpush: {
+              headers: { Urgency: "normal" },
+              notification: {
+                icon: "icon-192.png",
+                badge: "icon-192.png",
+              },
+            },
             apns: { headers: { "apns-priority": "10" } },
           },
         }),

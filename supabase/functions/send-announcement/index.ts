@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { SignJWT, importPKCS8 } from "https://esm.sh/jose@5.2.2";
+import { isDeadToken } from "../_shared/fcm.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -107,6 +108,13 @@ Deno.serve(async (req) => {
               priority: "high",
               notification: { channel_id: "notify_whistle" }
             },
+            webpush: {
+              headers: { Urgency: "high" },
+              notification: {
+                icon: "icon-192.png",
+                badge: "icon-192.png",
+              },
+            },
           },
         };
         const res = await fetch(
@@ -119,8 +127,9 @@ Deno.serve(async (req) => {
         );
         if (!res.ok) {
           const err = await res.text();
-          // Delete invalid tokens (404 = token invalid/unregistered, 400 = bad request/expired)
-          if (res.status === 404 || res.status === 400) {
+          // Delete only genuinely dead tokens — a bare 400 is normally a bad
+          // payload and would otherwise wipe every token in the table.
+          if (isDeadToken(res.status, err)) {
             await supabase.from("user_push_tokens").delete().eq("token", t.token);
           }
           throw new Error(`FCM ${res.status}: ${err.slice(0, 100)}`);

@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.10.0";
 // JWT generation for Firebase
 import { SignJWT, importPKCS8 } from "https://esm.sh/jose@5.2.2";
+import { isDeadToken } from "../_shared/fcm.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -293,7 +294,13 @@ serve(async (req) => {
                 channel_id: "notify_smash",
               },
             },
-            webpush: { headers: { Urgency: "high" } },
+            webpush: {
+              headers: { Urgency: "high" },
+              notification: {
+                icon: "icon-192.png",
+                badge: "icon-192.png",
+              },
+            },
             apns: { headers: { "apns-priority": "10" } },
             data: {
               matchId: matchRecord.id,
@@ -323,8 +330,9 @@ serve(async (req) => {
             resBody,
           );
 
-          // If token is invalid/expired, remove it from the DB
-          if (res.status === 404 || res.status === 400) {
+          // If the token itself is dead, remove it from the DB. A plain 400 is
+          // usually a bad payload, which would otherwise wipe every token.
+          if (isDeadToken(res.status, resBody)) {
             console.log(
               `[notify-match] Removing stale token ${t.token.slice(0, 20)}...`,
             );

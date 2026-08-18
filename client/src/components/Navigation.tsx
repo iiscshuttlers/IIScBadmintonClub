@@ -31,6 +31,7 @@ import {
   BookOpen,
   MessageSquare,
   Bell,
+  BellRing,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,6 +50,7 @@ import { useAuth, type ViewAsRole } from "@/contexts/AuthContext";
 import { useAppUpdate } from "@/hooks/useAppUpdate";
 import { useAppMode } from "@/contexts/AppModeContext";
 import { PreferencesModal } from "@/components/QuickSettings";
+import { NotificationSettingsModal } from "@/components/profile/NotificationSettingsModal";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { NotificationsMenu } from "@/components/NotificationsMenu";
@@ -69,6 +71,7 @@ export default function Navigation() {
   const [liveEventCount, setLiveEventCount] = useState(0);
   const [hasUnreadAnnouncements, setHasUnreadAnnouncements] = useState(false);
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
+  const [isNotificationSettingsOpen, setIsNotificationSettingsOpen] = useState(false);
   const [signOutDialog, setSignOutDialog] = useState<{ open: boolean; message: string; onConfirm: () => void }>({ open: false, message: "", onConfirm: () => {} });
   const {
     authLoading,
@@ -581,6 +584,15 @@ export default function Navigation() {
                       className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer"
                       onClick={() => {
                         setIsOpen(false);
+                        setIsNotificationSettingsOpen(true);
+                      }}
+                    >
+                      <BellRing className="h-4 w-4 text-amber-500" /> Notification Settings
+                    </button>
+                    <button
+                      className="w-full flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground dark:text-slate-300 font-medium text-sm transition-colors cursor-pointer"
+                      onClick={() => {
+                        setIsOpen(false);
                         setLocation("/personal/me");
                       }}
                     >
@@ -687,6 +699,11 @@ export default function Navigation() {
       <PreferencesModal
         isOpen={isPreferencesOpen}
         onClose={() => setIsPreferencesOpen(false)}
+      />
+
+      <NotificationSettingsModal
+        open={isNotificationSettingsOpen}
+        onOpenChange={setIsNotificationSettingsOpen}
       />
 
       <ConfirmDialog

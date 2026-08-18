@@ -32,11 +32,35 @@ Deno.serve(async (req) => {
       byPlatform[t.platform].push(t);
     });
 
-    // Get Firebase project from env
+    // Get Firebase project from env. A malformed secret must NOT abort the
+    // report — that is precisely the failure this function exists to surface.
     const serviceAccountStr = Deno.env.get("FIREBASE_SERVICE_ACCOUNT");
-    const serviceAccount = serviceAccountStr ? JSON.parse(serviceAccountStr) : null;
+    let serviceAccount: { project_id?: string; client_email?: string; private_key?: string } | null = null;
+    let serviceAccountError: string | null = null;
+
+    if (!serviceAccountStr) {
+      serviceAccountError = "FIREBASE_SERVICE_ACCOUNT is not set";
+    } else {
+      try {
+        serviceAccount = JSON.parse(serviceAccountStr);
+      } catch (e: any) {
+        serviceAccountError =
+          `FIREBASE_SERVICE_ACCOUNT is not valid JSON: ${e.message}. ` +
+          `Length=${serviceAccountStr.length}, starts with: ${JSON.stringify(serviceAccountStr.slice(0, 40))}`;
+      }
+    }
+
+    if (serviceAccount && typeof serviceAccount.private_key === "string") {
+      // A private_key pasted through a shell often loses its real newlines.
+      if (!serviceAccount.private_key.includes("\n")) {
+        serviceAccountError =
+          "private_key contains no real newlines (literal \\n was not unescaped) — FCM auth will fail";
+      }
+    }
 
     return new Response(JSON.stringify({
+      service_account_ok: serviceAccountError === null,
+      service_account_error: serviceAccountError,
       total_tokens: tokens?.length || 0,
       by_platform: Object.keys(byPlatform).reduce((acc: Record<string, any>, platform: string) => {
         const platformTokens = byPlatform[platform];

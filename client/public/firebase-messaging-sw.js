@@ -23,9 +23,9 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
   const notificationTitle = payload.notification?.title || 'IISc Shuttlers Alert';
   const notificationOptions = {
-    body: payload.notification?.body || 'You have a new update.',
-    icon: '/iiscshuttlers/icon-192.png',
-    badge: '/iiscshuttlers/icon-192.png',
+    body: payload.notification?.body || payload.data?.body || 'You have a new update.',
+    icon: 'icon-192.png',
+    badge: 'icon-192.png',
     tag: 'match-alert',
     data: payload.data
   };

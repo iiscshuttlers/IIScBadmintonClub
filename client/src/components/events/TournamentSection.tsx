@@ -41,6 +41,7 @@ import {
   type TournamentConfig,
 } from "@/lib/tournaments";
 import { safeReplaceState } from "@/lib/navUtils";
+import { MatchPredictionCard } from "@/components/feed/MatchPredictions";
 
 const NOTICES_BUCKET = "tournament_notices";
 
@@ -835,6 +836,52 @@ function SupabaseScheduleView({ tournamentId, playerName }: { tournamentId: stri
   const [showUpcoming, setShowUpcoming] = useState(true);
   const [showCompleted, setShowCompleted] = useState(false);
 
+  const { profile, isAdmin } = useAuth();
+  const [picks, setPicks] = useState<Record<string, 1 | 2>>({});
+  const [revealedMatchIds, setRevealedMatchIds] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (!profile?.id) return;
+    const loadPicks = async () => {
+      const { data: myVotes } = await supabase
+        .from("live_match_votes")
+        .select("live_match_id, pick")
+        .eq("user_id", profile.id);
+      if (myVotes) {
+        const p: Record<string, 1 | 2> = {};
+        myVotes.forEach(v => { p[v.live_match_id] = v.pick as 1 | 2; });
+        setPicks(p);
+      }
+      const { data: siteData } = await supabase
+        .from("site_data")
+        .select("value")
+        .eq("key", "poll_revealed_matches")
+        .single();
+      if (siteData?.value) {
+        setRevealedMatchIds(siteData.value as Record<string, boolean>);
+      }
+    };
+    loadPicks();
+  }, [profile?.id]);
+
+  const handlePick = async (matchId: string, team: 1 | 2) => {
+    if (!profile?.id) return;
+    setPicks(prev => ({ ...prev, [matchId]: team }));
+    await supabase.from("live_match_votes").upsert({
+      live_match_id: matchId,
+      user_id: profile.id,
+      pick: team
+    }, { onConflict: 'live_match_id,user_id' });
+  };
+
+  const handleToggleReveal = async (matchId: string) => {
+    if (!isAdmin) return;
+    const isRevealed = !!revealedMatchIds[matchId];
+    const nextState = { ...revealedMatchIds, [matchId]: !isRevealed };
+    setRevealedMatchIds(nextState);
+    await supabase.from("site_data").upsert({ key: "poll_revealed_matches", value: nextState }, { onConflict: "key" });
+  };
+
   useEffect(() => {
     if (!tournamentId) { setLoading(false); return; }
     supabase
@@ -981,6 +1028,27 @@ function SupabaseScheduleView({ tournamentId, playerName }: { tournamentId: stri
                           {isCompleted && m.sets_history?.length ? (
                             <p className="mt-1.5 text-xs font-mono text-muted-foreground">{m.sets_history.join(", ")}</p>
                           ) : null}
+
+                          {/* Poll Card (Compact) */}
+                          {m.match_code && (
+                            <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/50 print:hidden">
+                              <MatchPredictionCard
+                                compact
+                                matchId={m.match_code}
+                                t1Ids={[]}
+                                t2Ids={[]}
+                                t1Label={m.team1_label ?? "TBD"}
+                                t2Label={m.team2_label ?? "TBD"}
+                                hasStarted={isLive || isCompleted}
+                                myPick={picks[m.match_code]}
+                                profileId={profile?.id}
+                                onPick={(team) => handlePick(m.match_code, team)}
+                                isResultsRevealed={isLive || !!revealedMatchIds[m.match_code]}
+                                isAdmin={isAdmin}
+                                onToggleRevealResults={() => handleToggleReveal(m.match_code)}
+                              />
+                            </div>
+                          )}
                         </div>
                         );
                       })}

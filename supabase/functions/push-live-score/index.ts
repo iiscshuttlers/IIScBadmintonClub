@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { SignJWT, importPKCS8 } from "https://esm.sh/jose@5.2.2";
+import { isDeadToken } from "../_shared/fcm.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -89,7 +90,7 @@ Deno.serve(async (req) => {
         );
         if (!res.ok) {
           const err = await res.text();
-          if (res.status === 404 || res.status === 400) {
+          if (isDeadToken(res.status, err)) {
             await supabase.from("user_push_tokens").delete().eq("token", t.token);
           }
           throw new Error(`FCM ${res.status}: ${err.slice(0, 100)}`);

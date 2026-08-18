@@ -65,7 +65,13 @@ async function sendFcmNotification(
           priority: "high",
           notification: { channel_id: "notify_point" }
         },
-        webpush: { headers: { Urgency: "high" } },
+        webpush: {
+          headers: { Urgency: "high" },
+          notification: {
+            icon: "icon-192.png",
+            badge: "icon-192.png",
+          },
+        },
         apns: { headers: { "apns-priority": "10" } },
       },
     }),

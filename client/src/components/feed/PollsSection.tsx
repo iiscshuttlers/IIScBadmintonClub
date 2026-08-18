@@ -26,7 +26,7 @@ export interface Poll {
 }
 
 
-export const isPollVisible = (poll: Poll) => {
+const isPollVisible = (poll: Poll) => {
   if (poll.is_archived) return false;
   if (!poll.is_active) return false;
   const now = Date.now();

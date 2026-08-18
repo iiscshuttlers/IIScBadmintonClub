@@ -38,8 +38,8 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
                     android:scheme="https"
-                    android:host="iiscbadmintonclub.github.io"
-                    android:pathPrefix="/iiscshuttlers" />
+                    android:host="iiscshuttlers.github.io"
+                    android:pathPrefix="/IIScBadmintonClub" />
             </intent-filter>
             <!-- Custom app scheme for QR codes and NFC -->
             <intent-filter>

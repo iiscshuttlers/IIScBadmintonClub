@@ -127,7 +127,8 @@ export function MatchPredictionCard({
   onPick,
   isResultsRevealed = false,
   isAdmin = false,
-  onToggleRevealResults
+  onToggleRevealResults,
+  compact = false
 }: {
   matchId: string;
   t1Ids: string[];
@@ -141,6 +142,7 @@ export function MatchPredictionCard({
   isResultsRevealed?: boolean;
   isAdmin?: boolean;
   onToggleRevealResults?: () => void;
+  compact?: boolean;
 }) {
   const [statProb, setStatProb] = useState<StatProb>(null);
   const [tally, setTally] = useState<VoteTally>({ t1: 0, t2: 0 });
@@ -196,25 +198,25 @@ export function MatchPredictionCard({
   const shouldShowResults = isResultsRevealed;
 
   return (
-    <div className="pt-2 border-t border-slate-700/50 mt-2">
+    <div className={compact ? "mt-1" : "pt-2 border-t border-slate-700/50 mt-2"}>
       {myPick || hasStarted ? (
         <>
           {myPick && (
-            <div className="flex items-start sm:items-center gap-2 bg-violet-50 dark:bg-violet-950/20 rounded-xl px-3 py-2.5 mb-1">
-              <Check className="w-4 h-4 text-violet-500 shrink-0 mt-0.5 sm:mt-0" />
-              <p className="text-sm text-violet-700 dark:text-violet-400 font-bold leading-snug">
+            <div className={`flex items-start sm:items-center gap-2 bg-violet-50 dark:bg-violet-950/20 rounded-xl px-3 ${compact ? "py-1.5 mb-1" : "py-2.5 mb-1"}`}>
+              <Check className={`${compact ? "w-3.5 h-3.5 mt-0.5" : "w-4 h-4 shrink-0 mt-0.5 sm:mt-0"} text-violet-500`} />
+              <p className={`${compact ? "text-[10px]" : "text-sm"} text-violet-700 dark:text-violet-400 font-bold leading-snug`}>
                 You picked <strong>{myPick === 1 ? t1Label : t2Label}</strong>
               </p>
             </div>
           )}
-          {!myPick && hasStarted && (
+          {!myPick && hasStarted && !compact && (
             <p className="text-xs text-muted-foreground italic mb-2">Voting closed (Match has started)</p>
           )}
 
 
           {shouldShowResults ? (
             <>
-              {statProb && (
+              {statProb && !compact && (
                 <ProbBar
                   t1Pct={statProb.t1}
                   t2Pct={statProb.t2}
@@ -227,15 +229,15 @@ export function MatchPredictionCard({
               <ProbBar
                 t1Pct={voteT1Pct}
                 t2Pct={voteT2Pct}
-                t1Label={`${t1Label} · ${tally.t1} vote${tally.t1 !== 1 ? "s" : ""}`}
-                t2Label={`${tally.t2} vote${tally.t2 !== 1 ? "s" : ""} · ${t2Label}`}
-                label="Community votes"
+                t1Label={compact ? `${tally.t1} vote${tally.t1 !== 1 ? "s" : ""}` : `${t1Label} · ${tally.t1} vote${tally.t1 !== 1 ? "s" : ""}`}
+                t2Label={compact ? `${tally.t2} vote${tally.t2 !== 1 ? "s" : ""}` : `${tally.t2} vote${tally.t2 !== 1 ? "s" : ""} · ${t2Label}`}
+                label={compact ? undefined : "Community votes"}
                 tooltip="Live predictions from people in the community watching this match."
               />
             </>
           ) : (
-            <div className="mt-2 p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/50 text-[11px] text-muted-foreground flex items-center justify-between font-medium">
-              <span className="flex items-center gap-1.5">
+            <div className={`${compact ? "mt-1 py-1 px-2 text-[9px]" : "mt-2 p-2.5 text-[11px]"} rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/50 text-muted-foreground flex items-center justify-between font-medium`}>
+              <span className="flex items-center gap-1.5 line-clamp-1">
                 🔒 Poll results will be revealed when match umpiring starts or when released by admin.
               </span>
             </div>
@@ -243,37 +245,39 @@ export function MatchPredictionCard({
         </>
       ) : (
         <div className="flex flex-col">
-          <p className="text-[11px] text-center font-black text-slate-500 mb-2 flex items-center justify-center gap-1.5 uppercase tracking-wider">
-            <TrendingUp className="w-3.5 h-3.5 text-violet-500" /> Predict the winner!
-          </p>
-          <div className="flex flex-col sm:flex-row gap-2">
+          {!compact && (
+            <p className="text-[11px] text-center font-black text-slate-500 mb-2 flex items-center justify-center gap-1.5 uppercase tracking-wider">
+              <TrendingUp className="w-3.5 h-3.5 text-violet-500" /> Predict the winner!
+            </p>
+          )}
+          <div className={`flex ${compact ? "gap-1.5 flex-row" : "gap-2 flex-col sm:flex-row"}`}>
             <button
               onClick={() => {
                 setTally(prev => ({ ...prev, t1: prev.t1 + 1 }));
                 onPick(1);
               }}
-              className="flex-1 flex items-center justify-center p-2.5 min-h-[4.5rem] rounded-xl bg-primary/10 dark:bg-primary/20 hover:bg-primary/15 dark:hover:bg-primary/80/30 border border-primary/40 dark:border-primary/80 text-sm font-black text-primary dark:text-primary transition overflow-hidden"
+              className={`flex-1 flex items-center justify-center rounded-lg bg-primary/10 dark:bg-primary/20 hover:bg-primary/15 dark:hover:bg-primary/80/30 border border-primary/40 dark:border-primary/80 font-black text-primary dark:text-primary transition overflow-hidden ${compact ? "py-1 px-1.5 text-[9px] sm:text-[10px] min-h-[1.75rem]" : "p-2 text-xs sm:text-sm min-h-[4.5rem] rounded-xl"}`}
             >
-              <span className="line-clamp-2 break-words leading-tight">{t1Label}</span>
+              <span className={`line-clamp-2 break-words ${compact ? "leading-none" : "leading-tight"}`}>{t1Label}</span>
             </button>
             <button
               onClick={() => {
                 setTally(prev => ({ ...prev, t2: prev.t2 + 1 }));
                 onPick(2);
               }}
-              className="flex-1 flex items-center justify-center p-2.5 min-h-[4.5rem] rounded-xl bg-sky-50 dark:bg-sky-950/20 hover:bg-sky-100 dark:hover:bg-sky-900/30 border border-sky-200 dark:border-sky-800 text-sm font-black text-sky-700 dark:text-sky-400 transition overflow-hidden"
+              className={`flex-1 flex items-center justify-center rounded-lg bg-sky-50 dark:bg-sky-950/20 hover:bg-sky-100 dark:hover:bg-sky-900/30 border border-sky-200 dark:border-sky-800 font-black text-sky-700 dark:text-sky-400 transition overflow-hidden ${compact ? "py-1 px-1.5 text-[9px] sm:text-[10px] min-h-[1.75rem]" : "p-2 text-xs sm:text-sm min-h-[4.5rem] rounded-xl"}`}
             >
-              <span className="line-clamp-2 break-words leading-tight">{t2Label}</span>
+              <span className={`line-clamp-2 break-words ${compact ? "leading-none" : "leading-tight"}`}>{t2Label}</span>
             </button>
           </div>
         </div>
       )}
 
       {isAdmin && onToggleRevealResults && (
-        <div className="mt-2 text-right">
+        <div className={`text-right ${compact ? "mt-1" : "mt-2"}`}>
           <button
             onClick={onToggleRevealResults}
-            className="text-[10px] font-bold text-amber-500 hover:text-amber-400 inline-flex items-center gap-1 uppercase tracking-wider transition"
+            className={`font-bold text-amber-500 hover:text-amber-400 inline-flex items-center gap-1 uppercase tracking-wider transition ${compact ? "text-[9px]" : "text-[10px]"}`}
           >
             {isResultsRevealed ? "Hide Poll Results" : "Reveal"}
           </button>

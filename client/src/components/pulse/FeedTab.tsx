@@ -39,6 +39,7 @@ import { PollsSection } from "@/components/feed/PollsSection";
 import { RivalryCards } from "@/components/feed/RivalryCards";
 import { H2HSection } from "@/components/players-directory/H2HSection";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { MatchPredictionCard } from "@/components/feed/MatchPredictions";
 
 import { useHashTab } from "@/hooks/useHashTab";
 import { usePlayerMatches } from "@/hooks/usePlayerMatches";
@@ -162,6 +163,51 @@ export default function FeedTab() {
   } = useFeedMatches(ownProfile);
 
   const { matches: myAllMatches } = usePlayerMatches(ownProfile?.id);
+
+  const [picks, setPicks] = useState<Record<string, 1 | 2>>({});
+  const [revealedMatchIds, setRevealedMatchIds] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (!ownProfile?.id) return;
+    const loadPicks = async () => {
+      const { data: myVotes } = await supabase
+        .from("live_match_votes")
+        .select("live_match_id, pick")
+        .eq("user_id", ownProfile.id);
+      if (myVotes) {
+        const p: Record<string, 1 | 2> = {};
+        myVotes.forEach(v => { p[v.live_match_id] = v.pick as 1 | 2; });
+        setPicks(p);
+      }
+      const { data: siteData } = await supabase
+        .from("site_data")
+        .select("value")
+        .eq("key", "poll_revealed_matches")
+        .single();
+      if (siteData?.value) {
+        setRevealedMatchIds(siteData.value as Record<string, boolean>);
+      }
+    };
+    loadPicks();
+  }, [ownProfile?.id]);
+
+  const handlePick = async (matchId: string, team: 1 | 2) => {
+    if (!ownProfile?.id) return;
+    setPicks(prev => ({ ...prev, [matchId]: team }));
+    await supabase.from("live_match_votes").upsert({
+      live_match_id: matchId,
+      user_id: ownProfile.id,
+      pick: team
+    }, { onConflict: 'live_match_id,user_id' });
+  };
+
+  const handleToggleReveal = async (matchId: string) => {
+    if (!isAdmin) return;
+    const isRevealed = !!revealedMatchIds[matchId];
+    const nextState = { ...revealedMatchIds, [matchId]: !isRevealed };
+    setRevealedMatchIds(nextState);
+    await supabase.from("site_data").upsert({ key: "poll_revealed_matches", value: nextState }, { onConflict: "key" });
+  };
 
   const [tournaments, setTournaments] = useState<{ id: string, name: string }[]>([]);
   useEffect(() => {
@@ -525,7 +571,27 @@ export default function FeedTab() {
                           onKudos={() => handleKudos(match)}
                           onShare={() => handleShare(match)}
                           index={i}
-                        />
+                        >
+                          {match.match_code && (
+                            <div className="mt-1 pt-1 border-t border-slate-100/50 dark:border-slate-800/50">
+                              <MatchPredictionCard
+                                compact
+                                matchId={match.match_code}
+                                t1Ids={[]}
+                                t2Ids={[]}
+                                t1Label={match.team1_label ?? "TBD"}
+                                t2Label={match.team2_label ?? "TBD"}
+                                hasStarted={isLiveNow || match.status === 'completed' || match.status === 'walkover'}
+                                myPick={picks[match.match_code]}
+                                profileId={ownProfile?.id}
+                                onPick={(team) => handlePick(match.match_code, team)}
+                                isResultsRevealed={isLiveNow || !!revealedMatchIds[match.match_code]}
+                                isAdmin={isAdmin}
+                                onToggleRevealResults={() => handleToggleReveal(match.match_code)}
+                              />
+                            </div>
+                          )}
+                        </MatchCard>
                       </ErrorBoundary>
                     );
                   };

@@ -7,6 +7,7 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.10.0";
 import { SignJWT, importPKCS8 } from "https://esm.sh/jose@5.2.2";
+import { isDeadToken } from "../_shared/fcm.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -68,14 +69,20 @@ async function sendFcm(
             priority: "high",
             notification: { channel_id: "notify_whistle" }
           },
-          webpush: { headers: { Urgency: "high" } },
+          webpush: {
+            headers: { Urgency: "high" },
+            notification: {
+              icon: "icon-192.png",
+              badge: "icon-192.png",
+            },
+          },
           apns: { headers: { "apns-priority": "10" } },
         },
       }),
     },
   );
-  const stale = res.status === 404 || res.status === 400;
-  return { ok: res.ok, stale };
+  if (res.ok) return { ok: true, stale: false };
+  return { ok: false, stale: isDeadToken(res.status, await res.text()) };
 }
 
 serve(async () => {

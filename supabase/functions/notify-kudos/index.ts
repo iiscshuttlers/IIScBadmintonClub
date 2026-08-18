@@ -4,6 +4,7 @@
  */
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.10.0";
+import { isDeadToken } from "../_shared/fcm.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -147,7 +148,7 @@ serve(async (req) => {
       },
     );
     if (res.ok) sent++;
-    if (res.status === 404 || res.status === 400) staleTokens.push(token as string);
+    else if (isDeadToken(res.status, await res.text())) staleTokens.push(token as string);
   }
 
   for (const staleToken of staleTokens) {
