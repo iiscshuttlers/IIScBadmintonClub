@@ -95,7 +95,7 @@ export function DisputePanel() {
             ]}
           />
         </h2>
-        <button onClick={load} className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-slate-800 dark:hover:text-on-accent transition px-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
+        <button onClick={load} className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-slate-800 dark:hover:text-foreground transition px-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
           <RefreshCw className="w-3.5 h-3.5" /> Refresh
         </button>
       </div>

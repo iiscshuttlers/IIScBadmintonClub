@@ -246,7 +246,7 @@ export function GuestPlayersPanel() {
             onKeyDown={(e) => e.key === "Enter" && createGuest()}
             placeholder="Guest name (e.g. Visitor John)"
             maxLength={60}
-            className="flex-1 px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-bold text-on-accent outline-none focus:ring-2 focus:ring-violet-500"
+            className="flex-1 px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-bold text-foreground outline-none focus:ring-2 focus:ring-violet-500"
           />
           <div className="flex gap-2">
             {(["Male", "Female"] as const).map((opt) => (
@@ -286,7 +286,7 @@ export function GuestPlayersPanel() {
               </span>
             )}
           </h2>
-          <button onClick={load} className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-slate-800 dark:hover:text-on-accent transition px-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
+          <button onClick={load} className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-slate-800 dark:hover:text-foreground transition px-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
             <RefreshCw className="w-3.5 h-3.5" /> Refresh
           </button>
         </div>
@@ -437,7 +437,7 @@ export function GuestPlayersPanel() {
                       onChange={(e) => { setClaimSearch(e.target.value); setSelectedReal(null); }}
                       placeholder="Type a name to search..."
                       autoFocus
-                      className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium text-on-accent outline-none focus:ring-2 focus:ring-violet-500"
+                      className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium text-foreground outline-none focus:ring-2 focus:ring-violet-500"
                     />
                   </div>
 
@@ -614,7 +614,7 @@ function LinkExternalSection({
             </span>
           )}
         </h2>
-        <button onClick={loadLabels} className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-slate-800 dark:hover:text-on-accent transition px-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
+        <button onClick={loadLabels} className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-slate-800 dark:hover:text-foreground transition px-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
           <RefreshCw className="w-3.5 h-3.5" /> Refresh
         </button>
       </div>
@@ -640,7 +640,7 @@ function LinkExternalSection({
                 value={filter}
                 onChange={e => setFilter(e.target.value)}
                 placeholder="Filter by name..."
-                className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-on-accent outline-none focus:ring-2 focus:ring-sky-500"
+                className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-foreground outline-none focus:ring-2 focus:ring-sky-500"
               />
             </div>
             <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
@@ -703,7 +703,7 @@ function LinkExternalSection({
                     onChange={e => { setPlayerSearch(e.target.value); setSelectedPlayer(null); }}
                     placeholder="Type name to search..."
                     autoFocus
-                    className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-on-accent outline-none focus:ring-2 focus:ring-sky-500"
+                    className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-foreground outline-none focus:ring-2 focus:ring-sky-500"
                   />
                 </div>
 

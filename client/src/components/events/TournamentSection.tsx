@@ -394,7 +394,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
                 onClick={() => setViewStatus(st.id)}
                 className={`flex-1 py-2 px-4 rounded-xl text-sm font-bold transition-all capitalize ${
                   viewStatus === st.id
-                    ? "bg-white dark:bg-slate-700 text-blue-900 dark:text-on-accent shadow-sm"
+                    ? "bg-white dark:bg-slate-700 text-blue-900 dark:text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-muted-foreground dark:text-muted-foreground dark:hover:text-slate-300"
                 }`}
               >
@@ -1172,10 +1172,10 @@ export function TournamentArchiveBrackets({ tournamentId }: { tournamentId: stri
       {categories.length > 0 && matches.length > 0 && (
         <div className="space-y-4 border-b border-slate-100 dark:border-slate-700 pb-4">
           <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-fit">
-            <button onClick={() => setViewMode("list")} className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-1.5 text-xs font-black uppercase tracking-widest rounded-lg transition ${viewMode === "list" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-on-accent shadow" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}>
+            <button onClick={() => setViewMode("list")} className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-1.5 text-xs font-black uppercase tracking-widest rounded-lg transition ${viewMode === "list" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-foreground shadow" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}>
               <LayoutList className="w-3.5 h-3.5" /> List View
             </button>
-            <button onClick={() => setViewMode("bracket")} className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-1.5 text-xs font-black uppercase tracking-widest rounded-lg transition ${viewMode === "bracket" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-on-accent shadow" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}>
+            <button onClick={() => setViewMode("bracket")} className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-1.5 text-xs font-black uppercase tracking-widest rounded-lg transition ${viewMode === "bracket" ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-foreground shadow" : "text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300"}`}>
               <Tv2 className="w-3.5 h-3.5" /> Bracket Tree
             </button>
           </div>

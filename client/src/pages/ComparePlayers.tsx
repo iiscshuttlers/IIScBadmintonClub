@@ -225,11 +225,11 @@ export default function ComparePlayers() {
                   setLocation(`/compare/${e.target.value}/${player2.id}`);
                 }
               }}
-              className="text-sm sm:text-xl font-black text-on-accent dark:text-on-accent bg-transparent appearance-none text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-2 sm:px-6 py-1 rounded-xl w-full focus:outline-none whitespace-normal break-words"
+              className="text-sm sm:text-xl font-black text-foreground dark:text-foreground bg-transparent appearance-none text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-2 sm:px-6 py-1 rounded-xl w-full focus:outline-none whitespace-normal break-words"
             >
               <option value={player1.id} className="hidden">{player1.full_name}</option>
               {allPlayers.map((p) => (
-                <option key={p.id} value={p.id} className="text-sm font-bold bg-white dark:bg-slate-900 text-on-accent dark:text-on-accent">
+                <option key={p.id} value={p.id} className="text-sm font-bold bg-white dark:bg-slate-900 text-foreground dark:text-foreground">
                   {p.full_name}
                 </option>
               ))}
@@ -255,11 +255,11 @@ export default function ComparePlayers() {
                   setLocation(`/compare/${player1.id}/${e.target.value}`);
                 }
               }}
-              className="text-sm sm:text-xl font-black text-on-accent dark:text-on-accent bg-transparent appearance-none text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-2 sm:px-6 py-1 rounded-xl w-full focus:outline-none whitespace-normal break-words"
+              className="text-sm sm:text-xl font-black text-foreground dark:text-foreground bg-transparent appearance-none text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 px-2 sm:px-6 py-1 rounded-xl w-full focus:outline-none whitespace-normal break-words"
             >
               <option value={player2.id} className="hidden">{player2.full_name}</option>
               {allPlayers.map((p) => (
-                <option key={p.id} value={p.id} className="text-sm font-bold bg-white dark:bg-slate-900 text-on-accent dark:text-on-accent">
+                <option key={p.id} value={p.id} className="text-sm font-bold bg-white dark:bg-slate-900 text-foreground dark:text-foreground">
                   {p.full_name}
                 </option>
               ))}

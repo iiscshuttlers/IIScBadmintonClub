@@ -98,7 +98,7 @@ export function BasicInfoTab({
                 type="text"
                 value={avatarUrl}
                 onChange={(e) => setAvatarUrl(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-on-accent dark:text-on-accent text-sm outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary"
                 placeholder="e.g. https://images.unsplash.com/... or your custom avatar URL"
               />
             </div>
@@ -130,7 +130,7 @@ export function BasicInfoTab({
             type="text"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-on-accent dark:text-on-accent focus:ring-2 focus:ring-primary outline-none transition-all"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
             placeholder="e.g. Tanu Singh"
           />
         </div>
@@ -143,7 +143,7 @@ export function BasicInfoTab({
             type="text"
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-on-accent dark:text-on-accent focus:ring-2 focus:ring-primary outline-none transition-all"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
             placeholder="e.g. Tanya"
           />
         </div>
@@ -161,7 +161,7 @@ export function BasicInfoTab({
             onChange={(e) => setIiscEmail(e.target.value)}
             pattern="^[a-zA-Z0-9._%+\-]+@(alum\.)?iisc\.ac\.in$"
             title="Email must end with @iisc.ac.in or @alum.iisc.ac.in"
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-on-accent dark:text-on-accent focus:ring-2 focus:ring-primary outline-none transition-all"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
             placeholder="e.g. tanu@iisc.ac.in"
           />
         </div>
@@ -181,7 +181,7 @@ export function BasicInfoTab({
                 e.target.value.replace(/\D/g, "").slice(0, 10),
               )
             }
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-on-accent dark:text-on-accent focus:ring-2 focus:ring-primary outline-none transition-all"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
             placeholder="e.g. 9876543210"
           />
         </div>
@@ -196,7 +196,7 @@ export function BasicInfoTab({
             required
             value={gender}
             onChange={(e) => setGender(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-on-accent dark:text-on-accent focus:ring-2 focus:ring-primary outline-none transition-all"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
           >
             <option value="" disabled>Select gender</option>
             <option value="Male">Male</option>
@@ -215,7 +215,7 @@ export function BasicInfoTab({
             max={new Date().getFullYear() + 5}
             value={joinedYear}
             onChange={(e) => setJoinedYear(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-on-accent dark:text-on-accent focus:ring-2 focus:ring-primary outline-none transition-all"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
             placeholder="e.g. 2023"
           />
         </div>
@@ -231,7 +231,7 @@ export function BasicInfoTab({
               required
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-on-accent dark:text-on-accent focus:ring-2 focus:ring-primary outline-none transition-all"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
             >
               <option value="" disabled>
                 Select your department
@@ -259,7 +259,7 @@ export function BasicInfoTab({
                 type="text"
                 value={customDepartment}
                 onChange={(e) => setCustomDepartment(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-on-accent dark:text-on-accent focus:ring-2 focus:ring-primary outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
                 placeholder="e.g. Center for Nano Science"
               />
             </motion.div>

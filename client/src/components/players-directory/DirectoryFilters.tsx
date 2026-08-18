@@ -44,7 +44,7 @@ export function DirectoryFilters({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by name, nickname, or department..."
-            className="w-full pl-12 pr-10 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-on-accent dark:text-on-accent focus:ring-2 focus:ring-primary outline-none transition-all text-sm font-semibold"
+            className="w-full pl-12 pr-10 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all text-sm font-semibold"
           />
           {searchQuery && (
             <button
@@ -112,7 +112,7 @@ export function DirectoryFilters({
                 <select
                   value={levelFilter}
                   onChange={(e) => setLevelFilter(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-on-accent dark:text-on-accent text-sm outline-none focus:ring-2 focus:ring-primary font-semibold"
+                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary font-semibold"
                 >
                   <option value="All">All Levels</option>
                   <option value="Beginner">Beginner</option>
@@ -128,7 +128,7 @@ export function DirectoryFilters({
                 <select
                   value={departmentFilter}
                   onChange={(e) => setDepartmentFilter(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-on-accent dark:text-on-accent text-sm outline-none focus:ring-2 focus:ring-primary font-semibold"
+                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary font-semibold"
                 >
                   <option value="All">All Departments</option>
                   {allDepartments.map((dept) => (

@@ -446,7 +446,7 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
           {form.status === "active" && (
             <>
               <button onClick={() => transition("completed")} disabled={transitioning}
-                className="px-3 py-1 text-xs font-black rounded-xl bg-[var(--info)] hover:bg-[var(--info)] text-on-accent disabled:opacity-50 transition">
+                className="px-3 py-1 text-xs font-black rounded-xl bg-[var(--info)] hover:bg-[var(--info)] text-foreground disabled:opacity-50 transition">
                 {transitioning ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "→ Mark Completed"}
               </button>
               <button onClick={() => transition("draft")} disabled={transitioning}
@@ -457,7 +457,7 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
           )}
           {form.status === "completed" && (
             <button onClick={() => transition("active")} disabled={transitioning}
-              className="px-3 py-1 text-xs font-black rounded-xl bg-[var(--warning)] hover:bg-[var(--warning)] text-on-accent disabled:opacity-50 transition">
+              className="px-3 py-1 text-xs font-black rounded-xl bg-[var(--warning)] hover:bg-[var(--warning)] text-foreground disabled:opacity-50 transition">
               {transitioning ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "↺ Re-Activate (Live)"}
             </button>
           )}
@@ -658,7 +658,7 @@ function SetupTab({ tournament, onSaved, isMasterAdmin, onDelete }: {
                 if (onDelete) onDelete(); // Close setup tab view by clearing selected
               }
             }}
-            className="shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--danger)] hover:bg-[var(--danger)] text-on-accent font-black transition shadow"
+            className="shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--danger)] hover:bg-[var(--danger)] text-foreground font-black transition shadow"
           >
             Trash Tournament
           </button>
@@ -3235,7 +3235,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                                   placeholder="—"
                                   className={`text-center font-black text-base rounded-xl border-2 py-2 outline-none transition w-full
                                     ${t1Won ? "border-primary bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary/70"
-                                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-on-accent"}
+                                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-foreground"}
                                     focus:border-primary`}
                                 />
                                 <span className="text-center text-xs font-bold text-muted-foreground">–</span>
@@ -3246,7 +3246,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                                   placeholder="—"
                                   className={`text-center font-black text-base rounded-xl border-2 py-2 outline-none transition w-full
                                     ${t2Won ? "border-primary bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary/70"
-                                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-on-accent"}
+                                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-foreground"}
                                     focus:border-primary`}
                                 />
                               </div>
@@ -3328,7 +3328,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <button onClick={saveSchedule} className="px-4 py-1.5 rounded-xl bg-[var(--info)] hover:bg-[var(--info)] text-on-accent text-xs font-black transition">Save</button>
+                          <button onClick={saveSchedule} className="px-4 py-1.5 rounded-xl bg-[var(--info)] hover:bg-[var(--info)] text-foreground text-xs font-black transition">Save</button>
                           <button onClick={() => setEditSchedule(null)} className="text-xs text-muted-foreground hover:text-muted-foreground transition">Cancel</button>
                         </div>
                       </div>
@@ -3349,7 +3349,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <button onClick={saveUmpire} className="px-4 py-1.5 rounded-xl bg-[var(--info)] hover:bg-[var(--info)] text-on-accent text-xs font-black transition">Save</button>
+                          <button onClick={saveUmpire} className="px-4 py-1.5 rounded-xl bg-[var(--info)] hover:bg-[var(--info)] text-foreground text-xs font-black transition">Save</button>
                           <button onClick={() => setAssignUmpire(null)} className="text-xs text-muted-foreground hover:text-muted-foreground transition">Cancel</button>
                         </div>
                       </div>
@@ -3433,7 +3433,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
               <button
                 onClick={saveBulkSchedule}
                 disabled={bulkSaving || bulkPreview.length === 0 || bulkPreview.every((r) => !r.found)}
-                className="px-5 py-2 rounded-xl bg-[var(--info)] hover:bg-[var(--info)] text-on-accent text-xs font-black transition disabled:opacity-40 disabled:cursor-not-allowed">
+                className="px-5 py-2 rounded-xl bg-[var(--info)] hover:bg-[var(--info)] text-foreground text-xs font-black transition disabled:opacity-40 disabled:cursor-not-allowed">
                 {bulkSaving ? "Saving…" : `Save ${bulkPreview.filter((r) => r.found).length} Match${bulkPreview.filter((r) => r.found).length !== 1 ? "es" : ""}`}
               </button>
               <button onClick={() => { setShowBulkSchedule(false); setBulkText(""); setBulkPreview([]); }}
@@ -3490,7 +3490,7 @@ function ArchiveTab({ tournament, isMasterAdmin, onArchived }: {
               <p className="text-sm text-muted-foreground mt-1">Freeze all results and make this a historical record. Cannot be undone.</p>
             </div>
             <button onClick={archive} disabled={archiving}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--warning)] hover:bg-[var(--warning)] text-on-accent font-black transition disabled:opacity-50">
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--warning)] hover:bg-[var(--warning)] text-foreground font-black transition disabled:opacity-50">
               {archiving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Archive className="w-4 h-4" />}
               Archive
             </button>

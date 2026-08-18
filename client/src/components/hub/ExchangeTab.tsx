@@ -255,7 +255,7 @@ export default function ExchangeTab() {
                 <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-full shrink-0">
                   <button
                     onClick={() => setTypeFilter('all')}
-                    className={`px-3 py-1 text-xs font-black rounded-full transition-all ${typeFilter === 'all' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-on-accent shadow-sm' : 'text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300'}`}
+                    className={`px-3 py-1 text-xs font-black rounded-full transition-all ${typeFilter === 'all' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-foreground shadow-sm' : 'text-muted-foreground hover:text-muted-foreground dark:hover:text-slate-300'}`}
                   >
                     All
                   </button>

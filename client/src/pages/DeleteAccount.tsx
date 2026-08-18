@@ -170,7 +170,7 @@ export default function DeleteAccount() {
                     placeholder="We'd love to know how we can improve..."
                     rows={3}
                     maxLength={500}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-on-accent outline-none focus:ring-2 focus:ring-rose-500 resize-none"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-foreground outline-none focus:ring-2 focus:ring-rose-500 resize-none"
                   />
                 </div>
 
