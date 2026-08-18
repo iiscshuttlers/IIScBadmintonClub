@@ -41,7 +41,13 @@ export const exportToExcel = async (filename: string, sheets: { name: string, da
   }
 };
 
-const createHiddenTableElement = (sheets: { name: string, data: any[][] }[]): HTMLElement => {
+export type ExportSheetDef = {
+  name: string;
+  data: any[][];
+  cellStyler?: (row: any[], rowIndex: number, colIndex: number, cell: any) => string;
+};
+
+const createHiddenTableElement = (sheets: ExportSheetDef[]): HTMLElement => {
   const container = document.createElement("div");
   container.style.position = "fixed";
   container.style.top = "0";
@@ -61,10 +67,16 @@ const createHiddenTableElement = (sheets: { name: string, data: any[][] }[]): HT
     sheet.data.forEach((row, rowIndex) => {
       const isHeader = rowIndex === 0 || (rowIndex === 1 && sheet.name !== "Setup");
       html += `<tr>`;
-      row.forEach((cell) => {
-        const style = isHeader 
+      row.forEach((cell, colIndex) => {
+        let style = isHeader 
           ? "border: 1px solid #cbd5e1; padding: 12px 8px; background-color: #f8fafc; font-weight: bold; color: #0f172a;" 
           : "border: 1px solid #cbd5e1; padding: 10px 8px; color: #334155;";
+          
+        if (sheet.cellStyler && !isHeader) {
+          const customStyle = sheet.cellStyler(row, rowIndex, colIndex, cell);
+          if (customStyle) style += " " + customStyle;
+        }
+
         html += `<td style="${style}">${cell ?? ""}</td>`;
       });
       html += `</tr>`;
@@ -77,7 +89,7 @@ const createHiddenTableElement = (sheets: { name: string, data: any[][] }[]): HT
   return container;
 };
 
-const withExportElement = async <T,>(sheets: { name: string, data: any[][] }[], fn: (el: HTMLElement) => Promise<T>): Promise<T> => {
+const withExportElement = async <T,>(sheets: ExportSheetDef[], fn: (el: HTMLElement) => Promise<T>): Promise<T> => {
   const el = createHiddenTableElement(sheets);
   document.body.appendChild(el);
   try {
@@ -89,7 +101,7 @@ const withExportElement = async <T,>(sheets: { name: string, data: any[][] }[], 
   }
 };
 
-export const exportToImage = async (sheets: { name: string, data: any[][] }[], filename: string, email: boolean = false, subject: string = "", body: string = "") => {
+export const exportToImage = async (sheets: ExportSheetDef[], filename: string, email: boolean = false, subject: string = "", body: string = "") => {
   if (!sheets || sheets.length === 0) { toast.error("No data to export"); return; }
   
   try {
@@ -154,7 +166,7 @@ export const exportToImage = async (sheets: { name: string, data: any[][] }[], f
   }
 };
 
-export const exportToPDF = async (sheets: { name: string, data: any[][] }[], filename: string, email: boolean = false, subject: string = "", body: string = "") => {
+export const exportToPDF = async (sheets: ExportSheetDef[], filename: string, email: boolean = false, subject: string = "", body: string = "") => {
   if (!sheets || sheets.length === 0) { toast.error("No data to export"); return; }
   
   try {

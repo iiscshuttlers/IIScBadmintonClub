@@ -98,8 +98,9 @@ export interface TournamentSectionProps {
 
 export function TournamentSection({ liveEvents, upcomingEvents, completedEvents, renderCard }: TournamentSectionProps) {
   const [, setLocation] = useLocation();
-  const { session, isUmpire } = useAuth();
+  const { session, isUmpire, profile } = useAuth();
   const [isAdmin, setIsAdmin] = useState(isAdminEmail(session?.user?.email));
+  const [playerName, setPlayerName] = useState<string | null>(null);
   const [config, setConfig] = useState<TournamentConfig>(DEFAULT_TOURNAMENT_CONFIG);
   
   const searchParams = new URLSearchParams(window.location.search);
@@ -140,12 +141,16 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
       if (user) {
         supabase
           .from("players")
-          .select("role")
+          .select("role, full_name")
           .eq("id", user.id)
           .single()
           .then(({ data }) => {
-            if (data && (data.role === "admin" || data.role === "master_admin")) {
-              setIsAdmin(true);
+            if (data) {
+              const name = data.full_name || (user.email ? user.email.split('@')[0].replace(/[._]/g, ' ') : null);
+              setPlayerName(name);
+              if (!isAdminEmail(user.email)) {
+                setIsAdmin(data.role === "admin" || data.role === "master_admin");
+              }
             }
           });
       }
@@ -685,7 +690,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
 
         {activeTab === "schedule" && (
           <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-md border border-slate-100 dark:border-slate-700 p-6 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-[500px]">
-            <SupabaseScheduleView tournamentId={liveTournament?.id ?? null} />
+            <SupabaseScheduleView tournamentId={liveTournament?.id ?? null} playerName={playerName} />
           </div>
         )}
 
@@ -790,6 +795,22 @@ const CAT_COLORS: Record<string, string> = {
   MD: "bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary/70 border-primary/30 dark:border-primary/80",
   WD: "bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-100 dark:border-purple-800",
   XD: "bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-100 dark:border-orange-800",
+  BS: "bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 border-teal-100 dark:border-teal-800",
+  GS: "bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-100 dark:border-rose-800",
+  BD: "bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 border-cyan-100 dark:border-cyan-800",
+  GD: "bg-fuchsia-50 dark:bg-fuchsia-900/30 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-100 dark:border-fuchsia-800",
+};
+
+const CAT_BOX_COLORS: Record<string, string> = {
+  MS: "bg-blue-50/80 dark:bg-blue-900/20 border-blue-200 dark:border-blue-900/40",
+  WS: "bg-pink-50/80 dark:bg-pink-900/20 border-pink-200 dark:border-pink-900/40",
+  MD: "bg-primary/5 dark:bg-primary/10 border-primary/20 dark:border-primary/20",
+  WD: "bg-purple-50/80 dark:bg-purple-900/20 border-purple-200 dark:border-purple-900/40",
+  XD: "bg-orange-50/80 dark:bg-orange-900/20 border-orange-200 dark:border-orange-900/40",
+  BS: "bg-teal-50/80 dark:bg-teal-900/20 border-teal-200 dark:border-teal-900/40",
+  GS: "bg-rose-50/80 dark:bg-rose-900/20 border-rose-200 dark:border-rose-900/40",
+  BD: "bg-cyan-50/80 dark:bg-cyan-900/20 border-cyan-200 dark:border-cyan-900/40",
+  GD: "bg-fuchsia-50/80 dark:bg-fuchsia-900/20 border-fuchsia-200 dark:border-fuchsia-900/40",
 };
 
 interface ScheduledMatch {
@@ -806,7 +827,7 @@ interface ScheduledMatch {
   sets_history: string[] | null;
 }
 
-function SupabaseScheduleView({ tournamentId }: { tournamentId: string | null }) {
+function SupabaseScheduleView({ tournamentId, playerName }: { tournamentId: string | null, playerName: string | null }) {
   const [schedMatches, setSchedMatches] = useState<ScheduledMatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("ALL");
@@ -847,65 +868,129 @@ function SupabaseScheduleView({ tournamentId }: { tournamentId: string | null })
   const upcomingMatches = filtered.filter(m => m.status === "scheduled" || (!["in_progress", "completed", "walkover"].includes(m.status)));
 
   const renderMatchList = (matches: ScheduledMatch[]) => {
-    const grouped: Record<string, ScheduledMatch[]> = {};
+    const grouped: Record<string, Record<string, ScheduledMatch[]>> = {};
     for (const m of matches) {
       const key = m.scheduled_at
         ? new Date(m.scheduled_at).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })
         : "Unscheduled";
-      if (!grouped[key]) grouped[key] = [];
-      grouped[key].push(m);
+      if (!grouped[key]) grouped[key] = {};
+      const catKey = m.category || "Other";
+      if (!grouped[key][catKey]) grouped[key][catKey] = [];
+      grouped[key][catKey].push(m);
     }
 
     return (
       <div className="space-y-6 mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
-        {Object.entries(grouped).map(([date, dayMatches]) => (
-          <div key={date}>
-            <div className="flex items-center gap-3 mb-3">
-              <Calendar className="w-4 h-4 text-primary" />
-              <h4 className="font-black text-muted-foreground dark:text-slate-200 text-sm">{date}</h4>
-            </div>
-            <div className="space-y-3">
-              {dayMatches.map((m) => {
-                const catCls = CAT_COLORS[m.category] ?? "bg-slate-50 dark:bg-slate-800 text-muted-foreground border-slate-200";
-                const isCompleted = m.status === "completed" || m.status === "walkover";
-                const isLive = m.status === "in_progress";
-                return (
-                  <div key={m.id} className={`rounded-2xl border p-4 ${isLive ? "border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/20 shadow-md shadow-red-500/10" : "border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900"}`}>
-                    <div className="flex items-center gap-2 mb-2 flex-wrap">
-                      <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg border ${catCls}`}>{m.category}</span>
-                      <span className="text-[10px] text-muted-foreground font-bold">{m.round_name} · {m.match_code}</span>
-                      {m.court_number && (
-                        <span className={cn("flex items-center gap-1 text-[10px] font-bold", getCourtColor(m.court_number))}>
-                          <MapPin className="w-3 h-3" /> Court {m.court_number}
-                        </span>
-                      )}
-                      {m.scheduled_at && (
-                        <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                          <Clock className="w-3 h-3" />
-                          {new Date(m.scheduled_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
-                        </span>
-                      )}
-                      {isLive && <span className="text-[10px] font-black text-red-500 animate-pulse">● LIVE</span>}
-                      {isCompleted && <span className="text-[10px] font-black text-primary">✓ Done</span>}
+        {Object.entries(grouped).map(([date, categoriesGroup]) => {
+          const isToday = date === new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" });
+          const totalMatchesForDate = Object.values(categoriesGroup).reduce((acc, matches) => acc + matches.length, 0);
+          return (
+            <details key={date} open={isToday} className="group mb-6 last:mb-0 relative">
+              <summary className="flex items-center gap-3 mb-3 cursor-pointer list-none [&::-webkit-details-marker]:hidden select-none outline-none">
+                <Calendar className="w-4 h-4 text-primary" />
+                <h4 className="font-black text-muted-foreground dark:text-slate-200 text-sm flex-1">
+                  {date} <span className="text-xs font-bold text-slate-400">({totalMatchesForDate})</span>
+                </h4>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      const printContent = document.getElementById(`print-schedule-${date.replace(/\s+/g, '-')}`);
+                      if (printContent) {
+                        const originalContents = document.body.innerHTML;
+                        document.body.innerHTML = printContent.innerHTML;
+                        window.print();
+                        document.body.innerHTML = originalContents;
+                        window.location.reload();
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-xs font-bold"
+                  >
+                    <Trophy className="w-3 h-3" />
+                    Print
+                  </button>
+                  <ChevronDown className="w-4 h-4 text-muted-foreground group-open:rotate-180 transition-transform" />
+                </div>
+              </summary>
+              <div className="space-y-6" id={`print-schedule-${date.replace(/\s+/g, '-')}`}>
+                {/* Print Header (Only visible in print) */}
+                <div className="hidden print:block mb-8 text-center border-b pb-4">
+                  <h1 className="text-2xl font-black mb-1">IISc Badminton Club</h1>
+                  <h2 className="text-xl text-slate-600">Match Schedule - {date}</h2>
+                </div>
+
+                {Object.entries(categoriesGroup).map(([cat, dayMatches]) => {
+                  const catCls = CAT_COLORS[cat] ?? "bg-slate-50 dark:bg-slate-800 text-muted-foreground border-slate-200";
+                  const boxCls = CAT_BOX_COLORS[cat] ?? "border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900";
+                  
+                  return (
+                    <div key={cat} className="space-y-3">
+                      <h5 className={`text-xs font-black uppercase tracking-widest px-3 py-1 rounded-lg border w-max ${catCls}`}>
+                        {cat} Matches
+                      </h5>
+                      {dayMatches.map((m, idx) => {
+                        const isCompleted = m.status === "completed" || m.status === "walkover";
+                        const isLive = m.status === "in_progress";
+                        const checkMatch = (label: string | undefined | null, pName: string | null) => {
+                          if (!label || !pName) return false;
+                          const l = label.toLowerCase();
+                          const p = pName.toLowerCase();
+                          if (l.includes(p) || p.includes(l)) return true;
+                          const parts = p.split(' ').filter(x => x.length > 2);
+                          // If at least one significant part of the player's name is in the label
+                          return parts.length > 0 && parts.some(part => l.includes(part));
+                        };
+                        const isMyMatch = checkMatch(m.team1_label, playerName) || checkMatch(m.team2_label, playerName);
+                        
+                        let customBoxCls = boxCls;
+                        if (isLive) {
+                          customBoxCls = cn(boxCls, "border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/20 shadow-md shadow-red-500/10");
+                        } else if (isMyMatch) {
+                          customBoxCls = cn(boxCls, "ring-2 ring-primary border-primary shadow-lg shadow-primary/30 animate-pulse !bg-primary/5 dark:!bg-primary/10");
+                        }
+
+                        return (
+                          <div key={m.id} className={cn("rounded-2xl border p-4 print:break-inside-avoid print:border-slate-300 print:shadow-none transition-all duration-300", customBoxCls)}>
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
+                            <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 w-5">#{idx + 1}</span>
+                            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg border ${catCls} print:bg-transparent print:border-slate-300`}>{m.category}</span>
+                            <span className="text-[10px] text-muted-foreground font-bold">{m.round_name} · {m.match_code}</span>
+                            {m.court_number && (
+                              <span className={cn("flex items-center gap-1 text-[10px] font-bold", getCourtColor(m.court_number))}>
+                                <MapPin className="w-3 h-3" /> Court {m.court_number}
+                              </span>
+                            )}
+                            {m.scheduled_at && (
+                              <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                <Clock className="w-3 h-3" />
+                                {new Date(m.scheduled_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                              </span>
+                            )}
+                            {isLive && <span className="text-[10px] font-black text-red-500 animate-pulse">● LIVE</span>}
+                            {isCompleted && <span className="text-[10px] font-black text-primary">✓ Done</span>}
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className={`text-sm font-bold flex-1 ${m.winner_side === 1 ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-slate-200"}`}>
+                              {m.team1_label ?? "TBD"}
+                            </span>
+                            <span className="text-[10px] font-black text-rose-400 shrink-0">VS</span>
+                            <span className={`text-sm font-bold flex-1 text-right ${m.winner_side === 2 ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-slate-200"}`}>
+                              {m.team2_label ?? "TBD"}
+                            </span>
+                          </div>
+                          {isCompleted && m.sets_history?.length ? (
+                            <p className="mt-1.5 text-xs font-mono text-muted-foreground">{m.sets_history.join(", ")}</p>
+                          ) : null}
+                        </div>
+                        );
+                      })}
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className={`text-sm font-bold flex-1 ${m.winner_side === 1 ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-slate-200"}`}>
-                        {m.team1_label ?? "TBD"}
-                      </span>
-                      <span className="text-[10px] font-black text-rose-400 shrink-0">VS</span>
-                      <span className={`text-sm font-bold flex-1 text-right ${m.winner_side === 2 ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-slate-200"}`}>
-                        {m.team2_label ?? "TBD"}
-                      </span>
-                    </div>
-                    {isCompleted && m.sets_history?.length ? (
-                      <p className="mt-1.5 text-xs font-mono text-muted-foreground">{m.sets_history.join(", ")}</p>
-                    ) : null}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ))}
+                  );
+                })}
+              </div>
+            </details>
+          );
+        })}
       </div>
     );
   };

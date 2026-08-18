@@ -29,6 +29,18 @@ interface MatchCardProps {
   children?: React.ReactNode;
 }
 
+const CAT_BOX_COLORS: Record<string, string> = {
+  MS: "bg-blue-50/80 dark:bg-blue-900/20 border-blue-200 dark:border-blue-900/40",
+  WS: "bg-pink-50/80 dark:bg-pink-900/20 border-pink-200 dark:border-pink-900/40",
+  MD: "bg-primary/5 dark:bg-primary/10 border-primary/20 dark:border-primary/20",
+  WD: "bg-purple-50/80 dark:bg-purple-900/20 border-purple-200 dark:border-purple-900/40",
+  XD: "bg-orange-50/80 dark:bg-orange-900/20 border-orange-200 dark:border-orange-900/40",
+  BS: "bg-teal-50/80 dark:bg-teal-900/20 border-teal-200 dark:border-teal-900/40",
+  GS: "bg-rose-50/80 dark:bg-rose-900/20 border-rose-200 dark:border-rose-900/40",
+  BD: "bg-cyan-50/80 dark:bg-cyan-900/20 border-cyan-200 dark:border-cyan-900/40",
+  GD: "bg-fuchsia-50/80 dark:bg-fuchsia-900/20 border-fuchsia-200 dark:border-fuchsia-900/40",
+};
+
 export function MatchCard({
   match,
   currentUser,
@@ -98,18 +110,14 @@ export function MatchCard({
     const g4 = match.partner2?.gender;
 
     if (cat === "Doubles" || cat === "doubles") {
-      const allMale = [g1, g3].every(g => g === "Male");
-      const allFemale = [g1, g3].every(g => g === "Female");
-      if (allMale) return "Men's Doubles";
-      if (allFemale) return "Women's Doubles";
-      if (g1 && g3) return "Mixed Doubles";
-      return "Doubles";
+      if (g1 === "Male" && g2 === "Male" && g3 === "Male" && g4 === "Male") return "Men's Doubles";
+      if (g1 === "Female" && g2 === "Female" && g3 === "Female" && g4 === "Female") return "Women's Doubles";
+      return "Mixed Doubles";
     }
+
     if (cat === "Singles" || cat === "singles") {
       if (g1 === "Male" && g2 === "Male") return "Men's Singles";
       if (g1 === "Female" && g2 === "Female") return "Women's Singles";
-      if (g1 && g2) return "Mixed Singles";
-      return "Singles";
     }
     return cat;
   };
@@ -168,7 +176,6 @@ export function MatchCard({
     ...(match.partner2 ? [{ player: match.partner2 }] : []),
   ].filter((m) => m.player);
 
-  // Natural-language recap of the result (only when there's a winner)
   const winnerMembers = team1Win ? team1 : team2Win ? team2 : null;
   const loserMembers = team1Win ? team2 : team2Win ? team1 : null;
   const winnerSetCount = team1Win ? setsWonP1 : setsWonP2;
@@ -176,7 +183,6 @@ export function MatchCard({
   const joinNames = (members: { player: any }[]) =>
     members.map((m) => m.player?.full_name).filter(Boolean).join(" & ");
 
-  // Renders a team's players as stacked avatar + name rows (singles = one row)
   const renderTeam = (
     members: { player: any }[],
     win: boolean,
@@ -231,11 +237,12 @@ export function MatchCard({
       toast.error("Failed to delete match");
     } else {
       toast.success("Match deleted");
-      // Ideally trigger a reload or hide locally
       const el = document.getElementById(`match-card-${match.id}`);
       if (el) el.style.display = 'none';
     }
   };
+
+  const formatBoxClass = CAT_BOX_COLORS[match.category] || "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800";
 
   return (
     <motion.div
@@ -243,9 +250,9 @@ export function MatchCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
       id={`match-card-${match.id}`}
-      className={`bg-white dark:bg-slate-900 rounded-3xl p-1 sm:p-2 shadow-sm relative overflow-hidden group transition-all duration-200 hover:-translate-y-0.5 ${isMatchOfTheDay
+      className={`${formatBoxClass} rounded-3xl p-1 sm:p-2 shadow-sm relative overflow-hidden group transition-all duration-200 hover:-translate-y-0.5 border ${isMatchOfTheDay
           ? "border-2 border-indigo-500 shadow-indigo-500/20 shadow-xl hover:shadow-indigo-500/30"
-          : "border border-slate-100 dark:border-slate-800 hover:shadow-lg dark:hover:shadow-slate-700/40"
+          : "hover:shadow-lg dark:hover:shadow-slate-700/40"
         }`}
       drag="x"
       dragConstraints={{ left: 0, right: 0 }}

@@ -2017,7 +2017,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
   const [assignUmpire, setAssignUmpire] = useState<{ matchId: string; umpireId: string } | null>(null);
   const [showBulkSchedule, setShowBulkSchedule] = useState(false);
   const [bulkText, setBulkText] = useState("");
-  const [bulkPreview, setBulkPreview] = useState<{ matchCode: string; court: string; at: string; found: boolean }[]>([]);
+  const [bulkPreview, setBulkPreview] = useState<{ matchCode: string; court: string; at: string; found: boolean; wrongCategory?: boolean }[]>([]);
   const [bulkSaving, setBulkSaving] = useState(false);
   const [remindSendingId, setRemindSendingId] = useState<string | null>(null);
   const [remindSentMap, setRemindSentMap] = useState<Record<string, boolean>>({});
@@ -2187,11 +2187,26 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
       }
     }
 
+    const { data: match } = await supabase
+      .from("tournament_matches")
+      .select("status")
+      .eq("id", editSchedule.matchId)
+      .single();
+
+    let newStatus = match?.status;
+    if (match?.status === "pending" && (isoAt || editSchedule.court)) {
+      newStatus = "scheduled";
+    } else if (match?.status === "scheduled" && !isoAt && !editSchedule.court) {
+      newStatus = "pending";
+    }
+
     await supabase.from("tournament_matches").update({
       court_number: editSchedule.court || null,
       scheduled_at: isoAt,
+      status: newStatus,
       reminder_sent: false,
     }).eq("id", editSchedule.matchId);
+    
     await load();
     setEditSchedule(null);
     toast.success("Schedule saved");
@@ -2298,8 +2313,18 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
         }
       }
 
-      const found = matches.some((m) => m.match_code === matchCode);
-      results.push({ matchCode, court, at, found });
+      const match = matches.find((m) => m.match_code === matchCode);
+      const found = !!match;
+      const wrongCategory = match ? match.category !== activeCategory : false;
+      const existing = results.find(r => r.matchCode === matchCode);
+      
+      if (existing) {
+        // If the match was already seen, update its properties if new ones are provided
+        if (court) existing.court = court;
+        if (at) existing.at = at;
+      } else {
+        results.push({ matchCode, court, at, found, wrongCategory });
+      }
     }
     setBulkPreview(results);
   };
@@ -2308,12 +2333,21 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
     setBulkSaving(true);
     let saved = 0;
     for (const row of bulkPreview) {
-      if (!row.found) continue;
+      if (!row.found || row.wrongCategory) continue;
       const match = matches.find((m) => m.match_code === row.matchCode);
       if (!match) continue;
+      
+      let newStatus = match.status;
+      if (match.status === "pending" && (row.at || row.court)) {
+        newStatus = "scheduled";
+      } else if (match.status === "scheduled" && !row.at && !row.court) {
+        newStatus = "pending";
+      }
+
       await supabase.from("tournament_matches").update({
         court_number: row.court || null,
         scheduled_at: row.at || null,
+        status: newStatus,
       }).eq("id", match.id);
       saved++;
     }
@@ -2462,20 +2496,26 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
       return;
     }
 
-    // Sort by court then by time
+    // Group by category, then sort by time, then by court
     dateMatches.sort((a, b) => {
+      const catA = a.category || "";
+      const catB = b.category || "";
+      if (catA !== catB) return catA.localeCompare(catB);
+
       const timeA = new Date(a.scheduled_at!).getTime();
       const timeB = new Date(b.scheduled_at!).getTime();
       if (timeA !== timeB) return timeA - timeB;
+
       const courtA = a.court_number || "";
       const courtB = b.court_number || "";
       return courtA.localeCompare(courtB);
     });
 
     const header = [
+      "Sr. No",
+      "Category",
       "Time",
       "Court",
-      "Category",
       "Match",
       "Round",
       "Team 1",
@@ -2483,7 +2523,7 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
       "Score / Result"
     ];
 
-    const rows = dateMatches.map((m) => {
+    const rows = dateMatches.map((m, idx) => {
       const scheduleStr = new Date(m.scheduled_at!).toLocaleString("en-IN", {
         hour: "2-digit",
         minute: "2-digit",
@@ -2499,9 +2539,10 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
       }
 
       return [
+        (idx + 1).toString(),
+        m.category,
         scheduleStr,
         m.court_number ? `Court ${m.court_number}` : "-",
-        m.category,
         m.match_code || "",
         m.round_name || `Round ${m.round}`,
         m.team1_label || "TBD",
@@ -2513,7 +2554,23 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
     const sheetName = `Schedule - ${scheduleDate}`;
     const filename = `${tournament.name.replace(/\s+/g, '_')}_schedule_${scheduleDate}`;
 
-    await exportToPDF([{ name: sheetName, data: [header, ...rows] }], filename);
+    const cellStyler = (row: any[], rowIndex: number, colIndex: number) => {
+      const cat = row[1];
+      let bgColor = "#ffffff";
+      if (cat === "MS") bgColor = "#eff6ff";
+      else if (cat === "WS") bgColor = "#fdf2f8";
+      else if (cat === "MD") bgColor = "#f0fdf4";
+      else if (cat === "WD") bgColor = "#faf5ff";
+      else if (cat === "XD") bgColor = "#fff7ed";
+      
+      let style = `background-color: ${bgColor};`;
+      if (colIndex === 0 || colIndex === 1 || colIndex === 4 || colIndex === 6 || colIndex === 7) {
+        style += " font-weight: 600; color: #0f172a;";
+      }
+      return style;
+    };
+
+    await exportToPDF([{ name: sheetName, data: [header, ...rows], cellStyler }], filename);
   };
 
   const downloadMatchesCSV = (cat: string) => {
@@ -3357,8 +3414,8 @@ function BracketTab({ tournament, isMasterAdmin }: { tournament: Tournament; isM
                       <span className="font-bold text-muted-foreground dark:text-slate-300">{row.matchCode}</span>
                       <span className="text-muted-foreground dark:text-muted-foreground">{row.court || <span className="text-slate-300">—</span>}</span>
                       <span className="text-muted-foreground dark:text-muted-foreground">{row.at ? new Date(row.at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : <span className="text-slate-300">—</span>}</span>
-                      <span className={row.found ? "text-primary font-bold" : "text-red-500 font-bold"}>
-                        {row.found ? "✓ Found" : "✗ Not found"}
+                      <span className={row.found && !row.wrongCategory ? "text-primary font-bold" : "text-red-500 font-bold"}>
+                        {!row.found ? "✗ Not found" : row.wrongCategory ? "⚠️ Wrong Category" : "✓ Found"}
                       </span>
                     </div>
                   ))}

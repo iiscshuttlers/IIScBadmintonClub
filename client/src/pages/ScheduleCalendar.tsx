@@ -9,6 +9,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   CalendarDays,
@@ -17,6 +23,7 @@ import {
   ArrowRight,
   ExternalLink,
   Trophy,
+  X,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
@@ -265,7 +272,7 @@ export default function ScheduleCalendar() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <Card className="rounded-3xl shadow-xl border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl overflow-hidden p-2 sm:p-4">
+            <Card className="rounded-3xl shadow-xl border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl overflow-hidden p-2 sm:p-4 max-w-full">
               <Calendar
                 mode="single"
                 selected={selectedDate}
@@ -328,38 +335,67 @@ export default function ScheduleCalendar() {
 
                     if (dayEvents.length > 0) {
                       return (
-                        <TooltipProvider>
-                          <Tooltip delayDuration={300}>
-                            <TooltipTrigger asChild>
-                              <div className="w-full h-full relative cursor-pointer">
-                                <CalendarDayButton {...props} />
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent className="z-50 bg-slate-800 text-foreground border-slate-700">
-                              <div className="space-y-1.5 p-1">
-                                {dayEvents.map((e, i) => (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <div className="w-full h-full relative cursor-pointer">
+                              <CalendarDayButton {...props} />
+                            </div>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            sideOffset={4}
+                            collisionPadding={20}
+                            className="z-[100] bg-slate-800 text-foreground border-slate-700 w-[85vw] sm:w-[60vw] md:w-auto md:min-w-[15rem] md:max-w-md max-h-[min(70vh,var(--radix-dropdown-menu-content-available-height))] shadow-2xl p-0 rounded-xl flex flex-col !overflow-hidden"
+                          >
+                            <div className="flex items-center justify-between p-2 border-b border-slate-700 bg-slate-800 shrink-0">
+                              <span className="text-xs font-bold text-slate-400 pl-2">
+                                {dayEvents.length} Matches
+                              </span>
+                              <DropdownMenuItem className="p-1.5 rounded-lg hover:bg-slate-700 cursor-pointer focus:bg-slate-700 text-slate-300 h-8 w-8 flex items-center justify-center">
+                                <X className="w-4 h-4" />
+                              </DropdownMenuItem>
+                            </div>
+                            <div className="space-y-2 p-2 overflow-y-auto flex-1 overscroll-contain">
+                              {dayEvents.map((e, i) => {
+                                let catColor = "text-slate-200";
+                                if (e.type !== "holiday") {
+                                  const cat = e.title.split(" • ")[0];
+                                  if (cat === "MS") catColor = "text-blue-400";
+                                  else if (cat === "MD") catColor = "text-emerald-400";
+                                  else if (cat === "WS") catColor = "text-pink-400";
+                                  else if (cat === "WD") catColor = "text-purple-400";
+                                  else if (cat === "XD") catColor = "text-orange-400";
+                                }
+                                return (
                                   <div
                                     key={i}
-                                    className="flex items-center gap-2"
+                                    className="flex items-start gap-2 py-1"
                                   >
                                     <span
-                                      className={`w-2 h-2 rounded-full ${e.type === "holiday" ? getHolidayColor(e.title).solid : "bg-primary"}`}
+                                      className={`w-2 h-2 mt-1 shrink-0 rounded-full ${e.type === "holiday" ? getHolidayColor(e.title).solid : "bg-primary"}`}
                                     />
-                                    <span className="font-semibold text-xs">
-                                      {e.title}
-                                    </span>
-                                    {e.type !== "holiday" &&
-                                      e.date === dateStr && (
-                                        <span className="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded uppercase font-bold">
-                                          Starts
-                                        </span>
+                                    <div className="flex flex-col gap-0.5 leading-tight pr-2">
+                                      <span className={`font-semibold text-xs ${e.type === "holiday" ? "text-slate-200" : catColor}`}>
+                                        {e.title}
+                                      </span>
+                                      {e.type !== "holiday" && e.date === dateStr && (
+                                        <div className="flex items-center gap-1.5 mt-0.5">
+                                          <span className="text-[10px] w-fit bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded uppercase font-bold">
+                                            Starts
+                                          </span>
+                                          {e.time && (
+                                            <span className="text-[10px] text-slate-400 font-semibold flex items-center gap-1">
+                                              <Clock className="w-3 h-3" /> {e.time}
+                                            </span>
+                                          )}
+                                        </div>
                                       )}
+                                    </div>
                                   </div>
-                                ))}
-                              </div>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                                );
+                              })}
+                            </div>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       );
                     }
                     return <CalendarDayButton {...props} />;
@@ -525,7 +561,7 @@ export default function ScheduleCalendar() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <Card className="rounded-3xl shadow-xl border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl min-h-[500px]">
+            <Card className="rounded-3xl shadow-xl border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl min-h-[500px] max-w-full overflow-hidden">
               <div className="p-5 md:p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 rounded-t-3xl">
                 <h2 className="text-2xl font-black text-slate-800 dark:text-foreground">
                   {selectedDate
@@ -674,7 +710,7 @@ export default function ScheduleCalendar() {
             </Card>
 
             {tournamentData && selectedDateStr && dateFilterHasMatches(tournamentData, selectedDateStr) && (
-              <Card className="rounded-3xl shadow-xl border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl mt-6 overflow-hidden">
+              <Card className="rounded-3xl shadow-xl border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl mt-6 overflow-hidden max-w-full">
                 <div className="bg-slate-50 dark:bg-slate-800/50 p-5 md:p-6 border-b border-slate-100 dark:border-slate-800">
                   <h3 className="text-xl font-black text-slate-800 dark:text-foreground flex items-center gap-2">
                     <Trophy className="w-5 h-5 text-primary" />

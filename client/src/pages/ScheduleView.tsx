@@ -9,6 +9,7 @@ import {
   Users,
 } from "lucide-react";
 import { InfoModal } from "@/components/InfoModal";
+import { useAuth } from "@/contexts/AuthContext";
 
 const FORMAT_LABELS: Record<string, string> = {
   MS: "Men's Singles",
@@ -73,6 +74,8 @@ interface ScheduleViewProps {
 
 export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) {
   const [activeFormat, setActiveFormat] = useState<string>("ALL");
+  const { profile } = useAuth();
+  const playerName = profile?.full_name ?? null;
 
   if (!tournamentData) return (
     <div className="py-12 flex flex-col items-center justify-center text-center">
@@ -226,6 +229,20 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
                   const { p1List, p2List } = getPlayers(m);
                   const isLive = m.Status === "in-progress";
                   const isDone = m.Status === "completed";
+                  const checkMatch = (label: string | undefined | null, pName: string | null) => {
+                    if (!label || !pName) return false;
+                    const l = label.toLowerCase();
+                    const p = pName.toLowerCase();
+                    if (l.includes(p) || p.includes(l)) return true;
+                    const parts = p.split(' ').filter(x => x.length > 2);
+                    return parts.length > 0 && parts.some(part => l.includes(part));
+                  };
+                  
+                  const isMyMatch = checkMatch(p1List.join(" "), playerName) || 
+                                    checkMatch(p2List.join(" "), playerName) || 
+                                    checkMatch(m.Player_1, playerName) || 
+                                    checkMatch(m.Player_2, playerName);
+
 
                   const p1Won =
                     isDone &&
@@ -256,7 +273,9 @@ export function ScheduleView({ tournamentData, dateFilter }: ScheduleViewProps) 
                       key={idx}
                       className={`group relative bg-gradient-to-br ${poolGradient} border rounded-xl sm:rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg ${
                         isLive
-                          ? "ring-2 ring-rose-500 ring-offset-1 shadow-lg shadow-rose-100"
+                          ? "ring-2 ring-rose-500 ring-offset-1 shadow-lg shadow-rose-100 dark:shadow-rose-900/20"
+                          : isMyMatch
+                          ? "ring-2 ring-primary border-primary shadow-lg shadow-primary/30 animate-pulse bg-primary/5 dark:bg-primary/10"
                           : "shadow-sm"
                       }`}
                     >

@@ -41,6 +41,7 @@ import { H2HSection } from "@/components/players-directory/H2HSection";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
 import { useHashTab } from "@/hooks/useHashTab";
+import { usePlayerMatches } from "@/hooks/usePlayerMatches";
 
 export function MatchSection({ 
   title, 
@@ -159,6 +160,8 @@ export default function FeedTab() {
     searchQuery,
     setSearchQuery
   } = useFeedMatches(ownProfile);
+
+  const { matches: myAllMatches } = usePlayerMatches(ownProfile?.id);
 
   const [tournaments, setTournaments] = useState<{ id: string, name: string }[]>([]);
   useEffect(() => {
@@ -360,20 +363,26 @@ export default function FeedTab() {
                 {(() => {
                   const upcomingMatches: any[] = [];
                   const completedMatches: any[] = [];
-                  const myMatchesList: any[] = [];
+                  let myMatchesList = [...myAllMatches];
+
+                  if (searchQuery.trim()) {
+                    const q = searchQuery.toLowerCase().trim();
+                    myMatchesList = myMatchesList.filter((m: any) => {
+                      const p1Name = m.player1?.full_name?.toLowerCase() || "";
+                      const p2Name = m.player2?.full_name?.toLowerCase() || "";
+                      const p3Name = m.player3?.full_name?.toLowerCase() || m.partner1?.full_name?.toLowerCase() || "";
+                      const p4Name = m.player4?.full_name?.toLowerCase() || m.partner2?.full_name?.toLowerCase() || "";
+                      const t1Label = m.team1_label?.toLowerCase() || "";
+                      const t2Label = m.team2_label?.toLowerCase() || "";
+                      const mId = m.id?.toLowerCase() || "";
+                      const mNumber = m.match_number?.toString().toLowerCase() || "";
+                      const mFormat = m.format?.toLowerCase() || "";
+                      const mCategory = m.category?.toLowerCase() || "";
+                      return (p1Name.includes(q) || p2Name.includes(q) || p3Name.includes(q) || p4Name.includes(q) || t1Label.includes(q) || t2Label.includes(q) || mId.includes(q) || mNumber.includes(q) || mFormat.includes(q) || mCategory.includes(q));
+                    });
+                  }
 
                   displayMatches.forEach(match => {
-                    const isMyMatch = ownProfile?.id && (
-                      match.player1_id === ownProfile.id ||
-                      match.player2_id === ownProfile.id ||
-                      match.player3_id === ownProfile.id ||
-                      match.player4_id === ownProfile.id
-                    );
-                    
-                    if (isMyMatch) {
-                      myMatchesList.push(match);
-                    }
-
                     const isLiveNow = !match.is_friendly &&
                       (liveMatchIds.has(match.player1_id) || liveMatchIds.has(match.player2_id) ||
                         (match.team1_partner_id && liveMatchIds.has(match.team1_partner_id)) ||
@@ -388,8 +397,28 @@ export default function FeedTab() {
                     }
                   });
 
-                  // Sort myMatches by created_at
-                  myMatchesList.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                  // Sort myMatchesList: scheduled, unscheduled (pending), completed (reverse chron)
+                  myMatchesList.sort((a, b) => {
+                    const getRank = (m: any) => {
+                      if (m.status === 'scheduled') return 0;
+                      if (m.status === 'in_progress') return 0;
+                      if (m.status === 'pending') return 1;
+                      return 2; // completed or walkover
+                    };
+                    const rankA = getRank(a);
+                    const rankB = getRank(b);
+                    if (rankA !== rankB) return rankA - rankB;
+                    
+                    if (rankA === 0) { // both scheduled
+                      if (!a.scheduled_at && !b.scheduled_at) return 0;
+                      if (!a.scheduled_at) return 1;
+                      if (!b.scheduled_at) return -1;
+                      return new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime();
+                    }
+                    
+                    // pending or completed: reverse chronological
+                    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                  });
                   // Sort upcoming matches by scheduled_at ascending, placing unscheduled matches last
                   upcomingMatches.sort((a, b) => {
                     if (!a.scheduled_at && !b.scheduled_at) return 0;

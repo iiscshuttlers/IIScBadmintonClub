@@ -18,7 +18,7 @@ export async function fetchPlayerMatches(playerId: string, limit = 50): Promise<
   const { data: tournamentData, error: tourneyError } = await supabase
     .from("tournament_matches")
     .select(`*, tournaments!inner(status), player1:players!player1_id(${playerSelect}), player2:players!player2_id(${playerSelect}), partner1:players!player3_id(${playerSelect}), partner2:players!player4_id(${playerSelect})`)
-    .in("status", ["completed"])
+    .in("status", ["completed", "scheduled", "in_progress", "walkover"])
     .neq("tournaments.status", "deleted")
     .or(tFilter)
     .order("created_at", { ascending: false })
@@ -27,8 +27,8 @@ export async function fetchPlayerMatches(playerId: string, limit = 50): Promise<
 
   const mappedTourney = (tournamentData ?? [])
     .filter((m: any) => {
-      const hasTeam1 = m.player1_id || (m.team1_label && !m.team1_label.toLowerCase().includes("bye") && !m.team1_label.toLowerCase().startsWith("winner"));
-      const hasTeam2 = m.player2_id || (m.team2_label && !m.team2_label.toLowerCase().includes("bye") && !m.team2_label.toLowerCase().startsWith("winner"));
+      const hasTeam1 = m.player1_id || (m.team1_label && !m.team1_label.toLowerCase().includes("bye"));
+      const hasTeam2 = m.player2_id || (m.team2_label && !m.team2_label.toLowerCase().includes("bye"));
       return hasTeam1 && hasTeam2;
     })
     .map((m: any) => ({
@@ -141,8 +141,8 @@ export async function fetchFeedMatches(
 
   const mappedTourney = [...(completedData ?? []), ...(upcomingData ?? [])]
     .filter((m: any) => {
-      const hasTeam1 = m.player1_id || (m.team1_label && !m.team1_label.toLowerCase().includes("bye") && !m.team1_label.toLowerCase().startsWith("winner") && !m.team1_label.toLowerCase().startsWith("loser"));
-      const hasTeam2 = m.player2_id || (m.team2_label && !m.team2_label.toLowerCase().includes("bye") && !m.team2_label.toLowerCase().startsWith("winner") && !m.team2_label.toLowerCase().startsWith("loser"));
+      const hasTeam1 = m.player1_id || (m.team1_label && !m.team1_label.toLowerCase().includes("bye"));
+      const hasTeam2 = m.player2_id || (m.team2_label && !m.team2_label.toLowerCase().includes("bye"));
       return hasTeam1 && hasTeam2;
     })
     .map((m: any) => ({

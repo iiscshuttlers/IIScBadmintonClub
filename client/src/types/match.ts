@@ -19,6 +19,7 @@ export interface MatchRow {
   created_at: string;
   is_friendly: boolean;
   tournament_slug: string | null;
+  scheduled_at?: string | null;
 }
 
 export interface MatchWithPlayers extends MatchRow {

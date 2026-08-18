@@ -39,6 +39,18 @@ const COL_W = MATCH_W + COL_GAP;
 const PADDING = 16;
 const LABEL_H = 26;
 
+const CAT_BOX_COLORS_DARK: Record<string, string> = {
+  MS: "bg-blue-900/20 border-blue-900/40 hover:border-blue-500/50 hover:shadow-blue-500/20",
+  WS: "bg-pink-900/20 border-pink-900/40 hover:border-pink-500/50 hover:shadow-pink-500/20",
+  MD: "bg-primary/10 border-primary/20 hover:border-primary/50 hover:shadow-primary/20",
+  WD: "bg-purple-900/20 border-purple-900/40 hover:border-purple-500/50 hover:shadow-purple-500/20",
+  XD: "bg-orange-900/20 border-orange-900/40 hover:border-orange-500/50 hover:shadow-orange-500/20",
+  BS: "bg-teal-900/20 border-teal-900/40 hover:border-teal-500/50 hover:shadow-teal-500/20",
+  GS: "bg-rose-900/20 border-rose-900/40 hover:border-rose-500/50 hover:shadow-rose-500/20",
+  BD: "bg-cyan-900/20 border-cyan-900/40 hover:border-cyan-500/50 hover:shadow-cyan-500/20",
+  GD: "bg-fuchsia-900/20 border-fuchsia-900/40 hover:border-fuchsia-500/50 hover:shadow-fuchsia-500/20",
+};
+
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
   useEffect(() => {
@@ -784,8 +796,11 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                   const t2Won = isCompleted && m.winner_side === 2;
 
                   return (
-                    <div key={m.id} className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm flex flex-col hover:border-slate-700 transition-colors">
-                      <div className="flex justify-between items-center px-3 py-1.5 bg-slate-950/50 border-b border-slate-800 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                    <div key={m.id} className={cn(
+                      "rounded-xl overflow-hidden shadow-sm flex flex-col transition-colors border",
+                      CAT_BOX_COLORS_DARK[category || ""] || "bg-slate-900 border-slate-800 hover:border-slate-700"
+                    )}>
+                      <div className="flex justify-between items-center px-3 py-1.5 bg-slate-950/50 border-b border-slate-800/50 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                         <span>{m.match_code}</span>
                         {m.court_number && <span>Court {m.court_number}</span>}
                       </div>
@@ -800,7 +815,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                         </div>
                       </div>
                       {(m.score || isLive) && (
-                        <div className="px-3 py-2 bg-slate-950/30 border-t border-slate-800 flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
+                        <div className="px-3 py-2 bg-slate-950/30 border-t border-slate-800/50 flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
                           {isLive ? (
                             <span className="text-amber-500 animate-pulse flex items-center gap-1"><Play size={10} /> Live Match</span>
                           ) : (
@@ -896,9 +911,9 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                       opacity
                     }}
                   >
-                    <div className={`flex flex-col bg-slate-900 border ${isMatchOnPath ? 'border-primary ring-2 ring-primary/20 shadow-lg shadow-primary/10' : 'border-slate-700/80 shadow-md'} rounded overflow-hidden`}>
+                    <div className={cn("flex flex-col border rounded overflow-hidden", isMatchOnPath ? 'border-primary ring-2 ring-primary/20 shadow-lg shadow-primary/10' : 'border-slate-700/80 shadow-md', CAT_BOX_COLORS_DARK[category || ""] || "bg-slate-900")}>
                       {/* Match header */}
-                      <div className={`flex justify-between items-center px-2 py-1 text-[9px] font-black uppercase tracking-widest ${isCompleted ? 'bg-slate-800 text-slate-400' : isLive ? 'bg-amber-500/20 text-amber-500' : 'bg-slate-800/50 text-muted-foreground'}`}>
+                      <div className={`flex justify-between items-center px-2 py-1 text-[9px] font-black uppercase tracking-widest ${isCompleted ? 'bg-slate-800/80 text-slate-400' : isLive ? 'bg-amber-500/20 text-amber-500' : 'bg-slate-800/50 text-muted-foreground'}`}>
                         <span>{m.match_code}</span>
                         <span className="flex items-center gap-1">
                           {isCompleted ? (

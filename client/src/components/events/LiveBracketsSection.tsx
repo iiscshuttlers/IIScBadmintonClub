@@ -3,7 +3,7 @@ import { Trophy } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { BracketVisual, type BracketMatch } from "@/components/tournament/BracketVisual";
 
-const CATEGORY_ORDER = ["MS", "WS", "MD", "WD", "XD"];
+const CATEGORY_ORDER = ["MS", "WS", "MD", "WD", "XD", "BS", "GS", "BD", "GD"];
 
 export function LiveBracketsSection({ 
   tournamentId, 

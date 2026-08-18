@@ -52,6 +52,18 @@ const CAT_COLORS: Record<string, { bg: string; active: string; dot: string }> = 
 
 const DEFAULT_COLORS = { bg: "bg-slate-700 border-slate-600 text-slate-300", active: "bg-slate-600 text-foreground border-slate-600", dot: "bg-slate-400" };
 
+const CAT_BOX_COLORS_DARK: Record<string, string> = {
+  MS: "bg-blue-900/20 border-blue-900/40 hover:border-blue-500/50 hover:shadow-blue-500/20",
+  WS: "bg-pink-900/20 border-pink-900/40 hover:border-pink-500/50 hover:shadow-pink-500/20",
+  MD: "bg-primary/10 border-primary/20 hover:border-primary/50 hover:shadow-primary/20",
+  WD: "bg-purple-900/20 border-purple-900/40 hover:border-purple-500/50 hover:shadow-purple-500/20",
+  XD: "bg-orange-900/20 border-orange-900/40 hover:border-orange-500/50 hover:shadow-orange-500/20",
+  BS: "bg-teal-900/20 border-teal-900/40 hover:border-teal-500/50 hover:shadow-teal-500/20",
+  GS: "bg-rose-900/20 border-rose-900/40 hover:border-rose-500/50 hover:shadow-rose-500/20",
+  BD: "bg-cyan-900/20 border-cyan-900/40 hover:border-cyan-500/50 hover:shadow-cyan-500/20",
+  GD: "bg-fuchsia-900/20 border-fuchsia-900/40 hover:border-fuchsia-500/50 hover:shadow-fuchsia-500/20",
+};
+
 export function UmpireTournamentTab({ onStartMatch }: Props) {
   const { isAdmin, profile } = useAuth();
   const [allMatches, setAllMatches] = useState<TournamentMatchForUmpire[]>([]);
@@ -163,7 +175,12 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
       })
       .sort((a, b) => new Date(a.scheduled_at!).getTime() - new Date(b.scheduled_at!).getTime());
 
-    const availableDates = [...new Set(upcomingScheduled.map(m => new Date(m.scheduled_at!).toLocaleDateString()))];
+    const dateCounts = upcomingScheduled.reduce((acc, m) => {
+      const d = new Date(m.scheduled_at!).toLocaleDateString();
+      acc[d] = (acc[d] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    const availableDates = Object.keys(dateCounts);
     const availableCourts = [...new Set(upcomingScheduled.filter(m => m.court_number).map(m => m.court_number!))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
     if (upcomingSearch.trim()) {
@@ -192,7 +209,7 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <CalendarDays className="w-5 h-5 text-blue-400" />
-                <h3 className="text-sm font-black text-foreground">Upcoming Scheduled Matches</h3>
+                <h3 className="text-sm font-black text-foreground">Upcoming Scheduled Matches ({upcomingScheduled.length})</h3>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <input 
@@ -217,7 +234,7 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
                     className="bg-slate-800 border border-slate-700 text-sm text-foreground rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary cursor-pointer"
                   >
                     <option value="ALL">All Dates</option>
-                    {availableDates.map(d => <option key={d} value={d}>{d}</option>)}
+                    {availableDates.map(d => <option key={d} value={d}>{d} ({dateCounts[d]})</option>)}
                   </select>
                 )}
                 {availableCourts.length > 0 && (
@@ -252,7 +269,7 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
                       "relative w-full p-4 sm:p-5 rounded-2xl border text-left transition-all duration-300 group overflow-hidden shadow-sm",
                       noPlayers
                         ? "bg-slate-800/40 border-slate-800/50 opacity-60 cursor-not-allowed"
-                        : "bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 hover:border-primary/50 hover:shadow-primary/20 hover:shadow-lg hover:-translate-y-1 cursor-pointer"
+                        : `${CAT_BOX_COLORS_DARK[m.category] || "bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 hover:border-primary/50 hover:shadow-primary/20"} hover:shadow-lg hover:-translate-y-1 cursor-pointer`
                     )}
                   >
                     {!noPlayers && (
@@ -423,7 +440,7 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
                               ? "bg-gradient-to-br from-amber-950/40 to-slate-900 border-amber-500/50 hover:border-amber-400 hover:shadow-amber-500/20 hover:-translate-y-1"
                               : noPlayers
                                 ? "bg-slate-800/40 border-slate-800/50 opacity-60 cursor-not-allowed"
-                                : "bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 hover:border-primary/50 hover:shadow-primary/20 hover:shadow-lg hover:-translate-y-1"
+                                : `${CAT_BOX_COLORS_DARK[m.category] || "bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 hover:border-primary/50 hover:shadow-primary/20"} hover:shadow-lg hover:-translate-y-1`
                           )}
                         >
                           {!noPlayers && !isLive && (

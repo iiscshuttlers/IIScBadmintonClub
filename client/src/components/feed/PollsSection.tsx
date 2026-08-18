@@ -391,18 +391,18 @@ export function PollsSection() {
         </motion.div>
       ))}
 
-      {polls.filter(p => p.is_archived).length > 0 && (
-        <div className="mt-8">
-          <div className="flex items-center gap-2 mb-4 px-2">
-            <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Archived Polls</h3>
-            <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800"></div>
-          </div>
-          <div className="space-y-4">
+      {isMasterAdmin && polls.filter(p => p.is_archived).length > 0 && (
+        <details className="mt-8 group border border-slate-200 dark:border-slate-800 rounded-2xl bg-white/50 dark:bg-slate-900/50">
+          <summary className="flex items-center gap-2 p-4 cursor-pointer list-none outline-none">
+            <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex-1">Archived Polls</h3>
+            <span className="text-muted-foreground group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div className="p-4 pt-0 space-y-4">
             {polls.filter(p => p.is_archived).map(poll => (
               <PollCard key={poll.id} poll={poll} onVote={handleVote} onArchive={isMasterAdmin ? handleArchive : undefined} onDelete={isMasterAdmin ? handleDelete : undefined} onNotify={isMasterAdmin ? handleNotify : undefined} onToggleReveal={isMasterAdmin ? handleToggleReveal : undefined} currentUserId={profile?.id} isAdmin={isMasterAdmin} />
             ))}
           </div>
-        </div>
+        </details>
       )}
     </div>
   );
