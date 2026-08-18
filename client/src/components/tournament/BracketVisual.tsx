@@ -33,7 +33,16 @@ interface BracketVisualProps {
 }
 
 const MATCH_W = 180;
-const MATCH_H = 90;
+// A match box holds a header plus two player rows. MATCH_H was hardcoded to 90
+// with no relationship to the row height it has to contain, so on mobile
+// (20 + 44 + 44 = 108) the second player's name was sliced in half by the
+// box's overflow-hidden. Derived from the same numbers so they cannot drift.
+const HEADER_H = 20;
+const PLAYER_ROW_H_MOBILE = 44; // >=44 keeps the mobile touch target usable
+const PLAYER_ROW_H_DESKTOP = 36;
+// Sized for the taller (mobile) case; the box is vertically centred, so desktop
+// simply gets a little extra breathing room rather than clipping.
+const MATCH_H = HEADER_H + PLAYER_ROW_H_MOBILE * 2;
 const COL_GAP = 40;
 const COL_W = MATCH_W + COL_GAP;
 const PADDING = 16;
@@ -607,7 +616,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
   };
 
   // Touch target height for player rows (min 44px for mobile)
-  const playerRowH = isMobile ? 44 : 36;
+  const playerRowH = isMobile ? PLAYER_ROW_H_MOBILE : PLAYER_ROW_H_DESKTOP;
 
   return (
     <div className="rounded-2xl border border-slate-700 overflow-hidden" style={{ background: "#0d1117" }}>
