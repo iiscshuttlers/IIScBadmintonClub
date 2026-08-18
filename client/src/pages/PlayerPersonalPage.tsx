@@ -109,9 +109,9 @@ type FormatTab = (typeof FORMAT_TABS)[number];
 
 const STATUS_CONFIG = [
   { id: "looking", short: "Available", dot: "bg-primary", active: "bg-primary/20 text-primary dark:text-primary/70 ring-1 ring-primary/40" },
-  { id: "playing", short: "Playing", dot: "bg-amber-400", active: "bg-amber-500/20 text-amber-700 dark:text-amber-300 ring-1 ring-amber-400/40" },
-  { id: "resting", short: "Resting", dot: "bg-indigo-400", active: "bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-400/40" },
-  { id: "injured", short: "Injured", dot: "bg-rose-400", active: "bg-rose-500/20 text-rose-700 dark:text-rose-300 ring-1 ring-rose-400/40" },
+  { id: "playing", short: "Playing", dot: "bg-[var(--status-playing)]", active: "bg-[var(--status-playing)]/20 text-[var(--status-playing)] dark:text-[var(--status-playing)] ring-1 ring-[var(--status-playing)]/40" },
+  { id: "resting", short: "Resting", dot: "bg-[var(--status-resting)]", active: "bg-[var(--status-resting)]/20 text-[var(--status-resting)] dark:text-[var(--status-resting)] ring-1 ring-[var(--status-resting)]/40" },
+  { id: "injured", short: "Injured", dot: "bg-[var(--status-injured)]", active: "bg-[var(--status-injured)]/20 text-[var(--status-injured)] dark:text-[var(--status-injured)] ring-1 ring-[var(--status-injured)]/40" },
 ] as const;
 
 function MotionStatBar({ label, pct, color }: { label: string; pct: number; color: string }) {
@@ -183,20 +183,20 @@ function ComparisonRow({ label, a, b, aLabel, bLabel, suffix = "%" }: { label: s
     <div>
       <div className="text-xs font-bold text-muted-foreground mb-1">{label}</div>
       <div className="flex items-center gap-2">
-        <div className="w-10 text-right text-[10px] font-black text-blue-500">{aLabel}</div>
+        <div className="w-10 text-right text-[10px] font-black text-[var(--series-a)]">{aLabel}</div>
         <div className="flex-1 flex items-center gap-0.5">
           <div className="flex-1 flex justify-end">
-            <div className="h-2.5 rounded-l-full bg-blue-400" style={{ width: `${(a / max) * 100}%` }} />
+            <div className="h-2.5 rounded-l-full bg-[var(--series-a)]" style={{ width: `${(a / max) * 100}%` }} />
           </div>
           <div className="flex-1">
-            <div className="h-2.5 rounded-r-full bg-rose-500" style={{ width: `${(b / max) * 100}%` }} />
+            <div className="h-2.5 rounded-r-full bg-[var(--series-b)]" style={{ width: `${(b / max) * 100}%` }} />
           </div>
         </div>
-        <div className="w-10 text-[10px] font-black text-rose-500">{bLabel}</div>
+        <div className="w-10 text-[10px] font-black text-[var(--series-b)]">{bLabel}</div>
       </div>
       <div className="flex justify-between mt-0.5">
-        <span className="text-[10px] font-bold text-blue-500">{a.toFixed(0)}{suffix}</span>
-        <span className="text-[10px] font-bold text-rose-500">{b.toFixed(0)}{suffix}</span>
+        <span className="text-[10px] font-bold text-[var(--series-a)]">{a.toFixed(0)}{suffix}</span>
+        <span className="text-[10px] font-bold text-[var(--series-b)]">{b.toFixed(0)}{suffix}</span>
       </div>
     </div>
   );
@@ -258,9 +258,9 @@ function MotionAnalyticsPanels({ motionMatches }: { motionMatches: MotionMatch[]
       )}
 
       {mostIntense && (
-        <div className="bg-gradient-to-br from-rose-500/10 to-amber-500/10 rounded-2xl shadow-md border border-rose-200 dark:border-rose-800/30 p-5">
+        <div className="bg-gradient-to-br from-[var(--series-b)]/10 to-amber-500/10 rounded-2xl shadow-md border border-[var(--series-b)] dark:border-[var(--series-b)]/30 p-5">
           <div className="flex items-center gap-2 mb-2">
-            <Flame className="w-5 h-5 text-rose-500" />
+            <Flame className="w-5 h-5 text-[var(--series-b)]" />
             <h2 className="font-black text-slate-800 dark:text-slate-100">Most Intense Match</h2>
           </div>
           <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{mostIntense.tournamentName}</p>
@@ -532,7 +532,7 @@ function HomeSection({ player, matches, fullMatches, currentUser }: { player: an
                       className={`flex h-7 w-7 items-center justify-center rounded-md text-xs font-black ${
                         r === "W"
                           ? "bg-primary text-primary-foreground"
-                          : "bg-rose-500 text-white"
+                          : "bg-[var(--series-b)] text-white"
                       }`}
                     >
                       {r}
@@ -754,12 +754,12 @@ function MatchesSection({ matches, fullMatches, formatTab, setFormatTab, current
               }`}
             >
               <Icon className={`w-5 h-5 mb-2 ${
-                s.color === "blue" ? "text-blue-500" : s.color === "green" ? "text-green-500" : "text-amber-500"
+                s.color === "blue" ? "text-[var(--series-a)]" : s.color === "green" ? "text-green-500" : "text-amber-500"
               }`} />
               <div className="text-sm font-black text-slate-800 dark:text-slate-100">{s.count}</div>
               <div className="text-[10px] font-bold text-muted-foreground">{s.label}</div>
               <div className={`text-xs font-bold mt-1 ${
-                s.color === "blue" ? "text-blue-600 dark:text-blue-400" : s.color === "green" ? "text-green-600 dark:text-green-400" : "text-amber-600 dark:text-amber-400"
+                s.color === "blue" ? "text-[var(--series-a)] dark:text-[var(--series-a)]" : s.color === "green" ? "text-green-600 dark:text-green-400" : "text-amber-600 dark:text-amber-400"
               }`}>{s.winRate}% win</div>
             </button>
           );
@@ -1203,7 +1203,7 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 shadow-md border border-slate-100 dark:border-slate-700/50">
               <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Singles</div>
-              <div className="text-2xl font-black text-blue-500">{stats.singles.winRate}%</div>
+              <div className="text-2xl font-black text-[var(--series-a)]">{stats.singles.winRate}%</div>
               <div className="text-xs text-muted-foreground">{stats.singles.count} matches</div>
             </div>
             <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 shadow-md border border-slate-100 dark:border-slate-700/50">
@@ -1242,15 +1242,15 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
             </div>
           )}
           {isSensorsEmpty && !isSelfTracking && (
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/30 rounded-xl p-4 flex flex-col items-center text-center">
-              <Footprints className="w-5 h-5 text-blue-500 mb-2" />
-              <p className="text-sm text-blue-700 dark:text-blue-300 font-medium mb-3">
+            <div className="bg-blue-50 dark:bg-[var(--series-a)]/20 border border-[var(--series-a)] dark:border-[var(--series-a)]/30 rounded-xl p-4 flex flex-col items-center text-center">
+              <Footprints className="w-5 h-5 text-[var(--series-a)] mb-2" />
+              <p className="text-sm text-[var(--series-a)] dark:text-[var(--series-a)] font-medium mb-3">
                 No motion data yet. You can track motion yourself, or the umpire can track it for you.
               </p>
               {isCurrentUser && (
                 <button
                   onClick={() => setIsSelfTracking(true)}
-                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow transition hover:bg-blue-700"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--series-a)] px-3 py-1.5 text-xs font-bold text-white shadow transition hover:bg-[var(--series-a)]"
                 >
                   <ActivitySquare className="w-3 h-3" />
                   Start Self-Tracking
@@ -1263,7 +1263,7 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
             <div className="flex justify-end mt-2 mb-4">
               <button
                 onClick={() => setIsSelfTracking(true)}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow transition hover:bg-blue-700"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--series-a)] px-4 py-2 text-sm font-bold text-white shadow transition hover:bg-[var(--series-a)]"
               >
                 <ActivitySquare className="w-4 h-4" />
                 Record New Match
@@ -1307,7 +1307,7 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
 
               <div className="grid grid-cols-3 gap-4 mb-4">
                 <div className="flex items-center gap-2">
-                  <Gauge className="w-4 h-4 text-blue-500" />
+                  <Gauge className="w-4 h-4 text-[var(--series-a)]" />
                   <div>
                     <div className="text-lg font-black text-slate-800 dark:text-slate-100">{effMotion.avgMagnitude.toFixed(1)}</div>
                     <div className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1">
@@ -1345,7 +1345,7 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Flame className="w-4 h-4 text-rose-500" />
+                  <Flame className="w-4 h-4 text-[var(--series-b)]" />
                   <div>
                     <div className="text-lg font-black text-slate-800 dark:text-slate-100">{effWorkRate.toFixed(0)}</div>
                     <div className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1">
@@ -1367,9 +1367,9 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
 
               <div className="space-y-2.5">
                 <MotionStatBar label="Idle" pct={effMotion.idlePct} color="bg-slate-400" />
-                <MotionStatBar label="Walking" pct={effMotion.walkingPct} color="bg-blue-400" />
+                <MotionStatBar label="Walking" pct={effMotion.walkingPct} color="bg-[var(--series-a)]" />
                 <MotionStatBar label="Running" pct={effMotion.runningPct} color="bg-amber-500" />
-                <MotionStatBar label="Smash Sprint" pct={effMotion.smashSprintPct} color="bg-rose-500" />
+                <MotionStatBar label="Smash Sprint" pct={effMotion.smashSprintPct} color="bg-[var(--series-b)]" />
               </div>
 
               {motionMatches && motionMatches.length > 0 && (
@@ -1390,13 +1390,13 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
                         </div>
                         <div className="flex items-center gap-3 text-right">
                           <div>
-                            <div className="text-sm font-black text-rose-500">{m.workRate.toFixed(0)}</div>
+                            <div className="text-sm font-black text-[var(--series-b)]">{m.workRate.toFixed(0)}</div>
                             <div className="text-[10px] text-muted-foreground uppercase">Work-Rate</div>
                           </div>
                           {isCurrentUser && (
                             <button 
                               onClick={() => handleDeleteSession(m.matchId, m.source)}
-                              className="text-slate-400 hover:text-rose-500 transition-colors p-2 -mr-2"
+                              className="text-slate-400 hover:text-[var(--series-b)] transition-colors p-2 -mr-2"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -1424,14 +1424,14 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
                     <div>
                       <div className="text-xs font-bold text-muted-foreground mb-3 uppercase tracking-wider">Shot Distribution</div>
                       <div className="flex h-3 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-700">
-                        <div className="bg-rose-500" style={{ width: `${(effSensors.smashCount / effSensors.totalSwings) * 100}%` }} title="Smash" />
-                        <div className="bg-blue-500" style={{ width: `${(effSensors.clearCount / effSensors.totalSwings) * 100}%` }} title="Clear" />
+                        <div className="bg-[var(--series-b)]" style={{ width: `${(effSensors.smashCount / effSensors.totalSwings) * 100}%` }} title="Smash" />
+                        <div className="bg-[var(--series-a)]" style={{ width: `${(effSensors.clearCount / effSensors.totalSwings) * 100}%` }} title="Clear" />
                         <div className="bg-amber-500" style={{ width: `${(effSensors.driveCount / effSensors.totalSwings) * 100}%` }} title="Drive" />
                         <div className="bg-emerald-500" style={{ width: `${(effSensors.netShotCount / effSensors.totalSwings) * 100}%` }} title="Net Shot" />
                       </div>
                       <div className="flex justify-between mt-2 text-[10px] font-bold text-muted-foreground">
-                        <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-rose-500"/> Smash</div>
-                        <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-blue-500"/> Clear</div>
+                        <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-[var(--series-b)]"/> Smash</div>
+                        <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-[var(--series-a)]"/> Clear</div>
                         <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-amber-500"/> Drive</div>
                         <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500"/> Net</div>
                       </div>
@@ -1652,7 +1652,7 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
                       </div>
                       <span className={cn(
                         "text-xs font-black uppercase px-3 py-1.5 rounded-full",
-                        trainingLoad.riskLabel === "elevated" ? "bg-rose-500/15 text-rose-600 dark:text-rose-400" :
+                        trainingLoad.riskLabel === "elevated" ? "bg-[var(--series-b)]/15 text-[var(--series-b)] dark:text-[var(--series-b)]" :
                         trainingLoad.riskLabel === "undertrained" ? "bg-amber-500/15 text-amber-600 dark:text-amber-400" :
                         "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
                       )}>
@@ -1669,10 +1669,10 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
         <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
           
           {!isHealthConnectEnabled ? (
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/30 rounded-xl p-6 text-center">
-              <Watch className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-              <h3 className="font-bold text-blue-800 dark:text-blue-300 mb-1">Connect Health Connect</h3>
-              <p className="text-sm text-blue-700/80 dark:text-blue-400 max-w-sm mx-auto mb-5">
+            <div className="bg-blue-50 dark:bg-[var(--series-a)]/20 border border-[var(--series-a)] dark:border-[var(--series-a)]/30 rounded-xl p-6 text-center">
+              <Watch className="w-8 h-8 text-[var(--series-a)] mx-auto mb-2" />
+              <h3 className="font-bold text-[var(--series-a)] dark:text-[var(--series-a)] mb-1">Connect Health Connect</h3>
+              <p className="text-sm text-[var(--series-a)]/80 dark:text-[var(--series-a)] max-w-sm mx-auto mb-5">
                 Link your smartwatch via Android Health Connect to unlock rich insights like heart rate zones, calories burned, and sleep quality analysis to improve your game!
               </p>
               <button
@@ -1681,7 +1681,7 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
                   setIsHealthConnectEnabled(true);
                   handleManualSync(); // Immediately prompt permissions
                 }}
-                className="flex items-center justify-center mx-auto gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+                className="flex items-center justify-center mx-auto gap-2 rounded-xl bg-[var(--series-a)] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--series-a)]"
               >
                 Connect to Health Connect
               </button>
@@ -1710,14 +1710,14 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
                       HealthConnect.openHealthConnectSettings();
                       toast.info("Please revoke permissions in Settings to fully disconnect.");
                     }}
-                    className="rounded-lg bg-rose-50 dark:bg-rose-900/20 px-3 py-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 transition hover:bg-rose-100 border border-rose-200 dark:border-rose-800/30"
+                    className="rounded-lg bg-rose-50 dark:bg-[var(--series-b)]/20 px-3 py-1.5 text-xs font-semibold text-[var(--series-b)] dark:text-[var(--series-b)] transition hover:bg-[var(--series-b)] border border-[var(--series-b)] dark:border-[var(--series-b)]/30"
                   >
                     Disconnect
                   </button>
                   {isCurrentUser && (
                     <button
                       onClick={handleDeleteHealthData}
-                      className="rounded-lg bg-rose-50 dark:bg-rose-900/20 px-3 py-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 transition hover:bg-rose-100 border border-rose-200 dark:border-rose-800/30"
+                      className="rounded-lg bg-rose-50 dark:bg-[var(--series-b)]/20 px-3 py-1.5 text-xs font-semibold text-[var(--series-b)] dark:text-[var(--series-b)] transition hover:bg-[var(--series-b)] border border-[var(--series-b)] dark:border-[var(--series-b)]/30"
                     >
                       Delete My Data
                     </button>
@@ -1731,7 +1731,7 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
                     <button
                       onClick={handleManualSync}
                       disabled={isSyncingWatch}
-                      className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-50"
+                      className="flex items-center justify-center gap-2 rounded-xl bg-[var(--series-a)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--series-a)] disabled:opacity-50"
                     >
                       {isSyncingWatch ? <RefreshCw className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
                       Sync Watch Data
@@ -1785,7 +1785,7 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl">
                   <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Total Steps</div>
-                  <div className="text-xl font-bold text-blue-500">{Math.round(effHealth.totalSteps)}</div>
+                  <div className="text-xl font-bold text-[var(--series-a)]">{Math.round(effHealth.totalSteps)}</div>
                 </div>
               </div>
 
@@ -1797,7 +1797,7 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
                       <span className={cn(
                         "text-[10px] font-black uppercase px-2 py-1 rounded-full",
                         effHealth.readiness === "above" ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" :
-                        effHealth.readiness === "below" ? "bg-rose-500/15 text-rose-600 dark:text-rose-400" :
+                        effHealth.readiness === "below" ? "bg-[var(--series-b)]/15 text-[var(--series-b)] dark:text-[var(--series-b)]" :
                         "bg-slate-500/15 text-slate-600 dark:text-slate-400"
                       )}>
                         {effHealth.readiness === "above" ? "Above your average" : effHealth.readiness === "below" ? "Below your average" : "Typical for you"}
@@ -1971,9 +1971,9 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
       {currentSubTab === "Rallies" && (
         <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
           {motionMatches.length === 0 ? (
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/30 rounded-xl p-4 flex flex-col items-center text-center">
-              <Route className="w-5 h-5 text-blue-500 mb-2" />
-              <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">
+            <div className="bg-blue-50 dark:bg-[var(--series-a)]/20 border border-[var(--series-a)] dark:border-[var(--series-a)]/30 rounded-xl p-4 flex flex-col items-center text-center">
+              <Route className="w-5 h-5 text-[var(--series-a)] mb-2" />
+              <p className="text-sm text-[var(--series-a)] dark:text-[var(--series-a)] font-medium">
                 No tracked matches yet. Record a practice session or umpire a match with motion tracking on to see rally breakdowns and court paths here.
               </p>
             </div>
@@ -2060,16 +2060,16 @@ function TrainingSection() {
 
   return (
     <div className="space-y-5">
-      <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-2xl shadow-md border border-blue-200 dark:border-blue-800/30 p-6">
+      <div className="bg-gradient-to-br from-[var(--series-a)]/10 to-cyan-500/10 rounded-2xl shadow-md border border-[var(--series-a)] dark:border-[var(--series-a)]/30 p-6">
         <div className="text-center mb-6">
-          <Dumbbell className="w-8 h-8 text-blue-600 dark:text-blue-400 mx-auto mb-3" />
+          <Dumbbell className="w-8 h-8 text-[var(--series-a)] dark:text-[var(--series-a)] mx-auto mb-3" />
           <h2 className="font-black text-xl text-slate-800 dark:text-slate-100 mb-1">ACE Training Hub</h2>
           <p className="text-sm text-slate-600 dark:text-slate-400">Live data imported from the Brainy app</p>
         </div>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-8">
-            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+            <div className="w-8 h-8 border-4 border-[var(--series-a)] border-t-transparent rounded-full animate-spin mb-3"></div>
             <p className="text-sm text-slate-500">Syncing with ACE...</p>
           </div>
         ) : error ? (
@@ -2084,7 +2084,7 @@ function TrainingSection() {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               <div className="bg-white dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm text-center">
                 <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold mb-1">Total Sessions</p>
-                <p className="text-2xl font-black text-blue-600 dark:text-blue-400">{data.sessions?.length || 0}</p>
+                <p className="text-2xl font-black text-[var(--series-a)] dark:text-[var(--series-a)]">{data.sessions?.length || 0}</p>
               </div>
               <div className="bg-white dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm text-center">
                 <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold mb-1">Active Goals</p>
@@ -2100,7 +2100,7 @@ function TrainingSection() {
             {data.sessions && data.sessions.length > 0 && (
               <div>
                 <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center">
-                  <ActivitySquare className="w-4 h-4 mr-2 text-blue-500" /> Recent Sessions
+                  <ActivitySquare className="w-4 h-4 mr-2 text-[var(--series-a)]" /> Recent Sessions
                 </h3>
                 <div className="space-y-2">
                   {data.sessions.slice(0, 3).map((session: any) => (
@@ -2340,10 +2340,10 @@ function MeSection({ player }: { player: any }) {
               const content = (
                 <div className="flex items-center gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer group">
                   <div className="flex-shrink-0">
-                    <Icon className={cn("w-5 h-5", item.danger ? "text-rose-500" : "text-muted-foreground group-hover:text-primary")} />
+                    <Icon className={cn("w-5 h-5", item.danger ? "text-[var(--series-b)]" : "text-muted-foreground group-hover:text-primary")} />
                   </div>
                   <div className="flex-1">
-                    <h3 className={cn("font-semibold", item.danger ? "text-rose-600 dark:text-rose-400" : "text-foreground dark:text-foreground")}>
+                    <h3 className={cn("font-semibold", item.danger ? "text-[var(--series-b)] dark:text-[var(--series-b)]" : "text-foreground dark:text-foreground")}>
                       {item.label}
                     </h3>
                     <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5">
@@ -2435,7 +2435,7 @@ function MeSection({ player }: { player: any }) {
             <Button
               onClick={() => setSignOutDialog(true)}
               variant="outline"
-              className="w-full flex items-center justify-center gap-2 border-rose-200 dark:border-rose-900/50 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-600 dark:text-rose-400 hover:text-rose-700 py-6 rounded-xl transition-colors font-bold"
+              className="w-full flex items-center justify-center gap-2 border-[var(--series-b)] dark:border-[var(--series-b)]/50 hover:bg-rose-50 dark:hover:bg-[var(--series-b)]/30 text-[var(--series-b)] dark:text-[var(--series-b)] hover:text-[var(--series-b)] py-6 rounded-xl transition-colors font-bold"
             >
               <LogOut className="w-5 h-5" />
               Sign Out
@@ -2697,7 +2697,7 @@ export default function PlayerPersonalPage() {
           
           <button
             onClick={() => signOut()}
-            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-rose-500/80 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all w-full mt-1"
+            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[var(--series-b)]/80 hover:text-[var(--series-b)] hover:bg-rose-50 dark:hover:bg-[var(--series-b)]/10 transition-all w-full mt-1"
           >
             <LogOut className="w-5 h-5" />
             Sign Out
@@ -2754,7 +2754,7 @@ export default function PlayerPersonalPage() {
                     {player?.email && player?.is_guest === false && player?.status && (
                       <div className="flex items-center gap-1.5">
                         <span className="truncate max-w-[200px] sm:max-w-xs">{player.email}</span>
-                        <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400 px-1.5 py-0.5 rounded-md border border-blue-200 dark:border-blue-800/50">
+                        <span className="text-[10px] font-bold uppercase tracking-wider bg-[var(--series-a)] text-[var(--series-a)] dark:bg-[var(--series-a)]/40 dark:text-[var(--series-a)] px-1.5 py-0.5 rounded-md border border-[var(--series-a)] dark:border-[var(--series-a)]/50">
                           BRAINMINTON Linked
                         </span>
                       </div>
