@@ -48,17 +48,32 @@ export function usePushNotifications(userId: string | undefined) {
         //    is emitted before anyone is listening and never gets saved.
         await PushNotifications.addListener("registration", async (token) => {
           if (userId && token.value) {
-            await supabase
-              .from("user_push_tokens")
-              .upsert(
+            console.log("[Push] Token received, registering via edge function. platform:", Capacitor.getPlatform());
+            try {
+              const { data: { session } } = await supabase.auth.getSession();
+              const res = await fetch(
+                `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/register-push-token`,
                 {
-                  user_id: userId,
-                  token: token.value,
-                  platform: Capacitor.getPlatform(),
-                  updated_at: new Date().toISOString(),
-                },
-                { onConflict: "user_id,token" },
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${session?.access_token ?? import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+                    "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+                  },
+                  body: JSON.stringify({ token: token.value, platform: Capacitor.getPlatform() }),
+                }
               );
+              const result = await res.json();
+              if (!res.ok) {
+                console.error("[Push] Edge function token save failed:", result);
+              } else {
+                console.log("[Push] Token registered via edge function:", result);
+              }
+            } catch (err) {
+              console.error("[Push] Failed to register token:", err);
+            }
+          } else {
+            console.warn("[Push] Registration event fired but userId or token is missing. userId:", userId);
           }
         });
 
@@ -185,12 +200,23 @@ export function usePushNotifications(userId: string | undefined) {
           });
 
           if (token) {
-            await supabase
-              .from("user_push_tokens")
-              .upsert(
-                { user_id: userId, token, platform: "web", updated_at: new Date().toISOString() },
-                { onConflict: "user_id,token" }
+            try {
+              const { data: { session } } = await supabase.auth.getSession();
+              await fetch(
+                `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/register-push-token`,
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${session?.access_token ?? import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+                    "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+                  },
+                  body: JSON.stringify({ token, platform: "web" }),
+                }
               );
+            } catch (err) {
+              console.warn("[WebPush] Failed to register web token:", err);
+            }
 
             onMessage(messaging, (payload) => {
               console.log("[WebPush] Message received in foreground:", payload);
