@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { Mail, Lock, Eye, EyeOff, UserPlus, LogIn, ArrowRight, KeyRound } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, UserPlus, LogIn, ArrowRight, KeyRound, Fingerprint } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getPasswordStrength, type useJoinAuth } from "@/hooks/useJoinAuth";
 
@@ -81,6 +81,19 @@ export function SignInView({ auth }: { auth: JoinAuthContext }) {
       <Button type="submit" disabled={auth.loading} className="w-full py-6 bg-primary hover:bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 transition-all text-base flex items-center justify-center gap-2">
         {auth.loading ? <div className="w-5 h-5 rounded-full border-2 border-black/20 border-t-black/80 animate-spin" /> : <><LogIn className="w-5 h-5" /> Sign In</>}
       </Button>
+
+      {/* Native app only — biometricReady is always false on web/PWA. */}
+      {auth.biometricReady && (
+        <button
+          type="button"
+          onClick={auth.handleBiometricSignIn}
+          disabled={auth.loading}
+          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold text-sm hover:border-primary hover:text-primary dark:hover:text-primary transition"
+        >
+          <Fingerprint className="w-4 h-4 text-primary" />
+          {auth.biometricEmail ? `Sign in as ${auth.biometricEmail}` : "Sign in with Fingerprint"}
+        </button>
+      )}
 
       <div className="relative my-4">
         <div className="absolute inset-0 flex items-center">

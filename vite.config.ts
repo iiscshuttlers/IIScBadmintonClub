@@ -207,7 +207,11 @@ export default defineConfig(() => {
       emptyOutDir: true,
       chunkSizeWarningLimit: 1000,
       rollupOptions: {
-        external: ["capacitor-native-biometric"],
+        // capacitor-native-biometric used to be listed as `external` while it was
+        // uninstalled. It is a real dependency now and is loaded via dynamic
+        // import behind a Capacitor.isNativePlatform() guard, so Rollup must be
+        // allowed to resolve and chunk it — marking it external would emit a
+        // bare import the browser cannot resolve and break the web build.
         output: {
           manualChunks: {
             vendor: ["react", "react-dom", "wouter"],

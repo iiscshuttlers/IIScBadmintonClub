@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import { storeRefreshToken } from "@/lib/biometricAuth";
 
 export interface SupabaseSessionResult {
   /** The current Supabase session, or null if signed out / not yet resolved. */
@@ -81,7 +82,16 @@ export function useSupabaseSession(): SupabaseSessionResult {
     // Primary: onAuthStateChange fires INITIAL_SESSION immediately on mount.
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, s) => resolve(s));
+    } = supabase.auth.onAuthStateChange((event, s) => {
+      resolve(s);
+      // Biometric enrolment keeps a copy of the refresh token in the device
+      // keystore, and Supabase rotates that token on every refresh — so the
+      // copy has to follow. No-op on web and unless the user has opted in;
+      // swallows its own errors, so it cannot disturb session resolution.
+      if (event === "TOKEN_REFRESHED" || event === "SIGNED_IN") {
+        void storeRefreshToken(s);
+      }
+    });
 
     // Fallback: in case the listener never fires (misconfigured client, etc.)
     supabase.auth

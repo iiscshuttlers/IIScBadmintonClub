@@ -1,9 +1,17 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFormDraft } from "@/hooks/useFormDraft";
 import { toast } from "sonner";
+import {
+  biometricSignIn,
+  enableBiometricLogin,
+  getBiometricEmail,
+  isBiometricAvailable,
+  isBiometricEnabled,
+} from "@/lib/biometricAuth";
 
 export type Mode = "welcome" | "signin" | "signup" | "otp-email" | "otp-verify";
 
@@ -31,7 +39,22 @@ export function useJoinAuth() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [inactivityLogout, setInactivityLogout] = useState(false);
 
+  // Native-only. Stays false on web/PWA, so the sign-in UI is unchanged there.
+  const [biometricReady, setBiometricReady] = useState(false);
+  const biometricEmail = getBiometricEmail();
+
   const { session, profile, isInitializing } = useAuth();
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!isBiometricEnabled()) return;
+    isBiometricAvailable().then((available) => {
+      if (!cancelled) setBiometricReady(available);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const reset = () => {
     setPassword("");
@@ -70,6 +93,50 @@ export function useJoinAuth() {
     }
   }, [isInitializing, session, profile, setLocation]);
 
+  /**
+   * After a successful sign-in on a native device, offer to store the session
+   * behind biometrics. Silent on web, silent if already enrolled, and wrapped
+   * so a failure here can never break the sign-in it follows.
+   */
+  const offerBiometricEnrolment = async (newSession: Session | null) => {
+    try {
+      if (isBiometricEnabled()) return;
+      if (!(await isBiometricAvailable())) return;
+      toast("Enable fingerprint sign-in?", {
+        description: "Skip typing your password next time on this device.",
+        duration: 10000,
+        action: {
+          label: "Enable",
+          onClick: async () => {
+            if (await enableBiometricLogin(newSession)) {
+              toast.success("Fingerprint sign-in enabled");
+            }
+          },
+        },
+      });
+    } catch {
+      /* enrolment is entirely optional */
+    }
+  };
+
+  const handleBiometricSignIn = async () => {
+    setLoading(true);
+    setErrorMsg("");
+    const result = await biometricSignIn();
+
+    if (result === "ok") {
+      sessionStorage.removeItem("guest_mode");
+      return; // the redirect effect above takes it from here
+    }
+
+    setLoading(false);
+    if (result === "expired") {
+      setBiometricReady(false);
+      setErrorMsg("Fingerprint sign-in expired. Sign in with your password once to re-enable it.");
+    }
+    // "cancelled" — the user dismissed the prompt; stay quiet.
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -89,6 +156,7 @@ export function useJoinAuth() {
       if (!data.session) throw new Error("Sign in failed — no session returned. Please try again.");
       
       sessionStorage.removeItem("guest_mode");
+      offerBiometricEnrolment(data.session);
       if (new URLSearchParams(window.location.search).get("add_account") === "true") {
         setLocation("/");
       }
@@ -249,6 +317,7 @@ export function useJoinAuth() {
     confirm, setConfirm, showPwd, setShowPwd, otp, setOtp,
     infoMsg, setInfoMsg, errorMsg, setErrorMsg, agreedToTerms, setAgreedToTerms,
     inactivityLogout, setInactivityLogout, reset,
+    biometricReady, biometricEmail, handleBiometricSignIn,
     handleSignIn, handleSignUp, handleResendLink, handleSendOtp, handleVerifyOtp, handleGoogleSignIn
   };
 }
