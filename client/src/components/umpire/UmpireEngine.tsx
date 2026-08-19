@@ -465,6 +465,10 @@ export function UmpireEngine({
     if (!tournamentMatch) return null;
     const tm = tournamentMatch;
     const isDoublesMatch = ["MD", "WD", "XD"].includes(tm.category);
+
+    /** Bracket labels are one string ("Alphy Joseph & SWATHI VIJAYARAJ"). */
+    const splitTeamLabel = (label: string | null | undefined): string[] =>
+      (label ?? "").split(/[&,]/).map((s) => s.trim()).filter(Boolean);
     const CAT_BADGE: Record<string, string> = {
       MS: "bg-blue-600", WS: "bg-pink-600", MD: "bg-primary",
       WD: "bg-purple-600", XD: "bg-orange-600",
@@ -540,7 +544,7 @@ export function UmpireEngine({
               { team: 2, label: tm.team2_label ?? "Team 2" },
             ].map(({ team, label }) => (
               <button key={team}
-                onClick={() => setMatch({ ...match, serverTeam: team as 1 | 2, serverPlayerIndex: 0 })}
+                onClick={() => setMatch({ ...match, serverTeam: team as 1 | 2, serverPlayerIndex: 0, receiverPlayerIndex: 0 })}
                 className={`py-3 px-3 rounded-xl font-black text-sm border transition text-center ${
                   match.serverTeam === team
                     ? "bg-primary/20 border-primary text-primary"
@@ -551,25 +555,56 @@ export function UmpireEngine({
             ))}
           </div>
           {isDoublesMatch && (
-            <div className="grid grid-cols-2 gap-2 pt-1">
-              {[0, 1].map((idx) => {
-                const serving = match.serverTeam === 1;
-                const teamLabel = serving ? tm.team1_label : tm.team2_label;
-                const names = (teamLabel ?? "").split(/[&,]/).map((s) => s.trim());
-                const name = names[idx] ?? `Player ${idx + 1}`;
-                return (
-                  <button key={idx}
-                    onClick={() => setMatch({ ...match, serverPlayerIndex: idx as 0 | 1 })}
-                    className={`py-2 px-3 rounded-xl text-xs font-black border transition ${
-                      match.serverPlayerIndex === idx
-                        ? "bg-[color-mix(in_srgb,var(--info)_20%,transparent)] border-[var(--info)] text-[var(--info)]"
-                        : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"
-                    }`}>
-                    {name}
-                  </button>
-                );
-              })}
-            </div>
+            <>
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pt-1">Server within team</p>
+              <div className="grid grid-cols-2 gap-2">
+                {[0, 1].map((idx) => {
+                  const teamLabel = match.serverTeam === 1 ? tm.team1_label : tm.team2_label;
+                  const names = splitTeamLabel(teamLabel);
+                  // Don't offer a second player the team doesn't actually have.
+                  if (idx === 1 && names.length < 2) return null;
+                  const name = names[idx] ?? `Player ${idx + 1}`;
+                  return (
+                    <button key={idx}
+                      onClick={() => setMatch({ ...match, serverPlayerIndex: idx as 0 | 1 })}
+                      className={`py-2 px-3 rounded-xl text-xs font-black border transition ${
+                        match.serverPlayerIndex === idx
+                          ? "bg-[color-mix(in_srgb,var(--info)_20%,transparent)] border-[var(--info)] text-[var(--info)]"
+                          : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"
+                      }`}>
+                      {name}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* The tournament setup never asked who receives, so
+                  receiverPlayerIndex stayed at its default of 0. That now seeds
+                  the receiving pair's court positions in startTournamentMatch,
+                  so guessing it puts them on the wrong side from the first rally. */}
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pt-1">
+                First Receiver <span className="normal-case text-muted-foreground">(BWF 9.4)</span>
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {[0, 1].map((idx) => {
+                  const receivingLabel = match.serverTeam === 1 ? tm.team2_label : tm.team1_label;
+                  const names = splitTeamLabel(receivingLabel);
+                  if (idx === 1 && names.length < 2) return null;
+                  const name = names[idx] ?? `Player ${idx + 1}`;
+                  return (
+                    <button key={idx}
+                      onClick={() => setMatch({ ...match, receiverPlayerIndex: idx as 0 | 1 })}
+                      className={`py-2 px-3 rounded-xl text-xs font-black border transition ${
+                        match.receiverPlayerIndex === idx
+                          ? "bg-[color-mix(in_srgb,var(--warning)_20%,transparent)] border-[var(--warning)] text-[var(--warning)]"
+                          : "bg-slate-700/50 border-slate-700 text-muted-foreground hover:border-slate-500"
+                      }`}>
+                      {name}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
 
