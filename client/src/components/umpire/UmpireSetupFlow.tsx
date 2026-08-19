@@ -46,7 +46,8 @@ export function UmpireSetupFlow({
   const t1Label = teamLabel(t1p1Name, t1p2Name, "Team 1");
   const t2Label = teamLabel(t2p1Name, t2p2Name, "Team 2");
   const playersReady = !!(match.t1.p1Id && match.t2.p1Id);
-  const isDoubles = !!(match.t1.p2Id || match.t2.p2Id);
+  // Match the rest of the umpire flow: a partner may exist by name only.
+  const isDoubles = !!(match.t1.p2Id || match.t1.p2Name || match.t2.p2Id || match.t2.p2Name);
 
   // initials avatar helper
   const initials = (name: string) => name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
@@ -287,7 +288,10 @@ export function UmpireSetupFlow({
                 const label = t === 1 ? t1Label : t2Label;
                 return (
                   <button key={t}
-                    onClick={() => setMatch({ ...match, serverTeam: t })}
+                    // Reset both indices: changing who serves also changes which
+                    // pair is receiving, so a previously-picked receiver would
+                    // now refer to the wrong team.
+                    onClick={() => setMatch({ ...match, serverTeam: t, serverPlayerIndex: 0, receiverPlayerIndex: 0 })}
                     className={`py-2.5 rounded-xl font-bold text-sm border transition truncate ${match.serverTeam === t ? "bg-primary/20 border-primary text-primary" : "bg-slate-800 border-slate-700 text-muted-foreground hover:border-slate-500"}`}
                   >{label} serves</button>
                 );
@@ -301,10 +305,15 @@ export function UmpireSetupFlow({
                 <div className="grid grid-cols-2 gap-2">
                   {([0, 1] as const).map(i => {
                     const servingTeam = match.serverTeam === 1 ? match.t1 : match.t2;
-                    const pName = i === 0
-                      ? (servingTeam.p1Id ? getName(servingTeam.p1Id).split(" ")[0] : "P1")
-                      : (servingTeam.p2Id ? getName(servingTeam.p2Id).split(" ")[0] : "P2");
-                    if (i === 1 && !servingTeam.p2Id) return null;
+                    // Same as the receiver picker below: fall back to the stored
+                    // name when the partner has no linked player record.
+                    const nameForServer = (id: string | undefined, fallback: string | undefined) =>
+                      (id ? getName(id) : "") || fallback || "";
+                    const rawServer = i === 0
+                      ? nameForServer(servingTeam.p1Id, servingTeam.p1Name)
+                      : nameForServer(servingTeam.p2Id, servingTeam.p2Name);
+                    const pName = rawServer ? rawServer.split(" ")[0] : (i === 0 ? "P1" : "P2");
+                    if (i === 1 && !servingTeam.p2Id && !servingTeam.p2Name) return null;
                     return (
                       <button key={i}
                         onClick={() => setMatch({ ...match, serverPlayerIndex: i })}

@@ -428,8 +428,11 @@ export function useUmpireState({
         // receive stay correct for the rest of the game.
         t1RightCourt: (match.serverTeam === 1 ? match.serverPlayerIndex : match.receiverPlayerIndex) as 0 | 1,
         t2RightCourt: (match.serverTeam === 2 ? match.serverPlayerIndex : match.receiverPlayerIndex) as 0 | 1,
-        t1: { ...match.t1, p1Name: getName(match.t1.p1Id), p2Name: match.t1.p2Id ? getName(match.t1.p2Id) : undefined },
-        t2: { ...match.t2, p1Name: getName(match.t2.p1Id), p2Name: match.t2.p2Id ? getName(match.t2.p2Id) : undefined },
+        // Resolve names from player records, but keep any existing p2Name when
+        // the partner has no linked record — blanking it here would contradict
+        // the doubles check, which now also accepts a partner known by name.
+        t1: { ...match.t1, p1Name: getName(match.t1.p1Id) || match.t1.p1Name, p2Name: match.t1.p2Id ? getName(match.t1.p2Id) : match.t1.p2Name },
+        t2: { ...match.t2, p1Name: getName(match.t2.p1Id) || match.t2.p1Name, p2Name: match.t2.p2Id ? getName(match.t2.p2Id) : match.t2.p2Name },
       });
       toast.success("Match Broadcast Started!");
     };
@@ -900,7 +903,11 @@ export function useUmpireState({
       ? (match.t2.p2Name && match.receiverPlayerIndex === 1 ? match.t2.p2Name : match.t2.p1Name)
       : (match.t1.p2Name && match.receiverPlayerIndex === 1 ? match.t1.p2Name : match.t1.p1Name);
   
-    const isDoubles = match ? (!!match.t1.p2Id || !!match.t2.p2Id) : false;
+    // A tournament pair often has only a name for the partner (never linked to
+    // a player record), so p2Id alone reports doubles as singles.
+    const isDoubles = match
+      ? !!(match.t1.p2Id || match.t1.p2Name || match.t2.p2Id || match.t2.p2Name)
+      : false;
     const cardBadge = (target: CardTarget) => {
       const c = cards[target];
       if (!c.length) return null;
