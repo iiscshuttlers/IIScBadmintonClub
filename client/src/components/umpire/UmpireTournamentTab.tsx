@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Loader2, Swords, MapPin, Clock, Settings2, ChevronRight,
-  ChevronLeft, ChevronDown, Trophy, Users, Play, CalendarDays, Bell
+  ChevronLeft, ChevronDown, Trophy, Users, Play, CalendarDays, Bell, Flag
 } from "lucide-react";
 import { toast } from "sonner";
 import { getCourtColor, cn } from "@/lib/utils";
@@ -79,6 +79,41 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
   const [upcomingCourt, setUpcomingCourt] = useState("ALL");
   const [collapsedRounds, setCollapsedRounds] = useState<Record<string, boolean>>({});
   const [notifyingId, setNotifyingId] = useState<string | null>(null);
+  const [walkoverFor, setWalkoverFor] = useState<TournamentMatchForUmpire | null>(null);
+  const [savingWalkover, setSavingWalkover] = useState(false);
+
+  /**
+   * Record a no-show. side 1|2 = that team advances; 0 = double walkover, where
+   * nobody advances and the next-round slot becomes a BYE.
+   *
+   * Goes through the record_tournament_walkover RPC rather than updating the row
+   * directly: the update needs to set winner_side/score AND advance the bracket
+   * atomically, and RLS blocks direct writes to tournament_matches.
+   */
+  const recordWalkover = async (m: TournamentMatchForUmpire, winnerSide: 0 | 1 | 2) => {
+    setSavingWalkover(true);
+    try {
+      // Cast: supabase-types-auto.ts is generated and doesn't yet list this RPC.
+      const { error } = await (supabase.rpc as any)("record_tournament_walkover", {
+        p_match_id: m.id,
+        p_winner_side: winnerSide,
+      });
+      if (error) throw error;
+      toast.success(
+        winnerSide === 0
+          ? "Double walkover recorded — next round gets a bye"
+          : `Walkover recorded — ${(winnerSide === 1 ? m.team1_label : m.team2_label) ?? "winner"} advances`,
+      );
+      setWalkoverFor(null);
+      setSelectedMatch(null);
+      setStep("format");
+      load({ silent: true });
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to record walkover");
+    } finally {
+      setSavingWalkover(false);
+    }
+  };
 
   const handleNotify = async (e: React.MouseEvent, matchId: string) => {
     e.stopPropagation();
@@ -685,8 +720,53 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
               <Play className="w-5 h-5 fill-white" />
               {selectedMatch.status === "in_progress" ? "Resume Match" : "Start Umpiring"}
             </button>
+
+            {/* A no-show is discovered at the court, so the umpire needs to be
+                able to record it without finding an admin. Distinct from the
+                Retire flow, which is for a match that has already started. */}
+            <button
+              onClick={() => setWalkoverFor(selectedMatch)}
+              className="w-full py-2.5 rounded-xl border border-[var(--warning)]/50 text-[var(--warning)] font-bold text-xs uppercase tracking-wider transition hover:bg-[color-mix(in_srgb,var(--warning)_12%,transparent)] flex items-center justify-center gap-2">
+              <Flag className="w-4 h-4" /> Record Walkover
+            </button>
           </div>
         </div>
+
+        {walkoverFor && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 w-full max-w-sm shadow-2xl space-y-4">
+              <div className="text-center space-y-1">
+                <Flag className="w-10 h-10 text-[var(--warning)] mx-auto" />
+                <h2 className="text-lg font-black text-foreground uppercase tracking-wider">Record Walkover</h2>
+                <p className="text-xs text-muted-foreground">Who turned up? The team you pick advances.</p>
+              </div>
+
+              {([1, 2] as const).map((side) => (
+                <button key={side}
+                  disabled={savingWalkover}
+                  onClick={() => recordWalkover(walkoverFor, side)}
+                  className="w-full py-3 px-4 rounded-xl bg-slate-800 border border-slate-700 hover:border-[var(--warning)] text-foreground font-bold text-sm transition disabled:opacity-50 text-left">
+                  <span className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground">Team {side} advances</span>
+                  {(side === 1 ? walkoverFor.team1_label : walkoverFor.team2_label) ?? `Team ${side}`}
+                </button>
+              ))}
+
+              <button
+                disabled={savingWalkover}
+                onClick={() => recordWalkover(walkoverFor, 0)}
+                className="w-full py-3 px-4 rounded-xl bg-[color-mix(in_srgb,var(--danger)_15%,transparent)] border border-[var(--danger)]/50 text-[var(--danger)] font-bold text-sm transition disabled:opacity-50">
+                Neither turned up (double walkover)
+              </button>
+
+              <button
+                disabled={savingWalkover}
+                onClick={() => setWalkoverFor(null)}
+                className="w-full py-2.5 text-xs font-bold text-muted-foreground hover:text-foreground transition disabled:opacity-50">
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
