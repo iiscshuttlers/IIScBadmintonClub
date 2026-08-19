@@ -13,6 +13,7 @@ import { MatchEditState, BwfMatchState, PointLogEntry, CardType, CardTarget } fr
 import { usePlayers, usePlayerBuddies } from "@/hooks/usePlayers";
 import { computeAddPoint, computeDeductPoint, computeForceEndSet, computeEditSet } from "@/lib/umpire/umpireMutations";
 import { useUmpireHelpers } from "@/hooks/useUmpireHelpers";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface UmpireStateProps {
   userId: string;
@@ -38,6 +39,11 @@ export function useUmpireState({
   onMatchSaved
 }: UmpireStateProps) {
   const isAdmin = isAdminEmail(userEmail);
+  // isAdmin above is a hardcoded master-admin EMAIL check, not the role, so it
+  // misses ordinary admins entirely. isUmpire is role-based (admin,
+  // master_admin or umpire) and is what should exempt someone from the buddy
+  // requirement below — officiating is their job, including for strangers.
+  const { isUmpire: isRoleUmpire } = useAuth();
   // Use Zustand store instead
   const {
     match: storeMatch, setMatch, updateMatch: storeUpdateMatch,
@@ -302,11 +308,11 @@ export function useUmpireState({
     // directWinner now in Zustand
   
     // Buddy check for regular users: load own buddies list once
-    const { data: myBuddiesData } = usePlayerBuddies(userId, { enabled: !isAdmin && !isTournamentUmpire });
+    const { data: myBuddiesData } = usePlayerBuddies(userId, { enabled: !isAdmin && !isRoleUmpire && !isTournamentUmpire });
     const myBuddies = myBuddiesData || [];
   
     const selectedPlayerIds = [match.t1.p1Id, match.t1.p2Id, match.t2.p1Id, match.t2.p2Id].filter(Boolean) as string[];
-    const buddyCheckPassed = isAdmin || isTournamentUmpire
+    const buddyCheckPassed = isAdmin || isRoleUmpire || isTournamentUmpire
       || selectedPlayerIds.length === 0
       || selectedPlayerIds.some(id => myBuddies.includes(id));
   

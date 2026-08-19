@@ -6,7 +6,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { getCourtColor, cn } from "@/lib/utils";
-import { useAuth } from "@/contexts/AuthContext";
 
 export interface TournamentMatchForUmpire {
   id: string;
@@ -65,7 +64,6 @@ const CAT_BOX_COLORS_DARK: Record<string, string> = {
 };
 
 export function UmpireTournamentTab({ onStartMatch }: Props) {
-  const { isAdmin, profile } = useAuth();
   const [allMatches, setAllMatches] = useState<TournamentMatchForUmpire[]>([]);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState<"format" | "match" | "confirm">("format");
@@ -675,41 +673,15 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
             {/* Start button */}
             <button
               onClick={async () => {
-                // If user is admin/umpire, allow by default? The prompt says "they should have the right to umpire those matches and also time bounded umpiring".
-                // If they have admin/umpire role globally, we can let them bypass, or we force the assignment check. 
-                // Let's check assignments anyway if they are not an admin.
+                // The role IS the permission. This used to additionally require a
+                // row in umpire_assignments (per match, or a time block covering
+                // now), which duplicated the role check, needed maintaining per
+                // match, and blocked umpires who simply hadn't been rostered —
+                // the reason they ended up promoted to admin just to score.
+                // Assignments still drive scheduling, they just don't gate here.
                 const sessionResponse = await supabase.auth.getSession();
-                const userId = sessionResponse.data.session?.user?.id;
-                
-                if (!userId) {
+                if (!sessionResponse.data.session?.user?.id) {
                   toast.error("Session expired. Please sign in again.");
-                  return;
-                }
-
-                const possibleUserIds = [userId, profile?.id].filter(Boolean) as string[];
-                const { data: assignments } = await supabase
-                  .from("umpire_assignments")
-                  .select("*")
-                  .in("user_id", possibleUserIds);
-                
-                if (isAdmin) {
-                  onStartMatch(selectedMatch);
-                  return;
-                }
-
-                const now = new Date();
-                const isValid = assignments?.some(a => {
-                  if (a.tournament_match_id === selectedMatch.id) return true;
-                  if (a.start_time && a.end_time) {
-                    const start = new Date(a.start_time);
-                    const end = new Date(a.end_time);
-                    return now >= start && now <= end;
-                  }
-                  return false;
-                });
-
-                if (!isValid) {
-                  toast.error("You don't have an active umpire assignment for this match or time block.");
                   return;
                 }
 
