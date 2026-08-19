@@ -29,6 +29,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { LiveScoreSection } from "@/components/events/LiveScoreSection";
 import { LiveBracketsSection } from "@/components/events/LiveBracketsSection";
 import { LivePlayersSection } from "@/components/events/LivePlayersSection";
+import { LiveStandingsSection } from "@/components/events/LiveStandingsSection";
 import { UmpireTab } from "@/components/umpire/UmpireTab";
 import { useHashTab } from "@/hooks/useHashTab";
 import { BracketVisual } from "@/components/tournament/BracketVisual";
@@ -116,7 +117,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useHashTab(
-    ["notices", "players", "schedule", "broadcast", "brackets", "past", "umpire"] as const,
+    ["notices", "players", "schedule", "broadcast", "brackets", "standings", "past", "umpire"] as const,
     "brackets",
   );
   const mountedRef = useRef(true);
@@ -535,6 +536,7 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
             { id: "schedule", label: "Match Schedule", icon: Calendar },
             { id: "broadcast", label: "Live Broadcast", icon: Radio },
             { id: "brackets", label: "Brackets", icon: LayoutList },
+            { id: "standings", label: "Standings", icon: Trophy },
             ...((isUmpire || isAdmin) ? [{ id: "umpire", label: "Umpire", icon: Tv2 }] : []),
           ].map((tab) => (
             <button
@@ -559,6 +561,12 @@ export function TournamentSection({ liveEvents, upcomingEvents, completedEvents,
               categories={liveTournament.categories || []} 
               showParticipants={liveTournament.show_participants} 
             />
+          </div>
+        )}
+
+        {activeTab === "standings" && liveTournament && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 pt-6">
+            <LiveStandingsSection />
           </div>
         )}
 

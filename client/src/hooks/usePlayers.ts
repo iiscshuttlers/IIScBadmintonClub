@@ -66,7 +66,7 @@ export function useAllTournamentMatches() {
       const { supabase } = await import("@/lib/supabase");
       const { data, error } = await supabase
         .from("tournament_matches")
-        .select("id, player1_id, player2_id, player3_id, player4_id, winner_id, winner_side, category, status, created_at, ended_at")
+        .select("id, player1_id, player2_id, player3_id, player4_id, team1_label, team2_label, winner_id, winner_side, category, status, created_at, ended_at")
         .eq("status", "completed");
       if (error) throw error;
       

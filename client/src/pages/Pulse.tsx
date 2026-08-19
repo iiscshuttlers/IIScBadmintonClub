@@ -191,7 +191,7 @@ export default function Pulse() {
     description: "Live activity, announcements, and tournaments at IISc Badminton Club.",
   });
 
-  const TOURNAMENT_SUB_TABS = ["notices", "players", "schedule", "broadcast", "brackets", "past", "umpire"];
+  const TOURNAMENT_SUB_TABS = ["notices", "players", "schedule", "broadcast", "brackets", "standings", "past", "umpire"];
   const EVENTS_TABS = ["events", "calendar", "tournament", "history", ...TOURNAMENT_SUB_TABS];
   const FEED_TABS = ["feed-matches", "announcements", "umpire-panel"];
 
