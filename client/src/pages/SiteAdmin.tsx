@@ -28,7 +28,6 @@ import {
   LayoutGrid,
   UserRound,
   MessageSquare,
-  Clock,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
@@ -43,7 +42,6 @@ import {
   NoticeboardManager,
 } from "@/components/admin/AdminEditors";
 import { UmpireTab } from "@/components/umpire/UmpireTab";
-import { UmpireAssignmentPanel } from "@/components/admin/UmpireAssignmentPanel";
 import { ConvenerEditor, DEFAULT_CONVENER_DATA } from "@/components/admin/ConvenerEditor";
 import { AdminStatsOverview } from "@/components/admin/AdminStatsOverview";
 import { DisputePanel } from "@/components/admin/DisputePanel";
@@ -81,7 +79,6 @@ type TabId =
   | "players"
   | "guests"
   | "umpire"
-  | "umpire_duty"
   | "registrations"
   | "matches"
   | "changelog"
@@ -135,7 +132,6 @@ const TAB_GROUPS: TabGroup[] = [
       { id: "tournament", label: "Tournament", icon: Trophy },
       { id: "matches", label: "Matches", icon: Trophy },
       { id: "umpire", label: "Umpire Mode", icon: Activity },
-      { id: "umpire_duty", label: "Umpire Assignments", icon: Clock },
       { id: "disputes", label: "Disputes", icon: AlertTriangle },
     ],
   },
@@ -375,14 +371,6 @@ function SiteAdminInner() {
             <div className="flex flex-col sm:items-end items-start gap-1 w-full sm:w-auto mt-2 sm:mt-0">
               <div className="flex flex-wrap items-center gap-2">
                 <button
-                  onClick={() => handleTabChange("umpire_duty")}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 text-sm font-bold transition"
-                  title="Open Umpire Assignments"
-                >
-                  <Clock className="w-4 h-4" />
-                  <span className="hidden sm:inline">Assignments</span>
-                </button>
-                <button
                   onClick={() => handleTabChange("players")}
                   className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-sm font-bold transition"
                   title="Manage Players"
@@ -515,7 +503,6 @@ function SiteAdminInner() {
             {activeTab === "disputes" && <DisputePanel />}
             {activeTab === "elo_audit" && <EloAuditPanel />}
             {activeTab === "umpire" && <UmpireTab />}
-            {activeTab === "umpire_duty" && <UmpireAssignmentPanel />}
             {activeTab === "settings" && <AdminSettings />}
             {activeTab === "feedback" && <AdminFeedbackPanel />}
             {activeTab === "activity_log" && <AdminActivityLog />}

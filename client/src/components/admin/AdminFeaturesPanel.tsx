@@ -9,13 +9,12 @@ import { supabase } from "@/lib/supabase";
 import {
   Circle, TrendingUp, Zap, Bell, Globe, ShieldCheck,
   RefreshCw, Trash2, Play, CheckCircle, XCircle, Loader2,
-  BarChart3, Users, Trophy, Target, Coins
+  BarChart3, Trophy, Target, Coins
 } from "lucide-react";
 import { toast } from "sonner";
 import { WeeklyChallenges } from "@/components/feed/WeeklyChallenges";
 import { safeReplaceState, safeGetSearchParams, isCapacitor } from "@/lib/navUtils";
 
-import { UmpireAssignmentPanel } from "./UmpireAssignmentPanel";
 
 const cardCls = "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm";
 const sectionTitle = (icon: React.ReactNode, label: string) => (
@@ -509,10 +508,10 @@ function CronJobsPanel() {
 }
 
 export function AdminFeaturesPanel() {
-  const [section, setSection] = useState<"live" | "predictions" | "challenges" | "umpires" | "notifications" | "api" | "health">(() => {
+  const [section, setSection] = useState<"live" | "predictions" | "challenges" | "notifications" | "api" | "health">(() => {
     const params = safeGetSearchParams();
     const tab = params.get("tab") as any;
-    return ["live", "predictions", "challenges", "umpires", "notifications", "api", "health"].includes(tab) ? tab : "live";
+    return ["live", "predictions", "challenges", "notifications", "api", "health"].includes(tab) ? tab : "live";
   });
 
   useEffect(() => {
@@ -527,7 +526,6 @@ export function AdminFeaturesPanel() {
     { id: "live", label: "Live Scores", icon: <Circle className="w-3.5 h-3.5 fill-red-500 text-red-500" /> },
     { id: "predictions", label: "Predictions", icon: <TrendingUp className="w-3.5 h-3.5" /> },
     { id: "challenges", label: "Challenges", icon: <Target className="w-3.5 h-3.5" /> },
-    { id: "umpires", label: "Umpire Duty", icon: <Users className="w-3.5 h-3.5" /> },
     { id: "notifications", label: "Notifications", icon: <Bell className="w-3.5 h-3.5" /> },
     { id: "api", label: "Public API", icon: <Globe className="w-3.5 h-3.5" /> },
     { id: "health", label: "DB Health", icon: <ShieldCheck className="w-3.5 h-3.5" /> },
@@ -570,11 +568,6 @@ export function AdminFeaturesPanel() {
             {sectionTitle(<Zap className="w-4 h-4" />, "Player View Preview")}
             <WeeklyChallenges />
           </div>
-        </div>
-      )}
-      {section === "umpires" && (
-        <div className="max-w-4xl">
-          <UmpireAssignmentPanel />
         </div>
       )}
       {section === "notifications" && (
