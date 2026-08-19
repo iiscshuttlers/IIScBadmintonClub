@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { resolveTeamMembers } from "@/lib/teamNames";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Trophy, Swords, TrendingUp, TrendingDown, Calendar, Flag, CheckCircle2 } from "lucide-react";
@@ -27,8 +28,11 @@ export function MatchScorecardModal({ match, isOpen, onClose, currentUser }: Mat
 
   const p1 = match.player1;
   const p2 = match.player2;
-  const partner1 = match.partner1;
-  const partner2 = match.partner2;
+  // A partner with no linked player record returns null from the join, which
+  // both hid them and made a doubles match look like singles. Resolve against
+  // team*_label too. See lib/teamNames.
+  const partner1 = match.partner1 ?? resolveTeamMembers(match.player1, match.partner1, match.team1_label)[1] ?? null;
+  const partner2 = match.partner2 ?? resolveTeamMembers(match.player2, match.partner2, match.team2_label)[1] ?? null;
   const isDoubles = !!partner1 || !!partner2;
   const isP1Winner = match.winner_id === p1?.id || match.winner_id === partner1?.id;
 

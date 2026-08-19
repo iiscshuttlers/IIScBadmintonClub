@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLiveSiteData } from "@/hooks/useMatches";
+import { resolveTeamName } from "@/lib/teamNames";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { UmpireEngine } from "./UmpireEngine";
@@ -557,11 +558,11 @@ function RecentUmpireMatches({ onEdit, isTournament }: { onEdit: (m: MatchEditSt
               <div className="flex flex-col gap-1">
                 <p className="text-slate-300 font-bold text-sm flex items-center gap-2 flex-wrap">
                   <span className={team1Won ? "text-amber-400" : ""}>
-                    {m.player1?.full_name ? `${m.player1.full_name} ${m.partner1 ? `& ${m.partner1.full_name}` : ""}` : m.team1_label}
+                    {resolveTeamName(m.player1, m.partner1, m.team1_label)}
                   </span>
                   <span className="text-[10px] font-black uppercase text-rose-500 shrink-0">vs</span>
                   <span className={team2Won ? "text-amber-400" : ""}>
-                    {m.player2?.full_name ? `${m.player2.full_name} ${m.partner2 ? `& ${m.partner2.full_name}` : ""}` : m.team2_label}
+                    {resolveTeamName(m.player2, m.partner2, m.team2_label)}
                   </span>
                 </p>
                 <div className="flex flex-wrap items-center gap-2 mt-2">

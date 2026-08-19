@@ -1,3 +1,4 @@
+import { resolveTeamMembers } from "@/lib/teamNames";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
@@ -167,14 +168,10 @@ export function MatchCard({
   const team1Win = hasWinner && (match.winner_side === 1 || match.winner_id === p1?.id || match.winner_id === match.partner1?.id);
   const team2Win = hasWinner && !team1Win;
 
-  const team1 = [
-    { player: actualP1 },
-    ...(match.partner1 ? [{ player: match.partner1 }] : []),
-  ].filter((m) => m.player);
-  const team2 = [
-    { player: actualP2 },
-    ...(match.partner2 ? [{ player: match.partner2 }] : []),
-  ].filter((m) => m.player);
+  // A doubles partner who was never linked to a player record comes back null
+  // from the join, so resolve against team*_label as well. See lib/teamNames.
+  const team1 = resolveTeamMembers(p1, match.partner1, match.team1_label).map((player) => ({ player }));
+  const team2 = resolveTeamMembers(p2, match.partner2, match.team2_label).map((player) => ({ player }));
 
   const winnerMembers = team1Win ? team1 : team2Win ? team2 : null;
   const loserMembers = team1Win ? team2 : team2Win ? team1 : null;
