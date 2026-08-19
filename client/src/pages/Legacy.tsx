@@ -17,6 +17,8 @@ import {
   Bell,
   BellRing,
   Trophy,
+  Download,
+  Megaphone,
 } from "lucide-react";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { WinnersWallSection } from "@/components/events/WinnersWallSection";
@@ -114,6 +116,17 @@ export default function Legacy() {
     try { return new Set(JSON.parse(localStorage.getItem("gallery_subscriptions") || "[]")); }
     catch { return new Set(); }
   });
+  const [defaultSubscribedTags, setDefaultSubscribedTags] = useState<string[]>([]);
+  const [unsubscribedTags, setUnsubscribedTags] = useState<Set<string>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("gallery_unsubscriptions") || "[]")); }
+    catch { return new Set(); }
+  });
+
+  const isSubscribed = useCallback((tag: string) => {
+    if (subscribedTags.has(tag)) return true;
+    if (defaultSubscribedTags.includes(tag) && !unsubscribedTags.has(tag)) return true;
+    return false;
+  }, [subscribedTags, defaultSubscribedTags, unsubscribedTags]);
 
   const handleLike = async (e: React.MouseEvent, path: string) => {
     e.stopPropagation();
@@ -157,18 +170,58 @@ export default function Legacy() {
 
   const handleSubscribe = (e: React.MouseEvent, tag: string) => {
     e.stopPropagation();
-    setSubscribedTags(prev => {
-      const next = new Set(prev);
-      if (next.has(tag)) {
+    if (isSubscribed(tag)) {
+      setSubscribedTags(prev => {
+        const next = new Set(prev);
         next.delete(tag);
-        toast("Unsubscribed from " + formatText(tag), { icon: <Bell className="w-4 h-4 text-muted-foreground" /> });
-      } else {
-        next.add(tag);
-        toast.success("Subscribed to " + formatText(tag) + "! You'll be notified of new photos.");
+        localStorage.setItem("gallery_subscriptions", JSON.stringify([...next]));
+        return next;
+      });
+      if (defaultSubscribedTags.includes(tag)) {
+        setUnsubscribedTags(prev => {
+          const next = new Set(prev);
+          next.add(tag);
+          localStorage.setItem("gallery_unsubscriptions", JSON.stringify([...next]));
+          return next;
+        });
       }
-      localStorage.setItem("gallery_subscriptions", JSON.stringify([...next]));
-      return next;
-    });
+      toast("Unsubscribed from " + formatText(tag), { icon: <Bell className="w-4 h-4 text-muted-foreground" /> });
+    } else {
+      setSubscribedTags(prev => {
+        const next = new Set(prev);
+        next.add(tag);
+        localStorage.setItem("gallery_subscriptions", JSON.stringify([...next]));
+        return next;
+      });
+      if (defaultSubscribedTags.includes(tag)) {
+        setUnsubscribedTags(prev => {
+          const next = new Set(prev);
+          next.delete(tag);
+          localStorage.setItem("gallery_unsubscriptions", JSON.stringify([...next]));
+          return next;
+        });
+      }
+      toast.success("Subscribed to " + formatText(tag) + "! You'll be notified of new photos.");
+    }
+  };
+
+  const handleGlobalSubscribe = async (e: React.MouseEvent, tag: string) => {
+    e.stopPropagation();
+    if (!isAdmin) return;
+    
+    const isCurrentlyGlobal = defaultSubscribedTags.includes(tag);
+    const nextDefaults = isCurrentlyGlobal 
+      ? defaultSubscribedTags.filter(t => t !== tag)
+      : [...defaultSubscribedTags, tag];
+      
+    setDefaultSubscribedTags(nextDefaults);
+    toast(isCurrentlyGlobal ? "Removed global subscription for " + formatText(tag) : "Enabled global subscription for " + formatText(tag));
+    
+    try {
+      await supabase.from("site_data").upsert({ key: "gallery_default_subscriptions", value: nextDefaults }, { onConflict: "key" });
+    } catch (err) {
+      console.error("Failed to sync global subscription", err);
+    }
   };
 
   const [selectedSubfolder, setSelectedSubfolder] = useState(initialFilter || "all");
@@ -281,6 +334,9 @@ export default function Legacy() {
       .catch(() => {});
     fetchSiteData<Record<string, string[]>>("gallery_likes", null)
       .then((data) => { if (data) setGalleryLikes(data); })
+      .catch(() => {});
+    fetchSiteData<string[]>("gallery_default_subscriptions", null)
+      .then((data) => { if (data) setDefaultSubscribedTags(data); })
       .catch(() => {});
   }, []);
 
@@ -680,16 +736,29 @@ export default function Legacy() {
                     >
                       {formatText(sub)}
                     </button>
+                    {isAdmin && (
+                      <button
+                        onClick={(e) => handleGlobalSubscribe(e, sub)}
+                        className={`absolute right-9 p-1.5 rounded-full transition-colors ${
+                          defaultSubscribedTags.includes(sub)
+                            ? "text-rose-500 hover:text-rose-600 bg-rose-500/10"
+                            : "text-gray-400 hover:text-rose-500 hover:bg-rose-500/10 opacity-0 sm:group-hover:opacity-100"
+                        }`}
+                        title={defaultSubscribedTags.includes(sub) ? "Disable Global Subscription" : "Enable Global Subscription (Everyone)"}
+                      >
+                        <Megaphone className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                     <button
                       onClick={(e) => handleSubscribe(e, sub)}
                       className={`absolute right-1.5 p-1.5 rounded-full transition-colors ${
-                        subscribedTags.has(sub) 
+                        isSubscribed(sub) 
                           ? "text-primary hover:text-primary bg-primary/10" 
                           : "text-gray-400 hover:text-primary hover:bg-primary/10 opacity-0 sm:group-hover:opacity-100"
                       }`}
-                      title={subscribedTags.has(sub) ? "Unsubscribe" : "Subscribe to notifications"}
+                      title={isSubscribed(sub) ? "Unsubscribe" : "Subscribe to notifications"}
                     >
-                      {subscribedTags.has(sub) ? <BellRing className="w-3.5 h-3.5" /> : <Bell className="w-3.5 h-3.5" />}
+                      {isSubscribed(sub) ? <BellRing className="w-3.5 h-3.5" /> : <Bell className="w-3.5 h-3.5" />}
                     </button>
                   </div>
                 );
@@ -740,9 +809,26 @@ export default function Legacy() {
 
                   {/* Hover overlay */}
                   <div className="absolute inset-0 bg-black/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center p-4 text-center">
-                    <h3 className="text-foreground font-black text-base tracking-wide drop-shadow-md line-clamp-2">
-                      {item.title}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      {!/^\d+$/.test(item.title) ? (
+                        <h3 className="text-foreground font-black text-base tracking-wide drop-shadow-md line-clamp-2">
+                          {item.title}
+                        </h3>
+                      ) : isAdmin ? (
+                        <h3 className="text-foreground/50 italic text-sm tracking-wide drop-shadow-md line-clamp-2">
+                          No caption
+                        </h3>
+                      ) : <div />}
+                      {isAdmin && item.url && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleEditTitle(item); }}
+                          className="p-1.5 hover:bg-white/20 text-white/70 hover:text-white rounded-full transition-all shrink-0"
+                          title="Edit Title"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                        </button>
+                      )}
+                    </div>
                     {item.subfolder && (
                       <p className="text-primary/70 font-bold text-xs mt-1 uppercase tracking-widest drop-shadow">
                         {formatText(item.subfolder)}
@@ -1055,6 +1141,25 @@ export default function Legacy() {
                           </div>
                         );
                       })()}
+                      
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!item?.url) return;
+                          const downloadUrl = item.url.replace('/upload/', '/upload/fl_attachment/');
+                          const link = document.createElement('a');
+                          link.href = downloadUrl;
+                          link.target = "_blank";
+                          link.download = item.title || "download";
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        }}
+                        className="ml-2 p-2 bg-white/10 hover:bg-primary/20 text-foreground/80 hover:text-primary rounded-full backdrop-blur-sm border border-white/10 transition-all pointer-events-auto flex items-center justify-center"
+                        title="Download Image"
+                      >
+                        <Download className="w-5 h-5 md:w-6 md:h-6 drop-shadow-lg" />
+                      </button>
                     </div>
                     {item?.subfolder && (
                       <p className="text-primary/70 font-medium text-xs uppercase tracking-widest drop-shadow-md">

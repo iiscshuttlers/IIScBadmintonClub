@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Upload, FolderPlus, X, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { type RemoteGalleryItem, saveRemoteGalleryImages } from "@/lib/galleryStorage";
+import imageCompression from "browser-image-compression";
 
 interface GalleryUploaderProps {
   remotePhotos: RemoteGalleryItem[];
@@ -11,7 +12,7 @@ interface GalleryUploaderProps {
 export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<{file: File, caption: string}[]>([]);
   
   // Existing folders from remote photos
   const existingCategories = Array.from(new Set(remotePhotos.map((p) => p.category))).filter(c => c && c !== "uncategorized");
@@ -33,12 +34,20 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setFiles(Array.from(e.target.files));
+      const newFiles = Array.from(e.target.files).map(file => ({
+        file,
+        caption: file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+      }));
+      setFiles(prev => [...prev, ...newFiles]);
     }
   };
 
   const removeFile = (idx: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const updateCaption = (idx: number, newCaption: string) => {
+    setFiles((prev) => prev.map((f, i) => i === idx ? { ...f, caption: newCaption } : f));
   };
 
   const handleUpload = async () => {
@@ -69,10 +78,23 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
     const newItems: RemoteGalleryItem[] = [];
 
     try {
-      for (const file of files) {
+      for (const { file, caption } of files) {
+        
+        let fileToUpload = file;
+        try {
+          const options = {
+            maxSizeMB: 1,
+            maxWidthOrHeight: 1920,
+            useWebWorker: true,
+          };
+          fileToUpload = await imageCompression(file, options);
+        } catch (error) {
+          console.warn("Compression failed, uploading original", error);
+        }
+
         // Upload to Cloudinary
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append("file", fileToUpload);
         formData.append("upload_preset", uploadPreset);
         formData.append("folder", folderPath);
         
@@ -98,11 +120,9 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
         const optimizedUrl = data.secure_url.replace("/upload/", "/upload/f_auto,q_auto/");
 
         // Add to our list
-        const originalName = file.name;
-        const title = originalName.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
         newItems.push({
           id: data.public_id,
-          title,
+          title: caption.trim(),
           category: finalCategory.trim(),
           subfolder: finalSubfolder.trim(),
           url: optimizedUrl,
@@ -274,17 +294,31 @@ export function GalleryUploader({ remotePhotos }: GalleryUploaderProps) {
                   <span>Selected ({files.length})</span>
                   <button onClick={() => setFiles([])} className="text-red-500 hover:text-red-600">Clear all</button>
                 </div>
-                <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-                  {files.slice(0, 9).map((f, i) => (
-                    <div key={i} className="relative aspect-square rounded-lg bg-slate-200 dark:bg-slate-700 overflow-hidden group shadow-sm">
-                      <ImageIcon className="absolute inset-0 m-auto text-muted-foreground w-6 h-6" />
-                      <button 
-                        onClick={() => removeFile(i)}
-                        className="absolute top-1 right-1 bg-black/60 text-on-accent rounded-full p-1 opacity-0 group-hover:opacity-100 transition z-10 hover:bg-red-500"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                      <img src={URL.createObjectURL(f)} className="absolute inset-0 w-full h-full object-cover" />
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {files.slice(0, 9).map(({ file, caption }, i) => (
+                    <div key={i} className="flex flex-col gap-2">
+                      <div className="relative aspect-square rounded-lg bg-slate-200 dark:bg-slate-700 overflow-hidden group shadow-sm flex flex-col items-center justify-center">
+                        <ImageIcon className="text-muted-foreground w-6 h-6 mb-1" />
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase">{file.name.split('.').pop()}</span>
+                        <button 
+                          onClick={() => removeFile(i)}
+                          className="absolute top-1 right-1 bg-black/60 text-on-accent rounded-full p-1 opacity-0 group-hover:opacity-100 transition z-10 hover:bg-red-500"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                        <img 
+                          src={URL.createObjectURL(file)} 
+                          className="absolute inset-0 w-full h-full object-cover" 
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        />
+                      </div>
+                      <input 
+                        type="text"
+                        placeholder="Caption (Optional)"
+                        value={caption}
+                        onChange={(e) => updateCaption(i, e.target.value)}
+                        className="w-full text-xs p-2 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 outline-none focus:ring-1 focus:ring-blue-500"
+                      />
                     </div>
                   ))}
                   {files.length > 9 && (
