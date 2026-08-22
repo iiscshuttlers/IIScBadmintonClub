@@ -11,6 +11,8 @@ import { useUmpireStore } from "@/store/umpireStore";
 import { fetchSiteData } from "@/lib/siteData";
 import { BeautifulScoreDisplay } from "@/components/feed/BeautifulScoreDisplay";
 import { UmpireTournamentTab, type TournamentMatchForUmpire } from "./UmpireTournamentTab";
+import { toast } from "sonner";
+import { recoverMatchFromTournamentRow, splitSets } from "@/lib/umpire/resumeRecovery";
 
 const SETUP_STORAGE_KEY = "umpire_setup_matches_v1";
 
@@ -220,19 +222,53 @@ export function UmpireTab({ tournamentOnly = false }: { tournamentOnly?: boolean
 
     if (m.status === "in_progress" && m.match_code) {
       const { data } = await supabase.from("site_data").select("value").eq("key", "live_matches").maybeSingle();
-      if (data?.value && typeof data.value === 'object') {
-        const liveState = (data.value as Record<string, any>)[m.id];
-        if (liveState) {
-          setActiveMatches(prev => {
-            setActiveMatchIndex(prev.length);
-            // The snapshot froze the team names at the moment the match started,
-            // so a participant fixed up afterwards (a partner supplied late, a
-            // typo corrected) never showed here. Re-apply the current bracket
-            // labels while keeping every bit of scoring state from the snapshot.
-            return [...prev, withFreshTeamNames(liveState, m)];
-          });
-          return;
-        }
+      const liveState = (data?.value && typeof data.value === 'object')
+        ? (data.value as Record<string, any>)[m.id]
+        : undefined;
+
+      if (liveState) {
+        setActiveMatches(prev => {
+          setActiveMatchIndex(prev.length);
+          // The snapshot froze the team names at the moment the match started,
+          // so a participant fixed up afterwards (a partner supplied late, a
+          // typo corrected) never showed here. Re-apply the current bracket
+          // labels while keeping every bit of scoring state from the snapshot.
+          return [...prev, withFreshTeamNames(liveState, m)];
+        });
+        return;
+      }
+
+      // The row says the match is in progress but its live snapshot is gone.
+      // Resuming used to fall through to the pre-fill path below and silently
+      // restart the match at 0-0, throwing away every game already played.
+      // The tournament row still holds the score and completed sets, so
+      // recover from that instead.
+      const { data: row } = await supabase
+        .from("tournament_matches")
+        .select("score, sets_history")
+        .eq("id", m.id)
+        .maybeSingle();
+
+      const { completed, current } = splitSets(row ?? { score: null, sets_history: null });
+      if (completed.length > 0 || current[0] > 0 || current[1] > 0) {
+        const recovered = recoverMatchFromTournamentRow(
+          m,
+          row ?? { score: null, sets_history: null },
+          {
+            id: session!.user.id,
+            name: profile?.full_name || session!.user.email?.split("@")[0] || "Umpire",
+          },
+        );
+        setActiveMatches(prev => {
+          setActiveMatchIndex(prev.length);
+          return [...prev, recovered];
+        });
+        toast(
+          `Recovered ${completed.length > 0 ? completed.join(", ") + " | " : ""}${current[0]}-${current[1]}. ` +
+          "The point log and serve order could not be restored — check who is serving before continuing.",
+          { duration: 10000, icon: "⚠️" },
+        );
+        return;
       }
     }
 

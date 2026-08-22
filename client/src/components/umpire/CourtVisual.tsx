@@ -1,7 +1,11 @@
+import { isPlayerAtTop, seedRightCourts } from "@/lib/umpire/courtPositions";
+
 export function CourtVisual({
   serverTeam,
   serverPlayerIndex = 0,
-  receiverP0AtTop = true,
+  receiverPlayerIndex = 0,
+  t1RightCourt,
+  t2RightCourt,
   t1Name,
   t2Name,
   t1P2Name,
@@ -14,7 +18,10 @@ export function CourtVisual({
 }: {
   serverTeam: 1 | 2;
   serverPlayerIndex?: 0 | 1;
-  receiverP0AtTop?: boolean;
+  receiverPlayerIndex?: 0 | 1;
+  /** Which player stands in each team's right service court. */
+  t1RightCourt?: 0 | 1;
+  t2RightCourt?: 0 | 1;
   t1Name: string;
   t2Name: string;
   t1P2Name?: string;
@@ -40,44 +47,41 @@ export function CourtVisual({
   const rightP2Name = t1OnLeft ? t2P2Name : t1P2Name;
 
   const leftTeam  = t1OnLeft ? 1 : 2;
-  const rightTeam = t1OnLeft ? 2 : 1;
   const leftIsServer  = serverTeam === leftTeam;
 
-  // Active receiver: whoever is in the diagonal service court to the server.
-  // diagonalAtTop = true when the diagonal falls in the visual-top of the receiving side.
-  // Formula: server-on-left+even → bottom-left server → diagonal at top-right (diagonalAtTop=true)
-  //          server-on-left+odd  → top-left server  → diagonal at bottom-right (false)
-  //          server-on-right+even→ top-right server → diagonal at bottom-left (false)
-  //          server-on-right+odd → bottom-right     → diagonal at top-left (true)
-  const diagonalAtTop = serverOnLeft === isEven;
-  // activeReceiverIndex: P0 if P0 is at the diagonal position, else P1
-  const activeReceiverIndex: 0 | 1 = (diagonalAtTop === receiverP0AtTop) ? 0 : 1;
+  // Court occupancy is the only positional state. Matches saved before these
+  // fields existed are seeded from their serve/receive pair. Positions used to
+  // be driven by a `receiverP0AtTop` flag that was rewritten every rally from
+  // "is the active receiver player 0", so the receiving pair — who must stand
+  // still while the serving pair swaps courts — teleported on every point.
+  const { t1Right, t2Right } = seedRightCourts({
+    serverTeam,
+    serverPlayerIndex,
+    receiverPlayerIndex,
+    serverScore,
+    t1RightCourt,
+    t2RightCourt,
+  });
+  const rightCourtOf = (side: "left" | "right") =>
+    (side === "left") === t1OnLeft ? t1Right : t2Right;
 
   const nameColor = (side: "left" | "right", pIdx: 0 | 1) => {
     const sideIsServer = side === "left" ? leftIsServer : !leftIsServer;
     if (sideIsServer && serverPlayerIndex === pIdx) return "text-primary";
-    if (!sideIsServer && (!isDoubles || pIdx === activeReceiverIndex)) return "text-amber-400/80";
+    if (!sideIsServer && (!isDoubles || pIdx === receiverPlayerIndex)) return "text-amber-400/80";
     return "text-muted-foreground";
   };
 
   const topPct = (side: "left" | "right", pIdx: 0 | 1) => {
-    const sideIsServer = side === "left" ? leftIsServer : !leftIsServer;
     const onLeft = side === "left";
-    
+
     if (!isDoubles) {
-      // In singles, BOTH players always stand in the court corresponding to the score parity
+      // In singles there is one player per side, and they change service court
+      // themselves on every point, so position follows score parity directly.
       return onLeft ? (isEven ? "63%" : "12%") : (isEven ? "12%" : "63%");
     }
 
-    if (sideIsServer) {
-      // Server position follows score parity (BWF rule)
-      const serving = serverPlayerIndex === pIdx;
-      if (serving) return onLeft ? (isEven ? "63%" : "12%") : (isEven ? "12%" : "63%");
-      return onLeft ? (isEven ? "12%" : "63%") : (isEven ? "63%" : "12%");
-    } else {
-      // Receiver positions are FIXED once chosen — only the active-receiver label changes
-      return pIdx === 0 ? (receiverP0AtTop ? "12%" : "63%") : (receiverP0AtTop ? "63%" : "12%");
-    }
+    return isPlayerAtTop(pIdx, rightCourtOf(side), onLeft) ? "12%" : "63%";
   };
 
   return (
@@ -111,7 +115,7 @@ export function CourtVisual({
           >
             {leftP1Name || "T1"}
             {leftIsServer && serverPlayerIndex === 0 && <span className="block text-[7px] text-primary">SERVER</span>}
-            {!leftIsServer && (!isDoubles || activeReceiverIndex === 0) && <span className="block text-[7px] text-amber-500">RECEIVER</span>}
+            {!leftIsServer && (!isDoubles || receiverPlayerIndex === 0) && <span className="block text-[7px] text-amber-500">RECEIVER</span>}
           </div>
           {isDoubles && leftP2Name && (
             <div
@@ -121,7 +125,7 @@ export function CourtVisual({
             >
               {leftP2Name}
               {leftIsServer && serverPlayerIndex === 1 && <span className="block text-[7px] text-primary">SERVER</span>}
-              {!leftIsServer && activeReceiverIndex === 1 && <span className="block text-[7px] text-amber-500">RECEIVER</span>}
+              {!leftIsServer && receiverPlayerIndex === 1 && <span className="block text-[7px] text-amber-500">RECEIVER</span>}
             </div>
           )}
         </div>
@@ -134,7 +138,7 @@ export function CourtVisual({
           >
             {rightP1Name || "T2"}
             {!leftIsServer && serverPlayerIndex === 0 && <span className="block text-[7px] text-primary">SERVER</span>}
-            {leftIsServer && (!isDoubles || activeReceiverIndex === 0) && <span className="block text-[7px] text-amber-500">RECEIVER</span>}
+            {leftIsServer && (!isDoubles || receiverPlayerIndex === 0) && <span className="block text-[7px] text-amber-500">RECEIVER</span>}
           </div>
           {isDoubles && rightP2Name && (
             <div
@@ -144,7 +148,7 @@ export function CourtVisual({
             >
               {rightP2Name}
               {!leftIsServer && serverPlayerIndex === 1 && <span className="block text-[7px] text-primary">SERVER</span>}
-              {leftIsServer && activeReceiverIndex === 1 && <span className="block text-[7px] text-amber-500">RECEIVER</span>}
+              {leftIsServer && receiverPlayerIndex === 1 && <span className="block text-[7px] text-amber-500">RECEIVER</span>}
             </div>
           )}
         </div>
@@ -154,4 +158,3 @@ export function CourtVisual({
     </div>
   );
 }
-

@@ -30,7 +30,6 @@ export type ServeSnapshot = {
   serverTeam: 1 | 2;
   serverPlayerIndex: 0 | 1;
   receiverPlayerIndex: 0 | 1;
-  receiverP0AtTop: boolean;
   t1LastServedBy: 0 | 1;
   t2LastServedBy: 0 | 1;
   /** Which player (0|1) currently stands in each team's right service court. */
@@ -70,7 +69,6 @@ export type BwfMatchState = {
   serverTeam: 1 | 2;
   serverPlayerIndex: 0 | 1;
   receiverPlayerIndex: 0 | 1;
-  receiverP0AtTop: boolean;
   t1LastServedBy: 0 | 1;
   t2LastServedBy: 0 | 1;
   /** Which player (0|1) stands in each team's RIGHT service court.
@@ -103,4 +101,4 @@ export type CardTarget = "t1p1" | "t1p2" | "t2p1" | "t2p2";
 
 
 // ── UmpireEngine ──────────────────────────────────────────────────────────────
-
+

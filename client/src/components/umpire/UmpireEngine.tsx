@@ -488,7 +488,7 @@ export function UmpireEngine({
             </div>
             <p className="text-xs text-muted-foreground font-bold">{tm.tournament_name}</p>
           </div>
-          <button onClick={handleClose} className="p-2 hover:bg-slate-800 rounded-xl text-muted-foreground hover:text-on-accent transition">
+          <button onClick={() => handleClose()} className="p-2 hover:bg-slate-800 rounded-xl text-muted-foreground hover:text-on-accent transition">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -740,7 +740,7 @@ export function UmpireEngine({
 
         {/* Right Side: Exit & Offline Actions */}
         <div className="flex flex-col items-end gap-1.5 shrink-0">
-          <button onClick={handleClose} className="px-3 py-1.5 bg-slate-800/40 hover:bg-slate-700/60 text-slate-400 hover:text-white font-bold text-[10px] sm:text-xs rounded-full flex justify-center items-center gap-1.5 border border-slate-700/50 hover:border-slate-600 backdrop-blur-sm transition cursor-pointer shadow-sm">
+          <button onClick={() => handleClose()} className="px-3 py-1.5 bg-slate-800/40 hover:bg-slate-700/60 text-slate-400 hover:text-white font-bold text-[10px] sm:text-xs rounded-full flex justify-center items-center gap-1.5 border border-slate-700/50 hover:border-slate-600 backdrop-blur-sm transition cursor-pointer shadow-sm">
             <X className="w-3.5 h-3.5" /> Exit
           </button>
           {offlineSync.isOffline && (
@@ -787,7 +787,7 @@ export function UmpireEngine({
             }} className="flex-1 px-3 py-2.5 bg-[color-mix(in_srgb,var(--info)_10%,transparent)] hover:bg-[color-mix(in_srgb,var(--info)_20%,transparent)] text-[var(--info)] rounded-xl font-bold text-[10px] uppercase tracking-wider border border-[color-mix(in_srgb,var(--info)_20%,transparent)] flex items-center justify-center gap-1.5 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95">
               <RefreshCw className="w-3.5 h-3.5" /> Push Score
             </button>
-            <button disabled={isSaving} onClick={handleClose} className="flex-1 px-3 py-2.5 bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 rounded-xl font-bold text-[10px] uppercase tracking-wider border border-white/[0.08] flex items-center justify-center gap-1.5 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95">
+            <button disabled={isSaving} onClick={() => handleClose()} className="flex-1 px-3 py-2.5 bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 rounded-xl font-bold text-[10px] uppercase tracking-wider border border-white/[0.08] flex items-center justify-center gap-1.5 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95">
               <X className="w-3.5 h-3.5 text-rose-400" /> Close
             </button>
           </div>
@@ -963,7 +963,9 @@ export function UmpireEngine({
             <CourtVisual
               serverTeam={match.serverTeam}
               serverPlayerIndex={match.serverPlayerIndex}
-              receiverP0AtTop={match.receiverP0AtTop}
+              receiverPlayerIndex={match.receiverPlayerIndex}
+              t1RightCourt={match.t1RightCourt}
+              t2RightCourt={match.t2RightCourt}
               t1Name={match.t1.p1Name}
               t2Name={match.t2.p1Name}
               t1P2Name={match.t1.p2Name}
@@ -1052,7 +1054,6 @@ export function UmpireEngine({
                         const nextReceiver = (match.receiverPlayerIndex === 0 ? 1 : 0) as 0 | 1;
                         updateMatch({
                           receiverPlayerIndex: nextReceiver,
-                          receiverP0AtTop: nextReceiver === 0,
                           ...(match.serverTeam === 1
                             ? { t2RightCourt: flip(match.t2RightCourt) }
                             : { t1RightCourt: flip(match.t1RightCourt) }),
@@ -1274,7 +1275,7 @@ export function UmpireEngine({
                   message: "Are you sure you want to exit without saving? Any unsaved progress will be lost.",
                   confirmLabel: "Cancel Match",
                   confirmColor: "bg-rose-600 hover:bg-rose-500",
-                  onConfirm: () => handleClose()
+                  onConfirm: () => handleClose({ endBroadcast: true })
                 })} className="px-2 py-3 bg-white/[0.03] hover:bg-rose-500/10 text-rose-400 font-bold text-[10px] sm:text-xs rounded-xl flex flex-row justify-center items-center gap-1.5 border border-white/[0.05] hover:border-rose-500/20 transition active:scale-95">
                   <X className="w-3.5 h-3.5" /> Cancel
                 </button>
@@ -1345,7 +1346,7 @@ export function UmpireEngine({
                     } catch (e) {
                       console.error("Failed to abort broadcast", e);
                     }
-                    handleClose();
+                    handleClose({ endBroadcast: true });
                   }
                 })} className="px-2 py-3 bg-white/[0.03] hover:bg-rose-500/10 text-rose-500 font-bold text-[10px] sm:text-xs rounded-xl flex flex-row justify-center items-center gap-1.5 border border-white/[0.05] hover:border-rose-500/20 transition active:scale-95">
                   <AlertTriangle className="w-3.5 h-3.5" /> Abort

@@ -11,7 +11,6 @@ export interface ScoreState {
   t2Score: number;
   serverTeam: 1 | 2;
   serverPlayerIndex: 0 | 1; // 0 or 1
-  receiverP0AtTop: boolean; // Determines receiver positioning on SVG Court
   t1LastServedBy: 0 | 1; // Tracks who served last on team 1
   t2LastServedBy: 0 | 1; // Tracks who served last on team 2
   t1GamesWon: number;
@@ -31,7 +30,6 @@ export class ScoringLogic {
       t2Score: 0,
       serverTeam: 1,
       serverPlayerIndex: 0,
-      receiverP0AtTop: true,
       t1LastServedBy: 1, // Defaulting to 1 to match UmpireEngine.tsx init
       t2LastServedBy: 1,
       t1GamesWon: 0,
@@ -70,19 +68,15 @@ export class ScoringLogic {
 
     this.state.t1Score += 1;
     if (this.state.serverTeam === 1) {
-      // Same server continues — receiver positions stay exactly where they are
+      // Same server continues.
       this.state.t1LastServedBy = this.state.serverPlayerIndex;
     } else {
-      // Service changes to T1 — receivers (T2) choose new positions
+      // Service changes to T1. Court positions live in the match state
+      // (t1RightCourt/t2RightCourt), which computeAddPoint maintains.
       this.state.serverTeam = 1;
       this.state.serverPlayerIndex = isT1Doubles ? (this.state.t1LastServedBy === 0 ? 1 : 0) : 0;
       this.state.t1LastServedBy = this.state.serverPlayerIndex;
       
-      // Keep T2 players in their current physical positions
-      const oldT2Score = this.state.t2Score;
-      const p0WasServer = this.state.t2LastServedBy === 0;
-      const isEven = oldT2Score % 2 === 0;
-      this.state.receiverP0AtTop = p0WasServer ? isEven : !isEven;
     }
   }
 
@@ -93,19 +87,15 @@ export class ScoringLogic {
 
     this.state.t2Score += 1;
     if (this.state.serverTeam === 2) {
-      // Same server continues — receiver positions stay exactly where they are
+      // Same server continues.
       this.state.t2LastServedBy = this.state.serverPlayerIndex;
     } else {
-      // Service changes to T2 — receivers (T1) choose new positions
+      // Service changes to T2. Court positions live in the match state
+      // (t1RightCourt/t2RightCourt), which computeAddPoint maintains.
       this.state.serverTeam = 2;
       this.state.serverPlayerIndex = isT2Doubles ? (this.state.t2LastServedBy === 0 ? 1 : 0) : 0;
       this.state.t2LastServedBy = this.state.serverPlayerIndex;
       
-      // Keep T1 players in their current physical positions
-      const oldT1Score = this.state.t1Score;
-      const p0WasServer = this.state.t1LastServedBy === 0;
-      const isEven = oldT1Score % 2 === 0;
-      this.state.receiverP0AtTop = p0WasServer ? !isEven : isEven;
     }
   }
 

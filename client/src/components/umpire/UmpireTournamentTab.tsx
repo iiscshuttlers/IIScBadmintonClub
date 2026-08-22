@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { getCourtColor, cn } from "@/lib/utils";
+import { toLocalDateTimeInput, localDateTimeInputToIso } from "@/lib/umpire/schedule";
 
 export interface TournamentMatchForUmpire {
   id: string;
@@ -79,6 +80,57 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
   const [notifyingId, setNotifyingId] = useState<string | null>(null);
   const [walkoverFor, setWalkoverFor] = useState<TournamentMatchForUmpire | null>(null);
   const [savingWalkover, setSavingWalkover] = useState(false);
+  const [rescheduleFor, setRescheduleFor] = useState<TournamentMatchForUmpire | null>(null);
+  const [rescheduleAt, setRescheduleAt] = useState("");
+  const [rescheduleCourt, setRescheduleCourt] = useState("");
+  const [savingReschedule, setSavingReschedule] = useState(false);
+
+  const openReschedule = (m: TournamentMatchForUmpire) => {
+    setRescheduleAt(toLocalDateTimeInput(m.scheduled_at));
+    setRescheduleCourt(m.court_number ?? "");
+    setRescheduleFor(m);
+  };
+
+  /**
+   * Move a match to a new slot. Court and time travel together because in
+   * practice they change together — a match slips because its court is still
+   * busy. Unlike the walkover this is a plain row update: nothing about the
+   * bracket changes, and RLS already lets umpires write these columns.
+   */
+  const saveReschedule = async () => {
+    if (!rescheduleFor) return;
+    const iso = localDateTimeInputToIso(rescheduleAt);
+    if (!iso) {
+      toast.error("Pick a date and time for the match");
+      return;
+    }
+    setSavingReschedule(true);
+    try {
+      const { error } = await supabase
+        .from("tournament_matches")
+        .update({
+          scheduled_at: iso,
+          court_number: rescheduleCourt.trim() || null,
+          status: "scheduled",
+          // Let the reminder fire again for the new slot — players were told
+          // about the old one.
+          reminder_sent: false,
+        })
+        .eq("id", rescheduleFor.id);
+      if (error) throw error;
+
+      toast.success("Match rescheduled", {
+        description: `${new Date(iso).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })}` +
+          `${rescheduleCourt.trim() ? ` · Court ${rescheduleCourt.trim()}` : ""} — players will be reminded again.`,
+      });
+      setRescheduleFor(null);
+      load({ silent: true });
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to reschedule match");
+    } finally {
+      setSavingReschedule(false);
+    }
+  };
 
   /**
    * Record a no-show. side 1|2 = that team advances; 0 = double walkover, where
@@ -701,8 +753,84 @@ export function UmpireTournamentTab({ onStartMatch }: Props) {
               className="w-full py-2.5 rounded-xl border border-[var(--warning)]/50 text-[var(--warning)] font-bold text-xs uppercase tracking-wider transition hover:bg-[color-mix(in_srgb,var(--warning)_12%,transparent)] flex items-center justify-center gap-2">
               <Flag className="w-4 h-4" /> Record Walkover
             </button>
+
+            {/* Courts overrun and matches slip, which the umpire finds out at
+                the court. Rescheduling a match that has already started makes
+                no sense, so it is offered only before the first rally. */}
+            {selectedMatch.status !== "in_progress" && (
+              <button
+                onClick={() => openReschedule(selectedMatch)}
+                className="w-full py-2.5 rounded-xl border border-slate-600 text-slate-300 font-bold text-xs uppercase tracking-wider transition hover:border-blue-400 hover:text-blue-300 flex items-center justify-center gap-2">
+                <CalendarDays className="w-4 h-4" /> Reschedule
+              </button>
+            )}
           </div>
         </div>
+
+        {rescheduleFor && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 w-full max-w-sm shadow-2xl space-y-4">
+              <div className="text-center space-y-1">
+                <CalendarDays className="w-10 h-10 text-blue-400 mx-auto" />
+                <h2 className="text-lg font-black text-foreground uppercase tracking-wider">Reschedule</h2>
+                <p className="text-xs text-muted-foreground">
+                  {rescheduleFor.match_code} · {rescheduleFor.team1_label ?? "TBD"} vs {rescheduleFor.team2_label ?? "TBD"}
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="reschedule-at" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                  Date &amp; time
+                </label>
+                <input
+                  id="reschedule-at"
+                  type="datetime-local"
+                  value={rescheduleAt}
+                  onChange={(e) => setRescheduleAt(e.target.value)}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-foreground outline-none focus:border-blue-400 transition"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="reschedule-court" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                  Court <span className="normal-case tracking-normal font-bold text-slate-500">(leave blank to unassign)</span>
+                </label>
+                <input
+                  id="reschedule-court"
+                  list="umpire-court-options"
+                  value={rescheduleCourt}
+                  onChange={(e) => setRescheduleCourt(e.target.value)}
+                  placeholder="e.g. C3"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-foreground outline-none focus:border-blue-400 transition"
+                />
+                <datalist id="umpire-court-options">
+                  {[...new Set(allMatches.map((m) => m.court_number).filter(Boolean) as string[])]
+                    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+                    .map((c) => <option key={c} value={c} />)}
+                </datalist>
+              </div>
+
+              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                Players are reminded again for the new slot.
+              </p>
+
+              <button
+                disabled={savingReschedule}
+                onClick={saveReschedule}
+                className="w-full py-3 px-4 rounded-xl bg-blue-500 hover:bg-blue-400 text-black font-black text-sm uppercase tracking-wider transition disabled:opacity-50 flex items-center justify-center gap-2">
+                {savingReschedule ? <Loader2 className="w-4 h-4 animate-spin" /> : <CalendarDays className="w-4 h-4" />}
+                {savingReschedule ? "Saving..." : "Save New Slot"}
+              </button>
+
+              <button
+                disabled={savingReschedule}
+                onClick={() => setRescheduleFor(null)}
+                className="w-full py-2.5 text-xs font-bold text-muted-foreground hover:text-foreground transition disabled:opacity-50">
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
 
         {walkoverFor && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">

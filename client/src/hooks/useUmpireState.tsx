@@ -134,7 +134,6 @@ export function useUmpireState({
           serverTeam: 1,
           serverPlayerIndex: 0,
           receiverPlayerIndex: 0,
-          receiverP0AtTop: true,
           t1LastServedBy: 1,
           t2LastServedBy: 1,
           endsSwapped: false,
@@ -207,7 +206,6 @@ export function useUmpireState({
           serverTeam: 1,
           serverPlayerIndex: 0,
           receiverPlayerIndex: 0,
-          receiverP0AtTop: true,
           t1LastServedBy: 1,
           t2LastServedBy: 1,
           endsSwapped: false,
@@ -233,7 +231,6 @@ export function useUmpireState({
         serverTeam: 1,
         serverPlayerIndex: 0,
         receiverPlayerIndex: 0,
-        receiverP0AtTop: true,
         t1LastServedBy: 1,
         t2LastServedBy: 1,
         endsSwapped: false,
@@ -274,14 +271,15 @@ export function useUmpireState({
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (match.status === "playing") {
+      // A finished match is still unsaved work until Save Result is tapped.
+      if (match.status === "playing" || (match.status === "finished" && !hasSaved)) {
         e.preventDefault();
         e.returnValue = "";
       }
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [match.status]);
+  }, [match.status, hasSaved]);
 
   
     // Discipline cards: per player slot, array of card types issued
@@ -421,14 +419,9 @@ export function useUmpireState({
         toast.error("Invalid format: Singles vs Doubles matches are not allowed.");
         return;
       }
-      const initServerOnLeft = match.serverTeam === 1;
-      const initIsEven = true;
-      const initDiagonalAtTop = initServerOnLeft === initIsEven;
-      const initReceiverP0AtTop = (initDiagonalAtTop === (match.receiverPlayerIndex === 0));
       await updateMatch({
         status: "playing",
         category: cat,
-        receiverP0AtTop: initReceiverP0AtTop,
         // At 0-0 the server stands in the right service court, and the chosen
         // receiver stands in theirs. Seed court positions from that so serve and
         // receive stay correct for the rest of the game.
@@ -449,13 +442,9 @@ export function useUmpireState({
         MS: "Singles", WS: "Singles", MD: "Doubles", WD: "Doubles", XD: "Doubles",
       };
       const cat = tournamentMatch ? (catMap[tournamentMatch.category] ?? "Singles") : match.category;
-      const initServerOnLeft = match.serverTeam === 1;
-      const initDiagonalAtTop = initServerOnLeft; // score 0 is even
-      const initReceiverP0AtTop = (initDiagonalAtTop === (match.receiverPlayerIndex === 0));
       await updateMatch({
         status: "playing",
         category: cat,
-        receiverP0AtTop: initReceiverP0AtTop,
         // At 0-0 the server stands in the right service court, and the chosen
         // receiver stands in theirs. Seed court positions from that so serve and
         // receive stay correct for the rest of the game.
@@ -889,10 +878,46 @@ export function useUmpireState({
       prevStatusRef.current = match.status;
     }, [match.status]);
 
-    const handleClose = () => {
+    /**
+     * Leave the match screen.
+     *
+     * Exiting used to delete the live snapshot unconditionally, including for a
+     * match still in play. The tournament row stayed `in_progress` while the
+     * only record of the score was gone, so the match sat stuck as "live" and
+     * resuming it could do nothing but start again from 0-0. A match whose
+     * result is not yet recorded anywhere is now left broadcasting so it can be
+     * picked back up; `endBroadcast` is for the paths that really do mean to
+     * end it (Cancel and Abort).
+     *
+     * A finished match counts as unrecorded until it is saved: the status flips
+     * to "finished" the moment the last rally lands, well before the umpire
+     * taps Save Result, so closing in between would have discarded a completed
+     * match the same way.
+     *
+     * Takes an options object rather than a boolean so that passing this
+     * straight to an onClick — where React supplies a MouseEvent — cannot be
+     * mistaken for a request to end the broadcast.
+     */
+    const handleClose = (opts?: { endBroadcast?: boolean }) => {
       const liveMatchId = tournamentMatch?.id || match.dbId || match.id || userId;
-      if (liveMatchId) {
+      const unrecorded =
+        match.status === "playing" || (match.status === "finished" && !hasSaved);
+      const keepAlive = unrecorded && opts?.endBroadcast !== true;
+
+      if (liveMatchId && !keepAlive) {
         MatchService.removeLiveMatch(liveMatchId).catch(console.error);
+      }
+      if (keepAlive) {
+        // Make sure the last point actually reached the database before the
+        // screen goes away, or resuming would replay a stale score.
+        MatchService.flushLiveMatches().catch(console.error);
+        if (match.status === "finished") {
+          toast.warning("Result not saved — match left live so you can finish saving it", {
+            duration: 8000,
+          });
+        } else {
+          toast("Match left live — resume it from the match list", { icon: "📡" });
+        }
       }
       onClose();
     };

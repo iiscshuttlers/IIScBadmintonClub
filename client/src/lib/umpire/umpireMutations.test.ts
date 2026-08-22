@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeAddPoint, computeDeductPoint } from "./umpireMutations";
+import { computeAddPoint, computeDeductPoint, computeForceEndSet } from "./umpireMutations";
 import type { BwfMatchState } from "@/types/umpire";
 
 function createMockMatch(overrides?: Partial<BwfMatchState>): BwfMatchState {
@@ -14,7 +14,6 @@ function createMockMatch(overrides?: Partial<BwfMatchState>): BwfMatchState {
     serverTeam: 1,
     serverPlayerIndex: 0,
     receiverPlayerIndex: 0,
-    receiverP0AtTop: true,
     t1LastServedBy: 1,
     t2LastServedBy: 1,
     endsSwapped: false,
@@ -310,5 +309,149 @@ describe("deducting a point restores the serve", () => {
     const undone = computeDeductPoint(m, 1)!;
     expect(undone.t1!.score).toBe(4);
     expect(undone.serverTeam).toBeUndefined(); // nothing to restore, left alone
+  });
+
+  it("seeds court positions when the snapshot predates them", () => {
+    // Log entry written before court positions were snapshotted.
+    const m = createMockMatch({
+      t1: { p1Id: "p1", p1Name: "P1", p2Id: "p2", p2Name: "P2", score: 5, games: 0 },
+      t2: { p1Id: "p3", p1Name: "P3", p2Id: "p4", p2Name: "P4", score: 3, games: 0 },
+      serverTeam: 1,
+      t1RightCourt: 1,
+      t2RightCourt: 1,
+      pointLog: [{
+        gameNum: 1, team: 1, t1Score: 5, t2Score: 3, serverTeam: 1, ts: 0,
+        prev: {
+          serverTeam: 2, serverPlayerIndex: 0, receiverPlayerIndex: 1,
+          t1LastServedBy: 0, t2LastServedBy: 0,
+        },
+      }] as any,
+    });
+
+    const undone = computeDeductPoint(m, 1)!;
+    // T2 served at 3 (odd) → server and receiver were both in their left courts.
+    expect(undone.t2RightCourt).toBe(1);
+    expect(undone.t1RightCourt).toBe(0);
+  });
+});
+
+// ─── Regressions: the receiving pair must stand still ────────────────────────
+describe("receiving pair positions", () => {
+  const doublesMatch = (over?: any) => createMockMatch({
+    bestOfSets: 1,
+    pointsToWin: 21,
+    serverTeam: 2,
+    serverPlayerIndex: 0,
+    receiverPlayerIndex: 0,
+    t1RightCourt: 0,
+    t2RightCourt: 0,
+    ...over,
+  });
+
+  it("never moves the receiving pair during an unanswered run of serves", () => {
+    // The court diagram used to redraw the receiving pair on every point,
+    // because their positions were derived from "is the active receiver player
+    // 0" — which alternates as the serving pair swaps courts.
+    let m: any = doublesMatch();
+    for (let i = 0; i < 8; i++) {
+      const r = computeAddPoint(m, 2)!;
+      m = { ...m, ...r };
+      expect(m.t1RightCourt).toBe(0);   // receiving pair frozen
+      expect(m.t2RightCourt).toBe(i % 2 === 0 ? 1 : 0); // serving pair swaps
+    }
+    expect(m.t2.score).toBe(8);
+  });
+
+  it("leaves both pairs in place when the serve changes hands", () => {
+    let m: any = doublesMatch();
+    m = { ...m, ...computeAddPoint(m, 2)! }; // 0-1, T2 pair swapped
+    const before = { t1: m.t1RightCourt, t2: m.t2RightCourt };
+
+    m = { ...m, ...computeAddPoint(m, 1)! }; // receiving side wins the rally
+    expect(m.serverTeam).toBe(1);
+    expect(m.t1RightCourt).toBe(before.t1);
+    expect(m.t2RightCourt).toBe(before.t2);
+  });
+
+  it("keeps server and receiver diagonally opposite on every point", () => {
+    let m: any = doublesMatch();
+    const seq: (1 | 2)[] = [2, 2, 1, 1, 2, 1, 2, 2, 2, 1];
+    for (const team of seq) {
+      m = { ...m, ...computeAddPoint(m, team)! };
+      const serverScore = m.serverTeam === 1 ? m.t1.score : m.t2.score;
+      const serverInRight = serverScore % 2 === 0;
+      const servingRight = m.serverTeam === 1 ? m.t1RightCourt : m.t2RightCourt;
+      const receivingRight = m.serverTeam === 1 ? m.t2RightCourt : m.t1RightCourt;
+      // Server occupies the court its score parity demands...
+      expect(m.serverPlayerIndex).toBe(serverInRight ? servingRight : 1 - servingRight);
+      // ...and the receiver stands in the matching court across the net.
+      expect(m.receiverPlayerIndex).toBe(serverInRight ? receivingRight : 1 - receivingRight);
+    }
+  });
+});
+
+describe("new game reset", () => {
+  const atGamePoint = (winner: 1 | 2) => createMockMatch({
+    bestOfSets: 3,
+    pointsToWin: 21,
+    serverTeam: winner,
+    serverPlayerIndex: 0,
+    receiverPlayerIndex: 1,
+    t1RightCourt: 1,
+    t2RightCourt: 1,
+    endsSwapped: false,
+    t1: { p1Id: "p1", p1Name: "P1", p2Id: "p2", p2Name: "P2", score: winner === 1 ? 20 : 3, games: 0 },
+    t2: { p1Id: "p3", p1Name: "P3", p2Id: "p4", p2Name: "P4", score: winner === 2 ? 20 : 3, games: 0 },
+  });
+
+  // The old reset hardcoded a display flag that was only correct for one of the
+  // two winners, so the receiving pair was drawn mirrored after T1 won a game.
+  it.each([1, 2] as const)("lines both pairs up identically when team %i wins", (winner) => {
+    const r = computeAddPoint(atGamePoint(winner), winner)!;
+    expect(r.status).toBe("playing");
+    expect(r.serverTeam).toBe(winner);
+    expect(r.serverPlayerIndex).toBe(0);
+    expect(r.receiverPlayerIndex).toBe(0);
+    expect(r.t1RightCourt).toBe(0);
+    expect(r.t2RightCourt).toBe(0);
+    expect(r.endsSwapped).toBe(true);
+  });
+});
+
+describe("computeForceEndSet", () => {
+  const midGame = (over?: any) => createMockMatch({
+    bestOfSets: 3,
+    pointsToWin: 21,
+    t1: { p1Id: "p1", p1Name: "P1", p2Id: "p2", p2Name: "P2", score: 15, games: 0 },
+    t2: { p1Id: "p3", p1Name: "P3", p2Id: "p4", p2Name: "P4", score: 9, games: 0 },
+    serverTeam: 1,
+    serverPlayerIndex: 1,
+    receiverPlayerIndex: 1,
+    t1RightCourt: 1,
+    t2RightCourt: 1,
+    endsSwapped: false,
+    ...over,
+  });
+
+  it("resets court positions and changes ends for the next game", () => {
+    const r = computeForceEndSet(midGame())!;
+    expect(r.setsHistory).toEqual(["15-9"]);
+    expect(r.t1!.games).toBe(1);
+    expect(r.serverTeam).toBe(1);
+    expect(r.serverPlayerIndex).toBe(0);
+    expect(r.receiverPlayerIndex).toBe(0);
+    expect(r.t1RightCourt).toBe(0);
+    expect(r.t2RightCourt).toBe(0);
+    expect(r.endsSwapped).toBe(true);
+  });
+
+  it("leaves ends and positions alone when the match is over", () => {
+    const r = computeForceEndSet(midGame({
+      t1: { p1Id: "p1", p1Name: "P1", p2Id: "p2", p2Name: "P2", score: 15, games: 1 },
+    }))!;
+    expect(r.status).toBe("finished");
+    expect(r.winner).toBe(1);
+    expect(r.endsSwapped).toBeUndefined();
+    expect(r.t1RightCourt).toBeUndefined();
   });
 });

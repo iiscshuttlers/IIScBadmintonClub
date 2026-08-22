@@ -195,6 +195,64 @@ export class MatchService {
   }
 
   private static liveMatchDebounceTimers: Record<string, ReturnType<typeof setTimeout>> = {};
+  /** Latest state per match that has not reached the database yet. */
+  private static pendingLiveMatches: Record<string, BwfMatchState> = {};
+  private static flushHandlersBound = false;
+
+  /** Callers awaiting the next successful write for a match. */
+  private static liveMatchWaiters: Record<string, { resolve: () => void; reject: (e: unknown) => void }[]> = {};
+
+  private static async writeLiveMatch(matchId: string) {
+    const state = MatchService.pendingLiveMatches[matchId];
+    const waiters = MatchService.liveMatchWaiters[matchId] ?? [];
+    delete MatchService.liveMatchWaiters[matchId];
+    if (!state) {
+      waiters.forEach(w => w.resolve());
+      return;
+    }
+    delete MatchService.pendingLiveMatches[matchId];
+    if (MatchService.liveMatchDebounceTimers[matchId]) {
+      clearTimeout(MatchService.liveMatchDebounceTimers[matchId]);
+      delete MatchService.liveMatchDebounceTimers[matchId];
+    }
+    try {
+      const { error } = await supabase.rpc("upsert_live_match_by_id", {
+        p_match_id: matchId,
+        match_state: state as any,
+      });
+      if (error) throw error;
+      waiters.forEach(w => w.resolve());
+    } catch (e) {
+      waiters.forEach(w => w.reject(e));
+      throw e;
+    }
+  }
+
+  /**
+   * Write every debounced score straight away.
+   *
+   * The 500ms debounce is a real data-loss window on mobile: backgrounding the
+   * tab suspends timers, so a pending write could sit unsent indefinitely and
+   * the match would be left with a stale (or missing) live snapshot — the state
+   * an umpire later fails to resume from.
+   */
+  static async flushLiveMatches() {
+    await Promise.all(
+      Object.keys(MatchService.pendingLiveMatches).map(id =>
+        MatchService.writeLiveMatch(id).catch(e => console.warn("Live match flush failed", e)),
+      ),
+    );
+  }
+
+  private static bindFlushHandlers() {
+    if (MatchService.flushHandlersBound || typeof window === "undefined") return;
+    MatchService.flushHandlersBound = true;
+    const flush = () => { void MatchService.flushLiveMatches(); };
+    window.addEventListener("pagehide", flush);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") flush();
+    });
+  }
 
   static async upsertLiveMatch(matchId: string, matchState: BwfMatchState) {
     // 1. Instant sub-50ms WebSocket broadcast directly to camera & TV screens
@@ -208,23 +266,21 @@ export class MatchService {
       console.warn("Realtime broadcast send warning", e);
     }
 
-    // 2. Persist to site_data in Supabase DB (Debounced by 500ms)
+    // 2. Persist to site_data in Supabase DB (debounced by 500ms).
+    // Superseded calls used to be dropped with their promise left forever
+    // pending, so the caller's `await` never returned and everything after it —
+    // including the tournament_matches score sync — was silently skipped.
+    // The newest state now subsumes the older one and both callers settle.
+    MatchService.bindFlushHandlers();
+    MatchService.pendingLiveMatches[matchId] = matchState;
     if (MatchService.liveMatchDebounceTimers[matchId]) {
       clearTimeout(MatchService.liveMatchDebounceTimers[matchId]);
     }
 
     return new Promise<void>((resolve, reject) => {
-      MatchService.liveMatchDebounceTimers[matchId] = setTimeout(async () => {
-        try {
-          const { error } = await supabase.rpc("upsert_live_match_by_id", {
-            p_match_id: matchId,
-            match_state: matchState as any,
-          });
-          if (error) reject(error);
-          else resolve();
-        } catch (e) {
-          reject(e);
-        }
+      (MatchService.liveMatchWaiters[matchId] ??= []).push({ resolve, reject });
+      MatchService.liveMatchDebounceTimers[matchId] = setTimeout(() => {
+        void MatchService.writeLiveMatch(matchId).catch(() => {});
       }, 500);
     });
   }

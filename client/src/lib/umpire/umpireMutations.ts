@@ -1,10 +1,11 @@
 import { ScoringLogic, type MatchFormat } from "./scoringLogic";
+import { seedRightCourts } from "./courtPositions";
 import type { BwfMatchState, PointLogEntry } from "@/types/umpire";
 
 export function computeAddPoint(match: BwfMatchState, team: 1 | 2, note?: string): Partial<BwfMatchState> & { _changeEnds?: boolean; _reason?: string; _break?: number; _title?: string } | null {
   if (match.status !== "playing") return null;
 
-  const { t1, t2, serverTeam, serverPlayerIndex, receiverPlayerIndex, receiverP0AtTop,
+  const { t1, t2, serverTeam, serverPlayerIndex, receiverPlayerIndex,
         t1LastServedBy, t2LastServedBy,
         setsHistory, pointsToWin, goldenPoint, bestOfSets, endsSwapped, pointLog } = match;
         
@@ -22,7 +23,6 @@ export function computeAddPoint(match: BwfMatchState, team: 1 | 2, note?: string
       t2Score: newT2.score,
       serverTeam,
       serverPlayerIndex,
-      receiverP0AtTop,
       t1LastServedBy,
       t2LastServedBy,
       t1GamesWon: newT1.games,
@@ -37,7 +37,6 @@ export function computeAddPoint(match: BwfMatchState, team: 1 | 2, note?: string
   newT2.score = engine.state.t2Score;
   let newServerTeam = engine.state.serverTeam;
   let newServerPlayerIndex = engine.state.serverPlayerIndex as 0 | 1;
-  let newReceiverP0AtTop = engine.state.receiverP0AtTop;
   let newT1LastServedBy = engine.state.t1LastServedBy as 0 | 1;
   let newT2LastServedBy = engine.state.t2LastServedBy as 0 | 1;
 
@@ -51,18 +50,17 @@ export function computeAddPoint(match: BwfMatchState, team: 1 | 2, note?: string
   // Seed from the current server/receiver when a match predates these fields.
   const prevServerTeam = serverTeam;
   const prevServerScore = prevServerTeam === 1 ? t1.score : t2.score;
-  const serverInRightBefore = prevServerScore % 2 === 0;
 
-  let t1Right: 0 | 1 =
-    match.t1RightCourt ??
-    (prevServerTeam === 1
-      ? ((serverInRightBefore ? serverPlayerIndex : (1 - serverPlayerIndex)) as 0 | 1)
-      : ((serverInRightBefore ? receiverPlayerIndex : (1 - receiverPlayerIndex)) as 0 | 1));
-  let t2Right: 0 | 1 =
-    match.t2RightCourt ??
-    (prevServerTeam === 2
-      ? ((serverInRightBefore ? serverPlayerIndex : (1 - serverPlayerIndex)) as 0 | 1)
-      : ((serverInRightBefore ? receiverPlayerIndex : (1 - receiverPlayerIndex)) as 0 | 1));
+  const seeded = seedRightCourts({
+    serverTeam,
+    serverPlayerIndex,
+    receiverPlayerIndex,
+    serverScore: prevServerScore,
+    t1RightCourt: match.t1RightCourt,
+    t2RightCourt: match.t2RightCourt,
+  });
+  let t1Right: 0 | 1 = seeded.t1Right;
+  let t2Right: 0 | 1 = seeded.t2Right;
 
   const servingSideWonRally = team === prevServerTeam;
   if (servingSideWonRally) {
@@ -90,9 +88,6 @@ export function computeAddPoint(match: BwfMatchState, team: 1 | 2, note?: string
   if (newServerTeam === 1) newT1LastServedBy = newServerPlayerIndex;
   else newT2LastServedBy = newServerPlayerIndex;
 
-  // Keep the court visual's flag consistent with the derived receiver.
-  newReceiverP0AtTop = newReceiverPlayerIndex === 0;
-
   const currentGameNum = newT1.games + newT2.games + 1;
   const newLog: PointLogEntry = {
     gameNum: currentGameNum,
@@ -108,11 +103,13 @@ export function computeAddPoint(match: BwfMatchState, team: 1 | 2, note?: string
       serverTeam,
       serverPlayerIndex,
       receiverPlayerIndex,
-      receiverP0AtTop,
       t1LastServedBy,
       t2LastServedBy,
-      t1RightCourt: match.t1RightCourt,
-      t2RightCourt: match.t2RightCourt,
+      // Seeded rather than copied: a match that predates the court-position
+      // fields would otherwise snapshot `undefined` and leave the deduct path
+      // with the post-rally positions.
+      t1RightCourt: seeded.t1Right,
+      t2RightCourt: seeded.t2Right,
     },
   };
   const newPointLog = [...pointLog, newLog];
@@ -161,7 +158,6 @@ export function computeAddPoint(match: BwfMatchState, team: 1 | 2, note?: string
       newServerPlayerIndex = 0;
       newT1LastServedBy = 1;
       newT2LastServedBy = 0;
-      newReceiverP0AtTop = true;
       // New game starts 0-0: both sides line up with player 0 on the right,
       // so player 0 serves and player 0 receives.
       newReceiverPlayerIndex = 0;
@@ -202,7 +198,6 @@ export function computeAddPoint(match: BwfMatchState, team: 1 | 2, note?: string
     serverTeam: newServerTeam,
     serverPlayerIndex: newServerPlayerIndex,
     receiverPlayerIndex: newReceiverPlayerIndex,
-    receiverP0AtTop: newReceiverP0AtTop,
     t1LastServedBy: newT1LastServedBy,
     t2LastServedBy: newT2LastServedBy,
     t1RightCourt: t1Right,
@@ -236,11 +231,26 @@ export function computeDeductPoint(match: BwfMatchState, team: 1 | 2): Partial<B
         serverTeam: lastEntry.prev.serverTeam,
         serverPlayerIndex: lastEntry.prev.serverPlayerIndex,
         receiverPlayerIndex: lastEntry.prev.receiverPlayerIndex,
-        receiverP0AtTop: lastEntry.prev.receiverP0AtTop,
         t1LastServedBy: lastEntry.prev.t1LastServedBy,
         t2LastServedBy: lastEntry.prev.t2LastServedBy,
-        ...(lastEntry.prev.t1RightCourt !== undefined ? { t1RightCourt: lastEntry.prev.t1RightCourt } : {}),
-        ...(lastEntry.prev.t2RightCourt !== undefined ? { t2RightCourt: lastEntry.prev.t2RightCourt } : {}),
+        // Entries written before court positions were snapshotted carry no
+        // right-court values; seed them from the restored serve instead of
+        // leaving the post-rally positions in place.
+        ...(() => {
+          const prev = lastEntry.prev!;
+          // Scores as they stood before the rally being deducted.
+          const preT1 = team === 1 ? t1.score - 1 : t1.score;
+          const preT2 = team === 2 ? t2.score - 1 : t2.score;
+          const { t1Right, t2Right } = seedRightCourts({
+            serverTeam: prev.serverTeam,
+            serverPlayerIndex: prev.serverPlayerIndex,
+            receiverPlayerIndex: prev.receiverPlayerIndex,
+            serverScore: prev.serverTeam === 1 ? preT1 : preT2,
+            t1RightCourt: prev.t1RightCourt,
+            t2RightCourt: prev.t2RightCourt,
+          });
+          return { t1RightCourt: t1Right, t2RightCourt: t2Right };
+        })(),
       }
     : {};
 
@@ -273,7 +283,7 @@ export function computeForceEndSet(match: BwfMatchState): Partial<BwfMatchState>
   let t1Won = match.t1.score > match.t2.score;
   let t2Won = match.t2.score > match.t1.score;
 
-  let { t1, t2, setsHistory, bestOfSets } = match;
+  let { t1, t2, setsHistory, bestOfSets, endsSwapped } = match;
   let newT1 = { ...t1 };
   let newT2 = { ...t2 };
 
@@ -292,6 +302,8 @@ export function computeForceEndSet(match: BwfMatchState): Partial<BwfMatchState>
   if (newT1.games >= gamesToWin) { nextStatus = "finished"; nextWinner = 1; }
   else if (newT2.games >= gamesToWin) { nextStatus = "finished"; nextWinner = 2; }
 
+  const matchOver = nextStatus === "finished";
+
   return {
     setsHistory: newSetsHistory,
     t1: newT1,
@@ -302,6 +314,18 @@ export function computeForceEndSet(match: BwfMatchState): Partial<BwfMatchState>
     serverPlayerIndex: 0,
     t1LastServedBy: 1,
     t2LastServedBy: 0,
+    // Force-ending a set used to skip the rest of the new-game reset that the
+    // normal game-end path performs, so the next game started with the previous
+    // game's court positions and without changing ends — which then picked the
+    // wrong partner to serve the very first rally.
+    ...(matchOver
+      ? {}
+      : {
+          receiverPlayerIndex: 0 as const,
+          t1RightCourt: 0 as const,
+          t2RightCourt: 0 as const,
+          endsSwapped: !endsSwapped,
+        }),
   };
 }
 
