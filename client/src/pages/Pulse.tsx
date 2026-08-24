@@ -3,7 +3,7 @@ import FeedTab from "@/components/pulse/FeedTab";
 import { DirectoryWrapper } from "@/components/players-directory/DirectoryWrapper";
 import { Activity } from "lucide-react";
 import { motion, type Variants } from "framer-motion";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Calendar,
@@ -22,10 +22,10 @@ import {
 } from "lucide-react";
 import { getTournaments, fetchTournamentConfig, DEFAULT_TOURNAMENT_CONFIG, type TournamentConfig } from "@/lib/tournaments";
 import {
-  ARCHIVED_TOURNAMENTS,
   ArchivedTournament,
   type TournamentStatus,
 } from "@/data/tournamentArchive";
+import { useArchivedTournaments } from "@/hooks/useArchivedTournaments";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { InfoModal } from "@/components/InfoModal";
 import { useQuery } from "@tanstack/react-query";
@@ -50,43 +50,6 @@ const stagger: Variants = {
 
 
 const MILESTONE_ICONS: LucideIcon[] = [Trophy, Medal, Award, GraduationCap, Star];
-
-const MILESTONES = [
-  ...[...ARCHIVED_TOURNAMENTS]
-    .sort((a, b) => b.startDate.localeCompare(a.startDate))
-    .slice(0, 5)
-    .map((t, i) => {
-      const colors = [
-        "border-amber-400",
-        "border-primary",
-        "border-blue-500",
-        "border-purple-500",
-        "border-orange-400",
-      ];
-      return {
-        year: t.startDate,
-        title: t.name,
-        desc: t.description,
-        icon: (MILESTONE_ICONS[i] ?? Trophy) as LucideIcon,
-        color: colors[i] ?? "border-slate-400",
-        upcoming: false,
-      };
-    }),
-];
-
-type LiveTournament = {
-  id: string;
-  slug?: string;
-  name: string;
-  subtitle?: string;
-  description?: string;
-  startDate: string;
-  endDate?: string;
-  status: TournamentStatus;
-  location?: string;
-  type?: string;
-  categories?: string[];
-};
 
 function EventSkeleton() {
   return (
@@ -185,6 +148,35 @@ import { supabase } from "@/lib/supabase";
 
 export default function Pulse() {
   const { isAdmin } = useAuth();
+  const { archivedTournaments } = useArchivedTournaments();
+
+  const MILESTONES = [...archivedTournaments]
+    .sort((a, b) => b.startDate.localeCompare(a.startDate))
+    .slice(0, 5)
+    .map((t, i) => {
+      const colors = [
+        "border-amber-400",
+        "border-slate-300",
+        "border-orange-500",
+        "border-blue-500",
+        "border-purple-500",
+      ];
+      const textColors = [
+        "text-amber-700 dark:text-amber-400",
+        "text-slate-700 dark:text-slate-300",
+        "text-orange-700 dark:text-orange-400",
+        "text-blue-700 dark:text-blue-400",
+        "text-purple-700 dark:text-purple-400",
+      ];
+      return {
+        year: t.startDate.match(/^(\d{4})/) ? t.startDate.match(/^(\d{4})/)![1] : "Past",
+        title: t.name,
+        color: colors[i % colors.length],
+        textColor: textColors[i % textColors.length],
+        icon: MILESTONE_ICONS[i % MILESTONE_ICONS.length],
+        slug: t.slug,
+      };
+    });
 
   usePageMeta({
     title: "Pulse",
@@ -249,6 +241,21 @@ export default function Pulse() {
   const effectiveTab = TOURNAMENT_SUB_TABS.includes(activeTab as string)
     ? "tournament"
     : activeTab as "calendar" | "tournament" | "history";
+    
+  type LiveTournament = {
+    id: string;
+    slug?: string;
+    name: string;
+    subtitle?: string;
+    description?: string;
+    startDate: string;
+    endDate?: string;
+    status: TournamentStatus;
+    location?: string;
+    type?: string;
+    categories?: string[];
+  };
+
   const [events, setEvents] = useState<LiveTournament[]>([]);
   const [loading, setLoading] = useState(true);
   const [tournamentCfg, setTournamentCfg] = useState<TournamentConfig>(DEFAULT_TOURNAMENT_CONFIG);
@@ -284,14 +291,27 @@ export default function Pulse() {
 
   const live = events.filter((e) => e.status === "active");
   const upcoming = events.filter((e) => e.status === "upcoming");
-  const completed: any[] = [
-    ...ARCHIVED_TOURNAMENTS,
+  const completed = [
+    ...archivedTournaments,
     ...events.filter(
       (e) =>
         (e.status === "completed" || e.status === "archived") &&
-        !ARCHIVED_TOURNAMENTS.some((archived) => archived.slug === e.slug),
+        !archivedTournaments.some((archived) => archived.slug === e.slug),
     ),
   ].sort((a, b) => (b.startDate || "").localeCompare(a.startDate || ""));
+
+  const combinedEvents = useMemo(() => {
+    if (!events) return archivedTournaments;
+    return [
+      ...events,
+      ...archivedTournaments.filter((archived) => {
+        return (
+          (archived.status === "completed" || archived.status === "archived") &&
+          !events.some((e) => e.slug === archived.slug)
+        );
+      }),
+    ].sort((a, b) => new Date(b.startDate || (b as any).endDate || (b as any).end_date).getTime() - new Date(a.startDate || (a as any).endDate || (a as any).end_date).getTime());
+  }, [events, archivedTournaments]);
 
   const getTypeLabel = (type: string) => {
     if (type === "open") return "Open Tournament";
@@ -366,6 +386,11 @@ export default function Pulse() {
                   <p className="mt-1 font-bold text-blue-950 dark:text-foreground text-sm flex items-center gap-1.5">
                     <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" /> {result.winner}
                   </p>
+                  {result.runnerUp && (
+                    <p className="mt-0.5 font-semibold text-slate-600 dark:text-slate-400 text-xs flex items-center gap-1.5">
+                      <Trophy className="w-3 h-3 text-slate-400 shrink-0" /> {result.runnerUp}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -599,7 +624,7 @@ export default function Pulse() {
                 <div className="space-y-6">
                   {[
                     ...events,
-                    ...ARCHIVED_TOURNAMENTS.filter((archived) => !events.some((e) => e.slug === archived.slug)),
+                    ...archivedTournaments.filter((archived) => !events.some((e) => e.slug === archived.slug)),
                   ]
                     .map((t, i) => {
                       const colors = [

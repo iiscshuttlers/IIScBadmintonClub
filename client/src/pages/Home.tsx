@@ -20,7 +20,8 @@ import iiscTeam from "@/assets/iisc-team.jpg";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { motion, type Variants } from "framer-motion";
 import { useState, useEffect } from "react";
-import { ARCHIVED_TOURNAMENTS } from "@/data/tournamentArchive";
+import { useArchivedTournaments } from "@/hooks/useArchivedTournaments";
+import { ArchivedTournament } from "@/data/tournamentArchive";
 import { fetchSiteData } from "@/lib/siteData";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { InfoModal } from "@/components/InfoModal";
@@ -48,13 +49,14 @@ const VALUES = [
   { title: "Community", desc: "Building lasting friendships across departments and batches.", Icon: Sprout },
 ];
 
-function getLatestHighlight() {
-  const completed = ARCHIVED_TOURNAMENTS.filter((t) => t.status === "completed");
+function getLatestHighlight(archivedTournaments: ArchivedTournament[]) {
+  const completed = archivedTournaments.filter((t) => t.status === "completed" || t.status === "archived");
   if (!completed.length) return null;
   return [...completed].sort((a, b) => b.startDate.localeCompare(a.startDate))[0];
 }
 
 export default function Home() {
+  const { archivedTournaments } = useArchivedTournaments();
   const [config, setConfig] = useState<Record<string, any> | null>(null);
   const [convenerData, setConvenerData] = useState<ConvenerData | null>(null);
 
@@ -119,7 +121,7 @@ export default function Home() {
     },
   ];
 
-  const highlight = getLatestHighlight();
+  const highlight = getLatestHighlight(archivedTournaments);
 
   return (
     <>

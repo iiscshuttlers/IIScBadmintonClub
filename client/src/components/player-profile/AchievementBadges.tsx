@@ -160,20 +160,21 @@ interface Props {
 }
 
 export function AchievementBadges({ matches: allMatches, playerId, elo }: Props) {
-  const matches = useMemo(() => allMatches.filter(m => !!(m as any).tournament_slug), [allMatches]);
+  const matches = useMemo(() => allMatches, [allMatches]);
 
   const { wins, losses } = useMemo(() => {
     let w = 0;
     let l = 0;
-    const isWinner = (m: Match) => {
-      if (!m.winner_id) return false;
+    const isWinner = (m: any) => {
+      if (!m.winner_id && !m.winner_side) return false;
       const isTeam1 = m.player1_id === playerId || m.team1_partner_id === playerId;
+      if (m.winner_side) return isTeam1 ? m.winner_side === 1 : m.winner_side === 2;
       const isTeam1Winner = m.winner_id === m.player1_id || m.winner_id === m.team1_partner_id;
       return isTeam1 ? isTeam1Winner : !isTeam1Winner;
     };
 
     matches
-      .filter((m) => m.status === "confirmed")
+      .filter((m) => m.status === "confirmed" || m.status === "completed")
       .forEach((m) => {
         if (isWinner(m)) w++;
         else l++;
@@ -246,26 +247,28 @@ export function AchievementBadges({ matches: allMatches, playerId, elo }: Props)
               const Icon = badge.icon;
               const percent = Math.min(100, Math.round((progress.current / progress.max) * 100));
               
+              const textColors = badge.color.split(' ').filter(c => c.includes('text-')).join(' ');
+              
               return (
                 <div
                   key={badge.id}
                   title={badge.description}
-                  className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50"
+                  className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
                 >
-                  <div className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center opacity-60 ${badge.color} grayscale`}>
+                  <div className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center ${badge.color}`}>
                     <Icon className="w-5 h-5" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-0.5">
-                      <span className="text-xs font-bold text-muted-foreground dark:text-slate-300 truncate pr-2">{badge.label}</span>
-                      <span className="text-[10px] font-black text-muted-foreground whitespace-nowrap">
+                      <span className={`text-xs font-bold truncate pr-2 ${textColors}`}>{badge.label}</span>
+                      <span className={`text-[10px] font-black whitespace-nowrap ${textColors}`}>
                         {progress.max > 1 ? `${progress.current} / ${progress.max}` : `${percent}%`}
                       </span>
                     </div>
                     <p className="text-[9px] text-muted-foreground truncate mb-1.5" title={badge.description}>{badge.description}</p>
-                    <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                    <div className={`h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden ${textColors}`}>
                       <div 
-                        className="h-full bg-slate-400 dark:bg-slate-500 rounded-full transition-all duration-500" 
+                        className="h-full bg-current rounded-full transition-all duration-500" 
                         style={{ width: `${percent}%` }}
                       />
                     </div>

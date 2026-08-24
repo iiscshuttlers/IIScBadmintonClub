@@ -445,11 +445,13 @@ const TIMELINE_COLORS = [
   },
 ];
 
-import { ARCHIVED_TOURNAMENTS } from "@/data/tournamentArchive";
+import { useArchivedTournaments } from "@/hooks/useArchivedTournaments";
 
 export function CareerHighlightsSection({ player }: { player: any }) {
+  const { archivedTournaments } = useArchivedTournaments();
+
   // Extract tournament highlights dynamically
-  const tournamentHighlights = ARCHIVED_TOURNAMENTS.flatMap((t) => {
+  const tournamentHighlights = archivedTournaments.flatMap((t) => {
     if (!t.winners) return [];
     
     // Helper to check if player name matches winner string

@@ -25,7 +25,7 @@ import { usePlayerStats } from "@/hooks/usePlayerStats";
 import { useTournamentMatchHistory } from "@/hooks/useTournamentMatchHistory";
 import { useMatchActions } from "@/hooks/useMatchActions";
 import { isMasterAdminEmail as isAdminEmail } from "@/lib/admin";
-import { ARCHIVED_TOURNAMENTS } from "@/data/tournamentArchive";
+import { useArchivedTournaments } from "@/hooks/useArchivedTournaments";
 import { MatchHistorySection } from "@/components/player-profile/MatchHistorySection";
 import {
   EquipmentArsenalSection,
@@ -137,6 +137,8 @@ export default function PlayerProfile() {
     handleResendRequest,
   } = useMatchActions(ownPlayerProfile, () => silentRefresh(), () => {}, liveMatches);
 
+  const { archivedTournaments } = useArchivedTournaments();
+
   const dynamicTournamentData = useMemo(() => {
     if (!player) return { achievements: [], tournaments: [] };
 
@@ -151,7 +153,7 @@ export default function PlayerProfile() {
       return cleanStr.includes(playerName) || cleanStr.includes(firstName);
     };
 
-    ARCHIVED_TOURNAMENTS.forEach((t) => {
+    archivedTournaments.forEach((t) => {
       let playerPlayed = false;
       if (t.winners) {
         t.winners.forEach((w) => {
@@ -182,7 +184,7 @@ export default function PlayerProfile() {
     });
 
     return { achievements, tournaments: Array.from(tournaments) };
-  }, [player]);
+  }, [player, archivedTournaments]);
 
   const validAchievements = useMemo(() => {
     const manual = player?.achievements?.filter((a: string) => a.trim().length > 0) || [];
@@ -214,7 +216,8 @@ export default function PlayerProfile() {
   const { splitStats, streakStats, profileCompleteness } = usePlayerStats(
     (player as any) || null,
     liveMatches,
-    validAchievements
+    validAchievements,
+    tournamentRuns || undefined
   );
 
   const pendingMatches = useMemo(() => {
@@ -594,6 +597,7 @@ export default function PlayerProfile() {
               currentUser={currentUser}
               ownPlayerProfile={ownPlayerProfile}
               setIsChallengeModalOpen={setIsChallengeModalOpen}
+              eloRank={eloRank}
             />
           </div>
         </div>
@@ -731,7 +735,6 @@ export default function PlayerProfile() {
                   allPlayers={allPlayers}
                   id={id!}
                   setLocation={setLocation}
-                  DoublesSynergyWidget={DoublesSynergyWidget}
                   AchievementBadges={AchievementBadges}
                   PerformanceTrends={PerformanceTrends}
                   WrappedCard={WrappedCard}
@@ -768,7 +771,12 @@ export default function PlayerProfile() {
                 />
               )}
               {activeTab === "STATS" && (
-                <ProfileStatsTabRight player={augmentedPlayer || player} setLocation={setLocation} />
+                <ProfileStatsTabRight 
+                  liveMatches={liveMatches}
+                  id={id!}
+                  allPlayers={allPlayers}
+                  DoublesSynergyWidget={DoublesSynergyWidget}
+                />
               )}
             </div>
           </div>

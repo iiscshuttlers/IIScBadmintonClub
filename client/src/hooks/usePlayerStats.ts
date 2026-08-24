@@ -1,10 +1,12 @@
 import { useMemo } from "react";
 import type { PlayerRow, MatchWithPlayers } from "@/types";
+import type { TournamentRun } from "./useTournamentMatchHistory";
 
 export function usePlayerStats(
   player: PlayerRow | null,
   liveMatches: MatchWithPlayers[],
-  validAchievements: string[]
+  validAchievements: string[],
+  tournamentRuns?: TournamentRun[]
 ) {
   const id = player?.id;
 
@@ -81,15 +83,39 @@ export function usePlayerStats(
 
     const doubles = doublesMatches.filter(m => !mixed.includes(m));
 
+    const overallStats = computeStats(confirmed);
+    const friendlyStats = computeStats(friendly);
+    const tourneyStats = computeStats(tournament);
+
+    // Augment overallStats and tourneyStats with tournamentRuns
+    if (tournamentRuns && tournamentRuns.length > 0) {
+      let tourneyRunWins = 0;
+      let tourneyRunLosses = 0;
+      for (const run of tournamentRuns) {
+        tourneyRunWins += run.wins;
+        tourneyRunLosses += run.losses;
+      }
+      
+      overallStats.wins += tourneyRunWins;
+      overallStats.losses += tourneyRunLosses;
+      overallStats.total += (tourneyRunWins + tourneyRunLosses);
+      overallStats.winPct = overallStats.total > 0 ? Math.round((overallStats.wins / overallStats.total) * 100) : 0;
+
+      tourneyStats.wins += tourneyRunWins;
+      tourneyStats.losses += tourneyRunLosses;
+      tourneyStats.total += (tourneyRunWins + tourneyRunLosses);
+      tourneyStats.winPct = tourneyStats.total > 0 ? Math.round((tourneyStats.wins / tourneyStats.total) * 100) : 0;
+    }
+
     return {
-      all: computeStats(confirmed),
-      friendly: computeStats(friendly),
-      tournament: computeStats(tournament),
+      all: overallStats,
+      friendly: friendlyStats,
+      tournament: tourneyStats,
       singles: computeStats(singles),
       doubles: computeStats(doubles),
       mixed: computeStats(mixed),
     };
-  }, [liveMatches, id]);
+  }, [liveMatches, id, tournamentRuns]);
 
   const streakStats = useMemo(() => {
     if (!id || liveMatches.length === 0) return { current: 0, max: 0 };

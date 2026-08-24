@@ -60,7 +60,7 @@ function winProb(myElo: number, oppElo: number): number {
 
 export function PlayerAnalyticsWidget({ matches, playerId, playerElo, allPlayers = [] }: Props) {
   const confirmedMatches = useMemo(
-    () => matches.filter((m) => (m as any).status === "confirmed" || !(m as any).status),
+    () => matches.filter((m) => (m as any).status === "confirmed" || (m as any).status === "completed" || !(m as any).status),
     [matches],
   );
 

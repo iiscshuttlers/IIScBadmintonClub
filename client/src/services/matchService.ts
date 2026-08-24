@@ -39,7 +39,9 @@ export async function fetchPlayerMatches(playerId: string, limit = 50): Promise<
   }));
 
   const allMatches = [...(friendlyData ?? []), ...mappedTourney].sort((a: any, b: any) => {
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    const dateA = a.ended_at || a.scheduled_at || a.date || a.created_at;
+    const dateB = b.ended_at || b.scheduled_at || b.date || b.created_at;
+    return new Date(dateB).getTime() - new Date(dateA).getTime();
   });
 
   return allMatches.slice(0, limit) as unknown as MatchWithPlayers[];
@@ -125,37 +127,41 @@ export async function fetchFeedMatches(
     }
   }
 
-  const [
-    { data: friendlyData, error: friendlyError },
-    { data: completedData, error: completedError },
-    { data: upcomingData, error: upcomingError }
-  ] = await Promise.all([
-    friendlyQuery.order("created_at", { ascending: false }).limit(limit),
-    tourneyCompletedQuery.order("created_at", { ascending: false }).limit(limit),
-    tourneyUpcomingQuery.order("scheduled_at", { ascending: true }).limit(limit)
-  ]);
-
-  if (friendlyError) throw friendlyError;
-  if (completedError) throw completedError;
-  if (upcomingError) throw upcomingError;
-
-  const mappedTourney = [...(completedData ?? []), ...(upcomingData ?? [])]
-    .filter((m: any) => {
-      const hasTeam1 = m.player1_id || (m.team1_label && !m.team1_label.toLowerCase().includes("bye"));
-      const hasTeam2 = m.player2_id || (m.team2_label && !m.team2_label.toLowerCase().includes("bye"));
-      return hasTeam1 && hasTeam2;
-    })
-    .map((m: any) => ({
-      ...m,
-      is_friendly: false,
-      team1_partner_id: m.player3_id,
-      team2_partner_id: m.player4_id,
-    }));
-
-  const allMatches = [...(friendlyData ?? []), ...mappedTourney];
-
-  return allMatches as unknown as MatchWithPlayers[];
-}
+    const [
+      { data: friendlyData, error: friendlyError },
+      { data: completedData, error: completedError },
+      { data: upcomingData, error: upcomingError }
+    ] = await Promise.all([
+      friendlyQuery.order("created_at", { ascending: false }).limit(limit),
+      tourneyCompletedQuery.order("created_at", { ascending: false }).limit(limit),
+      tourneyUpcomingQuery.order("scheduled_at", { ascending: true }).limit(limit)
+    ]);
+  
+    if (friendlyError) throw friendlyError;
+    if (completedError) throw completedError;
+    if (upcomingError) throw upcomingError;
+  
+    const mappedTourney = [...(completedData ?? []), ...(upcomingData ?? [])]
+      .filter((m: any) => {
+        const hasTeam1 = m.player1_id || (m.team1_label && !m.team1_label.toLowerCase().includes("bye"));
+        const hasTeam2 = m.player2_id || (m.team2_label && !m.team2_label.toLowerCase().includes("bye"));
+        return hasTeam1 && hasTeam2;
+      })
+      .map((m: any) => ({
+        ...m,
+        is_friendly: false,
+        team1_partner_id: m.player3_id,
+        team2_partner_id: m.player4_id,
+      }));
+  
+    const allMatches = [...(friendlyData ?? []), ...mappedTourney].sort((a: any, b: any) => {
+      const dateA = a.ended_at || a.scheduled_at || a.date || a.created_at;
+      const dateB = b.ended_at || b.scheduled_at || b.date || b.created_at;
+      return new Date(dateB).getTime() - new Date(dateA).getTime();
+    });
+  
+    return allMatches.slice(0, limit) as unknown as MatchWithPlayers[];
+  }
 
 export async function confirmMatch(matchId: string, confirmerId: string) {
   const { data, error } = await supabase.rpc("confirm_friendly_match", { match_uuid: matchId, confirmer_id: confirmerId });

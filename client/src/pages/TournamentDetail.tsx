@@ -19,6 +19,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { getArchivedTournament, ArchivedTournament } from "@/data/tournamentArchive";
+import { useArchivedTournaments } from "@/hooks/useArchivedTournaments";
 import { motion } from "framer-motion";
 import { InfoModal } from "@/components/InfoModal";
 import { useQuery } from "@tanstack/react-query";
@@ -71,12 +72,13 @@ export default function TournamentDetail() {
   const [, setLocation] = useLocation();
   const params = routeParams ?? { slug: "" };
   const slug = params.slug;
-  let tournament: ArchivedTournament | undefined = getArchivedTournament(slug);
+  const { archivedTournaments, loading: archivedLoading } = useArchivedTournaments();
+  let tournament: ArchivedTournament | undefined = getArchivedTournament(slug, archivedTournaments);
   
   const { data: events, isLoading } = useQuery({
     queryKey: ["tournaments"],
     queryFn: getTournaments,
-    enabled: !tournament, // Only fetch if not a legacy tournament
+    enabled: !tournament && !archivedLoading, // Only fetch if not a legacy tournament and after archive loading
   });
 
   useEffect(() => {
@@ -103,7 +105,7 @@ export default function TournamentDetail() {
     }
   }
 
-  if (isLoading && !tournament) {
+  if ((isLoading || archivedLoading) && !tournament) {
     return <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   }
 
@@ -280,6 +282,11 @@ export default function TournamentDetail() {
                               {result.bronze && (
                                 <p className="mt-1 text-sm font-semibold text-muted-foreground dark:text-muted-foreground flex items-center gap-2">
                                   🥉 {result.bronze.join(" / ")}
+                                </p>
+                              )}
+                              {result.fourthPlace && (
+                                <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                                  4️⃣ {result.fourthPlace.join(" / ")}
                                 </p>
                               )}
                             </div>

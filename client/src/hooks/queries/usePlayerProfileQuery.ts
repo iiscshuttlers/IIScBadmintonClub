@@ -23,7 +23,7 @@ export function usePlayerProfileQuery(id: string | undefined, ownPlayerProfileId
   });
 
   const matchesQuery = useQuery({
-    queryKey: ["playerMatches", id],
+    queryKey: ["playerMatches", id, "v2"],
     queryFn: async () => {
       if (!id) return [];
       return fetchPlayerMatches(id, 50);
@@ -33,7 +33,7 @@ export function usePlayerProfileQuery(id: string | undefined, ownPlayerProfileId
   });
 
   const rankQuery = useQuery({
-    queryKey: ["playerRank", id],
+    queryKey: ["playerRank", id, "v2"],
     queryFn: async () => {
       if (!id) return null;
       const { data, error } = await supabase
@@ -44,7 +44,7 @@ export function usePlayerProfileQuery(id: string | undefined, ownPlayerProfileId
       if (error) throw error;
       if (!data) return null;
 
-      const targetPlayer = data.find((p) => p.id === id);
+      const targetPlayer = data.find((p) => p.id.toLowerCase() === id.toLowerCase());
       const targetGender = targetPlayer?.gender?.toLowerCase() || "unknown";
 
       const sameGenderData = targetGender !== "unknown" 
@@ -56,10 +56,10 @@ export function usePlayerProfileQuery(id: string | undefined, ownPlayerProfileId
       const sortedDoubles = [...sameGenderData].sort((a, b) => (b.doubles_elo || 0) - (a.doubles_elo || 0));
       const sortedMixed = [...data].sort((a, b) => (b.mixed_elo || 0) - (a.mixed_elo || 0));
 
-      const overallRank = sortedOverall.findIndex((p) => p.id === id) + 1;
-      const singlesRank = sortedSingles.findIndex((p) => p.id === id) + 1;
-      const doublesRank = sortedDoubles.findIndex((p) => p.id === id) + 1;
-      const mixedRank = sortedMixed.findIndex((p) => p.id === id) + 1;
+      const overallRank = sortedOverall.findIndex((p) => p.id.toLowerCase() === id.toLowerCase()) + 1;
+      const singlesRank = sortedSingles.findIndex((p) => p.id.toLowerCase() === id.toLowerCase()) + 1;
+      const doublesRank = sortedDoubles.findIndex((p) => p.id.toLowerCase() === id.toLowerCase()) + 1;
+      const mixedRank = sortedMixed.findIndex((p) => p.id.toLowerCase() === id.toLowerCase()) + 1;
 
       return {
         overall: overallRank > 0 ? overallRank : null,
@@ -111,7 +111,7 @@ export function usePlayerProfileQuery(id: string | undefined, ownPlayerProfileId
   return {
     player: profileQuery.data as PlayerProfileType | null | undefined,
     loading,
-    eloRank: liveMatches.some(m => m.status === 'confirmed') ? rankQuery.data : null,
+    eloRank: liveMatches.some(m => m.status === 'confirmed' || m.status === 'completed') ? rankQuery.data : null,
     liveMatches,
     eloLogs: eloLogsQuery.data || [],
     silentRefresh,

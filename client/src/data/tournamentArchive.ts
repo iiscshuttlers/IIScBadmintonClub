@@ -6,6 +6,7 @@ export type TournamentWinner = {
   winner: string;
   runnerUp?: string;
   bronze?: string[];
+  fourthPlace?: string[];
 };
 
 export type ArchivedTournament = {
@@ -217,8 +218,9 @@ export const ARCHIVED_TOURNAMENTS: ArchivedTournament[] = [
 
 export function getArchivedTournament(
   slug: string,
+  tournaments: ArchivedTournament[] = ARCHIVED_TOURNAMENTS
 ): ArchivedTournament | undefined {
-  return ARCHIVED_TOURNAMENTS.find((event) => event.slug === slug);
+  return tournaments.find((event) => event.slug === slug);
 }
 
 /**
@@ -239,7 +241,7 @@ export type PlayerWinEntry = {
   details: PlayerWinDetail[];
 };
 
-export function computeWinnerLeaderboard(): PlayerWinEntry[] {
+export function computeWinnerLeaderboard(tournaments: ArchivedTournament[] = ARCHIVED_TOURNAMENTS): PlayerWinEntry[] {
   const map = new Map<string, PlayerWinEntry>();
 
   const normalizeName = (n: string) => {
@@ -285,7 +287,7 @@ export function computeWinnerLeaderboard(): PlayerWinEntry[] {
     }
   };
 
-  for (const t of ARCHIVED_TOURNAMENTS) {
+  for (const t of tournaments) {
     if (!t.winners) continue;
     for (const w of t.winners) {
       processNames(w.winner, "Gold", t.name, w.category);

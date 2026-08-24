@@ -19,6 +19,25 @@ function isMatchParticipant(match: any, playerId?: string | null): boolean {
   return !!playerId && matchParticipantIds(match).includes(playerId);
 }
 
+function getRoundLabel(m: any): string | null {
+  if (m.is_friendly !== false) return null; // friendly matches don't have rounds usually, or we hide them
+  if (m.round_name) return m.round_name;
+  if (m.match_code) {
+    const parts = m.match_code.split('_');
+    if (parts.length >= 3) {
+      const r = parts[1];
+      if (r === 'F') return 'Final';
+      if (r === 'SF') return 'Semifinal';
+      if (r === 'QF') return 'Quarterfinal';
+      if (r === '3P') return '3rd Place';
+    }
+  }
+  if (m.round && m.round !== "Tournament" && m.round !== "Friendly") {
+    return typeof m.round === 'number' || !isNaN(Number(m.round)) ? `Round ${m.round}` : m.round;
+  }
+  return null;
+}
+
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: {
@@ -47,7 +66,7 @@ export function MatchHistorySection({
   handleConfirmMatch,
   handleRejectMatch,
   handleResendRequest,
-  defaultOpen = false,
+  defaultOpen = true,
 }: MatchHistorySectionProps) {
   const [, setLocation] = useLocation();
   const [isMatchHistoryOpen, setIsMatchHistoryOpen] = useState(defaultOpen);
@@ -442,11 +461,15 @@ export function MatchHistorySection({
                                     {formatLabel}
                                   </span>
                                 </div>
-                                {m.round && m.round !== "Tournament" && m.round !== "Friendly" && (
-                                  <div className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
-                                    {typeof m.round === 'number' || !isNaN(Number(m.round)) ? `Round ${m.round}` : m.round}
-                                  </div>
-                                )}
+                                {(() => {
+                                  const roundLabel = getRoundLabel(m);
+                                  if (!roundLabel) return null;
+                                  return (
+                                    <div className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
+                                      {roundLabel}
+                                    </div>
+                                  );
+                                })()}
                               </div>
                             </div>
 

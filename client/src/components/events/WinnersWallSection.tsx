@@ -9,10 +9,8 @@ import {
   Award,
   BarChart3,
 } from "lucide-react";
-import {
-  ARCHIVED_TOURNAMENTS,
-  computeWinnerLeaderboard,
-} from "@/data/tournamentArchive";
+import { computeWinnerLeaderboard } from "@/data/tournamentArchive";
+import { useArchivedTournaments } from "@/hooks/useArchivedTournaments";
 import { supabase } from "@/lib/supabase";
 
 import { motion, AnimatePresence } from "framer-motion";
@@ -101,6 +99,7 @@ function ConfettiBurst() {
 }
 
 export function WinnersWallSection() {
+  const { archivedTournaments, loading } = useArchivedTournaments();
   const [filter, setFilter] = useState<"all" | "open" | "team">("all");
   const [playerMap, setPlayerMap] = useState<Record<string, string>>({});
 
@@ -157,7 +156,7 @@ export function WinnersWallSection() {
     });
   };
 
-  const tournamentsWithResults = ARCHIVED_TOURNAMENTS.filter(
+  const tournamentsWithResults = archivedTournaments.filter(
     (event) => event.winners || event.podium,
   );
 
@@ -166,8 +165,8 @@ export function WinnersWallSection() {
   );
 
   const leaderboard = useMemo(
-    () => computeWinnerLeaderboard().slice(0, 10),
-    [],
+    () => computeWinnerLeaderboard(archivedTournaments).slice(0, 10),
+    [archivedTournaments],
   );
 
   const totalCategories = useMemo(
@@ -240,74 +239,77 @@ export function WinnersWallSection() {
                 {leaderboard.slice(0, 8).map((player, idx) => (
                   <div
                     key={player.name}
-                    className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50"
+                    className="flex flex-col gap-3 p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700/50"
                   >
-                    <div className="w-10 h-10 rounded-full bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary font-black flex items-center justify-center shrink-0">
-                      #{idx + 1}
-                    </div>
-                    <div className="flex-1 min-w-0 py-0.5">
-                      <div className="font-bold text-foreground dark:text-foreground truncate">
-                        {renderName(player.name)}
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-full bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary font-black flex items-center justify-center shrink-0 text-sm">
+                          #{idx + 1}
+                        </div>
+                        <div className="font-bold text-foreground dark:text-foreground truncate text-base">
+                          {renderName(player.name)}
+                        </div>
                       </div>
-                      <div className="flex flex-col mt-1 space-y-0.5">
-                        {player.details.map((d, i) => {
-                          const lower = d.category.toLowerCase();
-                          let shortCat = d.category;
-                          if (lower.includes("mixed")) shortCat = "XD";
-                          else if (
-                            lower.includes("women's singles") ||
-                            lower.includes("womens singles")
-                          )
-                            shortCat = "WS";
-                          else if (
-                            lower.includes("women's doubles") ||
-                            lower.includes("womens doubles")
-                          )
-                            shortCat = "WD";
-                          else if (
-                            lower.includes("men's singles") ||
-                            lower.includes("mens singles")
-                          )
-                            shortCat = "MS";
-                          else if (
-                            lower.includes("men's doubles") ||
-                            lower.includes("mens doubles")
-                          )
-                            shortCat = "MD";
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 font-bold shrink-0 text-xs shadow-sm">
+                        <Award className="w-3.5 h-3.5" />
+                        {player.wins}
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col space-y-2 bg-white dark:bg-slate-900/60 rounded-2xl p-3 border border-slate-100 dark:border-slate-800/60">
+                      {player.details.map((d, i) => {
+                        const lower = d.category.toLowerCase();
+                        let shortCat = d.category;
+                        if (lower.includes("mixed")) shortCat = "XD";
+                        else if (
+                          lower.includes("women's singles") ||
+                          lower.includes("womens singles")
+                        )
+                          shortCat = "WS";
+                        else if (
+                          lower.includes("women's doubles") ||
+                          lower.includes("womens doubles")
+                        )
+                          shortCat = "WD";
+                        else if (
+                          lower.includes("men's singles") ||
+                          lower.includes("mens singles")
+                        )
+                          shortCat = "MS";
+                        else if (
+                          lower.includes("men's doubles") ||
+                          lower.includes("mens doubles")
+                        )
+                          shortCat = "MD";
 
-                          const MedalIcon = d.medal === "Gold"
-                              ? Trophy
-                              : d.medal === "Silver"
-                                ? Medal
-                                : Award;
-                          const medalColor = d.medal === "Gold"
-                            ? "text-amber-500"
+                        const MedalIcon = d.medal === "Gold"
+                            ? Trophy
                             : d.medal === "Silver"
-                              ? "text-muted-foreground"
-                              : "text-orange-400";
+                              ? Medal
+                              : Award;
+                        const medalColor = d.medal === "Gold"
+                          ? "text-amber-500"
+                          : d.medal === "Silver"
+                            ? "text-slate-400"
+                            : "text-orange-500";
 
-                          return (
-                            <div
-                              key={i}
-                              className="text-[11px] leading-tight flex items-start gap-1.5 min-w-0"
-                            >
-                              <span className="shrink-0" title={d.medal}>
-                                <MedalIcon className={`w-3 h-3 ${medalColor}`} />
-                              </span>
-                              <span className="font-bold text-primary dark:text-primary shrink-0 w-5">
-                                {shortCat}
-                              </span>
-                              <span className="text-muted-foreground">
-                                {d.tournament}
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 font-bold shrink-0">
-                      <Award className="w-4 h-4" />
-                      {player.wins}
+                        return (
+                          <div
+                            key={i}
+                            className="text-xs leading-snug flex items-start gap-2 min-w-0"
+                          >
+                            <span className="shrink-0 mt-0.5" title={d.medal}>
+                              <MedalIcon className={`w-3.5 h-3.5 ${medalColor}`} />
+                            </span>
+                            <span className="font-black text-slate-700 dark:text-slate-300 shrink-0 w-6">
+                              {shortCat}
+                            </span>
+                            <span className="text-muted-foreground font-medium flex-1">
+                              {d.tournament}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}

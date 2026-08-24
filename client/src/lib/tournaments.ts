@@ -26,7 +26,8 @@ export async function getTournaments() {
       if (finals.length > 0) {
         winners = finals.map((m: any) => ({
           category: m.category,
-          winner: m.winner_side === 1 ? m.team1_label : m.team2_label
+          winner: m.winner_side === 1 ? m.team1_label : m.team2_label,
+          runnerUp: m.winner_side === 1 ? m.team2_label : m.team1_label
         }));
       }
     }

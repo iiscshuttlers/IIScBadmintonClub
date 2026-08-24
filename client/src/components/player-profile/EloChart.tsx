@@ -52,7 +52,7 @@ export function EloChart({ playerId, matches, currentElo = 1200 }: EloChartProps
   const data = useMemo(() => {
     if (!matches || matches.length === 0) return [];
     
-    const confirmed = matches.filter(m => m.status === 'confirmed');
+    const confirmed = matches.filter(m => m.status === 'confirmed' || m.status === 'completed');
     if (confirmed.length === 0) return [];
 
     let current = currentElo;
