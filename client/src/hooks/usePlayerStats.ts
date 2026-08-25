@@ -83,6 +83,10 @@ export function usePlayerStats(
 
     const doubles = doublesMatches.filter(m => !mixed.includes(m));
 
+    const singlesStats = computeStats(singles);
+    const doublesStats = computeStats(doubles);
+    const mixedStats = computeStats(mixed);
+
     const overallStats = computeStats(confirmed);
     const friendlyStats = computeStats(friendly);
     const tourneyStats = computeStats(tournament);
@@ -91,9 +95,35 @@ export function usePlayerStats(
     if (tournamentRuns && tournamentRuns.length > 0) {
       let tourneyRunWins = 0;
       let tourneyRunLosses = 0;
+      
+      let tourneySinglesWins = 0;
+      let tourneySinglesLosses = 0;
+      let tourneyDoublesWins = 0;
+      let tourneyDoublesLosses = 0;
+      let tourneyMixedWins = 0;
+      let tourneyMixedLosses = 0;
+
       for (const run of tournamentRuns) {
         tourneyRunWins += run.wins;
         tourneyRunLosses += run.losses;
+        
+        const cat = run.category.toLowerCase();
+        const isMixed = cat.includes("mixed") || cat === "xd";
+        const isSingles = !isMixed && (cat.includes("singles") || cat === "ms" || cat === "ws");
+        const isDoubles = !isMixed && !isSingles && (cat.includes("doubles") || cat === "md" || cat === "wd");
+
+        if (isMixed) {
+          tourneyMixedWins += run.wins;
+          tourneyMixedLosses += run.losses;
+        } else if (isSingles) {
+          tourneySinglesWins += run.wins;
+          tourneySinglesLosses += run.losses;
+        } else {
+          // If we can't tell, assume doubles as it's the most common, or check if it has "doubles"
+          // We'll default to doubles for team matches if neither singles nor mixed is specified
+          tourneyDoublesWins += run.wins;
+          tourneyDoublesLosses += run.losses;
+        }
       }
       
       overallStats.wins += tourneyRunWins;
@@ -105,15 +135,30 @@ export function usePlayerStats(
       tourneyStats.losses += tourneyRunLosses;
       tourneyStats.total += (tourneyRunWins + tourneyRunLosses);
       tourneyStats.winPct = tourneyStats.total > 0 ? Math.round((tourneyStats.wins / tourneyStats.total) * 100) : 0;
+      
+      singlesStats.wins += tourneySinglesWins;
+      singlesStats.losses += tourneySinglesLosses;
+      singlesStats.total += (tourneySinglesWins + tourneySinglesLosses);
+      singlesStats.winPct = singlesStats.total > 0 ? Math.round((singlesStats.wins / singlesStats.total) * 100) : 0;
+      
+      doublesStats.wins += tourneyDoublesWins;
+      doublesStats.losses += tourneyDoublesLosses;
+      doublesStats.total += (tourneyDoublesWins + tourneyDoublesLosses);
+      doublesStats.winPct = doublesStats.total > 0 ? Math.round((doublesStats.wins / doublesStats.total) * 100) : 0;
+      
+      mixedStats.wins += tourneyMixedWins;
+      mixedStats.losses += tourneyMixedLosses;
+      mixedStats.total += (tourneyMixedWins + tourneyMixedLosses);
+      mixedStats.winPct = mixedStats.total > 0 ? Math.round((mixedStats.wins / mixedStats.total) * 100) : 0;
     }
 
     return {
       all: overallStats,
       friendly: friendlyStats,
       tournament: tourneyStats,
-      singles: computeStats(singles),
-      doubles: computeStats(doubles),
-      mixed: computeStats(mixed),
+      singles: singlesStats,
+      doubles: doublesStats,
+      mixed: mixedStats,
     };
   }, [liveMatches, id, tournamentRuns]);
 
