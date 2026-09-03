@@ -59,25 +59,19 @@ const STEPS = [
 
 const getSteps = () => {
   const steps = [...STEPS];
-  // Insert the Android Beta Testing slide right after the Welcome slide if they are on the web
+  // Insert the Android App slide right after the Welcome slide if they are on the web
   if (!Capacitor.isNativePlatform()) {
     steps.splice(1, 0, {
       emoji: null,
-      title: "Help test our Android App!",
-      body: "We are launching our new app on the Play Store, but we need 20 active testers for 14 days before we can publish it. If you have an Android phone, you can help us out!",
+      title: "Download our Android App!",
+      body: "Our official app is now live on the Play Store! Get real-time match tracking, dynamic ELO ratings, and community features right on your phone.",
       cta: null,
       accent: "from-violet-500 to-amber-500",
       icon: <Smartphone className="w-12 h-12 text-amber-400 opacity-90" />,
       detail: (
         <div className="flex flex-col gap-2 mt-4 text-xs font-semibold">
-          <p className="mb-1 text-[11px] font-medium text-slate-300 leading-tight">
-            <strong className="text-white">Crucial:</strong> Ensure you join the group using the exact same Google account as your Android phone's Play Store.
-          </p>
-          <a href="https://groups.google.com/g/iisc-badminton-app-testers/about" target="_blank" rel="noreferrer" className="bg-violet-500/20 text-violet-300 py-2 px-3 rounded-lg flex items-center justify-center gap-2 border border-violet-500/30 hover:bg-violet-500/30 transition-colors">
-            <span className="w-5 h-5 rounded-full bg-violet-500 flex items-center justify-center text-slate-900 font-black">1</span> Join Testing Group
-          </a>
-          <a href="https://play.google.com/apps/testing/shuttlers.iisc.com" target="_blank" rel="noreferrer" className="bg-slate-800 text-white py-2 px-3 rounded-lg flex items-center justify-center gap-2 border border-slate-700 hover:bg-slate-700 transition-colors">
-            <span className="w-5 h-5 rounded-full bg-slate-600 flex items-center justify-center text-white font-black">2</span> Download on Play Store
+          <a href="https://play.google.com/store/apps/details?id=shuttlers.iisc.com" target="_blank" rel="noreferrer" className="bg-slate-800 text-white py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 border border-slate-700 hover:bg-slate-700 transition-colors">
+            Download on Play Store
           </a>
         </div>
       ),

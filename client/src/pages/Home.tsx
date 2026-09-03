@@ -307,10 +307,6 @@ export default function Home() {
                           <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-violet-500/30 to-purple-500/20 flex items-center justify-center border border-violet-400/40 shadow-lg shadow-violet-500/10">
                             <svg className="w-8 h-8 sm:w-9 sm:h-9 text-violet-400 drop-shadow-[0_0_8px_rgba(139,92,246,0.5)]" fill="currentColor" viewBox="0 0 24 24"><path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993.0004.5511-.4482.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592c.1158-.201.0464-.4581-.1551-.5739-.201-.1158-.4581-.046-.5739.1551l-2.022 3.501c-1.4284-.652-3.0305-1.016-4.7278-1.016-1.6976 0-3.2997.364-4.7278 1.016l-2.022-3.501c-.1158-.201-.3729-.2709-.5739-.1551-.2015.1158-.2709.3729-.1551.5739l1.9973 3.4592C2.6974 11.2382.2592 14.8876.103 19.349h23.794c-.1562-4.4614-2.5944-8.1108-6.9695-10.0276"/></svg>
                           </div>
-                          {/* BETA badge */}
-                          <div className="beta-badge absolute -top-2 -right-2 bg-gradient-to-r from-amber-400 to-orange-400 text-slate-900 text-[9px] font-black px-1.5 py-0.5 rounded-md shadow-lg shadow-amber-500/30 uppercase tracking-widest">
-                            Beta
-                          </div>
                         </div>
 
                         {/* Content */}
@@ -318,70 +314,22 @@ export default function Home() {
                           <div>
                             <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
                               <h3 className="font-black text-white text-xl sm:text-2xl leading-tight bg-gradient-to-r from-white via-violet-200 to-amber-300 bg-clip-text text-transparent">
-                                Help test our new Android App!
+                                Download our official Android App!
                               </h3>
                               <Sparkles className="w-5 h-5 text-amber-400 sparkle-1 hidden sm:block" />
                             </div>
                             <p className="text-sm font-medium text-slate-300 leading-relaxed mt-2 max-w-2xl">
-                              We are getting ready to launch our brand new app on the Google Play Store! We need <span className="bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded font-bold border border-amber-500/20">20 active testers</span> for the next <span className="bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded font-bold border border-amber-500/20">14 days</span> before Google allows us to publish it to the public. If you have an Android phone, please help us out by following these steps:
+                              Our official app is now live on the Google Play Store! Get real-time match tracking, dynamic ELO ratings, and community features right on your phone.
                             </p>
-                            
-                            <div className="bg-slate-800/50 rounded-xl p-4 mt-4 mb-4 border border-slate-700/50 max-w-2xl mx-auto sm:mx-0 text-left space-y-4 shadow-inner">
-                              <div className="flex gap-3 items-start">
-                                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-violet-400 text-slate-900 flex items-center justify-center text-xs font-black shadow-md mt-0.5">1</span>
-                                <div className="text-sm text-slate-300 leading-snug">
-                                  Click <strong className="bg-violet-500/20 text-violet-300 px-1.5 py-0.5 rounded border border-violet-500/20 font-bold mx-0.5">Join Testing Group</strong> below and click "Join group" on the page that opens.<br/>
-                                  <div className="mt-2 bg-amber-500/10 border-l-2 border-amber-500/50 pl-2.5 py-1.5 pr-2 rounded-r-md">
-                                    <span className="text-xs text-amber-400 font-medium">Crucial: Make sure you join using the exact same Google account as your Android phone's Play Store!</span>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="flex gap-3 items-start">
-                                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-400 text-slate-900 flex items-center justify-center text-xs font-black shadow-md mt-0.5">2</span>
-                                <p className="text-sm text-slate-300 leading-snug">
-                                  Click <strong className="bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded border border-amber-500/20 font-bold mx-0.5">Download on Play Store</strong> below, then click <strong className="bg-white/10 text-white px-1.5 py-0.5 rounded border border-white/10 font-bold mx-0.5">"Become a tester"</strong> to get the Play Store download link for your phone.
-                                </p>
-                              </div>
-                            </div>
                           </div>
 
-                          {/* Progress bar — testers needed */}
-                          <div className="max-w-md mx-auto sm:mx-0">
-                            <div className="flex items-center justify-between text-xs font-bold mb-1.5">
-                              <span className="text-slate-400 uppercase tracking-wider">Testers needed</span>
-                              <span className="text-amber-400 tabular-nums">Goal: 20</span>
-                            </div>
-                            <div className="h-2.5 bg-slate-800/80 rounded-full overflow-hidden border border-slate-700/50 relative">
-                              <div className="h-full bg-gradient-to-r from-violet-500 via-purple-400 to-amber-400 rounded-full relative overflow-hidden" style={{ width: "15%" }}>
-                                {/* Shine sweep on progress bar */}
-                                <div className="absolute inset-y-0 w-[40%] bg-gradient-to-r from-transparent via-white/30 to-transparent" style={{ animation: "progress-shine 2.5s ease-in-out infinite" }} />
-                              </div>
-                            </div>
-                            <p className="text-[11px] text-slate-500 mt-1">Join now and help us reach our goal!</p>
-                          </div>
-
-                          {/* Two-step CTA buttons */}
+                          {/* CTA button */}
                           <div className="flex flex-col sm:flex-row gap-3 pt-1">
-                            <a href="https://groups.google.com/g/iisc-badminton-app-testers/about" target="_blank" rel="noreferrer"
-                              className="group/btn text-sm font-bold text-violet-300 bg-violet-500/15 hover:bg-violet-500/25 px-5 py-3.5 rounded-xl transition-all inline-flex items-center justify-center gap-3 hover:-translate-y-1 hover:shadow-lg hover:shadow-violet-500/20 border border-violet-500/25">
-                              <span className="bg-violet-400 text-slate-900 rounded-full w-7 h-7 flex items-center justify-center text-sm font-black shadow-md">1</span>
-                              <span>Join Testing Group</span>
-                              <ArrowRight className="w-4 h-4 opacity-0 -ml-2 group-hover/btn:opacity-100 group-hover/btn:ml-0 transition-all" />
-                            </a>
-                            <a href="https://play.google.com/apps/testing/shuttlers.iisc.com" target="_blank" rel="noreferrer"
+                            <a href="https://play.google.com/store/apps/details?id=shuttlers.iisc.com" target="_blank" rel="noreferrer"
                               className="group/btn text-sm font-bold text-amber-300 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/25 px-5 py-3.5 rounded-xl transition-all inline-flex items-center justify-center gap-3 hover:-translate-y-1 hover:shadow-lg hover:shadow-amber-500/20">
-                              <span className="bg-amber-400 text-slate-900 rounded-full w-7 h-7 flex items-center justify-center text-sm font-black shadow-md">2</span>
-                              <span>Download on Play Store</span>
+                              <span>Get it on Google Play</span>
                               <ArrowRight className="w-4 h-4 opacity-0 -ml-2 group-hover/btn:opacity-100 group-hover/btn:ml-0 transition-all" />
                             </a>
-                          </div>
-
-                          {/* Important note */}
-                          <div className="flex items-start gap-2 bg-amber-500/5 border border-amber-500/15 rounded-xl px-4 py-3 max-w-2xl mx-auto sm:mx-0">
-                            <Zap className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-                            <p className="text-xs font-medium text-amber-200/70 leading-relaxed">
-                              <span className="font-bold text-amber-400">Important:</span> Please open the app every few days — check the Pulse feed, view tournaments, or just log in — so Google counts you as an active tester!
-                            </p>
                           </div>
                         </div>
                       </div>
