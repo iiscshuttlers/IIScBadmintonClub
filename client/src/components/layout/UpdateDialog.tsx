@@ -51,8 +51,8 @@ export function UpdateDialog({
   };
 
   return (
-    <Dialog open={true} onOpenChange={(open) => !open && onDismiss()}>
-      <DialogContent className="sm:max-w-sm border-0 bg-white dark:bg-slate-900 rounded-3xl p-7 shadow-2xl">
+    <Dialog open={true}>
+      <DialogContent className="sm:max-w-sm border-0 bg-white dark:bg-slate-900 rounded-3xl p-7 shadow-2xl [&>button]:hidden">
         <DialogTitle className="sr-only">Update Available</DialogTitle>
         <DialogDescription className="sr-only">Download version {info.versionName}</DialogDescription>
         <div className="text-center space-y-1">
@@ -72,12 +72,6 @@ export function UpdateDialog({
             className={`w-full ${downloading ? "bg-primary" : "bg-primary hover:bg-primary"} text-primary-foreground font-bold py-3 rounded-xl text-center transition-colors`}
           >
             {downloading ? "Downloading..." : "Download Update"}
-          </button>
-          <button
-            onClick={onDismiss}
-            className="w-full text-muted-foreground dark:text-muted-foreground font-medium py-2 text-sm hover:text-muted-foreground transition-colors"
-          >
-            Remind me later
           </button>
         </div>
       </DialogContent>

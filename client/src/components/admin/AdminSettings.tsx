@@ -99,7 +99,11 @@ export function AdminSettings() {
       await supabase.from("site_data").upsert({ key: "app_version", value: newAppVersion, updated_at: new Date().toISOString() }, { onConflict: "key" });
       
       await supabase.functions.invoke("send-announcement", {
-        body: { title: "Update Available", body: "A new version of IISc Badminton Club is available! Please open the app to update." },
+        body: { 
+          title: "Update Available", 
+          body: "A new version of IISc Badminton Club is available! Please open the app to update.",
+          data_type: "app_update"
+        },
       });
       
       await supabase.from("admin_logs").insert({ admin_email: session?.user?.email || "admin", action: `Forced app update prompt (v${nextVersion})`, created_at: new Date().toISOString() });

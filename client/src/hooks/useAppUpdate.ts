@@ -73,8 +73,8 @@ export function AppUpdateProvider({ children }: { children: ReactNode }) {
           // asked again. Without it, keying on versionCode alone meant a repeat
           // force was silently swallowed.
           const promptToken = `${required}:${latest?.forcedAt ?? ""}`;
-          if (localStorage.getItem(AUTO_PROMPT_KEY) !== promptToken) {
-            localStorage.setItem(AUTO_PROMPT_KEY, promptToken);
+          if (sessionStorage.getItem(AUTO_PROMPT_KEY) !== promptToken) {
+            sessionStorage.setItem(AUTO_PROMPT_KEY, promptToken);
             setIsDialogOpen(true);
           }
         } else {

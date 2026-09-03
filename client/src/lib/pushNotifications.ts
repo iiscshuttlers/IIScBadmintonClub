@@ -31,6 +31,9 @@ function handleDeepLink(data: Record<string, string> | undefined) {
     case "view_announcements":
       window.location.href = "/pulse#announcements";
       break;
+    case "app_update":
+      window.open("https://play.google.com/store/apps/details?id=shuttlers.iisc.com", "_system");
+      break;
     case "kudos":
       window.location.href = "/my-matches";
       break;

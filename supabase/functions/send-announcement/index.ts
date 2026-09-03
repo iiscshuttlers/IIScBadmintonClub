@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { title, body, admin_email } = await req.json() as { title: string; body: string; admin_email?: string };
+    const { title, body, admin_email, data_type, data_action } = await req.json() as { title: string; body: string; admin_email?: string; data_type?: string; data_action?: string };
     if (!title || !body) {
       return new Response(JSON.stringify({ error: "title and body required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -67,8 +67,8 @@ Deno.serve(async (req) => {
           user_id: u.id,
           title: `📢 ${title}`,
           message: body,
-          type: "announcement",
-          link: "/pulse#announcements"
+          type: data_type || "announcement",
+          link: data_type === "app_update" ? "https://play.google.com/store/apps/details?id=shuttlers.iisc.com" : "/pulse#announcements"
         }))
       );
       console.log(`Notifications insert result: ${notifErr?.message || "success"}`);
@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
           message: {
             token: t.token,
             notification: { title: `📢 ${title}`, body },
-            data: { type: "announcement", action: "view_announcements" },
+            data: { type: data_type || "announcement", action: data_action || "view_announcements" },
             android: {
               priority: "high",
               notification: { channel_id: "notify_whistle" }
