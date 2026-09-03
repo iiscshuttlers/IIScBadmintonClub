@@ -41,6 +41,7 @@ export default function PrivacyPolicy() {
               <li><strong>Badminton Profile:</strong> Playing level, dominant hand, playing style, favorite shots, racket details, and match statistics.</li>
               <li><strong>Activity Data:</strong> Match logs, scores, Elo rating changes, and interaction with other players (e.g., following, buddies).</li>
               <li><strong>Device Information:</strong> Device type, operating system version, and push notification tokens (only when you opt into notifications).</li>
+              <li><strong>Location Data:</strong> With your explicit permission, we may collect fine and background location data (via geofencing) to determine when you are near the badminton courts. This enables features like automatic court check-ins and contextual notifications. You can disable this at any time in your device settings.</li>
               <li><strong>Usage Analytics:</strong> Pages visited and feature usage via Google Analytics (anonymized, no personally identifiable information).</li>
             </ul>
 
@@ -51,6 +52,7 @@ export default function PrivacyPolicy() {
               <li>Calculate competitive statistics, Elo ratings, leaderboard rankings, and match history.</li>
               <li>Provide personalized experiences, such as "Buddy" matchmaking, rivalry analytics, and player comparisons.</li>
               <li>Communicate with you regarding your matches, buddy requests, and platform updates via push notifications (with your explicit opt-in consent).</li>
+              <li>Use location data (geofencing) to provide location-based features, such as notifying you when you arrive at the courts.</li>
               <li>Improve the platform based on aggregated, anonymized usage data.</li>
               <li>Enforce our <Link href="/terms"><span className="text-primary dark:text-primary font-bold hover:underline cursor-pointer">Terms of Service</span></Link> and prevent misuse.</li>
             </ul>
