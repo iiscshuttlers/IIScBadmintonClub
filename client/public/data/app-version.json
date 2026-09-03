@@ -1,6 +1,6 @@
 {
-  "versionCode": 350,
-  "versionName": "3.50",
+  "versionCode": 351,
+  "versionName": "3.51",
   "downloadUrl": "https://play.google.com/store/apps/details?id=shuttlers.iisc.com",
   "changelog": "Completely remove PwaUpdatePrompt from App.tsx so it can never render again."
 }

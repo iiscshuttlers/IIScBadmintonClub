@@ -12,7 +12,7 @@ export const DEPARTMENT_ACRONYMS: Record<string, string> = {
   "Centre for Cryogenic Technology": "CCT",
   "Centre for Infectious Disease Research": "CIDR",
   "Centre for Infrastructure, Sustainable Transportation & Urban Planning": "CISTUP",
-  "Centre for Nanoscience and Engineering": "CeNSE",
+  "Centre for science and Engineering": "CeNSE",
   "Centre for Society and Policy": "CSP",
   "Chemical Engineering": "CH",
   "Civil Engineering": "CE",
