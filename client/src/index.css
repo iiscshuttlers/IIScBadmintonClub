@@ -1215,3 +1215,19 @@ html {
 .bracket-export-bg {
   background-color: #0d1117;
 }
+
+/* Custom Visible Scrollbar */
+.visible-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.visible-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.visible-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 20px;
+}
+html.dark .visible-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(71, 85, 105, 0.5);
+}
+

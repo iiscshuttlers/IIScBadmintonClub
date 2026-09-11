@@ -954,7 +954,6 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
         try {
           const hrRes = await HealthConnect.getHeartRateForTimeRange({ startTime: startTime.toISOString(), endTime: endTime.toISOString() });
           const stepsRes = await HealthConnect.getStepsForTimeRange({ startTime: startTime.toISOString(), endTime: endTime.toISOString() });
-          const calRes = await HealthConnect.getCaloriesForTimeRange({ startTime: startTime.toISOString(), endTime: endTime.toISOString() });
 
           let hrvAvg: number | null = null;
           let spo2Avg: number | null = null;
@@ -1030,7 +1029,7 @@ function StatsSection({ matches, motionSummary, motionMatches, workRate, sensorA
               hr_zone_4_pct: (z4/t)*100,
               hr_zone_5_pct: (z5/t)*100,
               steps: stepsRes.steps || 0,
-              calories_burned: calRes.calories || 0,
+              calories_burned: 0, // TotalCaloriesBurned permission removed per Google Play policy
               hrv_avg: hrvAvg,
               spo2_avg: spo2Avg,
               spo2_min: spo2Min,

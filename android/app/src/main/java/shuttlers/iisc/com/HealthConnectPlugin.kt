@@ -9,7 +9,6 @@ import androidx.health.connect.client.records.OxygenSaturationRecord
 import androidx.health.connect.client.records.RestingHeartRateRecord
 import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.StepsRecord
-import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import androidx.health.connect.client.request.AggregateRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
@@ -35,7 +34,6 @@ class HealthConnectPlugin : Plugin() {
     private val PERMISSIONS = setOf(
         androidx.health.connect.client.permission.HealthPermission.getReadPermission(HeartRateRecord::class),
         androidx.health.connect.client.permission.HealthPermission.getReadPermission(StepsRecord::class),
-        androidx.health.connect.client.permission.HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class),
         androidx.health.connect.client.permission.HealthPermission.getReadPermission(HeartRateVariabilityRmssdRecord::class),
         androidx.health.connect.client.permission.HealthPermission.getReadPermission(OxygenSaturationRecord::class),
         androidx.health.connect.client.permission.HealthPermission.getReadPermission(SleepSessionRecord::class),
@@ -204,37 +202,6 @@ class HealthConnectPlugin : Plugin() {
         }
     }
 
-    @PluginMethod
-    fun getCaloriesForTimeRange(call: PluginCall) {
-        val startStr = call.getString("startTime")
-        val endStr = call.getString("endTime")
-        
-        if (startStr == null || endStr == null || healthConnectClient == null) {
-            call.reject("startTime and endTime required, and HealthConnect must be available")
-            return
-        }
-
-        scope.launch {
-            try {
-                val startTime = Instant.parse(startStr)
-                val endTime = Instant.parse(endStr)
-                
-                val request = AggregateRequest(
-                    metrics = setOf(TotalCaloriesBurnedRecord.ENERGY_TOTAL),
-                    timeRangeFilter = TimeRangeFilter.between(startTime, endTime)
-                )
-                
-                val response = healthConnectClient!!.aggregate(request)
-                val energy = response[TotalCaloriesBurnedRecord.ENERGY_TOTAL]?.inKilocalories ?: 0.0
-                
-                val ret = JSObject()
-                ret.put("calories", energy.toLong())
-                call.resolve(ret)
-            } catch (e: Exception) {
-                call.reject("Error fetching calories", e)
-            }
-        }
-    }
 
     @PluginMethod
     fun getHrvForTimeRange(call: PluginCall) {

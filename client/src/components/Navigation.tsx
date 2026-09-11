@@ -225,23 +225,23 @@ export default function Navigation() {
 
           {/* ── Row 1: Logo + Nav Links ─────────────────────────────── */}
           <div className="flex items-center gap-2">
-            <Link href="/">
-              <div className="flex items-center gap-2 cursor-pointer min-w-0">
+            <Link href="/" className="min-w-0 flex-shrink">
+              <div className="flex items-center gap-1.5 sm:gap-2 cursor-pointer min-w-0">
                 <img
                   src={`${import.meta.env.BASE_URL}iisc-logo.png`}
                   alt="IISc Logo"
-                  className="w-9 h-9 object-contain flex-shrink-0 transition-all duration-300"
+                  className="w-8 h-8 sm:w-9 sm:h-9 object-contain flex-shrink-0 transition-all duration-300"
                 />
-                <div className="min-w-0">
-                  <span className="font-bold text-foreground dark:text-foreground leading-tight text-[13px] sm:text-base block whitespace-nowrap tracking-tight">
+                <div className="min-w-0 flex-shrink flex-1 pr-1">
+                  <span className="font-bold text-foreground dark:text-foreground leading-tight text-xs sm:text-base block truncate tracking-tight">
                     IISc Badminton Club
                   </span>
                   {viewAsRole ? (
-                    <span className="text-[10px] text-amber-500 font-black uppercase tracking-widest hidden sm:block animate-pulse">
+                    <span className="text-[9px] text-amber-500 font-black uppercase tracking-widest hidden sm:block animate-pulse truncate">
                       Viewing as: {viewAsRole.replace("_", " ")}
                     </span>
                   ) : (
-                    <span className="text-[10px] text-primary dark:text-primary font-semibold uppercase tracking-widest hidden sm:block">
+                    <span className="text-[9px] text-primary dark:text-primary font-semibold uppercase tracking-widest hidden sm:block truncate">
                       Shuttlers · Bangalore
                     </span>
                   )}

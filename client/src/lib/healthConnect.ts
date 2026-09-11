@@ -7,7 +7,6 @@ export interface HealthConnectPlugin {
   requestHealthPermissions(): Promise<{ granted: boolean }>;
   getHeartRateForTimeRange(options: { startTime: string; endTime: string }): Promise<{ samples: { time: string; bpm: number }[] }>;
   getStepsForTimeRange(options: { startTime: string; endTime: string }): Promise<{ steps: number }>;
-  getCaloriesForTimeRange(options: { startTime: string; endTime: string }): Promise<{ calories: number }>;
   getHrvForTimeRange(options: { startTime: string; endTime: string }): Promise<{ samples: { time: string; rmssd: number }[] }>;
   getRestingHeartRate(options: { before: string }): Promise<{ bpm: number | null }>;
   getSpo2ForTimeRange(options: { startTime: string; endTime: string }): Promise<{ samples: { time: string; percentage: number }[] }>;
