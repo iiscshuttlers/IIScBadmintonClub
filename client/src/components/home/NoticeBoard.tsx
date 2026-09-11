@@ -268,7 +268,7 @@ export function NoticeBoard() {
             className="overflow-hidden"
           >
             <CardContent className="p-0">
-        <div className="max-h-[280px] overflow-y-scroll visible-scrollbar pr-1">
+        <div className="max-h-[280px] overflow-y-scroll overscroll-auto visible-scrollbar pr-1">
           {items.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
               <Bell className="w-8 h-8 mx-auto mb-3 opacity-20" />

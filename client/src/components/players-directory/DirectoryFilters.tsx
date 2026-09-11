@@ -1,5 +1,7 @@
-import { Search, X, ArrowUpDown, SlidersHorizontal } from "lucide-react";
+import { Search, X, ArrowUpDown, SlidersHorizontal, Trophy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
 export function DirectoryFilters({
   searchQuery,
@@ -26,10 +28,26 @@ export function DirectoryFilters({
   setLevelFilter: (v: string) => void;
   departmentFilter: string;
   setDepartmentFilter: (v: string) => void;
+  tournamentFilter?: string;
+  setTournamentFilter?: (v: string) => void;
+  categoryFilter?: string;
+  setCategoryFilter?: (v: string) => void;
   allDepartments: string[];
   filteredPlayersCount: number;
   otherPlayersCount: number;
 }) {
+  const [tournaments, setTournaments] = useState<{ id: string, name: string }[]>([]);
+  useEffect(() => {
+    supabase
+      .from("tournaments")
+      .select("id, name")
+      .neq("status", "deleted")
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        if (data) setTournaments(data);
+      });
+  }, []);
+
   return (
     <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-6 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 mb-10 space-y-5">
       <div className="flex flex-col md:flex-row gap-4 items-center">
@@ -66,6 +84,7 @@ export function DirectoryFilters({
               className="pl-9 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-muted-foreground dark:text-slate-200 text-sm font-bold outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer"
             >
               <option value="elo">By Overall Rank</option>
+              <option value="rankings">By Tournament Wins</option>
               <option value="singles">By Singles Rank</option>
               <option value="doubles">By Doubles Rank</option>
               <option value="mixed">By Mixed Rank</option>
@@ -138,12 +157,50 @@ export function DirectoryFilters({
                   ))}
                 </select>
               </div>
-              {(levelFilter !== "All" || departmentFilter !== "All") && (
+
+              {setTournamentFilter && setCategoryFilter && (
+                <>
+                  <div>
+                    <label className="block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-2">
+                      Tournament
+                    </label>
+                    <select
+                      value={tournamentFilter}
+                      onChange={(e) => setTournamentFilter(e.target.value)}
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary font-semibold"
+                    >
+                      <option value="All">All Tournaments</option>
+                      {tournaments.map((t) => (
+                        <option key={t.id} value={t.id}>{t.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-2">
+                      Category
+                    </label>
+                    <select
+                      value={categoryFilter}
+                      onChange={(e) => setCategoryFilter(e.target.value)}
+                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary font-semibold"
+                    >
+                      <option value="All">All Categories</option>
+                      <option value="singles">Singles</option>
+                      <option value="doubles">Doubles</option>
+                      <option value="mixed">Mixed</option>
+                    </select>
+                  </div>
+                </>
+              )}
+
+              {(levelFilter !== "All" || departmentFilter !== "All" || tournamentFilter !== "All" || categoryFilter !== "All") && (
                 <div className="sm:col-span-2 flex justify-end">
                   <button
                     onClick={() => {
                       setLevelFilter("All");
                       setDepartmentFilter("All");
+                      setTournamentFilter?.("All");
+                      setCategoryFilter?.("All");
                     }}
                     className="text-xs font-bold text-muted-foreground hover:text-slate-800 dark:hover:text-slate-200 transition flex items-center gap-1"
                   >

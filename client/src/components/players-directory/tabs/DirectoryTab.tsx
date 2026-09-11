@@ -5,7 +5,8 @@ import { isSupabaseConfigured } from "@/lib/supabase";
 import { PlayerCard, type Player } from "@/components/players-directory/PlayerCard";
 import { DirectoryFilters } from "@/components/players-directory/DirectoryFilters";
 import { TeamsTab } from "@/components/players-directory/tabs/TeamsTab";
-import { useState } from "react";
+import { H2HSection } from "@/components/players-directory/H2HSection";
+import { useState, useEffect } from "react";
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -54,6 +55,10 @@ interface DirectoryTabProps {
   handleToggleFollow: (id: string) => void;
   isPersonalView?: boolean;
   rankMap?: Record<string, { overall: number; singles: number; doubles: number; mixed: number }>;
+  tournamentFilter?: string;
+  setTournamentFilter?: (t: string) => void;
+  categoryFilter?: string;
+  setCategoryFilter?: (c: string) => void;
 }
 
 export function DirectoryTab({
@@ -90,8 +95,29 @@ export function DirectoryTab({
   handleToggleFollow,
   isPersonalView = false,
   rankMap = {},
+  tournamentFilter = "All",
+  setTournamentFilter,
+  categoryFilter = "All",
+  setCategoryFilter,
 }: DirectoryTabProps) {
-  const [viewMode, setViewMode] = useState<"individuals" | "teams">("individuals");
+  const getInitialParam = (param: string, defaultVal: string) => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param) || defaultVal;
+    } catch {
+      return defaultVal;
+    }
+  };
+
+  const [viewMode, setViewMode] = useState<any>(() => getInitialParam("dir_view", "individuals"));
+
+  useEffect(() => {
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set("dir_view", viewMode);
+      window.history.replaceState(null, "", url.toString());
+    } catch { /* ignore */ }
+  }, [viewMode]);
 
   const recommended = (() => {
     if (loading || !ownProfile) return [];
@@ -118,6 +144,10 @@ export function DirectoryTab({
         setLevelFilter={setLevelFilter}
         departmentFilter={departmentFilter}
         setDepartmentFilter={setDepartmentFilter}
+        tournamentFilter={tournamentFilter}
+        setTournamentFilter={setTournamentFilter}
+        categoryFilter={categoryFilter}
+        setCategoryFilter={setCategoryFilter}
         allDepartments={allDepartments}
         filteredPlayersCount={filteredPlayers.length}
         otherPlayersCount={otherPlayersCount}
@@ -145,6 +175,16 @@ export function DirectoryTab({
             }`}
           >
             <Shield className="w-4 h-4" /> Teams
+          </button>
+          <button
+            onClick={() => setViewMode("h2h")}
+            className={`flex-1 flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${
+              viewMode === "h2h"
+                ? "bg-amber-500 text-white shadow-sm"
+                : "text-muted-foreground hover:text-on-accent"
+            }`}
+          >
+            <Sword className="w-4 h-4" /> H2H
           </button>
         </div>
       </div>
@@ -334,9 +374,13 @@ export function DirectoryTab({
         </div>
       )}
       </>
+      ) : viewMode === "teams" ? (
+        <div className="mt-4">
+          <TeamsTab searchQuery={searchQuery} tournamentFilter={tournamentFilter} />
+        </div>
       ) : (
         <div className="mt-4">
-          <TeamsTab searchQuery={searchQuery} />
+          <H2HSection />
         </div>
       )}
     </>

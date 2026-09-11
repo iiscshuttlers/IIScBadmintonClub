@@ -30,7 +30,9 @@ import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { InfoModal } from "@/components/InfoModal";
 import type { ConvenerData } from "@/components/admin/ConvenerEditor";
 // import { VenueTrafficWidget } from "@/components/home/VenueTrafficWidget";
-import { NoticeBoard } from "@/components/home/NoticeBoard";
+import { ActiveTournamentWidget } from "@/components/home/ActiveTournamentWidget";
+import { HomeAnnouncementBar } from "@/components/home/HomeAnnouncementBar";
+import { useAuth } from "@/contexts/AuthContext";
 // ── Animation variants ────────────────────────────────────────────────────────
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 28 },
@@ -60,6 +62,7 @@ function getLatestHighlight(archivedTournaments: ArchivedTournament[]) {
 
 export default function Home() {
   const { archivedTournaments } = useArchivedTournaments();
+  const { isAdmin } = useAuth();
   const [config, setConfig] = useState<Record<string, any> | null>(null);
   const [convenerData, setConvenerData] = useState<ConvenerData | null>(null);
 
@@ -196,8 +199,10 @@ export default function Home() {
         <section aria-label="Quick Links" className="bg-slate-50 dark:bg-transparent">
           <div className="container mx-auto px-4">
             
+            <HomeAnnouncementBar isAdmin={isAdmin} />
+
             <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}>
-              <NoticeBoard />
+              <ActiveTournamentWidget />
             </motion.div>
 
 

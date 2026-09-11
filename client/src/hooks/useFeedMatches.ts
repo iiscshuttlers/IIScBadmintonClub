@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { fetchFeedMatches } from "@/services/matchService";
 
-export function useFeedMatches(ownProfile: any) {
+export function useFeedMatches(ownProfile: any, initialLimit = 100) {
   const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [limitCount, setLimitCount] = useState(100);
+  const [limitCount, setLimitCount] = useState(initialLimit);
   const [tournamentFilter, setTournamentFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<"all" | "singles" | "doubles" | "mixed">("all");
   const [timeFilter, setTimeFilter] = useState<"all" | "today" | "week">("all");

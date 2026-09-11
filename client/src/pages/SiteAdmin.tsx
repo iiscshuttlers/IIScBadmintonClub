@@ -66,12 +66,14 @@ import { DatabaseSchemaDashboard } from "@/components/admin/DatabaseSchemaDashbo
 import { ArchitectureNeuralGraph } from "@/components/admin/ArchitectureNeuralGraph";
 import { AdminFeaturesGuide } from "@/components/admin/AdminFeaturesGuide";
 import { Database, BrainCircuit, BookOpen } from "lucide-react";
+import { HomeBannerManager } from "@/components/admin/HomeBannerManager";
 
 /* ── Types ──────────────────────────────────────────────────────── */
 type TabId =
   | "overview"
   | "config"
   | "noticeboard"
+  | "home_banners"
   | "holidays"
   | "polls"
   | "tournament"
@@ -140,6 +142,7 @@ const TAB_GROUPS: TabGroup[] = [
     description: "Manage club content, announcements, and events",
     tabs: [
       { id: "config", label: "Landing Pages", icon: Paintbrush },
+      { id: "home_banners", label: "Home Banners", icon: Megaphone },
       { id: "noticeboard", label: "Noticeboard", icon: Megaphone },
       { id: "polls", label: "Community Polls", icon: Megaphone },
       { id: "holidays", label: "Holidays", icon: Calendar },
@@ -464,6 +467,7 @@ function SiteAdminInner() {
             {activeTab === "noticeboard" && (
               <NoticeboardManager setTabCounts={setTabCounts} />
             )}
+            {activeTab === "home_banners" && <HomeBannerManager />}
             {activeTab === "holidays" && (
               <ContentEditorWrapper 
                 dbKey="holidays" 

@@ -626,37 +626,17 @@ export default function Legacy() {
                 <Trophy className="w-4 h-4" /> Champions
               </a>
               <a
-                href="#albums"
-                onClick={() => setActiveTab("albums")}
+                href={`#${activeTab === "champions" ? "albums" : activeTab}`}
+                onClick={() => {
+                  if (activeTab === "champions") setActiveTab("albums");
+                }}
                 className={`flex w-full sm:w-auto items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
-                  activeTab === "albums"
+                  activeTab !== "champions"
                     ? "bg-white text-blue-900 shadow-md scale-100"
                     : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
                 }`}
               >
                 <Camera className="w-4 h-4" /> Albums
-              </a>
-              <a
-                href="#photos"
-                onClick={() => setActiveTab("photos")}
-                className={`flex w-full sm:w-auto items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
-                  activeTab === "photos"
-                    ? "bg-white text-blue-900 shadow-md scale-100"
-                    : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
-                }`}
-              >
-                <Camera className="w-4 h-4" /> All Photos
-              </a>
-              <a
-                href="#videos"
-                onClick={() => setActiveTab("videos")}
-                className={`flex w-full sm:w-auto items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
-                  activeTab === "videos"
-                    ? "bg-white text-blue-900 shadow-md scale-100"
-                    : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
-                }`}
-              >
-                <PlayCircle className="w-4 h-4" /> All Videos
               </a>
             </div>
           </div>
@@ -665,8 +645,47 @@ export default function Legacy() {
 
       {activeTab === "champions" && <WinnersWallSection />}
 
+      {activeTab !== "champions" && (
+        <section className="pt-6 pb-2 bg-slate-50/50 dark:bg-slate-950/50 relative border-b border-slate-100 dark:border-slate-800">
+          <div className="container mx-auto px-4 flex justify-center">
+            <div className="bg-slate-200/50 dark:bg-slate-900 p-1.5 rounded-2xl flex gap-1 border border-slate-200 dark:border-slate-800 w-full sm:w-auto shadow-inner">
+              <button
+                onClick={() => setActiveTab("albums")}
+                className={`flex-1 flex items-center justify-center gap-2 px-6 py-2 rounded-xl text-sm font-bold transition-all ${
+                  activeTab === "albums"
+                    ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-md ring-1 ring-black/5 dark:ring-white/10 scale-[1.02]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-slate-100/50 dark:hover:bg-slate-800/50"
+                }`}
+              >
+                <Camera className="w-4 h-4" /> Albums
+              </button>
+              <button
+                onClick={() => setActiveTab("photos")}
+                className={`flex-1 flex items-center justify-center gap-2 px-6 py-2 rounded-xl text-sm font-bold transition-all ${
+                  activeTab === "photos"
+                    ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-md ring-1 ring-black/5 dark:ring-white/10 scale-[1.02]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-slate-100/50 dark:hover:bg-slate-800/50"
+                }`}
+              >
+                <Camera className="w-4 h-4" /> All Photos
+              </button>
+              <button
+                onClick={() => setActiveTab("videos")}
+                className={`flex-1 flex items-center justify-center gap-2 px-6 py-2 rounded-xl text-sm font-bold transition-all ${
+                  activeTab === "videos"
+                    ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-md ring-1 ring-black/5 dark:ring-white/10 scale-[1.02]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-slate-100/50 dark:hover:bg-slate-800/50"
+                }`}
+              >
+                <PlayCircle className="w-4 h-4" /> All Videos
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+
       {(activeTab === "albums" || activeTab === "photos") && (
-      <section className="py-16 bg-white dark:bg-slate-950 relative">
+      <section className="py-8 bg-white dark:bg-slate-950 relative">
         <TeaserOverlay isLocked={!session}>
         <div className="container mx-auto px-4">
           {/* Main Category Filter */}

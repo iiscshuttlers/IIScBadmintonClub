@@ -776,14 +776,19 @@ html {
 }
 .visible-scrollbar::-webkit-scrollbar-track {
   background: transparent;
-  from {
-    opacity: 0;
-    transform: translateX(24px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+}
+.visible-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.5); /* slate-400 with opacity */
+  border-radius: 20px;
+}
+.visible-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(148, 163, 184, 0.8);
+}
+.dark .visible-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(71, 85, 105, 0.5); /* slate-600 with opacity */
+}
+.dark .visible-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(71, 85, 105, 0.8);
 }
 
 .marquee-anim {
@@ -816,7 +821,6 @@ html {
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
-
 /* Pulse glow for live indicators */
 @keyframes pulseGlow {
   0%,

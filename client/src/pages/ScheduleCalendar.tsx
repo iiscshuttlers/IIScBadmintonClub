@@ -182,7 +182,7 @@ export default function ScheduleCalendar() {
                 title: t.name,
                 type: "event",
                 location: t.venue || "Gymkhana",
-                link: `/pulse?t=${t.status}&tid=${t.slug || t.id}#tournament`,
+                link: t.status === "active" ? "/pulse#live" : `/events/${t.slug || t.id}`,
               });
             }
           });
@@ -202,7 +202,7 @@ export default function ScheduleCalendar() {
               time: timeStr,
               type: "event",
               location: m.court_number ? `Court ${m.court_number}` : "Gymkhana",
-              link: m.tournaments?.id ? `/pulse?t=live&tid=${m.tournaments.id}#tournament` : undefined,
+              link: m.tournaments?.id ? `/pulse#live` : undefined,
             });
           });
         }

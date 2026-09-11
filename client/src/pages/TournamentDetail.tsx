@@ -184,7 +184,7 @@ export default function TournamentDetail() {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbLink href="/pulse?t=completed#tournament">Pulse</BreadcrumbLink>
+              <BreadcrumbLink href="/pulse#events">Pulse</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>

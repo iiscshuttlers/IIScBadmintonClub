@@ -5,6 +5,7 @@ import { fetchPlayerList } from "@/services/playerService";
 import { calculateRanksMap } from "@/lib/rankingUtils";
 import { useAuth } from "@/contexts/AuthContext";
 import type { PlayerRow } from "@/types";
+import { useAllTournamentMatches } from "@/hooks/useAllTournamentMatches";
 
 export function DirectoryWrapper() {
   const { profile, isAdmin } = useAuth();
@@ -13,13 +14,39 @@ export function DirectoryWrapper() {
   const [players, setPlayers] = useState<PlayerRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
-  
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"elo" | "singles" | "doubles" | "mixed" | "winpct" | "name" | "department" | "level">("elo");
+  const getInitialParam = (param: string, defaultVal: string) => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param) || defaultVal;
+    } catch {
+      return defaultVal;
+    }
+  };
+
+  const [searchQuery, setSearchQuery] = useState(() => getInitialParam("dir_q", ""));
+  const [sortBy, setSortBy] = useState<any>(() => getInitialParam("dir_sort", "elo"));
   const [showFilters, setShowFilters] = useState(false);
-  const [levelFilter, setLevelFilter] = useState("All");
-  const [departmentFilter, setDepartmentFilter] = useState("All");
+  const [levelFilter, setLevelFilter] = useState(() => getInitialParam("dir_level", "All"));
+  const [departmentFilter, setDepartmentFilter] = useState(() => getInitialParam("dir_dept", "All"));
+  const [tournamentFilter, setTournamentFilter] = useState("All");
+  const [categoryFilter, setCategoryFilter] = useState("All");
   const [visibleCount, setVisibleCount] = useState(24);
+
+  useEffect(() => {
+    try {
+      const url = new URL(window.location.href);
+      if (searchQuery) url.searchParams.set("dir_q", searchQuery);
+      else url.searchParams.delete("dir_q");
+      
+      url.searchParams.set("dir_sort", sortBy);
+      url.searchParams.set("dir_level", levelFilter);
+      url.searchParams.set("dir_dept", departmentFilter);
+      
+      window.history.replaceState(null, "", url.toString());
+    } catch { /* ignore */ }
+  }, [searchQuery, sortBy, levelFilter, departmentFilter]);
+
+  const { data: allMatches = [] } = useAllTournamentMatches();
 
   const fetchPlayers = async () => {
     try {
@@ -65,16 +92,56 @@ export function DirectoryWrapper() {
       .filter(
         (p) => departmentFilter === "All" || (p.department || "").toLowerCase() === departmentFilter.toLowerCase()
       )
-      .sort((a, b) => {
+      .map(p => {
+        // If sorting by rankings, compute temporary stats for this filter
+        if (sortBy === "rankings") {
+          let wins = 0;
+          let losses = 0;
+          for (const m of allMatches) {
+            if (tournamentFilter !== "All" && m.tournament_id !== tournamentFilter) continue;
+            if (categoryFilter !== "All" && m.category !== categoryFilter) continue;
+            
+            const isTeam1 = m.player1_id === p.id || m.player3_id === p.id;
+            const isTeam2 = m.player2_id === p.id || m.player4_id === p.id;
+            if (isTeam1) {
+              if (m.winner_side === 1) wins++; else losses++;
+            } else if (isTeam2) {
+              if (m.winner_side === 2) wins++; else losses++;
+            }
+          }
+          return { ...p, _filterWins: wins, _filterLosses: losses };
+        }
+        return p;
+      })
+      .sort((a: any, b: any) => {
+        if (sortBy === "rankings") {
+          const aTotal = (a._filterWins || 0) + (a._filterLosses || 0);
+          const bTotal = (b._filterWins || 0) + (b._filterLosses || 0);
+          const aPct = aTotal === 0 ? -1 : (a._filterWins || 0) / aTotal;
+          const bPct = bTotal === 0 ? -1 : (b._filterWins || 0) / bTotal;
+          
+          if (bPct !== aPct) return bPct - aPct;
+          if ((b._filterWins || 0) !== (a._filterWins || 0)) return (b._filterWins || 0) - (a._filterWins || 0);
+          return (a.full_name || "").localeCompare(b.full_name || "");
+        }
         if (sortBy === "elo") return (b.elo_rating || 0) - (a.elo_rating || 0);
         if (sortBy === "singles") return (b.singles_elo || 0) - (a.singles_elo || 0);
         if (sortBy === "doubles") return (b.doubles_elo || 0) - (a.doubles_elo || 0);
         if (sortBy === "mixed") return (b.mixed_elo || 0) - (a.mixed_elo || 0);
         if (sortBy === "winpct") {
           const getPct = (p: any) => {
-            const w = p.stats?.wins || 0;
-            const l = p.stats?.losses || 0;
-            return w + l === 0 ? -1 : w / (w + l);
+            const rec = String(p.win_loss_record || "").toUpperCase();
+            const m = rec.match(/(\d+)\s*W\s*-?\s*(\d+)\s*L/);
+            if (m) {
+              const w = +m[1], l = +m[2];
+              return w + l === 0 ? -1 : w / (w + l);
+            }
+            const dashMatch = rec.match(/^(\d+)\s*-\s*(\d+)$/);
+            if (dashMatch) {
+              const w = +dashMatch[1], l = +dashMatch[2];
+              return w + l === 0 ? -1 : w / (w + l);
+            }
+            return -1;
           };
           return getPct(b) - getPct(a);
         }
@@ -113,6 +180,10 @@ export function DirectoryWrapper() {
         setLevelFilter={setLevelFilter}
         departmentFilter={departmentFilter}
         setDepartmentFilter={setDepartmentFilter}
+        tournamentFilter={tournamentFilter}
+        setTournamentFilter={setTournamentFilter}
+        categoryFilter={categoryFilter}
+        setCategoryFilter={setCategoryFilter}
         allDepartments={allDepartments}
         myBuddyIds={new Set(profile?.buddies || [])}
         myBuddyRequests={{ received: new Set(), sent: new Set() }}

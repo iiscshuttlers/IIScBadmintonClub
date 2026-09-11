@@ -1,46 +1,81 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Trophy, Users, Shield, Plus, Loader2 } from "lucide-react";
-import { TeamRegistration } from "../TeamRegistration";
+import { Trophy, Users, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import { usePlayers } from "@/hooks/usePlayers";
+import { useAllTournamentMatches } from "@/hooks/useAllTournamentMatches";
+import { useMemo } from "react";
 
 interface TeamsTabProps {
   searchQuery?: string;
+  tournamentFilter?: string;
 }
 
-export function TeamsTab({ searchQuery = "" }: TeamsTabProps) {
-  const [teams, setTeams] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [category, setCategory] = useState("doubles");
-  const { data: players } = usePlayers();
-  const [showRegistration, setShowRegistration] = useState(false);
-
-  const fetchTeams = async () => {
-    setLoading(true);
-    // Since the table might not exist yet, we wrap in try/catch and handle gracefully
+export function TeamsTab({ searchQuery = "", tournamentFilter = "All" }: TeamsTabProps) {
+  const getInitialParam = (param: string, defaultVal: string) => {
     try {
-      const { data, error } = await supabase
-        .from("doubles_teams")
-        .select("*")
-        .order("elo_rating", { ascending: false });
-
-      if (error) throw error;
-      setTeams(data || []);
-    } catch (err: any) {
-      console.error("Failed to fetch teams:", err.message);
-      setTeams([]); // Graceful fallback
-    } finally {
-      setLoading(false);
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param) || defaultVal;
+    } catch {
+      return defaultVal;
     }
   };
 
-  useEffect(() => {
-    fetchTeams();
-  }, []);
+  const [category, setCategory] = useState(() => getInitialParam("team_cat", "doubles"));
 
-  const filteredTeams = teams.filter((t) => {
-    const categoryMatch = category === "doubles" ? (t.category === "MD" || t.category === "WD") : t.category === category;
+  useEffect(() => {
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set("team_cat", category);
+      window.history.replaceState(null, "", url.toString());
+    } catch { /* ignore */ }
+  }, [category]);
+  const { data: players } = usePlayers();
+  
+  const { data: allMatches = [], isLoading } = useAllTournamentMatches();
+
+  const computedTeams = useMemo(() => {
+    const map = new Map<string, any>();
+    
+    allMatches.forEach(m => {
+       if (tournamentFilter !== "All" && m.tournament_id !== tournamentFilter) return;
+       if (!m.player3_id) return; // not a doubles match
+       
+       const processTeam = (p1: string, p2: string, won: boolean) => {
+          if (!p1 || !p2) return;
+          const ids = [p1, p2].sort();
+          const key = ids.join("_");
+          if (!map.has(key)) {
+             map.set(key, {
+                id: key,
+                player1_id: ids[0],
+                player2_id: ids[1],
+                category: m.category, // doubles, mixed
+                matches_won: 0,
+                matches_played: 0,
+             });
+          }
+          const t = map.get(key);
+          t.matches_played++;
+          if (won) t.matches_won++;
+       };
+
+       processTeam(m.player1_id, m.player3_id, m.winner_side === 1);
+       if (m.player2_id && m.player4_id) {
+          processTeam(m.player2_id, m.player4_id, m.winner_side === 2);
+       }
+    });
+
+    return Array.from(map.values()).sort((a, b) => {
+       const aPct = a.matches_won / a.matches_played;
+       const bPct = b.matches_won / b.matches_played;
+       if (bPct !== aPct) return bPct - aPct;
+       return b.matches_won - a.matches_won;
+    });
+  }, [allMatches, tournamentFilter]);
+
+  const filteredTeams = computedTeams.filter((t) => {
+    const categoryMatch = category === "doubles" ? (t.category === "doubles") : (t.category === "mixed");
     if (!categoryMatch) return false;
     
     if (searchQuery) {
@@ -60,29 +95,12 @@ export function TeamsTab({ searchQuery = "" }: TeamsTabProps) {
   return (
     <div className="font-sans animate-in fade-in zoom-in-95 duration-300">
       <div className="max-w-4xl mx-auto space-y-6">
-        
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex-1" />
-
-          <button
-            onClick={() => setShowRegistration(!showRegistration)}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black transition-all bg-violet-600 hover:bg-violet-700 text-on-accent shadow-lg shadow-violet-500/20"
-          >
-            {showRegistration ? "Cancel" : <><Plus className="w-4 h-4" /> Register New Team</>}
-          </button>
         </div>
 
-        {showRegistration && (
-          <div className="animate-in slide-in-from-top-4">
-            <TeamRegistration onTeamRegistered={() => {
-              setShowRegistration(false);
-              fetchTeams();
-            }} />
-          </div>
-        )}
-
         <div className="flex flex-wrap justify-center gap-2">
-          {["doubles", "XD"].map((cat) => (
+          {["doubles", "mixed"].map((cat) => (
             <button
               key={cat}
               onClick={() => setCategory(cat)}
@@ -97,7 +115,7 @@ export function TeamsTab({ searchQuery = "" }: TeamsTabProps) {
           ))}
         </div>
 
-        {loading ? (
+        {isLoading ? (
           <div className="flex justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-violet-500" />
           </div>
@@ -120,37 +138,21 @@ export function TeamsTab({ searchQuery = "" }: TeamsTabProps) {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-black text-foreground dark:text-foreground truncate">
-                      {team.team_name}
-                    </h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground truncate">
-                        {p1?.full_name || "Unknown"}
-                        {p1?.is_retired && (
-                          <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-sm bg-rose-500 text-on-accent shadow-sm shrink-0">
-                            Retired
-                          </span>
-                        )}
-                      </span>
+                    <h3 className="text-lg font-black text-foreground dark:text-foreground truncate flex items-center gap-2">
+                      <span className="truncate">{p1?.full_name || "Unknown"}</span>
                       <span className="text-xs text-slate-300 font-bold">&</span>
-                      <span className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground truncate">
-                        {p2?.full_name || "Unknown"}
-                        {p2?.is_retired && (
-                          <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-sm bg-rose-500 text-on-accent shadow-sm shrink-0">
-                            Retired
-                          </span>
-                        )}
-                      </span>
-                    </div>
+                      <span className="truncate">{p2?.full_name || "Unknown"}</span>
+                    </h3>
+
                   </div>
 
                   <div className="flex flex-col items-end text-right">
                     <div className="flex items-center gap-1.5 text-lg font-black text-primary dark:text-primary">
                       <Trophy className="w-4 h-4" />
-                      {team.elo_rating}
+                      {Math.round((team.matches_won / team.matches_played) * 100)}%
                     </div>
                     <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-1">
-                      {team.matches_won}W - {team.matches_played - team.matches_won}L
+                      {team.matches_won}W - {team.matches_played - team.matches_won}L ({team.matches_played} played)
                     </div>
                   </div>
                 </Link>
