@@ -44,7 +44,7 @@ export function H2HSection() {
     supabase
       .from("matches")
       .select("*")
-      .eq("status", "confirmed")
+      .in("status", ["confirmed", "walkover"])
       .then(({ data }) => {
         if (data) setMatches(data);
       });

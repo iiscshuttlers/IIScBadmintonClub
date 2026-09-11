@@ -16,7 +16,7 @@ export function useIronmanMonthlyQuery(eloMode: "club" | "tournament", enabled: 
         : await supabase
             .from("matches")
             .select("player1_id, player2_id, team1_partner_id, team2_partner_id")
-            .eq("status", "confirmed")
+            .in("status", ["confirmed", "walkover"])
             .gte("created_at", startOfMonth);
 
       if (error) throw error;

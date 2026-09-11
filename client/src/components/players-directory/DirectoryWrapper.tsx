@@ -4,6 +4,7 @@ import { DirectoryTab } from "./tabs/DirectoryTab";
 import { fetchPlayerList } from "@/services/playerService";
 import { calculateRanksMap } from "@/lib/rankingUtils";
 import { useAuth } from "@/contexts/AuthContext";
+import { getEloTier } from "@/lib/tiers";
 import type { PlayerRow } from "@/types";
 import { useAllTournamentMatches } from "@/hooks/useAllTournamentMatches";
 
@@ -104,17 +105,17 @@ export function DirectoryWrapper() {
         }
         return true;
       })
-      .filter((p) => levelFilter === "All" || (p.playing_level || "").toLowerCase() === levelFilter.toLowerCase())
+      .filter((p) => levelFilter === "All" || getEloTier(p.elo_rating).name === levelFilter)
       .filter(
         (p) => departmentFilter === "All" || (p.department || "").toLowerCase() === departmentFilter.toLowerCase()
       )
       .map(p => {
-        // If sorting by rankings, compute temporary stats for this filter
-        if (sortBy === "rankings") {
+        // If sorting by tournament rankings, compute temporary stats for this filter
+        if (tournamentFilter !== "All" && sortBy === "elo") {
           let wins = 0;
           let losses = 0;
           for (const m of allMatches) {
-            if (tournamentFilter !== "All" && m.tournament_id !== tournamentFilter) continue;
+            if (m.tournament_id !== tournamentFilter) continue;
             if (categoryFilter !== "All" && m.category !== categoryFilter) continue;
             
             const isTeam1 = m.player1_id === p.id || m.player3_id === p.id;
@@ -130,7 +131,7 @@ export function DirectoryWrapper() {
         return p;
       })
       .sort((a: any, b: any) => {
-        if (sortBy === "rankings") {
+        if (tournamentFilter !== "All" && sortBy === "elo") {
           const aTotal = (a._filterWins || 0) + (a._filterLosses || 0);
           const bTotal = (b._filterWins || 0) + (b._filterLosses || 0);
           const aPct = aTotal === 0 ? -1 : (a._filterWins || 0) / aTotal;
@@ -138,7 +139,7 @@ export function DirectoryWrapper() {
           
           if (bPct !== aPct) return bPct - aPct;
           if ((b._filterWins || 0) !== (a._filterWins || 0)) return (b._filterWins || 0) - (a._filterWins || 0);
-          return (a.full_name || "").localeCompare(b.full_name || "");
+          return (b.elo_rating || 0) - (a.elo_rating || 0);
         }
         if (sortBy === "elo") return (b.elo_rating || 0) - (a.elo_rating || 0);
         if (sortBy === "singles") return (b.singles_elo || 0) - (a.singles_elo || 0);

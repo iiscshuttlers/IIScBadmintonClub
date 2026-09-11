@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
+import { AnimatePresence } from "framer-motion";
 import { getTournaments } from "@/lib/tournaments";
 import { fetchSiteData } from "@/lib/siteData";
 import { Avatar } from "@/components/ui/Avatar";
@@ -32,6 +33,7 @@ import {
   MessageSquare,
   Bell,
   BellRing,
+  Calendar,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -54,6 +56,7 @@ import { NotificationSettingsModal } from "@/components/profile/NotificationSett
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { NotificationsMenu } from "@/components/NotificationsMenu";
+import { HolidayCalendarModal } from "@/components/HolidayCalendarModal";
 
 const CLUB_LINKS = [
   { href: "/pulse", label: "Pulse" },
@@ -72,6 +75,7 @@ export default function Navigation() {
   const [hasUnreadAnnouncements, setHasUnreadAnnouncements] = useState(false);
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
   const [isNotificationSettingsOpen, setIsNotificationSettingsOpen] = useState(false);
+  const [showHolidays, setShowHolidays] = useState(false);
   const [signOutDialog, setSignOutDialog] = useState<{ open: boolean; message: string; onConfirm: () => void }>({ open: false, message: "", onConfirm: () => {} });
   const {
     authLoading,
@@ -267,6 +271,13 @@ export default function Navigation() {
             {/* Mobile action buttons (search + profile) — always visible on mobile */}
             <div className="flex lg:hidden items-center gap-0.5 ml-auto flex-shrink-0">
               <button
+                onClick={() => setShowHolidays(true)}
+                className="p-1.5 rounded-xl text-muted-foreground dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                aria-label="Holiday Calendar"
+              >
+                <Calendar className="w-4 h-4" />
+              </button>
+              <button
                 onClick={() => setSearchOpen(true)}
                 className="p-1.5 rounded-xl text-muted-foreground dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 aria-label="Search"
@@ -378,6 +389,13 @@ export default function Navigation() {
           {/* ── Row 2: Action Buttons — desktop only ─────────────────── */}
           <div className="hidden lg:flex items-center justify-end gap-1.5 mt-1 border-t border-slate-100 dark:border-slate-800/60 pt-1.5">
 
+            <button
+              onClick={() => setShowHolidays(true)}
+              className="p-1.5 rounded-xl text-muted-foreground dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              aria-label="Holiday Calendar"
+            >
+              <Calendar className="w-4 h-4" />
+            </button>
             <button
               onClick={() => setSearchOpen(true)}
               className="p-1.5 rounded-xl text-muted-foreground dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
@@ -719,6 +737,9 @@ export default function Navigation() {
         onConfirm={() => { setSignOutDialog(d => ({ ...d, open: false })); signOutDialog.onConfirm(); }}
         onCancel={() => setSignOutDialog(d => ({ ...d, open: false }))}
       />
+      <AnimatePresence>
+        {showHolidays && <HolidayCalendarModal onClose={() => setShowHolidays(false)} />}
+      </AnimatePresence>
     </>
   );
 }

@@ -98,7 +98,7 @@ export function EloAuditPanel() {
         .order("elo_rating", { ascending: false }),
       supabase.from("matches")
         .select("player1_id, player2_id, team1_partner_id, team2_partner_id, winner_id")
-        .eq("status", "confirmed"),
+        .in("status", ["confirmed", "walkover"]),
       supabase.from("tournament_matches")
         .select("id, player1_id, player2_id, player3_id, player4_id, winner_id, winner_side, match_number, match_code, category, created_at")
         .eq("status", "completed"),

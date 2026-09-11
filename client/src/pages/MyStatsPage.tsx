@@ -42,7 +42,7 @@ export default function MyStatsPage() {
         .or(
           `player1_id.eq.${ownProfile.id},player2_id.eq.${ownProfile.id},team1_partner_id.eq.${ownProfile.id},team2_partner_id.eq.${ownProfile.id}`
         )
-        .eq("status", "confirmed")
+        .in("status", ["confirmed", "walkover"])
         .order("date", { ascending: false });
 
       if (!error && data) {

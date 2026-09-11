@@ -53,8 +53,8 @@ export function ActiveTournamentWidget() {
   const [loadingToday, setLoadingToday] = useState(false);
 
   useEffect(() => {
-    async function fetchActiveData() {
-      setLoading(true);
+    async function fetchActiveData(isInitial = false) {
+      if (isInitial) setLoading(true);
       try {
         // Fetch active tournament
         const { data: tourneys } = await supabase
@@ -109,15 +109,15 @@ export function ActiveTournamentWidget() {
       } catch (err) {
         console.error("Error fetching active tournament data:", err);
       } finally {
-        setLoading(false);
+        if (isInitial) setLoading(false);
       }
     }
 
-    fetchActiveData();
+    fetchActiveData(true);
 
     const channel = supabase.channel('live_matches_home')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'site_data', filter: "key=eq.live_matches" }, () => {
-        fetchActiveData();
+        fetchActiveData(false);
       })
       .subscribe();
 

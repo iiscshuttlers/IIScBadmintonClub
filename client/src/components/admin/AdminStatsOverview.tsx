@@ -47,8 +47,8 @@ export function AdminStatsOverview() {
         const [playersRes, matchesRes, weekMatchesRes, pendingMatchRes, pendingPlayersRes] =
           await Promise.all([
             supabase.from("players").select("id, full_name, elo_rating, is_approved").is("deleted_at", null),
-            supabase.from("matches").select("id", { count: "exact", head: true }).eq("status", "confirmed"),
-            supabase.from("matches").select("id, player1_id, player2_id, elo_change_p1, elo_change_p2, created_at").eq("status", "confirmed").gte("created_at", since7d),
+            supabase.from("matches").select("id", { count: "exact", head: true }).in("status", ["confirmed", "walkover"]),
+            supabase.from("matches").select("id, player1_id, player2_id, elo_change_p1, elo_change_p2, created_at").in("status", ["confirmed", "walkover"]).gte("created_at", since7d),
             supabase.from("matches").select("id", { count: "exact", head: true }).eq("status", "pending"),
             supabase.from("players").select("id", { count: "exact", head: true }).eq("is_approved", false).is("deleted_at", null),
           ]);

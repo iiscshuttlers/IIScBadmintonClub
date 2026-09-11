@@ -1,5 +1,7 @@
-import { Search, X, ArrowUpDown, SlidersHorizontal, Trophy } from "lucide-react";
+import { Trophy, ArrowUpDown, Filter, Search, X, SlidersHorizontal, UserPlus } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
+import { ELO_TIERS } from "@/lib/tiers";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -78,7 +80,24 @@ export function DirectoryFilters({
           )}
         </div>
 
-        <div className="flex gap-2 shrink-0">
+        <div className="flex gap-2 shrink-0 flex-wrap sm:flex-nowrap">
+          {/* Tournament selector */}
+          {setTournamentFilter && (
+            <div className="relative">
+              <Trophy className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <select
+                value={tournamentFilter}
+                onChange={(e) => setTournamentFilter(e.target.value)}
+                className="pl-9 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-muted-foreground dark:text-slate-200 text-sm font-bold outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer max-w-[200px] truncate"
+              >
+                <option value="All">All tournaments</option>
+                {tournaments.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* Sort selector */}
           <div className="relative">
             <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -87,16 +106,14 @@ export function DirectoryFilters({
               onChange={(e) => setSortBy(e.target.value)}
               className="pl-9 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-muted-foreground dark:text-slate-200 text-sm font-bold outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer"
             >
-              <option value="tournament_elo">Overall (all tournaments) ranking</option>
-              <option value="rankings">Tournament ranking</option>
-              <option value="elo">Overall ranking (throughout all formats)</option>
-              <option value="singles">By Singles Rank</option>
-              <option value="doubles">By Doubles Rank</option>
-              <option value="mixed">By Mixed Rank</option>
-              <option value="winpct">By Win %</option>
-              <option value="name">By Name</option>
-              <option value="department">By Department</option>
-              <option value="level">By Level</option>
+              <option value="elo">All Formats</option>
+              <option value="singles">Singles</option>
+              <option value="doubles">Doubles</option>
+              <option value="mixed">Mixed Doubles</option>
+              <option value="winpct">Win %</option>
+              <option value="name">Name</option>
+              <option value="department">Department</option>
+              <option value="level">Level</option>
             </select>
           </div>
 
@@ -139,10 +156,9 @@ export function DirectoryFilters({
                   className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary font-semibold"
                 >
                   <option value="All">All Levels</option>
-                  <option value="Beginner">Beginner</option>
-                  <option value="Intermediate">Intermediate</option>
-                  <option value="Advanced">Advanced</option>
-                  <option value="Professional">Professional</option>
+                  {ELO_TIERS.map(tier => (
+                    <option key={tier.name} value={tier.name}>{tier.name}</option>
+                  ))}
                 </select>
               </div>
               <div>
@@ -163,23 +179,8 @@ export function DirectoryFilters({
                 </select>
               </div>
 
-              {setTournamentFilter && setCategoryFilter && (
+              {setCategoryFilter && (
                 <>
-                  <div>
-                    <label className="block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-2">
-                      Tournament
-                    </label>
-                    <select
-                      value={tournamentFilter}
-                      onChange={(e) => setTournamentFilter(e.target.value)}
-                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary font-semibold"
-                    >
-                      <option value="All">All Tournaments</option>
-                      {tournaments.map((t) => (
-                        <option key={t.id} value={t.id}>{t.name}</option>
-                      ))}
-                    </select>
-                  </div>
                   <div>
                     <label className="block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-2">
                       Category
@@ -190,9 +191,11 @@ export function DirectoryFilters({
                       className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-foreground dark:text-foreground text-sm outline-none focus:ring-2 focus:ring-primary font-semibold"
                     >
                       <option value="All">All Categories</option>
-                      <option value="singles">Singles</option>
-                      <option value="doubles">Doubles</option>
-                      <option value="mixed">Mixed</option>
+                      <option value="Men's Singles">Men's Singles</option>
+                      <option value="Men's Doubles">Men's Doubles</option>
+                      <option value="Women's Singles">Women's Singles</option>
+                      <option value="Women's Doubles">Women's Doubles</option>
+                      <option value="Mixed Doubles">Mixed Doubles</option>
                     </select>
                   </div>
                 </>

@@ -71,7 +71,7 @@ export function WeeklyChallenges() {
       const { data: weekMatches } = await supabase
         .from("matches")
         .select("id, winner_id, player1_id, player2_id, match_score, status, created_at")
-        .eq("status", "confirmed")
+        .in("status", ["confirmed", "walkover"])
         .gte("created_at", since)
         .or(`player1_id.eq.${profile.id},player2_id.eq.${profile.id}`);
 
@@ -91,7 +91,7 @@ export function WeeklyChallenges() {
       const { data: allRecent } = await supabase
         .from("matches")
         .select("winner_id")
-        .eq("status", "confirmed")
+        .in("status", ["confirmed", "walkover"])
         .or(`player1_id.eq.${profile.id},player2_id.eq.${profile.id}`)
         .order("created_at", { ascending: false })
         .limit(20);

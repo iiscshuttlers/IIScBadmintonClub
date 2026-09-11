@@ -16,7 +16,7 @@ export function useDirectoryFilters(
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<
     "tournament_elo" | "rankings" | "elo" | "singles" | "doubles" | "mixed" | "winpct" | "name" | "department" | "level"
-  >("tournament_elo");
+  >("elo");
 
   // Debounce search input by 150ms
   useEffect(() => {

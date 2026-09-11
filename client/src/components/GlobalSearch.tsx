@@ -128,7 +128,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
         const { data: matchRows } = await supabase
           .from("matches")
           .select("id, match_score, score, category, created_at, player1_id, player2_id, player1:players!player1_id(full_name), player2:players!player2_id(full_name)")
-          .eq("status", "confirmed")
+          .in("status", ["confirmed", "walkover"])
           .or(`player1_id.in.(${matchingIds.join(",")}),player2_id.in.(${matchingIds.join(",")})`)
           .order("created_at", { ascending: false })
           .limit(4);
