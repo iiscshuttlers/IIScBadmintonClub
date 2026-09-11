@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- To check whether Health Connect is installed or not -->
-    <queries>
-        <package android:name="com.google.android.apps.healthdata" />
-    </queries>
+    <!-- Health Connect queries removed -->
 
     <application
         android:allowBackup="false"
@@ -49,10 +46,7 @@
                 <data android:scheme="iiscshuttlers" />
             </intent-filter>
             
-            <!-- Health Connect Permissions Rationale -->
-            <intent-filter>
-                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
-            </intent-filter>
+            <!-- Health Connect intent filter removed -->
         </activity>
 
         <provider
@@ -134,13 +128,6 @@
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.nfc" android:required="false" />
 
-    <!-- Health Connect Permissions -->
-    <uses-permission android:name="android.permission.health.READ_HEART_RATE"/>
-    <uses-permission android:name="android.permission.health.READ_STEPS"/>
-    <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED"/>
-    <uses-permission android:name="android.permission.health.READ_HEART_RATE_VARIABILITY"/>
-    <uses-permission android:name="android.permission.health.READ_OXYGEN_SATURATION"/>
-    <uses-permission android:name="android.permission.health.READ_SLEEP"/>
-    <uses-permission android:name="android.permission.health.READ_RESTING_HEART_RATE"/>
+    <!-- Health Connect Permissions Removed to comply with Google Play Policy -->
 </manifest>
 
