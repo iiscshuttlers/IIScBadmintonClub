@@ -509,7 +509,7 @@ function AppContent() {
                 {!location.startsWith("/tv") && <GuestPromoBanner />}
                 {!location.startsWith("/tv") && <Navigation />}
                 {!location.startsWith("/tv") && <StatusBanner />}
-                <main id="main-content" className={`flex-1 flex flex-col ${location.startsWith("/tv") ? "" : session ? "pb-24 lg:pb-0" : mode === "club" ? "pb-20 lg:pb-0" : ""} ${location.startsWith("/tv") ? "" : /^\/player\/[^/]+\/personal/.test(location) ? "pt-[calc(3rem+env(safe-area-inset-top))] lg:pt-0" : ""}`}>
+                <main id="main-content" className={`flex-1 flex flex-col ${location.startsWith("/tv") ? "" : /^\/player\/[^/]+\/personal/.test(location) ? "pt-[calc(3rem+env(safe-area-inset-top))] lg:pt-0" : ""}`}>
                   <AppRoutes />
                 </main>
                 {!location.startsWith("/tv") && <Footer />}

@@ -12,6 +12,8 @@ import {
   Trophy,
   Users,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Star,
   Zap,
   MapPin,
@@ -80,6 +82,7 @@ export default function Home() {
   });
 
   const [showLocationDisclosure, setShowLocationDisclosure] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
 
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
@@ -126,10 +129,10 @@ export default function Home() {
 
   return (
     <>
-      <div className="min-h-screen pb-24 lg:pb-8">
+      <div className="min-h-screen flex flex-col pb-0 bg-slate-950">
 
         {/* ── HERO ──────────────────────────────────────────────────────── */}
-        <section aria-label="Hero" className="relative overflow-hidden text-white py-10 lg:py-12 flex items-center bg-slate-950">
+        <section aria-label="Hero" className="relative overflow-hidden text-white py-2 lg:py-4 flex items-center bg-slate-950">
           {/* Mobile photo bg */}
           <div className="lg:hidden absolute inset-x-0 top-0 z-0">
             <img src={iiscTeam} alt="IISc Badminton Team" className="w-full aspect-[4/3] sm:aspect-video object-cover object-top" />
@@ -149,62 +152,19 @@ export default function Home() {
             <div className="absolute inset-0 dot-pattern opacity-30" />
           </div>
 
-          <div className="container mx-auto px-4 pt-56 sm:pt-72 pb-4 lg:pt-8 lg:pb-6 relative z-10 w-full">
+          <div className="container mx-auto px-4 pt-6 sm:pt-12 pb-1 lg:pt-2 lg:pb-2 relative z-10 w-full">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
 
               {/* Left Content */}
               <motion.div variants={fadeUp} initial="hidden" animate="visible" className="space-y-2">
-                {/* Live badge */}
-                <div className="inline-flex items-center gap-2.5 bg-white/8 border border-white/15 backdrop-blur-sm text-primary/70 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
-                  </span>
-                  Welcome to IISc Badminton Club
-                </div>
-
                 {/* Heading */}
-                <div className="space-y-2">
-                  <h1 className="text-5xl lg:text-6xl xl:text-7xl font-black leading-[1.05] tracking-tight text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]" style={{ fontFamily: "Playfair Display, serif" }}>
-                    Where{" "}
-                    <span className="relative inline-block">
-                      <span className="text-primary drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]">Champions</span>
-                    </span>{" "}
-                    Are Forged
+                <div className="space-y-4">
+                  <h1 className="text-4xl lg:text-5xl xl:text-6xl font-black leading-[1.1] tracking-tight text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]" style={{ fontFamily: "Playfair Display, serif" }}>
+                    Welcome to the <br className="hidden sm:block" />
+                    <span className="text-primary drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]">IISc</span> Badminton Club
                   </h1>
-                  <p className="text-base text-slate-200 font-bold uppercase tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
-                    Indian Institute of Science · Bangalore
-                  </p>
                 </div>
 
-                <p className="text-lg text-white font-medium leading-relaxed max-w-lg drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
-                  Experience world-class badminton at IISc. Join our vibrant community of{" "}
-                  <span className="text-white font-black bg-primary/40 backdrop-blur-md px-1.5 py-0.5 rounded-md border border-primary/50 shadow-sm">350+ players</span> — from beginners to national champions — competing, training, and growing together.
-                </p>
-
-                {/* CTAs */}
-                <div className="flex flex-col sm:flex-row gap-3 pt-0">
-                  <Link href="/pulse#events">
-                    <Button className="bg-primary hover:bg-primary text-primary-foreground px-4 py-2.5 text-sm font-bold flex items-center gap-1.5 w-full sm:w-auto justify-center rounded-xl shadow-lg shadow-primary/25 hover:-translate-y-0.5 transition-all duration-300 glow-emerald cursor-pointer">
-                      Explore Events <ArrowRight className="w-4 h-4" />
-                    </Button>
-                  </Link>
-                </div>
-
-
-                {/* Inline mini-stats */}
-                <div className="flex items-center justify-center gap-4 pt-1 border-t border-white/10 max-w-lg">
-                  {[
-                    { value: config?.stats?.members || "350+", label: "Members" },
-                    { value: config?.stats?.tournaments || "20+", label: "Tournaments" },
-                    { value: config?.stats?.trophies || "10+", label: "IISM Trophies" },
-                  ].map(({ value, label }) => (
-                    <div key={label} className="text-center">
-                      <div className="text-2xl font-black text-white drop-shadow-sm">{value}</div>
-                      <div className="text-[10px] text-white/85 font-semibold uppercase tracking-wider drop-shadow-sm">{label}</div>
-                    </div>
-                  ))}
-                </div>
               </motion.div>
 
               {/* Right: Animated Logo */}
@@ -213,7 +173,7 @@ export default function Home() {
                 initial="hidden"
                 animate="visible"
                 transition={{ delay: 0.15 }}
-                className="hidden lg:flex justify-center items-center"
+                className="hidden lg:flex justify-center items-center scale-50 lg:scale-75 transform origin-center"
               >
                 <AnimatedLogo />
               </motion.div>
@@ -228,269 +188,47 @@ export default function Home() {
           </div>
         </section>
         
-        {/* Android App Beta Callout — Sparkling Edition */}
-        {!Capacitor.isNativePlatform() && (
-          <>
-            {/* Injected keyframes for sparkle / shimmer / float animations */}
-            <style>{`
-              @keyframes shimmer-border {
-                0%, 100% { background-position: 0% 50%; }
-                50% { background-position: 100% 50%; }
-              }
-              @keyframes sparkle-float-1 {
-                0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; }
-                50% { transform: translateY(-18px) scale(1.3); opacity: 1; }
-              }
-              @keyframes sparkle-float-2 {
-                0%, 100% { transform: translateY(0) scale(0.8); opacity: 0.5; }
-                50% { transform: translateY(-14px) scale(1.1); opacity: 0.9; }
-              }
-              @keyframes sparkle-float-3 {
-                0%, 100% { transform: translateY(0) scale(1.1); opacity: 0.6; }
-                50% { transform: translateY(-22px) scale(1.4); opacity: 1; }
-              }
-              @keyframes pulse-glow {
-                0%, 100% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.15), 0 0 60px rgba(139, 92, 246, 0.05); }
-                50% { box-shadow: 0 0 30px rgba(139, 92, 246, 0.3), 0 0 80px rgba(139, 92, 246, 0.1); }
-              }
-              @keyframes progress-shine {
-                0% { left: -40%; }
-                100% { left: 140%; }
-              }
-              @keyframes badge-bounce {
-                0%, 100% { transform: scale(1); }
-                50% { transform: scale(1.08); }
-              }
-              .beta-card { animation: pulse-glow 4s ease-in-out infinite; }
-              .shimmer-border-wrap {
-                background: linear-gradient(90deg, #8b5cf6, #a78bfa, #f59e0b, #8b5cf6, #a78bfa);
-                background-size: 300% 100%;
-                animation: shimmer-border 4s ease-in-out infinite;
-                padding: 1.5px;
-                border-radius: 1rem;
-              }
-              .sparkle-1 { animation: sparkle-float-1 3s ease-in-out infinite; }
-              .sparkle-2 { animation: sparkle-float-2 3.5s ease-in-out infinite 0.5s; }
-              .sparkle-3 { animation: sparkle-float-3 4s ease-in-out infinite 1s; }
-              .sparkle-4 { animation: sparkle-float-1 3.2s ease-in-out infinite 1.5s; }
-              .sparkle-5 { animation: sparkle-float-2 2.8s ease-in-out infinite 0.8s; }
-              .sparkle-6 { animation: sparkle-float-3 3.8s ease-in-out infinite 2s; }
-              .beta-badge { animation: badge-bounce 2s ease-in-out infinite; }
-            `}</style>
-            <div className="bg-slate-900 dark:bg-slate-950 pt-6">
-              <div className="container mx-auto px-4 max-w-5xl">
-                <motion.div
-                  initial={{ opacity: 0, y: 24, scale: 0.97 }}
-                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, ease: "easeOut" }}
-                >
-                  {/* Animated shimmer border wrapper */}
-                  <div className="shimmer-border-wrap">
-                    <div className="beta-card bg-gradient-to-br from-slate-900 via-slate-900/98 to-violet-950/40 rounded-2xl p-6 sm:p-8 relative overflow-hidden">
 
-                      {/* Floating sparkle particles */}
-                      <div className="sparkle-1 absolute top-4 right-8 text-violet-400/60 pointer-events-none"><Sparkles className="w-3 h-3" /></div>
-                      <div className="sparkle-2 absolute top-12 right-24 text-amber-400/50 pointer-events-none"><Sparkles className="w-4 h-4" /></div>
-                      <div className="sparkle-3 absolute bottom-8 right-16 text-purple-400/40 pointer-events-none"><Sparkles className="w-3.5 h-3.5" /></div>
-                      <div className="sparkle-4 absolute top-6 left-[30%] text-amber-300/40 pointer-events-none"><Sparkles className="w-2.5 h-2.5" /></div>
-                      <div className="sparkle-5 absolute bottom-12 left-[20%] text-violet-300/30 pointer-events-none"><Sparkles className="w-3 h-3" /></div>
-                      <div className="sparkle-6 absolute top-16 right-[40%] text-amber-400/35 pointer-events-none"><Sparkles className="w-2 h-2" /></div>
-
-                      {/* Background glow orbs */}
-                      <div className="absolute -top-20 -right-20 w-60 h-60 bg-violet-500/8 rounded-full blur-3xl pointer-events-none" />
-                      <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-amber-500/6 rounded-full blur-3xl pointer-events-none" />
-
-                      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 sm:gap-7 relative z-10">
-                        {/* Android icon with glow ring */}
-                        <div className="relative flex-shrink-0">
-                          <div className="absolute inset-0 bg-violet-400/20 rounded-2xl blur-xl scale-150" />
-                          <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-violet-500/30 to-purple-500/20 flex items-center justify-center border border-violet-400/40 shadow-lg shadow-violet-500/10">
-                            <svg className="w-8 h-8 sm:w-9 sm:h-9 text-violet-400 drop-shadow-[0_0_8px_rgba(139,92,246,0.5)]" fill="currentColor" viewBox="0 0 24 24"><path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993.0004.5511-.4482.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592c.1158-.201.0464-.4581-.1551-.5739-.201-.1158-.4581-.046-.5739.1551l-2.022 3.501c-1.4284-.652-3.0305-1.016-4.7278-1.016-1.6976 0-3.2997.364-4.7278 1.016l-2.022-3.501c-.1158-.201-.3729-.2709-.5739-.1551-.2015.1158-.2709.3729-.1551.5739l1.9973 3.4592C2.6974 11.2382.2592 14.8876.103 19.349h23.794c-.1562-4.4614-2.5944-8.1108-6.9695-10.0276"/></svg>
-                          </div>
-                        </div>
-
-                        {/* Content */}
-                        <div className="space-y-4 flex-1 text-center sm:text-left">
-                          <div>
-                            <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
-                              <h3 className="font-black text-white text-xl sm:text-2xl leading-tight bg-gradient-to-r from-white via-violet-200 to-amber-300 bg-clip-text text-transparent">
-                                Download our official Android App!
-                              </h3>
-                              <Sparkles className="w-5 h-5 text-amber-400 sparkle-1 hidden sm:block" />
-                            </div>
-                            <p className="text-sm font-medium text-slate-300 leading-relaxed mt-2 max-w-2xl">
-                              Our official app is now live on the Google Play Store! Get real-time match tracking, dynamic ELO ratings, and community features right on your phone.
-                            </p>
-                          </div>
-
-                          {/* CTA button */}
-                          <div className="flex flex-col sm:flex-row gap-3 pt-1">
-                            <a href="https://play.google.com/store/apps/details?id=shuttlers.iisc.com" target="_blank" rel="noreferrer"
-                              className="group/btn text-sm font-bold text-amber-300 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/25 px-5 py-3.5 rounded-xl transition-all inline-flex items-center justify-center gap-3 hover:-translate-y-1 hover:shadow-lg hover:shadow-amber-500/20">
-                              <span>Get it on Google Play</span>
-                              <ArrowRight className="w-4 h-4 opacity-0 -ml-2 group-hover/btn:opacity-100 group-hover/btn:ml-0 transition-all" />
-                            </a>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              </div>
-            </div>
-          </>
-        )}
 
         {/* <VenueTrafficWidget /> */}
 
         {/* ── QUICK PATHS ──────────────────────────────────────────────── */}
-        <section aria-label="Quick Links" className="py-12 bg-slate-50 dark:bg-slate-900/60">
+        <section aria-label="Quick Links" className="bg-slate-50 dark:bg-transparent">
           <div className="container mx-auto px-4">
             
             <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}>
               <NoticeBoard />
             </motion.div>
-            <motion.div
-              className="text-center mb-12"
-              variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}
-            >
-              <p className="text-xs font-bold text-primary dark:text-primary uppercase tracking-widest mb-3">Quick Access</p>
-              <div className="flex items-center justify-center gap-2">
-                <h2 className="text-3xl lg:text-4xl font-black text-foreground dark:text-foreground" style={{ fontFamily: "Playfair Display, serif" }}>
-                  What are you looking for?
-                </h2>
-                <InfoModal
-                  title="QUICK LINKS"
-                  items={[
-                    { badge: "NAVIGATE", title: "Core Features", desc: "These are the most commonly accessed pages in the platform." }
-                  ]}
-                />
-              </div>
-              <p className="text-muted-foreground dark:text-muted-foreground mt-2 text-sm">Everything the club offers, one click away</p>
-            </motion.div>
 
-            <motion.div
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
-              variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}
-            >
-              {[
-                {
-                  href: "/pulse#events", title: "Pulse", description: "Browse live feeds, upcoming and archived tournaments.",
-                  Icon: CalendarDays,
-                  iconBg: "bg-primary/15 dark:bg-primary/40",
-                  iconColor: "text-primary dark:text-primary",
-                  accentColor: "text-primary dark:text-primary",
-                  hoverBorder: "hover:border-primary/40 dark:hover:border-primary",
-                  tag: "Live Now",
-                  tagColor: "bg-primary/15 dark:bg-primary/40 text-primary dark:text-primary",
-                },
-                {
-                  href: "/legacy", title: "Legacy", description: "See champions, podiums, and photo memories from all club events.",
-                  Icon: Medal,
-                  iconBg: "bg-amber-100 dark:bg-amber-900/40",
-                  iconColor: "text-amber-600 dark:text-amber-400",
-                  accentColor: "text-amber-600 dark:text-amber-400",
-                  hoverBorder: "hover:border-amber-200 dark:hover:border-amber-800",
-                  tag: "Legacy",
-                  tagColor: "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400",
-                },
-                {
-                  href: "/pulse", title: "Announcements", description: "Check court notices, event updates and club news.",
-                  Icon: Bell,
-                  iconBg: "bg-blue-100 dark:bg-blue-900/40",
-                  iconColor: "text-blue-600 dark:text-blue-400",
-                  accentColor: "text-blue-600 dark:text-blue-400",
-                  hoverBorder: "hover:border-blue-200 dark:hover:border-blue-800",
-                  tag: "Updates",
-                  tagColor: "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400",
-                },
-                {
-                  href: "/pulse#calendar", title: "Calendar", description: "Holiday calendar and event calendar merged.",
-                  Icon: Calendar,
-                  iconBg: "bg-emerald-100 dark:bg-emerald-900/40",
-                  iconColor: "text-emerald-600 dark:text-emerald-400",
-                  accentColor: "text-emerald-600 dark:text-emerald-400",
-                  hoverBorder: "hover:border-emerald-200 dark:hover:border-emerald-800",
-                  tag: "Schedule",
-                  tagColor: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400",
-                },
-              ].map((item) => (
-                <motion.div key={item.href} variants={cardVariant}>
-                  <Link href={item.href}>
-                    <div className={`group h-full rounded-2xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-800/80 p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer ${item.hoverBorder}`}>
-                      <div className="flex items-start justify-between mb-3">
-                        <div className={`w-10 h-10 rounded-2xl ${item.iconBg} flex items-center justify-center`}>
-                          <item.Icon className={`w-5 h-5 ${item.iconColor}`} />
-                        </div>
-                        <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${item.tagColor}`}>
-                          {item.tag}
-                        </span>
-                      </div>
-                      <h3 className="text-lg font-bold text-foreground dark:text-foreground mb-1">{item.title}</h3>
-                      <p className="text-muted-foreground dark:text-muted-foreground text-sm leading-snug mb-3">{item.description}</p>
-                      <div className={`inline-flex items-center gap-1.5 text-sm font-bold ${item.accentColor} group-hover:gap-2.5 transition-all duration-300`}>
-                        Open <ChevronRight className="w-3.5 h-3.5" />
-                      </div>
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
-            </motion.div>
+
+
           </div>
         </section>
 
-        {/* ── STATS BANNER (dark) ───────────────────────────────────────── */}
-        <section aria-label="Club Statistics" className="py-6 bg-slate-900 dark:bg-slate-950 border-y border-slate-800">
-          <div className="container mx-auto px-4">
-            <motion.div
-              className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-slate-700/40 rounded-2xl overflow-hidden"
-              variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }}
-            >
-              {[
-                { Icon: Users, value: config?.stats?.members || "350+", label: "Active Members", desc: "Across all skill levels", gradient: "from-primary to-teal-500" },
-                { Icon: Trophy, value: config?.stats?.tournaments || "20+", label: "Tournaments Held", desc: "Competitive events organized", gradient: "from-amber-500 to-orange-500" },
-                { Icon: Medal, value: config?.stats?.trophies || "10+", label: "IISM Trophies", desc: "National stage medals", gradient: "from-blue-500 to-indigo-500" },
-              ].map(({ Icon, value, label, desc, gradient }) => (
-                <motion.div
-                  key={label}
-                  variants={cardVariant}
-                  className="bg-slate-900 dark:bg-slate-950 p-6 text-center relative overflow-hidden group"
-                >
-                  <div className={`absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r ${gradient}`} />
-                  <div className={`inline-flex p-2.5 rounded-xl bg-gradient-to-br ${gradient} bg-opacity-10 mb-2`}>
-                    <Icon className="w-5 h-5 text-white" />
-                  </div>
-                  <div className="text-4xl lg:text-5xl font-black text-white mb-1 tabular-nums">{value}</div>
-                  <div className="text-sm font-bold text-slate-300 mb-1">{label}</div>
-                  <div className="text-xs text-slate-400">{desc}</div>
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-        </section>
 
         {/* ── ABOUT / MISSION & VALUES ──────────────────────────────────── */}
-        <section aria-label="About & Mission" className="py-8 bg-white dark:bg-slate-950">
+        <section aria-label="About & Mission" className="py-2 bg-white dark:bg-slate-950">
           <div className="container mx-auto px-4 max-w-6xl">
             <motion.div
-              className="mb-6"
+              className="mb-2"
               variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}
             >
-              <div className="inline-flex items-center gap-2 bg-primary/10 dark:bg-primary/10 border border-primary/40 dark:border-primary/25 text-primary dark:text-primary px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider mb-3">
-                <Zap className="w-3.5 h-3.5" /> Our Story
+              <div className="inline-flex items-center justify-between w-full cursor-pointer group" onClick={() => setShowAbout(!showAbout)}>
+                <div>
+                  <h2 className="text-xl lg:text-2xl font-black text-foreground dark:text-foreground mb-1 leading-tight" style={{ fontFamily: "Playfair Display, serif" }}>
+                    About IISc
+                    <span className="text-primary dark:text-primary"> Badminton Club</span>
+                  </h2>
+                </div>
+                <div className="ml-4 shrink-0 text-slate-400 group-hover:text-primary transition-colors bg-slate-100 dark:bg-slate-800 p-2 sm:p-3 rounded-full">
+                  {showAbout ? <ChevronUp className="w-6 h-6 sm:w-8 sm:h-8" /> : <ChevronDown className="w-6 h-6 sm:w-8 sm:h-8" />}
+                </div>
               </div>
-              <h2 className="text-4xl lg:text-5xl font-black text-foreground dark:text-foreground mb-2 leading-tight" style={{ fontFamily: "Playfair Display, serif" }}>
-                About IISc
-                <span className="text-primary dark:text-primary"> Badminton Club</span>
-              </h2>
-              <p className="text-muted-foreground dark:text-slate-300 max-w-2xl text-lg leading-relaxed">
-                A thriving community of 350+ badminton enthusiasts at the Indian Institute of Science — competing, connecting, and celebrating the sport year-round.
-              </p>
             </motion.div>
 
-            <motion.div
-              className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start"
+            {showAbout && (
+              <motion.div
+                className="flex flex-col gap-5 items-start mt-2"
               variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}
             >
               {/* Mission */}
@@ -522,11 +260,11 @@ export default function Home() {
                   <span className="w-1.5 h-7 bg-gradient-to-b from-orange-400 to-amber-500 rounded-full inline-block" />
                   Our Values
                 </h3>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 w-full">
                   {VALUES.map(({ title, desc, Icon }) => (
                     <div
                       key={title}
-                      className="group relative rounded-2xl p-4 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-800 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
+                      className="group relative rounded-2xl p-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-800 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
                     >
                       <div className="w-8 h-8 rounded-xl bg-primary/15 dark:bg-primary/40 flex items-center justify-center mb-2">
                         <Icon className="w-4 h-4 text-primary dark:text-primary" />
@@ -537,8 +275,8 @@ export default function Home() {
                   ))}
                 </div>
               </motion.div>
-            </motion.div>
-
+              </motion.div>
+            )}
             {/* Team Photo */}
             <motion.div
               className="mt-8 relative rounded-3xl overflow-hidden shadow-2xl cursor-pointer group border border-slate-200 dark:border-slate-700 max-w-5xl mx-auto"
@@ -548,11 +286,6 @@ export default function Home() {
               viewport={{ once: true }}
               onClick={() => setIsImageOpen(true)}
             >
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent z-10 flex items-end p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <span className="text-foreground text-sm font-semibold bg-white/15 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
-                  Click to enlarge photo
-                </span>
-              </div>
               <img
                 src={iiscTeam}
                 alt="IISc Badminton Team"
@@ -566,21 +299,21 @@ export default function Home() {
         </section>
 
         {/* ── LEADERSHIP ────────────────────────────────────────────────── */}
-        <section aria-label="Leadership Team" className="py-12 bg-slate-50 dark:bg-slate-900/50">
+        <section aria-label="Leadership Team" className="flex-1 py-2 bg-slate-50 dark:bg-slate-950">
           <div className="container mx-auto px-4">
             <motion.div
-              className="text-center mb-12"
+              className="text-center mb-3"
               variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
             >
-              <p className="text-xs font-bold text-orange-500 uppercase tracking-widest mb-3">Leadership</p>
-              <h2 className="text-3xl font-black text-foreground dark:text-foreground" style={{ fontFamily: "Playfair Display, serif" }}>
+              <p className="text-[9px] font-bold text-orange-500 uppercase tracking-widest mb-1">Leadership</p>
+              <h2 className="text-xl font-black text-foreground dark:text-foreground" style={{ fontFamily: "Playfair Display, serif" }}>
                 Club Leadership
               </h2>
-              <p className="text-muted-foreground dark:text-muted-foreground text-sm mt-2">The people keeping the shuttles flying</p>
+              <p className="text-muted-foreground dark:text-muted-foreground text-[10px] mt-0.5">The people keeping the shuttles flying</p>
             </motion.div>
 
             <motion.div
-              className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto"
+              className="grid grid-cols-2 gap-3 md:gap-4 max-w-4xl mx-auto"
               variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }}
             >
               {teamMembers.map((member, idx) => {
@@ -590,10 +323,10 @@ export default function Home() {
                   <motion.div
                     key={idx}
                     variants={cardVariant}
-                    className="flex flex-col sm:flex-row items-center text-center sm:text-left gap-6 p-7 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
+                    className="flex flex-col items-center text-center gap-2 md:gap-4 p-3 md:p-5 rounded-3xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group backdrop-blur-sm"
                     onClick={() => member.image && !imageErrors[member.name] ? setSelectedImage(member.image) : undefined}
                   >
-                    <div className={`flex-shrink-0 w-24 h-24 rounded-full bg-gradient-to-br ${gradients[idx % 2]} flex items-center justify-center shadow-lg overflow-hidden ring-4 ring-white dark:ring-slate-800 group-hover:scale-105 transition-transform duration-300`}>
+                    <div className={`flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br ${gradients[idx % 2]} flex items-center justify-center shadow-lg overflow-hidden ring-4 ring-white dark:ring-slate-700 group-hover:scale-105 transition-transform duration-300`}>
                       {member.image && !imageErrors[member.name] ? (
                         <img
                           loading="lazy"
@@ -603,15 +336,14 @@ export default function Home() {
                           onError={() => setImageErrors((prev) => ({ ...prev, [member.name]: true }))}
                         />
                       ) : (
-                        <span className="text-foreground text-3xl font-black">{initials}</span>
+                        <span className="text-foreground text-xl font-black">{initials}</span>
                       )}
                     </div>
-                    <div className="min-w-0">
-                      <span className="inline-block text-[10px] font-black text-primary dark:text-primary uppercase tracking-widest mb-1.5 px-2.5 py-1 bg-primary/10 dark:bg-primary/40 rounded-full">
+                    <div className="min-w-0 w-full">
+                      <span className="inline-block text-[8px] sm:text-[9px] font-black text-primary dark:text-primary uppercase tracking-widest mb-1 px-2 py-0.5 bg-primary/10 dark:bg-primary/20 rounded-full border border-primary/20">
                         {member.role}
                       </span>
-                      <h3 className="text-xl font-black text-foreground dark:text-foreground leading-tight">{member.name}</h3>
-                      <p className="text-muted-foreground dark:text-muted-foreground text-sm mt-1.5 leading-relaxed">{member.description}</p>
+                      <h3 className="text-sm sm:text-xl font-black text-foreground dark:text-foreground leading-tight truncate px-1">{member.name}</h3>
                     </div>
                   </motion.div>
                 );
@@ -620,79 +352,9 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── RECENT HIGHLIGHT ──────────────────────────────────────────── */}
-        {highlight && (
-          <motion.section
-            className="py-8 bg-white dark:bg-slate-900"
-            variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}
-          >
-            <div className="container mx-auto px-4">
-              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-800 via-emerald-700 to-lime-600 p-6 md:p-8 shadow-2xl">
-                {/* Decorative elements */}
-                <div className="absolute inset-0 hero-pattern opacity-40" />
-                <div className="absolute top-0 right-0 w-80 h-80 bg-lime-400/8 rounded-full blur-3xl" />
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-400/8 rounded-full blur-3xl" />
-                <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-primary via-teal-400 to-orange-500" />
 
-                <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-4">
-                  <div className="flex-1 space-y-1">
-                    <div className="inline-flex items-center gap-2 bg-amber-400/15 border border-amber-400/25 text-amber-300 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                      <Star className="w-3 h-3" /> Recent Highlight
-                    </div>
-                    <h3 className="text-2xl md:text-3xl font-black text-white leading-tight" style={{ fontFamily: "Playfair Display, serif" }}>
-                      {highlight.name}
-                    </h3>
-                    <p className="text-emerald-50 text-sm leading-relaxed max-w-xl">{highlight.description}</p>
-                  </div>
-                  <div className="flex gap-2 flex-wrap">
-                    <Link href={`/events/${highlight.slug}`}>
-                      <Button className="bg-white text-slate-900 hover:bg-slate-100 font-bold px-5 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer shadow-lg transition-all hover:-translate-y-0.5">
-                        View Results <Trophy className="w-4 h-4" />
-                      </Button>
-                    </Link>
-                    <Link href="/legacy">
-                      <Button variant="outline" className="border-white/40 text-white hover:bg-white/10 font-semibold px-5 py-2.5 rounded-xl cursor-pointer transition-all">
-                        Legacy
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.section>
-        )}
 
-        {/* ── CTA ───────────────────────────────────────────────────────── */}
-        <section className="py-6 relative overflow-hidden bg-slate-900 dark:bg-slate-950">
-          {/* Background */}
-          <div className="absolute inset-0 hero-pattern opacity-50" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/6 rounded-full blur-[100px]" />
 
-          <motion.div
-            className="container mx-auto px-4 text-center relative z-10"
-            variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}
-          >
-            <div className="max-w-2xl mx-auto space-y-4">
-              <div className="inline-flex items-center gap-2 bg-white/8 border border-white/12 text-primary px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider">
-                <Zap className="w-3.5 h-3.5" /> Join the Community
-              </div>
-              <h2 className="text-4xl lg:text-5xl font-black text-foreground leading-tight" style={{ fontFamily: "Playfair Display, serif" }}>
-                Ready to Pick Up<br />
-                <span className="text-primary">the Racket?</span>
-              </h2>
-              <p className="text-muted-foreground text-base leading-relaxed">
-                Whether you're a seasoned player or just starting out, there's a court and a community waiting for you at IISc.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3.5 justify-center pt-2">
-                <Link href="/join">
-                  <Button className="bg-primary hover:bg-primary text-primary-foreground px-8 py-3.5 text-sm font-bold rounded-xl shadow-lg shadow-primary/20 hover:-translate-y-0.5 transition-all duration-300 glow-emerald cursor-pointer">
-                    Get Started Today
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </motion.div>
-        </section>
 
         {/* ── MODALS ────────────────────────────────────────────────────── */}
         {selectedImage && (
@@ -746,6 +408,26 @@ export default function Home() {
 
 /* ── Image modal helper ─────────────────────────────────────────────────────── */
 function ImageModal({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    
+    window.history.pushState({ imageModalOpen: true }, "");
+    const handlePopState = () => onClose();
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("popstate", handlePopState);
+      if (window.history.state?.imageModalOpen) {
+        window.history.back();
+      }
+    };
+  }, [onClose]);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 backdrop-blur-sm"

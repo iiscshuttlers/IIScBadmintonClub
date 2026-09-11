@@ -27,7 +27,7 @@ interface NoticeItem {
 export function NoticeBoard() {
   const [items, setItems] = useState<NoticeItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   useEffect(() => {
     async function fetchNotices() {
@@ -230,20 +230,28 @@ export function NoticeBoard() {
   }
 
   return (
-    <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl shadow-xl overflow-hidden mt-8 mb-8">
+    <Card className="border-0 bg-white dark:bg-slate-900/40 backdrop-blur-md shadow-lg overflow-hidden mb-2 mt-2 ring-1 ring-slate-200/50 dark:ring-slate-800/50">
       <CardHeader 
-        className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 py-4 flex flex-row items-center justify-between space-y-0 cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-700/50 transition-colors"
+        className="border-b border-slate-100/50 dark:border-slate-800/50 bg-gradient-to-r from-slate-50 to-white dark:from-slate-900/60 dark:to-slate-800/40 py-3.5 px-4 flex flex-row items-center justify-between space-y-0 cursor-pointer hover:bg-slate-50/80 dark:hover:from-slate-800/60 dark:hover:to-slate-800/40 transition-all duration-300 group"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <CardTitle className="text-lg font-black flex items-center gap-2">
-          <Bell className="w-5 h-5 text-primary" />
+        <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5 text-slate-800 dark:text-slate-100">
+          <div className="w-7 h-7 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+            <Bell className="w-3.5 h-3.5 text-primary" />
+          </div>
           Notice Board
         </CardTitle>
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-bold text-muted-foreground bg-slate-200/50 dark:bg-slate-800 px-2 py-1 rounded-md">
+        <div className="flex items-center gap-2.5">
+          <span className="text-[10px] sm:text-xs font-bold text-primary dark:text-primary bg-primary/10 dark:bg-primary/20 px-2 py-0.5 rounded-full border border-primary/20">
             Live Feed
           </span>
-          {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+          <motion.div
+            animate={{ rotate: isExpanded ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+            className="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-slate-200 dark:group-hover:bg-slate-700 transition-colors"
+          >
+            <ChevronDown className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+          </motion.div>
         </div>
       </CardHeader>
       <AnimatePresence initial={false}>
@@ -260,7 +268,7 @@ export function NoticeBoard() {
             className="overflow-hidden"
           >
             <CardContent className="p-0">
-        <div className="max-h-[400px] overflow-y-auto visible-scrollbar">
+        <div className="max-h-[320px] overflow-y-auto visible-scrollbar">
           {items.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
               <Bell className="w-8 h-8 mx-auto mb-3 opacity-20" />
