@@ -86,13 +86,13 @@ export default function PrivacyPolicy() {
 
             <h3 className="text-xl font-bold text-foreground dark:text-foreground mt-8 mb-4">7. Health and Fitness Data</h3>
             <p>
-              Our app allows users to track badminton matches, game scores, and sports performance metrics. In accordance with Google Play's policies regarding Health and Fitness apps, we want to provide clear disclosures regarding this data:
+              Our app allows users to track badminton matches, game scores, and sports performance metrics. With your explicit permission, we integrate with Google Health Connect to provide enhanced performance and recovery tracking. In accordance with Google Play's policies regarding Health and Fitness apps, here are our clear disclosures regarding this data:
             </p>
             <ul className="list-disc pl-5 space-y-2">
-              <li><strong>What we collect:</strong> We collect sports activity data strictly in the form of manually entered badminton match logs, game scores, and user-provided playing statistics. We <strong>do not</strong> access or collect biometric data, heart rate, step counts, or connect to centralized health APIs (such as Google Fit or Health Connect).</li>
-              <li><strong>How we use it:</strong> This sports activity data is used exclusively to calculate Elo ratings, provide match history records, generate leaderboards, and facilitate the core competitive features of the IISc Badminton Club platform.</li>
-              <li><strong>Data sharing:</strong> Match logs and calculated ratings are visible to other registered members of the platform as part of our public leaderboard system. We do not sell, trade, or share this data with third-party advertisers, data brokers, or external health organizations.</li>
-              <li><strong>Data deletion:</strong> You may request the deletion of your sports activity data at any time by deleting your account or contacting us.</li>
+              <li><strong>What we collect:</strong> If you grant permission, we access and collect health and fitness data from Google Health Connect, including heart rate, steps, total calories burned, heart rate variability (HRV), oxygen saturation (SpO2), sleep, and resting heart rate. We also collect manually entered match logs and scores.</li>
+              <li><strong>How we use it:</strong> Your Health Connect data is used exclusively to provide personal sports performance metrics, track recovery between matches, and power the self-motion tracking features within the app. Manually entered match logs are used to calculate Elo ratings and display leaderboards.</li>
+              <li><strong>Data sharing:</strong> Match logs and calculated Elo ratings are visible to other registered members of the platform. However, your <strong>Health Connect data (biometrics, heart rate, sleep, etc.) is strictly private</strong>. We do not sell, trade, or share your Health Connect data with third-party advertisers, data brokers, or external health organizations. It is solely used within the app for your personal viewing.</li>
+              <li><strong>Data deletion:</strong> You may manage or delete your health data directly through the Google Health Connect app on your device. You may also request the deletion of your account and all associated sports activity data at any time via the Delete Account page or by contacting us.</li>
             </ul>
 
             <h3 className="text-xl font-bold text-foreground dark:text-foreground mt-8 mb-4">8. Children's Privacy</h3>
