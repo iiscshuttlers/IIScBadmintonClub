@@ -7,6 +7,7 @@ import {
   ArrowRight,
   Bell,
   CalendarDays,
+  Calendar,
   Medal,
   Trophy,
   Users,
@@ -26,7 +27,7 @@ import { fetchSiteData } from "@/lib/siteData";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { InfoModal } from "@/components/InfoModal";
 import type { ConvenerData } from "@/components/admin/ConvenerEditor";
-import { VenueTrafficWidget } from "@/components/home/VenueTrafficWidget";
+// import { VenueTrafficWidget } from "@/components/home/VenueTrafficWidget";
 import { NoticeBoard } from "@/components/home/NoticeBoard";
 // ── Animation variants ────────────────────────────────────────────────────────
 const fadeUp: Variants = {
@@ -341,7 +342,7 @@ export default function Home() {
           </>
         )}
 
-        <VenueTrafficWidget />
+        {/* <VenueTrafficWidget /> */}
 
         {/* ── QUICK PATHS ──────────────────────────────────────────────── */}
         <section aria-label="Quick Links" className="py-12 bg-slate-50 dark:bg-slate-900/60">
@@ -370,7 +371,7 @@ export default function Home() {
             </motion.div>
 
             <motion.div
-              className="grid md:grid-cols-3 gap-5"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
               variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}
             >
               {[
@@ -403,6 +404,16 @@ export default function Home() {
                   hoverBorder: "hover:border-blue-200 dark:hover:border-blue-800",
                   tag: "Updates",
                   tagColor: "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400",
+                },
+                {
+                  href: "/pulse#calendar", title: "Calendar", description: "Holiday calendar and event calendar merged.",
+                  Icon: Calendar,
+                  iconBg: "bg-emerald-100 dark:bg-emerald-900/40",
+                  iconColor: "text-emerald-600 dark:text-emerald-400",
+                  accentColor: "text-emerald-600 dark:text-emerald-400",
+                  hoverBorder: "hover:border-emerald-200 dark:hover:border-emerald-800",
+                  tag: "Schedule",
+                  tagColor: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400",
                 },
               ].map((item) => (
                 <motion.div key={item.href} variants={cardVariant}>

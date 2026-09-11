@@ -24,6 +24,8 @@ import {
   ExternalLink,
   Trophy,
   X,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
@@ -144,6 +146,9 @@ export default function ScheduleCalendar() {
   );
   const [loading, setLoading] = useState(true);
   const [tournamentData, setTournamentData] = useState<Record<string, unknown> | null>(null);
+  const [showHolidays, setShowHolidays] = useState(true);
+  const [showComingUp, setShowComingUp] = useState(true);
+  const [showDetails, setShowDetails] = useState(true);
 
   useEffect(() => {
     async function loadEvents() {
@@ -258,26 +263,29 @@ export default function ScheduleCalendar() {
 
   return (
     <section className="font-sans pb-32 lg:pb-12">
-      <div className="container mx-auto px-4 relative z-20 pt-8">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-2 h-8 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full" />
-          <h2 className="text-3xl font-black text-blue-900 dark:text-foreground">
+      <div className="container mx-auto px-4 relative z-20 pt-4">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-1.5 h-6 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full" />
+          <h2 className="text-2xl font-black text-blue-900 dark:text-foreground">
             Match Calendar
           </h2>
         </div>
-        <div className="grid lg:grid-cols-[1fr_1.5fr] gap-6">
-          {/* Left: Interactive Calendar */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Card className="rounded-3xl shadow-xl border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl overflow-hidden p-2 sm:p-4 max-w-full">
+        <div className="flex flex-col gap-6">
+          {/* Top Row: Calendar & Holidays */}
+          <div className="grid lg:grid-cols-[1fr_1.5fr] gap-6 items-stretch">
+            {/* Left: Interactive Calendar */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="flex flex-col"
+            >
+              <Card className="rounded-3xl shadow-xl border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl overflow-hidden p-1 sm:p-2 max-w-full h-full flex flex-col justify-center">
               <Calendar
                 mode="single"
                 selected={selectedDate}
                 onSelect={setSelectedDate}
-                className="w-full flex justify-center p-2"
+                className="w-full max-w-sm mx-auto flex justify-center p-1 [&_.rdp-day]:!aspect-auto [&_.rdp-day]:h-8 sm:[&_.rdp-day]:h-9 [&_.rdp-week]:mt-0 [&_.rdp-month]:gap-1"
                 modifiers={{
                   hasEventStart: eventStartDates,
                   hasEventOngoing: eventOngoingDates,
@@ -445,25 +453,75 @@ export default function ScheduleCalendar() {
                 }}
               />
             </Card>
+          </motion.div>
+          {/* Right: Gymkhana Holidays Card */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+            className="flex flex-col"
+          >
+            {holidayEvents.length > 0 && (
+              <Card className="rounded-3xl shadow-lg border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden flex flex-col p-0 gap-0">
+                <button 
+                  onClick={() => setShowHolidays(!showHolidays)}
+                  className="w-full py-2 px-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-rose-50 dark:bg-rose-950/20 shrink-0 cursor-pointer hover:bg-rose-100 dark:hover:bg-rose-950/40 transition-colors"
+                >
+                  <h3 className="font-bold text-xs text-rose-800 dark:text-rose-300 flex items-center gap-1.5">
+                    <CalendarDays className="w-3.5 h-3.5" /> Gymkhana Holidays {new Date().getFullYear()}
+                  </h3>
+                  {showHolidays ? <ChevronUp className="w-4 h-4 text-rose-700" /> : <ChevronDown className="w-4 h-4 text-rose-700" />}
+                </button>
+                {showHolidays && (
+                  <div className="p-2 flex flex-wrap gap-1.5 overflow-y-auto">
+                  {holidayEvents.slice(0, 12).map((h, idx) => {
+                    const d = new Date(h.date);
+                    const isPast = d.getTime() < new Date().getTime() - 86400000;
+                    const hc = getHolidayColor(h.title);
+                    return (
+                      <div key={idx} className={`flex-auto min-w-[200px] flex items-center justify-between py-1 px-2.5 rounded-md border ${isPast ? 'opacity-60 grayscale' : ''} ${hc.bg} ${hc.border}`}>
+                        <span className={`font-bold text-[11px] truncate mr-2 ${hc.textDark}`}>{h.title}</span>
+                        <span className={`text-[10px] font-semibold whitespace-nowrap ${hc.text}`}>{d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                      </div>
+                    );
+                  })}
+                  </div>
+                )}
+              </Card>
+            )}
+          </motion.div>
+        </div>
 
+        {/* Bottom Row: Coming Up & Selected Date Details */}
+        <div className="grid lg:grid-cols-[1fr_1.5fr] gap-6 items-start">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+          >
             {/* Upcoming Summary Card */}
-            <Card className="rounded-3xl shadow-lg border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 mt-6 overflow-hidden">
-              <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                <h3 className="font-bold text-slate-800 dark:text-slate-200">
+            <Card className="rounded-3xl shadow-lg border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden p-0 gap-0">
+              <button 
+                onClick={() => setShowComingUp(!showComingUp)}
+                className="w-full py-2 px-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+              >
+                <h3 className="font-bold text-sm text-slate-800 dark:text-slate-200">
                   Coming Up
                 </h3>
-              </div>
-              <div className="p-5 space-y-4">
+                {showComingUp ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
+              </button>
+              {showComingUp && (
+                <div className="p-3 grid grid-cols-2 gap-2">
                 {loading ? (
-                  <div className="animate-pulse flex gap-3">
-                    <div className="w-10 h-10 bg-slate-200 rounded" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-slate-200 rounded w-3/4" />
-                      <div className="h-3 bg-slate-200 rounded w-1/2" />
+                  <div className="animate-pulse flex gap-2">
+                    <div className="w-8 h-8 bg-slate-200 rounded" />
+                    <div className="flex-1 space-y-1">
+                      <div className="h-3 bg-slate-200 rounded w-3/4" />
+                      <div className="h-2 bg-slate-200 rounded w-1/2" />
                     </div>
                   </div>
                 ) : (
-                  upcomingEvents.slice(0, 3).map((e, idx) => {
+                  upcomingEvents.slice(0, 4).map((e, idx) => {
                     const d = new Date(e.date);
                     const isHoliday = e.type === "holiday";
                     const holidayColor = isHoliday
@@ -471,9 +529,9 @@ export default function ScheduleCalendar() {
                       : null;
                     const isMultiDayStart = e.endDate && e.date !== e.endDate;
                     return (
-                      <div key={idx} className="flex gap-4">
+                      <div key={idx} className="flex gap-2 items-center">
                         <div
-                          className={`flex flex-col items-center justify-center w-14 shrink-0 rounded-xl text-center p-1.5 border ${
+                          className={`flex flex-col items-center justify-center min-w-10 min-h-10 shrink-0 rounded-xl text-center px-1.5 py-1 border ${
                             isHoliday
                               ? `${holidayColor?.bg} ${holidayColor?.border}`
                               : isMultiDayStart
@@ -482,38 +540,38 @@ export default function ScheduleCalendar() {
                           }`}
                         >
                           <span
-                            className={`text-[9px] font-black uppercase ${isHoliday ? holidayColor?.text : isMultiDayStart ? "text-blue-600" : "text-primary"}`}
+                            className={`text-[7px] font-black uppercase leading-[1] ${isHoliday ? holidayColor?.text : isMultiDayStart ? "text-blue-600" : "text-primary"}`}
                           >
                             {d.toLocaleString("default", { weekday: "short" })}
                           </span>
                           <span
-                            className={`text-xl font-black leading-none my-0.5 ${isHoliday ? holidayColor?.textDark : isMultiDayStart ? "text-blue-700 dark:text-blue-400" : "text-primary dark:text-primary"}`}
+                            className={`text-[13px] font-black leading-none my-[1px] ${isHoliday ? holidayColor?.textDark : isMultiDayStart ? "text-blue-700 dark:text-blue-400" : "text-primary dark:text-primary"}`}
                           >
                             {d.getDate()}
                           </span>
                           <span
-                            className={`text-[10px] font-bold uppercase ${isHoliday ? holidayColor?.text : isMultiDayStart ? "text-blue-500" : "text-primary"}`}
+                            className={`text-[7px] font-bold uppercase leading-[1] ${isHoliday ? holidayColor?.text : isMultiDayStart ? "text-blue-500" : "text-primary"}`}
                           >
                             {d.toLocaleString("default", { month: "short" })}
                           </span>
                         </div>
-                        <div className="flex flex-col justify-center">
-                          <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200 line-clamp-1">
+                        <div className="flex flex-col justify-center overflow-hidden">
+                          <h4 className="font-bold text-xs text-slate-800 dark:text-slate-200 line-clamp-1">
                             {e.title}
                           </h4>
                           {e.time ? (
-                            <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                              <Clock className="w-3 h-3" /> {e.time}
+                            <div className="text-[9px] text-muted-foreground flex items-center gap-0.5 mt-0.5 truncate">
+                              <Clock className="w-2.5 h-2.5 shrink-0" /> {e.time}
                             </div>
                           ) : isHoliday ? (
                             <div
-                              className={`text-xs ${holidayColor?.text} flex items-center gap-1 mt-1 font-semibold`}
+                              className={`text-[9px] ${holidayColor?.text} flex items-center gap-0.5 mt-0.5 font-bold truncate`}
                             >
                               Holiday
                             </div>
                           ) : isMultiDayStart ? (
-                            <div className="text-xs text-blue-500 flex items-center gap-1 mt-1 font-semibold">
-                              Tournament Starts
+                            <div className="text-[9px] text-blue-500 flex items-center gap-0.5 mt-0.5 font-bold truncate">
+                              Starts
                             </div>
                           ) : null}
                         </div>
@@ -526,33 +584,10 @@ export default function ScheduleCalendar() {
                     No upcoming events scheduled.
                   </p>
                 )}
-              </div>
+                </div>
+              )}
             </Card>
 
-            {/* Gymkhana Holidays Card */}
-            {holidayEvents.length > 0 && (
-              <Card className="rounded-3xl shadow-lg border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 mt-6 overflow-hidden">
-                <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-rose-50 dark:bg-rose-950/20">
-                  <h3 className="font-bold text-rose-800 dark:text-rose-300 flex items-center gap-2">
-                    <CalendarDays className="w-4 h-4" /> Gymkhana Holidays {new Date().getFullYear()}
-                  </h3>
-                </div>
-                <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {holidayEvents.map((h, idx) => {
-                    const d = new Date(h.date);
-                    const isPast = d.getTime() < new Date().getTime() - 86400000;
-                    return (
-                      <div key={idx} className={`flex items-center justify-between p-3 rounded-xl border ${isPast ? 'bg-slate-50 border-slate-100 dark:bg-slate-800/50 dark:border-slate-800 opacity-60' : 'bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-700'}`}>
-                        <div className="flex flex-col">
-                          <span className={`font-bold text-sm ${isPast ? 'text-slate-500 dark:text-slate-400' : 'text-slate-800 dark:text-slate-200'}`}>{h.title}</span>
-                          <span className="text-xs font-semibold text-muted-foreground">{d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </Card>
-            )}
           </motion.div>
 
           {/* Right: Selected Date Details */}
@@ -561,27 +596,35 @@ export default function ScheduleCalendar() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <Card className="rounded-3xl shadow-xl border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl min-h-[500px] max-w-full overflow-hidden">
-              <div className="p-5 md:p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 rounded-t-3xl">
-                <h2 className="text-2xl font-black text-slate-800 dark:text-foreground">
-                  {selectedDate
-                    ? selectedDate.toLocaleDateString("en-US", {
-                        weekday: "long",
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })
-                    : "Select a date"}
-                </h2>
-                <p className="text-muted-foreground dark:text-muted-foreground mt-1">
-                  {selectedEvents.length} event
-                  {selectedEvents.length !== 1 ? "s" : ""} scheduled
-                </p>
-              </div>
 
-              <div className="p-5 md:p-6">
+            <Card className="rounded-3xl shadow-xl border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl max-w-full overflow-hidden p-0 gap-0">
+              <button 
+                onClick={() => setShowDetails(!showDetails)}
+                className="w-full text-left py-2 px-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 rounded-t-3xl flex items-center justify-between cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                <div>
+                  <h2 className="text-sm font-bold text-slate-800 dark:text-foreground leading-tight">
+                    {selectedDate
+                      ? selectedDate.toLocaleDateString("en-US", {
+                          weekday: "long",
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })
+                      : "Select a date"}
+                  </h2>
+                  <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5">
+                    {selectedEvents.length} event
+                    {selectedEvents.length !== 1 ? "s" : ""} scheduled
+                  </p>
+                </div>
+                {showDetails ? <ChevronUp className="w-5 h-5 text-slate-500" /> : <ChevronDown className="w-5 h-5 text-slate-500" />}
+              </button>
+
+              {showDetails && (
+                <div className="p-3 md:p-4">
                 {selectedEvents.length > 0 ? (
-                  <div className="space-y-6">
+                  <div className="space-y-3">
                     {selectedEvents.map((event, idx) => {
                       const isHoliday = event.type === "holiday";
                       const holidayColor = isHoliday
@@ -590,13 +633,13 @@ export default function ScheduleCalendar() {
                       return (
                         <div
                           key={idx}
-                          className={`p-4 md:p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden group ${isHoliday ? "opacity-80" : ""}`}
+                          className={`p-3 md:p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden group ${isHoliday ? "opacity-80" : ""}`}
                         >
                           <div
-                            className={`absolute left-0 top-0 bottom-0 w-1.5 ${isHoliday ? holidayColor?.solid : "bg-primary"}`}
+                            className={`absolute left-0 top-0 bottom-0 w-1 ${isHoliday ? holidayColor?.solid : "bg-primary"}`}
                           />
-                          <div className="flex items-center gap-2 mb-3 flex-wrap">
-                            <h3 className="text-xl font-bold text-foreground dark:text-foreground">
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
+                            <h3 className="text-base font-bold text-foreground dark:text-foreground">
                               {event.title}
                             </h3>
                             {isHoliday && (
@@ -623,8 +666,8 @@ export default function ScheduleCalendar() {
                           </div>
 
                           {/* Date range */}
-                          <div className="flex items-center gap-1.5 text-sm font-semibold text-muted-foreground dark:text-slate-300 mb-3">
-                            <CalendarDays className="w-4 h-4 text-blue-500" />
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground dark:text-slate-300 mb-2">
+                            <CalendarDays className="w-3.5 h-3.5 text-blue-500" />
                             {new Date(event.date).toLocaleDateString("en-US", {
                               month: "short",
                               day: "numeric",
@@ -645,16 +688,16 @@ export default function ScheduleCalendar() {
                             )}
                           </div>
 
-                          <div className="flex flex-wrap gap-4 mb-4">
+                          <div className="flex flex-wrap gap-3 mb-3">
                             {event.time && (
-                              <div className="flex items-center gap-1.5 text-sm font-semibold text-muted-foreground dark:text-slate-300">
-                                <Clock className="w-4 h-4 text-primary" />{" "}
+                              <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground dark:text-slate-300">
+                                <Clock className="w-3.5 h-3.5 text-primary" />{" "}
                                 {event.time}
                               </div>
                             )}
                             {event.location && (
-                              <div className="flex items-center gap-1.5 text-sm font-semibold text-muted-foreground dark:text-slate-300">
-                                <MapPin className="w-4 h-4 text-primary" />{" "}
+                              <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground dark:text-slate-300">
+                                <MapPin className="w-3.5 h-3.5 text-primary" />{" "}
                                 {event.location}
                               </div>
                             )}
@@ -693,24 +736,24 @@ export default function ScheduleCalendar() {
                 ) : null}
 
                 {selectedEvents.length === 0 && (!tournamentData || !dateFilterHasMatches(tournamentData, selectedDateStr)) && (
-                  <div className="flex flex-col items-center justify-center h-64 text-center">
-                    <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4 text-slate-300 dark:text-muted-foreground">
-                      <CalendarDays className="w-8 h-8" />
+                  <div className="flex items-center gap-3 py-3 px-4 justify-center md:justify-start bg-slate-50/50 dark:bg-slate-800/30 rounded-xl">
+                    <CalendarDays className="w-5 h-5 text-slate-400 shrink-0" />
+                    <div className="text-left">
+                      <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 leading-none">
+                        No Events Scheduled
+                      </h3>
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 leading-tight">
+                        Enjoy the rest of your day!
+                      </p>
                     </div>
-                    <h3 className="text-lg font-bold text-muted-foreground dark:text-slate-300">
-                      No Events Scheduled
-                    </h3>
-                    <p className="text-muted-foreground dark:text-muted-foreground mt-1 max-w-sm">
-                      There are no matches or practice sessions scheduled for
-                      this date. Enjoy the rest!
-                    </p>
                   </div>
                 )}
-              </div>
+                </div>
+              )}
             </Card>
 
             {tournamentData && selectedDateStr && dateFilterHasMatches(tournamentData, selectedDateStr) && (
-              <Card className="rounded-3xl shadow-xl border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl mt-6 overflow-hidden max-w-full">
+              <Card className="rounded-3xl shadow-xl border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl mt-6 overflow-hidden max-w-full p-0 gap-0">
                 <div className="bg-slate-50 dark:bg-slate-800/50 p-5 md:p-6 border-b border-slate-100 dark:border-slate-800">
                   <h3 className="text-xl font-black text-slate-800 dark:text-foreground flex items-center gap-2">
                     <Trophy className="w-5 h-5 text-primary" />
@@ -723,6 +766,7 @@ export default function ScheduleCalendar() {
           </motion.div>
         </div>
       </div>
+    </div>
     </section>
   );
 }

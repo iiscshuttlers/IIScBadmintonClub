@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { fetchSiteData } from "@/lib/siteData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bell, Trophy, Swords, Search, ShoppingBag, Clock, ExternalLink } from "lucide-react";
+import { Bell, Trophy, Swords, Search, ShoppingBag, Clock, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
 import { Link } from "wouter";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 type NoticeType = "announcement" | "tournament" | "match" | "find_lost" | "marketplace";
@@ -27,6 +27,7 @@ interface NoticeItem {
 export function NoticeBoard() {
   const [items, setItems] = useState<NoticeItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     async function fetchNotices() {
@@ -230,16 +231,35 @@ export function NoticeBoard() {
 
   return (
     <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl shadow-xl overflow-hidden mt-8 mb-8">
-      <CardHeader className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 py-4 flex flex-row items-center justify-between space-y-0">
+      <CardHeader 
+        className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 py-4 flex flex-row items-center justify-between space-y-0 cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-700/50 transition-colors"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
         <CardTitle className="text-lg font-black flex items-center gap-2">
           <Bell className="w-5 h-5 text-primary" />
           Notice Board
         </CardTitle>
-        <span className="text-xs font-bold text-muted-foreground bg-slate-200/50 dark:bg-slate-800 px-2 py-1 rounded-md">
-          Live Feed
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-bold text-muted-foreground bg-slate-200/50 dark:bg-slate-800 px-2 py-1 rounded-md">
+            Live Feed
+          </span>
+          {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+        </div>
       </CardHeader>
-      <CardContent className="p-0">
+      <AnimatePresence initial={false}>
+        {isExpanded && (
+          <motion.div
+            initial="collapsed"
+            animate="open"
+            exit="collapsed"
+            variants={{
+              open: { opacity: 1, height: "auto" },
+              collapsed: { opacity: 0, height: 0 }
+            }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <CardContent className="p-0">
         <div className="max-h-[400px] overflow-y-auto visible-scrollbar">
           {items.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
@@ -291,6 +311,9 @@ export function NoticeBoard() {
           )}
         </div>
       </CardContent>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Card>
   );
 }
