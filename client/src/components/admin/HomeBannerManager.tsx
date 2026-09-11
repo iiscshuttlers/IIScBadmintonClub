@@ -72,7 +72,7 @@ export function HomeBannerManager() {
     setSaving(true);
     const { error } = await supabase
       .from("site_data")
-      .upsert({ key: "home_banners", value: banners, updated_at: new Date().toISOString() }, { onConflict: "key" });
+      .upsert({ key: "home_banners", value: banners as any, updated_at: new Date().toISOString() }, { onConflict: "key" });
     setSaving(false);
     if (error) toast.error("Failed to save: " + error.message);
     else toast.success("Home banners saved!");
