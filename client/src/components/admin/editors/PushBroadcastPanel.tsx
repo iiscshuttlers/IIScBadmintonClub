@@ -13,6 +13,7 @@ export function PushBroadcastPanel() {
   const { session } = useAuth();
   const [customPush, setCustomPush] = useState({ title: "", body: "", url: "" });
   const [pushing, setPushing] = useState(false);
+  const [showOnHome, setShowOnHome] = useState(false);
 
   const sendCustomPush = async () => {
     if (!customPush.title.trim()) { toast.error("Title is required"); return; }
@@ -39,6 +40,27 @@ export function PushBroadcastPanel() {
         { key: "admin_push", value: payload, updated_at: new Date().toISOString() },
         { onConflict: "key" }
       );
+
+      // 3. Optionally add to home_banners if requested
+      if (showOnHome) {
+        const { data: bData } = await supabase.from("site_data").select("value").eq("key", "home_banners").maybeSingle();
+        const existingBanners = bData?.value?.banners || (Array.isArray(bData?.value) ? bData?.value : []);
+        const newBanner = {
+          id: `broadcast_${Date.now()}`,
+          type: "custom",
+          title: customPush.title.trim(),
+          message: customPush.body.trim(),
+          color: "amber",
+          link_url: customPush.url.trim() || undefined,
+          link_label: "View",
+          active: true,
+          pinned: false,
+        };
+        await supabase.from("site_data").upsert(
+          { key: "home_banners", value: { banners: [...existingBanners, newBanner] }, updated_at: new Date().toISOString() },
+          { onConflict: "key" }
+        );
+      }
 
       const sent = fnData?.sent ?? 0;
       const failed = fnData?.failed ?? 0;
@@ -100,6 +122,17 @@ export function PushBroadcastPanel() {
             placeholder="Short description..."
             maxLength={150}
           />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-muted-foreground dark:text-slate-300">
+            <input
+              type="checkbox"
+              checked={showOnHome}
+              onChange={(e) => setShowOnHome(e.target.checked)}
+              className="w-4 h-4 text-primary rounded focus:ring-primary"
+            />
+            Show on Home Page
+          </label>
         </div>
       </div>
       <div className="flex justify-end">

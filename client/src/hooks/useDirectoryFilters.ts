@@ -15,8 +15,8 @@ export function useDirectoryFilters(
   const [departmentFilter, setDepartmentFilter] = useState("All");
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<
-    "elo" | "winpct" | "name" | "department" | "level"
-  >("name");
+    "tournament_elo" | "rankings" | "elo" | "singles" | "doubles" | "mixed" | "winpct" | "name" | "department" | "level"
+  >("tournament_elo");
 
   // Debounce search input by 150ms
   useEffect(() => {
@@ -88,8 +88,21 @@ export function useDirectoryFilters(
         // If searching, sort by fuzzy score first
         if (q && a!.score !== b!.score) return b!.score - a!.score;
 
+        if (sortBy === "tournament_elo")
+          return (b!.player.tournament_elo ?? 0) - (a!.player.tournament_elo ?? 0);
         if (sortBy === "elo")
           return (b!.player.elo_rating ?? 0) - (a!.player.elo_rating ?? 0);
+        if (sortBy === "singles")
+          return (b!.player.singles_elo ?? 0) - (a!.player.singles_elo ?? 0);
+        if (sortBy === "doubles")
+          return (b!.player.doubles_elo ?? 0) - (a!.player.doubles_elo ?? 0);
+        if (sortBy === "mixed")
+          return (b!.player.mixed_elo ?? 0) - (a!.player.mixed_elo ?? 0);
+        if (sortBy === "rankings") {
+          const aWins = a!.player.stats?.titlesWon ?? 0;
+          const bWins = b!.player.stats?.titlesWon ?? 0;
+          return bWins - aWins;
+        }
         if (sortBy === "winpct")
           return (
             (parseWinPct(b!.player.win_loss_record) ?? 0) -

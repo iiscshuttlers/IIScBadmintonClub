@@ -22,7 +22,7 @@ export function useTournamentMatchHistory(playerId: string | undefined) {
       const { data, error } = await supabase
         .from("tournament_matches")
         .select("tournament_id, category, round, round_name, winner_side, player1_id, player2_id, player3_id, player4_id, status, tournaments(name)")
-        .eq("status", "completed")
+        .in("status", ["completed", "walkover"])
         .or(
           `player1_id.eq.${playerId},player2_id.eq.${playerId},player3_id.eq.${playerId},player4_id.eq.${playerId}`
         )

@@ -75,7 +75,9 @@ export function TeamsTab({ searchQuery = "", tournamentFilter = "All" }: TeamsTa
   }, [allMatches, tournamentFilter]);
 
   const filteredTeams = computedTeams.filter((t) => {
-    const categoryMatch = category === "doubles" ? (t.category === "doubles") : (t.category === "mixed");
+    const isMixed = t.category?.toLowerCase() === "xd" || t.category?.toLowerCase() === "mixed";
+    const isDoubles = t.category?.toLowerCase() === "md" || t.category?.toLowerCase() === "wd" || t.category?.toLowerCase() === "doubles";
+    const categoryMatch = category === "doubles" ? isDoubles : isMixed;
     if (!categoryMatch) return false;
     
     if (searchQuery) {

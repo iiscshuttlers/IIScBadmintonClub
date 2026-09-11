@@ -21,7 +21,7 @@ export function useAllTournamentMatches() {
       const { data, error } = await supabase
         .from("tournament_matches")
         .select("id, tournament_id, category, winner_side, player1_id, player2_id, player3_id, player4_id, status")
-        .eq("status", "completed");
+        .in("status", ["completed", "walkover"]);
 
       if (error) {
         console.error("Failed to fetch all tournament matches:", error);

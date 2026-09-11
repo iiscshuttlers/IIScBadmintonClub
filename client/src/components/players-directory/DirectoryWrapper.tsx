@@ -28,8 +28,8 @@ export function DirectoryWrapper() {
   const [showFilters, setShowFilters] = useState(false);
   const [levelFilter, setLevelFilter] = useState(() => getInitialParam("dir_level", "All"));
   const [departmentFilter, setDepartmentFilter] = useState(() => getInitialParam("dir_dept", "All"));
-  const [tournamentFilter, setTournamentFilter] = useState("All");
-  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [tournamentFilter, setTournamentFilter] = useState(() => getInitialParam("dir_tourn", "All"));
+  const [categoryFilter, setCategoryFilter] = useState(() => getInitialParam("dir_cat", "All"));
   const [visibleCount, setVisibleCount] = useState(24);
 
   useEffect(() => {
@@ -41,10 +41,12 @@ export function DirectoryWrapper() {
       url.searchParams.set("dir_sort", sortBy);
       url.searchParams.set("dir_level", levelFilter);
       url.searchParams.set("dir_dept", departmentFilter);
+      url.searchParams.set("dir_tourn", tournamentFilter);
+      url.searchParams.set("dir_cat", categoryFilter);
       
       window.history.replaceState(null, "", url.toString());
     } catch { /* ignore */ }
-  }, [searchQuery, sortBy, levelFilter, departmentFilter]);
+  }, [searchQuery, sortBy, levelFilter, departmentFilter, tournamentFilter, categoryFilter]);
 
   const { data: allMatches = [] } = useAllTournamentMatches();
 
@@ -77,8 +79,22 @@ export function DirectoryWrapper() {
   }, [players]);
 
   const filteredPlayers = useMemo(() => {
+    let participantIds: Set<string> | null = null;
+    if (tournamentFilter !== "All" || categoryFilter !== "All") {
+      participantIds = new Set();
+      for (const m of allMatches) {
+        if (tournamentFilter !== "All" && m.tournament_id !== tournamentFilter) continue;
+        if (categoryFilter !== "All" && m.category !== categoryFilter) continue;
+        if (m.player1_id) participantIds.add(m.player1_id);
+        if (m.player2_id) participantIds.add(m.player2_id);
+        if (m.player3_id) participantIds.add(m.player3_id);
+        if (m.player4_id) participantIds.add(m.player4_id);
+      }
+    }
+
     return players
       .filter((p) => {
+        if (participantIds && !participantIds.has(p.id)) return false;
         if (searchQuery) {
           const q = searchQuery.toLowerCase();
           return (
@@ -150,7 +166,7 @@ export function DirectoryWrapper() {
         if (sortBy === "level") return (a.playing_level || "").localeCompare(b.playing_level || "");
         return 0;
       });
-  }, [players, searchQuery, sortBy, levelFilter, departmentFilter]);
+  }, [players, searchQuery, sortBy, levelFilter, departmentFilter, tournamentFilter, categoryFilter, allMatches]);
 
   return (
     <div className="w-full h-full p-4 lg:p-6 bg-slate-50 dark:bg-slate-950 min-h-screen max-w-7xl mx-auto">

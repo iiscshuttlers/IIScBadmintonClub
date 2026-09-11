@@ -87,8 +87,9 @@ export function DirectoryFilters({
               onChange={(e) => setSortBy(e.target.value)}
               className="pl-9 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-muted-foreground dark:text-slate-200 text-sm font-bold outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer"
             >
-              <option value="elo">By Overall Rank</option>
-              <option value="rankings">By Tournament Wins</option>
+              <option value="tournament_elo">Overall (all tournaments) ranking</option>
+              <option value="rankings">Tournament ranking</option>
+              <option value="elo">Overall ranking (throughout all formats)</option>
               <option value="singles">By Singles Rank</option>
               <option value="doubles">By Doubles Rank</option>
               <option value="mixed">By Mixed Rank</option>

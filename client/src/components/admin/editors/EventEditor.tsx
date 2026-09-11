@@ -24,7 +24,7 @@ export function EventEditor({
       { date: "", title: "", link: "", registrationDeadline: "" },
     ]);
   const remove = (i: number) => onChange(data.filter((_, idx) => idx !== i));
-  const update = (i: number, field: string, val: string) => {
+  const update = (i: number, field: string, val: any) => {
     const next = [...data];
     next[i] = { ...next[i], [field]: val };
     onChange(next);
@@ -43,6 +43,15 @@ export function EventEditor({
               onChange={(ev) => update(i, "title", ev.target.value)}
               className={inputCls}
             />
+            <label className="flex items-center gap-2 mt-2 cursor-pointer text-xs font-bold text-muted-foreground dark:text-slate-300">
+              <input
+                type="checkbox"
+                checked={!!e.showOnHome}
+                onChange={(ev) => update(i, "showOnHome", ev.target.checked)}
+                className="w-3.5 h-3.5 text-primary rounded focus:ring-primary"
+              />
+              Show on Home Page
+            </label>
           </div>
           <div>
             <label className={labelCls}>Start Date</label>

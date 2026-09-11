@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Health Connect queries removed -->
+
 
     <application
         android:allowBackup="false"
@@ -46,7 +46,6 @@
                 <data android:scheme="iiscshuttlers" />
             </intent-filter>
             
-            <!-- Health Connect intent filter removed -->
         </activity>
 
         <provider
@@ -128,6 +127,5 @@
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.nfc" android:required="false" />
 
-    <!-- Health Connect Permissions Removed to comply with Google Play Policy -->
 </manifest>
 

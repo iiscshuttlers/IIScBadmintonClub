@@ -103,6 +103,15 @@ export function AnnouncementEditor({
                 className={inputCls}
                 placeholder="Announcement title"
               />
+              <label className="flex items-center gap-2 mt-2 cursor-pointer text-xs font-bold text-muted-foreground dark:text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={!!a.showOnHome}
+                  onChange={(e) => update(i, "showOnHome", e.target.checked)}
+                  className="w-3.5 h-3.5 text-primary rounded focus:ring-primary"
+                />
+                Show on Home Page
+              </label>
             </div>
             <div>
               <label className={labelCls}>Publish Date</label>

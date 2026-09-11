@@ -62,6 +62,15 @@ export function FlyerConfigBuilder({
               />
               Enabled
             </label>
+            <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-muted-foreground dark:text-slate-300 ml-4">
+              <input
+                type="checkbox"
+                checked={!!f.showOnHome}
+                onChange={(e) => update("showOnHome", e.target.checked)}
+                className="w-4 h-4 text-primary rounded focus:ring-primary"
+              />
+              Show on Home Page
+            </label>
             {onRemove && (
               <button
                 onClick={onRemove}

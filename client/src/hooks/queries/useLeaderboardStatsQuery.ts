@@ -18,7 +18,7 @@ export function useLeaderboardStatsQuery(categoryFilter: string, eloMode: "club"
         let query = supabase
           .from("tournament_matches")
           .select("*, player1:players!player1_id(id, full_name, avatar_url), player2:players!player2_id(id, full_name, avatar_url), partner1:players!player3_id(id, full_name, avatar_url), partner2:players!player4_id(id, full_name, avatar_url)")
-          .eq("status", "completed")
+          .in("status", ["completed", "walkover"])
           .order("created_at", { ascending: false })
           .limit(1000);
 

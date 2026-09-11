@@ -67,7 +67,7 @@ export function useAllTournamentMatches() {
       const { data, error } = await supabase
         .from("tournament_matches")
         .select("id, player1_id, player2_id, player3_id, player4_id, team1_label, team2_label, winner_id, winner_side, category, status, created_at, ended_at")
-        .eq("status", "completed");
+        .in("status", ["completed", "walkover"]);
       if (error) throw error;
       
       // Transform to match what TournamentStandingsTab expects

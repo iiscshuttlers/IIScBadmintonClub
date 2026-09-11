@@ -20,6 +20,7 @@ export type Announcement = {
   content: string;
   url?: string;
   flyer?: DynamicFlyer;
+  showOnHome?: boolean;
 };
 export type EventItem = {
   date: string;
@@ -30,6 +31,7 @@ export type EventItem = {
   registrationDeadline?: string;
   time?: string;
   location?: string;
+  showOnHome?: boolean;
 };
 export type Chapter = { time: number; title: string };
 export type VideoItem = {
@@ -88,6 +90,7 @@ export type DynamicFlyer = {
   speed?: "slow" | "normal" | "fast" | "custom";
   customSpeed?: number;
   url?: string;
+  showOnHome?: boolean;
 };
 
 export const inputCls =
