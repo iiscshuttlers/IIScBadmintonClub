@@ -775,6 +775,25 @@ function SnapshotTab({
         </div>
       </div>
 
+      {/* ELO Formula Explainer */}
+      <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/50 rounded-xl p-4">
+        <h4 className="text-xs font-black text-blue-800 dark:text-blue-300 mb-2 uppercase tracking-wider flex items-center gap-1.5">
+          <InfoModal 
+            title="Overall ELO Formula" 
+            items={[
+              { badge: "MATH", title: "Fixed Average", desc: "Overall ELO is an equal 1/3 weighted average of all three formats." },
+              { badge: "RULE", title: "Unplayed Default", desc: "If a player has not played a format, it defaults to exactly 1200 ELO in the calculation." },
+              { badge: "GOAL", title: "Incentive", desc: "This formula rewards players for participating in multiple formats by raising their average above baseline." }
+            ]} 
+          />
+          Overall ELO Calculation Formula
+        </h4>
+        <div className="bg-white dark:bg-slate-900 rounded-lg p-3 font-mono text-xs border border-blue-100 dark:border-slate-800 flex flex-col gap-1.5 overflow-x-auto text-slate-700 dark:text-slate-300">
+          <p><span className="text-blue-600 dark:text-blue-400 font-bold">Overall ELO</span> = (Singles + Doubles + Mixed) / 3</p>
+          <p className="text-[10px] text-muted-foreground mt-1 border-t border-slate-100 dark:border-slate-800 pt-1.5">* Missing formats default to 1200.</p>
+        </div>
+      </div>
+
       {/* Filter panel (collapsible) */}
       {showFilters && (
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 space-y-3 animate-in slide-in-from-top-2 duration-200">

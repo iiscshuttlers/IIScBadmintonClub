@@ -21,12 +21,14 @@ const EMAIL_KEY = "iisc_biometric_email";
 
 type NativeBiometricApi = typeof import("capacitor-native-biometric")["NativeBiometric"];
 
+type PluginWrapper = { instance: NativeBiometricApi };
+
 /** Lazily resolve the plugin. Returns null on web or if the plugin is missing. */
-async function getPlugin(): Promise<NativeBiometricApi | null> {
+async function getPluginWrapper(): Promise<PluginWrapper | null> {
   if (!Capacitor.isNativePlatform()) return null;
   try {
     const mod = await import("capacitor-native-biometric");
-    return mod.NativeBiometric;
+    return { instance: mod.NativeBiometric };
   } catch (e) {
     console.warn("[Biometric] Plugin unavailable:", e);
     return null;
@@ -62,8 +64,9 @@ export function getBiometricEmail(): string | null {
 
 /** Whether this device has usable biometric hardware and an enrolled identity. */
 export async function isBiometricAvailable(): Promise<boolean> {
-  const NativeBiometric = await getPlugin();
-  if (!NativeBiometric) return false;
+  const wrapper = await getPluginWrapper();
+  if (!wrapper) return false;
+  const NativeBiometric = wrapper.instance;
   try {
     const result = await NativeBiometric.isAvailable();
     return !!result?.isAvailable;
@@ -78,8 +81,9 @@ export async function isBiometricAvailable(): Promise<boolean> {
  * Returns true only if the credential was actually saved.
  */
 export async function enableBiometricLogin(session: Session | null): Promise<boolean> {
-  const NativeBiometric = await getPlugin();
-  if (!NativeBiometric) return false;
+  const wrapper = await getPluginWrapper();
+  if (!wrapper) return false;
+  const NativeBiometric = wrapper.instance;
 
   const refreshToken = session?.refresh_token;
   const email = session?.user?.email;
@@ -113,8 +117,9 @@ export async function disableBiometricLogin(): Promise<void> {
   writeFlag(ENABLED_KEY, null);
   writeFlag(EMAIL_KEY, null);
 
-  const NativeBiometric = await getPlugin();
-  if (!NativeBiometric) return;
+  const wrapper = await getPluginWrapper();
+  if (!wrapper) return;
+  const NativeBiometric = wrapper.instance;
   try {
     await NativeBiometric.deleteCredentials({ server: SERVER });
   } catch (e) {
@@ -132,8 +137,9 @@ export async function disableBiometricLogin(): Promise<void> {
 export type BiometricSignInResult = "ok" | "cancelled" | "expired" | "unavailable";
 
 export async function biometricSignIn(): Promise<BiometricSignInResult> {
-  const NativeBiometric = await getPlugin();
-  if (!NativeBiometric || !isBiometricEnabled()) return "unavailable";
+  const wrapper = await getPluginWrapper();
+  if (!wrapper || !isBiometricEnabled()) return "unavailable";
+  const NativeBiometric = wrapper.instance;
 
   let refreshToken: string;
   try {
@@ -173,8 +179,9 @@ export async function biometricSignIn(): Promise<BiometricSignInResult> {
 export async function storeRefreshToken(session: Session | null): Promise<void> {
   if (!isBiometricEnabled()) return;
 
-  const NativeBiometric = await getPlugin();
-  if (!NativeBiometric) return;
+  const wrapper = await getPluginWrapper();
+  if (!wrapper) return;
+  const NativeBiometric = wrapper.instance;
 
   const refreshToken = session?.refresh_token;
   const email = session?.user?.email;

@@ -64,7 +64,7 @@ function getLatestHighlight(archivedTournaments: ArchivedTournament[]) {
 
 export default function Home() {
   const { archivedTournaments } = useArchivedTournaments();
-  const { isAdmin } = useAuth();
+  const { isAdmin, session } = useAuth();
   const [config, setConfig] = useState<Record<string, any> | null>(null);
   const [convenerData, setConvenerData] = useState<ConvenerData | null>(null);
 
@@ -90,18 +90,22 @@ export default function Home() {
   const [showAbout, setShowAbout] = useState(false);
 
   useEffect(() => {
-    if (Capacitor.isNativePlatform()) {
+    if (Capacitor.isNativePlatform() && session) {
       const agreed = localStorage.getItem("location_disclosure_agreed");
       if (agreed === "true") {
-        Geofence.setupGymkhanaGeofence().catch(e => {
-          console.log("Geofence setup failed:", e);
-          Sentry.captureException(e, { extra: { context: "Geofence.setupGymkhanaGeofence" } });
-        });
-      } else if (!agreed) {
+        // Delay slightly to prevent collision with push notification permission prompt on fresh login
+        setTimeout(() => {
+          Geofence.setupGymkhanaGeofence().catch(e => {
+            console.log("Geofence setup failed:", e);
+            Sentry.captureException(e, { extra: { context: "Geofence.setupGymkhanaGeofence" } });
+          });
+        }, 2000);
+      } else if (agreed === null) {
+        // Only show if never answered
         setShowLocationDisclosure(true);
       }
     }
-  }, []);
+  }, [session]);
 
   const handleAgreeLocation = () => {
     localStorage.setItem("location_disclosure_agreed", "true");
