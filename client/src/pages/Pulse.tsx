@@ -273,23 +273,23 @@ export default function Pulse() {
           </p>
 
           <div className="mt-6 w-full flex justify-center mb-2 px-2">
-            <div className="flex w-full sm:w-auto bg-black/20 backdrop-blur-md p-1 rounded-xl border border-black/10 gap-1 flex-wrap justify-center shadow-inner">
+            <div className="flex w-full sm:w-auto bg-black/20 backdrop-blur-md p-1 rounded-2xl border border-black/10 gap-1 flex-wrap justify-center shadow-inner">
               {[
-                { id: "live", label: "Live", icon: <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> },
-                { id: "feed", label: "Feed", icon: <Radio className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> },
-                { id: "events", label: "Events", icon: <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> },
-                { id: "directory", label: "Directory", icon: <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> },
-              ].map(({ id, label, icon }) => (
+                { id: "live", label: "Live", icon: <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-rose-400 shadow-md scale-100" },
+                { id: "feed", label: "Feed", icon: <Radio className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-sky-400 shadow-md scale-100" },
+                { id: "events", label: "Events", icon: <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-amber-400 shadow-md scale-100" },
+                { id: "directory", label: "Directory", icon: <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-fuchsia-400 shadow-md scale-100" },
+              ].map((tab) => (
                 <button
-                  key={id}
-                  onClick={() => setPulseTab(id as any)}
-                  className={`flex-auto sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-5 sm:py-2 rounded-lg text-xs sm:text-sm font-black transition-all ${
-                    pulseTab === id
-                      ? "bg-slate-900 text-lime-400 shadow-md scale-100"
+                  key={tab.id}
+                  onClick={() => setPulseTab(tab.id as any)}
+                  className={`flex-auto sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
+                    pulseTab === tab.id
+                      ? tab.activeClass
                       : "text-white/80 hover:text-white hover:bg-black/20 scale-95"
                   }`}
                 >
-                  {icon} {label}
+                  {tab.icon} {tab.label}
                 </button>
               ))}
             </div>

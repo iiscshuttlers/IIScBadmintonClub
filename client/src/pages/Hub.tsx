@@ -72,21 +72,21 @@ export default function Hub() {
 
           {/* View Toggle — 2×2 grid on mobile, single row on sm+ */}
           <div className="mt-6 flex justify-center w-full px-2">
-            <div className="flex w-full sm:w-auto bg-black/20 backdrop-blur-md p-1 rounded-xl border border-black/10 gap-1 flex-wrap justify-center shadow-inner">
+            <div className="flex w-full sm:w-auto bg-black/20 backdrop-blur-md p-1 rounded-2xl border border-black/10 gap-1 flex-wrap justify-center shadow-inner">
               {/* unified grid/flex for all screens */}
               <div className="flex flex-wrap sm:flex-nowrap justify-center gap-1">
                 {[
-                  { id: "lost-found", label: "Lost & Found", icon: <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> },
-                  { id: "buy-sell",   label: "Buy & Sell",   icon: <Store className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> },
-                  { id: "facilities", label: "Facilities",   icon: <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> },
-                  { id: "contact",    label: "Contact & FAQ",icon: <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> },
-                ].map(({ id, label, icon }) => (
+                  { id: "lost-found", label: "Lost & Found", icon: <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-orange-400 shadow-md scale-100" },
+                  { id: "buy-sell",   label: "Buy & Sell",   icon: <Store className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-emerald-400 shadow-md scale-100" },
+                  { id: "facilities", label: "Facilities",   icon: <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-blue-400 shadow-md scale-100" },
+                  { id: "contact",    label: "Contact & FAQ",icon: <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, activeClass: "bg-slate-900 text-indigo-400 shadow-md scale-100" },
+                ].map(({ id, label, icon, activeClass }) => (
                   <button
                     key={id}
                     onClick={() => handleTabChange(id)}
-                    className={`flex-auto sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-5 sm:py-2 rounded-lg text-xs sm:text-sm font-black transition-all ${
+                    className={`flex-auto sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
                       activeTab === id
-                        ? "bg-slate-900 text-lime-400 shadow-md scale-100"
+                        ? activeClass
                         : "text-white/80 hover:text-white hover:bg-black/20 scale-95"
                     }`}
                   >
