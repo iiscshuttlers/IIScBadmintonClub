@@ -136,7 +136,6 @@ export function usePushNotifications(userId: string | undefined) {
     if (!Capacitor.isNativePlatform() || !userId) return;
 
     let isRegistered = false;
-    let setupTimer: ReturnType<typeof setTimeout>;
 
     const createAndroidChannels = async () => {
       if (Capacitor.getPlatform() !== 'android') return;
@@ -257,30 +256,13 @@ export function usePushNotifications(userId: string | undefined) {
         // 2. Create Android channels before registering
         await createAndroidChannels();
 
-        // 3. Request push notification permission (POST_NOTIFICATIONS on Android 13+).
-        //    We use PushNotifications directly now that the 2s startup delay ensures
-        //    the Activity is attached. LocalNotifications was a workaround that prevented
-        //    the crash but also prevented the permission dialog from ever appearing.
-        let permGranted = false;
-        try {
-          const permStatus = await PushNotifications.checkPermissions();
-          if (permStatus.receive === "granted") {
-            permGranted = true;
-          } else if (permStatus.receive === "prompt" || permStatus.receive === "prompt-with-rationale") {
-            const requested = await PushNotifications.requestPermissions();
-            permGranted = requested.receive === "granted";
-          }
-          // If "denied", permGranted stays false — skip registration
-        } catch (permErr) {
-          // Fallback: some older Capacitor/Android combos still NPE here.
-          // Attempt registration anyway — Android will silently skip if denied.
-          console.warn("[Push] Permission check failed, attempting register anyway:", permErr);
-          permGranted = true;
-        }
-
-        if (!permGranted) {
-          console.log("[Push] Notification permission not granted, skipping registration.");
-          return;
+        // 3. Check permissions, then register (fires "registration" → listener saves token)
+        const permStatus = await PushNotifications.checkPermissions();
+        if (permStatus.receive === "prompt") {
+          const requested = await PushNotifications.requestPermissions();
+          if (requested.receive !== "granted") return;
+        } else if (permStatus.receive !== "granted") {
+          return; // Permission denied
         }
 
         await PushNotifications.register();
@@ -290,13 +272,7 @@ export function usePushNotifications(userId: string | undefined) {
       }
     };
 
-    // Defer push setup by 2 seconds after sign-in to ensure the Android Activity
-    // is fully initialized. On Android 16, calling PushNotifications methods
-    // too early causes a NullPointerException in getPermissionStates() that
-    // crashes the app (Sentry issue JAVASCRIPT-REACT-3).
-    setupTimer = setTimeout(() => {
-      setup();
-    }, 2000);
+    setup();
 
     // Refresh token periodically to prevent FCM expiration (~7 days without refresh)
     const refreshInterval = setInterval(() => {
@@ -306,14 +282,12 @@ export function usePushNotifications(userId: string | undefined) {
     }, 6 * 60 * 60 * 1000);
 
     return () => {
-      clearTimeout(setupTimer);
       clearInterval(refreshInterval);
       if (isRegistered) {
         PushNotifications.removeAllListeners();
       }
     };
   }, [userId]);
-
 
   // ─── Web/PWA Browser Notification Permission ───
   useEffect(() => {

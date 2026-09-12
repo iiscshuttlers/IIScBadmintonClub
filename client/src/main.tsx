@@ -4,14 +4,26 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 import "./pwa";
+import packageJson from "../../package.json";
 
 Sentry.init(
   {
     dsn: import.meta.env.VITE_SENTRY_DSN || "",
     enabled: !!import.meta.env.VITE_SENTRY_DSN,
-    release: "shuttlers.iisc.com@3.66.0", // matches package.json
+    release: `shuttlers.iisc.com@${packageJson.version}`,
+    integrations: [
+      SentryReact.browserTracingIntegration(),
+      SentryReact.replayIntegration(),
+    ],
+    tracesSampleRate: 1.0,
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
   },
   SentryReact.init as any
 );
 
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")!).render(
+  <SentryReact.ErrorBoundary fallback={<p>An error has occurred</p>}>
+    <App />
+  </SentryReact.ErrorBoundary>
+);

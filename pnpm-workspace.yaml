@@ -3,7 +3,7 @@ packages:
 
 allowBuilds:
   "@firebase/util": true
-  '@sentry/capacitor': set this to true or false
+  '@sentry/capacitor': true
   core-js: true
   esbuild: true
   protobufjs: true
