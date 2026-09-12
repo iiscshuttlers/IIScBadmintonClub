@@ -35,11 +35,17 @@ function showExitToast(onDone: () => void) {
 
 export function useNativeBackButton() {
   const backPressedRef = useRef(false);
+  const lastPressTime = useRef(0);
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
     const listener = CapApp.addListener("backButton", (event) => {
+      const now = Date.now();
+      // Ignore bounces/duplicate events within 300ms
+      if (now - lastPressTime.current < 300) return;
+      lastPressTime.current = now;
+
       const path = window.location.pathname;
       const isHome =
         path === "/" ||
