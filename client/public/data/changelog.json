@@ -1,5 +1,33 @@
 [
   {
+    "versionCode": 385,
+    "versionName": "3.85",
+    "date": "2026-09-12T14:33:18.264Z",
+    "changes": [
+      "- fix(ci): approve sentry build script for pnpm",
+      "- feat: add home announcement bar, holiday calendar, serving indicator, HomeBannerManager admin",
+      "- fix: entirely remove Health Connect permissions and queries to pass Google Play Review",
+      "- fix: remove READ_MEDIA permissions and bump version for Google Play compliance",
+      "- chore: update privacy policy to include Health Connect and Location data disclosures for Google Play compliance",
+      "- docs: add location data disclosure to privacy policy to comply with play store",
+      "- fix(display): stop dropping unlinked doubles partners",
+      "- refactor(admin): remove the Umpire Assignment panel",
+      "- feat(umpire): role alone is enough to umpire",
+      "- feat(umpire): walkover recording + let the umpire role actually umpire",
+      "- fix(bracket): stop dropping a partner when advancing a winner",
+      "- fix(umpire): bring the friendly flow to parity with tournament",
+      "- fix(umpire): ask who receives first in tournament setup",
+      "- fix(nav): hide the dead Light/Dark toggle",
+      "- fix(bracket): stop clipping the second player name",
+      "- fix(theme): revert 106 on-accent conversions that broke light mode",
+      "- refactor(tournament-admin): tokenise affordance colours (185 -> 8)",
+      "- refactor(player-page): tokenise series and status colours (175 -> 61)",
+      "- refactor(live-scores): tokenise danger/winner colours (49 -> 8)",
+      "- refactor(umpire): tokenise UmpireEngine colours (37 -> 0)",
+      "- feat(theme): add semantic colour tokens"
+    ]
+  },
+  {
     "versionCode": 304,
     "versionName": "3.04",
     "date": "2026-08-11T14:39:08.171Z",
