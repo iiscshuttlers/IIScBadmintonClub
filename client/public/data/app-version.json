@@ -1,6 +1,6 @@
 {
-  "versionCode": 385,
-  "versionName": "3.85",
+  "versionCode": 386,
+  "versionName": "3.86",
   "downloadUrl": "https://play.google.com/store/apps/details?id=shuttlers.iisc.com",
   "changelog": "- fix(ci): approve sentry build script for pnpm\n- feat: add home announcement bar, holiday calendar, serving indicator, HomeBannerManager admin\n- fix: entirely remove Health Connect permissions and queries to pass Google Play Review\n- fix: remove READ_MEDIA permissions and bump version for Google Play compliance\n- chore: update privacy policy to include Health Connect and Location data disclosures for Google Play compliance\n- docs: add location data disclosure to privacy policy to comply with play store\n- fix(display): stop dropping unlinked doubles partners\n- refactor(admin): remove the Umpire Assignment panel\n- feat(umpire): role alone is enough to umpire\n- feat(umpire): walkover recording + let the umpire role actually umpire\n- fix(bracket): stop dropping a partner when advancing a winner\n- fix(umpire): bring the friendly flow to parity with tournament\n- fix(umpire): ask who receives first in tournament setup\n- fix(nav): hide the dead Light/Dark toggle\n- fix(bracket): stop clipping the second player name\n- fix(theme): revert 106 on-accent conversions that broke light mode\n- refactor(tournament-admin): tokenise affordance colours (185 -> 8)\n- refactor(player-page): tokenise series and status colours (175 -> 61)\n- refactor(live-scores): tokenise danger/winner colours (49 -> 8)\n- refactor(umpire): tokenise UmpireEngine colours (37 -> 0)\n- feat(theme): add semantic colour tokens"
 }

@@ -104,8 +104,9 @@ public class GeofencePlugin extends Plugin {
             }
             ensureBackgroundLocation(call);
         } catch (Exception e) {
-            Log.e(TAG, "Error in setupGymkhanaGeofence", e);
-            call.reject("Geofence setup crashed", e);
+            String msg = "Geofence setup crashed: " + e.getClass().getName() + " - " + e.getMessage();
+            Log.e(TAG, msg, e);
+            call.reject(msg, e);
         }
     }
 
@@ -150,8 +151,9 @@ public class GeofencePlugin extends Plugin {
             }
             ensureBackgroundLocation(call);
         } catch (Exception e) {
-            Log.e(TAG, "Error in locationPermissionCallback", e);
-            call.reject("Location permission callback crashed", e);
+            String msg = "Location permission callback crashed: " + e.getClass().getName() + " - " + e.getMessage();
+            Log.e(TAG, msg, e);
+            call.reject(msg, e);
         }
     }
 
@@ -170,8 +172,9 @@ public class GeofencePlugin extends Plugin {
             }
             addGeofence(call);
         } catch (Exception e) {
-            Log.e(TAG, "Error in ensureBackgroundLocation", e);
-            call.reject("Ensure background location crashed", e);
+            String msg = "Ensure background location crashed: " + e.getClass().getName() + " - " + e.getMessage();
+            Log.e(TAG, msg, e);
+            call.reject(msg, e);
         }
     }
 
@@ -182,8 +185,9 @@ public class GeofencePlugin extends Plugin {
             // reliably in the background, which is an acceptable degradation.
             addGeofence(call);
         } catch (Exception e) {
-            Log.e(TAG, "Error in backgroundLocationPermissionCallback", e);
-            call.reject("Background location permission callback crashed", e);
+            String msg = "Background location permission callback crashed: " + e.getClass().getName() + " - " + e.getMessage();
+            Log.e(TAG, msg, e);
+            call.reject(msg, e);
         }
     }
 
@@ -223,8 +227,9 @@ public class GeofencePlugin extends Plugin {
                     .addOnSuccessListener(aVoid -> call.resolve())
                     .addOnFailureListener(e -> call.reject("Failed to add geofence", e));
         } catch (Exception e) {
-            Log.e(TAG, "Error in addGeofence", e);
-            call.reject("Add geofence crashed", e);
+            String msg = "Add geofence crashed: " + e.getClass().getName() + " - " + e.getMessage();
+            Log.e(TAG, msg, e);
+            call.reject(msg, e);
         }
     }
 }
