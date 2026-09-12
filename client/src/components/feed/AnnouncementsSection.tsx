@@ -160,6 +160,22 @@ export function AnnouncementsSection() {
       setPinnedAnnouncements(sortByNewest(pinned));
       setRecentAnnouncements(sortByNewest(allAnnouncements));
       setLoading(false);
+      
+      // Auto-scroll to specific announcement if hash is present
+      setTimeout(() => {
+        const hash = window.location.hash;
+        if (hash && hash.startsWith('#feed-')) {
+          const el = document.getElementById(hash.substring(1));
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Add a brief highlight effect
+            el.classList.add('ring-2', 'ring-primary', 'ring-offset-2', 'dark:ring-offset-slate-950');
+            setTimeout(() => {
+              el.classList.remove('ring-2', 'ring-primary', 'ring-offset-2', 'dark:ring-offset-slate-950');
+            }, 2000);
+          }
+        }
+      }, 100);
     } else if (!isQueryLoading) {
       setLoading(false);
     }
@@ -387,6 +403,7 @@ export function AnnouncementsSection() {
                       return (
                         <Card
                           key={index}
+                          id={`feed-${item.title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`}
                           className="border-2 border-orange-300 dark:border-orange-900/50 bg-white dark:bg-slate-800 hover:shadow-lg transition-all duration-300 overflow-hidden"
                         >
                           <div className="h-1 bg-gradient-to-r from-orange-500 to-amber-400" />
@@ -526,6 +543,7 @@ export function AnnouncementsSection() {
                       return (
                         <Card
                           key={index}
+                          id={`feed-${item.title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`}
                           className="border border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
                         >
                           <div

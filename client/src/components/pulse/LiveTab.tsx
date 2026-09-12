@@ -38,7 +38,7 @@ export function LiveTab() {
   const { session, profile: ownProfile, isUmpire, isAdmin } = useAuth();
   const { liveMatchIds, hasLiveMatches } = useLiveMatches();
 
-  const [activeSubTab, setActiveSubTab] = useQueryState<"details" | "matches" | "polls" | "schedule" | "umpire" | "brackets">("subtab", "matches");
+  const [activeSubTab, setActiveSubTab] = useQueryState<"details" | "matches" | "polls" | "schedule" | "umpire" | "brackets" | "my-matches">("subtab", "matches");
   const [activeTournament, setActiveTournament] = useState<any | null>(null);
   
   useEffect(() => {
@@ -220,25 +220,26 @@ export function LiveTab() {
         </div>
       )}
 
-      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 pb-2 mb-6">
+      <div className="flex flex-wrap items-center justify-center gap-2 pb-2 mb-6 w-full">
         {[
           { id: "details", label: "Details", icon: FileText },
           { id: "matches", label: "Matches", icon: Activity },
           { id: "polls", label: "Polls", icon: ListChecks },
           { id: "schedule", label: "Schedule", icon: Calendar },
+          { id: "my-matches", label: "My Matches", icon: Activity, activeClass: "bg-violet-500 text-white shadow-md ring-2 ring-violet-500/20 scale-105", inactiveClass: "bg-violet-500/10 text-violet-400 dark:text-violet-300 hover:bg-violet-500/20 hover:text-violet-500 dark:hover:text-violet-200 border border-violet-500/20", iconClass: "text-violet-500" },
           { id: "brackets", label: "Brackets", icon: LayoutList },
           ...((isUmpire || isAdmin) ? [{ id: "umpire", label: "Umpire", icon: Tv2 }] : []),
-        ].map((tab) => (
+        ].map((tab: any) => (
           <button
             key={tab.id}
             onClick={() => setActiveSubTab(tab.id as any)}
-            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-200 ${
+            className={`flex-auto flex items-center justify-center gap-2 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-200 ${
               activeSubTab === tab.id
-                ? "bg-red-500 text-white shadow-md ring-2 ring-red-500/20 scale-105"
-                : "bg-slate-200 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white"
+                ? (tab.activeClass || "bg-red-500 text-white shadow-md ring-2 ring-red-500/20 scale-105")
+                : (tab.inactiveClass || "bg-slate-200 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white")
             }`}
           >
-            <tab.icon className="w-4 h-4 mb-[1px]" />
+            <tab.icon className={`w-4 h-4 mb-[1px] ${activeSubTab !== tab.id && tab.iconClass && !tab.inactiveClass ? tab.iconClass : ""}`} />
             <span>{tab.label}</span>
           </button>
         ))}
@@ -251,34 +252,14 @@ export function LiveTab() {
         </div>
       )}
 
-      {/* 1. Matches (Scores & Log merged) */}
-      {!loading && activeSubTab === "matches" && (
+      {/* 1. Matches (Scores & Log merged) and My Matches */}
+      {!loading && (activeSubTab === "matches" || activeSubTab === "my-matches") && (
         <div className="mb-6">
-          <div className="-mx-4 sm:mx-0 mb-6">
-            <LiveScoreSection />
-          </div>
-          <div className="flex bg-slate-100/80 dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 mb-6 shadow-sm">
-            <button
-              onClick={() => setFeedView("my")}
-              className={`flex-1 flex justify-center items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-black transition-all ${
-                feedView === "my"
-                  ? "bg-white dark:bg-slate-800 text-violet-500 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50"
-              }`}
-            >
-              <Activity className="w-4 h-4" /> My Matches
-            </button>
-            <button
-              onClick={() => setFeedView("tournament")}
-              className={`flex-1 flex justify-center items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-black transition-all ${
-                feedView === "tournament"
-                  ? "bg-white dark:bg-slate-800 text-primary shadow-sm ring-1 ring-slate-200 dark:ring-slate-700"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50"
-              }`}
-            >
-              <Trophy className="w-4 h-4" /> Tournament Matches
-            </button>
-          </div>
+          {activeSubTab === "matches" && (
+            <div className="-mx-4 sm:mx-0 mb-6">
+              <LiveScoreSection />
+            </div>
+          )}
 
           <div className="mb-3 relative w-full">
             <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -530,7 +511,7 @@ export function LiveTab() {
 
                 return (
                   <>
-                    {feedView === "my" ? (
+                    {activeSubTab === "my-matches" ? (
                       <MatchSection 
                         title="My Matches" 
                         icon={<Activity className="w-5 h-5 text-violet-500" />} 
@@ -551,7 +532,7 @@ export function LiveTab() {
                                   : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
                               }`}
                             >
-                              {status} Matches 
+                              {status}
                               <span className="ml-2 text-xs text-muted-foreground opacity-70">
                                 ({status === "upcoming" ? upcomingMatches.length : completedMatches.length})
                               </span>

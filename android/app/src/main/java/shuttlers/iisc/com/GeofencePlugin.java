@@ -30,7 +30,10 @@ import java.security.GeneralSecurityException;
 @CapacitorPlugin(
     name = "Geofence",
     permissions = {
-        @Permission(strings = {Manifest.permission.ACCESS_FINE_LOCATION}, alias = "location"),
+        @Permission(strings = {
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        }, alias = "location"),
         @Permission(strings = {Manifest.permission.ACCESS_BACKGROUND_LOCATION}, alias = "backgroundLocation")
     }
 )

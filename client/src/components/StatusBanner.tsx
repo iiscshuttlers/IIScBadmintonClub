@@ -243,10 +243,10 @@ export default function StatusBanner() {
       </Link>
       <button
         onClick={() => setIsClosed(true)}
-        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors z-30"
+        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-black/20 hover:bg-black/30 backdrop-blur-md rounded-full shadow-sm transition-all z-30 ring-1 ring-black/10"
         aria-label="Close banner"
       >
-        <X className="w-5 h-5 text-primary-foreground/90" />
+        <X className="w-5 h-5 text-white" />
       </button>
     </div>
   )}
@@ -310,10 +310,10 @@ export default function StatusBanner() {
                     newClosed.add(flyer.id);
                     setClosedFlyers(newClosed);
                   }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-black/10 rounded-full transition-colors z-30"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-black/20 hover:bg-black/30 backdrop-blur-md rounded-full shadow-sm transition-all z-30 ring-1 ring-black/10"
                   aria-label="Close flyer"
                 >
-                  <X className="w-5 h-5 text-foreground/90" />
+                  <X className="w-5 h-5 text-white" />
                 </button>
               </div>
             );

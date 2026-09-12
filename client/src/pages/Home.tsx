@@ -136,15 +136,8 @@ export default function Home() {
 
         {/* ── HERO ──────────────────────────────────────────────────────── */}
         <section aria-label="Hero" className="relative overflow-hidden text-white py-2 lg:py-4 flex items-center bg-slate-950">
-          {/* Mobile photo bg */}
-          <div className="lg:hidden absolute inset-x-0 top-0 z-0">
-            <img src={iiscTeam} alt="IISc Badminton Team" className="w-full aspect-[4/3] sm:aspect-video object-cover object-top" />
-            <div className="absolute inset-0 bg-slate-950/20" />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
-          </div>
-
-          {/* Desktop bg */}
-          <div className="hidden lg:block absolute inset-0 z-0">
+          {/* Universal bg */}
+          <div className="absolute inset-0 z-0">
             <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-900 to-slate-950" />
             <div className="absolute inset-0 hero-pattern opacity-30" />
             {/* decorative glow orbs */}
@@ -155,14 +148,14 @@ export default function Home() {
             <div className="absolute inset-0 dot-pattern opacity-30" />
           </div>
 
-          <div className="container mx-auto px-4 pt-6 sm:pt-12 pb-1 lg:pt-2 lg:pb-2 relative z-10 w-full">
+          <div className="container mx-auto px-4 pt-6 sm:pt-12 pb-1 lg:pt-2 lg:pb-2 relative z-10 w-full max-w-5xl">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
 
               {/* Left Content */}
               <motion.div variants={fadeUp} initial="hidden" animate="visible" className="space-y-2">
                 {/* Heading */}
                 <div className="space-y-4">
-                  <h1 className="text-4xl lg:text-5xl xl:text-6xl font-black leading-[1.1] tracking-tight text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]" style={{ fontFamily: "Playfair Display, serif" }}>
+                  <h1 className="text-3xl lg:text-4xl xl:text-5xl font-black leading-[1.1] tracking-tight text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]" style={{ fontFamily: "Playfair Display, serif" }}>
                     Welcome to the <br className="hidden sm:block" />
                     <span className="text-primary drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]">IISc</span> Badminton Club
                   </h1>
@@ -197,7 +190,7 @@ export default function Home() {
 
         {/* ── QUICK PATHS ──────────────────────────────────────────────── */}
         <section aria-label="Quick Links" className="bg-slate-50 dark:bg-transparent">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-4 max-w-5xl">
             
             <HomeAnnouncementBar isAdmin={isAdmin} />
 
@@ -213,7 +206,7 @@ export default function Home() {
 
         {/* ── ABOUT / MISSION & VALUES ──────────────────────────────────── */}
         <section aria-label="About & Mission" className="py-2 bg-white dark:bg-slate-950">
-          <div className="container mx-auto px-4 max-w-6xl">
+          <div className="container mx-auto px-4 max-w-5xl">
             <motion.div
               className="mb-2"
               variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}
@@ -305,7 +298,7 @@ export default function Home() {
 
         {/* ── LEADERSHIP ────────────────────────────────────────────────── */}
         <section aria-label="Leadership Team" className="flex-1 py-2 bg-slate-50 dark:bg-slate-950">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-4 max-w-5xl">
             <motion.div
               className="text-center mb-3"
               variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
@@ -318,7 +311,7 @@ export default function Home() {
             </motion.div>
 
             <motion.div
-              className="grid grid-cols-2 gap-3 md:gap-4 max-w-4xl mx-auto"
+              className="grid grid-cols-2 gap-3 md:gap-4 max-w-5xl mx-auto"
               variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }}
             >
               {teamMembers.map((member, idx) => {

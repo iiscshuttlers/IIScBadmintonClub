@@ -144,30 +144,35 @@ export default function TvScoreboard() {
       : "shadow-[0_0_12px_rgba(139,92,246,0.7)]";
 
     return (
-      <div className={`flex-1 flex flex-col items-center justify-center p-6 lg:p-10 relative transition-all duration-500 ${serving ? `bg-gradient-to-br ${bgClass}` : ""}`}>
-        {/* Server indicator */}
-        {serving && (
-          <div className={`absolute top-6 ${team === 1 ? "right-6" : "left-6"} w-6 h-6 lg:w-8 lg:h-8 rounded-full ${dotColor} ${dotGlow} animate-pulse`} />
-        )}
-
-        {/* Player names */}
-        <div className="mb-auto mt-4 lg:mt-8 text-center">
+      <div className={`flex-1 flex flex-col items-center justify-center p-6 md:p-10 relative transition-all duration-500 ${serving ? `bg-gradient-to-br ${bgClass}` : ""}`}>
+        {/* Player names & Server indicator */}
+        <div className="mb-auto mt-4 md:mt-8 flex flex-col items-center text-center">
           {t.teamName && (
-            <div className="text-lg lg:text-2xl font-bold tracking-[0.2em] text-slate-500/80 mb-2 uppercase">{t.teamName}</div>
+            <div className="text-lg md:text-2xl font-bold tracking-[0.2em] text-slate-500/80 mb-2 uppercase">{t.teamName}</div>
           )}
-          <div className="text-4xl lg:text-6xl xl:text-7xl font-black tracking-tight text-white/95 truncate max-w-[40vw]">
-            {t.p1Name}
+          <div className="relative">
+            <div className="text-4xl md:text-6xl xl:text-7xl font-black tracking-tight text-white/95 truncate max-w-[35vw] px-2">
+              {t.p1Name}
+            </div>
+            {serving && (matchState.serverPlayerIndex === 0 || matchState.serverPlayerIndex === undefined) && (
+              <div className={`absolute top-1/2 -translate-y-1/2 ${team === 1 ? "-right-6 md:-right-10" : "-left-6 md:-left-10"} w-4 h-4 md:w-6 md:h-6 rounded-full ${dotColor} ${dotGlow} animate-pulse`} />
+            )}
           </div>
           {t.p2Name && (
-            <div className="text-2xl lg:text-4xl xl:text-5xl font-bold tracking-tight text-slate-400/80 mt-1 truncate max-w-[40vw]">
-              {t.p2Name}
+            <div className="relative mt-1">
+              <div className="text-2xl md:text-4xl xl:text-5xl font-bold tracking-tight text-slate-400/80 truncate max-w-[35vw] px-2">
+                {t.p2Name}
+              </div>
+              {serving && matchState.serverPlayerIndex === 1 && (
+                <div className={`absolute top-1/2 -translate-y-1/2 ${team === 1 ? "-right-5 md:-right-8" : "-left-5 md:-left-8"} w-3 h-3 md:w-5 md:h-5 rounded-full ${dotColor} ${dotGlow} animate-pulse`} />
+              )}
             </div>
           )}
         </div>
 
         {/* Giant score */}
         <div className="relative my-auto">
-          <div className={`text-[28vw] lg:text-[22vw] xl:text-[18rem] font-black leading-none tracking-tighter tabular-nums transition-all duration-300 ${serving ? glowClass : "text-white/90"}`}>
+          <div className={`text-[28vw] md:text-[22vw] xl:text-[18rem] font-black leading-none tracking-tighter tabular-nums transition-all duration-300 ${serving ? glowClass : "text-white/90"}`}>
             {t.score}
           </div>
         </div>
@@ -177,7 +182,7 @@ export default function TvScoreboard() {
           {Array.from({ length: matchState.bestOfSets }).map((_, i) => (
             <div
               key={i}
-              className={`w-5 h-5 lg:w-7 lg:h-7 rounded-full transition-all duration-300 ${i < t.games ? `${setDot} ${setGlow}` : "bg-slate-800 border border-slate-700"}`}
+              className={`w-5 h-5 md:w-7 md:h-7 rounded-full transition-all duration-300 ${i < t.games ? `${setDot} ${setGlow}` : "bg-slate-800 border border-slate-700"}`}
             />
           ))}
         </div>
@@ -186,28 +191,28 @@ export default function TvScoreboard() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col overflow-hidden font-sans selection:bg-transparent relative group">
+    <div className="h-[100dvh] bg-black text-white flex flex-col overflow-hidden font-sans selection:bg-transparent relative group">
       {/* Subtle animated background */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(6,182,212,0.06)_0%,transparent_50%),radial-gradient(ellipse_at_bottom_right,rgba(139,92,246,0.06)_0%,transparent_50%)] pointer-events-none" />
 
-      {/* Exit Button (Shows on hover) */}
+      {/* Exit Button (Always partially visible, fully visible on hover) */}
       <button 
         onClick={() => setLocation("/tv")}
-        className="absolute top-6 right-6 z-50 p-3 bg-slate-800/60 hover:bg-slate-700 text-white rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-md shadow-2xl border border-slate-700/50"
+        className="absolute top-6 right-6 z-50 p-3 bg-slate-800/60 hover:bg-slate-700 text-white rounded-2xl opacity-40 hover:opacity-100 transition-opacity backdrop-blur-md shadow-2xl border border-slate-700/50"
         title="Exit Scoreboard"
       >
         <X className="w-7 h-7" />
       </button>
       
       {/* Top Header */}
-      <div className="h-20 lg:h-28 w-full flex items-center justify-between px-8 lg:px-12 bg-gradient-to-b from-slate-950/80 to-transparent relative z-10">
+      <div className="h-20 md:h-28 w-full flex items-center justify-between px-8 md:px-12 bg-gradient-to-b from-slate-950/80 to-transparent relative z-10">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
             <span className="text-xs font-black uppercase tracking-[0.2em] text-red-400">LIVE</span>
           </div>
           <div className="w-px h-8 bg-slate-700/50" />
-          <div className="text-2xl lg:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-400 tracking-wide">
+          <div className="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-400 tracking-wide">
             IISc Badminton
           </div>
           {matchState.tournament && (
@@ -217,7 +222,7 @@ export default function TvScoreboard() {
             </>
           )}
         </div>
-        <div className="flex items-center gap-4 lg:gap-6">
+        <div className="flex items-center gap-4 md:gap-6">
           {isDeuce && (
             <div className="px-4 py-1.5 bg-amber-500/15 border border-amber-500/40 text-amber-400 text-xl font-black rounded-xl tracking-widest animate-bounce">
               ⚡ DEUCE
@@ -244,15 +249,15 @@ export default function TvScoreboard() {
       </div>
 
       {/* Main Score Area */}
-      <div className="flex-1 flex flex-col lg:flex-row relative">
+      <div className="flex-1 flex flex-col md:flex-row relative">
         {/* Center divider */}
-        <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-slate-700/30 to-transparent hidden lg:block z-0" />
-        <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-slate-700/30 to-transparent lg:hidden z-0" />
+        <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-slate-700/30 to-transparent hidden md:block z-0" />
+        <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-slate-700/30 to-transparent md:hidden z-0" />
         
         {/* Center VS badge */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-          <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-full bg-slate-900 border border-slate-700/50 flex items-center justify-center shadow-2xl">
-            <span className="text-lg lg:text-xl font-black text-slate-500 tracking-widest">VS</span>
+          <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-slate-900 border border-slate-700/50 flex items-center justify-center shadow-2xl">
+            <span className="text-lg md:text-xl font-black text-slate-500 tracking-widest">VS</span>
           </div>
         </div>
 
@@ -261,8 +266,8 @@ export default function TvScoreboard() {
       </div>
 
       {/* Bottom Footer */}
-      <div className="h-16 lg:h-24 w-full flex items-center justify-center px-12 bg-gradient-to-t from-slate-950/80 to-transparent relative z-10">
-        <div className="flex items-center gap-6 text-xl lg:text-2xl font-bold text-slate-500 tracking-wider">
+      <div className="h-16 md:h-24 w-full flex items-center justify-center px-12 bg-gradient-to-t from-slate-950/80 to-transparent relative z-10">
+        <div className="flex items-center gap-6 text-xl md:text-2xl font-bold text-slate-500 tracking-wider">
           {matchState.setsHistory?.length > 0 ? (
             <>
               <span className="text-slate-600 uppercase text-sm tracking-[0.2em]">Previous Sets</span>

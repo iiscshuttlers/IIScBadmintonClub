@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { PushNotifications, type Channel } from "@capacitor/push-notifications";
+import { LocalNotifications } from "@capacitor/local-notifications";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/lib/supabase";
 import { getFirebaseMessaging } from "@/lib/firebase";
@@ -256,12 +257,12 @@ export function usePushNotifications(userId: string | undefined) {
         // 2. Create Android channels before registering
         await createAndroidChannels();
 
-        // 3. Check permissions, then register (fires "registration" → listener saves token)
-        const permStatus = await PushNotifications.checkPermissions();
-        if (permStatus.receive === "prompt") {
-          const requested = await PushNotifications.requestPermissions();
-          if (requested.receive !== "granted") return;
-        } else if (permStatus.receive !== "granted") {
+        // 3. Check permissions using LocalNotifications to bypass PushNotifications NPE bug
+        const permStatus = await LocalNotifications.checkPermissions();
+        if (permStatus.display === "prompt" || permStatus.display === "prompt-with-rationale") {
+          const requested = await LocalNotifications.requestPermissions();
+          if (requested.display !== "granted") return;
+        } else if (permStatus.display !== "granted") {
           return; // Permission denied
         }
 

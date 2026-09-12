@@ -46,10 +46,10 @@ export default function Pulse() {
   const getPulseTab = () => {
     try {
       const hash = window.location.hash.replace("#", "");
-      if (hash === "directory") return "directory";
-      if (hash === "events") return "events";
-      if (hash === "feed") return "feed";
-      if (hash === "live") return "live";
+      if (hash.startsWith("directory")) return "directory";
+      if (hash.startsWith("events")) return "events";
+      if (hash.startsWith("feed")) return "feed";
+      if (hash.startsWith("live")) return "live";
     } catch { /* ignore */ }
     return "live";
   };
@@ -261,11 +261,11 @@ export default function Pulse() {
             Live matches, upcoming tournaments, and club announcements.
           </p>
 
-          <div className="mt-6 w-full flex justify-center mb-2">
-            <div className="flex bg-white/10 backdrop-blur-md p-1 rounded-xl border border-white/20 gap-1 flex-wrap justify-center">
+          <div className="mt-6 w-full flex justify-center mb-2 px-2">
+            <div className="flex w-full sm:w-auto bg-white/10 backdrop-blur-md p-1 rounded-xl border border-white/20 gap-1 flex-wrap justify-center">
               <button
                 onClick={() => setPulseTab("live")}
-                className={`flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-black transition-all ${
+                className={`flex-auto sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-black transition-all ${
                   pulseTab === "live"
                     ? "bg-white text-blue-900 shadow-sm scale-100"
                     : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
@@ -275,7 +275,7 @@ export default function Pulse() {
               </button>
               <button
                 onClick={() => setPulseTab("feed")}
-                className={`flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-black transition-all ${
+                className={`flex-auto sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-black transition-all ${
                   pulseTab === "feed"
                     ? "bg-white text-blue-900 shadow-sm scale-100"
                     : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
@@ -285,7 +285,7 @@ export default function Pulse() {
               </button>
               <button
                 onClick={() => setPulseTab("events")}
-                className={`flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-black transition-all ${
+                className={`flex-auto sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-black transition-all ${
                   pulseTab === "events"
                     ? "bg-white text-blue-900 shadow-sm scale-100"
                     : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
@@ -295,7 +295,7 @@ export default function Pulse() {
               </button>
               <button
                 onClick={() => setPulseTab("directory")}
-                className={`flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-black transition-all ${
+                className={`flex-auto sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-black transition-all ${
                   pulseTab === "directory"
                     ? "bg-white text-blue-900 shadow-sm scale-100"
                     : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"

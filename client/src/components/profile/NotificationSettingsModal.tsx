@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Bell, BellRing, BellOff, Loader2, Trophy, Megaphone, ShieldAlert, Swords } from "lucide-react";
 import { PushNotifications } from "@capacitor/push-notifications";
+import { LocalNotifications } from "@capacitor/local-notifications";
 import { Capacitor } from "@capacitor/core";
 import { enableWebPush } from "@/hooks/usePushNotifications";
 
@@ -73,8 +74,8 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
   const checkPermissions = async () => {
     try {
       if (Capacitor.isNativePlatform()) {
-        const { receive } = await PushNotifications.checkPermissions();
-        setPushGranted(receive === "granted");
+        const { display } = await LocalNotifications.checkPermissions();
+        setPushGranted(display === "granted");
       } else if ("Notification" in window) {
         setPushGranted(Notification.permission === "granted");
       } else {
@@ -89,12 +90,12 @@ export function NotificationSettingsModal({ open, onOpenChange }: NotificationSe
     setLoading(true);
     try {
       if (Capacitor.isNativePlatform()) {
-        let permStatus = await PushNotifications.checkPermissions();
-        if (permStatus.receive === "prompt" || permStatus.receive === "prompt-with-rationale") {
-          permStatus = await PushNotifications.requestPermissions();
+        let permStatus = await LocalNotifications.checkPermissions();
+        if (permStatus.display === "prompt" || permStatus.display === "prompt-with-rationale") {
+          permStatus = await LocalNotifications.requestPermissions();
         }
 
-        if (permStatus.receive === "granted") {
+        if (permStatus.display === "granted") {
           setPushGranted(true);
           await PushNotifications.register();
           toast("Notifications Enabled!", { icon: "✅" });

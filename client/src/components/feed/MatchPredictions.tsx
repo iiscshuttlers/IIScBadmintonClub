@@ -73,43 +73,31 @@ async function fetchStatProb(t1Ids: string[], t2Ids: string[]): Promise<StatProb
 }
 
 function ProbBar({ t1Pct, t2Pct, t1Label, t2Label, label, tooltip }: {
-  t1Pct: number; t2Pct: number; t1Label: string; t2Label: string; label: string; tooltip?: string;
+  t1Pct: number; t2Pct: number; t1Label: string; t2Label: string; label?: string; tooltip?: string;
 }) {
   return (
-    <div className="mt-3">
-      <div className="flex items-center gap-1.5 mb-1.5">
-        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{label}</p>
-        {tooltip && (
-          <div className="group/tooltip relative flex items-center">
-            <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/70 hover:text-muted-foreground cursor-help transition-colors" />
-            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 bg-slate-800 text-slate-300 text-xs font-medium p-2.5 rounded-xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-10 shadow-xl border border-slate-700 leading-relaxed text-center pointer-events-none">
-              {tooltip}
-              <div className="absolute left-1/2 -translate-x-1/2 top-full border-[6px] border-transparent border-t-slate-800" />
+    <div className="mt-1.5">
+      {(label || tooltip) && (
+        <div className="flex items-center gap-1.5 mb-1">
+          {label && <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">{label}</p>}
+          {tooltip && (
+            <div className="group/tooltip relative flex items-center">
+              <HelpCircle className="w-3 h-3 text-muted-foreground/70 hover:text-muted-foreground cursor-help transition-colors" />
+              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 bg-slate-800 text-slate-300 text-xs font-medium p-2.5 rounded-xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-10 shadow-xl border border-slate-700 leading-relaxed text-center pointer-events-none">
+                {tooltip}
+                <div className="absolute left-1/2 -translate-x-1/2 top-full border-[6px] border-transparent border-t-slate-800" />
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
+      )}
+      <div className="flex justify-between items-end mb-1 px-0.5">
+        <span className="text-[9px] text-primary dark:text-primary font-bold break-words flex-1">{t1Label}</span>
+        <span className="text-[9px] text-sky-600 dark:text-sky-400 font-bold break-words flex-1 text-right">{t2Label}</span>
       </div>
-      <div className="flex rounded-full overflow-hidden h-4">
-        {t1Pct > 0 && (
-          <div
-            className="bg-primary flex items-center justify-start pl-2 transition-all duration-700"
-            style={{ width: `${t1Pct}%` }}
-          >
-            {t1Pct >= 20 && <span className="text-[10px] font-black text-slate-900 truncate">{t1Pct}%</span>}
-          </div>
-        )}
-        {t2Pct > 0 && (
-          <div
-            className="bg-sky-400 flex items-center justify-end pr-2 transition-all duration-700"
-            style={{ width: `${t2Pct}%` }}
-          >
-            {t2Pct >= 20 && <span className="text-[10px] font-black text-slate-900 truncate">{t2Pct}%</span>}
-          </div>
-        )}
-      </div>
-      <div className="flex justify-between gap-2 mt-1">
-        <span className="text-[10px] text-primary dark:text-primary font-bold break-words flex-1">{t1Label}</span>
-        <span className="text-[10px] text-sky-600 dark:text-sky-400 font-bold break-words flex-1 text-right">{t2Label}</span>
+      <div className="flex rounded-full overflow-hidden h-2.5">
+        {t1Pct > 0 && <div className="bg-primary transition-all duration-700" style={{ width: `${t1Pct}%` }} />}
+        {t2Pct > 0 && <div className="bg-sky-400 transition-all duration-700" style={{ width: `${t2Pct}%` }} />}
       </div>
     </div>
   );
@@ -201,18 +189,29 @@ export function MatchPredictionCard({
     <div className={compact ? "mt-1" : "pt-2 border-t border-slate-700/50 mt-2"}>
       {myPick || hasStarted ? (
         <>
-          {myPick && (
-            <div className={`flex items-start sm:items-center gap-2 bg-violet-50 dark:bg-violet-950/20 rounded-xl px-3 ${compact ? "py-1.5 mb-1" : "py-2.5 mb-1"}`}>
-              <Check className={`${compact ? "w-3.5 h-3.5 mt-0.5" : "w-4 h-4 shrink-0 mt-0.5 sm:mt-0"} text-violet-500`} />
-              <p className={`${compact ? "text-[10px]" : "text-sm"} text-violet-700 dark:text-violet-400 font-bold leading-snug`}>
-                You picked <strong>{myPick === 1 ? t1Label : t2Label}</strong>
-              </p>
-            </div>
-          )}
+          <div className="flex items-center justify-between">
+            {myPick && (
+              <div className={`flex flex-1 items-center gap-1.5 bg-violet-50 dark:bg-violet-950/20 rounded-lg px-2 ${compact ? "py-1" : "py-1.5"}`}>
+                <Check className={`${compact ? "w-3.5 h-3.5" : "w-4 h-4"} text-violet-500 shrink-0`} />
+                <p className={`${compact ? "text-[10px]" : "text-xs"} text-violet-700 dark:text-violet-400 font-bold leading-snug line-clamp-1`}>
+                  Picked <strong>{myPick === 1 ? t1Label : t2Label}</strong>
+                </p>
+              </div>
+            )}
+            
+            {isAdmin && onToggleRevealResults && (
+              <button
+                onClick={onToggleRevealResults}
+                className={`ml-2 font-bold text-amber-500 hover:text-amber-400 inline-flex items-center justify-center uppercase tracking-wider transition shrink-0 ${compact ? "text-[9px]" : "text-[10px]"}`}
+              >
+                {isResultsRevealed ? "Hide Results" : "Reveal"}
+              </button>
+            )}
+          </div>
+          
           {!myPick && hasStarted && !compact && (
-            <p className="text-xs text-muted-foreground italic mb-2">Voting closed (Match has started)</p>
+            <p className="text-xs text-muted-foreground italic mb-2 mt-1">Voting closed (Match has started)</p>
           )}
-
 
           {shouldShowResults ? (
             <>
@@ -229,10 +228,9 @@ export function MatchPredictionCard({
               <ProbBar
                 t1Pct={voteT1Pct}
                 t2Pct={voteT2Pct}
-                t1Label={compact ? `${tally.t1} vote${tally.t1 !== 1 ? "s" : ""}` : `${t1Label} · ${tally.t1} vote${tally.t1 !== 1 ? "s" : ""}`}
-                t2Label={compact ? `${tally.t2} vote${tally.t2 !== 1 ? "s" : ""}` : `${tally.t2} vote${tally.t2 !== 1 ? "s" : ""} · ${t2Label}`}
-                label={compact ? undefined : "Community votes"}
-                tooltip="Live predictions from people in the community watching this match."
+                t1Label={compact ? `${voteT1Pct}% • ${tally.t1} vote${tally.t1 !== 1 ? "s" : ""}` : `${voteT1Pct}% • ${tally.t1} vote${tally.t1 !== 1 ? "s" : ""} • ${t1Label}`}
+                t2Label={compact ? `${tally.t2} vote${tally.t2 !== 1 ? "s" : ""} • ${voteT2Pct}%` : `${t2Label} • ${tally.t2} vote${tally.t2 !== 1 ? "s" : ""} • ${voteT2Pct}%`}
+                tooltip={compact ? undefined : "Live predictions from people in the community watching this match."}
               />
             </>
           ) : (
@@ -270,17 +268,6 @@ export function MatchPredictionCard({
               <span className={`line-clamp-2 break-words ${compact ? "leading-none" : "leading-tight"}`}>{t2Label}</span>
             </button>
           </div>
-        </div>
-      )}
-
-      {isAdmin && onToggleRevealResults && (
-        <div className={`text-right ${compact ? "mt-1" : "mt-2"}`}>
-          <button
-            onClick={onToggleRevealResults}
-            className={`font-bold text-amber-500 hover:text-amber-400 inline-flex items-center gap-1 uppercase tracking-wider transition ${compact ? "text-[9px]" : "text-[10px]"}`}
-          >
-            {isResultsRevealed ? "Hide Poll Results" : "Reveal"}
-          </button>
         </div>
       )}
     </div>

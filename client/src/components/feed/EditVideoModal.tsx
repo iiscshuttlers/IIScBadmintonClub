@@ -9,11 +9,12 @@ interface EditVideoModalProps {
   isOpen: boolean;
   onClose: () => void;
   matchId: string;
+  tableName: string;
   initialUrl: string;
   onSuccess: (newUrl: string) => void;
 }
 
-export function EditVideoModal({ isOpen, onClose, matchId, initialUrl, onSuccess }: EditVideoModalProps) {
+export function EditVideoModal({ isOpen, onClose, matchId, tableName, initialUrl, onSuccess }: EditVideoModalProps) {
   const [url, setUrl] = useState(initialUrl || "");
   const [saving, setSaving] = useState(false);
 
@@ -23,7 +24,7 @@ export function EditVideoModal({ isOpen, onClose, matchId, initialUrl, onSuccess
     setSaving(true);
     try {
       const { error } = await supabase
-        .from("matches")
+        .from(tableName)
         .update({ video_url: url.trim() })
         .eq("id", matchId);
       

@@ -510,10 +510,14 @@ export default function CameraBroadcast() {
       ctx.fillStyle = serverDotColor;
       ctx.shadowColor = serverDotColor;
       ctx.shadowBlur = 8;
-      ctx.beginPath();
-      ctx.arc(bugX + 22, row1Y + 21, 5, 0, Math.PI * 2);
-      ctx.fill();
+    } else {
+      ctx.fillStyle = "rgb(100, 116, 139)"; // slate-500
+      ctx.shadowBlur = 0;
     }
+    ctx.beginPath();
+    ctx.arc(bugX + 22, row1Y + 21, 5, 0, Math.PI * 2);
+    ctx.fill();
+
 
     // Team 1 Label
     ctx.fillStyle = "#ffffff";
@@ -558,10 +562,13 @@ export default function CameraBroadcast() {
       ctx.fillStyle = serverDotColor;
       ctx.shadowColor = serverDotColor;
       ctx.shadowBlur = 8;
-      ctx.beginPath();
-      ctx.arc(bugX + 22, row2Y + 21, 5, 0, Math.PI * 2);
-      ctx.fill();
+    } else {
+      ctx.fillStyle = "rgb(100, 116, 139)"; // slate-500
+      ctx.shadowBlur = 0;
     }
+    ctx.beginPath();
+    ctx.arc(bugX + 22, row2Y + 21, 5, 0, Math.PI * 2);
+    ctx.fill();
 
     // Team 2 Label
     ctx.fillStyle = "#ffffff";
@@ -833,9 +840,9 @@ export default function CameraBroadcast() {
             >
               <div className="flex items-center gap-2.5 truncate pr-2">
                 <div
-                  className={`w-2 h-2 rounded-full shrink-0 transition-all duration-300 ${liveMatch?.live_score?.server === 1 ? "animate-pulse" : ""}`}
+                  className="w-2 h-2 rounded-full shrink-0 transition-all duration-300 animate-pulse"
                   style={{
-                    backgroundColor: liveMatch?.live_score?.server === 1 ? serverDotColor : "rgb(51,65,85)",
+                    backgroundColor: liveMatch?.live_score?.server === 1 ? serverDotColor : "rgb(100,116,139)",
                     boxShadow: liveMatch?.live_score?.server === 1 ? `0 0 10px ${serverDotColor}` : "none"
                   }}
                 />
@@ -870,9 +877,9 @@ export default function CameraBroadcast() {
             >
               <div className="flex items-center gap-2.5 truncate pr-2">
                 <div
-                  className={`w-2 h-2 rounded-full shrink-0 transition-all duration-300 ${liveMatch?.live_score?.server === 2 ? "animate-pulse" : ""}`}
+                  className="w-2 h-2 rounded-full shrink-0 transition-all duration-300 animate-pulse"
                   style={{
-                    backgroundColor: liveMatch?.live_score?.server === 2 ? serverDotColor : "rgb(51,65,85)",
+                    backgroundColor: liveMatch?.live_score?.server === 2 ? serverDotColor : "rgb(100,116,139)",
                     boxShadow: liveMatch?.live_score?.server === 2 ? `0 0 10px ${serverDotColor}` : "none"
                   }}
                 />

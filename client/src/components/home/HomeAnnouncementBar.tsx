@@ -26,12 +26,52 @@ const BANNER_ICONS: Record<string, any> = {
   custom: PartyPopper,
 };
 
-const BANNER_COLORS: Record<string, { bg: string; border: string; icon: string; badge: string; btn: string }> = {
-  blue:   { bg: "bg-blue-950/60",    border: "border-blue-700/50",   icon: "text-blue-400",   badge: "bg-blue-500",   btn: "bg-blue-600 hover:bg-blue-500" },
-  green:  { bg: "bg-emerald-950/60", border: "border-emerald-700/50", icon: "text-emerald-400", badge: "bg-emerald-500", btn: "bg-emerald-600 hover:bg-emerald-500" },
-  amber:  { bg: "bg-amber-950/50",   border: "border-amber-700/50",   icon: "text-amber-400",  badge: "bg-amber-500",  btn: "bg-amber-600 hover:bg-amber-500" },
-  red:    { bg: "bg-red-950/60",     border: "border-red-700/50",     icon: "text-red-400",    badge: "bg-red-500",    btn: "bg-red-600 hover:bg-red-500" },
-  purple: { bg: "bg-purple-950/60",  border: "border-purple-700/50",  icon: "text-purple-400", badge: "bg-purple-500", btn: "bg-purple-600 hover:bg-purple-500" },
+const BANNER_COLORS: Record<string, { bg: string; border: string; iconBg: string; iconColor: string; glow: string; btn: string; gradient: string }> = {
+  blue: {
+    bg: "bg-slate-900/40",
+    border: "border-blue-500/30",
+    iconBg: "bg-blue-500/20",
+    iconColor: "text-blue-400",
+    glow: "shadow-[0_0_15px_rgba(59,130,246,0.15)]",
+    btn: "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-500/25 text-white",
+    gradient: "from-blue-500/10 via-transparent to-transparent"
+  },
+  green: {
+    bg: "bg-slate-900/40",
+    border: "border-emerald-500/30",
+    iconBg: "bg-emerald-500/20",
+    iconColor: "text-emerald-400",
+    glow: "shadow-[0_0_15px_rgba(16,185,129,0.15)]",
+    btn: "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-lg shadow-emerald-500/25 text-white",
+    gradient: "from-emerald-500/10 via-transparent to-transparent"
+  },
+  amber: {
+    bg: "bg-slate-900/40",
+    border: "border-amber-500/30",
+    iconBg: "bg-amber-500/20",
+    iconColor: "text-amber-400",
+    glow: "shadow-[0_0_15px_rgba(245,158,11,0.15)]",
+    btn: "bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 shadow-lg shadow-amber-500/25 text-white",
+    gradient: "from-amber-500/10 via-transparent to-transparent"
+  },
+  red: {
+    bg: "bg-slate-900/40",
+    border: "border-rose-500/30",
+    iconBg: "bg-rose-500/20",
+    iconColor: "text-rose-400",
+    glow: "shadow-[0_0_15px_rgba(244,63,94,0.15)]",
+    btn: "bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 shadow-lg shadow-rose-500/25 text-white",
+    gradient: "from-rose-500/10 via-transparent to-transparent"
+  },
+  purple: {
+    bg: "bg-slate-900/40",
+    border: "border-purple-500/30",
+    iconBg: "bg-purple-500/20",
+    iconColor: "text-purple-400",
+    glow: "shadow-[0_0_15px_rgba(168,85,247,0.15)]",
+    btn: "bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 shadow-lg shadow-purple-500/25 text-white",
+    gradient: "from-purple-500/10 via-transparent to-transparent"
+  },
 };
 
 
@@ -71,7 +111,7 @@ export function HomeAnnouncementBar({ isAdmin }: { isAdmin?: boolean }) {
               title: a.title,
               message: a.content,
               color: "blue",
-              link_url: a.url || "/admin?tab=announcements#noticeboard",
+              link_url: a.url || `/pulse#feed-${a.title?.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`,
               link_label: "View",
               active: true,
               pinned: a.priority === "high",
@@ -171,45 +211,49 @@ export function HomeAnnouncementBar({ isAdmin }: { isAdmin?: boolean }) {
           return (
             <motion.div
               key={banner.id}
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-              className="px-4 py-1.5"
+              initial={{ opacity: 0, height: 0, scale: 0.95 }}
+              animate={{ opacity: 1, height: "auto", scale: 1 }}
+              exit={{ opacity: 0, height: 0, scale: 0.95 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="py-2 sm:py-3"
             >
-              <div className={`flex items-start gap-3 p-3 sm:p-4 rounded-2xl border ${colors.bg} ${colors.border} shadow-sm relative overflow-hidden`}>
-                {/* accent line */}
-                <div className={`absolute left-0 top-0 bottom-0 w-1 ${colors.badge} rounded-l-2xl`} />
+              <div className={`relative group flex items-start gap-3 sm:gap-4 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-all duration-300`}>
 
-                <div className={`shrink-0 mt-0.5 ${colors.icon}`}>
-                  <Icon className="w-4 h-4" />
+                {/* Icon Container */}
+                <div className={`relative shrink-0 flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-2xl ${colors.iconBg} border border-white/5 shadow-inner`}>
+                  <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${colors.iconColor} drop-shadow-md`} />
                 </div>
 
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-black text-white leading-tight">{banner.title}</p>
+                {/* Content */}
+                <div className="relative flex-1 min-w-0 pt-0.5">
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight tracking-wide">{banner.title}</h3>
                   {banner.message && (
-                    <p className="text-xs text-slate-300 mt-0.5 leading-relaxed whitespace-pre-wrap">{banner.message}</p>
+                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed whitespace-pre-wrap">{banner.message}</p>
                   )}
+                  
                   {banner.link_url && (
-                    <a
-                      href={banner.link_url}
-                      target={banner.link_url.startsWith("http") ? "_blank" : "_self"}
-                      rel="noopener noreferrer"
-                      className={`inline-flex items-center gap-1 mt-2 px-3 py-1.5 rounded-lg text-xs font-black text-white transition-all ${colors.btn}`}
-                    >
-                      {banner.link_label || "Learn More"}
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
+                    <div className="mt-3">
+                      <a
+                        href={banner.link_url}
+                        target={banner.link_url.startsWith("http") ? "_blank" : "_self"}
+                        rel="noopener noreferrer"
+                        className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black transition-all transform hover:scale-105 active:scale-95 ${colors.btn}`}
+                      >
+                        {banner.link_label || "Learn More"}
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
                   )}
                 </div>
 
+                {/* Dismiss Button */}
                 {!banner.pinned && (
                   <button
                     onClick={() => handleDismiss(banner)}
-                    className="shrink-0 p-1 rounded-lg hover:bg-white/10 text-slate-500 hover:text-slate-300 transition"
+                    className="relative shrink-0 p-1.5 -mr-1 -mt-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer"
                     aria-label="Dismiss"
                   >
-                    <X className="w-3.5 h-3.5" />
+                    <X className="w-4 h-4" />
                   </button>
                 )}
               </div>
@@ -217,7 +261,6 @@ export function HomeAnnouncementBar({ isAdmin }: { isAdmin?: boolean }) {
           );
         })}
       </AnimatePresence>
-
     </>
   );
 }

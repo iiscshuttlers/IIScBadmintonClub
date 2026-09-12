@@ -2,13 +2,14 @@ import { resolveTeamMembers } from "@/lib/teamNames";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { Trophy, Swords, Sparkles, TrendingUp, Heart, Share2, Video, Edit2, BarChart2, Trash2, Loader2, Bot, Bell, Clock, MapPin } from "lucide-react";
+import { Trophy, Swords, Sparkles, TrendingUp, Heart, Share2, Video, Edit2, BarChart2, Trash2, Loader2, Bot, Bell, Clock, MapPin, PlayCircle } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserMatchAlerts } from "@/hooks/useUserMatchAlerts";
 import { EditVideoModal } from "./EditVideoModal";
+import { VideoPlayerModal } from "./VideoPlayerModal";
 import { MatchScorecardModal } from "./MatchScorecardModal";
 import { fetchMatchSummary } from "@/lib/aiPredictor";
 import { NotificationModal } from "../events/NotificationModal";
@@ -68,6 +69,7 @@ export function MatchCard({
 
   const [currentVideoUrl, setCurrentVideoUrl] = useState(match.video_url || null);
   const [isEditVideoOpen, setIsEditVideoOpen] = useState(false);
+  const [isVideoPlayerOpen, setIsVideoPlayerOpen] = useState(false);
   const [isScorecardOpen, setIsScorecardOpen] = useState(false);
   const [isNotifyOpen, setIsNotifyOpen] = useState(false);
   const [localExpanded, setLocalExpanded] = useState(isLiveNow || isMatchOfTheDay);
@@ -313,8 +315,17 @@ export function MatchCard({
                   <span className="text-slate-600 shrink-0">•</span>
                   <span className={`${getMatchCodeColor(match.match_code).text} truncate font-black`}>{match.match_code || `Match #${match.match_number}`}</span>
                 </div>
-                <div className="text-[9px] sm:text-[10px] text-slate-500 font-bold truncate shrink-0 ml-2">
-                  {getDisplayCategory()}{match.round_name ? ` • ${match.round_name}` : ""}
+                <div className="text-[9px] sm:text-[10px] text-slate-500 font-bold shrink-0 ml-2 flex items-center gap-2">
+                  {highlightUrl && (
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setIsVideoPlayerOpen(true); }}
+                      className="text-rose-500 hover:text-rose-600 transition-colors"
+                      title="Play Highlights"
+                    >
+                      <PlayCircle className="w-4 h-4 animate-pulse" />
+                    </button>
+                  )}
+                  <span className="truncate">{getDisplayCategory()}{match.round_name ? ` • ${match.round_name}` : ""}</span>
                 </div>
               </div>
 
@@ -414,7 +425,7 @@ export function MatchCard({
           {/* Scoreboard */}
       <div className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 p-1">
         {/* Teams */}
-        <div className="flex flex-col sm:grid sm:grid-cols-[1fr_auto_1fr] items-stretch sm:items-center gap-1 mb-0.5">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 mb-0.5">
           <div className="flex justify-start w-full min-w-0">
             {renderTeam(team1, team1Win, hasWinner && !team1Win, "left")}
           </div>
@@ -431,17 +442,17 @@ export function MatchCard({
           <div className="text-center border-t border-slate-200 dark:border-slate-700/60 pt-1 mb-1 relative">
             <div className="flex items-center justify-center gap-2">
               <div className={`flex items-center relative transition-all ${team1Win ? "scale-110" : team2Win ? "opacity-60 grayscale" : ""}`}>
-                <span className={`text-4xl sm:text-5xl font-black tracking-tighter leading-none ${team1Win ? "bg-gradient-to-br from-primary to-teal-600 bg-clip-text text-transparent drop-shadow-md" : "text-muted-foreground dark:text-muted-foreground"}`}>
+                <span className={`text-3xl font-black tracking-tighter leading-none ${team1Win ? "bg-gradient-to-br from-primary to-teal-600 bg-clip-text text-transparent drop-shadow-md" : "text-muted-foreground dark:text-muted-foreground"}`}>
                   {setsWonP1}
                 </span>
               </div>
 
               <div className="flex flex-col items-center justify-center">
-                <span className="text-slate-300 dark:text-muted-foreground text-4xl sm:text-5xl font-black tracking-tighter leading-none mx-2">–</span>
+                <span className="text-slate-300 dark:text-muted-foreground text-3xl font-black tracking-tighter leading-none mx-2">–</span>
               </div>
 
               <div className={`flex items-center relative transition-all ${team2Win ? "scale-110" : team1Win ? "opacity-60 grayscale" : ""}`}>
-                <span className={`text-4xl sm:text-5xl font-black tracking-tighter leading-none ${team2Win ? "bg-gradient-to-br from-primary to-teal-600 bg-clip-text text-transparent drop-shadow-md" : "text-muted-foreground dark:text-muted-foreground"}`}>
+                <span className={`text-3xl font-black tracking-tighter leading-none ${team2Win ? "bg-gradient-to-br from-primary to-teal-600 bg-clip-text text-transparent drop-shadow-md" : "text-muted-foreground dark:text-muted-foreground"}`}>
                   {setsWonP2}
                 </span>
               </div>
@@ -457,9 +468,9 @@ export function MatchCard({
               const p1Won = s.p1 > s.p2;
               return (
                 <div key={i} className="grid grid-cols-[1fr_auto_1fr] items-center gap-1">
-                  <span className={`text-2xl text-center tabular-nums tracking-tight ${p1Won ? "font-black text-primary dark:text-primary" : "font-bold text-rose-500 dark:text-rose-400"}`}>{s.p1}</span>
+                  <span className={`text-xl text-center tabular-nums tracking-tight ${p1Won ? "font-black text-primary dark:text-primary" : "font-bold text-rose-500 dark:text-rose-400"}`}>{s.p1}</span>
                   <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground dark:text-muted-foreground bg-white dark:bg-slate-800 rounded-full px-2 py-0 border border-slate-200 dark:border-slate-700 whitespace-nowrap">Set {i + 1}</span>
-                  <span className={`text-2xl text-center tabular-nums tracking-tight ${!p1Won ? "font-black text-primary dark:text-primary" : "font-bold text-rose-500 dark:text-rose-400"}`}>{s.p2}</span>
+                  <span className={`text-xl text-center tabular-nums tracking-tight ${!p1Won ? "font-black text-primary dark:text-primary" : "font-bold text-rose-500 dark:text-rose-400"}`}>{s.p2}</span>
                 </div>
               );
             })}
@@ -472,14 +483,12 @@ export function MatchCard({
 
         {highlightUrl && (
           <div className="flex justify-center mt-1.5">
-            <a
-              href={highlightUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={() => setIsVideoPlayerOpen(true)}
               className="text-[10px] font-bold bg-rose-50 dark:bg-rose-900/30 text-rose-500 px-2 py-1 rounded-full border border-rose-200 dark:border-rose-800 flex items-center gap-1 hover:scale-105 transition"
             >
               <Video className="w-3 h-3" /> Highlights
-            </a>
+            </button>
           </div>
         )}
           {/* Result recap - Single Sentence */}
@@ -488,20 +497,7 @@ export function MatchCard({
           <span className="font-black text-primary dark:text-primary">{joinNames(winnerMembers)}</span>
           <span className="text-emerald-600 dark:text-emerald-400 font-bold mx-1.5 uppercase text-[10px] sm:text-xs tracking-wider">defeated</span>
           <span className="font-semibold text-slate-500 dark:text-slate-400">{joinNames(loserMembers)}</span>
-          <span className="font-medium text-slate-400 mx-1">by</span>
-          <span className="font-bold text-slate-600 dark:text-slate-300">{winnerSetCount}-{loserSetCount}</span>
-          {displayScore && (
-            <span className="tabular-nums font-bold text-slate-500 dark:text-slate-400 ml-1">
-              ({parsedSets.map((s, i) => (
-                <span key={i}>
-                  <span>{s.p1}</span>
-                  <span className="mx-0.5">-</span>
-                  <span>{s.p2}</span>
-                  {i < parsedSets.length - 1 && <span>, </span>}
-                </span>
-              ))})
-            </span>
-          )}
+
         </div>
       )}
 
@@ -509,8 +505,15 @@ export function MatchCard({
         isOpen={isEditVideoOpen}
         onClose={() => setIsEditVideoOpen(false)}
         matchId={match.id}
+        tableName={match.is_friendly === false ? "tournament_matches" : "matches"}
         initialUrl={highlightUrl || ""}
         onSuccess={(url) => setCurrentVideoUrl(url)}
+      />
+      
+      <VideoPlayerModal
+        isOpen={isVideoPlayerOpen}
+        onClose={() => setIsVideoPlayerOpen(false)}
+        videoUrl={highlightUrl || ""}
       />
 
       <MatchScorecardModal
@@ -547,153 +550,97 @@ export function MatchCard({
       {/* Children (e.g., Accept/Reject buttons) */}
       {children && <div className="mt-4">{children}</div>}
 
-      {/* AI Summary Block */}
-      {isGeneratingSummary && (
-        <div className="mt-1.5 p-2 rounded-2xl bg-gradient-to-br from-indigo-50 to-primary/5 dark:from-indigo-950/30 dark:to-primary/90/30 border border-indigo-100 dark:border-indigo-900/50 flex flex-col items-center justify-center min-h-[80px]">
-          <Loader2 className="w-5 h-5 text-indigo-500 animate-spin mb-2" />
-          <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-400 animate-pulse">Gemini is analyzing the match...</span>
-        </div>
-      )}
 
-      {aiSummary && !isGeneratingSummary && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-          className="mt-1.5 p-2.5 rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-950 text-on-accent shadow-lg border border-indigo-500/30 relative overflow-hidden"
-        >
-          <div className="absolute -top-6 -right-6 text-indigo-500/20">
-            <Sparkles className="w-24 h-24" />
-          </div>
-          <div className="flex items-center gap-2 mb-2 text-indigo-300">
-            <Bot className="w-4 h-4" />
-            <span className="text-[10px] font-black uppercase tracking-widest">AI Recap</span>
-          </div>
-          <p className="text-sm font-medium leading-relaxed relative z-10 text-slate-100 whitespace-pre-wrap break-words">
-            "{aiSummary}"
-          </p>
-        </motion.div>
-      )}
 
       {/* Grid Actions & Score Row */}
       {!hideActions && (
-        <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/50 grid grid-cols-[1fr_auto_1fr] items-center gap-y-1 relative z-10 px-0.5">
-          {/* Left Column: AI Recap, Like */}
-          <div className="flex flex-col items-start gap-1 w-full overflow-hidden">
-            <button
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={handleGenerateSummary}
-              disabled={isGeneratingSummary || !!aiSummary}
-              className={`flex items-center justify-start gap-1.5 px-2 py-1.5 rounded-full text-[11px] font-bold transition-all active:scale-95 max-w-full ${aiSummary
-                  ? "text-indigo-500 bg-indigo-50 dark:bg-indigo-500/20 opacity-70"
-                  : "text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
-                }`}
-            >
-              {isGeneratingSummary ? <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" /> : <Sparkles className="w-3.5 h-3.5 flex-shrink-0" />}
-              <span className="truncate">AI Recap</span>
-            </button>
-            
-            <button
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onKudos) onKudos(); }}
-              className={`flex items-center justify-start gap-1.5 px-2 py-1.5 rounded-full text-[11px] font-bold transition-all active:scale-95 max-w-full ${isKudosed
-                  ? "text-rose-500 bg-rose-50 dark:bg-rose-500/20"
-                  : "text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
-                }`}
-            >
-              <Heart className={`w-3.5 h-3.5 flex-shrink-0 ${isKudosed ? "scale-110" : ""}`} fill={isKudosed ? "currentColor" : "none"} stroke="currentColor" />
-              <span className="truncate">{kudosCount} {kudosCount === 1 ? 'like' : 'likes'}</span>
-            </button>
-          </div>
+        <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/50 flex flex-col items-center gap-1.5 relative z-10 px-0.5">
+          
 
-          {/* Center Column: Score Summary */}
-          <div className="flex flex-col items-center justify-center gap-0.5 text-center px-2">
-            {hasWinner ? (
-              <>
-                <span className="block text-sm leading-tight">
-                  <span style={{ color: 'var(--color-primary)' }} className="font-black">{winnerSetCount}</span>
-                  <span className="text-slate-400 mx-1.5">–</span>
-                  <span style={{ color: '#ef4444' }} className="font-black dark:text-rose-400">{loserSetCount}</span>
-                </span>
-                {displayScore && (
-                  <span className="block tabular-nums text-[10px] text-slate-500 dark:text-slate-400 font-bold leading-tight">
-                    ({parsedSets.map((s, i) => (
-                      <span key={i}>
-                        <span style={{ color: team1Win ? 'var(--color-primary)' : '#ef4444' }}>{s.p1}</span>
-                        <span className="text-slate-400 dark:text-slate-500 mx-0.5">-</span>
-                        <span style={{ color: team2Win ? 'var(--color-primary)' : '#ef4444' }}>{s.p2}</span>
-                        {i < parsedSets.length - 1 && <span className="text-slate-400">, </span>}
-                      </span>
-                    ))})
-                  </span>
-                )}
-              </>
-            ) : (
-              <span className="text-[10px] font-bold text-slate-300 dark:text-slate-600 tracking-widest uppercase">vs</span>
-            )}
-          </div>
+          {/* Action Buttons Row */}
+          <div className="flex items-center justify-between w-full">
+            {/* Left: Like */}
+            <div className="flex items-center justify-start flex-1 min-w-0">
+              <button
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onKudos) onKudos(); }}
+                className={`flex items-center justify-start gap-1.5 px-2 py-1.5 rounded-full text-[11px] font-bold transition-all active:scale-95 max-w-full ${isKudosed
+                    ? "text-rose-500 bg-rose-50 dark:bg-rose-500/20"
+                    : "text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
+                  }`}
+              >
+                <Heart className={`w-3.5 h-3.5 flex-shrink-0 ${isKudosed ? "scale-110" : ""}`} fill={isKudosed ? "currentColor" : "none"} stroke="currentColor" />
+                <span className="truncate">{kudosCount} {kudosCount === 1 ? 'like' : 'likes'}</span>
+              </button>
+            </div>
 
-          {/* Right Column: Scoreboard, Share, Notify */}
-          <div className="flex flex-col items-end gap-1 w-full overflow-hidden">
-            <button
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsScorecardOpen(true); }}
-              className="flex items-center justify-end gap-1.5 px-2 py-1.5 rounded-full text-[11px] font-bold text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 max-w-full"
-            >
-              <span className="truncate">Scoreboard</span>
-              <BarChart2 className="w-3.5 h-3.5 flex-shrink-0" />
-            </button>
+            {/* Center: Scoreboard */}
+            <div className="flex items-center justify-center flex-1 min-w-0">
+              <button
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsScorecardOpen(true); }}
+                className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold text-slate-700 dark:text-slate-200 bg-slate-100/80 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 ring-1 ring-slate-200 dark:ring-slate-700/50 transition-all active:scale-95 shadow-sm max-w-full"
+              >
+                <BarChart2 className="w-3.5 h-3.5 flex-shrink-0 text-primary" />
+                <span className="truncate">Scoreboard</span>
+              </button>
+            </div>
 
-            <button
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onShare) onShare(); }}
-              className="flex items-center justify-end gap-1.5 px-2 py-1.5 rounded-full text-[11px] font-bold text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 max-w-full"
-            >
-              <span className="truncate">Share</span>
-              <Share2 className="w-3.5 h-3.5 flex-shrink-0" />
-            </button>
-            
-            {(!hasWinner || match.status === "scheduled" || match.status === "pending") && (
-              (() => {
-                const alert = matchAlerts.find(a => a.match_id === match.id);
-                if (alert && match.scheduled_at) {
-                  const notifyDate = new Date(match.scheduled_at);
-                  if (!isNaN(notifyDate.getTime())) {
-                    notifyDate.setMinutes(notifyDate.getMinutes() - alert.notify_before_mins);
-                    const timeStr = notifyDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
-                    return (
-                      <div className="flex items-center justify-end gap-1 px-2 py-1 rounded-full text-[10px] font-bold text-accent bg-accent/10 border border-accent/20 max-w-full">
-                        <span className="truncate">At {timeStr}</span>
-                        <Bell className="w-3 h-3 fill-current flex-shrink-0" />
-                        <button
-                          onPointerDown={(e) => e.stopPropagation()}
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsNotifyOpen(true); }}
-                          className="ml-0.5 underline hover:text-accent-foreground flex-shrink-0"
-                        >
-                          Edit
-                        </button>
-                      </div>
-                    );
+            {/* Right: Share, Notify */}
+            <div className="flex items-center justify-end gap-1 flex-1 min-w-0">
+              <button
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (onShare) onShare(); }}
+                className="flex items-center justify-end gap-1.5 px-2 py-1.5 rounded-full text-[11px] font-bold text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 max-w-full"
+              >
+                <span className="truncate">Share</span>
+                <Share2 className="w-3.5 h-3.5 flex-shrink-0" />
+              </button>
+              
+              {(!hasWinner || match.status === "scheduled" || match.status === "pending") && (
+                (() => {
+                  const alert = matchAlerts.find(a => a.match_id === match.id);
+                  if (alert && match.scheduled_at) {
+                    const notifyDate = new Date(match.scheduled_at);
+                    if (!isNaN(notifyDate.getTime())) {
+                      notifyDate.setMinutes(notifyDate.getMinutes() - alert.notify_before_mins);
+                      const timeStr = notifyDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+                      return (
+                        <div className="flex items-center justify-end gap-1 px-2 py-1 rounded-full text-[10px] font-bold text-accent bg-accent/10 border border-accent/20 max-w-full">
+                          <span className="truncate">At {timeStr}</span>
+                          <Bell className="w-3 h-3 fill-current flex-shrink-0" />
+                          <button
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsNotifyOpen(true); }}
+                            className="ml-0.5 underline hover:text-accent-foreground flex-shrink-0"
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      );
+                    }
                   }
-                }
-                return (
-                  <button
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsNotifyOpen(true); }}
-                    className="flex items-center justify-end gap-1.5 px-2 py-1.5 rounded-full text-[11px] font-bold text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 max-w-full"
-                  >
-                    <span className="truncate">Notify</span>
-                    <Bell className="w-3.5 h-3.5 flex-shrink-0" />
-                  </button>
-                );
-              })()
-            )}
+                  return (
+                    <button
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsNotifyOpen(true); }}
+                      className="flex items-center justify-end gap-1.5 px-2 py-1.5 rounded-full text-[11px] font-bold text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 max-w-full"
+                    >
+                      <span className="truncate">Notify</span>
+                      <Bell className="w-3.5 h-3.5 flex-shrink-0" />
+                    </button>
+                  );
+                })()
+              )}
+            </div>
           </div>
 
-          {/* Add Video — span full width, centered, only for players involved in this match */}
-          {isPlayerInMatch && (
-            <div className="col-span-3 flex justify-center mt-1">
+          {/* Add Video — span full width, centered, only for players involved in this match or admins */}
+          {(isPlayerInMatch || isAdmin) && (
+            <div className="col-span-3 flex justify-center mt-0.5">
               <button
                 onClick={() => setIsEditVideoOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
+                className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
               >
                 <Edit2 className="w-3.5 h-3.5" />
                 {highlightUrl ? "Edit Video" : "Add Video"}
@@ -705,26 +652,14 @@ export function MatchCard({
 
       </div>
 
-          <div className="mt-4 flex items-center justify-between border-t border-slate-100 dark:border-slate-800/50 pt-2 px-2">
-            {isAdmin && !hideActions ? (
-              <button
-                onClick={deleteMatch}
-                title="Delete Match (Admin)"
-                className="p-1.5 sm:p-2 text-rose-400 hover:text-rose-600 bg-rose-50 dark:bg-rose-900/10 hover:bg-rose-100 dark:hover:bg-rose-900/30 rounded-full transition-colors"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            ) : <div className="w-8" />}
-
+          <div className="mt-2 flex items-center justify-center border-t border-slate-100 dark:border-slate-800/50 pt-1 px-2">
             <button
               onClick={(e) => { e.stopPropagation(); handleSetExpanded(false); }}
-              className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white bg-slate-100 dark:bg-slate-800/50 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition shadow-sm"
+              className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-white bg-slate-100 dark:bg-slate-800/50 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition shadow-sm"
               title="Collapse"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
             </button>
-
-            <div className="w-8" />
           </div>
         </div>
       )}

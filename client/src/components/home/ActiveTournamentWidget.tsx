@@ -242,11 +242,11 @@ export function ActiveTournamentWidget() {
   if (!tournament && liveMatches.length === 0) return null;
 
   return (
-    <Card className="border-0 bg-white dark:bg-slate-900/40 backdrop-blur-md shadow-lg overflow-hidden mb-4 mt-2 ring-1 ring-slate-200/50 dark:ring-slate-800/50">
+    <Card className="border-0 bg-emerald-50/80 dark:bg-[#061f17] backdrop-blur-md shadow-lg overflow-hidden mb-4 mt-2 ring-1 ring-emerald-500/30 dark:ring-emerald-500/40">
 
       {/* Tournament header */}
       {tournament && (
-        <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 dark:from-emerald-500/20 dark:to-teal-500/20 border-b border-emerald-500/20 dark:border-emerald-500/30 p-4 sm:p-5 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+        <div className="border-b border-emerald-500/10 dark:border-emerald-500/20 p-4 sm:p-5 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
               <Trophy className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
@@ -307,37 +307,49 @@ export function ActiveTournamentWidget() {
                         {m.is_doubles ? (
                           <div className="space-y-0.5">
                             {/* T1 P1 */}
-                            <div className="flex items-center gap-1.5">
-                              {m.server_team === 1 && m.server_player_index === 0 && (
-                                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" title="Serving" />
-                              )}
-                              <p className={`text-xs font-black truncate leading-tight ${
-                                m.server_team === 1 && m.server_player_index === 0 ? "text-green-400" :
-                                isT1Leading ? "text-yellow-400" : "text-slate-200"
-                              }`}>{m.t1_p1_name || "TBD"}</p>
+                            <div className="flex justify-start">
+                              <div className="flex items-center gap-1.5 max-w-full">
+                                <p className={`text-xs font-black truncate leading-tight ${
+                                  m.server_team === 1 && m.server_player_index === 0 ? "text-green-400" :
+                                  isT1Leading ? "text-yellow-400" : "text-slate-200"
+                                }`}>{m.t1_p1_name || "TBD"}</p>
+                                <div className="w-1.5 h-1.5 flex items-center justify-center shrink-0">
+                                  {m.server_team === 1 && m.server_player_index === 0 && (
+                                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" title="Serving" />
+                                  )}
+                                </div>
+                              </div>
                             </div>
                             {/* T1 P2 */}
                             {m.t1_p2_name && (
-                              <div className="flex items-center gap-1.5">
-                                {m.server_team === 1 && m.server_player_index === 1 && (
-                                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" title="Serving" />
-                                )}
-                                <p className={`text-xs font-black truncate leading-tight ${
-                                  m.server_team === 1 && m.server_player_index === 1 ? "text-green-400" :
-                                  isT1Leading ? "text-yellow-400" : "text-slate-300"
-                                }`}>{m.t1_p2_name}</p>
+                              <div className="flex justify-start mt-0.5">
+                                <div className="flex items-center gap-1.5 max-w-full">
+                                  <p className={`text-xs font-black truncate leading-tight ${
+                                    m.server_team === 1 && m.server_player_index === 1 ? "text-green-400" :
+                                    isT1Leading ? "text-yellow-400" : "text-slate-300"
+                                  }`}>{m.t1_p2_name}</p>
+                                  <div className="w-1.5 h-1.5 flex items-center justify-center shrink-0">
+                                    {m.server_team === 1 && m.server_player_index === 1 && (
+                                      <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" title="Serving" />
+                                    )}
+                                  </div>
+                                </div>
                               </div>
                             )}
                           </div>
                         ) : (
-                          <div className="flex items-center gap-1.5">
-                            {m.server_team === 1 && (
-                              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" title="Serving" />
-                            )}
-                            <p className={`text-sm font-black truncate ${
-                              m.server_team === 1 ? "text-green-400" :
-                              isT1Leading ? "text-yellow-400" : "text-slate-200"
-                            }`}>{m.team1_label || "TBD"}</p>
+                          <div className="flex justify-start">
+                            <div className="flex items-center gap-1.5 max-w-full">
+                              <p className={`text-sm font-black truncate ${
+                                m.server_team === 1 ? "text-green-400" :
+                                isT1Leading ? "text-yellow-400" : "text-slate-200"
+                              }`}>{m.team1_label || "TBD"}</p>
+                              <div className="w-1.5 h-1.5 flex items-center justify-center shrink-0">
+                                {m.server_team === 1 && (
+                                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" title="Serving" />
+                                )}
+                              </div>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -352,37 +364,47 @@ export function ActiveTournamentWidget() {
                         {m.is_doubles ? (
                           <div className="space-y-0.5">
                             {/* T2 P1 */}
-                            <div className="flex items-center justify-end gap-1.5">
-                              <p className={`text-xs font-black truncate leading-tight ${
-                                m.server_team === 2 && m.server_player_index === 0 ? "text-green-400" :
-                                isT2Leading ? "text-yellow-400" : "text-slate-200"
-                              }`}>{m.t2_p1_name || "TBD"}</p>
-                              {m.server_team === 2 && m.server_player_index === 0 && (
-                                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" title="Serving" />
-                              )}
+                            <div className="flex justify-end">
+                              <div className="flex items-center gap-1.5 max-w-full">
+                                <div className="w-1.5 h-1.5 flex items-center justify-center shrink-0">
+                                  {m.server_team === 2 && m.server_player_index === 0 && (
+                                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" title="Serving" />
+                                  )}
+                                </div>
+                                <p className={`text-xs font-black truncate leading-tight ${
+                                  m.server_team === 2 && m.server_player_index === 0 ? "text-green-400" :
+                                  isT2Leading ? "text-yellow-400" : "text-slate-200"
+                                }`}>{m.t2_p1_name || "TBD"}</p>
+                              </div>
                             </div>
                             {/* T2 P2 */}
                             {m.t2_p2_name && (
-                              <div className="flex items-center justify-end gap-1.5">
-                                <p className={`text-xs font-black truncate leading-tight ${
-                                  m.server_team === 2 && m.server_player_index === 1 ? "text-green-400" :
-                                  isT2Leading ? "text-yellow-400" : "text-slate-300"
-                                }`}>{m.t2_p2_name}</p>
-                                {m.server_team === 2 && m.server_player_index === 1 && (
-                                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" title="Serving" />
-                                )}
+                              <div className="flex justify-end mt-0.5">
+                                <div className="flex items-center gap-1.5 max-w-full">
+                                  <div className="w-1.5 h-1.5 flex items-center justify-center shrink-0">
+                                    {m.server_team === 2 && m.server_player_index === 1 && (
+                                      <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" title="Serving" />
+                                    )}
+                                  </div>
+                                  <p className={`text-xs font-black truncate leading-tight ${
+                                    m.server_team === 2 && m.server_player_index === 1 ? "text-green-400" :
+                                    isT2Leading ? "text-yellow-400" : "text-slate-300"
+                                  }`}>{m.t2_p2_name}</p>
+                                </div>
                               </div>
                             )}
                           </div>
                         ) : (
-                          <div className="flex items-center justify-end gap-1.5">
-                            <p className={`text-sm font-black truncate ${
-                              m.server_team === 2 ? "text-green-400" :
-                              isT2Leading ? "text-yellow-400" : "text-slate-200"
-                            }`}>{m.team2_label || "TBD"}</p>
-                            {m.server_team === 2 && (
-                              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" title="Serving" />
-                            )}
+                          <div className="flex justify-end">
+                            <div className="relative flex items-center max-w-full">
+                              {m.server_team === 2 && (
+                                <span className="absolute right-full mr-1.5 w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" title="Serving" />
+                              )}
+                              <p className={`text-sm font-black truncate ${
+                                m.server_team === 2 ? "text-green-400" :
+                                isT2Leading ? "text-yellow-400" : "text-slate-200"
+                              }`}>{m.team2_label || "TBD"}</p>
+                            </div>
                           </div>
                         )}
                       </div>
