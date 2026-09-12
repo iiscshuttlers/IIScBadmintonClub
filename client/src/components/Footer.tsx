@@ -124,6 +124,16 @@ export default function Footer() {
                   </Link>
                 </li>
               ))}
+              <li>
+                <button
+                  type="button"
+                  onClick={() => window.dispatchEvent(new CustomEvent("openHolidays"))}
+                  className="group flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors text-sm cursor-pointer w-full text-left"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-700 group-hover:bg-primary transition-colors flex-shrink-0" />
+                  Holidays
+                </button>
+              </li>
             </ul>
           </div>
 

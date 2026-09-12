@@ -189,6 +189,12 @@ html {
   --grad-warm-to: #f43f8e;
 }
 
+/* Marquee scrolling animation — must be top-level, NOT inside @theme */
+@keyframes marquee {
+  from { transform: translateX(0%); }
+  to   { transform: translateX(-50%); }
+}
+
 /* Theme accent overrides: set --primary and --primary-foreground per data-accent */
 :root[data-accent="violet"] {
   --primary: #7c3aed;
@@ -715,24 +721,7 @@ html {
 }
 
 /* ── Accessibility: respect reduced-motion preference ──────────────────────── */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  ::before,
-  ::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
 
-  /* Specifically pause infinite animations */
-  .marquee-anim,
-  .float-anim,
-  .pulse-glow,
-  .shimmer {
-    animation: none !important;
-  }
-}
 
 /* Mobile Safe Areas */
 @utility pb-safe {
@@ -914,24 +903,7 @@ html {
 }
 
 /* ── Accessibility: respect reduced-motion preference ──────────────────────── */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  ::before,
-  ::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
 
-  /* Specifically pause infinite animations */
-  .marquee-anim,
-  .float-anim,
-  .pulse-glow,
-  .shimmer {
-    animation: none !important;
-  }
-}
 
 /* Mobile Safe Areas */
 @utility pb-safe {
@@ -1108,24 +1080,7 @@ html {
 }
 
 /* ── Accessibility: respect reduced-motion preference ──────────────────────── */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  ::before,
-  ::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
 
-  /* Specifically pause infinite animations */
-  .marquee-anim,
-  .float-anim,
-  .pulse-glow,
-  .shimmer {
-    animation: none !important;
-  }
-}
 
 /* Mobile Safe Areas */
 @utility pb-safe {

@@ -19,6 +19,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLiveMatches } from "@/hooks/useLiveMatches";
 import { useFeedMatches } from "@/hooks/useFeedMatches";
 import { usePlayerMatches } from "@/hooks/usePlayerMatches";
+import { useQueryState } from "@/hooks/useQueryState";
 import { LiveScoreSection } from "@/components/events/LiveScoreSection";
 import { LiveBracketsSection } from "@/components/events/LiveBracketsSection";
 import { LiveStandingsSection } from "@/components/events/LiveStandingsSection";
@@ -37,25 +38,9 @@ export function LiveTab() {
   const { session, profile: ownProfile, isUmpire, isAdmin } = useAuth();
   const { liveMatchIds, hasLiveMatches } = useLiveMatches();
 
-  const getInitialParam = (param: string, defaultVal: string) => {
-    try {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(param) || defaultVal;
-    } catch {
-      return defaultVal;
-    }
-  };
-
-  const [activeSubTab, setActiveSubTab] = useState<any>(() => getInitialParam("tab", "matches"));
-
-  useEffect(() => {
-    try {
-      const url = new URL(window.location.href);
-      url.searchParams.set("tab", activeSubTab);
-      window.history.replaceState(null, "", url.toString());
-    } catch { /* ignore */ }
-  }, [activeSubTab]);
+  const [activeSubTab, setActiveSubTab] = useQueryState<"details" | "matches" | "polls" | "schedule" | "umpire" | "brackets">("subtab", "matches");
   const [activeTournament, setActiveTournament] = useState<any | null>(null);
+  
   useEffect(() => {
     supabase.from("tournaments").select("*").eq("status", "active").limit(1).then(({ data }) => {
       if (data && data.length > 0) setActiveTournament(data[0]);
@@ -63,20 +48,11 @@ export function LiveTab() {
   }, []);
   const activeTournamentId = activeTournament?.id;
 
-  const [feedView, setFeedView] = useState<"my" | "tournament">("tournament");
+  const [feedView, setFeedView] = useQueryState<"my" | "tournament">("feed", "tournament");
 
   // Dynamic URL syncing for Tournament Matches
-  const [matchStatus, setMatchStatus] = useState<string>(() => getInitialParam("m_status", "upcoming"));
-  const [matchCat, setMatchCat] = useState<string>(() => getInitialParam("m_cat", "ALL"));
-
-  useEffect(() => {
-    try {
-      const url = new URL(window.location.href);
-      url.searchParams.set("m_status", matchStatus);
-      url.searchParams.set("m_cat", matchCat);
-      window.history.replaceState(null, "", url.toString());
-    } catch { /* ignore */ }
-  }, [matchStatus, matchCat]);
+  const [matchStatus, setMatchStatus] = useQueryState<"upcoming" | "completed">("m_status", "upcoming");
+  const [matchCat, setMatchCat] = useQueryState<"ALL" | "MS" | "MD" | "XD" | "WS" | "WD">("m_cat", "ALL");
 
   const {
     loading,
@@ -96,6 +72,37 @@ export function LiveTab() {
     searchQuery,
     setSearchQuery
   } = useFeedMatches(ownProfile, 2000);
+
+  const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!loading && displayMatches.length > 0) {
+      const hash = window.location.hash;
+      if (hash && hash.startsWith('#match-card-')) {
+        setTimeout(() => {
+          const elId = hash.substring(1);
+          const matchId = elId.replace('match-card-', '');
+          setExpandedMatchId(matchId);
+
+          const el = document.getElementById(elId);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add('ring-4', 'ring-indigo-500', 'ring-offset-2', 'dark:ring-offset-slate-950', 'transition-all', 'duration-700');
+            setTimeout(() => {
+              el.classList.remove('ring-4', 'ring-indigo-500', 'ring-offset-2', 'dark:ring-offset-slate-950');
+            }, 3000);
+          }
+        }, 500); // Allow time for DOM to paint
+      } else if (!expandedMatchId) {
+        const liveMatch = displayMatches.find(m => m.status === 'in_progress');
+        if (liveMatch) {
+          setExpandedMatchId(liveMatch.id);
+        } else if (matchOfTheDayId) {
+          setExpandedMatchId(matchOfTheDayId);
+        }
+      }
+    }
+  }, [loading, displayMatches.length, matchOfTheDayId]);
 
   const { matches: myAllMatches } = usePlayerMatches(ownProfile?.id);
 
@@ -494,6 +501,8 @@ export function LiveTab() {
                         onKudos={() => handleKudos(match)}
                         onShare={() => handleShare(match)}
                         index={i}
+                        isExpanded={expandedMatchId === match.id}
+                        onToggleExpand={(expanded) => setExpandedMatchId(expanded ? match.id : null)}
                       >
                         {match.match_code && (
                           <div className="mt-1 pt-1 border-t border-slate-100/50 dark:border-slate-800/50">
@@ -532,7 +541,7 @@ export function LiveTab() {
                     ) : (
                       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden transition-all duration-300 mb-6">
                         <div className="flex border-b border-slate-100 dark:border-slate-800">
-                          {["upcoming", "completed"].map(status => (
+                          {(["upcoming", "completed"] as const).map(status => (
                             <button
                               key={status}
                               onClick={() => setMatchStatus(status)}
@@ -552,7 +561,7 @@ export function LiveTab() {
                         <div className="p-4 sm:p-5">
                           <div className="mb-5 bg-slate-100/50 dark:bg-slate-950 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800">
                             <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-1">
-                              {["ALL", "MS", "MD", "XD", "WS", "WD"].map(cat => (
+                              {(["ALL", "MS", "MD", "XD", "WS", "WD"] as const).map(cat => (
                                 <button
                                   key={cat}
                                   onClick={() => setMatchCat(cat)}

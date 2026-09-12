@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Calendar, Clock, MapPin, Trophy, ShieldAlert } from "lucide-react";
 import { MatchScoreDisplay } from "../tournament/MatchScoreDisplay";
+import { BeautifulScoreDisplay } from "../feed/BeautifulScoreDisplay";
 
 export function MyMatchesTab() {
   const { profile } = useAuth();
@@ -79,6 +80,11 @@ export function MyMatchesTab() {
                     winner_side={m.winner_side}
                     status={m.status}
                   />
+                  {(!m.sets_history || m.sets_history.length === 0) && m.status === 'completed' && (m.score || m.match_score) && (
+                    <div className="mt-2">
+                      <BeautifulScoreDisplay score={m.match_score || m.score} />
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-950/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800">

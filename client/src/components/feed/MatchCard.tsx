@@ -28,6 +28,8 @@ interface MatchCardProps {
   index?: number;
   hideActions?: boolean;
   children?: React.ReactNode;
+  isExpanded?: boolean;
+  onToggleExpand?: (expanded: boolean) => void;
 }
 
 const CAT_BOX_COLORS: Record<string, string> = {
@@ -54,7 +56,9 @@ export function MatchCard({
   onShare,
   index = 0,
   hideActions = false,
-  children
+  children,
+  isExpanded: controlledIsExpanded,
+  onToggleExpand
 }: MatchCardProps) {
   const p1 = match.player1;
   const p2 = match.player2;
@@ -66,7 +70,17 @@ export function MatchCard({
   const [isEditVideoOpen, setIsEditVideoOpen] = useState(false);
   const [isScorecardOpen, setIsScorecardOpen] = useState(false);
   const [isNotifyOpen, setIsNotifyOpen] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(isLiveNow || isMatchOfTheDay);
+  const [localExpanded, setLocalExpanded] = useState(isLiveNow || isMatchOfTheDay);
+
+  const isExpanded = controlledIsExpanded !== undefined ? controlledIsExpanded : localExpanded;
+
+  const handleSetExpanded = (val: boolean) => {
+    if (onToggleExpand) {
+      onToggleExpand(val);
+    } else {
+      setLocalExpanded(val);
+    }
+  };
 
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
@@ -287,7 +301,7 @@ export function MatchCard({
       )}
 
       {!isExpanded ? (
-        <div className={`cursor-pointer select-none ${actualIsLiveNow || isMatchOfTheDay ? 'pt-6 sm:pt-4' : ''}`} onClick={() => setIsExpanded(true)}>
+        <div className={`cursor-pointer select-none ${actualIsLiveNow || isMatchOfTheDay ? 'pt-6 sm:pt-4' : ''}`} onClick={() => handleSetExpanded(true)}>
           <div className="flex flex-row items-stretch px-1 py-1 mt-1 sm:mt-0 gap-2 w-full">
             {/* Main 2-row content */}
             <div className="flex flex-col gap-1 flex-1 min-w-0">
@@ -357,7 +371,7 @@ export function MatchCard({
           
           <div 
             className="cursor-pointer group/header transition-opacity hover:opacity-80" 
-            onClick={() => setIsExpanded(false)}
+            onClick={() => handleSetExpanded(false)}
             title="Collapse Match"
           >
             <div className="flex items-center justify-center gap-1.5 mb-1 mt-1 md:mt-0 flex-wrap">
@@ -703,7 +717,7 @@ export function MatchCard({
             ) : <div className="w-8" />}
 
             <button
-              onClick={(e) => { e.stopPropagation(); setIsExpanded(false); }}
+              onClick={(e) => { e.stopPropagation(); handleSetExpanded(false); }}
               className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white bg-slate-100 dark:bg-slate-800/50 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition shadow-sm"
               title="Collapse"
             >

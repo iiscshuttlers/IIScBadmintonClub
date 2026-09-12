@@ -247,27 +247,7 @@ function AppRoutes() {
   );
 }
 
-function GuestPromoBanner() {
-  const { session } = useAuth();
-  
-  if (session) return null;
-  // If we are already on the web platform, don't show the link to the web platform
-  if (!Capacitor.isNativePlatform()) return null;
-  
-  return (
-    <div className="bg-primary/10 border-b border-primary/20 text-foreground text-center py-2.5 px-4 text-[13px] font-medium z-50 flex items-center justify-center gap-2">
-      <span className="opacity-90">For a better experience with all features, visit</span>
-      <a 
-        href="https://iiscshuttlers.github.io/IIScBadmintonClub/" 
-        className="text-primary font-bold hover:underline transition-all flex items-center gap-1"
-        target="_blank" 
-        rel="noopener noreferrer"
-      >
-        IISc Badminton Club <ExternalLink className="w-3 h-3" />
-      </a>
-    </div>
-  );
-}
+// GuestPromoBanner removed to prevent status bar bleeding and UX confusion
 
 function OfflineBanner() {
   const [offline, setOffline] = useState(!navigator.onLine);
@@ -506,7 +486,6 @@ function AppContent() {
                 </a>
                 {!location.startsWith("/tv") && <OfflineBanner />}
                 {!location.startsWith("/tv") && <PwaInstallPrompt />}
-                {!location.startsWith("/tv") && <GuestPromoBanner />}
                 {!location.startsWith("/tv") && <Navigation />}
                 {!location.startsWith("/tv") && <StatusBanner />}
                 <main id="main-content" className={`flex-1 flex flex-col ${location.startsWith("/tv") ? "" : /^\/player\/[^/]+\/personal/.test(location) ? "pt-[calc(3rem+env(safe-area-inset-top))] lg:pt-0" : ""}`}>

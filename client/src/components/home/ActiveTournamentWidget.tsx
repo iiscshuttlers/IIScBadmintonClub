@@ -1,9 +1,14 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/card";
-import { Trophy, ArrowRight, MapPin, Calendar, ChevronDown, ChevronUp, Clock, CheckCircle2 } from "lucide-react";
+import {
+  Calendar, CalendarRange, Trophy, Loader2, ChevronRight, Activity, Clock, Users, Flame, ChevronDown, ChevronUp, MapPin, ArrowRight, CheckCircle2
+} from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
+import { PollsSection } from "@/components/feed/PollsSection";
+import { BarChart2, Plus, Minus } from "lucide-react";
 
 interface Tournament {
   id: string;
@@ -34,23 +39,28 @@ interface LiveMatch {
 interface TodayMatch {
   id: string;
   category: string;
+  round_name: string;
+  match_code: string;
+  court_number: string | null;
   team1_label: string;
   team2_label: string;
   status: string;
   scheduled_at: string | null;
-  score_team1?: number | null;
-  score_team2?: number | null;
-  winner_id?: string | null;
-  player1_id?: string | null;
+  score: string | null;
+  winner_id: string | null;
+  player1_id: string | null;
 }
 
 export function ActiveTournamentWidget() {
+  const { isAdmin } = useAuth();
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [liveMatches, setLiveMatches] = useState<LiveMatch[]>([]);
   const [todayMatches, setTodayMatches] = useState<TodayMatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [showTodayMatches, setShowTodayMatches] = useState(false);
+  const [showPolls, setShowPolls] = useState(false);
   const [loadingToday, setLoadingToday] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   useEffect(() => {
     async function fetchActiveData(isInitial = false) {
@@ -124,53 +134,60 @@ export function ActiveTournamentWidget() {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
-  async function fetchTodayMatches() {
+  async function fetchTodayMatches(dateToFetch: Date = selectedDate) {
     setLoadingToday(true);
     try {
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
-      const todayEnd = new Date();
-      todayEnd.setHours(23, 59, 59, 999);
+      // Pad the search window by 24 hours on each side to avoid timezone cutoff issues when querying Supabase.
+      const queryStart = new Date(dateToFetch);
+      queryStart.setDate(queryStart.getDate() - 1);
+      queryStart.setHours(0, 0, 0, 0);
 
+      const queryEnd = new Date(dateToFetch);
+      queryEnd.setDate(queryEnd.getDate() + 1);
+      queryEnd.setHours(23, 59, 59, 999);
+
+      // tournament_matches is the correct table for scheduled tournament matches
       const { data } = await supabase
-        .from("matches")
-        .select("id, category, player1:player1_id(full_name), player2:player2_id(full_name), partner1:team1_partner_id(full_name), partner2:team2_partner_id(full_name), status, scheduled_at, score_team1, score_team2, winner_id, player1_id, team1_label, team2_label")
-        .gte("scheduled_at", todayStart.toISOString())
-        .lte("scheduled_at", todayEnd.toISOString());
+        .from("tournament_matches")
+        .select("id, category, round_name, match_code, court_number, status, scheduled_at, score, winner_id, player1_id, player2_id, player3_id, player4_id, team1_label, team2_label")
+        .gte("scheduled_at", queryStart.toISOString())
+        .lte("scheduled_at", queryEnd.toISOString());
 
       if (data) {
-        const mapped: TodayMatch[] = (data as any[]).map((m) => ({
-          id: m.id,
-          category: m.category || "",
-          team1_label: m.team1_label || (m.player1?.full_name || "TBD") + (m.partner1?.full_name ? ` & ${m.partner1.full_name}` : ""),
-          team2_label: m.team2_label || (m.player2?.full_name || "TBD") + (m.partner2?.full_name ? ` & ${m.partner2.full_name}` : ""),
-          status: m.status,
-          scheduled_at: m.scheduled_at,
-          score_team1: m.score_team1,
-          score_team2: m.score_team2,
-          winner_id: m.winner_id,
-          player1_id: m.player1_id,
-        }));
+        const targetDateStr = toLocalISOString(dateToFetch);
+        
+        const mapped: TodayMatch[] = (data as any[])
+          .filter(m => m.scheduled_at && toLocalISOString(new Date(m.scheduled_at)) === targetDateStr)
+          .filter(m => m.status !== "draft" || isAdmin)
+          .map((m) => ({
+            id: m.id,
+            category: m.category || "",
+            round_name: m.round_name || "",
+            match_code: m.match_code || "",
+            court_number: m.court_number || null,
+            team1_label: m.team1_label || "TBD",
+            team2_label: m.team2_label || "TBD",
+            status: m.status,
+            scheduled_at: m.scheduled_at,
+            score: m.score || null,
+            winner_id: m.winner_id,
+            player1_id: m.player1_id,
+          }));
 
-        const upcoming = mapped
-          .filter(m => m.status === "scheduled" || m.status === "in_progress")
-          .sort((a, b) => {
-            if (!a.scheduled_at && !b.scheduled_at) return 0;
-            if (!a.scheduled_at) return 1;
-            if (!b.scheduled_at) return -1;
-            return new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime();
-          });
+        // 1. Live matches
+        const live = mapped.filter(m => m.status === "in_progress");
+        
+        // 2. Scheduled/Draft matches (Chronological)
+        const scheduled = mapped
+          .filter(m => m.status === "scheduled" || m.status === "draft")
+          .sort((a, b) => new Date(a.scheduled_at!).getTime() - new Date(b.scheduled_at!).getTime());
 
+        // 3. Completed matches (Reverse Chronological)
         const completed = mapped
           .filter(m => m.status === "completed" || m.status === "walkover")
-          .sort((a, b) => {
-            if (!a.scheduled_at && !b.scheduled_at) return 0;
-            if (!a.scheduled_at) return 1;
-            if (!b.scheduled_at) return -1;
-            return new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime();
-          });
+          .sort((a, b) => new Date(b.scheduled_at!).getTime() - new Date(a.scheduled_at!).getTime());
 
-        setTodayMatches([...upcoming, ...completed]);
+        setTodayMatches([...live, ...scheduled, ...completed]);
       }
     } catch (err) {
       console.error("Error fetching today's matches:", err);
@@ -180,8 +197,39 @@ export function ActiveTournamentWidget() {
   }
 
   const handleToggleTodayMatches = () => {
-    if (!showTodayMatches && todayMatches.length === 0) fetchTodayMatches();
+    if (!showTodayMatches) fetchTodayMatches(selectedDate);
     setShowTodayMatches(prev => !prev);
+    setShowPolls(false);
+  };
+
+  const handleTogglePolls = () => {
+    setShowPolls(prev => !prev);
+    setShowTodayMatches(false);
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.value) {
+      const [year, month, day] = e.target.value.split('-').map(Number);
+      const newDate = new Date(year, month - 1, day);
+      setSelectedDate(newDate);
+      if (showTodayMatches) {
+        fetchTodayMatches(newDate);
+      }
+    }
+  };
+
+  const adjustDate = (days: number) => {
+    const newDate = new Date(selectedDate);
+    newDate.setDate(newDate.getDate() + days);
+    setSelectedDate(newDate);
+    if (showTodayMatches) {
+      fetchTodayMatches(newDate);
+    }
+  };
+
+  const toLocalISOString = (d: Date) => {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   };
 
   const formatTime = (dt: string | null) => {
@@ -217,22 +265,9 @@ export function ActiveTournamentWidget() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
-            <button
-              onClick={handleToggleTodayMatches}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-bold shadow-sm transition-all active:scale-95 border ${
-                showTodayMatches
-                  ? "bg-indigo-600 text-white border-indigo-600"
-                  : "bg-slate-800/60 text-slate-300 hover:bg-slate-700 border-slate-700"
-              }`}
-            >
-              <Calendar className="w-3.5 h-3.5" />
-              Today's Matches
-              {showTodayMatches ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            </button>
-
+          <div className="flex items-center gap-2 flex-wrap self-end sm:self-auto mt-2 sm:mt-0">
             <Link href={`/pulse?tab=events`}>
-              <button className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition-all active:scale-95 shrink-0">
+              <button className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold shadow-md shadow-emerald-600/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all active:scale-95 shrink-0 border border-emerald-500/50">
                 View Tournament
                 <ArrowRight className="w-4 h-4" />
               </button>
@@ -363,7 +398,35 @@ export function ActiveTournamentWidget() {
         )}
       </AnimatePresence>
 
-      {/* Today's Matches */}
+      {/* Today's Matches & Polls */}
+      <div className={`px-3 sm:px-5 pb-4 grid grid-cols-2 gap-2 sm:gap-3 ${liveMatches.length === 0 ? "pt-4" : ""}`}>
+        <button
+          onClick={handleToggleTodayMatches}
+          className={`flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition-all active:scale-95 border ${
+            showTodayMatches
+              ? "bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-600/30"
+              : "bg-indigo-950/40 text-indigo-300 hover:bg-indigo-900/60 border-indigo-900/50 hover:border-indigo-700/50"
+          }`}
+        >
+          <Calendar className="w-3.5 h-3.5 shrink-0" />
+          <span>Today's Matches</span>
+          {showTodayMatches ? <ChevronUp className="w-3.5 h-3.5 shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 shrink-0" />}
+        </button>
+
+        <button
+          onClick={handleTogglePolls}
+          className={`flex items-center justify-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition-all active:scale-95 border ${
+            showPolls
+              ? "bg-violet-600 text-white border-violet-500 shadow-lg shadow-violet-600/30"
+              : "bg-violet-950/40 text-violet-300 hover:bg-violet-900/60 border-violet-900/50 hover:border-violet-700/50"
+          }`}
+        >
+          <BarChart2 className="w-3.5 h-3.5 shrink-0" />
+          <span>Polls</span>
+          {showPolls ? <ChevronUp className="w-3.5 h-3.5 shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 shrink-0" />}
+        </button>
+      </div>
+
       <AnimatePresence>
         {showTodayMatches && (
           <motion.div
@@ -375,10 +438,26 @@ export function ActiveTournamentWidget() {
             className="overflow-hidden"
           >
             <div className="border-t border-slate-200/50 dark:border-slate-800 p-4 sm:p-5">
-              <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 mb-4">
-                <Calendar className="w-3.5 h-3.5 text-indigo-400" />
-                Today — {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}
-              </h4>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                  <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+                  {selectedDate.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}
+                </h4>
+                <div className="flex items-center gap-1.5">
+                  <button onClick={() => adjustDate(-1)} className="p-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors">
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <input 
+                    type="date" 
+                    className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-lg px-2 py-1 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 outline-none"
+                    value={toLocalISOString(selectedDate)}
+                    onChange={handleDateChange}
+                  />
+                  <button onClick={() => adjustDate(1)} className="p-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors">
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
 
               {loadingToday ? (
                 <div className="flex justify-center py-6">
@@ -387,53 +466,163 @@ export function ActiveTournamentWidget() {
               ) : todayMatches.length === 0 ? (
                 <div className="text-center py-8">
                   <Calendar className="w-10 h-10 text-slate-600 mx-auto mb-2" />
-                  <p className="text-sm font-bold text-slate-500">No matches scheduled for today</p>
+                  <p className="text-sm font-bold text-slate-500">No matches scheduled for this date</p>
                 </div>
               ) : (
                 <div className="space-y-2">
                   {todayMatches.map((m) => {
                     const isCompleted = m.status === "completed" || m.status === "walkover";
-                    const hasScore = m.score_team1 != null && m.score_team2 != null;
-                    const isT1Winner = isCompleted && m.winner_id === m.player1_id;
+                    const isT1Winner = isCompleted && !!m.winner_id && m.winner_id === m.player1_id;
                     const isT2Winner = isCompleted && !!m.winner_id && m.winner_id !== m.player1_id;
+                    
+                    const getCategoryColorClass = (cat: string) => {
+                      const c = cat?.substring(0, 2).toUpperCase() || "";
+                      if (c === "MS") return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800/50";
+                      if (c === "WS") return "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400 border-pink-200 dark:border-pink-800/50";
+                      if (c === "MD") return "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400 border-cyan-200 dark:border-cyan-800/50";
+                      if (c === "WD") return "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-800/50";
+                      if (c === "XD") return "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border-orange-200 dark:border-orange-800/50";
+                      return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700";
+                    };
+                    const isLive = m.status === "in_progress";
+                    const tabStatus = isCompleted ? "completed" : isLive ? "live" : "upcoming";
+                    const href = `/pulse?tab=matches&m_status=${tabStatus}&m_cat=ALL#match-card-${m.id}`;
+
                     return (
-                      <div
+                      <Link
                         key={m.id}
-                        className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                        href={href}
+                        className={`flex flex-col gap-2 p-3 rounded-xl border transition-all cursor-pointer block ${
                           isCompleted
-                            ? "bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 opacity-70"
-                            : "bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 shadow-sm"
+                            ? "bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 opacity-80 hover:opacity-100 hover:border-indigo-300 dark:hover:border-indigo-700/50"
+                            : "bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md hover:border-indigo-400 dark:hover:border-indigo-600/50"
                         }`}
                       >
-                        <div className="shrink-0">
-                          {isCompleted ? (
-                            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                          ) : (
-                            <Clock className={`w-4 h-4 ${m.status === "in_progress" ? "text-red-500 animate-pulse" : "text-indigo-400"}`} />
-                          )}
-                        </div>
-                        <div className="text-[10px] font-black text-slate-400 shrink-0 w-12 text-center">
-                          {formatTime(m.scheduled_at)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-xs font-bold truncate ${isT1Winner ? "text-emerald-500" : "text-slate-700 dark:text-slate-200"}`}>{m.team1_label}</p>
-                          <p className={`text-xs font-bold truncate mt-0.5 ${isT2Winner ? "text-emerald-500" : "text-slate-700 dark:text-slate-200"}`}>{m.team2_label}</p>
-                        </div>
-                        {isCompleted && hasScore ? (
-                          <div className="shrink-0 flex flex-col items-center">
-                            <span className={`text-sm font-black tabular-nums ${isT1Winner ? "text-emerald-500" : "text-slate-400"}`}>{m.score_team1}</span>
-                            <span className={`text-sm font-black tabular-nums ${isT2Winner ? "text-emerald-500" : "text-slate-400"}`}>{m.score_team2}</span>
+                        {/* Top Row: Time | Format | Round | Status/Score */}
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 overflow-hidden">
+                            <span className="text-[10px] font-black text-slate-400 shrink-0">
+                              {formatTime(m.scheduled_at) || "--:--"}
+                            </span>
+                            <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border shrink-0 ${getCategoryColorClass(m.category)}`}>
+                              {m.category?.slice(0,2) || "TBD"}
+                            </span>
+                            {m.round_name && (
+                              <span className="text-[10px] font-bold text-slate-500 truncate max-w-[100px]">
+                                {m.round_name}
+                              </span>
+                            )}
                           </div>
-                        ) : m.status === "in_progress" ? (
-                          <span className="text-[9px] font-black uppercase tracking-wider text-red-500 px-2 py-0.5 bg-red-500/10 rounded-full shrink-0">LIVE</span>
-                        ) : (
-                          <span className="text-[9px] font-bold text-slate-400 shrink-0">{m.category?.slice(0, 2)?.toUpperCase() || ""}</span>
-                        )}
-                      </div>
+                          
+                          <div className="shrink-0 ml-2">
+                            {isCompleted && m.score ? (
+                              <div className="flex items-center gap-0.5 text-[11px] font-black tracking-wide bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded shadow-sm border border-slate-200/50 dark:border-slate-700/50">
+                                {m.score.split(',').map((setScore, idx, arr) => {
+                                  const parts = setScore.trim().split('-');
+                                  if (parts.length === 2) {
+                                    return (
+                                      <span key={idx} className="flex items-center">
+                                        <span className={isT1Winner ? "text-emerald-600 dark:text-emerald-400" : isT2Winner ? "text-slate-400 dark:text-slate-500" : "text-slate-600 dark:text-slate-300"}>{parts[0]}</span>
+                                        <span className="text-slate-400 dark:text-slate-500 mx-0.5">-</span>
+                                        <span className={isT2Winner ? "text-emerald-600 dark:text-emerald-400" : isT1Winner ? "text-slate-400 dark:text-slate-500" : "text-slate-600 dark:text-slate-300"}>{parts[1]}</span>
+                                        {idx < arr.length - 1 && <span className="text-slate-400 dark:text-slate-500 mr-1.5">,</span>}
+                                      </span>
+                                    );
+                                  }
+                                  return (
+                                    <span key={idx} className="text-slate-600 dark:text-slate-300">
+                                      {setScore}{idx < arr.length - 1 ? ',' : ''}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            ) : m.status === "in_progress" ? (
+                              <span className="text-[9px] font-black uppercase tracking-wider text-red-500 px-2 py-0.5 bg-red-500/10 border border-red-500/20 rounded-full flex items-center gap-1.5 shadow-sm shadow-red-500/10">
+                                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                                LIVE
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-1.5 py-0.5 rounded border border-indigo-100 dark:border-indigo-800/30">
+                                {m.match_code || "TBD"}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Bottom Row: Teams/Players */}
+                        <div className="flex flex-col gap-1.5 mt-0.5">
+                          <div className="flex items-start gap-2">
+                            {isT1Winner ? (
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                            ) : isCompleted ? (
+                              <div className="w-3.5 h-3.5 shrink-0" />
+                            ) : null}
+                            <p className={`text-xs sm:text-sm font-bold leading-snug ${
+                              isT1Winner ? "text-emerald-600 dark:text-emerald-400" : 
+                              isCompleted ? "text-slate-500 dark:text-slate-400" : 
+                              "text-slate-800 dark:text-slate-200"
+                            }`}>
+                              {m.team1_label}
+                            </p>
+                          </div>
+                          
+                          <div className="flex items-start gap-2">
+                            {isT2Winner ? (
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                            ) : isCompleted ? (
+                              <div className="w-3.5 h-3.5 shrink-0" />
+                            ) : null}
+                            <p className={`text-xs sm:text-sm font-bold leading-snug ${
+                              isT2Winner ? "text-emerald-600 dark:text-emerald-400" : 
+                              isCompleted ? "text-slate-500 dark:text-slate-400" : 
+                              "text-slate-800 dark:text-slate-200"
+                            }`}>
+                              {m.team2_label}
+                            </p>
+                          </div>
+                        </div>
+                      </Link>
                     );
                   })}
                 </div>
               )}
+
+              <div className="mt-4 flex justify-center">
+                <button
+                  onClick={handleToggleTodayMatches}
+                  className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors flex items-center justify-center gap-1 text-xs font-bold uppercase tracking-wider"
+                >
+                  <ChevronUp className="w-4 h-4" />
+                  Close
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showPolls && (
+          <motion.div
+            key="polls"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="border-t border-slate-200/50 dark:border-slate-800 p-4 sm:p-5">
+              <PollsSection />
+              
+              <div className="mt-4 flex justify-center">
+                <button
+                  onClick={handleTogglePolls}
+                  className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors flex items-center justify-center gap-1 text-xs font-bold uppercase tracking-wider"
+                >
+                  <ChevronUp className="w-4 h-4" />
+                  Close
+                </button>
+              </div>
             </div>
           </motion.div>
         )}

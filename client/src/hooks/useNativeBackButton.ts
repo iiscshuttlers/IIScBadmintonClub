@@ -41,38 +41,28 @@ export function useNativeBackButton() {
 
     const listener = CapApp.addListener("backButton", (event) => {
       const path = window.location.pathname;
-      const isRootTab =
+      const isHome =
         path === "/" ||
         path === "" ||
-        path === "/pulse" ||
-        path === "/legacy" ||
-        path === "/hub" ||
         path === "/iiscshuttlers" ||
         path === "/iiscshuttlers/";
 
-      // If we are not on a root tab, go back.
-      if (!isRootTab) {
-        window.history.back();
+      // If we are on Home, or WebView has no history, handle double-tap to exit
+      if (isHome || !event.canGoBack) {
+        if (backPressedRef.current) {
+          CapApp.exitApp();
+          return;
+        }
+
+        backPressedRef.current = true;
+        showExitToast(() => {
+          backPressedRef.current = false;
+        });
         return;
       }
 
-      // If we are on a root tab but not Home, maybe go to Home instead of exiting?
-      // (Optional pattern, but standard Android is often to go to Home)
-      if (path !== "/" && path !== "" && path !== "/iiscshuttlers" && path !== "/iiscshuttlers/") {
-         window.location.href = "/";
-         return;
-      }
-
-      // If we are on the Home tab, handle double-tap to exit
-      if (backPressedRef.current) {
-        CapApp.exitApp();
-        return;
-      }
-
-      backPressedRef.current = true;
-      showExitToast(() => {
-        backPressedRef.current = false;
-      });
+      // Otherwise, standard browser back navigation
+      window.history.back();
     });
 
     return () => {

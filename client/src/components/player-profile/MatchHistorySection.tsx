@@ -220,12 +220,22 @@ export function MatchHistorySection({
                       }
 
                       let opponents: any[] = [];
+                      const oppTeamLabel = isTeam1 ? m.team2_label : m.team1_label;
                       if (isTeam1) {
                         if (m.player2) opponents.push(m.player2);
                         if (m.partner2) opponents.push(m.partner2);
                       } else {
                         if (m.player1) opponents.push(m.player1);
                         if (m.partner1) opponents.push(m.partner1);
+                      }
+                      
+                      if (opponents.length === 0) {
+                        const labelStr = (oppTeamLabel || "").toUpperCase();
+                        if (labelStr.includes("BYE") || labelStr === "BYE") {
+                          opponents.push({ id: "bye", full_name: "BYE", gender: "unknown" });
+                        } else if (labelStr) {
+                          opponents.push({ id: "tbd", full_name: oppTeamLabel, gender: "unknown" });
+                        }
                       }
 
                       // Dynamic format label
@@ -381,12 +391,22 @@ export function MatchHistorySection({
                       }
 
                       let opponents: any[] = [];
+                      const oppTeamLabel = isTeam1 ? m.team2_label : m.team1_label;
                       if (isTeam1) {
                         if (m.player2) opponents.push(m.player2);
                         if (m.partner2) opponents.push(m.partner2);
                       } else {
                         if (m.player1) opponents.push(m.player1);
                         if (m.partner1) opponents.push(m.partner1);
+                      }
+
+                      if (opponents.length === 0) {
+                        const labelStr = (oppTeamLabel || "").toUpperCase();
+                        if (labelStr.includes("BYE") || labelStr === "BYE") {
+                          opponents.push({ id: "bye", full_name: "BYE", gender: "unknown" });
+                        } else if (labelStr) {
+                          opponents.push({ id: "tbd", full_name: oppTeamLabel, gender: "unknown" });
+                        }
                       }
 
                       const won = isTeam1 ? m.winner_id === m.player1_id : m.winner_id === m.player2_id;

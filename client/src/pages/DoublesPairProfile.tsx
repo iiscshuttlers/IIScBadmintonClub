@@ -220,8 +220,10 @@ export default function DoublesPairProfile() {
                     opponents = m.team1_label || [m.p1_name, m.p3_name].filter(Boolean).join(" & ");
                   }
                   
-                  if (!opponents || opponents.toUpperCase() === "BYE") {
+                  if (opponents && (opponents.toUpperCase() === "BYE" || opponents.toUpperCase().includes(" BYE "))) {
                     opponents = "BYE";
+                  } else if (!opponents) {
+                    opponents = "TBD";
                   }
 
                   let scoreDisplay = m.score || "";

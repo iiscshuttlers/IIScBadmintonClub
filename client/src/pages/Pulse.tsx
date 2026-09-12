@@ -44,7 +44,6 @@ export default function Pulse() {
   const isCapacitorEnv = Capacitor.isNativePlatform();
 
   const getPulseTab = () => {
-    if (isCapacitorEnv) return "live";
     try {
       const hash = window.location.hash.replace("#", "");
       if (hash === "directory") return "directory";
@@ -58,18 +57,16 @@ export default function Pulse() {
   const [pulseTab, setPulseTabState] = useState<"live" | "feed" | "events" | "directory">(getPulseTab);
 
   useEffect(() => {
-    if (isCapacitorEnv) return;
     const onHashChange = () => setPulseTabState(getPulseTab());
     window.addEventListener("hashchange", onHashChange);
     if (!window.location.hash) {
       try { window.history.replaceState(null, "", "#live"); } catch { /* ignore */ }
     }
     return () => window.removeEventListener("hashchange", onHashChange);
-  }, [isCapacitorEnv]);
+  }, []);
 
   const setPulseTab = (tab: "live" | "feed" | "events" | "directory") => {
     setPulseTabState(tab);
-    if (isCapacitorEnv) return;
     try {
       const url = new URL(window.location.href);
       url.search = ""; // clear query string to prevent bleeding
