@@ -22,6 +22,10 @@ public class MainActivity extends BridgeActivity {
     registerPlugin(WidgetManagerPlugin.class);
     registerPlugin(GeofencePlugin.class);
     registerPlugin(MediaPermissionsPlugin.class);
+    // Replace the default PushNotificationsPlugin with our null-Activity-safe subclass.
+    // This guards against the NullPointerException in getPermissionStates() on Android 16
+    // where the Activity can be null when the bridge dispatches early. (Sentry JAVASCRIPT-REACT-3)
+    registerPlugin(SafePushNotificationsPlugin.class);
     super.onCreate(savedInstanceState);
     if (getSupportActionBar() != null) {
       getSupportActionBar().hide();
