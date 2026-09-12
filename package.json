@@ -124,7 +124,10 @@
   "pnpm": {
     "overrides": {
       "uuid": ">=11.1.1"
-    }
+    },
+    "approvedBuilds": [
+      "@sentry/capacitor"
+    ]
   },
   "resolutions": {
     "uuid": ">=11.1.1"
