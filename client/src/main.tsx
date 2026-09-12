@@ -13,11 +13,8 @@ Sentry.init(
     release: `shuttlers.iisc.com@${packageJson.version}`,
     integrations: [
       SentryReact.browserTracingIntegration(),
-      SentryReact.replayIntegration(),
     ],
     tracesSampleRate: 1.0,
-    replaysSessionSampleRate: 0.1,
-    replaysOnErrorSampleRate: 1.0,
   },
   SentryReact.init as any
 );

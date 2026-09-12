@@ -1,6 +1,8 @@
 import { Sparkles, ShieldCheck, Activity, Award, Target, Handshake, Sprout } from "lucide-react";
 import { Link } from "wouter";
-import { Capacitor } from "@capacitor/core";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { registerPlugin, Capacitor } from "@capacitor/core";
+import * as Sentry from "@sentry/react";
 import { Geofence } from "@/lib/geofence";
 import { Button } from "@/components/ui/button";
 import {
@@ -91,7 +93,10 @@ export default function Home() {
     if (Capacitor.isNativePlatform()) {
       const agreed = localStorage.getItem("location_disclosure_agreed");
       if (agreed === "true") {
-        Geofence.setupGymkhanaGeofence().catch(e => console.log("Geofence setup failed:", e));
+        Geofence.setupGymkhanaGeofence().catch(e => {
+          console.log("Geofence setup failed:", e);
+          Sentry.captureException(e, { extra: { context: "Geofence.setupGymkhanaGeofence" } });
+        });
       } else if (!agreed) {
         setShowLocationDisclosure(true);
       }
@@ -101,7 +106,10 @@ export default function Home() {
   const handleAgreeLocation = () => {
     localStorage.setItem("location_disclosure_agreed", "true");
     setShowLocationDisclosure(false);
-    Geofence.setupGymkhanaGeofence().catch(e => console.log("Geofence setup failed:", e));
+    Geofence.setupGymkhanaGeofence().catch(e => {
+      console.log("Geofence setup failed:", e);
+      Sentry.captureException(e, { extra: { context: "Geofence.setupGymkhanaGeofence (handleAgree)" } });
+    });
   };
 
   const handleDeclineLocation = () => {

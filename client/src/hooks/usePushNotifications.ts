@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { PushNotifications, type Channel } from "@capacitor/push-notifications";
 import { Capacitor } from "@capacitor/core";
+import * as Sentry from "@sentry/react";
 import { supabase } from "@/lib/supabase";
 import { getFirebaseMessaging } from "@/lib/firebase";
 import { getToken, onMessage } from "firebase/messaging";
@@ -269,6 +270,7 @@ export function usePushNotifications(userId: string | undefined) {
         isRegistered = true;
       } catch (err) {
         console.warn("Failed to register push notifications", err);
+        Sentry.captureException(err, { extra: { context: "PushNotifications.register" } });
       }
     };
 
