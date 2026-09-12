@@ -94,11 +94,16 @@ public class GeofencePlugin extends Plugin {
 
     @PluginMethod
     public void setupGymkhanaGeofence(PluginCall call) {
-        if (getPermissionState("location") != PermissionState.GRANTED) {
-            requestPermissionForAlias("location", call, "locationPermissionCallback");
-            return;
+        try {
+            if (getPermissionState("location") != PermissionState.GRANTED) {
+                requestPermissionForAlias("location", call, "locationPermissionCallback");
+                return;
+            }
+            ensureBackgroundLocation(call);
+        } catch (Exception e) {
+            Log.e(TAG, "Error in setupGymkhanaGeofence", e);
+            call.reject("Geofence setup crashed", e);
         }
-        ensureBackgroundLocation(call);
     }
 
     @PluginMethod
@@ -135,11 +140,16 @@ public class GeofencePlugin extends Plugin {
 
     @PermissionCallback
     private void locationPermissionCallback(PluginCall call) {
-        if (getPermissionState("location") != PermissionState.GRANTED) {
-            call.reject("Location permission not granted");
-            return;
+        try {
+            if (getPermissionState("location") != PermissionState.GRANTED) {
+                call.reject("Location permission not granted");
+                return;
+            }
+            ensureBackgroundLocation(call);
+        } catch (Exception e) {
+            Log.e(TAG, "Error in locationPermissionCallback", e);
+            call.reject("Location permission callback crashed", e);
         }
-        ensureBackgroundLocation(call);
     }
 
     /**
@@ -149,42 +159,69 @@ public class GeofencePlugin extends Plugin {
      * foreground-only case rather than blocking setup on it.
      */
     private void ensureBackgroundLocation(PluginCall call) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
-                && getPermissionState("backgroundLocation") != PermissionState.GRANTED) {
-            requestPermissionForAlias("backgroundLocation", call, "backgroundLocationPermissionCallback");
-            return;
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+                    && getPermissionState("backgroundLocation") != PermissionState.GRANTED) {
+                requestPermissionForAlias("backgroundLocation", call, "backgroundLocationPermissionCallback");
+                return;
+            }
+            addGeofence(call);
+        } catch (Exception e) {
+            Log.e(TAG, "Error in ensureBackgroundLocation", e);
+            call.reject("Ensure background location crashed", e);
         }
-        addGeofence(call);
     }
 
     @PermissionCallback
     private void backgroundLocationPermissionCallback(PluginCall call) {
-        // Proceed regardless of outcome: foreground-only geofencing still works, just less
-        // reliably in the background, which is an acceptable degradation.
-        addGeofence(call);
+        try {
+            // Proceed regardless of outcome: foreground-only geofencing still works, just less
+            // reliably in the background, which is an acceptable degradation.
+            addGeofence(call);
+        } catch (Exception e) {
+            Log.e(TAG, "Error in backgroundLocationPermissionCallback", e);
+            call.reject("Background location permission callback crashed", e);
+        }
     }
 
     @SuppressLint("MissingPermission")
     private void addGeofence(PluginCall call) {
-        // IISc Gymkhana coordinates
-        double lat = call.getDouble("lat", 13.018672431031957);
-        double lng = call.getDouble("lng", 77.56458736863928);
-        float radius = call.getFloat("radius", 50.0f); // 50 meters
+        try {
+            // Check for nulls and safely unbox to avoid NPEs
+            Double latObj = call.getDouble("lat", 13.018672431031957);
+            Double lngObj = call.getDouble("lng", 77.56458736863928);
+            
+            double lat = latObj != null ? latObj : 13.018672431031957;
+            double lng = lngObj != null ? lngObj : 77.56458736863928;
+            
+            // Note: PluginCall.getFloat might not exist with a default value, or might return null.
+            // We use getDouble to be safe, then cast to float.
+            Double radiusObj = call.getDouble("radius", 50.0);
+            float radius = radiusObj != null ? radiusObj.floatValue() : 50.0f;
 
-        Geofence geofence = new Geofence.Builder()
-                .setRequestId("GYMKHANA_GEOFENCE")
-                .setCircularRegion(lat, lng, radius)
-                .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
-                .build();
+            if (geofencingClient == null) {
+                call.reject("Geofencing client is null");
+                return;
+            }
 
-        GeofencingRequest request = new GeofencingRequest.Builder()
-                .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
-                .addGeofence(geofence)
-                .build();
+            Geofence geofence = new Geofence.Builder()
+                    .setRequestId("GYMKHANA_GEOFENCE")
+                    .setCircularRegion(lat, lng, radius)
+                    .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                    .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
+                    .build();
 
-        geofencingClient.addGeofences(request, getGeofencePendingIntent())
-                .addOnSuccessListener(aVoid -> call.resolve())
-                .addOnFailureListener(e -> call.reject("Failed to add geofence", e));
+            GeofencingRequest request = new GeofencingRequest.Builder()
+                    .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
+                    .addGeofence(geofence)
+                    .build();
+
+            geofencingClient.addGeofences(request, getGeofencePendingIntent())
+                    .addOnSuccessListener(aVoid -> call.resolve())
+                    .addOnFailureListener(e -> call.reject("Failed to add geofence", e));
+        } catch (Exception e) {
+            Log.e(TAG, "Error in addGeofence", e);
+            call.reject("Add geofence crashed", e);
+        }
     }
 }
