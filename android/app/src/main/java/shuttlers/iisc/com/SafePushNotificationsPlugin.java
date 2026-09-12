@@ -38,7 +38,7 @@ import com.capacitorjs.plugins.pushnotifications.PushNotificationsPlugin;
     name = "PushNotifications",
     permissions = @Permission(
         strings = { Manifest.permission.POST_NOTIFICATIONS },
-        alias = PushNotificationsPlugin.PUSH_NOTIFICATIONS
+        alias = "receive"
     )
 )
 public class SafePushNotificationsPlugin extends PushNotificationsPlugin {
