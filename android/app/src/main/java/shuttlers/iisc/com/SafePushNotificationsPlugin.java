@@ -4,17 +4,17 @@ import android.app.Activity;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 
 import androidx.core.content.ContextCompat;
 
 import com.getcapacitor.JSObject;
-import com.getcapacitor.PermissionState;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
-import com.getcapacitor.annotation.PermissionCallback;
 import com.capacitorjs.plugins.pushnotifications.PushNotificationsPlugin;
 
 /**
@@ -26,9 +26,11 @@ import com.capacitorjs.plugins.pushnotifications.PushNotificationsPlugin;
  * Sentry issue: JAVASCRIPT-REACT-3
  * Root cause:   com.getcapacitor.c0.getPermissionStates → getActivity() == null
  *
- * Strategy: override checkPermissions() so we never call the super implementation
- * when the Activity is null. Instead we check the POST_NOTIFICATIONS permission
- * directly via PackageManager and return the appropriate state.
+ * Strategy:
+ * - checkPermissions(): If Activity is null, return current PackageManager state.
+ * - requestPermissions(): If Activity is null, wait up to 5s for it to attach,
+ *   then delegate to super. This prevents the dialog from being silently swallowed
+ *   when the JS layer calls requestPermissions immediately after app start.
  *
  * IMPORTANT: @CapacitorPlugin is NOT inherited in Java. We must re-declare it here
  * with the exact same name and permissions so the Capacitor bridge routes
@@ -42,6 +44,9 @@ import com.capacitorjs.plugins.pushnotifications.PushNotificationsPlugin;
     )
 )
 public class SafePushNotificationsPlugin extends PushNotificationsPlugin {
+
+    private static final int MAX_WAIT_MS = 5000;
+    private static final int RETRY_INTERVAL_MS = 200;
 
     @Override
     @PluginMethod
@@ -65,17 +70,42 @@ public class SafePushNotificationsPlugin extends PushNotificationsPlugin {
     @Override
     @PluginMethod
     public void requestPermissions(PluginCall call) {
+        // Save the call so it survives across Handler posts (Capacitor may GC it otherwise)
+        call.save();
+        waitForActivityAndRequest(call, 0);
+    }
+
+    /**
+     * Polls for the Activity to become non-null, then delegates requestPermissions to super.
+     * If the Activity is never available within MAX_WAIT_MS, falls back to resolving
+     * with the PackageManager state (better than hanging the call forever).
+     */
+    private void waitForActivityAndRequest(final PluginCall call, final int elapsedMs) {
         Activity activity = getActivity();
-        if (activity == null) {
-            // Can't show a permission dialog without an Activity.
+        if (activity != null) {
+            // Activity is ready — show the real permission dialog.
+            try {
+                super.requestPermissions(call);
+            } catch (Exception e) {
+                // Still failed somehow — resolve gracefully so JS isn't stuck.
+                call.resolve(buildPermissionResult());
+            }
+            return;
+        }
+
+        if (elapsedMs >= MAX_WAIT_MS) {
+            // Gave up waiting. Resolve with the current state so JS isn't hung.
+            android.util.Log.w("SafePushPlugin",
+                "requestPermissions: Activity never attached after " + MAX_WAIT_MS + "ms. " +
+                "Resolving with PackageManager state (no dialog shown).");
             call.resolve(buildPermissionResult());
             return;
         }
-        try {
-            super.requestPermissions(call);
-        } catch (Exception e) {
-            call.resolve(buildPermissionResult());
-        }
+
+        // Activity is still null — retry after RETRY_INTERVAL_MS
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            waitForActivityAndRequest(call, elapsedMs + RETRY_INTERVAL_MS);
+        }, RETRY_INTERVAL_MS);
     }
 
     /**
