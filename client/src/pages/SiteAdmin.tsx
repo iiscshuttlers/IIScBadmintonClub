@@ -273,7 +273,7 @@ function SiteAdminInner() {
             </button>
           ) : (
             <button
-              onClick={() => setLocation("/")}
+              onClick={() => window.history.length > 1 ? window.history.back() : setLocation("/")}
               className="px-6 py-3 bg-slate-600 hover:bg-slate-700 text-on-accent font-bold rounded-xl transition shadow-lg shadow-slate-500/20"
             >
               Back to Home

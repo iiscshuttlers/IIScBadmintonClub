@@ -746,7 +746,7 @@ export default function CameraBroadcast() {
           Phone Camera Broadcast & YouTube Live streaming controls are reserved for Tournament Admins and Umpires only.
         </p>
         <button
-          onClick={() => setLocation("/")}
+          onClick={() => window.history.length > 1 ? window.history.back() : setLocation("/")}
           className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition shadow-lg text-sm"
         >
           Back to Home

@@ -13,7 +13,8 @@ import {
   Tv2,
   ListChecks,
   FileText,
-  Calendar
+  Calendar,
+  Bell
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLiveMatches } from "@/hooks/useLiveMatches";
@@ -31,6 +32,7 @@ import { MatchSection } from "@/components/pulse/MatchSection";
 import { MatchCard } from "@/components/feed/MatchCard";
 import { UmpireTab } from "@/components/umpire/UmpireTab";
 import { MatchPredictionCard } from "@/components/feed/MatchPredictions";
+import { MatchReminderModal } from "@/components/pulse/MatchReminderModal";
 import { shareMatch } from "@/lib/shareMatch";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
@@ -53,6 +55,8 @@ export function LiveTab() {
   // Dynamic URL syncing for Tournament Matches
   const [matchStatus, setMatchStatus] = useQueryState<"upcoming" | "completed">("m_status", "upcoming");
   const [matchCat, setMatchCat] = useQueryState<"ALL" | "MS" | "MD" | "XD" | "WS" | "WD">("m_cat", "ALL");
+
+  const [isGlobalReminderOpen, setIsGlobalReminderOpen] = useState(false);
 
   const {
     loading,
@@ -210,12 +214,12 @@ export function LiveTab() {
   return (
     <div className="container mx-auto px-4 max-w-3xl mt-8 pb-10">
       {activeTournament && (
-        <div className="text-center mb-6 mt-2">
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white" style={{ fontFamily: "Playfair Display, serif" }}>
+        <div className="text-center mb-3 mt-0">
+          <h1 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white" style={{ fontFamily: "Playfair Display, serif" }}>
             {activeTournament.name}
           </h1>
           {activeTournament.subtitle && (
-            <p className="text-sm text-muted-foreground mt-1 font-medium">{activeTournament.subtitle}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 font-medium">{activeTournament.subtitle}</p>
           )}
         </div>
       )}
@@ -512,13 +516,32 @@ export function LiveTab() {
                 return (
                   <>
                     {activeSubTab === "my-matches" ? (
-                      <MatchSection 
-                        title="My Matches" 
-                        icon={<Activity className="w-5 h-5 text-violet-500" />} 
-                        matches={myMatchesList} 
-                        defaultExpanded={true} 
-                        renderMatchCard={renderCard}
-                      />
+                      <>
+                        <MatchSection 
+                          title="My Matches" 
+                          icon={<Activity className="w-5 h-5 text-violet-500" />} 
+                          matches={myMatchesList} 
+                          defaultExpanded={true} 
+                          renderMatchCard={renderCard}
+                          headerAction={
+                            <button
+                              onClick={() => setIsGlobalReminderOpen(true)}
+                              className="p-1.5 bg-violet-100 hover:bg-violet-200 dark:bg-violet-900/30 dark:hover:bg-violet-900/50 text-violet-600 dark:text-violet-400 rounded-full transition-colors"
+                              title="Global Match Reminders"
+                            >
+                              <Bell className="w-4 h-4" />
+                            </button>
+                          }
+                        />
+                        {session?.user?.id && (
+                          <MatchReminderModal
+                            isOpen={isGlobalReminderOpen}
+                            onClose={() => setIsGlobalReminderOpen(false)}
+                            userId={session.user.id}
+                            initialGlobalMins={ownProfile?.default_match_reminder_mins}
+                          />
+                        )}
+                      </>
                     ) : (
                       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden transition-all duration-300 mb-6">
                         <div className="flex border-b border-slate-100 dark:border-slate-800">
@@ -629,7 +652,7 @@ export function LiveTab() {
       {/* 4. Brackets */}
       {!loading && activeSubTab === "brackets" && activeTournamentId && (
         <div className="mb-6 bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border border-slate-100 dark:border-slate-800 shadow-sm">
-          <h2 className="font-black text-lg mb-4">Live Brackets</h2>
+
           <LiveBracketsSection tournamentId={activeTournamentId} showBrackets={true} />
         </div>
       )}

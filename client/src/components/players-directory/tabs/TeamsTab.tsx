@@ -39,8 +39,8 @@ export function TeamsTab({ searchQuery = "", tournamentFilter = "All" }: TeamsTa
     
     allMatches.forEach(m => {
        if (tournamentFilter !== "All" && m.tournament_id !== tournamentFilter) return;
-       if (!m.player3_id) return; // not a doubles match
-       
+       if (m.category === 'MS' || m.category === 'WS' || m.category === 'Singles') return;
+
        const processTeam = (p1: string, p2: string, won: boolean) => {
           if (!p1 || !p2) return;
           const ids = [p1, p2].sort();
@@ -134,27 +134,25 @@ export function TeamsTab({ searchQuery = "", tournamentFilter = "All" }: TeamsTa
               const p2 = players?.find((p) => p.id === team.player2_id);
 
               return (
-                <Link key={team.id} href={`/doubles/${team.player1_id}/${team.player2_id}`} className="flex items-center gap-4 bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-violet-300 dark:hover:border-violet-700 transition-all cursor-pointer group">
-                  <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center font-black text-xl text-muted-foreground">
+                <Link key={team.id} href={`/doubles/${team.player1_id}/${team.player2_id}`} className="flex items-center gap-2 sm:gap-4 bg-white dark:bg-slate-900 rounded-2xl p-3 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-violet-300 dark:hover:border-violet-700 transition-all cursor-pointer group">
+                  <div className="flex-shrink-0 w-8 sm:w-10 h-8 sm:h-10 flex items-center justify-center font-black text-base sm:text-xl text-muted-foreground">
                     #{index + 1}
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-black text-foreground dark:text-foreground truncate flex items-center gap-2">
-                      <span className="truncate">{p1?.full_name || "Unknown"}</span>
-                      <span className="text-xs text-slate-300 font-bold">&</span>
-                      <span className="truncate">{p2?.full_name || "Unknown"}</span>
+                    <h3 className="text-sm sm:text-base leading-snug font-black text-foreground dark:text-foreground line-clamp-2 pr-1">
+                      {p1?.full_name || "Unknown"} <span className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 font-bold mx-0.5">&</span> {p2?.full_name || "Unknown"}
                     </h3>
 
                   </div>
 
-                  <div className="flex flex-col items-end text-right">
-                    <div className="flex items-center gap-1.5 text-lg font-black text-primary dark:text-primary">
-                      <Trophy className="w-4 h-4" />
+                  <div className="flex flex-col items-end text-right shrink-0 ml-1">
+                    <div className="flex items-center gap-1 text-base sm:text-lg font-black text-primary dark:text-primary">
+                      <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       {Math.round((team.matches_won / team.matches_played) * 100)}%
                     </div>
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-1">
-                      {team.matches_won}W - {team.matches_played - team.matches_won}L ({team.matches_played} played)
+                    <div className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-0.5">
+                      {team.matches_won}W - {team.matches_played - team.matches_won}L ({team.matches_played}P)
                     </div>
                   </div>
                 </Link>

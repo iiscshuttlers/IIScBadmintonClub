@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Trophy, ZoomIn, ZoomOut, X, ChevronRight, Clock, CheckCircle2, Play, Download, ImageIcon, ChevronDown } from "lucide-react";
+import { Trophy, ZoomIn, ZoomOut, X, ChevronRight, Clock, CheckCircle2, Play, Download, ImageIcon, ChevronDown, Maximize2, Minimize2, Printer } from "lucide-react";
 import { getCourtColor, cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -68,6 +68,31 @@ function useIsMobile() {
     return () => window.removeEventListener("resize", handler);
   }, []);
   return isMobile;
+}
+
+// ── Fuzzy Match Helper ────────────────────────────────────────────────────────
+function fuzzyMatch(term: string, target: string | null | undefined): boolean {
+  if (!target) return false;
+  const t = term.toLowerCase();
+  const tgt = target.toLowerCase();
+  if (tgt.includes(t)) return true;
+  
+  if (t.length < 4) return false; // Require at least 4 chars for fuzzy matching
+  
+  const maxDiff = t.length >= 6 ? 2 : 1; 
+  
+  for (let i = 0; i <= tgt.length - t.length; i++) {
+    const sub = tgt.substring(i, i + t.length);
+    let diff = 0;
+    for (let j = 0; j < t.length; j++) {
+      if (t[j] !== sub[j]) {
+        diff++;
+        if (diff > maxDiff) break;
+      }
+    }
+    if (diff <= maxDiff) return true;
+  }
+  return false;
 }
 
 // ── Player Roadmap Modal ──────────────────────────────────────────────────────
@@ -418,13 +443,59 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
   });
   const [viewMode, setViewMode] = useState<"tree" | "list">("tree");
   const [scale, setScale] = useState(1);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showRoadmap, setShowRoadmap] = useState(false);
+  const normalContainerRef = useRef<HTMLDivElement>(null);
+  const fsContainerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+
+  // Pinch-to-zoom state
+  const pinchRef = useRef<{ startDist: number; startScale: number } | null>(null);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      pinchRef.current = { startDist: Math.hypot(dx, dy), startScale: scale };
+    }
+  }, [scale]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2 && pinchRef.current) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.hypot(dx, dy);
+      const ratio = dist / pinchRef.current.startDist;
+      const newScale = Math.min(2.5, Math.max(0.3, +(pinchRef.current.startScale * ratio).toFixed(2)));
+      setScale(newScale);
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback(() => { pinchRef.current = null; }, []);
+
+  // Android hardware back button closes fullscreen
+  useEffect(() => {
+    if (!isFullscreen) return;
+    let cleanup: (() => void) | undefined;
+    import("@capacitor/app").then(({ App }) => {
+      App.addListener("backButton", () => setIsFullscreen(false)).then((handle) => {
+        cleanup = () => handle.remove();
+      });
+    }).catch(() => {/* web — no-op */});
+    // Web keyboard Escape
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setIsFullscreen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      cleanup?.();
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [isFullscreen]);
 
   // Auto-scale to fit screen width on mount / resize
   const computeScale = useCallback(() => {
-    if (!containerRef.current) return;
-    const containerW = containerRef.current.offsetWidth;
+    const el = normalContainerRef.current || fsContainerRef.current;
+    if (!el) return;
+    const containerW = el.offsetWidth;
     const totalW = rounds.length * COL_W + PADDING * 2;
     if (totalW > containerW) {
       const auto = Math.min(1, Math.max(0.4, (containerW * 0.95) / totalW));
@@ -581,6 +652,10 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
     let foundPos = null;
     let foundRi = 0;
     let exactPlayerName: string | null = null;
+    
+    let fuzzyFoundPos = null;
+    let fuzzyFoundRi = 0;
+    let fuzzyExactPlayerName: string | null = null;
 
     for (let ri = 0; ri < roundData.length; ri++) {
       for (const pos of roundData[ri].positions) {
@@ -595,123 +670,117 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
           else if (t2Match) exactPlayerName = pos.match.team2_label;
           break;
         }
+
+        if (!fuzzyFoundPos) {
+          const f1 = fuzzyMatch(lowerVal, pos.match.team1_label);
+          const f2 = fuzzyMatch(lowerVal, pos.match.team2_label);
+          if (f1 || f2) {
+            fuzzyFoundPos = pos;
+            fuzzyFoundRi = ri;
+            fuzzyExactPlayerName = f1 ? pos.match.team1_label : pos.match.team2_label;
+          }
+        }
       }
       if (foundPos) break;
     }
 
-    if (foundPos && containerRef.current) {
-      if (enablePathHighlight && exactPlayerName) setSelectedPlayer(exactPlayerName);
+    if (!foundPos && fuzzyFoundPos) {
+      foundPos = fuzzyFoundPos;
+      foundRi = fuzzyFoundRi;
+      exactPlayerName = fuzzyExactPlayerName;
+    }
+
+    if (foundPos) {
+      if (exactPlayerName) {
+        setSelectedPlayer(exactPlayerName);
+        if (enablePathHighlight) setShowRoadmap(true);
+      }
       const x = foundRi * COL_W + PADDING;
       const y = foundPos.y + PADDING + LABEL_H;
       
       const scaledX = x * scale;
       const scaledY = y * scale;
       
-      containerRef.current.scrollTo({
-        left: Math.max(0, scaledX - containerRef.current.clientWidth / 2 + (MATCH_W * scale) / 2),
-        top: Math.max(0, scaledY - containerRef.current.clientHeight / 2 + (MATCH_H * scale) / 2),
-        behavior: "smooth",
+      const scrollOpts = (el: HTMLDivElement) => ({
+        left: Math.max(0, scaledX - el.clientWidth / 2 + (MATCH_W * scale) / 2),
+        top: Math.max(0, scaledY - el.clientHeight / 2 + (MATCH_H * scale) / 2),
+        behavior: "smooth" as ScrollBehavior,
       });
+
+      normalContainerRef.current?.scrollTo(scrollOpts(normalContainerRef.current));
+      fsContainerRef.current?.scrollTo(scrollOpts(fsContainerRef.current));
+    } else {
+      if (val.length >= 2) {
+        setSelectedPlayer(null);
+        setShowRoadmap(false);
+      }
     }
   };
 
   // Touch target height for player rows (min 44px for mobile)
   const playerRowH = isMobile ? PLAYER_ROW_H_MOBILE : PLAYER_ROW_H_DESKTOP;
 
-  return (
-    <div className="rounded-2xl border border-slate-700 overflow-hidden" style={{ background: "#0d1117" }}>
-      {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-3 py-2 border-b border-slate-800 gap-2">
-        <div className="flex w-full sm:w-auto items-center justify-between">
-          <span className="text-[10px] text-muted-foreground uppercase tracking-widest truncate mr-2">
-            {enablePathHighlight && selectedPlayer
-              ? <><span className="text-primary font-black">{selectedPlayer}</span><span className="text-muted-foreground"> · roadmap open</span></>
-              : enablePathHighlight ? "Tap a player to see roadmap" : "Bracket"
-            }
-          </span>
+  // ── Shared toolbar renderer (used in both normal and fullscreen mode) ──────
+  const toolbar = (
+    <div className="flex flex-col md:flex-row gap-2 px-3 py-2 border-b border-slate-800 bg-[#0d1117] shadow-sm relative z-10">
+      
+      {/* --- ROW 1 --- */}
+      <div className="flex items-center gap-2 w-full md:w-auto md:flex-1">
+        {/* 1. Search & View */}
+        <div className="flex items-center gap-1 bg-slate-900/80 p-1 rounded-md border border-slate-700/60 shadow-sm flex-1 min-w-0 overflow-x-auto">
           <input
             type="text"
             placeholder="Find player..."
             value={searchTerm}
             onChange={handleSearch}
-            className="sm:hidden bg-slate-900/50 text-white text-[10px] sm:text-xs rounded border border-slate-700 px-2 py-1 outline-none focus:border-primary w-28 ml-auto"
+            className="bg-transparent text-white text-[10px] px-2 py-1 outline-none focus:text-primary w-24 shrink-0 placeholder:text-slate-500"
           />
-        </div>
-        <div className="flex items-center gap-1 shrink-0 ml-auto sm:mr-4">
-          <input
-            type="text"
-            placeholder="Find player..."
-            value={searchTerm}
-            onChange={handleSearch}
-            className="hidden sm:block bg-slate-900/50 text-white text-[10px] sm:text-xs rounded border border-slate-700 px-2 py-1 outline-none focus:border-primary w-28 mr-2"
-          />
+          <div className="w-px h-3 bg-slate-700 mx-1 shrink-0" />
           <select
             value={viewMode}
             onChange={(e) => setViewMode(e.target.value as "tree" | "list")}
-            className="bg-slate-900/50 text-slate-300 text-[10px] sm:text-xs rounded border border-slate-700 px-2 py-1 outline-none focus:border-primary mr-2"
+            className="bg-transparent text-slate-300 text-[10px] outline-none cursor-pointer shrink-0"
           >
-            <option value="tree">Tree View</option>
-            <option value="list">List View</option>
+            <option value="tree" className="bg-slate-900">Tree</option>
+            <option value="list" className="bg-slate-900">List</option>
           </select>
           {currentBaseSlots >= 16 && (
-            <select
-              value={bracketSegment}
-              onChange={(e) => setBracketSegment(e.target.value)}
-              className="bg-slate-900/50 text-slate-300 text-[10px] sm:text-xs rounded border border-slate-700 px-2 py-1 outline-none focus:border-primary mr-2"
-            >
-              <option value="full">Full Tree</option>
-              <option value="top-half">Top Half</option>
-              <option value="bottom-half">Bottom Half</option>
-              {currentBaseSlots >= 32 && (
-                <>
-                  <option value="q1">Quarter 1</option>
-                  <option value="q2">Quarter 2</option>
-                  <option value="q3">Quarter 3</option>
-                  <option value="q4">Quarter 4</option>
-                </>
-              )}
-            </select>
+            <>
+              <div className="w-px h-3 bg-slate-700 mx-1 shrink-0" />
+              <select
+                value={bracketSegment}
+                onChange={(e) => setBracketSegment(e.target.value)}
+                className="bg-transparent text-slate-300 text-[10px] outline-none cursor-pointer shrink-0"
+              >
+                <option value="full" className="bg-slate-900">Full</option>
+                <option value="top-half" className="bg-slate-900">Top ½</option>
+                <option value="bottom-half" className="bg-slate-900">Bot ½</option>
+                {currentBaseSlots >= 32 && (
+                  <>
+                    <option value="q1" className="bg-slate-900">Q1</option>
+                    <option value="q2" className="bg-slate-900">Q2</option>
+                    <option value="q3" className="bg-slate-900">Q3</option>
+                    <option value="q4" className="bg-slate-900">Q4</option>
+                  </>
+                )}
+              </select>
+            </>
           )}
-          {hiddenRounds.length > 0 && (
-            <button
-              onClick={() => setHiddenRounds([])}
-              className="px-2 py-1 mr-1 flex items-center gap-1 text-[10px] font-bold uppercase rounded-md text-amber-400 hover:text-white hover:bg-amber-500/20 active:bg-amber-500/30 transition-colors border border-amber-500/30"
-              title="Show hidden rounds"
-            >
-              Unhide ({hiddenRounds.length})
-            </button>
-          )}
-          {onExportExcel && (
-            <button
-              onClick={onExportExcel}
-              className="px-2 py-1 flex items-center gap-1 text-[10px] font-bold uppercase rounded-md text-slate-300 hover:text-white hover:bg-green-500/20 active:bg-green-500/30 transition-colors"
-            >
-              Excel
-            </button>
-          )}
-          <button
-            onClick={() => {
-              const el = document.getElementById("bracket-visual-export-container");
-              if (el) {
-                import("@/utils/exportUtils").then(({ exportElementToPDF }) => {
-                  exportElementToPDF(el, getExportFilename(), "#0d1117", { transform: 'scale(1)' });
-                });
-              }
-            }}
-            className="px-2 py-1 flex items-center gap-1 text-[10px] font-bold uppercase rounded-md text-slate-300 hover:text-white hover:bg-red-500/20 active:bg-red-500/30 transition-colors"
-          >
-            PDF
-          </button>
+        </div>
+
+        {/* 2. Export Controls (Print & Download) */}
+        <div className="flex items-center gap-1 bg-slate-900/80 p-1 rounded-md border border-slate-700/60 shadow-sm shrink-0">
+          {/* Print Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
-                className="px-2 py-1 flex items-center gap-1 text-[10px] font-bold uppercase rounded-md text-slate-300 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200 transition-colors border border-slate-600/50"
-                title="Export a light-themed PDF suitable for printing"
+                className="w-6 h-6 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-700 active:bg-slate-600 transition-colors shrink-0"
+                title="Print..."
               >
-                Print PDF <ChevronDown size={12} />
+                <Printer size={12} />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
+            <DropdownMenuContent align="center" className="w-44">
               {[1, 2, 4].map(pages => (
                 <DropdownMenuItem
                   key={pages}
@@ -727,65 +796,241 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
                       });
                     }
                   }}
-                  className="text-xs"
+                  className="text-xs cursor-pointer"
                 >
                   {pages === 1 ? "Single Page (Full)" : pages === 2 ? "2 Pages (Halves)" : "4 Pages (Quarters)"}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <button
-            onClick={() => {
-              const el = document.getElementById("bracket-visual-export-container");
-              if (el) {
-                import("@/utils/exportUtils").then(({ exportElementToImage }) => {
-                  exportElementToImage(el, getExportFilename(), "#0d1117", { transform: 'scale(1)' });
-                });
-              }
-            }}
-            className="px-2 py-1 flex items-center gap-1 text-[10px] font-bold uppercase rounded-md text-slate-300 hover:text-white hover:bg-blue-500/20 active:bg-blue-500/30 transition-colors"
-          >
-            PNG
-          </button>
-          <button
-            onClick={() => {
-              const el = document.getElementById("bracket-visual-export-container");
-              if (el) {
-                import("@/utils/exportUtils").then(({ exportElementToJpeg }) => {
-                  exportElementToJpeg(el, getExportFilename(), "#0d1117", { transform: 'scale(1)' });
-                });
-              }
-            }}
-            className="px-2 py-1 flex items-center gap-1 text-[10px] font-bold uppercase rounded-md text-slate-300 hover:text-white hover:bg-indigo-500/20 active:bg-indigo-500/30 transition-colors"
-          >
-            JPG
-          </button>
+
+          <div className="w-px h-3 bg-slate-700 mx-0.5 shrink-0" />
+
+          {/* Download Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="w-6 h-6 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-700 active:bg-slate-600 transition-colors shrink-0"
+                title="Download..."
+              >
+                <Download size={12} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-32">
+              <DropdownMenuItem
+                onClick={() => {
+                  const el = document.getElementById("bracket-visual-export-container");
+                  if (el) import("@/utils/exportUtils").then(({ exportElementToPDF }) => exportElementToPDF(el, getExportFilename(), "#0d1117", { transform: 'scale(1)' }));
+                }}
+                className="text-xs cursor-pointer"
+              >
+                As PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  const el = document.getElementById("bracket-visual-export-container");
+                  if (el) import("@/utils/exportUtils").then(({ exportElementToImage }) => exportElementToImage(el, getExportFilename(), "#0d1117", { transform: 'scale(1)' }));
+                }}
+                className="text-xs cursor-pointer"
+              >
+                As PNG
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  const el = document.getElementById("bracket-visual-export-container");
+                  if (el) import("@/utils/exportUtils").then(({ exportElementToJpeg }) => exportElementToJpeg(el, getExportFilename(), "#0d1117", { transform: 'scale(1)' }));
+                }}
+                className="text-xs cursor-pointer"
+              >
+                As JPG
+              </DropdownMenuItem>
+              {onExportExcel && (
+                <DropdownMenuItem
+                  onClick={onExportExcel}
+                  className="text-xs cursor-pointer text-green-500 focus:text-green-400"
+                >
+                  As Excel
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-        {/* Zoom controls */}
-        <div className="flex items-center gap-1 shrink-0">
+
+        {/* Fullscreen Close Button (inline with toolbar) */}
+        {isFullscreen && (
           <button
-            onClick={() => setScale((s) => Math.max(0.4, +(s - 0.1).toFixed(1)))}
-            className="w-8 h-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-on-accent hover:bg-slate-700 active:bg-slate-600 transition-colors"
+            onClick={() => setIsFullscreen(false)}
+            className="ml-auto w-8 h-8 flex items-center justify-center rounded-full bg-slate-900/90 text-slate-300 border border-slate-700 shadow-sm hover:bg-red-500/20 hover:text-red-400 active:scale-95 transition-all shrink-0"
+            title="Exit Fullscreen"
+          >
+            <X size={18} />
+          </button>
+        )}
+      </div>
+
+      {/* --- ROW 2 --- */}
+      <div className="flex items-center justify-between gap-2 w-full md:w-auto shrink-0">
+        {/* 3. Zoom & Fullscreen Controls */}
+        <div className="flex items-center gap-1 bg-slate-900/80 p-1 rounded-md border border-slate-700/60 shadow-sm shrink-0 overflow-x-auto">
+          <button
+            onClick={() => setScale((s) => Math.max(0.3, +(s - 0.1).toFixed(1)))}
+            className="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:text-white hover:bg-slate-700 active:bg-slate-600 transition-colors shrink-0"
             aria-label="Zoom out"
           >
-            <ZoomOut size={15} />
+            <ZoomOut size={12} />
           </button>
-          <span className="text-[10px] text-muted-foreground w-8 text-center tabular-nums">{Math.round(scale * 100)}%</span>
+          <span className="text-[9px] font-mono font-medium text-slate-400 w-7 text-center tabular-nums shrink-0">
+            {Math.round(scale * 100)}%
+          </span>
           <button
-            onClick={() => setScale((s) => Math.min(1.5, +(s + 0.1).toFixed(1)))}
-            className="w-8 h-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-on-accent hover:bg-slate-700 active:bg-slate-600 transition-colors"
+            onClick={() => setScale((s) => Math.min(2.5, +(s + 0.1).toFixed(1)))}
+            className="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:text-white hover:bg-slate-700 active:bg-slate-600 transition-colors shrink-0"
             aria-label="Zoom in"
           >
-            <ZoomIn size={15} />
+            <ZoomIn size={12} />
           </button>
           <button
             onClick={computeScale}
-            className="text-[10px] text-muted-foreground hover:text-on-accent px-2 py-1 rounded-md hover:bg-slate-700 transition-colors"
+            className="text-[9px] font-bold uppercase text-slate-400 hover:text-white px-2 py-1 rounded hover:bg-slate-700 active:bg-slate-600 transition-colors shrink-0"
           >
             Fit
           </button>
+          
+          {/* Fullscreen toggle */}
+          {!isFullscreen && (
+            <>
+              <div className="w-px h-3 bg-slate-700 mx-0.5 shrink-0" />
+              <button
+                onClick={() => setIsFullscreen(true)}
+                className="w-6 h-6 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-700 active:bg-slate-600 transition-colors shrink-0"
+                title="Fullscreen"
+              >
+                <Maximize2 size={12} />
+              </button>
+            </>
+          )}
         </div>
+
+        {/* 4. Quick Actions (Unhide) */}
+        {hiddenRounds.length > 0 && (
+          <button
+            onClick={() => setHiddenRounds([])}
+            className="px-2.5 py-1.5 flex items-center gap-1 text-[10px] font-bold uppercase rounded-md text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 active:bg-amber-500/30 transition-colors border border-amber-500/30 shadow-sm shrink-0"
+            title="Show hidden rounds"
+          >
+            Unhide ({hiddenRounds.length})
+          </button>
+        )}
       </div>
+    </div>
+  );
+
+  return (
+    <>
+    {/* ── Fullscreen overlay ────────────────────────────────────────────── */}
+    {isFullscreen && (
+      <div
+        className="fixed inset-0 z-[9999] flex flex-col"
+        style={{ background: "#0d1117" }}
+      >
+        {/* Fullscreen toolbar (reused) */}
+        <div className="shrink-0">{toolbar}</div>
+        {/* Bracket canvas — fills remaining space */}
+        {viewMode === "list" ? (
+          <div className="flex-1 overflow-y-auto p-4 space-y-8">
+            {/* list content rendered below */}
+          </div>
+        ) : (
+          <div
+            ref={fsContainerRef}
+            className="flex-1"
+            style={{
+              overflowX: "auto",
+              overflowY: "auto",
+              WebkitOverflowScrolling: "touch" as React.CSSProperties["WebkitOverflowScrolling"],
+              touchAction: pinchRef.current ? "none" : "pan-x pan-y",
+            }}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            <div
+              id="bracket-visual-export-container"
+              className="bracket-export-bg"
+              style={{
+                transformOrigin: "top left",
+                transform: `scale(${scale})`,
+                width: totalW + PADDING * 2,
+                height: totalH + PADDING * 2 + LABEL_H,
+                minWidth: (totalW + PADDING * 2) * scale,
+                minHeight: (totalH + PADDING * 2 + LABEL_H) * scale,
+                position: "relative",
+              }}
+            >
+              {/* Round labels */}
+              <div className="flex absolute top-0 left-0" style={{ paddingLeft: PADDING, paddingTop: PADDING / 2 }}>
+                {roundData.map(({ ri, label, round }) => (
+                  <div key={ri} style={{ width: COL_W, flexShrink: 0 }}
+                    className="text-[10px] font-black uppercase tracking-widest text-indigo-400 flex items-center gap-1"
+                  >
+                    <button
+                      onClick={() => setHiddenRounds((h) => h.includes(round) ? h.filter((r) => r !== round) : [...h, round])}
+                      className="opacity-40 hover:opacity-100 transition-opacity"
+                      title="Hide/show round"
+                    >
+                      <X size={10} />
+                    </button>
+                    {label}
+                  </div>
+                ))}
+              </div>
+              {/* SVG connector lines */}
+              <svg
+                style={{ position: "absolute", top: PADDING + LABEL_H, left: PADDING, overflow: "visible", pointerEvents: "none" }}
+                width={totalW}
+                height={totalH}
+              >
+                {lines}
+              </svg>
+              {/* Match cards */}
+              {roundData.map(({ ri, positions }) =>
+                positions.map(({ match: m, y }) => (
+                  <MatchCard
+                    key={m.id}
+                    match={m}
+                    x={ri * COL_W + PADDING}
+                    y={y + PADDING + LABEL_H}
+                    isHighlighted={pathSet.has(m.id)}
+                    enablePathHighlight={enablePathHighlight}
+                    selectedPlayer={selectedPlayer}
+                    onHide={() => setHiddenRounds((h) => [...h, m.round])}
+                    onPlayerClick={enablePathHighlight ? (name) => {
+                      if (selectedPlayer === name) {
+                        if (!showRoadmap) setShowRoadmap(true);
+                        else {
+                          setSelectedPlayer(null);
+                          setShowRoadmap(false);
+                        }
+                      } else {
+                        setSelectedPlayer(name);
+                        setShowRoadmap(true);
+                      }
+                    } : undefined}
+                    playerRowH={playerRowH}
+                    category={category}
+                  />
+                ))
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    )}
+
+    {/* ── Normal (in-page) view ──────────────────────────────────────────── */}
+    <div className="rounded-2xl border border-slate-700 overflow-hidden" style={{ background: "#0d1117" }}>
+      {/* Toolbar */}
+      {toolbar}
 
       {/* View Content */}
       {viewMode === "list" ? (
@@ -842,7 +1087,7 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
       ) : (
         /* Scrollable bracket */
         <div
-          ref={containerRef}
+          ref={normalContainerRef}
           style={{
             overflowX: "auto",
             overflowY: "auto",
@@ -1003,14 +1248,155 @@ function BracketVisualInner({ matches, rounds, enablePathHighlight = false, onEx
       )}
 
       {/* Roadmap modal */}
-      {enablePathHighlight && selectedPlayer && (
+      {enablePathHighlight && selectedPlayer && showRoadmap && (
         <RoadmapPanel
           player={selectedPlayer}
           matches={matches}
           isMobile={isMobile}
-          onClose={() => setSelectedPlayer(null)}
+          onClose={() => setShowRoadmap(false)}
         />
       )}
+    </div>
+    </>
+  );
+}
+
+interface MatchCardProps {
+  match: BracketMatch;
+  x: number;
+  y: number;
+  isHighlighted: boolean;
+  enablePathHighlight: boolean;
+  selectedPlayer: string | null;
+  onHide: () => void;
+  onPlayerClick?: (name: string) => void;
+  playerRowH: number;
+  category?: string;
+}
+
+function MatchCard({ match: m, x, y, isHighlighted, enablePathHighlight, selectedPlayer, onHide, onPlayerClick, playerRowH, category }: MatchCardProps) {
+  const isCompleted = m.status === "completed";
+  const isLive = m.status === "in_progress";
+  const t1 = m.team1_label ?? "TBD";
+  const t2 = m.team2_label ?? "TBD";
+  const t1Won = isCompleted && m.winner_side === 1;
+  const t2Won = isCompleted && m.winner_side === 2;
+  
+  const isT1Selected = selectedPlayer && t1.trim().toLowerCase() === selectedPlayer.trim().toLowerCase();
+  const isT2Selected = selectedPlayer && t2.trim().toLowerCase() === selectedPlayer.trim().toLowerCase();
+  
+  const opacity = enablePathHighlight && selectedPlayer && !isHighlighted ? 0.3 : 1;
+  
+  const sets = m.sets_history?.length && Array.isArray(m.sets_history)
+    ? m.sets_history.map((s) => {
+        if (typeof s !== "string") return { t1: 0, t2: 0 };
+        const [a, b] = s.split("-").map(Number);
+        return { t1: isNaN(a) ? 0 : a, t2: isNaN(b) ? 0 : b };
+      })
+    : null;
+
+  return (
+    <div
+      className={`absolute flex flex-col justify-center transition-opacity duration-300 ${isHighlighted ? 'z-10' : 'z-0'}`}
+      style={{
+        left: x,
+        top: y,
+        width: MATCH_W,
+        height: MATCH_H,
+        opacity
+      }}
+    >
+      <div className={cn("flex flex-col border rounded overflow-hidden", 
+        CAT_BOX_COLORS_DARK[category || ""] || "bg-slate-900 border-slate-800",
+        isHighlighted ? 'border-primary ring-2 ring-primary/20 shadow-lg shadow-primary/10' : 'shadow-md'
+      )}>
+        {/* Match header */}
+        <div className={`flex justify-between items-center px-2 py-1 text-[9px] font-black uppercase 
+tracking-widest ${isCompleted ? 'bg-slate-800/80 text-slate-400' : isLive ? 'bg-amber-500/20 text-amber-500' : 
+'bg-slate-800/50 text-muted-foreground'}`}>
+          <span>{m.match_code}</span>
+          <span className="flex items-center gap-1">
+            {isCompleted ? (
+              <span className="text-slate-500">Done</span>
+            ) : (
+              isLive ? (
+                <span className="flex items-center gap-1 text-amber-500 font-bold">
+                  Live
+                  {m.court_number && (
+                    <span className={cn("font-black px-1.5 py-0.5 rounded-md text-[8px] bg-slate-800/80 border border-slate-600/50 shadow-sm", getCourtColor(m.court_number))}>
+                      {String(m.court_number).toUpperCase().startsWith('C') ? String(m.court_number).toUpperCase() : `C${m.court_number}`}
+                    </span>
+                  )}
+                </span>
+              ) : (m as any).scheduled_at ? (
+                <span className="flex items-center gap-1 text-[9px]">
+                  {m.court_number && (
+                    <span className={cn("font-black px-1.5 py-0.5 rounded-md bg-slate-800/80 border border-slate-600/50 shadow-sm", getCourtColor(m.court_number))}>
+                      {String(m.court_number).toUpperCase().startsWith('C') ? String(m.court_number).toUpperCase() : `C${m.court_number}`}
+                    </span>
+                  )}
+                  <span className="text-slate-100 font-black tracking-wide drop-shadow-sm">
+                    {new Date((m as any).scheduled_at).toLocaleString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                    <span className="font-bold text-amber-400 ml-1">
+                      {new Date((m as any).scheduled_at).toLocaleString("en-GB", { day: "2-digit", month: "2-digit" })}
+                    </span>
+                  </span>
+                </span>
+              ) : (
+                <span className="text-[10px] font-black text-slate-400 tracking-widest">TBD</span>
+              )
+            )}
+            {isLive && <span className="animate-pulse w-1.5 h-1.5 rounded-full bg-red-500" />}
+          </span>
+        </div>
+        {/* Players + scores */}
+        <div className="flex">
+          <div className="flex-1 min-w-0 flex flex-col">
+            <div
+              onClick={onPlayerClick ? () => onPlayerClick(t1) : undefined}
+              style={{ minHeight: playerRowH }}
+              className={`flex-1 flex items-center gap-1 px-2 border-b border-slate-700/50 ${
+                isT1Selected 
+                  ? "bg-primary/40 animate-pulse shadow-[inset_0_0_10px_rgba(var(--primary),0.5)]" 
+                  : t1Won ? "bg-amber-500/20" : ""
+              } ${onPlayerClick ? "cursor-pointer active:bg-slate-700/50" : ""}`}
+            >
+              <span className={`flex-1 text-[11px] font-bold truncate leading-tight ${
+                isT1Selected ? "text-white drop-shadow-md" : t1Won ? "text-amber-300" : "text-slate-300"
+              }`}>{t1}</span>
+              {t1Won && <Trophy size={11} className="text-amber-400 shrink-0" />}
+            </div>
+            <div
+              onClick={onPlayerClick ? () => onPlayerClick(t2) : undefined}
+              style={{ minHeight: playerRowH }}
+              className={`flex-1 flex items-center gap-1 px-2 ${
+                isT2Selected 
+                  ? "bg-primary/40 animate-pulse shadow-[inset_0_0_10px_rgba(var(--primary),0.5)]" 
+                  : t2Won ? "bg-amber-500/20" : ""
+              } ${onPlayerClick ? "cursor-pointer active:bg-slate-700/50" : ""}`}
+            >
+              <span className={`flex-1 text-[11px] font-bold truncate leading-tight ${
+                isT2Selected ? "text-white drop-shadow-md" : t2Won ? "text-amber-300" : "text-slate-300"
+              }`}>{t2}</span>
+              {t2Won && <Trophy size={11} className="text-amber-400 shrink-0" />}
+            </div>
+          </div>
+          {isCompleted && sets && (
+            <div className="flex shrink-0 border-l border-slate-700/50">
+              {sets.map((s, i) => (
+                <div key={i} className={`flex flex-col${i < sets.length - 1 ? " border-r border-slate-700/30" : ""}`} style={{ width: 22 }}>
+                  <div style={{ minHeight: playerRowH }} className={`flex items-center justify-center text-[11px] font-mono font-bold border-b border-slate-700/50 ${t1Won ? "bg-amber-500/10" : ""} ${s.t1 > s.t2 ? "text-foreground" : "text-muted-foreground"}`}>
+                    {s.t1}
+                  </div>
+                  <div style={{ minHeight: playerRowH }} className={`flex items-center justify-center text-[11px] font-mono font-bold ${t2Won ? "bg-amber-500/10" : ""} ${s.t2 > s.t1 ? "text-foreground" : "text-muted-foreground"}`}>
+                    {s.t2}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

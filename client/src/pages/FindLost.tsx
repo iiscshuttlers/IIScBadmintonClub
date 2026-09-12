@@ -373,13 +373,13 @@ export default function FindLost() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-safe pb-24 lg:pb-8">
       {/* Hero */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-on-accent py-6 relative overflow-hidden">
+      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-on-accent py-3 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(99,102,241,0.15),transparent)] pointer-events-none" />
         <div className="container mx-auto px-4 max-w-3xl relative z-10 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-black uppercase tracking-widest mb-2">
-            <Search className="w-4 h-4 text-indigo-400" /> Find & Lost
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-[10px] font-black uppercase tracking-widest mb-1.5">
+            <Search className="w-3 h-3 text-indigo-400" /> Find &amp; Lost
             <InfoModal
-              title="FIND & LOST"
+              title="FIND &amp; LOST"
               items={[
                 { badge: "NOTIFY", title: "Real-time Alerts", desc: "Whenever you post an item, all users will see it in the global feed." },
                 { badge: "CLAIM", title: "Claiming an item", desc: "Click 'Claim' on an item to securely ping the poster that you have their item or want to collect it." }
@@ -387,14 +387,14 @@ export default function FindLost() {
               triggerClassName="text-foreground hover:text-indigo-200"
             />
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black mb-3">Lost something on court?</h1>
-          <p className="text-slate-300 text-sm">Post about lost or found items at the IISc badminton courts. Get real-time notifications when someone replies.</p>
+          <h1 className="text-xl font-black mb-1">Lost something on court?</h1>
+          <p className="text-slate-300 text-xs leading-snug">Post lost or found items at IISc courts. Get real-time notifications when someone replies.</p>
           {session && (
             <button
               onClick={openNewPost}
-              className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-on-accent font-bold shadow-lg shadow-indigo-900/40 transition"
+              className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-on-accent text-sm font-bold shadow-lg shadow-indigo-900/40 transition"
             >
-              <Plus className="w-4 h-4" /> Post Item
+              <Plus className="w-3.5 h-3.5" /> Post Item
             </button>
           )}
         </div>

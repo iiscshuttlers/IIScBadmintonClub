@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
@@ -42,6 +42,12 @@ export function useJoinAuth() {
   // Native-only. Stays false on web/PWA, so the sign-in UI is unchanged there.
   const [biometricReady, setBiometricReady] = useState(false);
   const biometricEmail = getBiometricEmail();
+
+  // Controls the in-page "Enable fingerprint sign-in?" modal card.
+  const [showBiometricPrompt, setShowBiometricPrompt] = useState(false);
+  // useRef so the value survives re-renders (plain object would reset on every render).
+  const pendingSessionRef = useRef<Parameters<typeof enableBiometricLogin>[0]>(null);
+
 
   const { session, profile, isInitializing } = useAuth();
 
@@ -102,21 +108,34 @@ export function useJoinAuth() {
     try {
       if (isBiometricEnabled()) return;
       if (!(await isBiometricAvailable())) return;
-      toast("Enable fingerprint sign-in?", {
-        description: "Skip typing your password next time on this device.",
-        duration: 10000,
-        action: {
-          label: "Enable",
-          onClick: async () => {
-            if (await enableBiometricLogin(newSession)) {
-              toast.success("Fingerprint sign-in enabled");
-            }
-          },
-        },
-      });
+      // Store session reference and show the proper in-page modal card.
+      pendingSessionRef.current = newSession;
+      setShowBiometricPrompt(true);
     } catch {
       /* enrolment is entirely optional */
     }
+  };
+
+  const handleEnableBiometric = async () => {
+    setShowBiometricPrompt(false);
+    // Always use the live current session — the one stored at sign-in time may
+    // already have been rotated by Supabase's internal auto-refresh, which would
+    // cause the stored credential to be "expired" immediately on next use.
+    let sessionToEnrol = pendingSessionRef.current;
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) sessionToEnrol = data.session;
+    } catch { /* fall back to pendingSession */ }
+    pendingSessionRef.current = null;
+    if (await enableBiometricLogin(sessionToEnrol)) {
+      setBiometricReady(true);
+      toast.success("Fingerprint sign-in enabled");
+    }
+  };
+
+  const dismissBiometricPrompt = () => {
+    setShowBiometricPrompt(false);
+    pendingSessionRef.current = null;
   };
 
   const handleBiometricSignIn = async () => {
@@ -318,6 +337,7 @@ export function useJoinAuth() {
     infoMsg, setInfoMsg, errorMsg, setErrorMsg, agreedToTerms, setAgreedToTerms,
     inactivityLogout, setInactivityLogout, reset,
     biometricReady, biometricEmail, handleBiometricSignIn,
+    showBiometricPrompt, handleEnableBiometric, dismissBiometricPrompt,
     handleSignIn, handleSignUp, handleResendLink, handleSendOtp, handleVerifyOtp, handleGoogleSignIn
   };
 }

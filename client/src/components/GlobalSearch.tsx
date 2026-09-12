@@ -14,6 +14,33 @@ interface SearchResult {
   href: string;
 }
 
+function fuzzyMatch(term: string, target: string | null | undefined): boolean {
+  if (!target) return false;
+  const t = term.toLowerCase();
+  const tgt = target.toLowerCase();
+  if (tgt.includes(t)) return true;
+  
+  if (t.length < 4) return false; // Require at least 4 chars for fuzzy matching
+  
+  const maxDiff = t.length >= 6 ? 2 : 1; 
+  
+  for (let i = 0; i <= tgt.length - t.length; i++) {
+    const sub = tgt.substring(i, i + t.length);
+    let diff = 0;
+    for (let j = 0; j < t.length; j++) {
+      if (t[j] !== sub[j]) {
+        diff++;
+        if (diff > maxDiff) break;
+      }
+    }
+    if (diff <= maxDiff) return true;
+  }
+  return false;
+}
+
+// Module-level cache for fast client-side fuzzy searching of players
+let cachedSearchPlayers: any[] | null = null;
+
 interface GlobalSearchProps {
   open: boolean;
   onClose: () => void;
@@ -82,19 +109,14 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
 
       const lq = q.toLowerCase();
 
-      const [playersRes, playerIdRes, annRes, eventsRes, teamsRes] = await Promise.all([
-        supabase
-          .from("search_players_view")
-          .select("id, full_name, avatar_url, department, overall_rank")
-          .ilike("full_name", `%${q}%`)
-          .limit(5),
-        // Separate ID-only query used to filter matches safely (avoids raw subquery injection)
-        supabase
-          .from("players")
-          .select("id")
-          .ilike("full_name", `%${q}%`)
-          .is("deleted_at", null)
-          .limit(20),
+      const [playersRes, annRes, eventsRes, teamsRes] = await Promise.all([
+        // We fetch all active players once to support client-side fuzzy matching
+        (async () => {
+          if (cachedSearchPlayers) return null;
+          const res = await supabase.from("search_players_view").select("id, full_name, avatar_url, department, overall_rank");
+          if (res.data) cachedSearchPlayers = res.data;
+          return null;
+        })(),
         supabase
           .from("site_data")
           .select("value")
@@ -112,7 +134,11 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
           .limit(4),
       ]);
 
-      const playerResults: SearchResult[] = (playersRes.data || []).map((p) => ({
+      // Filter players using fuzzy match
+      const matchedPlayers = (cachedSearchPlayers || []).filter(p => fuzzyMatch(lq, p.full_name));
+      const topPlayers = matchedPlayers.slice(0, 5);
+
+      const playerResults: SearchResult[] = topPlayers.map((p) => ({
         type: "player",
         id: p.id,
         title: p.full_name,
@@ -122,12 +148,12 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
       }));
 
       // Use the ID list to filter matches with parameterised .in() — no raw interpolation
-      const matchingIds = (playerIdRes.data || []).map((r: any) => r.id);
+      const matchingIds = matchedPlayers.slice(0, 20).map((r: any) => r.id);
       let matchResults: SearchResult[] = [];
       if (matchingIds.length > 0) {
         const { data: matchRows } = await supabase
           .from("matches")
-          .select("id, match_score, score, category, created_at, player1_id, player2_id, player1:players!player1_id(full_name), player2:players!player2_id(full_name)")
+          .select("id, score, category, created_at, player1_id, player2_id, player1:players!player1_id(full_name), player2:players!player2_id(full_name)")
           .in("status", ["confirmed", "walkover"])
           .or(`player1_id.in.(${matchingIds.join(",")}),player2_id.in.(${matchingIds.join(",")})`)
           .order("created_at", { ascending: false })

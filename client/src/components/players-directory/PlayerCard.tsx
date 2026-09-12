@@ -100,6 +100,7 @@ interface PlayerCardProps {
   currentUserId?: string;
   isPersonalView?: boolean;
   allRanks?: { overall?: number; singles?: number; doubles?: number; mixed?: number };
+  activeMetric?: "overall" | "singles" | "doubles" | "mixed";
 }
 
 export function PlayerCard({
@@ -119,6 +120,7 @@ export function PlayerCard({
   currentUserId,
   isPersonalView = false,
   allRanks,
+  activeMetric = "overall",
 }: PlayerCardProps) {
   const [, setLocation] = useLocation();
   // Calibration Phase
@@ -212,6 +214,8 @@ export function PlayerCard({
   const lastName = nameParts.length > 0 ? nameParts[nameParts.length - 1] : "";
   const emphasizeFirst = nameParts.length > 1 && lastName.length <= 2;
 
+  const displayRank = allRanks ? allRanks[activeMetric] : undefined;
+
   return (
     <motion.div
       drag="x"
@@ -232,24 +236,33 @@ export function PlayerCard({
         }}
         className={`h-full w-full overflow-hidden cursor-pointer bg-white dark:bg-slate-900
         hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:shadow-xl hover:-translate-y-1
-        transition-all duration-300 flex flex-col relative p-4 sm:p-5 rounded-3xl border
+        transition-all duration-300 flex flex-col relative p-2.5 sm:p-4 rounded-3xl border
         ${
           isOwn
             ? "border-primary dark:border-primary ring-2 ring-primary/20 shadow-primary/10 dark:shadow-none"
             : "border-slate-100 dark:border-slate-800 shadow-sm"
         }`}
       >
-        {/* Top: Avatar, Name, Share */}
-        <div className="grid grid-cols-[45%_45%_10%] gap-1 w-full mb-3 items-center">
+        {/* Top: Ranking, Avatar, Name, Share */}
+        <div className="flex items-center gap-4 w-full mb-0">
           
-          {/* 1. Avatar side (45%) */}
-          <div className="flex justify-start items-center relative w-full">
+          {/* 0. Ranking number */}
+          {displayRank ? (
+            <div className="shrink-0 flex items-center justify-center font-black text-xl sm:text-2xl text-slate-300 dark:text-slate-700 w-8 sm:w-10">
+              #{displayRank}
+            </div>
+          ) : (
+             <div className="shrink-0 w-8 sm:w-10" />
+          )}
+
+          {/* 1. Avatar side */}
+          <div className="relative shrink-0 flex items-center justify-center pl-1">
             <div className="relative shrink-0">
               <div
                 className={`absolute inset-0 bg-gradient-to-br ${getEloTier(player.elo_rating).color} blur-md opacity-40 rounded-full scale-110`}
               />
               <div
-                className={`relative w-16 h-16 rounded-full overflow-hidden border-2 shadow-md ${getEloTier(player.elo_rating).border}`}
+                className={`relative w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 shadow-md ${getEloTier(player.elo_rating).border}`}
               >
                 {player.avatar_url ? (
                   <img
@@ -281,22 +294,22 @@ export function PlayerCard({
             </div>
           </div>
 
-          {/* 2. Name side (45%) */}
-          <div className="flex flex-col items-start w-full min-w-0 text-left pr-1">
+          {/* 2. Name side */}
+          <div className="flex-1 flex flex-col items-start min-w-0 text-left">
             <div className={emphasizeFirst 
-              ? "text-[18px] sm:text-[20px] font-black text-foreground dark:text-foreground leading-tight uppercase tracking-tight w-full truncate" 
-              : "text-[9px] font-black text-muted-foreground dark:text-muted-foreground uppercase tracking-[0.2em] mb-0.5 w-full truncate"
+              ? "text-[16px] sm:text-[18px] font-black text-foreground dark:text-foreground leading-tight uppercase tracking-tight w-full truncate" 
+              : "text-[8px] sm:text-[9px] font-black text-muted-foreground dark:text-muted-foreground uppercase tracking-[0.2em] w-full truncate"
             }>
               {displayFirst || "\u00A0"}
             </div>
             <div className={emphasizeFirst 
-              ? "text-[9px] font-black text-muted-foreground dark:text-muted-foreground uppercase tracking-[0.2em] mb-0.5 w-full truncate"
-              : "text-[18px] sm:text-[20px] font-black text-foreground dark:text-foreground leading-tight uppercase tracking-tight w-full truncate"
+              ? "text-[8px] sm:text-[9px] font-black text-muted-foreground dark:text-muted-foreground uppercase tracking-[0.2em] w-full truncate"
+              : "text-[16px] sm:text-[18px] font-black text-foreground dark:text-foreground leading-tight uppercase tracking-tight w-full truncate"
             }>
               {lastName}
             </div>
             
-            <div className="mt-1 flex flex-col items-start gap-1 flex-wrap">
+            <div className="mt-0.5 flex flex-col items-start gap-1 flex-wrap">
               {player.is_retired && (
                 <div className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-rose-500 text-on-accent shadow-sm">
                   Retired
@@ -315,15 +328,15 @@ export function PlayerCard({
             </div>
           </div>
 
-          {/* 3. Action / Share side (10%) */}
-          <div className="flex flex-col items-end justify-start self-start w-full gap-2 -mt-2 -mr-2">
+          {/* 3. Action / Share side */}
+          <div className="shrink-0 flex flex-col items-end justify-start self-start gap-2 -mt-1 -mr-1">
             <button
               onClick={handleShare}
               className="flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
               title="Share profile"
             >
-              <div className="p-2 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-primary/10 dark:hover:bg-primary/90/30">
-                <Share2 className="w-4 h-4" />
+              <div className="p-1.5 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-primary/10 dark:hover:bg-primary/90/30">
+                <Share2 className="w-3.5 h-3.5" />
               </div>
             </button>
             {isPersonalView && !isOwn && (
@@ -334,8 +347,8 @@ export function PlayerCard({
                 }`}
                 title="Ping player"
               >
-                <div className={`p-2 rounded-full ${isPinged ? "bg-amber-50 dark:bg-amber-950/30" : "bg-slate-50 dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-950/30"}`}>
-                  <BellRing className="w-4 h-4" />
+                <div className={`p-1.5 rounded-full ${isPinged ? "bg-amber-50 dark:bg-amber-950/30" : "bg-slate-50 dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-950/30"}`}>
+                  <BellRing className="w-3.5 h-3.5" />
                 </div>
               </button>
             )}
@@ -344,8 +357,8 @@ export function PlayerCard({
 
         {/* Admin Detailed Stats */}
         {/* Detailed Stats */}
-        <div className="w-full mt-1 mb-3 px-1">
-          <div className="flex items-center gap-1.5 text-[9px] uppercase font-bold text-muted-foreground mb-1.5 tracking-wider pl-1 border-b border-slate-100 dark:border-slate-800 pb-1">
+        <div className="w-full mt-0 mb-2">
+          <div className="flex items-center gap-1 text-[8px] sm:text-[9px] uppercase font-bold text-muted-foreground mb-1 tracking-wider border-b border-slate-100 dark:border-slate-800 pb-1">
             <span>Player Stats</span>
             <TooltipProvider delayDuration={100}>
               <Tooltip>
@@ -381,34 +394,34 @@ export function PlayerCard({
               </Tooltip>
             </TooltipProvider>
           </div>
-          <div className="grid grid-cols-4 gap-1.5 text-[9px] text-center font-medium">
-            <div className="bg-slate-50 dark:bg-slate-800 rounded p-1.5 flex flex-col justify-between">
-              <div className="text-[8px] text-muted-foreground uppercase mb-1 font-bold">Overall</div>
-              <div className="font-black text-[11px] mb-1 text-violet-600 dark:text-violet-400">{allRanks?.overall ? `#${allRanks.overall}` : "UR"}</div>
-              <div>{formatWinLossRecord(player.win_loss_record)}</div>
-              <div className="font-bold text-primary mt-0.5">{parseWinPct(player.win_loss_record) ?? 0}%</div>
-              {isAdmin && <div className="font-black text-[10px] mt-1 text-amber-600 dark:text-amber-500" title="ELO Rating">{player.elo_rating ?? "—"}</div>}
+          <div className="grid grid-cols-4 gap-1 text-[8.5px] sm:text-[9px] text-center font-medium">
+            <div className="bg-slate-50 dark:bg-slate-800 rounded p-1 flex flex-col justify-between">
+              <div className="text-[7.5px] sm:text-[8px] text-muted-foreground uppercase mb-0.5 font-bold">Overall</div>
+              <div className="font-black text-[10px] sm:text-[11px] mb-0.5 text-violet-600 dark:text-violet-400">{allRanks?.overall ? `#${allRanks.overall}` : "UR"}</div>
+              <div className="leading-tight">{formatWinLossRecord(player.win_loss_record)}</div>
+              <div className="font-bold text-primary">{parseWinPct(player.win_loss_record) ?? 0}%</div>
+              {isAdmin && <div className="font-black text-[9px] sm:text-[10px] mt-0.5 text-amber-600 dark:text-amber-500" title="ELO Rating">{player.elo_rating ?? "—"}</div>}
             </div>
-            <div className="bg-sky-50 dark:bg-sky-950/30 rounded p-1.5 text-sky-700 dark:text-sky-400 flex flex-col justify-between">
-              <div className="text-[8px] uppercase mb-1 font-bold">Singles</div>
-              <div className="font-black text-[11px] mb-1">{allRanks?.singles ? `#${allRanks.singles}` : "UR"}</div>
-              <div>{formatWinLossRecord(player.singles_record)}</div>
-              <div className="font-bold mt-0.5">{parseWinPct(player.singles_record) ?? 0}%</div>
-              {isAdmin && <div className="font-black text-[10px] mt-1 text-amber-600 dark:text-amber-500" title="Singles ELO">{player.singles_elo ?? "—"}</div>}
+            <div className="bg-sky-50 dark:bg-sky-950/30 rounded p-1 text-sky-700 dark:text-sky-400 flex flex-col justify-between">
+              <div className="text-[7.5px] sm:text-[8px] uppercase mb-0.5 font-bold">Singles</div>
+              <div className="font-black text-[10px] sm:text-[11px] mb-0.5">{allRanks?.singles ? `#${allRanks.singles}` : "UR"}</div>
+              <div className="leading-tight">{formatWinLossRecord(player.singles_record)}</div>
+              <div className="font-bold">{parseWinPct(player.singles_record) ?? 0}%</div>
+              {isAdmin && <div className="font-black text-[9px] sm:text-[10px] mt-0.5 text-amber-600 dark:text-amber-500" title="Singles ELO">{player.singles_elo ?? "—"}</div>}
             </div>
-            <div className="bg-emerald-50 dark:bg-emerald-950/30 rounded p-1.5 text-emerald-700 dark:text-emerald-400 flex flex-col justify-between">
-              <div className="text-[8px] uppercase mb-1 font-bold">Doubles</div>
-              <div className="font-black text-[11px] mb-1">{allRanks?.doubles ? `#${allRanks.doubles}` : "UR"}</div>
-              <div>{formatWinLossRecord(player.doubles_record)}</div>
-              <div className="font-bold mt-0.5">{parseWinPct(player.doubles_record) ?? 0}%</div>
-              {isAdmin && <div className="font-black text-[10px] mt-1 text-amber-600 dark:text-amber-500" title="Doubles ELO">{player.doubles_elo ?? "—"}</div>}
+            <div className="bg-emerald-50 dark:bg-emerald-950/30 rounded p-1 text-emerald-700 dark:text-emerald-400 flex flex-col justify-between">
+              <div className="text-[7.5px] sm:text-[8px] uppercase mb-0.5 font-bold">Doubles</div>
+              <div className="font-black text-[10px] sm:text-[11px] mb-0.5">{allRanks?.doubles ? `#${allRanks.doubles}` : "UR"}</div>
+              <div className="leading-tight">{formatWinLossRecord(player.doubles_record)}</div>
+              <div className="font-bold">{parseWinPct(player.doubles_record) ?? 0}%</div>
+              {isAdmin && <div className="font-black text-[9px] sm:text-[10px] mt-0.5 text-amber-600 dark:text-amber-500" title="Doubles ELO">{player.doubles_elo ?? "—"}</div>}
             </div>
-            <div className="bg-pink-50 dark:bg-pink-950/30 rounded p-1.5 text-pink-700 dark:text-pink-400 flex flex-col justify-between">
-              <div className="text-[8px] uppercase mb-1 font-bold">Mixed</div>
-              <div className="font-black text-[11px] mb-1">{allRanks?.mixed ? `#${allRanks.mixed}` : "UR"}</div>
-              <div>{formatWinLossRecord(player.mixed_record)}</div>
-              <div className="font-bold mt-0.5">{parseWinPct(player.mixed_record) ?? 0}%</div>
-              {isAdmin && <div className="font-black text-[10px] mt-1 text-amber-600 dark:text-amber-500" title="Mixed ELO">{player.mixed_elo ?? "—"}</div>}
+            <div className="bg-pink-50 dark:bg-pink-950/30 rounded p-1 text-pink-700 dark:text-pink-400 flex flex-col justify-between">
+              <div className="text-[7.5px] sm:text-[8px] uppercase mb-0.5 font-bold">Mixed</div>
+              <div className="font-black text-[10px] sm:text-[11px] mb-0.5">{allRanks?.mixed ? `#${allRanks.mixed}` : "UR"}</div>
+              <div className="leading-tight">{formatWinLossRecord(player.mixed_record)}</div>
+              <div className="font-bold">{parseWinPct(player.mixed_record) ?? 0}%</div>
+              {isAdmin && <div className="font-black text-[9px] sm:text-[10px] mt-0.5 text-amber-600 dark:text-amber-500" title="Mixed ELO">{player.mixed_elo ?? "—"}</div>}
             </div>
           </div>
         </div>

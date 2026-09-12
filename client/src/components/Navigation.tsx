@@ -58,6 +58,16 @@ import { GlobalSearch } from "@/components/GlobalSearch";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { NotificationsMenu } from "@/components/NotificationsMenu";
 import { HolidayCalendarModal } from "@/components/HolidayCalendarModal";
+import { navGet } from "@/lib/navMemory";
+
+/** Returns the best href to navigate to when tapping Pulse — restores last tab */
+const getPulseHref = () => {
+  const saved = navGet("pulse_tab");
+  if (saved && ["live", "feed", "events", "directory"].includes(saved)) {
+    return `/pulse#${saved}`;
+  }
+  return "/pulse";
+};
 
 const CLUB_LINKS = [
   { href: "/pulse", label: "Pulse" },
@@ -267,7 +277,7 @@ export default function Navigation() {
               {currentLinks.map((link) => (
                 <NavLink
                   key={link.href}
-                  href={link.href}
+                  href={link.href === "/pulse" ? getPulseHref() : link.href}
                   label={link.label}
                   isActive={isActive(link.href)}
                   badge={link.href === "/pulse" ? (liveEventCount > 0 ? liveEventCount : (hasUnreadAnnouncements ? -1 : undefined)) : undefined}
@@ -682,7 +692,7 @@ export default function Navigation() {
                     <span className="text-[11px] font-semibold">Home</span>
                   </button>
                 </Link>
-                <Link href="/pulse" className="flex-1 min-w-0">
+                <a href={getPulseHref()} className="flex-1 min-w-0">
                   <button className={`relative flex flex-col items-center w-full pt-2 pb-1 px-0.5 ${isActive("/pulse") ? "text-[#ccff00]" : "text-muted-foreground hover:text-foreground dark:hover:text-foreground"}`}>
                     <Activity strokeWidth={1.5} className="w-5 h-5 mb-0.5" />
                     <span className="text-[11px] font-semibold">Pulse</span>
@@ -692,7 +702,7 @@ export default function Navigation() {
                       </span>
                     )}
                   </button>
-                </Link>
+                </a>
 
 
 

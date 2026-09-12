@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { Mail, Lock, Eye, EyeOff, UserPlus, LogIn, ArrowRight, KeyRound, Fingerprint } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, UserPlus, LogIn, ArrowRight, KeyRound, Fingerprint, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getPasswordStrength, type useJoinAuth } from "@/hooks/useJoinAuth";
 
@@ -61,6 +61,78 @@ export function WelcomeView({ auth }: { auth: JoinAuthContext }) {
 export function SignInView({ auth }: { auth: JoinAuthContext }) {
   return (
     <motion.form key="signin" onSubmit={auth.handleSignIn} className="space-y-5" initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 15 }} transition={{ duration: 0.2 }}>
+
+      {/* ── Fingerprint enrolment modal card ────────────────── */}
+      {auth.showBiometricPrompt && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: -8 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="relative rounded-2xl overflow-hidden border border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-5 shadow-lg"
+        >
+          <button
+            type="button"
+            onClick={auth.dismissBiometricPrompt}
+            className="absolute top-3 right-3 p-1 rounded-full text-muted-foreground hover:bg-white/10 transition"
+            aria-label="Dismiss"
+          >
+            <X className="w-4 h-4" />
+          </button>
+          <div className="flex flex-col items-center text-center gap-3">
+            <div className="w-14 h-14 rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center shadow-inner">
+              <Fingerprint className="w-7 h-7 text-primary" />
+            </div>
+            <div>
+              <p className="font-black text-base text-foreground">Enable Fingerprint Sign-In?</p>
+              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">Skip typing your password next time. Your fingerprint stays on this device — never sent anywhere.</p>
+            </div>
+            <div className="flex gap-2 w-full">
+              <button
+                type="button"
+                onClick={auth.dismissBiometricPrompt}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold border border-slate-200 dark:border-slate-700 text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              >
+                Not now
+              </button>
+              <button
+                type="button"
+                onClick={auth.handleEnableBiometric}
+                className="flex-1 py-2.5 rounded-xl text-sm font-black bg-primary text-primary-foreground shadow-lg shadow-primary/25 hover:opacity-90 transition flex items-center justify-center gap-1.5"
+              >
+                <Fingerprint className="w-4 h-4" /> Enable
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* ── Fingerprint sign-in button (primary, shown when enrolled) ── */}
+      {auth.biometricReady && !auth.showBiometricPrompt && (
+        <button
+          type="button"
+          onClick={auth.handleBiometricSignIn}
+          disabled={auth.loading}
+          className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-primary text-primary-foreground font-black text-base shadow-lg shadow-primary/25 hover:opacity-90 transition"
+        >
+          <Fingerprint className="w-5 h-5" />
+          {auth.biometricEmail ? `Sign in as ${auth.biometricEmail.split("@")[0]}` : "Sign in with Fingerprint"}
+        </button>
+      )}
+
+      {/* Expired banner */}
+      {auth.errorMsg.startsWith("Fingerprint sign-in expired") && (
+        <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50">
+          <Fingerprint className="w-4 h-4 mt-0.5 shrink-0 text-amber-600 dark:text-amber-400" />
+          <p className="text-xs text-amber-800 dark:text-amber-300 font-medium leading-snug">
+            Fingerprint session expired — sign in with your password once to re-enable it.
+          </p>
+        </div>
+      )}
+
+      {/* Generic error */}
+      {auth.errorMsg && !auth.errorMsg.startsWith("Fingerprint sign-in expired") && auth.errorMsg !== "Email not confirmed" && (
+        <p className="text-sm text-red-500 font-medium">{auth.errorMsg}</p>
+      )}
+
       <div>
         <label className="block text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider mb-1.5">Email</label>
         <div className="relative">
@@ -81,19 +153,6 @@ export function SignInView({ auth }: { auth: JoinAuthContext }) {
       <Button type="submit" disabled={auth.loading} className="w-full py-6 bg-primary hover:bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 transition-all text-base flex items-center justify-center gap-2">
         {auth.loading ? <div className="w-5 h-5 rounded-full border-2 border-black/20 border-t-black/80 animate-spin" /> : <><LogIn className="w-5 h-5" /> Sign In</>}
       </Button>
-
-      {/* Native app only — biometricReady is always false on web/PWA. */}
-      {auth.biometricReady && (
-        <button
-          type="button"
-          onClick={auth.handleBiometricSignIn}
-          disabled={auth.loading}
-          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold text-sm hover:border-primary hover:text-primary dark:hover:text-primary transition"
-        >
-          <Fingerprint className="w-4 h-4 text-primary" />
-          {auth.biometricEmail ? `Sign in as ${auth.biometricEmail}` : "Sign in with Fingerprint"}
-        </button>
-      )}
 
       <div className="relative my-4">
         <div className="absolute inset-0 flex items-center">
@@ -125,6 +184,7 @@ export function SignInView({ auth }: { auth: JoinAuthContext }) {
     </motion.form>
   );
 }
+
 
 export function SignUpView({ auth }: { auth: JoinAuthContext }) {
   return (

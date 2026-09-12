@@ -166,12 +166,10 @@ export default function ComparePlayers() {
 
   return (
     <div className="pb-24 pt-6 max-w-4xl mx-auto px-4">
-      <Link href="/pulse#h2h">
-        <button className="flex items-center text-muted-foreground hover:text-slate-800 dark:hover:text-foreground mb-6 transition-colors">
+      <button onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = '/pulse'} className="flex items-center text-muted-foreground hover:text-slate-800 dark:hover:text-foreground mb-6 transition-colors">
           <ChevronLeft className="w-5 h-5 mr-1" />
           Back to H2H
         </button>
-      </Link>
 
       <div className="text-center mb-10">
         <div className="inline-flex items-center gap-2 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-2 border border-rose-200 dark:border-rose-900/50">

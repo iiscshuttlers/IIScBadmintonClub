@@ -909,6 +909,41 @@ export type Database = {
           },
         ]
       }
+      match_reminders: {
+        Row: {
+          created_at: string | null
+          id: string
+          match_id: string
+          remind_before_mins: number
+          sent_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          match_id: string
+          remind_before_mins: number
+          sent_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          match_id?: string
+          remind_before_mins?: number
+          sent_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_reminders_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       match_sensor_analytics: {
         Row: {
           accel_avg: number | null
@@ -1160,6 +1195,7 @@ export type Database = {
           team1_partner_id: string | null
           team2_partner_id: string | null
           tournament_id: string | null
+          video_url: string | null
           winner_id: string | null
         }
         Insert: {
@@ -1187,6 +1223,7 @@ export type Database = {
           team1_partner_id?: string | null
           team2_partner_id?: string | null
           tournament_id?: string | null
+          video_url?: string | null
           winner_id?: string | null
         }
         Update: {
@@ -1214,6 +1251,7 @@ export type Database = {
           team1_partner_id?: string | null
           team2_partner_id?: string | null
           tournament_id?: string | null
+          video_url?: string | null
           winner_id?: string | null
         }
         Relationships: [
@@ -1304,6 +1342,51 @@ export type Database = {
           {
             foreignKeyName: "matches_winner_id_fkey"
             columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "search_players_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_queue: {
+        Row: {
+          body: string
+          created_at: string | null
+          id: string
+          player_id: string | null
+          sent: boolean | null
+          sent_at: string | null
+          title: string
+        }
+        Insert: {
+          body: string
+          created_at?: string | null
+          id?: string
+          player_id?: string | null
+          sent?: boolean | null
+          sent_at?: string | null
+          title: string
+        }
+        Update: {
+          body?: string
+          created_at?: string | null
+          id?: string
+          player_id?: string | null
+          sent?: boolean | null
+          sent_at?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_queue_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_queue_player_id_fkey"
+            columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "search_players_view"
             referencedColumns: ["id"]
@@ -1479,11 +1562,13 @@ export type Database = {
           created_by: string | null
           current_racket: string | null
           current_ranking: number | null
+          default_match_reminder_mins: number | null
           deleted_at: string | null
           department: string | null
           dominant_hand: string | null
           doubles_elo: number | null
           doubles_matches_played: number | null
+          doubles_record: string | null
           elo_rating: number | null
           email: string | null
           favorite_format: string | null
@@ -1507,6 +1592,7 @@ export type Database = {
           joined_year: number | null
           mixed_elo: number | null
           mixed_matches_played: number | null
+          mixed_record: string | null
           nationality: string | null
           nickname: string | null
           playing_level: string | null
@@ -1520,6 +1606,7 @@ export type Database = {
           shoes: string | null
           singles_elo: number | null
           singles_matches_played: number | null
+          singles_record: string | null
           sr_number: string | null
           started_playing_year: number | null
           stats: Json | null
@@ -1544,11 +1631,13 @@ export type Database = {
           created_by?: string | null
           current_racket?: string | null
           current_ranking?: number | null
+          default_match_reminder_mins?: number | null
           deleted_at?: string | null
           department?: string | null
           dominant_hand?: string | null
           doubles_elo?: number | null
           doubles_matches_played?: number | null
+          doubles_record?: string | null
           elo_rating?: number | null
           email?: string | null
           favorite_format?: string | null
@@ -1572,6 +1661,7 @@ export type Database = {
           joined_year?: number | null
           mixed_elo?: number | null
           mixed_matches_played?: number | null
+          mixed_record?: string | null
           nationality?: string | null
           nickname?: string | null
           playing_level?: string | null
@@ -1585,6 +1675,7 @@ export type Database = {
           shoes?: string | null
           singles_elo?: number | null
           singles_matches_played?: number | null
+          singles_record?: string | null
           sr_number?: string | null
           started_playing_year?: number | null
           stats?: Json | null
@@ -1609,11 +1700,13 @@ export type Database = {
           created_by?: string | null
           current_racket?: string | null
           current_ranking?: number | null
+          default_match_reminder_mins?: number | null
           deleted_at?: string | null
           department?: string | null
           dominant_hand?: string | null
           doubles_elo?: number | null
           doubles_matches_played?: number | null
+          doubles_record?: string | null
           elo_rating?: number | null
           email?: string | null
           favorite_format?: string | null
@@ -1637,6 +1730,7 @@ export type Database = {
           joined_year?: number | null
           mixed_elo?: number | null
           mixed_matches_played?: number | null
+          mixed_record?: string | null
           nationality?: string | null
           nickname?: string | null
           playing_level?: string | null
@@ -1650,6 +1744,7 @@ export type Database = {
           shoes?: string | null
           singles_elo?: number | null
           singles_matches_played?: number | null
+          singles_record?: string | null
           sr_number?: string | null
           started_playing_year?: number | null
           stats?: Json | null
@@ -1775,6 +1870,7 @@ export type Database = {
           team2_label: string | null
           tournament_id: string
           umpired_by: string | null
+          video_url: string | null
           winner_id: string | null
           winner_side: number | null
         }
@@ -1812,6 +1908,7 @@ export type Database = {
           team2_label?: string | null
           tournament_id: string
           umpired_by?: string | null
+          video_url?: string | null
           winner_id?: string | null
           winner_side?: number | null
         }
@@ -1849,6 +1946,7 @@ export type Database = {
           team2_label?: string | null
           tournament_id?: string
           umpired_by?: string | null
+          video_url?: string | null
           winner_id?: string | null
           winner_side?: number | null
         }
@@ -2090,13 +2188,13 @@ export type Database = {
           id: string
           name: string
           require_app_registration: boolean
+          show_brackets: boolean | null
+          show_participants: boolean | null
           start_date: string | null
           status: string
           tournament_type: string
           venue: string | null
           year: number
-          show_participants: boolean | null
-          show_brackets: boolean | null
         }
         Insert: {
           archived_at?: string | null
@@ -2114,6 +2212,8 @@ export type Database = {
           id?: string
           name: string
           require_app_registration?: boolean
+          show_brackets?: boolean | null
+          show_participants?: boolean | null
           start_date?: string | null
           status?: string
           tournament_type?: string
@@ -2136,13 +2236,13 @@ export type Database = {
           id?: string
           name?: string
           require_app_registration?: boolean
+          show_brackets?: boolean | null
+          show_participants?: boolean | null
           start_date?: string | null
           status?: string
           tournament_type?: string
           venue?: string | null
           year?: number
-          show_participants?: boolean | null
-          show_brackets?: boolean | null
         }
         Relationships: [
           {
@@ -2406,6 +2506,19 @@ export type Database = {
             Args: { p_approved?: boolean; p_ids: string[] }
             Returns: undefined
           }
+      admin_assign_umpires: {
+        Args: {
+          p_end_time?: string
+          p_start_time?: string
+          p_tournament_match_id?: string
+          p_user_ids: string[]
+        }
+        Returns: number
+      }
+      admin_delete_umpire_assignment: {
+        Args: { p_id: string }
+        Returns: undefined
+      }
       admin_edit_tournament_match: {
         Args: {
           p_match_id: string
@@ -2437,6 +2550,7 @@ export type Database = {
         Args: { p_tournament_id: string }
         Returns: undefined
       }
+      auto_claim_duplicate_profile: { Args: never; Returns: boolean }
       calculate_overall_elo: {
         Args: {
           p_doubles_elo: number
@@ -2447,6 +2561,10 @@ export type Database = {
           p_singles_matches: number
         }
         Returns: number
+      }
+      can_umpire_match: {
+        Args: { p_match_id: string; p_uid: string }
+        Returns: boolean
       }
       cancel_buddy_request: {
         Args: { p_target_id: string }
@@ -2515,11 +2633,13 @@ export type Database = {
           created_by: string | null
           current_racket: string | null
           current_ranking: number | null
+          default_match_reminder_mins: number | null
           deleted_at: string | null
           department: string | null
           dominant_hand: string | null
           doubles_elo: number | null
           doubles_matches_played: number | null
+          doubles_record: string | null
           elo_rating: number | null
           email: string | null
           favorite_format: string | null
@@ -2543,6 +2663,7 @@ export type Database = {
           joined_year: number | null
           mixed_elo: number | null
           mixed_matches_played: number | null
+          mixed_record: string | null
           nationality: string | null
           nickname: string | null
           playing_level: string | null
@@ -2556,6 +2677,7 @@ export type Database = {
           shoes: string | null
           singles_elo: number | null
           singles_matches_played: number | null
+          singles_record: string | null
           sr_number: string | null
           started_playing_year: number | null
           stats: Json | null
@@ -2623,12 +2745,23 @@ export type Database = {
         }
         Returns: boolean
       }
+      link_label_to_player: {
+        Args: { p_label: string; p_partner_id?: string; p_player_id: string }
+        Returns: number
+      }
+      pick_team_label: {
+        Args: { p_rebuilt: string; p_stored: string }
+        Returns: string
+      }
       process_tournament_bracket_progression: {
         Args: { p_match_id: string; p_winner_id: string }
         Returns: undefined
       }
-      push_match_alert: { Args: { p_message: string }; Returns: undefined }
+      push_match_alert:
+        | { Args: { p_message: string }; Returns: undefined }
+        | { Args: { p_message: string; p_title?: string }; Returns: undefined }
       recalculate_all_elo: { Args: never; Returns: undefined }
+      recalculate_all_win_loss_records: { Args: never; Returns: undefined }
       recalculate_category_records: {
         Args: { player_uuid: string }
         Returns: undefined
@@ -2637,7 +2770,19 @@ export type Database = {
         Args: { player_uuid: string }
         Returns: undefined
       }
+      recalculate_player_win_loss_records: {
+        Args: { p_player_id: string }
+        Returns: undefined
+      }
       recalculate_tournament_elo: { Args: never; Returns: undefined }
+      record_tournament_walkover: {
+        Args: {
+          p_match_id: string
+          p_scored_by?: string
+          p_winner_side: number
+        }
+        Returns: undefined
+      }
       reject_friendly_match:
         | {
             Args: { match_uuid: string; rejecter_id: string }
@@ -2711,40 +2856,24 @@ export type Database = {
         Args: { p_match_id: string; p_new_umpire_id: string }
         Returns: undefined
       }
-      umpire_submit_match:
-        | {
-            Args: {
-              ended_at?: string
-              is_friendly: boolean
-              match_category: string
-              match_round: string
-              match_score: string
-              player1_id: string
-              player2_id: string
-              sets_history?: string[]
-              started_at?: string
-              team1_partner_id: string
-              team2_partner_id: string
-              umpire_id: string
-              winner_id: string
-            }
-            Returns: string
-          }
-        | {
-            Args: {
-              is_friendly: boolean
-              match_category: string
-              match_round: string
-              match_score: string
-              player1_id: string
-              player2_id: string
-              team1_partner_id: string
-              team2_partner_id: string
-              umpire_id: string
-              winner_id: string
-            }
-            Returns: string
-          }
+      umpire_submit_match: {
+        Args: {
+          ended_at?: string
+          is_friendly: boolean
+          match_category: string
+          match_round: string
+          match_score: string
+          player1_id: string
+          player2_id: string
+          sets_history?: string[]
+          started_at?: string
+          team1_partner_id: string
+          team2_partner_id: string
+          umpire_id: string
+          winner_id: string
+        }
+        Returns: string
+      }
       umpire_update_match:
         | {
             Args: {
@@ -2769,6 +2898,10 @@ export type Database = {
       unclaim_find_lost_item:
         | { Args: { post_uuid: string; user_id: string }; Returns: undefined }
         | { Args: { post_uuid: string; user_id: string }; Returns: undefined }
+      undo_tournament_match: {
+        Args: { p_match_id: string }
+        Returns: undefined
+      }
       upsert_live_match_by_id: {
         Args: { match_state: Json; p_match_id: string }
         Returns: undefined
@@ -2800,12 +2933,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2829,11 +2962,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2854,11 +2987,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2879,11 +3012,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2896,11 +3029,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

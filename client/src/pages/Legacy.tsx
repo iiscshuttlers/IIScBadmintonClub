@@ -596,47 +596,47 @@ export default function Legacy() {
   return (
     <div className="min-h-screen font-sans">
       {/* Hero Section */}
-      <section className="bg-gradient-to-tr from-teal-800 via-emerald-700 to-lime-600 text-on-accent py-4 relative overflow-hidden">
+      <section className="bg-gradient-to-tr from-teal-800 via-emerald-700 to-lime-600 text-on-accent py-6 relative overflow-hidden">
         <div className="absolute inset-0 hero-pattern" />
         <div className="container mx-auto px-4 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 px-4 py-1.5 rounded-full text-sm font-semibold mb-2">
-            <Trophy className="w-4 h-4 text-amber-300" />
+          <div className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 text-white/80 px-3 py-1 rounded-full text-xs font-semibold mb-3">
+            <Trophy className="w-3.5 h-3.5 text-amber-300" />
             Club Legends
           </div>
           <h1
-            className="text-5xl md:text-6xl font-black mb-2 text-white"
+            className="text-3xl md:text-4xl font-black mb-2 text-white"
             style={{ fontFamily: "Playfair Display, serif" }}
           >
             Legacy
           </h1>
-          <p className="text-xl text-emerald-50 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-sm md:text-base text-emerald-50 max-w-3xl mx-auto">
             Honoring the champions, the fighters, and the top performers of IISc Badminton Club, along with all our memories.
           </p>
-          <div className="mt-4 flex justify-center w-full px-2">
-            <div className="grid grid-cols-2 sm:flex bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 sm:flex-wrap sm:justify-center gap-1.5 sm:gap-0 w-full sm:w-auto">
+          <div className="mt-6 flex justify-center w-full px-2">
+            <div className="grid grid-cols-2 sm:flex bg-black/20 backdrop-blur-md p-1 rounded-2xl border border-black/10 sm:flex-wrap sm:justify-center gap-1 shadow-inner w-full sm:w-auto">
               <a
                 href="#champions"
                 onClick={() => setActiveTab("champions")}
-                className={`flex w-full sm:w-auto items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
+                className={`flex w-full sm:w-auto items-center justify-center gap-1.5 px-3 py-1.5 sm:px-5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
                   activeTab === "champions"
-                    ? "bg-white text-emerald-900 shadow-md scale-100"
-                    : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
+                    ? "bg-slate-900 text-amber-400 shadow-md scale-100"
+                    : "text-white/80 hover:text-white hover:bg-black/20 scale-95"
                 }`}
               >
-                <Trophy className="w-4 h-4" /> Champions
+                <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Champions
               </a>
               <a
                 href={`#${activeTab === "champions" ? "albums" : activeTab}`}
                 onClick={() => {
                   if (activeTab === "champions") setActiveTab("albums");
                 }}
-                className={`flex w-full sm:w-auto items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
+                className={`flex w-full sm:w-auto items-center justify-center gap-1.5 px-3 py-1.5 sm:px-5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
                   activeTab !== "champions"
-                    ? "bg-white text-blue-900 shadow-md scale-100"
-                    : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
+                    ? "bg-slate-900 text-blue-400 shadow-md scale-100"
+                    : "text-white/80 hover:text-white hover:bg-black/20 scale-95"
                 }`}
               >
-                <Camera className="w-4 h-4" /> Albums
+                <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Albums
               </a>
             </div>
           </div>
@@ -667,7 +667,7 @@ export default function Legacy() {
                     : "text-muted-foreground hover:text-foreground hover:bg-slate-100/50 dark:hover:bg-slate-800/50"
                 }`}
               >
-                <Camera className="w-4 h-4" /> All Photos
+                <Camera className="w-4 h-4" /> Photos
               </button>
               <button
                 onClick={() => setActiveTab("videos")}
@@ -677,7 +677,7 @@ export default function Legacy() {
                     : "text-muted-foreground hover:text-foreground hover:bg-slate-100/50 dark:hover:bg-slate-800/50"
                 }`}
               >
-                <PlayCircle className="w-4 h-4" /> All Videos
+                <PlayCircle className="w-4 h-4" /> Videos
               </button>
             </div>
           </div>
@@ -736,7 +736,7 @@ export default function Legacy() {
                     : "bg-gray-100 dark:bg-slate-800 text-muted-foreground dark:text-muted-foreground hover:bg-gray-200 dark:hover:bg-slate-700"
                 }`}
               >
-                {activeTab === "photos" ? "All Photos" : "All Albums"}
+                {activeTab === "photos" ? "Photos" : "Albums"}
               </button>
               {subfolders.map((sub, i) => {
                 const isOddLast = (subfolders.length % 2 !== 0) && (i === subfolders.length - 1);

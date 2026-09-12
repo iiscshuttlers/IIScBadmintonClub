@@ -125,12 +125,10 @@ export default function TournamentDetail() {
           <p className="text-muted-foreground dark:text-muted-foreground">
             This tournament page doesn't exist or hasn't been archived yet.
           </p>
-          <Link href="/pulse">
-            <button className="inline-flex items-center gap-2 bg-primary hover:bg-primary text-primary-foreground font-bold px-6 py-3 rounded-xl transition-all hover:-translate-y-0.5">
+          <button onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = '/pulse'} className="inline-flex items-center gap-2 bg-primary hover:bg-primary text-primary-foreground font-bold px-6 py-3 rounded-xl transition-all hover:-translate-y-0.5">
               <ArrowLeft className="w-4 h-4" />
               Back to Pulse
             </button>
-          </Link>
         </div>
       </div>
     );

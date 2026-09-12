@@ -56,7 +56,7 @@ export default function ChangePassword() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col pt-12 sm:pt-20 pb-12 px-4">
       <div className="max-w-md w-full mx-auto">
         <button
-          onClick={() => setLocation("/")}
+          onClick={() => window.history.length > 1 ? window.history.back() : setLocation("/")}
           className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-foreground mb-8 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Back to home

@@ -105,13 +105,13 @@ export function LiveBracketsSection({
   const rounds = [...new Set(currentMatches.map((m) => m.round))].sort((a, b) => a - b);
 
   return (
-    <div className="animate-in fade-in duration-300 w-full py-6">
-      <div className="max-w-7xl mx-auto mb-6 flex flex-wrap gap-2 justify-center">
+    <div className="animate-in fade-in duration-300 w-full pb-4">
+      <div className="max-w-7xl mx-auto mb-4 flex flex-wrap gap-1.5 justify-center">
         {formats.map((fmt) => (
           <button
             key={fmt}
             onClick={() => setActiveFormat(fmt)}
-            className={`px-6 py-2 rounded-full font-bold transition-all shadow-sm ${
+            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm ${
               activeFormat === fmt
                 ? "bg-primary text-primary-foreground"
                 : "bg-white dark:bg-slate-900 text-muted-foreground dark:text-muted-foreground hover:bg-gray-50 border border-gray-200 dark:border-slate-700"

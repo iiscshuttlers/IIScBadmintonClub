@@ -182,29 +182,29 @@ export function AnnouncementsSection() {
   }, [queryData, isQueryLoading]);
 
   const categories = [
-    { id: "all", label: "All", color: "bg-gray-100 text-muted-foreground", icon: "📋" },
+    { id: "all", label: "All", color: "bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700/50", icon: "📋" },
     {
       id: "tournament",
       label: "Tournament",
-      color: "bg-primary/15 text-primary",
+      color: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50",
       icon: "🏆",
     },
     {
       id: "facility",
       label: "Facility",
-      color: "bg-blue-100 text-blue-800",
+      color: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50",
       icon: "🏸",
     },
     {
       id: "general",
       label: "General",
-      color: "bg-purple-100 text-purple-800",
+      color: "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-800/50",
       icon: "📢",
     },
     {
       id: "others",
       label: "Others",
-      color: "bg-orange-100 text-orange-800",
+      color: "bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800/50",
       icon: "📌",
     },
   ];
@@ -214,7 +214,7 @@ export function AnnouncementsSection() {
     return (
       found ?? {
         label: category,
-        color: "bg-gray-100 text-muted-foreground",
+        color: "bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700/50",
         icon: "📄",
       }
     );
@@ -424,7 +424,7 @@ export function AnnouncementsSection() {
                               )}
                             </CardTitle>
 
-                            <div className="flex flex-wrap gap-2 text-sm text-muted-foreground mt-3">
+                            <div className="flex flex-col gap-2 mt-3 text-sm text-muted-foreground">
                               {item.date && (
                                 <div className="flex items-center gap-1.5">
                                   <Calendar className="w-4 h-4 text-primary" />
@@ -433,33 +433,36 @@ export function AnnouncementsSection() {
                                   </span>
                                 </div>
                               )}
+                              
                               {(item.startDate || item.endDate) && (
-                                <div className="flex items-center gap-1.5 ml-2 mr-1 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded text-blue-700 dark:text-blue-300 font-medium text-xs border border-blue-200 dark:border-blue-800">
-                                  <CalendarDays className="w-3.5 h-3.5" />
-                                  <span>
+                                <div className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-md text-blue-700 dark:text-blue-300 font-medium text-xs border border-blue-200 dark:border-blue-800 w-full">
+                                  <CalendarDays className="w-3.5 h-3.5 shrink-0" />
+                                  <span className="truncate">
                                     Event: {item.startDate || "TBD"}{" "}
-                                    {item.endDate &&
-                                    item.endDate !== item.startDate
+                                    {item.endDate && item.endDate !== item.startDate
                                       ? `— ${item.endDate}`
                                       : ""}
                                   </span>
                                 </div>
                               )}
-                              {(() => {
-                                const b = getCategoryBadge(item.category);
-                                return (
-                                  <Badge
-                                    className={`${b.color} border-0 font-semibold`}
-                                  >
-                                    {b.icon} {b.label}
-                                  </Badge>
-                                );
-                              })()}
-                              <Badge
-                                className={`${getStatusColor(status)} border-0 font-semibold capitalize`}
-                              >
-                                {status}
-                              </Badge>
+
+                              <div className="flex gap-2 w-full">
+                                {(() => {
+                                  const b = getCategoryBadge(item.category);
+                                  return (
+                                    <Badge
+                                      className={`${b.color} border-0 font-semibold flex-1 justify-center py-1`}
+                                    >
+                                      <span className="mr-1.5">{b.icon}</span> <span className="truncate">{b.label}</span>
+                                    </Badge>
+                                  );
+                                })()}
+                                <Badge
+                                  className={`${getStatusColor(status)} border-0 font-semibold capitalize flex-1 justify-center py-1`}
+                                >
+                                  {status}
+                                </Badge>
+                              </div>
                             </div>
                           </CardHeader>
                           <CardContent>
@@ -481,29 +484,29 @@ export function AnnouncementsSection() {
             {/* Filter */}
             <section className="py-6 border-b bg-white dark:bg-slate-950 sticky top-16 z-30 shadow-sm">
               <div className="container mx-auto px-4 max-w-md">
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-2">
                   {categories.filter(c => c.id === 'all').map((cat) => (
                     <button
                       key={cat.id}
                       onClick={() => setSelectedCategory(cat.id)}
-                      className={`w-full px-5 py-3 rounded-full text-sm font-bold transition-all duration-200 flex justify-center items-center gap-2 ${
+                      className={`w-full px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 flex justify-center items-center gap-2 ${
                         selectedCategory === cat.id
-                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 dark:shadow-primary/50/40 scale-[1.02]"
-                          : `${cat.color} hover:shadow-sm dark:bg-slate-800 dark:text-slate-300`
+                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 dark:shadow-primary/50/40 scale-[1.02] border border-primary/50"
+                          : `${cat.color} hover:shadow-sm`
                       }`}
                     >
                       <span className="text-base">{cat.icon}</span> {cat.label}
                     </button>
                   ))}
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2">
                     {categories.filter(c => c.id !== 'all').map((cat) => (
                       <button
                         key={cat.id}
                         onClick={() => setSelectedCategory(cat.id)}
-                        className={`w-full px-3 py-2.5 rounded-full text-sm font-bold transition-all duration-200 flex justify-center items-center gap-2 ${
+                        className={`w-full px-3 py-1.5 rounded-full text-sm font-bold transition-all duration-200 flex justify-center items-center gap-1.5 ${
                           selectedCategory === cat.id
-                            ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 dark:shadow-primary/50/40 scale-[1.02]"
-                            : `${cat.color} hover:shadow-sm dark:bg-slate-800 dark:text-slate-300`
+                            ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 dark:shadow-primary/50/40 scale-[1.02] border border-primary/50"
+                            : `${cat.color} hover:shadow-sm`
                         }`}
                       >
                         <span className="text-base">{cat.icon}</span> <span className="truncate">{cat.label}</span>
@@ -572,7 +575,7 @@ export function AnnouncementsSection() {
                               )}
                             </CardTitle>
 
-                            <div className="flex flex-wrap gap-2 text-sm text-muted-foreground mt-2">
+                            <div className="flex flex-col gap-2 mt-3 text-sm text-muted-foreground">
                               {item.date && (
                                 <div className="flex items-center gap-1.5">
                                   <Calendar className="w-3.5 h-3.5 text-primary" />
@@ -581,33 +584,36 @@ export function AnnouncementsSection() {
                                   </span>
                                 </div>
                               )}
+                              
                               {(item.startDate || item.endDate) && (
-                                <div className="flex items-center gap-1.5 ml-2 mr-1 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded text-blue-700 dark:text-blue-300 font-medium text-xs border border-blue-200 dark:border-blue-800">
-                                  <CalendarDays className="w-3.5 h-3.5" />
-                                  <span>
+                                <div className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-md text-blue-700 dark:text-blue-300 font-medium text-xs border border-blue-200 dark:border-blue-800 w-full">
+                                  <CalendarDays className="w-3.5 h-3.5 shrink-0" />
+                                  <span className="truncate">
                                     Event: {item.startDate || "TBD"}{" "}
-                                    {item.endDate &&
-                                    item.endDate !== item.startDate
+                                    {item.endDate && item.endDate !== item.startDate
                                       ? `— ${item.endDate}`
                                       : ""}
                                   </span>
                                 </div>
                               )}
-                              {(() => {
-                                const b = getCategoryBadge(item.category);
-                                return (
-                                  <Badge
-                                    className={`${b.color} border-0 font-semibold text-xs`}
-                                  >
-                                    {b.icon} {b.label}
-                                  </Badge>
-                                );
-                              })()}
-                              <Badge
-                                className={`${getStatusColor(status)} border-0 font-semibold capitalize text-xs`}
-                              >
-                                {status}
-                              </Badge>
+
+                              <div className="flex gap-2 w-full">
+                                {(() => {
+                                  const b = getCategoryBadge(item.category);
+                                  return (
+                                    <Badge
+                                      className={`${b.color} border-0 font-semibold flex-1 justify-center py-1 text-xs`}
+                                    >
+                                      <span className="mr-1.5">{b.icon}</span> <span className="truncate">{b.label}</span>
+                                    </Badge>
+                                  );
+                                })()}
+                                <Badge
+                                  className={`${getStatusColor(status)} border-0 font-semibold capitalize flex-1 justify-center py-1 text-xs`}
+                                >
+                                  {status}
+                                </Badge>
+                              </div>
                             </div>
                           </CardHeader>
 
@@ -634,14 +640,6 @@ export function AnnouncementsSection() {
               </div>
             </section>
 
-            {/* Stay Informed */}
-            <section className="py-14 bg-gradient-to-br from-blue-50 to-primary/5 dark:from-slate-900 dark:to-slate-800">
-              <div className="container mx-auto px-4">
-                <div className="max-w-4xl mx-auto">
-                  <SocialCTA />
-                </div>
-              </div>
-            </section>
           </>
         )}
       </div>

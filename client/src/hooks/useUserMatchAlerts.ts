@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 
 export interface UserMatchAlert {
   match_id: string;
-  notify_before_mins: number;
+  remind_before_mins: number;
 }
 
 export function useUserMatchAlerts(userId?: string | null) {
@@ -15,8 +15,8 @@ export function useUserMatchAlerts(userId?: string | null) {
       return;
     }
     const { data } = await supabase
-      .from("user_match_notifications")
-      .select("match_id, notify_before_mins")
+      .from("match_reminders")
+      .select("match_id, remind_before_mins")
       .eq("user_id", userId);
     
     if (data) {

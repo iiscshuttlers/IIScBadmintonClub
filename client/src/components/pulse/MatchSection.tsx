@@ -6,13 +6,15 @@ export function MatchSection({
   icon, 
   matches, 
   defaultExpanded = false,
-  renderMatchCard 
+  renderMatchCard,
+  headerAction
 }: { 
   title: string; 
   icon: React.ReactNode; 
   matches: any[]; 
   defaultExpanded?: boolean;
   renderMatchCard: (match: any, index: number) => React.ReactNode;
+  headerAction?: React.ReactNode;
 }) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [category, setCategory] = useState<string>("ALL");
@@ -45,7 +47,14 @@ export function MatchSection({
           </div>
           <h3 className="font-black text-lg text-slate-800 dark:text-slate-100">{title} <span className="text-muted-foreground font-semibold text-sm ml-2">({matches.length})</span></h3>
         </div>
-        <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`} />
+        <div className="flex items-center gap-3">
+          {headerAction && (
+            <div onClick={(e) => e.stopPropagation()}>
+              {headerAction}
+            </div>
+          )}
+          <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`} />
+        </div>
       </div>
 
       {expanded && (

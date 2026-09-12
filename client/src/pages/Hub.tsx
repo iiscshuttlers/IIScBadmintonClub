@@ -48,13 +48,13 @@ export default function Hub() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 lg:pb-8 font-sans selection:bg-primary/30">
-      <div className="bg-gradient-to-r from-teal-800 via-emerald-700 to-lime-600 text-on-accent py-4 relative overflow-hidden">
+      <div className="bg-gradient-to-r from-teal-800 via-emerald-700 to-lime-600 text-on-accent py-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(132,204,22,0.15),transparent)] pointer-events-none" />
         <div className="absolute inset-0 hero-pattern opacity-50" />
 
         <div className="container mx-auto px-4 max-w-4xl relative z-10 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-black uppercase tracking-widest mb-2">
-            <ShieldCheck className="w-4 h-4 text-lime-300" /> Club Info
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-semibold mb-3 text-white/80">
+            <ShieldCheck className="w-3.5 h-3.5 text-lime-300" /> Club Info
             <InfoModal
               title="ABOUT THE CLUB"
               items={[
@@ -63,56 +63,37 @@ export default function Hub() {
               triggerClassName="text-white hover:text-lime-200"
             />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black mb-1 tracking-tight text-white" style={{ fontFamily: "Playfair Display, serif" }}>
+          <h1 className="text-3xl md:text-4xl font-black mb-2 text-white" style={{ fontFamily: "Playfair Display, serif" }}>
             Club Hub
           </h1>
-          <p className="text-emerald-50 font-medium max-w-2xl mx-auto">
-            Everything you need to know about our courts, reaching out to the team, and how the platform works.
+          <p className="text-sm md:text-base text-emerald-50 max-w-3xl mx-auto">
+            Courts, contacts, and platform info — all in one place.
           </p>
 
-          {/* View Toggle */}
-          <div className="mt-4 flex justify-center w-full px-2">
-            <div className="flex flex-wrap justify-center bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 gap-1.5 w-full sm:w-auto">
-              <button
-                onClick={() => handleTabChange("lost-found")}
-                className={`flex w-full sm:w-auto flex-1 sm:flex-none items-center justify-center min-w-[140px] gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
-                  activeTab === "lost-found"
-                    ? "bg-white text-blue-900 shadow-md scale-100"
-                    : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
-                }`}
-              >
-                <Search className="w-4 h-4" /> Lost & Found
-              </button>
-              <button
-                onClick={() => handleTabChange("buy-sell")}
-                className={`flex w-full sm:w-auto flex-1 sm:flex-none items-center justify-center min-w-[140px] gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
-                  activeTab === "buy-sell"
-                    ? "bg-white text-blue-900 shadow-md scale-100"
-                    : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
-                }`}
-              >
-                <Store className="w-4 h-4" /> Buy & Sell
-              </button>
-              <button
-                onClick={() => handleTabChange("facilities")}
-                className={`flex w-full sm:w-auto flex-1 sm:flex-none items-center justify-center min-w-[140px] gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
-                  activeTab === "facilities"
-                    ? "bg-white text-blue-900 shadow-md scale-100"
-                    : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
-                }`}
-              >
-                <MapPin className="w-4 h-4" /> Facilities
-              </button>
-              <button
-                onClick={() => handleTabChange("contact")}
-                className={`flex w-full sm:w-auto flex-1 sm:flex-none items-center justify-center min-w-[140px] gap-2 px-3 sm:px-4 py-2.5 sm:py-2 rounded-xl text-[13px] sm:text-sm font-black transition-all ${
-                  activeTab === "contact"
-                    ? "bg-white text-blue-900 shadow-md scale-100"
-                    : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
-                }`}
-              >
-                <Info className="w-4 h-4" /> Contact & FAQ
-              </button>
+          {/* View Toggle — 2×2 grid on mobile, single row on sm+ */}
+          <div className="mt-6 flex justify-center w-full px-2">
+            <div className="flex w-full sm:w-auto bg-black/20 backdrop-blur-md p-1 rounded-xl border border-black/10 gap-1 flex-wrap justify-center shadow-inner">
+              {/* unified grid/flex for all screens */}
+              <div className="flex flex-wrap sm:flex-nowrap justify-center gap-1">
+                {[
+                  { id: "lost-found", label: "Lost & Found", icon: <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> },
+                  { id: "buy-sell",   label: "Buy & Sell",   icon: <Store className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> },
+                  { id: "facilities", label: "Facilities",   icon: <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> },
+                  { id: "contact",    label: "Contact & FAQ",icon: <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> },
+                ].map(({ id, label, icon }) => (
+                  <button
+                    key={id}
+                    onClick={() => handleTabChange(id)}
+                    className={`flex-auto sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-5 sm:py-2 rounded-lg text-xs sm:text-sm font-black transition-all ${
+                      activeTab === id
+                        ? "bg-slate-900 text-lime-400 shadow-md scale-100"
+                        : "text-white/80 hover:text-white hover:bg-black/20 scale-95"
+                    }`}
+                  >
+                    {icon} {label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>

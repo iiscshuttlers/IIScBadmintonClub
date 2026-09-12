@@ -125,19 +125,19 @@ export function NotificationModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md bg-slate-900 border border-slate-800 text-white">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Bell className="w-5 h-5 text-accent" />
-            {title}
+      <DialogContent className="sm:max-w-md bg-slate-900 border border-slate-800 text-white p-4 max-h-[60vh] overflow-y-auto">
+        <DialogHeader className="mb-0">
+          <DialogTitle className="flex items-start sm:items-center gap-2 pr-6">
+            <Bell className="w-5 h-5 text-accent flex-shrink-0 mt-0.5 sm:mt-0" />
+            <span className="leading-tight break-words text-lg">{title}</span>
           </DialogTitle>
-          <DialogDescription className="text-slate-400">
+          <DialogDescription className="text-slate-400 text-xs">
             When would you like to be notified before the match starts?
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-6 pt-4">
+        <form onSubmit={handleSubmit} className="space-y-3 pt-1">
           <div className="flex justify-center items-center gap-4">
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex flex-col items-center gap-1">
               <Input
                 type="number"
                 min="0"
@@ -145,12 +145,12 @@ export function NotificationModal({
                 placeholder="00"
                 value={hours}
                 onChange={(e) => setHours(e.target.value)}
-                className="w-20 text-center text-2xl font-black bg-slate-800 border-slate-700 h-16"
+                className="w-14 text-center text-lg font-black bg-slate-800 border-slate-700 h-10"
               />
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Hours</span>
+              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Hours</span>
             </div>
-            <span className="text-3xl font-black text-slate-600 mb-6">:</span>
-            <div className="flex flex-col items-center gap-2">
+            <span className="text-2xl font-black text-slate-600 mb-4">:</span>
+            <div className="flex flex-col items-center gap-1">
               <Input
                 type="number"
                 min="0"
@@ -158,21 +158,21 @@ export function NotificationModal({
                 placeholder="00"
                 value={minutes}
                 onChange={(e) => setMinutes(e.target.value)}
-                className="w-20 text-center text-2xl font-black bg-slate-800 border-slate-700 h-16"
+                className="w-14 text-center text-lg font-black bg-slate-800 border-slate-700 h-10"
               />
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Mins</span>
+              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Mins</span>
             </div>
           </div>
           
           {/* Quick presets */}
-          <div className="flex flex-wrap justify-center gap-2 pt-2">
-            <Button type="button" variant="outline" size="sm" onClick={() => { setHours(""); setMinutes("15"); }} className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs">15 mins</Button>
-            <Button type="button" variant="outline" size="sm" onClick={() => { setHours(""); setMinutes("30"); }} className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs">30 mins</Button>
-            <Button type="button" variant="outline" size="sm" onClick={() => { setHours("1"); setMinutes(""); }} className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs">1 hour</Button>
-            <Button type="button" variant="outline" size="sm" onClick={() => { setHours("24"); setMinutes(""); }} className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs">1 day</Button>
+          <div className="flex flex-wrap justify-center gap-1.5">
+            <Button type="button" variant="outline" size="sm" onClick={() => { setHours(""); setMinutes("15"); }} className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-[10px] h-7 px-2">15 mins</Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => { setHours(""); setMinutes("30"); }} className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-[10px] h-7 px-2">30 mins</Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => { setHours("1"); setMinutes(""); }} className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-[10px] h-7 px-2">1 hour</Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => { setHours("24"); setMinutes(""); }} className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-[10px] h-7 px-2">1 day</Button>
           </div>
 
-          <div className="bg-slate-800/50 rounded-xl p-3 flex items-center justify-center gap-2 text-sm text-slate-300">
+          <div className="bg-slate-800/50 rounded-lg p-2 flex items-center justify-center gap-1.5 text-xs text-slate-300">
             <Clock className="w-4 h-4 text-accent" />
             <span className="font-medium text-center">
               Alert: <strong className="text-white">{displayTimeStr}</strong> before 
@@ -180,17 +180,15 @@ export function NotificationModal({
             </span>
           </div>
 
-          <div className="flex justify-between items-center pt-4 border-t border-slate-800">
-            {isSubscribed ? (
-              <Button type="button" variant="destructive" onClick={handleRemove} disabled={loading} className="bg-red-500/20 text-red-500 hover:bg-red-500/30 border-none font-bold">
+          <div className="flex flex-col sm:flex-row justify-between items-center pt-2 border-t border-slate-800 gap-1.5">
+            {isSubscribed && (
+              <Button type="button" variant="destructive" onClick={handleRemove} disabled={loading} className="w-full sm:w-auto bg-red-500/20 text-red-500 hover:bg-red-500/30 border-none font-bold h-8 text-xs">
                 Remove Alert
               </Button>
-            ) : (
-              <div></div>
             )}
-            <div className="flex gap-3">
-              <Button type="button" variant="ghost" onClick={onClose} className="hover:bg-slate-800">Cancel</Button>
-              <Button type="submit" disabled={loading} className="bg-accent text-accent-foreground font-bold px-6">
+            <div className="flex w-full sm:w-auto gap-1.5">
+              <Button type="button" variant="ghost" onClick={onClose} className="flex-1 sm:flex-none hover:bg-slate-800 h-8 text-xs">Cancel</Button>
+              <Button type="submit" disabled={loading} className="flex-1 sm:flex-none bg-accent text-accent-foreground font-bold px-3 h-8 text-xs">
                 {loading ? "Saving..." : "Set Alert"}
               </Button>
             </div>

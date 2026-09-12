@@ -15,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Capacitor } from '@capacitor/core';
 import { supabase } from "@/lib/supabase";
 import { motion, type Variants } from "framer-motion";
+import { navGet, navSet } from "@/lib/navMemory";
 
 // New Tab Components
 import { LiveTab } from "@/components/pulse/LiveTab";
@@ -51,6 +52,9 @@ export default function Pulse() {
       if (hash.startsWith("feed")) return "feed";
       if (hash.startsWith("live")) return "live";
     } catch { /* ignore */ }
+    // No hash → restore from localStorage
+    const saved = navGet("pulse_tab") as "live" | "feed" | "events" | "directory" | null;
+    if (saved) return saved;
     return "live";
   };
 
@@ -60,16 +64,23 @@ export default function Pulse() {
     const onHashChange = () => setPulseTabState(getPulseTab());
     window.addEventListener("hashchange", onHashChange);
     if (!window.location.hash) {
-      try { window.history.replaceState(null, "", "#live"); } catch { /* ignore */ }
+      const restored = navGet("pulse_tab") || "live";
+      try { window.history.replaceState(null, "", `#${restored}`); } catch { /* ignore */ }
     }
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
 
+  const DIR_PARAMS = ["dir_q", "dir_sort", "dir_level", "dir_dept", "dir_tourn", "dir_cat", "dir_view"];
+
   const setPulseTab = (tab: "live" | "feed" | "events" | "directory") => {
     setPulseTabState(tab);
+    navSet("pulse_tab", tab); // persist across refresh
     try {
       const url = new URL(window.location.href);
-      url.search = ""; // clear query string to prevent bleeding
+      if (tab !== "directory") {
+        url.search = "";
+      }
+      // When switching TO directory, keep existing dir_* params intact
       url.hash = tab;
       window.history.pushState(null, "", url.toString());
     } catch { /* ignore */ }
@@ -144,62 +155,62 @@ export default function Pulse() {
     const isUpcoming = item.status === "draft";
 
     const cardContent = (
-      <Card className="rounded-3xl border border-primary/30 dark:border-slate-700 shadow-md bg-white dark:bg-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer h-full overflow-hidden flex flex-col">
+      <Card className="rounded-2xl border border-primary/30 dark:border-slate-700 shadow-sm bg-white dark:bg-slate-800 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 cursor-pointer h-full overflow-hidden flex flex-col">
         <div
           className={`h-1 w-full shrink-0 ${liveMode ? "bg-gradient-to-r from-red-500 to-orange-500 animate-pulse" : isUpcoming ? "bg-gradient-to-r from-primary to-teal-500" : "bg-gradient-to-r from-slate-300 to-slate-400"}`}
         />
-        <CardContent className="p-6 space-y-5 flex-1 flex flex-col">
-          <div className="flex flex-wrap items-center gap-3">
+        <CardContent className="p-3 sm:p-4 space-y-2 flex-1 flex flex-col">
+          <div className="flex items-center gap-1.5 overflow-hidden w-full">
             {liveMode ? (
-              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400 text-xs font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+              <span className="flex items-center gap-1 px-1.5 py-0.5 rounded border border-red-200 dark:border-red-900 bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 text-[9px] sm:text-[10px] font-black uppercase tracking-widest shrink-0">
+                <span className="w-1 h-1 rounded-full bg-red-500 animate-pulse" />
                 LIVE
               </span>
             ) : (
-              <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                item.status === 'draft' ? 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400' :
-                item.status === 'completed' || item.status === 'archived' ? 'bg-slate-100 text-muted-foreground dark:bg-slate-800 dark:text-muted-foreground' :
-                'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400'
+              <span className={`px-1.5 py-0.5 rounded border text-[9px] sm:text-[10px] font-black uppercase tracking-widest shrink-0 ${
+                item.status === 'draft' ? 'bg-teal-50 border-teal-200 text-teal-700 dark:bg-teal-900/40 dark:border-teal-800/50 dark:text-teal-400' :
+                item.status === 'completed' || item.status === 'archived' ? 'bg-slate-50 border-slate-200 text-slate-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400' :
+                'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/40 dark:border-blue-800/50 dark:text-blue-400'
               }`}>
                 {item.status === 'draft' ? 'Upcoming' : item.status}
               </span>
             )}
 
             <span
-              className={`px-3 py-1 rounded-full text-xs font-semibold ${
+              className={`px-1.5 py-0.5 rounded border text-[9px] sm:text-[10px] font-black uppercase tracking-widest shrink-0 truncate ${
                 item.type === "open"
-                  ? "bg-primary/15 text-primary dark:bg-primary/40 dark:text-primary"
+                  ? "bg-primary/5 border-primary/20 text-primary dark:bg-primary/10 dark:border-primary/30 dark:text-primary"
                   : item.type === "team"
-                    ? "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400"
-                    : "bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400"
+                    ? "bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-950/40 dark:border-indigo-800/50 dark:text-indigo-400"
+                    : "bg-fuchsia-50 border-fuchsia-200 text-fuchsia-700 dark:bg-fuchsia-950/40 dark:border-fuchsia-800/50 dark:text-fuchsia-400"
               }`}
             >
               {getTypeLabel(item.type)}
             </span>
 
-            <div className="flex items-center gap-2 text-sm text-muted-foreground dark:text-muted-foreground">
-              <Calendar className="w-3.5 h-3.5" />
-              {item.startDate}
+            <div className="flex items-center gap-1 text-[9px] sm:text-[10px] font-bold text-muted-foreground dark:text-muted-foreground shrink-0 ml-auto pl-1 truncate">
+              <Calendar className="w-3 h-3 shrink-0" />
+              <span className="truncate">{item.startDate}</span>
             </div>
           </div>
 
-          <h3 className="text-2xl font-black text-blue-900 dark:text-foreground leading-tight">
+          <h3 className="text-base sm:text-lg font-black text-blue-900 dark:text-foreground leading-tight pt-1 line-clamp-2">
             {item.name}
           </h3>
 
-          <p className="text-muted-foreground dark:text-muted-foreground line-clamp-3">
+          <p className="text-muted-foreground dark:text-muted-foreground text-[11px] sm:text-xs line-clamp-2 leading-snug">
             {item.description}
           </p>
           
           <div className="flex-1" />
 
-          <div className="flex items-center gap-2 pt-1 font-bold text-primary dark:text-primary text-sm">
+          <div className="flex items-center gap-1.5 pt-1.5 font-black text-primary dark:text-primary text-[11px] sm:text-xs uppercase tracking-wide">
             {isUpcoming
               ? "View details"
               : item.status === "active"
                 ? "View live fixtures"
                 : "View results"}
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
           </div>
         </CardContent>
       </Card>
@@ -262,47 +273,25 @@ export default function Pulse() {
           </p>
 
           <div className="mt-6 w-full flex justify-center mb-2 px-2">
-            <div className="flex w-full sm:w-auto bg-white/10 backdrop-blur-md p-1 rounded-xl border border-white/20 gap-1 flex-wrap justify-center">
-              <button
-                onClick={() => setPulseTab("live")}
-                className={`flex-auto sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-black transition-all ${
-                  pulseTab === "live"
-                    ? "bg-white text-blue-900 shadow-sm scale-100"
-                    : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
-                }`}
-              >
-                <Activity className="w-3.5 h-3.5" /> Live
-              </button>
-              <button
-                onClick={() => setPulseTab("feed")}
-                className={`flex-auto sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-black transition-all ${
-                  pulseTab === "feed"
-                    ? "bg-white text-blue-900 shadow-sm scale-100"
-                    : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
-                }`}
-              >
-                <Radio className="w-3.5 h-3.5" /> Feed
-              </button>
-              <button
-                onClick={() => setPulseTab("events")}
-                className={`flex-auto sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-black transition-all ${
-                  pulseTab === "events"
-                    ? "bg-white text-blue-900 shadow-sm scale-100"
-                    : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
-                }`}
-              >
-                <Trophy className="w-3.5 h-3.5" /> Events
-              </button>
-              <button
-                onClick={() => setPulseTab("directory")}
-                className={`flex-auto sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-black transition-all ${
-                  pulseTab === "directory"
-                    ? "bg-white text-blue-900 shadow-sm scale-100"
-                    : "text-foreground/80 hover:text-foreground hover:bg-white/10 scale-95"
-                }`}
-              >
-                <Users className="w-3.5 h-3.5" /> Directory
-              </button>
+            <div className="flex w-full sm:w-auto bg-black/20 backdrop-blur-md p-1 rounded-xl border border-black/10 gap-1 flex-wrap justify-center shadow-inner">
+              {[
+                { id: "live", label: "Live", icon: <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> },
+                { id: "feed", label: "Feed", icon: <Radio className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> },
+                { id: "events", label: "Events", icon: <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> },
+                { id: "directory", label: "Directory", icon: <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> },
+              ].map(({ id, label, icon }) => (
+                <button
+                  key={id}
+                  onClick={() => setPulseTab(id as any)}
+                  className={`flex-auto sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-5 sm:py-2 rounded-lg text-xs sm:text-sm font-black transition-all ${
+                    pulseTab === id
+                      ? "bg-slate-900 text-lime-400 shadow-md scale-100"
+                      : "text-white/80 hover:text-white hover:bg-black/20 scale-95"
+                  }`}
+                >
+                  {icon} {label}
+                </button>
+              ))}
             </div>
           </div>
         </div>

@@ -60,6 +60,7 @@ export interface PlayerRow {
   is_guest: boolean | null;
   deleted_at: string | null;
   created_at?: string;
+  default_match_reminder_mins?: number | null;
 }
 
 export interface RacketDetail {

@@ -80,17 +80,17 @@ export function DirectoryFilters({
           )}
         </div>
 
-        <div className="flex gap-2 shrink-0 flex-wrap sm:flex-nowrap">
+        <div className="flex gap-2 w-full md:w-auto shrink-0">
           {/* Tournament selector */}
           {setTournamentFilter && (
-            <div className="relative">
-              <Trophy className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <div className="relative flex-1 min-w-0">
+              <Trophy className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
               <select
                 value={tournamentFilter}
                 onChange={(e) => setTournamentFilter(e.target.value)}
-                className="pl-9 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-muted-foreground dark:text-slate-200 text-sm font-bold outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer max-w-[200px] truncate"
+                className="w-full pl-8 pr-2 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-muted-foreground dark:text-slate-200 text-xs font-bold outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer truncate"
               >
-                <option value="All">All tournaments</option>
+                <option value="All">All</option>
                 {tournaments.map((t) => (
                   <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
@@ -99,14 +99,14 @@ export function DirectoryFilters({
           )}
 
           {/* Sort selector */}
-          <div className="relative">
-            <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          <div className={`relative ${setTournamentFilter ? "flex-[1.2]" : "flex-1"} min-w-0`}>
+            <ArrowUpDown className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="pl-9 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-muted-foreground dark:text-slate-200 text-sm font-bold outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer"
+              className="w-full pl-7 pr-1 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-muted-foreground dark:text-slate-200 text-xs font-bold outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer truncate"
             >
-              <option value="elo">All Formats</option>
+              <option value="elo">Overall</option>
               <option value="singles">Singles</option>
               <option value="doubles">Doubles</option>
               <option value="mixed">Mixed Doubles</option>
@@ -119,17 +119,17 @@ export function DirectoryFilters({
 
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-4 py-3 rounded-2xl border text-sm font-bold transition
+            className={`flex-1 min-w-0 flex items-center justify-center gap-1.5 px-2 py-3 rounded-2xl border text-xs font-bold transition
           ${
             showFilters
               ? "bg-primary/10 dark:bg-primary/20 border-primary/50 dark:border-primary text-primary dark:text-primary"
               : "border-slate-200 dark:border-slate-700 text-muted-foreground dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600"
           }`}
           >
-            <SlidersHorizontal className="w-4 h-4" />
-            Filters
+            <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Filters</span>
             {(levelFilter !== "All" || departmentFilter !== "All") && (
-              <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
             )}
           </button>
         </div>

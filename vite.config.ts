@@ -162,6 +162,7 @@ export default defineConfig(() => {
 
       VitePWA({
         selfDestroying: true,
+        injectRegister: false,
         manifest: {
           name: "IISc Shuttlers",
           short_name: "Shuttlers",

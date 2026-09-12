@@ -8,11 +8,11 @@ export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans pb-24 pt-4 lg:pt-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        <Link href="/">
-          <span className="inline-flex items-center gap-2 text-sm font-semibold text-primary dark:text-primary hover:text-primary dark:hover:text-primary/70 transition-colors cursor-pointer mb-6">
-            <ArrowLeft className="w-4 h-4" /> Back to Home
-          </span>
-        </Link>
+          <button onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = '/'}>
+            <span className="inline-flex items-center gap-2 text-sm font-semibold text-primary dark:text-primary hover:text-primary dark:hover:text-primary/70 transition-colors cursor-pointer mb-6">
+              <ArrowLeft className="w-4 h-4" /> Back to Home
+            </span>
+          </button>
         
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-10 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-4 mb-8">

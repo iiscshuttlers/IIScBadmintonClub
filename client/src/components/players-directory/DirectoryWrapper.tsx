@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getEloTier } from "@/lib/tiers";
 import type { PlayerRow } from "@/types";
 import { useAllTournamentMatches } from "@/hooks/useAllTournamentMatches";
+import { navGet, navSet, navRemove } from "@/lib/navMemory";
 
 export function DirectoryWrapper() {
   const { profile, isAdmin } = useAuth();
@@ -18,10 +19,15 @@ export function DirectoryWrapper() {
   const getInitialParam = (param: string, defaultVal: string) => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(param) || defaultVal;
+      const fromUrl = urlParams.get(param);
+      if (fromUrl) return fromUrl;
+      // Fall back to localStorage for cross-page + refresh memory
+      const fromStorage = navGet(param);
+      if (fromStorage) return fromStorage;
     } catch {
-      return defaultVal;
+      // ignore
     }
+    return defaultVal;
   };
 
   const [searchQuery, setSearchQuery] = useState(() => getInitialParam("dir_q", ""));
@@ -36,15 +42,29 @@ export function DirectoryWrapper() {
   useEffect(() => {
     try {
       const url = new URL(window.location.href);
-      if (searchQuery) url.searchParams.set("dir_q", searchQuery);
-      else url.searchParams.delete("dir_q");
-      
+      if (searchQuery) {
+        url.searchParams.set("dir_q", searchQuery);
+        navSet("dir_q", searchQuery);
+      } else {
+        url.searchParams.delete("dir_q");
+        navRemove("dir_q");
+      }
+
       url.searchParams.set("dir_sort", sortBy);
+      navSet("dir_sort", sortBy);
+
       url.searchParams.set("dir_level", levelFilter);
+      navSet("dir_level", levelFilter);
+
       url.searchParams.set("dir_dept", departmentFilter);
+      navSet("dir_dept", departmentFilter);
+
       url.searchParams.set("dir_tourn", tournamentFilter);
+      navSet("dir_tourn", tournamentFilter);
+
       url.searchParams.set("dir_cat", categoryFilter);
-      
+      navSet("dir_cat", categoryFilter);
+
       window.history.replaceState(null, "", url.toString());
     } catch { /* ignore */ }
   }, [searchQuery, sortBy, levelFilter, departmentFilter, tournamentFilter, categoryFilter]);
@@ -131,6 +151,21 @@ export function DirectoryWrapper() {
         return p;
       })
       .sort((a: any, b: any) => {
+        const getPct = (recStr?: string) => {
+          const rec = String(recStr || "").toUpperCase();
+          const m = rec.match(/(\d+)\s*W\s*-?\s*(\d+)\s*L/);
+          if (m) {
+            const w = +m[1], l = +m[2];
+            return w + l === 0 ? -1 : w / (w + l);
+          }
+          const dashMatch = rec.match(/^(\d+)\s*-\s*(\d+)$/);
+          if (dashMatch) {
+            const w = +dashMatch[1], l = +dashMatch[2];
+            return w + l === 0 ? -1 : w / (w + l);
+          }
+          return -1;
+        };
+
         if (tournamentFilter !== "All" && sortBy === "elo") {
           const aTotal = (a._filterWins || 0) + (a._filterLosses || 0);
           const bTotal = (b._filterWins || 0) + (b._filterLosses || 0);
@@ -141,26 +176,28 @@ export function DirectoryWrapper() {
           if ((b._filterWins || 0) !== (a._filterWins || 0)) return (b._filterWins || 0) - (a._filterWins || 0);
           return (b.elo_rating || 0) - (a.elo_rating || 0);
         }
-        if (sortBy === "elo") return (b.elo_rating || 0) - (a.elo_rating || 0);
-        if (sortBy === "singles") return (b.singles_elo || 0) - (a.singles_elo || 0);
-        if (sortBy === "doubles") return (b.doubles_elo || 0) - (a.doubles_elo || 0);
-        if (sortBy === "mixed") return (b.mixed_elo || 0) - (a.mixed_elo || 0);
+        if (sortBy === "elo") {
+          const eloDiff = (b.elo_rating || 0) - (a.elo_rating || 0);
+          if (eloDiff !== 0) return eloDiff;
+          return getPct(b.win_loss_record) - getPct(a.win_loss_record);
+        }
+        if (sortBy === "singles") {
+          const eloDiff = (b.singles_elo || 0) - (a.singles_elo || 0);
+          if (eloDiff !== 0) return eloDiff;
+          return getPct(b.singles_record) - getPct(a.singles_record);
+        }
+        if (sortBy === "doubles") {
+          const eloDiff = (b.doubles_elo || 0) - (a.doubles_elo || 0);
+          if (eloDiff !== 0) return eloDiff;
+          return getPct(b.doubles_record) - getPct(a.doubles_record);
+        }
+        if (sortBy === "mixed") {
+          const eloDiff = (b.mixed_elo || 0) - (a.mixed_elo || 0);
+          if (eloDiff !== 0) return eloDiff;
+          return getPct(b.mixed_record) - getPct(a.mixed_record);
+        }
         if (sortBy === "winpct") {
-          const getPct = (p: any) => {
-            const rec = String(p.win_loss_record || "").toUpperCase();
-            const m = rec.match(/(\d+)\s*W\s*-?\s*(\d+)\s*L/);
-            if (m) {
-              const w = +m[1], l = +m[2];
-              return w + l === 0 ? -1 : w / (w + l);
-            }
-            const dashMatch = rec.match(/^(\d+)\s*-\s*(\d+)$/);
-            if (dashMatch) {
-              const w = +dashMatch[1], l = +dashMatch[2];
-              return w + l === 0 ? -1 : w / (w + l);
-            }
-            return -1;
-          };
-          return getPct(b) - getPct(a);
+          return getPct(b.win_loss_record) - getPct(a.win_loss_record);
         }
         if (sortBy === "name") return (a.full_name || "").localeCompare(b.full_name || "");
         if (sortBy === "department") return (a.department || "").localeCompare(b.department || "");

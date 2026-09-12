@@ -12,7 +12,7 @@ import { EditVideoModal } from "./EditVideoModal";
 import { VideoPlayerModal } from "./VideoPlayerModal";
 import { MatchScorecardModal } from "./MatchScorecardModal";
 import { fetchMatchSummary } from "@/lib/aiPredictor";
-import { NotificationModal } from "../events/NotificationModal";
+import { MatchReminderModal } from "../pulse/MatchReminderModal";
 
 const isApp = Capacitor.isNativePlatform();
 
@@ -523,29 +523,15 @@ export function MatchCard({
         currentUser={currentUser}
       />
 
-      <NotificationModal
-        isOpen={isNotifyOpen}
-        onClose={() => setIsNotifyOpen(false)}
-        matchTime={match.scheduled_at}
-        onSave={async (mins) => {
-          if (!currentUser) {
-            toast.error("Please login to set alerts");
-            return;
-          }
-          try {
-            const { error } = await supabase.from("user_match_notifications").upsert({
-              user_id: currentUser.id,
-              match_id: match.id,
-              notify_before_mins: mins
-            }, { onConflict: "user_id,match_id" });
-            if (error) throw error;
-          } catch (e) {
-            toast.error("Failed to set alert");
-          }
-        }}
-        title={`Alert: ${match.team1_label || actualP1?.full_name || "TBD"} vs ${match.team2_label || actualP2?.full_name || "TBD"}`}
-        defaultMins={15}
-      />
+      {currentUser && (
+        <MatchReminderModal
+          isOpen={isNotifyOpen}
+          onClose={() => setIsNotifyOpen(false)}
+          matchId={match.id}
+          userId={currentUser.id}
+          initialGlobalMins={currentUser.default_match_reminder_mins}
+        />
+      )}
 
       {/* Children (e.g., Accept/Reject buttons) */}
       {children && <div className="mt-4">{children}</div>}
@@ -603,7 +589,7 @@ export function MatchCard({
                   if (alert && match.scheduled_at) {
                     const notifyDate = new Date(match.scheduled_at);
                     if (!isNaN(notifyDate.getTime())) {
-                      notifyDate.setMinutes(notifyDate.getMinutes() - alert.notify_before_mins);
+                      notifyDate.setMinutes(notifyDate.getMinutes() - alert.remind_before_mins);
                       const timeStr = notifyDate.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
                       return (
                         <div className="flex items-center justify-end gap-1 px-2 py-1 rounded-full text-[10px] font-bold text-accent bg-accent/10 border border-accent/20 max-w-full">

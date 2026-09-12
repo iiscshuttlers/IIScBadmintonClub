@@ -70,7 +70,7 @@ export function WeeklyChallenges() {
       const since = new Date(weekStart).toISOString();
       const { data: weekMatches } = await supabase
         .from("matches")
-        .select("id, winner_id, player1_id, player2_id, match_score, status, created_at")
+        .select("id, winner_id, player1_id, player2_id, score, status, created_at")
         .in("status", ["confirmed", "walkover"])
         .gte("created_at", since)
         .or(`player1_id.eq.${profile.id},player2_id.eq.${profile.id}`);
@@ -79,12 +79,12 @@ export function WeeklyChallenges() {
       const myWins = matches.filter((m: any) => m.winner_id === profile.id).length;
       const myMatches = matches.length;
       const mySingles = matches.filter((m: any) => {
-        const scoreStr: string = m.match_score ?? "";
+        const scoreStr: string = m.score ?? "";
         return m.winner_id === profile.id && !scoreStr.includes("[");
       }).length;
       const myDoubles = matches.filter((m: any) => {
-        const scoreStr: string = m.match_score ?? "";
-        return scoreStr.includes("[");
+        const scoreStr: string = m.score ?? "";
+        return m.winner_id === profile.id && scoreStr.includes("[");
       }).length;
 
       // Streak: fetch recent confirmed matches all-time

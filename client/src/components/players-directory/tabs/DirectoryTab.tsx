@@ -7,6 +7,7 @@ import { DirectoryFilters } from "@/components/players-directory/DirectoryFilter
 import { TeamsTab } from "@/components/players-directory/tabs/TeamsTab";
 import { H2HSection } from "@/components/players-directory/H2HSection";
 import { useState, useEffect } from "react";
+import { navGet, navSet } from "@/lib/navMemory";
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -103,18 +104,29 @@ export function DirectoryTab({
   const getInitialParam = (param: string, defaultVal: string) => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(param) || defaultVal;
+      const fromUrl = urlParams.get(param);
+      if (fromUrl) return fromUrl;
+      // Fall back to localStorage for refresh/cross-page memory
+      const fromStorage = navGet(param);
+      if (fromStorage) return fromStorage;
     } catch {
       return defaultVal;
     }
+    return defaultVal;
   };
 
-  const [viewMode, setViewMode] = useState<any>(() => getInitialParam("dir_view", "individuals"));
+  const [viewMode, setViewModeState] = useState<any>(() => getInitialParam("dir_view", "individuals"));
+
+  const setViewMode = (mode: string) => {
+    setViewModeState(mode);
+    navSet("dir_view", mode);
+  };
 
   useEffect(() => {
     try {
       const url = new URL(window.location.href);
       url.searchParams.set("dir_view", viewMode);
+      navSet("dir_view", viewMode);
       window.history.replaceState(null, "", url.toString());
     } catch { /* ignore */ }
   }, [viewMode]);
@@ -233,6 +245,7 @@ export function DirectoryTab({
                   currentUserId={ownProfile?.id}
                   isPersonalView={isPersonalView}
                   allRanks={rankMap[player.id]}
+                  activeMetric={["singles", "doubles", "mixed"].includes(sortBy) ? (sortBy as any) : "overall"}
                 />
               </div>
             ))}
@@ -330,6 +343,7 @@ export function DirectoryTab({
                   currentUserId={ownProfile?.id}
                   isPersonalView={isPersonalView}
                   allRanks={rankMap[player.id]}
+                  activeMetric={["singles", "doubles", "mixed"].includes(sortBy) ? (sortBy as any) : "overall"}
                 />
               </motion.div>
             ))}

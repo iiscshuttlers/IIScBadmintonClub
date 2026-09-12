@@ -1231,7 +1231,7 @@ export function LiveScoreSection() {
   return (
     <div className="w-full max-w-5xl mx-auto space-y-2">
       {activeMatchList.filter(m => m.status !== "setup").length > 0 && (
-        <div className="flex flex-wrap items-center justify-end gap-2 mb-2 px-4">
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-2 px-4">
           <button
             onClick={() => {
               if (!voiceEnabled && window.speechSynthesis) {
@@ -1241,30 +1241,30 @@ export function LiveScoreSection() {
               }
               setVoiceEnabled(!voiceEnabled);
             }}
-            className={`flex justify-center items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] uppercase tracking-wider font-bold transition-colors ${
+            className={`flex justify-center items-center gap-1.5 px-3 h-7 rounded-xl border text-[10px] uppercase tracking-wider font-bold transition-colors ${
               voiceEnabled ? 'bg-primary/20 text-primary border-primary/50 hover:bg-primary/30' : 'bg-slate-800 text-muted-foreground border-slate-700 hover:bg-slate-700'
             }`}
           >
             {voiceEnabled ? <Volume2 className="w-3 h-3" /> : <VolumeX className="w-3 h-3" />}
-            <span className="hidden sm:inline">Voice</span>
+            <span className="leading-none pt-[1px]">Voice</span>
           </button>
           <button
             onClick={() => setFlashEnabled(!flashEnabled)}
-            className={`flex justify-center items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] uppercase tracking-wider font-bold transition-colors ${
+            className={`flex justify-center items-center gap-1.5 px-3 h-7 rounded-xl border text-[10px] uppercase tracking-wider font-bold transition-colors ${
               flashEnabled ? 'bg-primary/20 text-primary border-primary/50 hover:bg-primary/30' : 'bg-slate-800 text-muted-foreground border-slate-700 hover:bg-slate-700'
             }`}
           >
             <Zap className="w-3 h-3" />
-            <span className="hidden sm:inline">Flash</span>
+            <span className="leading-none pt-[1px]">Flash</span>
           </button>
           <button
             onClick={() => setVibrateEnabled(!vibrateEnabled)}
-            className={`flex justify-center items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] uppercase tracking-wider font-bold transition-colors ${
+            className={`flex justify-center items-center gap-1.5 px-3 h-7 rounded-xl border text-[10px] uppercase tracking-wider font-bold transition-colors ${
               vibrateEnabled ? 'bg-primary/20 text-primary border-primary/50 hover:bg-primary/30' : 'bg-slate-800 text-muted-foreground border-slate-700 hover:bg-slate-700'
             }`}
           >
             <Smartphone className="w-3 h-3" />
-            <span className="hidden sm:inline">Vibrate</span>
+            <span className="leading-none pt-[1px]">Vibrate</span>
           </button>
         </div>
       )}

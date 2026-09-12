@@ -182,52 +182,52 @@ export function WinnersWallSection() {
     <div className="flex-1 w-full flex flex-col">
       <section className="container mx-auto px-4 py-12 space-y-6">
         {/* Aggregate Stats & Leaderboard Grid */}
-        <div className="grid lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto space-y-6">
           {/* Stats Bar */}
-          <div className="lg:col-span-1 space-y-6">
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
-                <Trophy className="w-7 h-7 text-blue-600 dark:text-blue-400" />
+          <div className="grid grid-cols-3 gap-3 sm:gap-6">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl p-3 sm:p-6 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
+                <Trophy className="w-5 h-5 sm:w-7 sm:h-7 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <div className="text-3xl font-black text-blue-950 dark:text-foreground">
+                <div className="text-xl sm:text-3xl font-black text-blue-950 dark:text-foreground leading-none sm:leading-tight">
                   {tournamentsWithResults.length}
                 </div>
-                <div className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
-                  Archived Events
+                <div className="text-[10px] sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mt-1 sm:mt-0">
+                  Events
                 </div>
               </div>
             </div>
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-primary/10 dark:bg-primary/40 flex items-center justify-center shrink-0">
-                <Medal className="w-7 h-7 text-primary dark:text-primary" />
+            <div className="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl p-3 sm:p-6 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-primary/10 dark:bg-primary/40 flex items-center justify-center shrink-0">
+                <Medal className="w-5 h-5 sm:w-7 sm:h-7 text-primary dark:text-primary" />
               </div>
               <div>
-                <div className="text-3xl font-black text-blue-950 dark:text-foreground">
+                <div className="text-xl sm:text-3xl font-black text-blue-950 dark:text-foreground leading-none sm:leading-tight">
                   {totalCategories}
                 </div>
-                <div className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
-                  Title Categories
+                <div className="text-[10px] sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mt-1 sm:mt-0">
+                  Titles
                 </div>
               </div>
             </div>
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center shrink-0">
-                <Users className="w-7 h-7 text-amber-600 dark:text-amber-400" />
+            <div className="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl p-3 sm:p-6 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center shrink-0">
+                <Users className="w-5 h-5 sm:w-7 sm:h-7 text-amber-600 dark:text-amber-400" />
               </div>
               <div>
-                <div className="text-3xl font-black text-blue-950 dark:text-foreground">
+                <div className="text-xl sm:text-3xl font-black text-blue-950 dark:text-foreground leading-none sm:leading-tight">
                   {leaderboard.length}
                 </div>
-                <div className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
-                  Total Champions
+                <div className="text-[10px] sm:text-sm font-bold text-muted-foreground uppercase tracking-wider mt-1 sm:mt-0">
+                  Champs
                 </div>
               </div>
             </div>
           </div>
 
           {/* Top Leaderboard */}
-          <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
             <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
               <BarChart3 className="w-6 h-6 text-primary" />
               <h2 className="text-xl font-black text-blue-950 dark:text-foreground">
@@ -362,7 +362,7 @@ export function WinnersWallSection() {
                   animate="visible"
                   exit={{ opacity: 0, scale: 0.95 }}
                   viewport={{ once: true, margin: "-60px" }}
-                  className="rounded-3xl shadow-md border border-primary/30 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden"
+                  className="rounded-2xl sm:rounded-3xl shadow-sm border border-primary/20 dark:border-slate-700/50 bg-white dark:bg-slate-800 overflow-hidden"
                 >
                   {/* Top accent */}
                   <div
@@ -375,12 +375,12 @@ export function WinnersWallSection() {
                     }`}
                   />
 
-                  <div className="p-6 sm:p-10 space-y-6">
-                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
+                  <div className="p-4 sm:p-8 space-y-4 sm:space-y-6">
+                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                       <div>
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2 mb-1.5">
                           <span
-                            className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                            className={`px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-bold uppercase tracking-wider ${
                               event.type === "open"
                                 ? "bg-primary/15 text-primary dark:bg-primary/40 dark:text-primary"
                                 : event.type === "team"
@@ -389,36 +389,37 @@ export function WinnersWallSection() {
                             }`}
                           >
                             {event.type === "open"
-                              ? "Open Tournament"
+                              ? "Open"
                               : event.type === "team"
                                 ? "Team Event"
                                 : "Special Event"}
                           </span>
-                          <span className="text-sm font-bold text-primary dark:text-primary">
+                          <span className="text-xs sm:text-sm font-bold text-primary dark:text-primary">
                             {event.startDate}
                           </span>
                         </div>
-                        <h2 className="text-2xl sm:text-3xl font-black text-blue-900 dark:text-foreground">
+                        <h2 className="text-lg sm:text-2xl font-black text-blue-900 dark:text-foreground leading-tight">
                           {event.name}
                         </h2>
-                        <p className="text-muted-foreground dark:text-muted-foreground mt-2 max-w-3xl text-sm leading-relaxed">
+                        <p className="text-muted-foreground dark:text-muted-foreground mt-1.5 max-w-3xl text-xs sm:text-sm leading-snug">
                           {event.description}
                         </p>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-3 shrink-0">
+                      <div className="flex items-center gap-2 sm:gap-3 shrink-0 w-full sm:w-auto">
                         <a
                           href={event.galleryFolder ? `/legacy?filter=${encodeURIComponent(event.galleryFolder)}#albums` : `/legacy#albums`}
+                          className="flex-1 sm:flex-none"
                         >
-                          <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-muted-foreground dark:text-slate-200 font-bold text-sm transition-colors">
-                            <ImageIcon className="w-4 h-4" />
+                          <button className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-muted-foreground dark:text-slate-200 font-bold text-xs sm:text-sm transition-colors">
+                            <ImageIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             Photos
                           </button>
                         </a>
-                        <Link href={`/events/${event.slug}`}>
-                          <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/15 hover:bg-primary/20 dark:bg-primary/40 dark:hover:bg-primary/80/60 text-primary dark:text-primary font-bold text-sm transition-colors">
-                            Results Details
-                            <ArrowRight className="w-4 h-4" />
+                        <Link href={`/events/${event.slug}`} className="flex-1 sm:flex-none">
+                          <button className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-primary/15 hover:bg-primary/20 dark:bg-primary/40 dark:hover:bg-primary/80/60 text-primary dark:text-primary font-bold text-xs sm:text-sm transition-colors">
+                            Results
+                            <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           </button>
                         </Link>
                       </div>
@@ -426,7 +427,7 @@ export function WinnersWallSection() {
 
                     {/* Winners */}
                     {event.winners && (
-                      <div className="space-y-7 pt-4 border-t border-slate-100 dark:border-slate-700">
+                      <div className="space-y-5 pt-3 border-t border-slate-100 dark:border-slate-700/50">
                         {Object.entries(
                           event.winners.reduce(
                             (acc, curr) => {
@@ -446,31 +447,31 @@ export function WinnersWallSection() {
                             {} as Record<string, typeof event.winners>,
                           ),
                         ).map(([group, results]) => (
-                          <div key={group} className="space-y-3">
+                          <div key={group} className="space-y-2">
                             {group !== "Overall" && (
-                              <div className="flex items-center gap-3">
-                                <div className="w-1.5 h-5 bg-gradient-to-b from-amber-400 to-orange-500 rounded-full" />
-                                <h3 className="text-base font-black text-blue-900 dark:text-foreground">
+                              <div className="flex items-center gap-2">
+                                <div className="w-1 h-4 bg-gradient-to-b from-amber-400 to-orange-500 rounded-full" />
+                                <h3 className="text-sm font-black text-blue-900 dark:text-foreground">
                                   {group}
                                 </h3>
                               </div>
                             )}
-                            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">
+                            <div className="flex flex-wrap gap-2 sm:gap-3">
                               {results!.map((result) => (
                                 <div
                                   key={result.category}
-                                  className="rounded-2xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/15 p-4 hover:shadow-sm transition-shadow"
+                                  className="flex-1 min-w-[200px] rounded-xl border border-amber-200/60 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-950/10 p-3 hover:shadow-sm transition-shadow"
                                 >
-                                  <div className="flex items-center gap-2 text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-2">
-                                    <Medal className="w-3.5 h-3.5" />
+                                  <div className="flex items-center gap-1.5 text-[10px] font-black text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-1.5">
+                                    <Medal className="w-3 h-3" />
                                     {result.category}
                                   </div>
-                                  <p className="font-bold text-blue-950 dark:text-foreground text-sm flex items-center gap-1">
-                                    <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" /> {renderName(result.winner)}
+                                  <p className="font-bold text-blue-950 dark:text-foreground text-xs sm:text-sm flex items-center gap-1">
+                                    <Trophy className="w-3 h-3 text-amber-500 shrink-0" /> {renderName(result.winner)}
                                   </p>
                                   {result.runnerUp && (
-                                    <p className="mt-1 text-xs font-semibold text-muted-foreground dark:text-muted-foreground flex items-center gap-1">
-                                      <Medal className="w-3 h-3 text-muted-foreground shrink-0" /> {renderName(result.runnerUp)}
+                                    <p className="mt-1 text-[10px] sm:text-xs font-semibold text-muted-foreground dark:text-muted-foreground flex items-center gap-1">
+                                      <Medal className="w-2.5 h-2.5 text-muted-foreground shrink-0" /> {renderName(result.runnerUp)}
                                     </p>
                                   )}
                                 </div>
@@ -483,7 +484,7 @@ export function WinnersWallSection() {
 
                     {/* Podium */}
                     {event.podium && (
-                      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 pt-3 border-t border-slate-100 dark:border-slate-700/50">
                         {event.podium.map((team, index) => {
                           const rankConfig = [
                             {
@@ -492,16 +493,16 @@ export function WinnersWallSection() {
                               iconColor: "text-amber-500",
                               border:
                                 "border-amber-300 dark:border-amber-700/60",
-                              bg: "bg-amber-50 dark:bg-amber-950/20",
+                              bg: "bg-amber-50/50 dark:bg-amber-950/10",
                               text: "text-amber-700 dark:text-amber-400",
                             },
                             {
                               label: "Silver",
                               icon: Medal,
-                              iconColor: "text-muted-foreground",
-                              border: "border-slate-300 dark:border-slate-600",
-                              bg: "bg-slate-50 dark:bg-slate-800",
-                              text: "text-muted-foreground dark:text-slate-300",
+                              iconColor: "text-slate-400",
+                              border: "border-slate-300 dark:border-slate-600/60",
+                              bg: "bg-slate-50/50 dark:bg-slate-800/40",
+                              text: "text-slate-600 dark:text-slate-300",
                             },
                             {
                               label: "Bronze",
@@ -509,7 +510,7 @@ export function WinnersWallSection() {
                               iconColor: "text-orange-400",
                               border:
                                 "border-orange-300 dark:border-orange-700/60",
-                              bg: "bg-orange-50 dark:bg-orange-950/20",
+                              bg: "bg-orange-50/50 dark:bg-orange-950/10",
                               text: "text-orange-700 dark:text-orange-400",
                             },
                           ];
@@ -517,22 +518,22 @@ export function WinnersWallSection() {
                             label: `#${index + 1}`,
                             icon: undefined as any,
                             iconColor: undefined as string | undefined,
-                            border: "border-blue-200 dark:border-blue-800",
-                            bg: "bg-blue-50 dark:bg-blue-950/20",
+                            border: "border-blue-200 dark:border-blue-800/60",
+                            bg: "bg-blue-50/50 dark:bg-blue-950/10",
                             text: "text-blue-700 dark:text-blue-400",
                           };
                           return (
                             <div
                               key={team}
-                              className={`rounded-2xl border ${rank.border} ${rank.bg} p-4`}
+                              className={`rounded-xl border ${rank.border} ${rank.bg} p-2.5 sm:p-4`}
                             >
                               <p
-                                className={`text-xs font-black uppercase tracking-wider ${rank.text} flex items-center gap-1`}
+                                className={`text-[10px] sm:text-xs font-black uppercase tracking-wider ${rank.text} flex items-center gap-1`}
                               >
-                                {rank.icon && <rank.icon className={`w-3.5 h-3.5 ${rank.iconColor ?? ""}`} />}
+                                {rank.icon && <rank.icon className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${rank.iconColor ?? ""}`} />}
                                 {rank.label}
                               </p>
-                              <p className="mt-2 font-bold text-blue-950 dark:text-foreground text-sm">
+                              <p className="mt-1.5 font-bold text-blue-950 dark:text-foreground text-xs sm:text-sm">
                                 {team}
                               </p>
                             </div>
