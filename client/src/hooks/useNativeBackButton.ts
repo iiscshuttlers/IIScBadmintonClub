@@ -53,6 +53,30 @@ export function useNativeBackButton() {
         path === "/iiscshuttlers" ||
         path === "/iiscshuttlers/";
 
+      // 1. Intercept Back Button for Open Modals/Sheets/Drawers (Radix UI)
+      // Radix UI components (Dialog, Sheet, Dropdown, etc.) listen for the 'Escape' key to close.
+      // They also add `data-state="open"` and lock the body pointer events.
+      const hasOpenOverlays = document.querySelectorAll(
+        '[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"], [role="menu"][data-state="open"], [role="listbox"][data-state="open"]'
+      ).length > 0;
+      
+      const isBodyLocked = document.body.style.pointerEvents === "none";
+
+      if (hasOpenOverlays || isBodyLocked) {
+        // Synthesize an Escape key press to dismiss the top-most overlay gracefully
+        document.dispatchEvent(
+          new KeyboardEvent("keydown", {
+            key: "Escape",
+            code: "Escape",
+            keyCode: 27,
+            which: 27,
+            bubbles: true,
+            cancelable: true,
+          })
+        );
+        return;
+      }
+
       // If we are on Home, or WebView has no history, handle double-tap to exit
       if (isHome || !event.canGoBack) {
         if (backPressedRef.current) {
